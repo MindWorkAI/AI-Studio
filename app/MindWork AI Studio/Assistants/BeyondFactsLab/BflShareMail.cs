@@ -39,7 +39,11 @@ public static class BflShareMail
     /// <summary>
     /// Gets the subject of the mail, in the language of the app.
     /// </summary>
-    public static string Subject => TB("A session of the BeyondFacts Lab for your research");
+    /// <remarks>
+    /// The mail speaks to the research team, not to the person, so neither the subject nor the text addresses anybody:
+    /// the form of address the person chose for the lab does not fit the research team.
+    /// </remarks>
+    public static string Subject => TB("A shared session of the BeyondFacts Lab");
 
     /// <summary>
     /// Gets the text of the mail, in the language of the app.
@@ -47,7 +51,7 @@ public static class BflShareMail
     public static string Body => TB("""
         Hello,
 
-        I am sharing a session of the BeyondFacts Lab with you for your research; you find it in the attached file. Before I exported it, AI Studio removed the personal details it recognized.
+        attached is a session of the BeyondFacts Lab, which I share for the research on the lab. Before I exported it, AI Studio removed the personal details it recognized.
 
         Kind regards
         """);
