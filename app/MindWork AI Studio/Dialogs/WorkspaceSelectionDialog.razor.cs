@@ -74,10 +74,10 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
     {
         var normalizedWorkspaceName = WorkspaceBehaviour.NormalizeWorkspaceName(workspaceName ?? string.Empty);
         if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
-            return T("Please enter a workspace name.");
+            return TA("Please enter a workspace name.");
 
         if (this.IsWorkspaceNameExisting(normalizedWorkspaceName))
-            return T("There is already a workspace with this name. Please choose a different name.");
+            return TA("There is already a workspace with this name. Please choose a different name.");
 
         if (this.createWorkspaceError is not null && string.Equals(this.createWorkspaceErrorName, normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase))
             return this.createWorkspaceError;
@@ -130,7 +130,7 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
             var result = await WorkspaceBehaviour.TryCreateWorkspaceAsync(this.newWorkspaceName);
             if (!result.Success)
             {
-                this.createWorkspaceError = T("There is already a workspace with this name. Please choose a different name.");
+                this.createWorkspaceError = TA("There is already a workspace with this name. Please choose a different name.");
                 this.createWorkspaceErrorName = WorkspaceBehaviour.NormalizeWorkspaceName(this.newWorkspaceName);
                 await this.createWorkspaceForm.ValidateAsync();
                 return;

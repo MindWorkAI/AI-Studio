@@ -8,7 +8,7 @@
         @if (this.IsEnterpriseConfiguration)
         {
             <MudAlert Severity="Severity.Info" Class="mb-4">
-                @T("This embedding provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.")
+                @TA("This embedding provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.")
             </MudAlert>
         }
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
@@ -33,7 +33,7 @@
             @if (this.IsProviderProhibited)
             {
                 <MudAlert Severity="Severity.Warning" Class="mb-3">
-                    @T("The use of this provider has been prohibited by your organization. Please select a different provider.")
+                    @TA("The use of this provider has been prohibited by your organization. Please select a different provider.")
                 </MudAlert>
             }
             else
@@ -120,13 +120,13 @@
                     @if (this.dataConfiguredModelIsNotOffered)
                     {
                         <MudAlert Severity="Severity.Info" Class="mt-3">
-                            @T("This server does not offer the selected model right now. It stays selected, so the documents you already prepared keep working. Choosing another model means every document of the data sources behind this provider is prepared again.")
+                            @TA("This server does not offer the selected model right now. It stays selected, so the documents you already prepared keep working. Choosing another model means every document of the data sources behind this provider is prepared again.")
                         </MudAlert>
                     }
                     @if (this.ServerNamedNoEmbeddingModel)
                     {
                         <MudAlert Severity="Severity.Info" Class="mt-3">
-                            @T("Your server answered, but none of the models it serves is one we know to create embeddings. Either there is none installed, or it runs under a name we do not recognize. In the latter case, your organization can describe the model in a model plugin, and it will show up here.")
+                            @TA("Your server answered, but none of the models it serves is one we know to create embeddings. Either there is none installed, or it runs under a name we do not recognize. In the latter case, your organization can describe the model in a model plugin, and it will show up here.")
                         </MudAlert>
                     }
                     @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
@@ -161,7 +161,7 @@
                         <MudDivider />
                         <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
                             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                                @T("Please be aware: This section is for experts only. For cloud providers, the selected tokenizer and chunk settings may not match the real embedding model limits exactly.")
+                                @TA("Please be aware: This section is for experts only. For cloud providers, the selected tokenizer and chunk settings may not match the real embedding model limits exactly.")
                             </MudJustifiedText>
                             <MudNumericField
                                 T="int"
@@ -213,7 +213,7 @@
                                     </MudButton>
                                 </MudStack>
                                 <MudText Typo="Typo.body2">
-                                    @T("You can also drag & drop the tokenizer file here.")
+                                    @TA("You can also drag & drop the tokenizer file here.")
                                 </MudText>
                             </PathDropZone>
                         </MudCollapse>

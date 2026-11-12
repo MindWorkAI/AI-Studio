@@ -18,7 +18,7 @@
             {
                 <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-6">
                     <MudJustifiedText Typo="Typo.body1">
-                        @T("Your organization no longer allows adding mailboxes, so this one cannot be added.")
+                        @TA("Your organization no longer allows adding mailboxes, so this one cannot be added.")
                     </MudJustifiedText>
                 </MudAlert>
             }
@@ -75,25 +75,25 @@
                 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                     @if (this.AllowsOnlyOrganizationMailServers)
                     {
-                        @T("Your organization allows mailboxes only on its own mail servers. Choose one of them here, and AI Studio fills in the server settings for you.")
+                        @TA("Your organization allows mailboxes only on its own mail servers. Choose one of them here, and AI Studio fills in the server settings for you.")
                     }
                     else if (this.HasOrganizationProviders)
                     {
-                        @T("Choose your mail provider here, and AI Studio fills in the server settings for you. The mail servers of your organization come first, marked with a building. Alternatively, you can enter the technical details yourself.")
+                        @TA("Choose your mail provider here, and AI Studio fills in the server settings for you. The mail servers of your organization come first, marked with a building. Alternatively, you can enter the technical details yourself.")
                     }
                     else
                     {
-                        @T("Choose your mail provider here, and AI Studio fills in the server settings for you. Alternatively, e.g., for a mail server of your organization, you can enter the technical details yourself.")
+                        @TA("Choose your mail provider here, and AI Studio fills in the server settings for you. Alternatively, e.g., for a mail server of your organization, you can enter the technical details yourself.")
                     }
                 </MudJustifiedText>
                 @if (this.AllowsOnlyOrganizationMailServers && !this.HasOrganizationProviders)
                 {
                     <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
-                        @T("Your organization has not set up any of its mail servers here yet. Please ask your IT department.")
+                        @TA("Your organization has not set up any of its mail servers here yet. Please ask your IT department.")
                     </MudAlert>
                 }
                 @* No adornment: the field shows the chosen entry together with its icon, see the entries below. They use the size and spacing of ProviderLabel, so a logo and a Material icon line up. *@
-                <MudSelect @ref="@this.providerSelect" T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Placeholder="@T("Please choose a mail server")" Label="@T("Provider")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" Validation="@this.ValidateOrganizationProvider">
+                <MudSelect @ref="@this.providerSelect" T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Placeholder="@TA("Please choose a mail server")" Label="@T("Provider")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" Validation="@this.ValidateOrganizationProvider">
                     @if (!this.AllowsOnlyOrganizationMailServers)
                     {
                         <MudSelectItem T="string" Value="@string.Empty">
@@ -138,7 +138,7 @@
             {
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="mb-6">
                     <MudJustifiedText Typo="Typo.body2" Class="mb-1">
-                        @T("Your organization offers this mail server. Sign in with your own username and password.")
+                        @TA("Your organization offers this mail server. Sign in with your own username and password.")
                     </MudJustifiedText>
                     @if (!string.IsNullOrEmpty(chosenOrganizationProvider.UsernameHint))
                     {
@@ -264,12 +264,12 @@
                 @T("Folder")
             </MudText>
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder, and from your sent mails and drafts when you include them below. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.")
+                @TA("Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder, and from your sent mails and drafts when you include them below. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.")
             </MudJustifiedText>
             @if (!this.CanChangeSource)
             {
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
-                    @T("The mails of this mailbox are already prepared, so its server, its username, and its folder cannot be changed. Another account or folder holds other mails, which makes it another mailbox: please add one for it. The embedding provider below can be changed.")
+                    @TA("The mails of this mailbox are already prepared, so its server, its username, and its folder cannot be changed. Another account or folder holds other mails, which makes it another mailbox: please add one for it. The embedding provider below can be changed.")
                 </MudAlert>
             }
             @if (this.CanChangeSource && this.ConnectionTestSucceeded)
@@ -284,7 +284,7 @@
                     Label="@T("Selected folder")"
                     Class="mb-3"
                     ReadOnly="@true"
-                    HelperText="@(this.CanChangeSource ? T("Test the connection to select another folder.") : string.Empty)"
+                    HelperText="@(this.CanChangeSource ? TA("Test the connection to select another folder.") : string.Empty)"
                     Adornment="Adornment.Start"
                     AdornmentIcon="@AppIcons.FOLDER"
                     Variant="Variant.Outlined"/>
@@ -334,7 +334,7 @@
             }
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3 mt-3">
-                @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.")
+                @TA("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.")
             </MudJustifiedText>
             <MudSelect @ref="@this.embeddingSelect" @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
                 @foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
@@ -354,12 +354,12 @@
                 else
                 {
                     <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
-                        @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
+                        @TA("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
                     </MudJustifiedText>
                 }
             }
 
-            <MudSelect @ref="@this.confidenceLevelSelect" T="ConfidenceLevel" @bind-Value="@this.dataConfidenceLevel" Text="@this.ConfidenceLevelText" Placeholder="@T("Please select a level")" Label="@T("Required provider confidence level")" Class="mb-1 mt-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateMailboxConfidenceLevel">
+            <MudSelect @ref="@this.confidenceLevelSelect" T="ConfidenceLevel" @bind-Value="@this.dataConfidenceLevel" Text="@this.ConfidenceLevelText" Placeholder="@TA("Please select a level")" Label="@T("Required provider confidence level")" Class="mb-1 mt-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateMailboxConfidenceLevel">
                 @foreach (var level in ConfigurationSelectDataFactory.GetMailboxConfidenceLevelsData())
                 {
                     <MudSelectItem T="ConfidenceLevel" Value="@level.Value">
@@ -368,10 +368,10 @@
                 }
             </MudSelect>
             <MudJustifiedText Typo="Typo.body2" Class="mb-6">
-                @T("Only providers with at least this confidence level see the content of your mails: the chat provider, the embedding provider, and every provider which checks a mail for you.")
+                @TA("Only providers with at least this confidence level see the content of your mails: the chat provider, the embedding provider, and every provider which checks a mail for you.")
             </MudJustifiedText>
 
-            <OutboundDataRestrictionSelection @bind-Value="@this.dataOutboundDataRestriction" Label="@T("Where a chat may send data after reading mails")" Explanation="@T("Mails come from strangers and may contain instructions meant for the AI. This setting decides where a chat may still send data once it has read from this mailbox. Mind that opening a link can be enough to set something off, e.g., to confirm a subscription, an order, or a payment.")" OrganizationMinimum="@this.MinimumOutboundDataRestriction"/>
+            <OutboundDataRestrictionSelection @bind-Value="@this.dataOutboundDataRestriction" Label="@T("Where a chat may send data after reading mails")" Explanation="@TA("Mails come from strangers and may contain instructions meant for the AI. This setting decides where a chat may still send data once it has read from this mailbox. Mind that opening a link can be enough to set something off, e.g., to confirm a subscription, an order, or a payment.")" OrganizationMinimum="@this.MinimumOutboundDataRestriction"/>
 
             <MudStack Class="mb-3">
                 <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@AppIcons.ADVANCED_SETTINGS">
@@ -414,7 +414,7 @@
                         T="ushort"
                         Min="10"
                         @bind-Value="@this.dataMaxMatches"
-                        Label="@T("How many mails do you want at most per search?")"
+                        Label="@TA("How many mails do you want at most per search?")"
                         Variant="Variant.Outlined"
                         Step="10"
                         Adornment="Adornment.Start"

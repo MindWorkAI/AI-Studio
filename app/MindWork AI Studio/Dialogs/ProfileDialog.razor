@@ -2,15 +2,15 @@
 <MudDialog>
     <DialogContent>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.")
+            @TA("Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.")
         </MudJustifiedText>
 
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.")
+            @TA("Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.")
         </MudJustifiedText>
 
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("The name of the profile is mandatory. Each profile must have a unique name. Whether you provide information about yourself or only fill out the actions is up to you. Only one of these pieces is required.")
+            @TA("The name of the profile is mandatory. Each profile must have a unique name. Whether you provide information about yourself or only fill out the actions is up to you. Only one of these pieces is required.")
         </MudJustifiedText>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
@@ -38,13 +38,13 @@
                 AdornmentIcon="@AppIcons.PROMPT"
                 Adornment="Adornment.Start"
                 Immediate="@true"
-                Label="@T("What should the AI know about you?")"
+                Label="@TA("What should the AI know about you?")"
                 Variant="Variant.Outlined"
                 Lines="6"
                 Sizing="InputSizing.Auto"
                 MaxLines="12"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                HelperText="@T("Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?")"
+                HelperText="@TA("Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?")"
                 ReadOnly="@this.IsReadOnly"
             />
             <ReadFileContent Text="@T("Load what the AI should know from file")" @bind-FileContent="@this.DataNeedToKnow" EnableDragDrop="true" Disabled="@this.IsReadOnly"/>
@@ -56,20 +56,20 @@
                 AdornmentIcon="@AppIcons.PROMPT"
                 Adornment="Adornment.Start"
                 Immediate="@true"
-                Label="@T("What should the AI do for you?")"
+                Label="@TA("What should the AI do for you?")"
                 Variant="Variant.Outlined"
                 Lines="6"
                 Sizing="InputSizing.Auto"
                 MaxLines="12"
                 Class="mt-10"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                HelperText="@T("Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.")"
+                HelperText="@TA("Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.")"
                 ReadOnly="@this.IsReadOnly"
             />
             <ReadFileContent Text="@T("Load what the AI should do from file")" @bind-FileContent="@this.DataActions" EnableDragDrop="true" Disabled="@this.IsReadOnly"/>
 
             <MudJustifiedText Typo="Typo.body2" Class="mb-3 mt-3">
-                @T("Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task.")
+                @TA("Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task.")
             </MudJustifiedText>
             
         </MudForm>

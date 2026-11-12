@@ -54,7 +54,7 @@
             @if (!this.IsConnectionEncrypted())
             {
                 <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                    @T("Please note: the connection to the ERI v1 server is not encrypted. This means that all data sent to the server is transmitted in plain text. Please ask the ERI server administrator to enable encryption.")
+                    @TA("Please note: the connection to the ERI v1 server is not encrypted. This means that all data sent to the server is transmitted in plain text. Please ask the ERI server administrator to enable encryption.")
                 </MudJustifiedText>
             }
             
@@ -106,7 +106,7 @@
             
             @if (this.availableRetrievalProcesses.Count > 0)
             {
-                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" @bind-Value:after="@this.ClearImportRetrievalIssue" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
+                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" @bind-Value:after="@this.ClearImportRetrievalIssue" Text="@this.dataSelectedRetrievalProcess.Name" Label="@TA("Select one retrieval process")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
                     @foreach (var retrievalProcess in this.availableRetrievalProcesses)
                     {
                         <MudSelectItem Value="@retrievalProcess">
@@ -116,7 +116,7 @@
                 </MudSelect>
             }
 
-            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.SelectionText" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
+            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.SelectionText" Label="@TA("Your security policy")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
                 @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
                 {
                     <MudSelectItem Value="@policy">
@@ -125,9 +125,9 @@
                 }
             </MudSelect>
 
-            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@T("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction" SecurityPolicy="@this.dataSecurityPolicy"/>
+            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@TA("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction" SecurityPolicy="@this.dataSecurityPolicy"/>
 
-            <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
+            <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@TA("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
             
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>

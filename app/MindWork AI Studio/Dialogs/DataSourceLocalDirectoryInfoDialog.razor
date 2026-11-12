@@ -19,7 +19,7 @@
         @if (!this.IsDirectoryAvailable)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                @T("The directory chosen for the data source does not exist anymore. Please edit the data source and correct the path.")
+                @TA("The directory chosen for the data source does not exist anymore. Please edit the data source and correct the path.")
             </MudJustifiedText>
         }
         else
@@ -39,7 +39,7 @@
         else
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
-                @T("The embedding runs locally or in your organization. Your data is not sent to the cloud.")
+                @TA("The embedding runs locally or in your organization. Your data is not sent to the cloud.")
             </MudJustifiedText>
         }
 

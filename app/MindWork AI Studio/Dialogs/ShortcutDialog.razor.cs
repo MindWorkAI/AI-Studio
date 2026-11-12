@@ -66,7 +66,7 @@ public partial class ShortcutDialog : MSGComponentBase
     #endregion
     
     private string ShowText => string.IsNullOrWhiteSpace(this.currentShortcut)
-        ? T("Press a key combination...")
+        ? TA("Press a key combination...")
         : this.GetDisplayShortcut();
 
     private void ParseExistingShortcut()
@@ -131,7 +131,7 @@ public partial class ShortcutDialog : MSGComponentBase
         if (!this.hasCtrl && !this.hasShift && !this.hasAlt && !this.hasMeta)
         {
             this.currentDisplayName = string.Empty;
-            this.validationMessage = T("Please include at least one modifier key (Ctrl, Shift, Alt, or Cmd).");
+            this.validationMessage = TA("Please include at least one modifier key (Ctrl, Shift, Alt, or Cmd).");
             this.validationSeverity = Severity.Warning;
             this.hasValidationError = true;
             this.StateHasChanged();
@@ -188,7 +188,7 @@ public partial class ShortcutDialog : MSGComponentBase
             if (!string.IsNullOrWhiteSpace(this.originalShortcut)
                 && this.currentShortcut.Equals(this.originalShortcut, StringComparison.OrdinalIgnoreCase))
             {
-                this.validationMessage = T("This is the shortcut you previously used.");
+                this.validationMessage = TA("This is the shortcut you previously used.");
                 this.validationSeverity = Severity.Info;
                 this.hasValidationError = false;
                 this.StateHasChanged();

@@ -77,7 +77,7 @@ public partial class SettingsDialogBatchProcessing : SettingsDialogBase
     private string? ValidateCustomCsvSeparator(string separator)
     {
         if (!BatchProcessingCsvSeparator.IsValidCustomSeparator(separator))
-            return T("Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.");
+            return TA("Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.");
 
         return null;
     }
