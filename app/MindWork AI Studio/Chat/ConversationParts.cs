@@ -157,15 +157,13 @@ public sealed record ConversationParts
 
                 //
                 // An earlier answer travels with the note of the tools and sources it rested on, see
-                // ToolCallHistoryNote, so it is counted with it. The note of an answer does not change
-                // anymore, so the text stays the same string and its count stays in the cache.
+                // ToolCallHistoryNote.TextForModel, so it is counted with it. The note of an answer does
+                // not change anymore, so the text stays the same and its count stays in the cache.
                 //
                 if (text.IsStreaming)
                     growing.Add(text.Text);
-                else if (block.Role is ChatRole.AI)
-                    texts.Add(ListContentBlockExtensions.WithHistoryNote(text.Text, text, block.Time));
                 else
-                    texts.Add(text.Text);
+                    texts.Add(ToolCallHistoryNote.TextForModel(block, text.Text));
 
                 Sort(text.FileAttachments, documents, ref images);
             }

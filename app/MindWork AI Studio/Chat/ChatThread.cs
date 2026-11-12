@@ -827,7 +827,10 @@ public sealed record ChatThread
     /// What goes unnoticed is a change beside the messages: another system prompt, profile, or
     /// selection of tools. That shows only with the next answer. Noticing it would take a
     /// fingerprint of the system prompt as it was sent, after the data sources added to it, which
-    /// is a lot of machinery for a number which corrects itself one answer later.
+    /// is a lot of machinery for a number which corrects itself one answer later. The same holds for
+    /// the explanation of the notes on earlier answers, which the system prompt gets once the first
+    /// answer has a note, see ToolCallHistoryNote. The note of the last answer itself is counted: it
+    /// changes with every answer, and the answer goes out with it, see ToolCallHistoryNote.TextForModel.
     /// </remarks>
     /// <param name="model">The model the next request would go to.</param>
     /// <returns>
@@ -848,7 +851,7 @@ public sealed record ChatThread
         if (!string.Equals(reported.ModelId, model.Id, StringComparison.Ordinal))
             return ReportedHistory.UNKNOWN;
 
-        return ReportedHistory.Of(reported.ToTokenUsage(), answer.Text);
+        return ReportedHistory.Of(reported.ToTokenUsage(), ToolCallHistoryNote.TextForModel(this.Blocks[^1], answer.Text));
     }
 
     private static void DeleteManagedAttachments(ContentBlock block)

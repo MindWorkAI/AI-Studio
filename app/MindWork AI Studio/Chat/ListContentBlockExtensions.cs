@@ -110,16 +110,9 @@ public static class ListContentBlockExtensions
 
             //
             // Local function to prepare the text of one message. An earlier answer of the model gets the
-            // note of the tools and sources it rested on in front, see ToolCallHistoryNote; the answer
-            // being written right now does not, since its tool calls travel in the tool conversation.
+            // note of the tools and sources it rested on in front, see ToolCallHistoryNote.TextForModel.
             //
-            async Task<string> PrepareTextAsync(ContentBlock block, ContentText text)
-            {
-                var prepared = await text.PrepareTextContentForAI(reportingScope);
-                return block.Role is ChatRole.AI && !text.IsStreaming
-                    ? WithHistoryNote(prepared, text, block.Time)
-                    : prepared;
-            }
+            async Task<string> PrepareTextAsync(ContentBlock block, ContentText text) => ToolCallHistoryNote.TextForModel(block, await text.PrepareTextContentForAI(reportingScope));
 
             //
             // Local function to prepare one image for the model. An image which cannot be prepared
@@ -174,24 +167,6 @@ public static class ListContentBlockExtensions
                 StandardRoleTransformer,
                 StandardTextSubContentFactory,
                 NestedImageSubContentFactory);
-    }
-
-    /// <summary>
-    /// Puts the note of the tools and sources an earlier answer rested on in front of its text.
-    /// </summary>
-    /// <remarks>
-    /// A note the model wrote into its answer itself goes in any case, see
-    /// ToolCallHistoryNote.RemoveNotesWrittenByModel.
-    /// </remarks>
-    /// <param name="preparedText">The text of the answer as prepared for the model.</param>
-    /// <param name="answer">The answer.</param>
-    /// <param name="time">When the answer was written.</param>
-    /// <returns>The text for the model.</returns>
-    internal static string WithHistoryNote(string preparedText, ContentText answer, DateTimeOffset time)
-    {
-        var text = ToolCallHistoryNote.RemoveNotesWrittenByModel(preparedText);
-        var note = ToolCallHistoryNote.Build(answer, time);
-        return note is null ? text : $"{note}\n\n{text}";
     }
 
     private static ISubContent StandardTextSubContentFactory(string text) => new SubContentText

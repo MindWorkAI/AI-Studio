@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -79,10 +80,55 @@ public static partial class ToolCallHistoryNote
     /// </summary>
     /// <param name="blocks">The blocks of the conversation.</param>
     /// <returns>True when at least one answer gets a note.</returns>
-    public static bool IsInAnyOf(IEnumerable<ContentBlock> blocks) => blocks.Any(block =>
-        block is { Role: ChatRole.AI, ContentType: ContentType.TEXT, Content: ContentText { IsStreaming: false } answer } &&
-        !string.IsNullOrWhiteSpace(answer.Text) &&
-        Build(answer, block.Time) is not null);
+    public static bool IsInAnyOf(IEnumerable<ContentBlock> blocks) => blocks.Any(block => Of(block) is not null);
+
+    /// <summary>
+    /// The note one block of a conversation goes to the model with.
+    /// </summary>
+    /// <param name="block">The block.</param>
+    /// <returns>The note, or null when the block is no earlier answer or the answer used neither a tool nor a source.</returns>
+    public static string? Of(ContentBlock block) => IsEarlierAnswer(block, out var answer) ? Build(answer, block.Time) : null;
+
+    /// <summary>
+    /// The text of one block as the model receives it.
+    /// </summary>
+    /// <remarks>
+    /// An earlier answer loses any note the model wrote into it itself, see RemoveNotesWrittenByModel,
+    /// and gets its own note in front. Every other block keeps its text. The message builder, the
+    /// estimate of the tokens, and the report of the last answer all ask here, so that each of them
+    /// deals with the text which is actually sent.
+    /// </remarks>
+    /// <param name="block">The block.</param>
+    /// <param name="preparedText">The text of the block as prepared for the model, see ContentText.PrepareTextContentForAI.</param>
+    /// <returns>The text for the model.</returns>
+    public static string TextForModel(ContentBlock block, string preparedText)
+    {
+        if (!IsEarlierAnswer(block, out var answer))
+            return preparedText;
+
+        var text = RemoveNotesWrittenByModel(preparedText);
+        var note = Build(answer, block.Time);
+        return note is null ? text : $"{note}\n\n{text}";
+    }
+
+    /// <summary>
+    /// Whether a block is an earlier answer of the model, which goes to the model with its note.
+    /// </summary>
+    /// <remarks>
+    /// A finished text of the AI. The answer being written right now is none: its tool calls travel in
+    /// the tool conversation of its own request. A block without text is not sent at all.
+    /// </remarks>
+    private static bool IsEarlierAnswer(ContentBlock block, [NotNullWhen(true)] out ContentText? answer)
+    {
+        if (block is { Role: ChatRole.AI, ContentType: ContentType.TEXT, Content: ContentText { IsStreaming: false } text } && !string.IsNullOrWhiteSpace(text.Text))
+        {
+            answer = text;
+            return true;
+        }
+
+        answer = null;
+        return false;
+    }
 
     private static readonly JsonWriterOptions ARGUMENT_WRITER_OPTIONS = new()
     {
