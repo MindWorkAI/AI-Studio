@@ -37,6 +37,8 @@ public sealed class RemoveThinkTagsTests
     [TestCase("Models write <think> before and </think> after their thinking.", TestName = "An answer which explains the markers")]
     [TestCase("The answer.\n<think>Afterthought.</think>", TestName = "Thinking in the middle of an answer")]
     [TestCase("Here is my thought process: none. Here is my response: the answer.", TestName = "Thinking in plain text, as Granite writes it")]
+    [TestCase("gpt-oss starts its answer with <|channel|>final<|message|> and ends it with <|return|>.", TestName = "An answer which quotes the Harmony markers")]
+    [TestCase("Magistral ends its thinking with [/THINK], Gemma 4 with <channel|>.", TestName = "An answer which quotes other closing markers")]
     public void AnAnswerWithoutLeadingThinkingStaysAsItIs(string text)
     {
         Assert.That(text.RemoveThinkTags(), Is.EqualTo(text));

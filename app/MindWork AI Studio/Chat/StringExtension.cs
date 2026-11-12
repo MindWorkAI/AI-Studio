@@ -12,9 +12,12 @@ public static class StringExtensions
     /// named thought. A server which separates the thinking, e.g., into reasoning_content, leaves
     /// none of them in the answer.
     /// </remarks>
+    private const string THINK_OPEN = "<think>";
+    private const string THINK_CLOSE = "</think>";
+
     private static readonly (string Open, string Close)[] THINKING_MARKERS =
     [
-        ("<think>", "</think>"),
+        (THINK_OPEN, THINK_CLOSE),
         ("[THINK]", "[/THINK]"),
         ("<|START_THINKING|>", "<|END_THINKING|>"),
         ("◁think▷", "◁/think▷"),
@@ -49,9 +52,10 @@ public static class StringExtensions
         /// <list type="bullet">
         /// <item>One or several blocks of thinking at the beginning are removed, also after a blank line.</item>
         /// <item>A block which is not closed yet means that the model is still thinking, so nothing remains.</item>
-        /// <item>A closing marker without its opening one ends the thinking as well: since Qwen 3.5, the opening
-        /// &lt;think&gt; is part of the prompt, and only the closing one appears in the answer. It counts only when
-        /// no opening marker of its kind stands before it, so that an answer which explains these markers stays whole.</item>
+        /// <item>A closing &lt;/think&gt; without its opening one ends the thinking as well: since Qwen 3.5, the
+        /// opening marker is part of the prompt, and only the closing one appears in the answer. It counts only when
+        /// no &lt;think&gt; stands before it, so that an answer which explains these markers stays whole.</item>
+        /// <item>The Harmony format of gpt-oss counts only when the answer starts with it.</item>
         /// </list>
         /// Thinking in the middle of an answer stays, as does thinking in plain text, such as that of Granite 3.2:
         /// neither can be told apart from an answer which merely mentions it.
@@ -62,16 +66,17 @@ public static class StringExtensions
             if (string.IsNullOrWhiteSpace(text))
                 return text;
 
-            var finalChannel = text.LastIndexOf(HARMONY_FINAL, StringComparison.Ordinal);
-            if (finalChannel >= 0)
-                return WithoutHarmonyEndTokens(text[(finalChannel + HARMONY_FINAL.Length)..]);
-
             //
-            // gpt-oss is still thinking, since its answer has not started yet:
+            // The Harmony format counts only when the answer starts with the thinking of gpt-oss, so
+            // that an answer which merely quotes its markers stays whole. Without the final channel,
+            // gpt-oss is still thinking:
             //
             var rest = text.AsSpan().TrimStart();
             if (rest.StartsWith(HARMONY_ANALYSIS, StringComparison.Ordinal) || rest.StartsWith(HARMONY_START + HARMONY_ANALYSIS, StringComparison.Ordinal))
-                return string.Empty;
+            {
+                var finalChannel = text.LastIndexOf(HARMONY_FINAL, StringComparison.Ordinal);
+                return finalChannel < 0 ? string.Empty : WithoutHarmonyEndTokens(text[(finalChannel + HARMONY_FINAL.Length)..]);
+            }
 
             var removedBlock = false;
             while (ClosingMarkerOfLeadingBlock(rest) is { } close)
@@ -87,16 +92,15 @@ public static class StringExtensions
             if (removedBlock)
                 return rest.ToString();
 
-            foreach (var (open, close) in THINKING_MARKERS)
-            {
-                var end = text.IndexOf(close, StringComparison.Ordinal);
-                if (end < 0 || text.AsSpan(0, end).Contains(open, StringComparison.Ordinal))
-                    continue;
+            //
+            // Only the models with <think> put the opening marker into the prompt, so only their closing
+            // marker counts on its own:
+            //
+            var orphanEnd = text.IndexOf(THINK_CLOSE, StringComparison.Ordinal);
+            if (orphanEnd < 0 || text.AsSpan(0, orphanEnd).Contains(THINK_OPEN, StringComparison.Ordinal))
+                return text;
 
-                return text[(end + close.Length)..].TrimStart();
-            }
-
-            return text;
+            return text[(orphanEnd + THINK_CLOSE.Length)..].TrimStart();
         }
 
         /// <summary>

@@ -135,6 +135,19 @@ public sealed class BatchProcessingOutputFolderTests
     }
 
     [Test]
+    public void TheInputFolderAsOutputFolderLeavesOutTheResultsTableOfTheOtherFormat()
+    {
+        var outputFolder = new BatchProcessingOutputFolder(INPUT_FOLDER, INPUT_FOLDER, "batch-results.xlsx");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "batch-results.xlsx")), Is.True);
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "batch-results.csv")), Is.True, "A run before the user switched to Excel wrote the table as CSV.");
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "batch-results.pdf")), Is.False);
+        }
+    }
+
+    [Test]
     public void TheInputFolderAsOutputFolderKeepsDocumentsWithSimilarNames()
     {
         var outputFolder = new BatchProcessingOutputFolder(INPUT_FOLDER, INPUT_FOLDER, RESULTS_FILE_NAME);

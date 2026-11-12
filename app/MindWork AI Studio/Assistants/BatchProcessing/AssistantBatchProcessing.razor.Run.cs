@@ -111,9 +111,16 @@ public partial class AssistantBatchProcessing
         if (numImages == 0 || this.ProviderSettings.SupportsImageInput())
             return;
 
-        var warning = numImages == 1
-            ? T("The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.")
-            : string.Format(T("The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual."), numImages);
+        //
+        // An image in a subfolder lets the whole subfolder fail, documents included:
+        //
+        var imageInFolder = this.fileResults.Any(fileResult => fileResult.IsFolder && fileResult.Status is not BatchProcessingFileStatus.DONE && fileResult.MemberFiles.Any(IsImage));
+        var warning = (numImages == 1, imageInFolder) switch
+        {
+            (_, true) => T("The selected model cannot read images, so the images among the selected files will fail, and so will every subfolder which contains an image. All other files are processed as usual."),
+            (true, _) => T("The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual."),
+            _ => string.Format(T("The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual."), numImages),
+        };
 
         await this.MessageBus.SendWarning(new(AppIcons.IMAGE_NOT_SUPPORTED, warning));
     }

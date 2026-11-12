@@ -127,6 +127,7 @@ public partial class AssistantBatchProcessing
             ResultText = source.ResultText,
             ModelName = source.ModelName,
             ProcessedAt = source.ProcessedAt,
+            UsedTools = source.UsedTools,
         };
     }
 }
