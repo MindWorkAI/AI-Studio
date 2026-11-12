@@ -14,6 +14,8 @@ public partial class AssistantBatchProcessing
             return;
 
         var (resolvedOutputDirectory, units) = runPreparation.Value;
+        if (!await this.LoadPromptAttachmentsAsync())
+            return;
 
         //
         // Every format but Markdown is written by Pandoc, so it has to be there before the first

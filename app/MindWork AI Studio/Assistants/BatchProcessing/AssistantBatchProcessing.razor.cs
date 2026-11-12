@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
@@ -83,6 +84,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.ApplyFormDefaults();
         this.importedPrompt = string.Empty;
         this.promptFileLoadIssue = string.Empty;
+        this.promptAttachments = [];
+        this.promptAttachmentsContent = string.Empty;
         this.fileResults.Clear();
         this.usedResultFileNames.Clear();
         this.hasReportedWriteFailure = false;
@@ -119,6 +122,13 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string promptFilePath = string.Empty;
     private string promptFileLoadIssue = string.Empty;
     private DataDocumentAnalysisPolicy? selectedPolicy;
+    private HashSet<FileAttachment> promptAttachments = [];
+
+    /// <summary>
+    /// The text of the attachments to the instructions, read once when a run starts, cf. LoadPromptAttachmentsAsync.
+    /// </summary>
+    private string promptAttachmentsContent = string.Empty;
+
     private BatchProcessingOutputMode outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
     private FileExportFormat resultFileFormat = FileExportFormat.MARKDOWN;
     private string resultColumnHeader = string.Empty;

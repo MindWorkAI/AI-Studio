@@ -87,6 +87,59 @@ public partial class AssistantBatchProcessing
     }
 
     /// <summary>
+    /// Reads the attachments to the instructions, which the system prompt appends to them.
+    /// </summary>
+    /// <remarks>
+    /// Read once per run instead of per document: they are the same for every document, and a run
+    /// over hundreds of documents would otherwise read them hundreds of times. An attachment which
+    /// cannot be read stops the run before the first document, because every answer would lack it.
+    /// </remarks>
+    /// <returns><c>true</c> when the run may start.</returns>
+    private async Task<bool> LoadPromptAttachmentsAsync()
+    {
+        this.promptAttachmentsContent = string.Empty;
+        var content = new StringBuilder();
+        foreach (var attachment in this.promptAttachments.OrderBy(attachment => attachment.FileName, StringComparer.OrdinalIgnoreCase))
+        {
+            if (attachment.IsForbidden || attachment.IsImage)
+                continue;
+
+            if (!attachment.Exists)
+            {
+                this.AddInputIssue(string.Format(T("The attachment '{0}' to the instructions no longer exists."), attachment.FileName));
+                return false;
+            }
+
+            FileExtractionResult extraction;
+            try
+            {
+                extraction = await this.RustService.ReadArbitraryFileData(attachment.FilePath, int.MaxValue);
+            }
+            catch (Exception e)
+            {
+                this.Logger.LogError(e, "Was not able to read the attachment '{FilePath}' to the batch instructions.", attachment.FilePath);
+                this.AddInputIssue(string.Format(T("Was not able to read the attachment '{0}' to the instructions: {1}"), attachment.FileName, e.Message));
+                return false;
+            }
+
+            if (!extraction.HasUsableContent || string.IsNullOrWhiteSpace(extraction.Content))
+            {
+                this.Logger.LogError("Reading the attachment '{FilePath}' to the batch instructions failed: code={ErrorCode}, message='{ErrorMessage}'.", attachment.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
+                this.AddInputIssue(extraction.ToUserMessage(attachment.FileName));
+                return false;
+            }
+
+            if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
+                await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, extraction.ToPartialUserMessage(attachment.FileName)));
+
+            content.AppendLineLF(BuildPromptAttachmentPart(attachment.FileName, extraction.Content));
+        }
+
+        this.promptAttachmentsContent = content.ToString();
+        return true;
+    }
+
+    /// <summary>
     /// How many images the selected model takes in one message.
     /// </summary>
     /// <returns>1 for a model which takes a single image, and int.MaxValue when nobody knows a limit.</returns>

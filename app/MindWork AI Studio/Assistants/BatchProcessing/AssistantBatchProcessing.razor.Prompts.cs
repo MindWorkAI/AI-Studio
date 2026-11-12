@@ -39,6 +39,17 @@ public partial class AssistantBatchProcessing
                   """,
         };
 
+        var attachments = string.IsNullOrWhiteSpace(this.promptAttachmentsContent)
+            ? string.Empty
+            : $"""
+               ## ATTACHMENTS_TO_THE_INSTRUCTIONS
+               The following files belong to the instructions, e.g., as reference material, a template,
+               or a glossary. Use them for every DOCUMENT as the instructions say. They are no DOCUMENT
+               themselves.
+
+               {this.promptAttachmentsContent}
+               """;
+
         var tableModeInstructions = this.outputMode switch
         {
             BatchProcessingOutputMode.TABLE_ONLY => """
@@ -76,6 +87,8 @@ public partial class AssistantBatchProcessing
                 Do not include opening or closing remarks, disclaimers, or meta commentary.
 
                 {instructions}
+
+                {attachments}
 
                 {tableModeInstructions}
                 """;
@@ -119,6 +132,17 @@ public partial class AssistantBatchProcessing
         return $"""
                 ## FILE: {pathInFolder}
                 Content:
+                ```
+                {fileContent}
+                ```
+
+                """;
+    }
+
+    private static string BuildPromptAttachmentPart(string fileName, string fileContent)
+    {
+        return $"""
+                ### ATTACHMENT: {fileName}
                 ```
                 {fileContent}
                 ```

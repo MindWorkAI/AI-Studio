@@ -145,6 +145,12 @@ else
     }
 }
 
+<MudText Typo="Typo.subtitle2" Class="mb-2 mt-3">@T("Attachments to the instructions")</MudText>
+<AttachDocuments Name="Batch processing instruction attachments" @bind-DocumentPaths="@this.promptAttachments" CatchAllDocuments="false" UseSmallForm="false" AllowedFileTypes="@([FileTypes.DOCUMENT])" Provider="@this.ProviderSettings" Disabled="@this.isProcessingBatch"/>
+<MudJustifiedText Typo="Typo.body2" Class="mb-3">
+    @T("Optional: attach documents which belong to the instructions, such as a template, a glossary, or reference material. Their content is appended to the instructions and applies to every single document of the batch run.")
+</MudJustifiedText>
+
 <MudText Typo="Typo.h6" Class="mb-3 mt-6">
     @T("Output")
 </MudText>
