@@ -102,6 +102,7 @@
                             <MudSwitch T="bool" Value="@(project.HappenedAtUtc is not null)" ValueChanged="@this.SetHappenedAsync" Disabled="@this.isBusy" Color="Color.Primary" Class="mr-2">
                                 @T("The event has taken place")
                             </MudSwitch>
+                            <MudButton StartIcon="@AppIcons.SHARE_WITH_RESEARCH" OnClick="@this.ShareAsync" Disabled="@this.isBusy">@T("Share with the research team")</MudButton>
                             <MudButton StartIcon="@AppIcons.RENAME" OnClick="@this.RenameProjectAsync" Disabled="@this.isBusy">@T("Rename")</MudButton>
                             <MudButton StartIcon="@AppIcons.DELETE" Color="Color.Error" OnClick="@this.DeleteProjectAsync" Disabled="@this.isBusy">@T("Delete")</MudButton>
                         </MudStack>

@@ -91,12 +91,12 @@ public static class BflFieldCatalog
         // The topic of the contribution may be unpublished, so it never reaches the research:
         new(CONTRIBUTION_TOPIC, BflStep.FRAMEWORK, BflFieldKind.MULTI_LINE) { IsKeyDetail = true },
 
-        new(EVENT_DATE, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsSharedWithResearch = true },
-        new(EVENT_LOCATION, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsSharedWithResearch = true },
+        new(EVENT_DATE, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsSharedWithResearch = true, IdentifiesEvent = true },
+        new(EVENT_LOCATION, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsSharedWithResearch = true, IdentifiesEvent = true },
         new(EVENT_DURATION, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE),
         new(CONTRIBUTION_DURATION, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE),
         new(OTHER_PARTICIPANTS, BflStep.FRAMEWORK, BflFieldKind.MULTI_LINE) { IsSharedWithResearch = true, NameRole = BflNameRole.PARTICIPANTS },
-        new(EVENT_LINK, BflStep.FRAMEWORK, BflFieldKind.LINK) { IsSharedWithResearch = true },
+        new(EVENT_LINK, BflStep.FRAMEWORK, BflFieldKind.LINK) { IsSharedWithResearch = true, IdentifiesEvent = true },
 
         new(CONTRIBUTION_SUMMARY, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE) { IsKeyDetail = true },
         new(CORE_THESES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),

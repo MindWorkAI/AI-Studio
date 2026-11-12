@@ -50,6 +50,9 @@ public static class AppIcons
     /// <summary>Stands for a policy of the document analysis, which defines how documents are analyzed.</summary>
     public const string ANALYSIS_POLICY = LucideIcons.CLIPBOARD_LIST;
 
+    /// <summary>Marks what anonymizing replaced, such as the names in a session shared from the BeyondFacts Lab.</summary>
+    public const string ANONYMIZED = LucideIcons.VENETIAN_MASK;
+
     /// <summary>Marks the streamed answer of an AI, such as when generating or reading it fails.</summary>
     public const string ANSWER_STREAM = LucideIcons.ACTIVITY;
 
@@ -1012,6 +1015,9 @@ public static class AppIcons
 
     /// <summary>Shares an item with the native share sheet of the operating system, such as a plugin archive.</summary>
     public const string SHARE = LucideIcons.SHARE;
+
+    /// <summary>Shares a session with a research team, such as a preparation of the BeyondFacts Lab with the team which develops it.</summary>
+    public const string SHARE_WITH_RESEARCH = LucideIcons.HEART_HANDSHAKE;
 
     /// <summary>Shows the sidebar, such as the workspaces.</summary>
     public const string SHOW_SIDEBAR = LucideIcons.PANEL_LEFT_OPEN;
