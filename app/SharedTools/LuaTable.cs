@@ -12,7 +12,12 @@ public static class LuaTable
         // Add the UI_TEXT_CONTENT table:
         //
         sb.AppendLineLF($$"""{{tableVariableName}} = {}""");
-        foreach (var kvp in keyValuePairs.OrderBy(x => x.Key))
+
+        //
+        // Ordinal, so that every computer writes the texts in the same order. A comparison by culture would
+        // depend on the region settings of the computer, e.g., where it sorts the underscore:
+        //
+        foreach (var kvp in keyValuePairs.OrderBy(x => x.Key, StringComparer.Ordinal))
         {
             if (cancellationToken.IsCancellationRequested)
                 return sb.ToString();
