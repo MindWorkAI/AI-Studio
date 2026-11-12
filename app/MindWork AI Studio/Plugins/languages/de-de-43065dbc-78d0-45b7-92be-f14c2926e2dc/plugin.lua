@@ -14209,7 +14209,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T247591452"] = "Vielen Dank, Peer,
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2640760894"] = "Werden Sie einer unserer Titanen"
 
 -- Thank you, Carsten, for fixing the first build after a fresh clone of AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2698568606"] = "Vielen Dank, Carsten, dass Sie den ersten Build nach dem frischen Klonen von AI Studio repariert haben."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2698568606"] = "Vielen Dank, Carsten, dass du den ersten Build nach einem frischen Klon von AI Studio repariert hast."
 
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2929332068"] = "Unterstützer"
