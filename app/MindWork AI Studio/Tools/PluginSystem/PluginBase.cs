@@ -35,6 +35,8 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginBase).Namespace, nameof(PluginBase));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(PluginBase).Namespace, nameof(PluginBase));
+
     private readonly IReadOnlyCollection<string> baseIssues;
     protected readonly LuaState State;
 
@@ -509,7 +511,7 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
         if (!this.State.Environment["DEPRECATION_MESSAGE"].TryRead(out deprecationMessage))
         {
             deprecationMessage = string.Empty;
-            message = TB("The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.");
+            message = TA("The field DEPRECATION_MESSAGE does not exist or is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.");
             return false;
         }
         

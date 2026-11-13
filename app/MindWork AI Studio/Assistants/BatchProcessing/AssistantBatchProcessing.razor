@@ -7,7 +7,7 @@
     @T("Input")
 </MudText>
 
-<SelectDirectory Label="@T("Folder containing your documents")" DirectoryDialogTitle="@T("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
+<SelectDirectory Label="@TA("Folder containing your documents")" DirectoryDialogTitle="@TA("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
 
 <MudTextSwitch Label="@T("Include subfolders?")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, process files in subfolders as well")" LabelOff="@T("No, only process files in the selected folder")"/>
 
@@ -31,7 +31,7 @@
 </MudJustifiedText>
 
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-    @T("Images in JPG, PNG, WebP, GIF, BMP, or TIFF format are given to the model as images, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start.")
+    @TA("Images in JPG, PNG, WebP, GIF, BMP, or TIFF format are given to the model as images, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start.")
 </MudJustifiedText>
 
 <MudStack Class="mb-3">
@@ -81,7 +81,7 @@
 }
 else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
 {
-    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
+    <ReadFileContent Text="@TA("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
 
     @if (!string.IsNullOrWhiteSpace(this.promptFilePath))
     {
@@ -103,13 +103,13 @@ else
 {
     @if (this.ConfiguredPolicyIsMissing)
     {
-        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@T("The configured default policy no longer exists. Please select another document analysis policy.")</MudAlert>
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@TA("The configured default policy no longer exists. Please select another document analysis policy.")</MudAlert>
     }
 
     @if (this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Count is 0)
     {
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("You have not yet created any document analysis policies. Please use the Document Analysis Assistant to create a policy first.")
+            @TA("You have not yet created any document analysis policies. Please use the Document Analysis Assistant to create a policy first.")
         </MudJustifiedText>
         <MudButton Href="@Routes.ASSISTANT_DOCUMENT_ANALYSIS" Variant="Variant.Filled" Color="Color.Primary" Class="mb-3">
             @T("Open the Document Analysis Assistant")
@@ -156,7 +156,7 @@ else
 
 @if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
 {
-    <MudSelect T="FileExportFormat" @bind-Value="@this.resultFileFormat" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.DOCUMENT" Adornment="Adornment.Start" Label="@T("File format")" HelperText="@T("Choose the format of the result files. Everything except Markdown is converted by Pandoc, which AI Studio offers to install when it is missing.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+    <MudSelect T="FileExportFormat" @bind-Value="@this.resultFileFormat" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.DOCUMENT" Adornment="Adornment.Start" Label="@T("File format")" HelperText="@TA("Choose the format of the result files. Everything except Markdown is converted by Pandoc, which AI Studio offers to install when it is missing.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
         @foreach (var format in FileExportFormat.AnswerFormats)
         {
             <MudSelectItem Value="@format">
@@ -171,11 +171,11 @@ else
 }
 else
 {
-    <MudTextField T="string" @bind-Text="@this.csvFileName" Validation="@this.ValidateCsvFileName" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Name of the results table (optional)")" HelperText="@T("The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.")" AdornmentIcon="@AppIcons.DOCUMENT" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" @bind-Text="@this.csvFileName" Validation="@this.ValidateCsvFileName" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Name of the results table (optional)")" HelperText="@TA("The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.")" AdornmentIcon="@AppIcons.DOCUMENT" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-    <MudTextField T="string" @bind-Text="@this.resultColumnHeader" Disabled="@this.isProcessingBatch" Label="@T("Header of the result column (optional)")" HelperText="@T("The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.")" AdornmentIcon="@AppIcons.RESULT_COLUMN" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" @bind-Text="@this.resultColumnHeader" Disabled="@this.isProcessingBatch" Label="@T("Header of the result column (optional)")" HelperText="@TA("The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.")" AdornmentIcon="@AppIcons.RESULT_COLUMN" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-    <MudSelect T="BatchProcessingCsvSeparator" @bind-Value="@this.csvSeparator" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Label="@T("Column separator")" HelperText="@T("Choose which character separates the columns of the results table.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+    <MudSelect T="BatchProcessingCsvSeparator" @bind-Value="@this.csvSeparator" Disabled="@this.isProcessingBatch" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Label="@T("Column separator")" HelperText="@TA("Choose which character separates the columns of the results table.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
         @foreach (var separator in Enum.GetValues<BatchProcessingCsvSeparator>())
         {
             <MudSelectItem Value="@separator">
@@ -186,14 +186,14 @@ else
 
     @if (this.csvSeparator is BatchProcessingCsvSeparator.CUSTOM)
     {
-        <MudTextField T="string" @bind-Text="@this.customCsvSeparator" Validation="@this.ValidateCustomCsvSeparator" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Custom column separator")" HelperText="@T("Enter one punctuation or symbol character.")" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField T="string" @bind-Text="@this.customCsvSeparator" Validation="@this.ValidateCustomCsvSeparator" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Custom column separator")" HelperText="@TA("Enter one punctuation or symbol character.")" AdornmentIcon="@AppIcons.CSV_SEPARATOR" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
 }
 
-<SelectDirectory Label="@T("Output folder (optional)")" DirectoryDialogTitle="@T("Select the output folder")" @bind-Directory="@this.outputDirectory" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
+<SelectDirectory Label="@T("Output folder (optional)")" DirectoryDialogTitle="@TA("Select the output folder")" @bind-Directory="@this.outputDirectory" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
 
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-    @T("We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.")
+    @TA("We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.")
 </MudJustifiedText>
 
 <MudText Typo="Typo.h6" Class="mb-3 mt-6">
@@ -203,7 +203,7 @@ else
 @if (MinimumDelayIsManaged)
 {
     <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
-        @(string.Format(T("Your organization requires a pause of at least {0} seconds between files."), this.ManagedMinimumDelaySeconds))
+        @(string.Format(TA("Your organization requires a pause of at least {0} seconds between files."), this.ManagedMinimumDelaySeconds))
     </MudAlert>
 }
 else

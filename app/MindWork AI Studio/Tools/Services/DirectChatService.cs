@@ -12,6 +12,8 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
 {
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(DirectChatService).Namespace, nameof(DirectChatService));
 
+    private static string TA(string fallbackEn) => I18N.I.TA(fallbackEn, typeof(DirectChatService).Namespace, nameof(DirectChatService));
+
     public async Task<DirectChatStartResult> TryCreateAssistantChatAsync(PluginAssistants assistantPlugin)
     {
         if (assistantPlugin.ChatLaunchConfiguration is not { } launchConfiguration)
@@ -315,8 +317,8 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         //
         if (provider == ProviderSettings.NONE)
             return new(null, originChatTemplate is null
-                ? TB("The assistant chat launcher selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.")
-                : string.Format(TB("The chat template '{0}' selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created."), originChatTemplate.GetSafeName()));
+                ? TA("The assistant chat launcher selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.")
+                : string.Format(TA("The chat template '{0}' selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created."), originChatTemplate.GetSafeName()));
 
         var requestedDataSources = new List<IDataSource>(chosenOptions.PreselectedDataSourceIds.Count);
         foreach (var dataSourceId in chosenOptions.PreselectedDataSourceIds)

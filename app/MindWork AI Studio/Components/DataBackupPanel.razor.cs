@@ -98,7 +98,7 @@ public partial class DataBackupPanel : MSGComponentBase
 
     private string BackupProgressText => this.DataBackupService.Progress switch
     {
-        { Phase: DataBackupPhase.COPYING_INDEXES } current => string.Format(T("Copying the indexes of your data sources: {0} of {1}"), current.Processed + 1, current.Total),
+        { Phase: DataBackupPhase.COPYING_INDEXES } current => string.Format(TA("Copying the indexes of your data sources: {0} of {1}"), current.Processed + 1, current.Total),
         { Phase: DataBackupPhase.WRITING, Total: > 0 } current => string.Format(T("Writing file {0} of {1}"), current.Processed, current.Total),
         _ => T("Preparing the backup"),
     };
@@ -225,7 +225,7 @@ public partial class DataBackupPanel : MSGComponentBase
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, T("Restoring this backup replaces your settings, your chats, your plugins, and the indexes of your data sources with those of the backup. Whatever you changed since the backup was made is lost. Afterward, AI Studio restarts. Do you want to restore this backup?") },
+                { x => x.Message, TA("Restoring this backup replaces your settings, your chats, your plugins, and the indexes of your data sources with those of the backup. Whatever you changed since the backup was made is lost. Afterward, AI Studio restarts. Do you want to restore this backup?") },
             };
 
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Replace All Data"), dialogParameters, DialogOptions.FULLSCREEN);

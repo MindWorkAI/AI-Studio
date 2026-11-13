@@ -9,7 +9,7 @@ namespace AIStudio.Components;
 
 public partial class ProfileSelection : MSGComponentBase
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProfileSelection).Namespace, nameof(ProfileSelection));
+    private new static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ProfileSelection).Namespace, nameof(ProfileSelection));
     
     [Parameter]
     public Profile CurrentProfile { get; set; } = Profile.NO_PROFILE;
@@ -32,7 +32,7 @@ public partial class ProfileSelection : MSGComponentBase
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
-    private readonly string defaultToolTipText = TB("You can switch between your profiles here");
+    private readonly string defaultToolTipText = TA("You can switch between your profiles here");
 
     private string ToolTipText => this.Disabled ? this.DisabledText : this.defaultToolTipText;
     

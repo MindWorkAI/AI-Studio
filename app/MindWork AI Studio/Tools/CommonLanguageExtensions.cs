@@ -5,6 +5,8 @@ namespace AIStudio.Tools;
 public static class CommonLanguageExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(CommonLanguageExtensions).Namespace, nameof(CommonLanguageExtensions));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(CommonLanguageExtensions).Namespace, nameof(CommonLanguageExtensions));
     
     extension(CommonLanguages language)
     {
@@ -74,7 +76,7 @@ public static class CommonLanguageExtensions
             get
             {
                 if(language is CommonLanguages.AS_IS)
-                    return TB("Please select the target language");
+                    return TA("Please select the target language");
             
                 return language.Name;
             }

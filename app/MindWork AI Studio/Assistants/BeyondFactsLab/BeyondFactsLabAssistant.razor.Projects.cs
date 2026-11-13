@@ -207,7 +207,7 @@ public partial class BeyondFactsLabAssistant
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException)
         {
             this.Logger.LogError(exception, "A change of the preparations of the BeyondFacts Lab failed.");
-            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_BEYOND_FACTS_LAB, TA("AI Studio could not save the change of your preparations. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_BEYOND_FACTS_LAB, TA("AI Studio could not save the change to your preparations. Please try again.")));
             await this.ReloadAfterFailureAsync();
         }
         finally

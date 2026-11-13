@@ -621,7 +621,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         
         var remove = await this.DialogService.ShowMessageBoxAsync(
             T("Remove Message"),
-            T("Do you really want to remove this message?"),
+            TA("Do you really want to remove this message?"),
             T("Yes, remove it"),
             T("No, keep it"));
         
@@ -703,7 +703,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         
         var regenerate = await this.DialogService.ShowMessageBoxAsync(
             T("Regenerate Message"),
-            T("Do you really want to regenerate this message?"),
+            TA("Do you really want to regenerate this message?"),
             T("Yes, regenerate it"),
             T("No, keep it"));
         
@@ -718,7 +718,7 @@ public partial class ContentBlockComponent : MSGComponentBase
 
         var rollback = await this.DialogService.ShowMessageBoxAsync(
             T("Roll Back Chat"),
-            T("Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed."),
+            TA("Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed."),
             T("Yes, roll back the chat"),
             T("No, keep it"));
 
@@ -747,7 +747,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         
         var edit = await this.DialogService.ShowMessageBoxAsync(
             T("Edit Message"),
-            T("Do you really want to edit this message? In order to edit this message, the AI response will be deleted."),
+            TA("Do you really want to edit this message? In order to edit this message, the AI response will be deleted."),
             T("Yes, remove the AI response and edit it"),
             T("No, keep it"));
         

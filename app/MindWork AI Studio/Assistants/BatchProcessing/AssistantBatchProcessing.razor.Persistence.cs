@@ -162,7 +162,7 @@ public partial class AssistantBatchProcessing
                 return;
 
             this.hasReportedWriteFailure = true;
-            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, string.Format(T("Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"), Path.GetFileName(targetFilePath), e.Message)));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, string.Format(TA("Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"), Path.GetFileName(targetFilePath), e.Message)));
         }
     }
 

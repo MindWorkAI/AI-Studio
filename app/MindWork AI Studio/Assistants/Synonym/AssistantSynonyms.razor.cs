@@ -155,7 +155,7 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a word or phrase as input.");
+            return TA("Please provide a word or phrase as input.");
         
         return null;
     }
@@ -163,7 +163,7 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }

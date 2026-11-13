@@ -2,7 +2,7 @@
 <MudDialog>
     <DialogContent>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Here are the details of this plugin. Most of them come from its authors, and AI Studio shows them as stated without being able to verify them.")
+            @TA("Here are the details of this plugin. Most of them come from its authors, and AI Studio shows them as stated without being able to verify them.")
         </MudJustifiedText>
 
         <MudSimpleTable Dense="@true" Hover="@true" Bordered="@true" Striped="@true" Style="overflow-x: auto;">
@@ -55,7 +55,7 @@
                 @if (this.Plugin.IsManagedByConfigServer)
                 {
                     <InfoTableRow Icon="@AppIcons.ORGANIZATION" Label="@T("Origin")">
-                        <MudText Typo="Typo.body2">@T("Managed by your organization")</MudText>
+                        <MudText Typo="Typo.body2">@TA("Managed by your organization")</MudText>
                     </InfoTableRow>
                 }
             </tbody>

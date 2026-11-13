@@ -16,7 +16,7 @@
             }
         </ActivatorContent>
         <ChildContent>
-            <MudMenuItem Icon="@AppIcons.SETTINGS" Label="@T("Manage your templates")" OnClick="@(async () => await this.OpenSettingsDialog())" />
+            <MudMenuItem Icon="@AppIcons.SETTINGS" Label="@TA("Manage your templates")" OnClick="@(async () => await this.OpenSettingsDialog())" />
             <MudDivider/>
             <MudMenuItem Icon="@AppIcons.CREATE_CHAT_TEMPLATE" Label="@T("Create template from current chat")" OnClick="@(async () => await this.CreateNewChatTemplateFromChat())" Disabled="@(!this.CanChatThreadBeUsedForTemplate)"/>
             <MudDivider/>

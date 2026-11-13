@@ -115,6 +115,8 @@ internal static class FileExclusions
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExclusions).Namespace, nameof(FileExclusions));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(FileExclusions).Namespace, nameof(FileExclusions));
+
     /// <summary>
     /// Splits a list into its entries. Empty lines and empty entries are allowed and dropped.
     /// </summary>
@@ -160,12 +162,12 @@ internal static class FileExclusions
     private static string? DescribeValidationIssue(ValidationIssue issue) => issue switch
     {
         ValidationIssue.NONE => null,
-        ValidationIssue.SELECTOR => TB("Selectors such as :text: cannot be excluded. Please use file name patterns such as *.min.js or folder names such as bin/."),
-        ValidationIssue.PATH => TB("Please write excluded folders as a name without a path, ending with a slash, e.g., node_modules/ or bin/. Such an entry excludes every folder of that name."),
-        ValidationIssue.RECURSIVE_WILDCARD => TB("Please use only single asterisks as wildcards, e.g., *.min.js or cmake-build-*/."),
+        ValidationIssue.SELECTOR => TA("Selectors such as :text: cannot be excluded. Please use file name patterns such as *.min.js or folder names such as bin/."),
+        ValidationIssue.PATH => TA("Please write excluded folders as a name without a path, ending with a slash, e.g., node_modules/ or bin/. Such an entry excludes every folder of that name."),
+        ValidationIssue.RECURSIVE_WILDCARD => TA("Please use only single asterisks as wildcards, e.g., *.min.js or cmake-build-*/."),
         ValidationIssue.INVALID_CHARACTER => TB("One of the excluded files or folders contains an invalid character."),
-        ValidationIssue.FILE_IN_FOLDER_LIST => TB("Folder patterns must end with /, e.g., build/. Enter file patterns such as *.pdf in 'Files'."),
-        ValidationIssue.FOLDER_IN_FILE_LIST => TB("Enter folder patterns ending with / in 'Folders'. File patterns must not end with /."),
+        ValidationIssue.FILE_IN_FOLDER_LIST => TA("Folder patterns must end with /, e.g., build/. Enter file patterns such as *.pdf in 'Files'."),
+        ValidationIssue.FOLDER_IN_FILE_LIST => TA("Enter folder patterns ending with / in 'Folders'. File patterns must not end with /."),
         _ => throw new ArgumentOutOfRangeException(nameof(issue)),
     };
 

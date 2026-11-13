@@ -41,11 +41,6 @@ public sealed class DataBeyondFactsLab(Expression<Func<Data, DataBeyondFactsLab>
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumProviderConfidence, MINIMUM_CONFIDENCE_FLOOR);
 
     /// <summary>
-    /// Gets or sets how the lab addresses the person in languages with a formal and an informal address.
-    /// </summary>
-    public AddressForm AddressForm { get; set; } = ManagedConfiguration.Register(configSelection, value => value.AddressForm, AddressForm.FORMAL);
-
-    /// <summary>
     /// Gets or sets whether files in the folder for prompt overrides replace the prompts which come with the lab.
     /// </summary>
     /// <remarks>

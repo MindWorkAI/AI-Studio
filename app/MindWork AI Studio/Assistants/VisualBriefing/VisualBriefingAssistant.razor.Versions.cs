@@ -118,7 +118,7 @@ public partial class VisualBriefingAssistant
 
         if (PathComparer().Equals(Path.GetFullPath(sourcePath), Path.GetFullPath(response.SaveFilePath)))
         {
-            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, T("Choose a different export location so the immutable briefing version is not overwritten.")));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, TA("Choose a different export location so the immutable briefing version is not overwritten.")));
             return;
         }
 
@@ -176,7 +176,7 @@ public partial class VisualBriefingAssistant
         catch (Exception e)
         {
             this.Logger.LogError(e, "The visual briefing could not be exported, because the file '{FilePath}' cannot be opened for writing.", targetPath);
-            await this.MessageBus.SendError(new(AppIcons.EXPORT, T("The visual briefing could not be exported. Please check that the target file is not open in another program.")));
+            await this.MessageBus.SendError(new(AppIcons.EXPORT, TA("The visual briefing could not be exported. Please check that the target file is not open in another program.")));
             return false;
         }
 

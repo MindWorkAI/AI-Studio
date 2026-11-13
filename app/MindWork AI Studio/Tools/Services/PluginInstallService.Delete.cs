@@ -183,7 +183,7 @@ public sealed partial class PluginInstallService
         // alongside them in a subdirectory.
         //
         if (PluginFactory.IsOrganizationConfigurationPath(plugin.LocalPath))
-            return TB("Plugins deployed by your organization cannot be deleted.");
+            return TA("Plugins deployed by your organization cannot be deleted.");
 
         //
         // Organizations also roll plugins out past these directories, e.g. through their MDM
@@ -193,7 +193,7 @@ public sealed partial class PluginInstallService
         // manual placement as the only way in, and the file system as the way back out.
         //
         if (plugin.IsManagedByConfigServer)
-            return TB("Plugins deployed by your organization cannot be deleted.");
+            return TA("Plugins deployed by your organization cannot be deleted.");
 
         if (!PluginFactory.IsInsidePluginsRoot(plugin.LocalPath) || PluginFactory.IsPluginsRoot(plugin.LocalPath))
             return TB("This individual plugin’s directory is outside the expected plugins directory.");

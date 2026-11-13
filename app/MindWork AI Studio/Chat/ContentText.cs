@@ -24,6 +24,8 @@ public sealed class ContentText : IContent
     private static readonly ILogger<ContentText> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ContentText>();
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ContentText).Namespace, nameof(ContentText));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ContentText).Namespace, nameof(ContentText));
     
     /// <summary>
     /// The minimum time between two streaming events, when the user
@@ -178,7 +180,7 @@ public sealed class ContentText : IContent
         }
 
         if (Interlocked.Exchange(ref UNSTORED_CONTENT_REPORTED, 1) is 0)
-            await MessageBus.INSTANCE.SendWarning(new(AppIcons.PROVENANCE_STORE, TB("AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.")));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.PROVENANCE_STORE, TA("AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.")));
     }
 
     /// <summary>
@@ -429,7 +431,7 @@ public sealed class ContentText : IContent
                 // The answer is about to be created without the data the user expected it to use.
                 // Without this message, that answer is indistinguishable from one that did use it:
                 //
-                await MessageBus.INSTANCE.SendWarning(new(AppIcons.DATA_SOURCE, TB("Your data sources could not be used. This answer was created without them.")));
+                await MessageBus.INSTANCE.SendWarning(new(AppIcons.DATA_SOURCE, TA("Your data sources could not be used. This answer was created without them.")));
             }
         }
 
@@ -607,7 +609,7 @@ public sealed class ContentText : IContent
             return true;
         
         var message = string.Format(
-            TB("The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."),
+            TA("The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."),
             chatModel.Id,
             provider.InstanceName,
             provider.Provider);

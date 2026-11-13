@@ -35,6 +35,8 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SemanticSearchTool).Namespace, nameof(SemanticSearchTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(SemanticSearchTool).Namespace, nameof(SemanticSearchTool));
+
     private const string QUERY_ARGUMENT = "query";
     private const string DATA_SOURCE_IDS_ARGUMENT = "data_source_ids";
     private const string PAGE_ARGUMENT = "page";
@@ -345,7 +347,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
     public string GetDisplayName() => TB("Semantic Search");
 
-    public string GetDescription() => TB("Lets the AI search the data sources of your chat itself, whenever a question calls for it.");
+    public string GetDescription() => TA("Lets the AI search the data sources of your chat itself, whenever a question calls for it.");
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {

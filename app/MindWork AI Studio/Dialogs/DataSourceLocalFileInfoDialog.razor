@@ -13,7 +13,7 @@
         @if (!this.IsFileAvailable)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                @T("The file chosen for the data source does not exist anymore. Please edit the data source and choose another file or correct the path.")
+                @TA("The file chosen for the data source does not exist anymore. Please edit the data source and choose another file or correct the path.")
             </MudJustifiedText>
         }
         else
@@ -27,13 +27,13 @@
         @if (this.IsCloudEmbedding)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                @string.Format(T("The embedding runs in the cloud. All your data within the file '{0}' will be sent to the cloud."), this.DataSource.FilePath)
+                @string.Format(TA("The embedding runs in the cloud. All your data within the file '{0}' will be sent to the cloud."), this.DataSource.FilePath)
             </MudJustifiedText>
         }
         else
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
-                @T("The embedding runs locally or in your organization. Your data is not sent to the cloud.")
+                @TA("The embedding runs locally or in your organization. Your data is not sent to the cloud.")
             </MudJustifiedText>
         }
 

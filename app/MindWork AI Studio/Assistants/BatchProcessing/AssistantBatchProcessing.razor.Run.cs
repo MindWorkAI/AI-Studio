@@ -196,8 +196,8 @@ public partial class AssistantBatchProcessing
             if (failedFiles > 0)
             {
                 var failureMessage = failedFiles == 1
-                    ? T("The batch run finished, but one file could not be processed. See the progress table and log for details.")
-                    : string.Format(T("The batch run finished, but {0} files could not be processed. See the progress table and log for details."), failedFiles);
+                    ? TA("The batch run finished, but one file could not be processed. See the progress table and log for details.")
+                    : string.Format(TA("The batch run finished, but {0} files could not be processed. See the progress table and log for details."), failedFiles);
                 await this.MessageBus.SendError(new(AppIcons.ERROR, failureMessage));
             }
         }

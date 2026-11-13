@@ -68,7 +68,7 @@
                                     <MudCopyClipboardButton TooltipMessage="@T("Copy project ID")" StringContent="@this.selectedProject.BriefingId.ToString("D")"/>
                                 </MudStack>
                                 <MudText Typo="Typo.body2">
-                                    @T("If you need help, report the problem and include the project ID.")
+                                    @TA("If you need help, report the problem and include the project ID.")
                                     <MudLink Href="https://github.com/MindWorkAI/AI-Studio" Target="_blank">@T("Report a problem?")</MudLink>
                                 </MudText>
                                 <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
@@ -81,7 +81,7 @@
                     else if (this.selectedBriefing is null)
                     {
                         <MudPaper Outlined="true" Class="pa-6">
-                            <MudText Typo="Typo.h5">@T("Create or import a visual briefing to begin.")</MudText>
+                            <MudText Typo="Typo.h5">@TA("Create or import a visual briefing to begin.")</MudText>
                         </MudPaper>
                     }
                     else
@@ -248,7 +248,7 @@
                                     </MudTooltip>
                                     <MudTooltip Text="@(this.SelectedVersionSupportsEdits
                                                           ? T("Recompile this version with the current AI Studio version without AI model calls.")
-                                                          : T("This version has no compatible semantic artifacts. Rebuild the briefing instead."))">
+                                                          : TA("This version has no compatible semantic artifacts. Rebuild the briefing instead."))">
                                         <span>
                                             <MudButton Variant="Variant.Filled" StartIcon="@AppIcons.RECOMPILE" OnClick="@(() => this.RecompileAsync())" Disabled="@this.CannotRecompile">@T("Recompile briefing")</MudButton>
                                         </span>
@@ -278,7 +278,7 @@
                         {
                             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
-                                    <MudText>@T("The updated content no longer fits the current presentation. You can continue as a rebuild without another content model call.")</MudText>
+                                    <MudText>@TA("The updated content no longer fits the current presentation. You can continue as a rebuild without another content model call.")</MudText>
                                     <MudButton Variant="Variant.Filled"
                                                Color="Color.Warning"
                                                StartIcon="@AppIcons.REGENERATE"

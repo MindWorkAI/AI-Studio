@@ -18,6 +18,8 @@ public sealed class StaanSearchBackend : IWebSearchBackend
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(StaanSearchBackend).Namespace, nameof(StaanSearchBackend));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(StaanSearchBackend).Namespace, nameof(StaanSearchBackend));
+
     private const string SETTINGS_GROUP = "staan";
 
     private const string API_KEY_SETTING = $"{SETTINGS_GROUP}.apiKey";
@@ -85,7 +87,7 @@ public sealed class StaanSearchBackend : IWebSearchBackend
 
     public string GetSettingsFieldDescription(string fieldName) => fieldName switch
     {
-        API_KEY_SETTING => TB("Your Staan API key. It is kept in your operating system's keyring, not in a settings file. Staan is a European search index; the first requests are free of charge, after which searching is billed per thousand requests."),
+        API_KEY_SETTING => TA("Your Staan API key. It is kept in your operating system's keyring, not in a settings file. Staan is a European search index; the first requests are free of charge, after which searching is billed per thousand requests."),
         MARKET_SETTING => TB("The market Staan searches in. Staan searches one market at a time and offers only these three. When the AI model asks for German, English, or French, the matching market is used no matter what is chosen here; this setting decides what happens for every other language and when no language is requested at all."),
 
         _ => string.Empty,
@@ -113,7 +115,7 @@ public sealed class StaanSearchBackend : IWebSearchBackend
         if (string.IsNullOrWhiteSpace(market) || IsSupportedMarket(market))
             return true;
 
-        error = string.Format(TB("The configured Staan market '{0}' is not one of the markets Staan offers. Please choose one of these: {1}."), market, string.Join(", ", SUPPORTED_MARKETS));
+        error = string.Format(TA("The configured Staan market '{0}' is not one of the markets Staan offers. Please choose one of these: {1}."), market, string.Join(", ", SUPPORTED_MARKETS));
         return false;
     }
 

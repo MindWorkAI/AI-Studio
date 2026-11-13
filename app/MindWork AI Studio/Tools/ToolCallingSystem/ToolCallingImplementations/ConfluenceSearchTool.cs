@@ -38,6 +38,8 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfluenceSearchTool).Namespace, nameof(ConfluenceSearchTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ConfluenceSearchTool).Namespace, nameof(ConfluenceSearchTool));
+
     private const string BASE_URL_SETTING = "baseUrl";
     private const string TIMEOUT_SECONDS_SETTING = "timeoutSeconds";
     private const string QUERY_ARGUMENT = "query";
@@ -137,7 +139,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     public string GetDisplayName() => TB("Search Confluence");
 
-    public string GetDescription() => TB("Find pages in your company's Confluence wiki.");
+    public string GetDescription() => TA("Find pages in your company's Confluence wiki.");
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
@@ -148,7 +150,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
-        BASE_URL_SETTING => TB("The HTTPS address of your Confluence Data Center wiki, including its path if present, such as https://wiki.example.org/confluence/. Confluence Cloud is not supported yet. When your wiki has a private or VPN address, also add its host to the allowed private hosts of Read Web Page, which opens the pages found. Where a chat may send data after a search is decided by the setting 'Where a chat may send data after reading internal pages' of Read Web Page, which applies to wiki pages as well."),
+        BASE_URL_SETTING => TA("The HTTPS address of your Confluence Data Center wiki, including its path if present, such as https://wiki.example.org/confluence/. Confluence Cloud is not supported yet. When your wiki has a private or VPN address, also add its host to the allowed private hosts of Read Web Page, which opens the pages found. Where a chat may send data after a search is decided by the setting 'Where a chat may send data after reading internal pages' of Read Web Page, which applies to wiki pages as well."),
         TIMEOUT_SECONDS_SETTING => TB("(Optional) Search request timeout in seconds."),
         _ => TB(fieldDefinition.Description),
     };
@@ -165,7 +167,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
                 IsConfigured = false,
-                Message = TB("Enter a valid HTTPS Confluence base URL without a query or fragment."),
+                Message = TA("Enter a valid HTTPS Confluence base URL without a query or fragment."),
             });
 
         if (!ToolSettingsValueParser.TryReadBoundedOptionalPositiveInt(settingsValues, TIMEOUT_SECONDS_SETTING, MAX_TIMEOUT_SECONDS,
@@ -193,7 +195,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
         // a High-confidence provider.
         //
         if (context.ProviderConfidence < ConfidenceLevel.HIGH)
-            throw new ToolExecutionBlockedException(TB("Searching your company's wiki requires a High-confidence provider."));
+            throw new ToolExecutionBlockedException(TA("Searching your company's wiki requires a High-confidence provider."));
 
         if (!TryParseBaseUrl(context.SettingsValues.GetValueOrDefault(BASE_URL_SETTING), out var baseUrl))
             throw new InvalidOperationException(TB("The Confluence base URL is not configured correctly."));
@@ -247,7 +249,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             throw new InvalidOperationException(TB("Confluence redirected the search outside the configured wiki."));
 
         if (IsLoginPage(page.FinalUrl))
-            throw new InvalidOperationException(TB("Confluence asked for a sign-in instead of showing search results. AI Studio signs in with your operating system account only when your wiki has a private or VPN address, and either the wiki did not accept that sign-in or its address is public. Open the wiki in your browser to check your access."));
+            throw new InvalidOperationException(TA("Confluence asked for a sign-in instead of showing search results. AI Studio signs in with your operating system account only when your wiki has a private or VPN address, and either the wiki did not accept that sign-in or its address is public. Open the wiki in your browser to check your access."));
 
         var markdown = retrievedPage.ExtractedPage.Markdown;
         if (string.IsNullOrWhiteSpace(markdown))

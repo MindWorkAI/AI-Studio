@@ -1,7 +1,6 @@
 using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
@@ -18,12 +17,6 @@ public partial class SettingsDialogBeyondFactsLab : SettingsDialogBase
 
     [Inject]
     private ILogger<SettingsDialogBeyondFactsLab> Logger { get; init; } = null!;
-
-    /// <summary>
-    /// Whether the language of the app tells a formal address from an informal one, so that the form of address
-    /// is a choice at all.
-    /// </summary>
-    private bool offersFormOfAddress;
 
     /// <summary>
     /// Whether the settings for the further development of the lab are unfolded.
@@ -45,13 +38,6 @@ public partial class SettingsDialogBeyondFactsLab : SettingsDialogBase
     /// purpose.
     /// </summary>
     private bool ArePromptOverridesLockedOff => IsPromptOverridesLocked && !this.SettingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides;
-
-    /// <inheritdoc />
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-        this.offersFormOfAddress = (await this.SettingsManager.GetActiveLanguagePlugin()).HasInformalAddress();
-    }
 
     /// <summary>
     /// Shows the minimum confidence which applies, never one below the floor of the lab.
