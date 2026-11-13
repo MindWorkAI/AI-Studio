@@ -75,6 +75,26 @@ public sealed class ChatDraftAutosave(TimeSpan delay, Func<ChatThread, bool> isS
     }
 
     /// <summary>
+    /// Forgets the given chat without storing it, because it is about to leave the disk.
+    /// </summary>
+    /// <remarks>
+    /// A new chat which holds nothing but the message being written goes again when the user empties
+    /// the message. Storing it after the pause would bring it back.
+    /// </remarks>
+    /// <param name="chatId">The chat.</param>
+    public void Forget(Guid chatId)
+    {
+        lock (this.stateLock)
+        {
+            if (this.pendingChat?.ChatId != chatId)
+                return;
+
+            this.pendingChat = null;
+            this.timer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        }
+    }
+
+    /// <summary>
     /// Stores the noted chat right away, which is what leaving the chat calls for.
     /// </summary>
     public async Task FlushAsync()

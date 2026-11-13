@@ -126,6 +126,35 @@ public sealed class ChatDraftAutosaveTests
     }
 
     [Test]
+    public async Task AForgottenChatIsNeitherStoredAfterThePauseNorWhenLeaving()
+    {
+        var storage = new FakeStorage();
+        await using var autosave = storage.CreateAutosave(SHORT_DELAY);
+        var chat = new ChatThread { ChatId = Guid.NewGuid() };
+
+        autosave.Schedule(chat);
+        autosave.Forget(chat.ChatId);
+        await Task.Delay(SHORT_DELAY * 4);
+        await autosave.FlushAsync();
+
+        Assert.That(storage.StoredChats, Is.Empty, "The chat is about to leave the disk, e.g., because the user emptied the only message it held. Storing it would bring it back.");
+    }
+
+    [Test]
+    public async Task ForgettingAnotherChatKeepsTheNotedOne()
+    {
+        var storage = new FakeStorage();
+        await using var autosave = storage.CreateAutosave(LONG_DELAY);
+        var chat = new ChatThread { ChatId = Guid.NewGuid() };
+
+        autosave.Schedule(chat);
+        autosave.Forget(Guid.NewGuid());
+        await autosave.FlushAsync();
+
+        Assert.That(storage.StoredChats, Is.EqualTo(new[] { chat }), "Only the chat which leaves the disk is forgotten; the change of any other chat still has to reach it.");
+    }
+
+    [Test]
     public async Task DisposingStoresWhatIsPending()
     {
         var storage = new FakeStorage();

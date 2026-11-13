@@ -27,7 +27,7 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
 
     /// <summary>
     /// Whether the search found words in the chat, which the list shows with the sign of the search, see
-    /// SearchFoundIcon, rather than with <see cref="Icon"/>.
+    /// SearchFoundIcon, rather than with <see cref="this.Icon"/>.
     /// </summary>
     public bool IsFoundBySearch { get; init; }
 

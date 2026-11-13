@@ -4123,6 +4123,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3996190985"] = "{0} of {1
 -- Heading
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4231005109"] = "Heading"
 
+-- Your message holds the transcript of an audio or video file. Clearing the message deletes the transcript, which would have to be made anew. Do you want to clear your message?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T458230939"] = "Your message holds the transcript of an audio or video file. Clearing the message deletes the transcript, which would have to be made anew. Do you want to clear your message?"
+
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T474393241"] = "Please select the workspace where you want to move the chat to."
 
@@ -4132,8 +4135,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Move the c
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Show your workspaces"
 
+-- Clear your message and its attachments
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T783125807"] = "Clear your message and its attachments"
+
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T857715435"] = "approx. {0} tokens"
+
+-- Clear Message
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T905217477"] = "Clear Message"
 
 -- Next match in this chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATFINDBAR::T1197277362"] = "Next match in this chat"
@@ -6684,6 +6693,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3337233722"] = "Copy chat"
 
 -- Rename
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3355849203"] = "Rename"
+
+-- New chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3395183389"] = "New chat"
 
 -- Please enter a new or edit the name for your chat '{0}':
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3419791373"] = "Please enter a new or edit the name for your chat '{0}':"

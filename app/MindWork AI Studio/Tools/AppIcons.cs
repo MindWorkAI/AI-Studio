@@ -113,4 +113,18 @@ public static class AppIcons
         """
         <path d="M19 3H5c-1.1 0-2 .9-2 2v16l3.6-3.6H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12.4H6.6L5 17V5h14v10.4zM11 6.5h2v3.6h-2zm0 5.4h2v2h-2z"/>
         """;
+
+    /// <summary>
+    /// The speech bubble of <see cref="CHAT_BUBBLE_OUTLINED"/> with three dots inside, the common sign of
+    /// somebody still typing, for the new chat of a place which the user has not sent yet.
+    /// </summary>
+    /// <remarks>
+    /// After <see cref="Icons.Material.Outlined.Sms"/>, drawn on the square of Material's grid like the
+    /// plain bubble. The dots keep Material's size of two by two units and its gaps of two units, and sit
+    /// in the middle of the inside of the bubble.
+    /// </remarks>
+    public const string CHAT_BUBBLE_DRAFT_OUTLINED =
+        """
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v16l3.6-3.6H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12.4H6.6L5 17V5h14v10.4zM7 9.2h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+        """;
 }

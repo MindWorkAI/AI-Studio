@@ -29,6 +29,9 @@ public partial class Workspaces : MSGComponentBase
     private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
 
     [Inject]
+    private NewChatRegistry NewChatRegistry { get; init; } = null!;
+
+    [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
 
     [Parameter]
@@ -414,10 +417,10 @@ public partial class Workspaces : MSGComponentBase
     {
         this.areWorkspacesShown = this.SettingsManager.ConfigurationData.Workspace.UsesWorkspaces;
         this.workspaces = !this.areWorkspacesShown ? [] : snapshot.Workspaces
-            .Select(workspace => workspace with { Chats = workspace.Chats.OrderByDescending(x => x.LastEditTime).ToList() })
+            .Select(workspace => workspace with { Chats = WorkspaceTreeChat.InListOrder(workspace.Chats) })
             .ToList();
 
-        this.temporaryChats = snapshot.TemporaryChats.OrderByDescending(x => x.LastEditTime).ToList();
+        this.temporaryChats = WorkspaceTreeChat.InListOrder(snapshot.TemporaryChats);
     }
 
     /// <summary>
@@ -607,7 +610,49 @@ public partial class Workspaces : MSGComponentBase
     private async Task OpenChatAsync(WorkspaceTreeChat chat)
     {
         this.SelectSearchResult(chat.ChatId);
+        if (this.FindNewChatInMemory(chat) is { } newChat)
+        {
+            await this.OpenNewChatInMemoryAsync(newChat);
+            return;
+        }
+
         await this.LoadChatAsync(chat.ChatPath, true);
+    }
+
+    /// <summary>
+    /// Opens a new chat which lives in memory, see NewChatRegistry, just like a stored chat is opened.
+    /// </summary>
+    /// <remarks>
+    /// The open chat may hold changes which would be lost, so the user is asked first, as
+    /// LoadChatAsync does. The new chat is opened as the very thread the registry holds.
+    /// </remarks>
+    /// <param name="newChat">The new chat.</param>
+    private async Task OpenNewChatInMemoryAsync(ChatThread newChat)
+    {
+        if (!await this.MayLeaveOpenChatAsync())
+            return;
+
+        this.CurrentChatThread = newChat;
+        await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+    }
+
+    /// <summary>
+    /// Asks the user whether to leave the open chat for another one, when its unsaved changes would be lost.
+    /// </summary>
+    /// <returns>True when the open chat may be left.</returns>
+    private async Task<bool> MayLeaveOpenChatAsync()
+    {
+        if (!await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
+            return true;
+
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Message, T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Load Chat"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false };
     }
 
     private void OnSearchStepRequested(int direction) => this.InvokeAsync(() => this.StepToSearchResultAsync(direction)).Observe($"{nameof(Workspaces)}: stepping to a result of the search");
@@ -746,7 +791,31 @@ public partial class Workspaces : MSGComponentBase
 
     private bool IsWorkspaceOfCurrentChatListed => this.workspaces.Any(workspace => this.IsWorkspaceOfCurrentChat(workspace.WorkspaceId));
 
-    private bool IsCurrentChatAmongTemporaryChats => this.temporaryChats.Any(this.IsCurrentChat) || this.GetNeverSavedChat() is { IsTemporary: true };
+    private bool IsCurrentChatAmongTemporaryChats => this.temporaryChats.Any(this.IsCurrentChat) || this.GetNeverSavedChat() is { IsTemporary: true } || this.IsCurrentChatListedInMemory;
+
+    /// <summary>
+    /// Whether the open chat is a new chat which the list shows from memory, see GetNewChatInMemory.
+    /// </summary>
+    private bool IsCurrentChatListedInMemory => this.CurrentChatThread is { } openChat && this.GetNewChatInMemory(openChat.WorkspaceId) is { } row && row.ChatId == openChat.ChatId;
+
+    /// <summary>
+    /// The name a chat shows in the list. The open chat shows the name it has right now, which for its new chat follows the message being written.
+    /// </summary>
+    /// <param name="chat">The chat.</param>
+    private string GetChatName(WorkspaceTreeChat chat)
+    {
+        var name = this.IsCurrentChat(chat) ? this.CurrentChatThread!.Name : chat.Name;
+        if (!string.IsNullOrWhiteSpace(name))
+            return name;
+
+        return this.IsNewChat(chat) ? T("New chat") : T("Empty chat");
+    }
+
+    /// <summary>
+    /// Whether a chat is the new chat of its place. For the open chat, the list asks the chat itself, which was sent maybe since it was stored last.
+    /// </summary>
+    /// <param name="chat">The chat.</param>
+    private bool IsNewChat(WorkspaceTreeChat chat) => this.IsCurrentChat(chat) ? this.CurrentChatThread!.IsNewChat : chat.IsNewChat;
 
     /// <summary>
     /// Whether some row of the list carries the mark of the open chat.
@@ -767,7 +836,7 @@ public partial class Workspaces : MSGComponentBase
             if (this.IsWorkspacesSectionCollapsed || !this.IsWorkspaceExpanded(workspace.WorkspaceId))
                 return true;
 
-            return workspace.ChatsLoaded && (workspace.Chats.Any(this.IsCurrentChat) || this.GetNeverSavedChat() is not null);
+            return workspace.ChatsLoaded && (workspace.Chats.Any(this.IsCurrentChat) || this.GetNeverSavedChat() is not null || this.IsCurrentChatListedInMemory);
         }
 
         return false;
@@ -832,11 +901,11 @@ public partial class Workspaces : MSGComponentBase
 
     //
     // While chats are saved by hand, the open chat shows whether it holds changes the user did not
-    // save yet, with a dot after its name and a button to save it. A new chat which was never saved
-    // shows up as well, from its first message on, in the place it will be saved to: first among the
-    // chats of its workspace, or first among the other chats. Saving it puts it there for real, so
-    // nothing moves. The chat which holds the changes is always the open one:
-    // leaving a chat asks the user to save it or to give up the changes.
+    // save yet, with a dot after its name and a button to save it. A chat which was never saved
+    // shows up as well, in the place it will be saved to: first among the chats of its workspace, or
+    // first among the other chats. Saving it puts it there for real, so nothing moves. Leaving a chat
+    // asks the user to save it or to give up the changes, except for the new chat of a place, which
+    // the list keeps showing from memory until the user sends, saves, or deletes it, see NewChatRegistry.
     //
 
     /// <summary>
@@ -849,17 +918,59 @@ public partial class Workspaces : MSGComponentBase
     /// Whether the given chat shows that it holds changes the user did not save yet.
     /// </summary>
     /// <param name="chat">The chat.</param>
-    private bool HasUnsavedChanges(WorkspaceTreeChat chat) => this.IsCurrentChat(chat)
-                                                              && this.SaveState?.IsUnsaved(chat.ChatId) is true
-                                                              && this.IsSavedByHand(chat.WorkspaceId);
+    private bool HasUnsavedChanges(WorkspaceTreeChat chat)
+    {
+        if (!this.IsSavedByHand(chat.WorkspaceId))
+            return false;
+
+        if (this.FindNewChatInMemory(chat) is not null)
+            return this.NewChatRegistry.HasUnsavedChanges(chat.ChatId);
+
+        return this.IsCurrentChat(chat) && this.SaveState?.IsUnsaved(chat.ChatId) is true;
+    }
+
+    /// <summary>
+    /// The new chat of a place which lives in memory, as the row which shows it, see NewChatRegistry.
+    /// </summary>
+    /// <remarks>
+    /// A place which never stores its chats shows none: there is nothing to save it with.
+    /// </remarks>
+    /// <param name="workspaceId">The workspace, or <see cref="Guid.Empty"/> for the chats outside of workspaces.</param>
+    /// <returns>The row, or null when the place has no new chat in memory.</returns>
+    private WorkspaceTreeChat? GetNewChatInMemory(Guid workspaceId)
+    {
+        if (this.SettingsManager.ConfigurationData.Workspace.GetStorageBehavior(workspaceId) is WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            return null;
+
+        if (this.NewChatRegistry.Find(workspaceId) is not { } newChat)
+            return null;
+
+        // Saved by hand before, it lies on the disk as well, from where it can be deleted:
+        var chatPath = WorkspaceBehaviour.IsChatExisting(new(newChat.WorkspaceId, newChat.ChatId))
+            ? WorkspaceBehaviour.GetChatDirectory(newChat.WorkspaceId, newChat.ChatId)
+            : string.Empty;
+
+        return new WorkspaceTreeChat(newChat.WorkspaceId, newChat.ChatId, chatPath, newChat.Name, DateTimeOffset.Now, IsTemporary: workspaceId == Guid.Empty, IsNewChat: true);
+    }
+
+    /// <summary>
+    /// The thread of a row which shows a new chat from memory, or null for any other row.
+    /// </summary>
+    /// <param name="chat">The row.</param>
+    private ChatThread? FindNewChatInMemory(WorkspaceTreeChat chat) => this.GetNewChatInMemory(chat.WorkspaceId) is { } row && row.ChatId == chat.ChatId
+        ? this.NewChatRegistry.Find(chat.WorkspaceId)
+        : null;
 
     /// <summary>
     /// The open chat, while it holds messages but was never saved, as the row which stands in for it
     /// until it is saved. Null otherwise, and while the list does not know yet what is saved.
     /// </summary>
+    /// <remarks>
+    /// Not for the new chat of a place, which has a row of its own, see GetNewChatInMemory.
+    /// </remarks>
     private WorkspaceTreeChat? GetNeverSavedChat()
     {
-        if (this.CurrentChatThread is not { } openChat || !openChat.Blocks.Any(block => !block.HideFromUser))
+        if (this.CurrentChatThread is not { } openChat || openChat.IsNewChat || !openChat.Blocks.Any(block => !block.HideFromUser))
             return null;
 
         var chat = new WorkspaceTreeChat(openChat.WorkspaceId, openChat.ChatId, ChatPath: string.Empty, openChat.Name, DateTimeOffset.Now, IsTemporary: openChat.WorkspaceId == Guid.Empty);
@@ -881,23 +992,97 @@ public partial class Workspaces : MSGComponentBase
     }
 
     /// <summary>
-    /// The chats of a place as the list shows them: the open chat which was never saved first, when it
-    /// belongs there.
+    /// The chats of a place as the list shows them: the new chat first, then the open chat which was
+    /// never saved, when they belong there, then the other chats.
     /// </summary>
-    /// <param name="chats">The saved chats of the place.</param>
+    /// <param name="chats">The stored chats of the place, in their order, see WorkspaceTreeChat.InListOrder.</param>
     /// <param name="workspaceId">The workspace of the chats, or <see cref="Guid.Empty"/> for the chats outside of workspaces.</param>
     /// <param name="neverSavedChat">The open chat which was never saved, see <see cref="GetNeverSavedChat"/>.</param>
-    private static IReadOnlyList<WorkspaceTreeChat> WithNeverSavedChat(IReadOnlyList<WorkspaceTreeChat> chats, Guid workspaceId, WorkspaceTreeChat? neverSavedChat) => neverSavedChat is { } chat && chat.WorkspaceId == workspaceId
-        ? [chat, ..chats]
-        : chats;
+    private IReadOnlyList<WorkspaceTreeChat> ChatsOfPlace(IReadOnlyList<WorkspaceTreeChat> chats, Guid workspaceId, WorkspaceTreeChat? neverSavedChat)
+    {
+        var newChatInMemory = this.GetNewChatInMemory(workspaceId);
+        var isNeverSavedChatHere = neverSavedChat is { } neverSaved && neverSaved.WorkspaceId == workspaceId;
+        if (newChatInMemory is null && !isNeverSavedChatHere)
+            return chats;
+
+        // The row from memory takes the place of the stored state of the same chat, which may be older:
+        var storedChats = newChatInMemory is { } inMemory ? chats.Where(chat => chat.ChatId != inMemory.ChatId).ToList() : chats;
+        var shownChats = new List<WorkspaceTreeChat>();
+        if (newChatInMemory is { } newChatRow)
+            shownChats.Add(newChatRow);
+
+        shownChats.AddRange(storedChats.Where(chat => chat.IsNewChat));
+        if (isNeverSavedChatHere)
+            shownChats.Add(neverSavedChat!.Value);
+
+        shownChats.AddRange(storedChats.Where(chat => !chat.IsNewChat));
+        return shownChats;
+    }
 
     /// <summary>
-    /// What the dot after the name of the open chat tells, while it holds unsaved changes.
+    /// What the dot after the name of a chat tells, while it holds unsaved changes.
     /// </summary>
     /// <param name="isNeverSaved">Whether the chat was never saved.</param>
     private string GetUnsavedChangesText(bool isNeverSaved) => isNeverSaved ? T("This chat is not saved yet") : T("This chat has unsaved changes");
 
-    private Task SaveChatAsync() => this.SaveChatRequested.InvokeAsync();
+    /// <summary>
+    /// Saves a chat from its row: the open chat just like the save button of its toolbar, and a new chat
+    /// from memory which is not open right where it is.
+    /// </summary>
+    /// <param name="chat">The row of the chat.</param>
+    private async Task SaveChatAsync(WorkspaceTreeChat chat)
+    {
+        if (this.IsCurrentChat(chat))
+        {
+            await this.SaveChatRequested.InvokeAsync();
+            return;
+        }
+
+        if (this.FindNewChatInMemory(chat) is not { } newChat || this.IsChatBusy(newChat.ChatId))
+            return;
+
+        if (!await WorkspaceBehaviour.StoreChatAsync(newChat))
+            return;
+
+        this.NewChatRegistry.SetUnsavedChanges(newChat.ChatId, false);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+    }
+
+    /// <summary>
+    /// Deletes a new chat which lives in memory, after asking the user, see NewChatRegistry.
+    /// </summary>
+    /// <remarks>
+    /// It may lie on the disk as well, when the user saved it by hand before. Like every chat, it
+    /// stays while an answer is being written for it or a transcript is being made. Transcripts which
+    /// were never saved wait in the staging area, which the next start empties.
+    /// </remarks>
+    /// <param name="newChat">The new chat.</param>
+    private async Task DeleteNewChatInMemoryAsync(ChatThread newChat)
+    {
+        if (this.IsChatBusy(newChat.ChatId))
+            return;
+
+        if (!await WorkspaceBehaviour.AskToDeleteChatAsync(this.DialogService, newChat))
+            return;
+
+        if (WorkspaceBehaviour.IsChatExisting(new(newChat.WorkspaceId, newChat.ChatId)) && !await WorkspaceBehaviour.DeleteChatWithoutAskingAsync(newChat.WorkspaceId, newChat.ChatId))
+            return;
+
+        this.NewChatRegistry.Forget(newChat.ChatId);
+        this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForChat(newChat.ChatId));
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+
+        if (this.CurrentChatThread?.ChatId == newChat.ChatId)
+        {
+            this.CurrentChatThread = null;
+            await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+        }
+    }
+
+    /// <summary>
+    /// Makes the list show what the disk holds now, e.g., the name of a new chat which follows the message being written.
+    /// </summary>
+    public Task ShowStoredChatsAsync() => this.LoadTreeItemsAsync(startPrefetch: false);
 
     private void OnSaveStateChanged() => this.SafeStateHasChanged().Observe($"{nameof(Workspaces)}: showing whether the open chat is saved");
 
@@ -1210,19 +1395,9 @@ public partial class Workspaces : MSGComponentBase
 
         if (!Directory.Exists(chatPath))
             return null;
-        
-        if (switchToChat && await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
-        {
-            var dialogParameters = new DialogParameters<ConfirmDialog>
-            {
-                { x => x.Message, T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
-            };
-            
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Load Chat"), dialogParameters, DialogOptions.FULLSCREEN);
-            var dialogResult = await dialogReference.Result;
-            if (dialogResult is null || dialogResult.Canceled)
-                return null;
-        }
+
+        if (switchToChat && !await this.MayLeaveOpenChatAsync())
+            return null;
 
         try
         {
@@ -1276,6 +1451,8 @@ public partial class Workspaces : MSGComponentBase
         if (!await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation))
             return false;
 
+        // A new chat saved by hand lives in memory as well, see NewChatRegistry:
+        this.NewChatRegistry.Forget(chat.ChatId);
         this.MediaTranscriptionService.ClearOwnerState(mediaOwner);
         await this.LoadTreeItemsAsync(startPrefetch: false);
         
@@ -1459,7 +1636,8 @@ public partial class Workspaces : MSGComponentBase
             return;
         }
 
-        var chatCount = Directory.EnumerateDirectories(workspacePath).Count();
+        // Counted as the user knows them, together with the open chat and the new chat which may not be stored yet:
+        var chatCount = chatIds.Count;
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
@@ -1479,6 +1657,8 @@ public partial class Workspaces : MSGComponentBase
         foreach (var chatId in chatIds)
             this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForChat(chatId));
 
+        // So did its new chat, also when it lived in memory only:
+        this.NewChatRegistry.ForgetPlace(workspaceId);
         await this.LoadTreeItemsAsync(startPrefetch: false);
 
         // The open chat went along with its workspace. Left on the screen, it would be stored again sooner or later:
@@ -1490,18 +1670,22 @@ public partial class Workspaces : MSGComponentBase
     }
 
     /// <summary>
-    /// Reads the chats of the given workspace, together with the open chat when it belongs there.
+    /// Reads the chats of the given workspace, together with those which are not stored there.
     /// </summary>
     /// <remarks>
-    /// A new chat started in a workspace reaches the disk only with its first message. Until then, it
-    /// is missing from the workspace on the disk, but it may already wait for a transcript.
+    /// The open chat may not be stored yet, while chats are saved by hand, and neither may the new
+    /// chat of the workspace, which may already wait for a transcript, see NewChatRegistry. The open
+    /// chat counts only once it is more than an empty new chat.
     /// </remarks>
     /// <param name="workspaceId">The workspace to read.</param>
     private HashSet<Guid> ReadChatIdsOfWorkspace(Guid workspaceId)
     {
         var chatIds = WorkspaceBehaviour.ReadChatIdsOfWorkspace(workspaceId).ToHashSet();
-        if (this.CurrentChatThread is { } openChat && openChat.WorkspaceId == workspaceId)
+        if (this.CurrentChatThread is { IsNewChat: false } openChat && openChat.WorkspaceId == workspaceId)
             chatIds.Add(openChat.ChatId);
+
+        if (this.NewChatRegistry.Find(workspaceId) is { } newChat)
+            chatIds.Add(newChat.ChatId);
 
         return chatIds;
     }

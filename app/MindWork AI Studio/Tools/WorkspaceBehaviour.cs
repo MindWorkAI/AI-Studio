@@ -27,6 +27,8 @@ public static partial class WorkspaceBehaviour
         public DateTimeOffset LastEditTime { get; set; }
 
         public bool IsTemporary { get; init; }
+
+        public bool IsNewChat { get; init; }
     }
 
     private sealed class WorkspaceCacheEntry
@@ -130,7 +132,22 @@ public static partial class WorkspaceBehaviour
         return (acquired, semaphore);
     }
 
-    private static WorkspaceTreeChat ToPublicChat(WorkspaceChatCacheEntry chat) => new(chat.WorkspaceId, chat.ChatId, chat.ChatPath, chat.ChatName, chat.LastEditTime, chat.IsTemporary);
+    /// <summary>
+    /// The file which marks a stored chat as the new chat of its place, see ChatThread.IsNewChat.
+    /// </summary>
+    /// <remarks>
+    /// The list reads it next to the file with the name, so it knows the new chat of every place
+    /// without reading a single thread. Storing the chat writes both from the thread.
+    /// </remarks>
+    private const string NEW_CHAT_MARKER_FILE = "newChat";
+
+    private static WorkspaceTreeChat ToPublicChat(WorkspaceChatCacheEntry chat) => new(chat.WorkspaceId, chat.ChatId, chat.ChatPath, chat.ChatName, chat.LastEditTime, chat.IsTemporary, chat.IsNewChat);
+
+    /// <summary>
+    /// Whether the chat in the given directory is the new chat of its place.
+    /// </summary>
+    /// <param name="chatDirectory">The directory of the chat.</param>
+    private static bool IsMarkedAsNewChat(string chatDirectory) => File.Exists(Path.Join(chatDirectory, NEW_CHAT_MARKER_FILE));
 
     private static WorkspaceTreeWorkspace ToPublicWorkspace(WorkspaceCacheEntry workspace) => new(workspace.WorkspaceId,
         workspace.WorkspacePath,
@@ -176,6 +193,7 @@ public static partial class WorkspaceBehaviour
                 ChatName = chatName,
                 LastEditTime = lastEditTime,
                 IsTemporary = false,
+                IsNewChat = IsMarkedAsNewChat(chatPath),
             });
         }
 
@@ -203,6 +221,7 @@ public static partial class WorkspaceBehaviour
                 ChatName = chatName,
                 LastEditTime = lastEditTime,
                 IsTemporary = true,
+                IsNewChat = IsMarkedAsNewChat(tempChatPath),
             });
         }
 
@@ -388,7 +407,7 @@ public static partial class WorkspaceBehaviour
         return results;
     }
 
-    private static async Task UpdateCacheAfterChatStored(Guid workspaceId, Guid chatId, string chatDirectory, string chatName, DateTimeOffset lastEditTime)
+    private static async Task UpdateCacheAfterChatStored(Guid workspaceId, Guid chatId, string chatDirectory, string chatName, DateTimeOffset lastEditTime, bool isNewChat)
     {
         await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
         try
@@ -396,7 +415,7 @@ public static partial class WorkspaceBehaviour
             if (!WORKSPACE_TREE_CACHE.IsShellLoaded || WORKSPACE_TREE_CACHE_INVALIDATED)
                 return;
 
-            UpdateCacheAfterChatStoredCore(workspaceId, chatId, chatDirectory, chatName, lastEditTime);
+            UpdateCacheAfterChatStoredCore(workspaceId, chatId, chatDirectory, chatName, lastEditTime, isNewChat);
         }
         finally
         {
@@ -405,7 +424,7 @@ public static partial class WorkspaceBehaviour
     }
 
     /// <summary>Puts a stored chat into the cache. The caller holds the cache semaphore.</summary>
-    private static void UpdateCacheAfterChatStoredCore(Guid workspaceId, Guid chatId, string chatDirectory, string chatName, DateTimeOffset lastEditTime)
+    private static void UpdateCacheAfterChatStoredCore(Guid workspaceId, Guid chatId, string chatDirectory, string chatName, DateTimeOffset lastEditTime, bool isNewChat)
     {
         var chatCacheEntry = new WorkspaceChatCacheEntry
         {
@@ -415,6 +434,7 @@ public static partial class WorkspaceBehaviour
             ChatName = string.IsNullOrWhiteSpace(chatName) ? TB("Unnamed chat") : chatName,
             LastEditTime = lastEditTime,
             IsTemporary = workspaceId == Guid.Empty,
+            IsNewChat = isNewChat,
         };
 
         if (workspaceId == Guid.Empty)
@@ -489,7 +509,7 @@ public static partial class WorkspaceBehaviour
             }
 
             UpdateCacheAfterChatDeletedCore(sourceWorkspaceId, chatId);
-            UpdateCacheAfterChatStoredCore(targetWorkspaceId, chatId, targetDirectory, chatName, lastEditTime);
+            UpdateCacheAfterChatStoredCore(targetWorkspaceId, chatId, targetDirectory, chatName, lastEditTime, IsMarkedAsNewChat(targetDirectory));
         }
         finally
         {
@@ -752,24 +772,27 @@ public static partial class WorkspaceBehaviour
         if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
             return Guid.Empty;
 
-        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
-        try
-        {
-            await EnsureTreeShellLoadedCoreAsync();
-
-            var existingWorkspace = WORKSPACE_TREE_CACHE.Workspaces.Values.FirstOrDefault(workspace =>
-                string.Equals(workspace.WorkspaceName.Trim(), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
-            if (existingWorkspace is not null)
-                return existingWorkspace.WorkspaceId;
-        }
-        finally
-        {
-            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
-        }
+        var existingWorkspaceId = await FindWorkspaceIdByNameAsync(normalizedWorkspaceName);
+        if (existingWorkspaceId != Guid.Empty)
+            return existingWorkspaceId;
 
         var result = await TryCreateWorkspaceAsync(normalizedWorkspaceName);
         if (result.Success)
             return result.Workspace.WorkspaceId;
+
+        return await FindWorkspaceIdByNameAsync(normalizedWorkspaceName);
+    }
+
+    /// <summary>
+    /// Finds a workspace by its name, without creating it.
+    /// </summary>
+    /// <param name="workspaceName">The name of the workspace, compared without surrounding blanks and regardless of case.</param>
+    /// <returns>The ID of the workspace, or Guid.Empty when there is none of that name.</returns>
+    public static async Task<Guid> FindWorkspaceIdByNameAsync(string workspaceName)
+    {
+        var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
+        if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+            return Guid.Empty;
 
         await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
         try
@@ -784,6 +807,28 @@ public static partial class WorkspaceBehaviour
         {
             WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
         }
+    }
+
+    /// <summary>
+    /// Finds the stored new chat of a place, see ChatThread.IsNewChat.
+    /// </summary>
+    /// <remarks>
+    /// A place has at most one new chat. Should there be more, e.g., after a backup was restored, the
+    /// one changed last counts; the others stay in the list until the user sends or deletes them.
+    /// </remarks>
+    /// <param name="workspaceId">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    /// <returns>Where the chat lies, or null when the place has no stored new chat.</returns>
+    public static async Task<LoadChat?> FindStoredNewChatAsync(Guid workspaceId)
+    {
+        var chats = workspaceId == Guid.Empty
+            ? (await GetOrLoadWorkspaceTreeShellAsync()).TemporaryChats
+            : await GetWorkspaceChatsAsync(workspaceId);
+
+        return chats
+            .Where(chat => chat.IsNewChat)
+            .OrderByDescending(chat => chat.LastEditTime)
+            .Select(chat => (LoadChat?)new LoadChat(chat.WorkspaceId, chat.ChatId))
+            .FirstOrDefault();
     }
 
     /// <summary>
@@ -987,11 +1032,17 @@ public static partial class WorkspaceBehaviour
             var chatNamePath = Path.Join(chatDirectory, "name");
             await File.WriteAllTextAsync(chatNamePath, chat.Name);
 
+            var newChatMarkerPath = Path.Join(chatDirectory, NEW_CHAT_MARKER_FILE);
+            if (chat.IsNewChat)
+                await File.WriteAllTextAsync(newChatMarkerPath, string.Empty);
+            else if (File.Exists(newChatMarkerPath))
+                File.Delete(newChatMarkerPath);
+
             var chatPath = Path.Join(chatDirectory, "thread.json");
             await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
 
             var lastEditTime = File.GetLastWriteTimeUtc(chatPath);
-            await UpdateCacheAfterChatStored(chat.WorkspaceId, chat.ChatId, chatDirectory, chat.Name, lastEditTime);
+            await UpdateCacheAfterChatStored(chat.WorkspaceId, chat.ChatId, chatDirectory, chat.Name, lastEditTime, chat.IsNewChat);
             return true;
         }
         finally
@@ -1522,27 +1573,38 @@ public static partial class WorkspaceBehaviour
         if (chat is null)
             return true;
 
-        if (askForConfirmation)
-        {
-            var workspaceName = await LoadWorkspaceNameAsync(chat.WorkspaceId);
-            var dialogParameters = new DialogParameters<ConfirmDialog>
-            {
-                {
-                    x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
-                    {
-                        true => string.Format(TB("Are you sure you want to delete the chat '{0}'?"), chat.Name),
-                        false => string.Format(TB("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
-                    }
-                },
-            };
-
-            var dialogReference = await dialogService.ShowAsync<ConfirmDialog>(TB("Delete Chat"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
-            var dialogResult = await dialogReference.Result;
-            if (dialogResult is null || dialogResult.Canceled)
-                return false;
-        }
+        if (askForConfirmation && !await AskToDeleteChatAsync(dialogService, chat))
+            return false;
 
         return await DeleteChatWithoutAskingAsync(workspaceId, chatId);
+    }
+
+    /// <summary>
+    /// Asks the user whether to delete the given chat.
+    /// </summary>
+    /// <remarks>
+    /// The one place which words this question, also for a new chat which lives in memory only, see NewChatRegistry.
+    /// </remarks>
+    /// <param name="dialogService">Used to ask.</param>
+    /// <param name="chat">The chat to delete.</param>
+    /// <returns>True when the user agreed.</returns>
+    public static async Task<bool> AskToDeleteChatAsync(IDialogService dialogService, ChatThread chat)
+    {
+        var workspaceName = await LoadWorkspaceNameAsync(chat.WorkspaceId);
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            {
+                x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
+                {
+                    true => string.Format(TB("Are you sure you want to delete the chat '{0}'?"), chat.Name),
+                    false => string.Format(TB("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
+                }
+            },
+        };
+
+        var dialogReference = await dialogService.ShowAsync<ConfirmDialog>(TB("Delete Chat"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false };
     }
 
     /// <summary>

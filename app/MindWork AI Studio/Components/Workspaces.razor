@@ -14,7 +14,7 @@
 else
 {
     var neverSavedChat = this.GetNeverSavedChat();
-    var temporaryChatsShown = WithNeverSavedChat(this.temporaryChats, Guid.Empty, neverSavedChat);
+    var temporaryChatsShown = this.ChatsOfPlace(this.temporaryChats, Guid.Empty, neverSavedChat);
     <div class="workspace-list" @ref="@this.listElement">
         @* A search leaves every workspace and chat in its place and only marks what it found. While
            workspaces are switched off, the list holds the disappearing chats only: *@
@@ -168,7 +168,7 @@ else
         {
             @if (workspace.ChatsLoaded)
             {
-                @foreach (var chat in WithNeverSavedChat(workspace.Chats, workspace.WorkspaceId, neverSavedChat))
+                @foreach (var chat in this.ChatsOfPlace(workspace.Chats, workspace.WorkspaceId, neverSavedChat))
                 {
                     @this.RenderChat(chat, isNested: true, isNeverSaved: chat == neverSavedChat)
                 }
@@ -189,9 +189,10 @@ else
     /// One chat, either in a workspace or among the other chats.
     /// </summary>
     /// <remarks>
-    /// While chats are saved by hand, the open chat shows unsaved changes with a dot and offers to save
-    /// them. The open chat which was never saved has no menu, since there is nothing yet to rename, move,
-    /// copy, or delete.
+    /// While chats are saved by hand, a chat shows unsaved changes with a dot and offers to save them.
+    /// The open chat which was never saved has no menu, since there is nothing yet to rename, move,
+    /// copy, or delete. The new chat of a place offers to delete it only: it is named after the message
+    /// being written, and it stays in its place until the user sends it, see NewChatRegistry.
     /// </remarks>
     /// <param name="chat">The chat.</param>
     /// <param name="isNested">Whether the chat lies in a workspace, below its name.</param>
@@ -200,8 +201,10 @@ else
         @{
             var state = this.GetChatIndicator(chat.ChatId);
             var indicator = this.GetChatIcon(chat, state);
-            var name = string.IsNullOrWhiteSpace(chat.Name) ? T("Empty chat") : chat.Name;
+            var name = this.GetChatName(chat);
             var hasUnsavedChanges = this.HasUnsavedChanges(chat);
+            var newChatInMemory = this.FindNewChatInMemory(chat);
+            var isNotSavedYet = isNeverSaved || (newChatInMemory is not null && string.IsNullOrEmpty(chat.ChatPath));
         }
         <MudListItem T="string" Class="@this.GetChatItemClasses(chat, isNested)" OnClick="@(() => this.OpenChatAsync(chat))">
             <div class="d-flex align-center gap-2" style="min-width: 0; height: 24px;">
@@ -225,8 +228,8 @@ else
                 }
                 @if (hasUnsavedChanges)
                 {
-                    <MudTooltip Text="@this.GetUnsavedChangesText(isNeverSaved)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT" RootClass="d-flex flex-shrink-0">
-                        <span class="workspace-unsaved-dot" role="img" aria-label="@this.GetUnsavedChangesText(isNeverSaved)"></span>
+                    <MudTooltip Text="@this.GetUnsavedChangesText(isNotSavedYet)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT" RootClass="d-flex flex-shrink-0">
+                        <span class="workspace-unsaved-dot" role="img" aria-label="@this.GetUnsavedChangesText(isNotSavedYet)"></span>
                     </MudTooltip>
                 }
                 <div class="workspace-item-actions flex-shrink-0" @onclick:stopPropagation="@true">
@@ -234,10 +237,16 @@ else
                     {
                         @* Disabled while an answer is being written, just like the save button of the chat's toolbar: *@
                         <MudTooltip Text="@T("Save chat")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                            <MudIconButton Icon="@Icons.Material.Outlined.Save" aria-label="@T("Save chat")" Disabled="@this.AIJobService.IsChatGenerationActive(chat.ChatId)" OnClick="@this.SaveChatAsync"/>
+                            <MudIconButton Icon="@Icons.Material.Outlined.Save" aria-label="@T("Save chat")" Disabled="@this.AIJobService.IsChatGenerationActive(chat.ChatId)" OnClick="@(() => this.SaveChatAsync(chat))"/>
                         </MudTooltip>
                     }
-                    @if (!isNeverSaved)
+                    @if (this.IsNewChat(chat) && !isNeverSaved)
+                    {
+                        <CompactMenu Icon="@Icons.Material.Filled.MoreHoriz" AriaLabel="@T("Chat options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(chat.ChatId, isOpen))">
+                            <MudMenuItem Disabled="@this.IsChatBusy(chat.ChatId)" Icon="@Icons.Material.Outlined.Delete" IconColor="Color.Error" Label="@T("Delete")" OnClick="@(() => newChatInMemory is not null ? this.DeleteNewChatInMemoryAsync(newChatInMemory) : this.DeleteChatAsync(chat.ChatPath))"/>
+                        </CompactMenu>
+                    }
+                    else if (!isNeverSaved)
                     {
                         <CompactMenu Icon="@Icons.Material.Filled.MoreHoriz" AriaLabel="@T("Chat options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(chat.ChatId, isOpen))">
                             @{
@@ -278,7 +287,8 @@ else
             }
             else
             {
-                <MudIcon Icon="@indicator.Icon" Color="@indicator.Color"/>
+                @* The new chat of a place shows a bubble still being typed in, as long as its icon tells no status: *@
+                <MudIcon Icon="@(this.IsNewChat(chat) && !indicator.IsStatus ? AppIcons.CHAT_BUBBLE_DRAFT_OUTLINED : indicator.Icon)" Color="@indicator.Color"/>
             }
             @switch (indicator.Badge)
             {

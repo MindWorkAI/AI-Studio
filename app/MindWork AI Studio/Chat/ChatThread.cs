@@ -344,6 +344,21 @@ public sealed record ChatThread
     public bool RuntimeToolsAreAssistantManaged { get; set; }
 
     /// <summary>
+    /// Whether this is the new chat of its place, which the user has not sent anything in yet.
+    /// </summary>
+    /// <remarks>
+    /// Every place, the chats outside of workspaces and every workspace, has at most one new chat.
+    /// Starting a new chat there opens it again, with everything the user put into it. It counts from
+    /// the first thing the user put into it, and its first message makes it a chat like any other.
+    /// Until then, it is stored the way its place stores chats, together with this mark, so that it is
+    /// still the new chat of its place after a restart, see NewChatRegistry for the places which keep
+    /// it in memory. A copy made with a with expression keeps the mark, since it is still the same chat.
+    /// Only a new chat writes it, so every other chat is stored as it was before.
+    /// </remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsNewChat { get; set; }
+
+    /// <summary>
     /// Whether this thread may run tools at all.
     /// </summary>
     public bool MayRunTools(SettingsManager settingsManager) => this.RuntimeToolsAreAssistantManaged || settingsManager.IsToolSelectionVisible(this.RuntimeComponent);

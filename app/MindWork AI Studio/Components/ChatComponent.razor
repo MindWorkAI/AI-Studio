@@ -54,6 +54,7 @@
                 T="string"
                 @ref="@this.inputField"
                 @bind-Text="@this.UserInput"
+                @bind-Text:after="@this.FollowComposerAsync"
                 Variant="Variant.Outlined"
                 Sizing="InputSizing.Auto"
                 Lines="3"
@@ -125,6 +126,10 @@
             }
             
             <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" KeepPreviewedText="@this.KeepPreviewedTextAsync" Disabled="@(!this.CanAttachFiles)"/>
+
+            <MudTooltip Text="@T("Clear your message and its attachments")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.ClearAll" OnClick="@this.ClearComposerAsync" Disabled="@(!this.CanAttachFiles || !this.ComposerState.HasComposerContent)"/>
+            </MudTooltip>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             

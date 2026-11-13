@@ -1,6 +1,7 @@
 using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Assistants.VisualBriefing;
+using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
@@ -216,6 +217,7 @@ internal sealed class Program
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<GlobalShortcutService>();
         builder.Services.AddSingleton<MediaTranscriptionService>();
+        builder.Services.AddSingleton<NewChatRegistry>();
         builder.Services.AddSingleton<ConversationTokenCounter>();
         builder.Services.AddSingleton<VisualBriefingArtifactService>();
         builder.Services.AddSingleton<VisualBriefingStore>();

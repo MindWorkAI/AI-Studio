@@ -77,7 +77,7 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public ChatThread? OwnerChat { get; set; }
 
-    /// <summary>Creates and persists a draft owner after media import confirmation.</summary>
+    /// <summary>Makes sure the owner chat exists and is persisted after media import confirmation, and returns it. Null leaves the owner chat as it is.</summary>
     [Parameter]
     public Func<string, Task<ChatThread?>> EnsureOwnerChatAsync { get; set; } = _ => Task.FromResult<ChatThread?>(null);
 
@@ -431,8 +431,12 @@ public partial class AttachDocuments : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled)
             return attached;
 
-        if (this.OwnerChat is null)
-            this.OwnerChat = await this.EnsureOwnerChatAsync(mediaPaths[0]);
+        //
+        // Asked also when there is an owner chat already: the new chat of the chat page may have a
+        // thread before it is a chat of its own, see ChatThread.RuntimeIsNewChat. Without an answer,
+        // the owner chat stays as it is:
+        //
+        this.OwnerChat = await this.EnsureOwnerChatAsync(mediaPaths[0]) ?? this.OwnerChat;
 
         // Owners that persist their own sources show the file right away and keep it next to the
         // stored document, instead of waiting for the transcription to be delivered back.
