@@ -22,7 +22,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
 
     protected override Tools.Components Component => Tools.Components.MODEL_COMPARISON_ASSISTANT;
 
-    protected override string Title => T("Model Comparison");
+    protected override string Title => ModelComparisonMode.STABILITY.PageTitle;
 
     protected override string Description => TA("Send the same request to two models and compare their answers side by side. You vote blindly for the better answer and learn at the end which model wrote which answer.");
 

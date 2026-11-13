@@ -334,7 +334,7 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
         {
             var chatOne = await this.ConversationOf(task.ChatOne);
             var chatTwo = await this.ConversationOf(task.ChatTwo);
-            await this.SeriesJudge.JudgeAsync(this.Series, task, chatOne.Thread, chatTwo.Thread, T("Model Comparison"), this.judgeCancellation.Token);
+            await this.SeriesJudge.JudgeAsync(this.Series, task, chatOne.Thread, chatTwo.Thread, ModelComparisonMode.TASKS.PageTitle, this.judgeCancellation.Token);
         }
         catch (OperationCanceledException)
         {
