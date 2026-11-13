@@ -600,20 +600,19 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
             // keep resuming on for as long as the batch runs. A click has to wait its turn behind
             // whatever is already queued on that context, and a background loop which keeps hopping
             // back onto it -- once per run, for a whole batch -- can make that turn a long time coming.
-            // Its one deliberate touch of that context, the render below, is not awaited either, for
-            // the same reason -- see the remark right above it.
+            // It touches that context on purpose only twice per run: to add the run to the lists, which
+            // costs next to nothing, and to render, which is not awaited -- see the remark further down.
             //
             await foreach (var completedTask in Task.WhenEach(tasks).ConfigureAwait(false))
             {
                 var entry = await completedTask.ConfigureAwait(false);
-                this.batchEntries.Add(entry);
-                this.batchVotes.Add(null);
 
-                // Only a rebuild for the entry the user is actually looking at avoids rebuilding the
-                // shown answers -- and so the chat component re-parsing them -- for runs which arrived
-                // while the user was still on an earlier one:
-                if (this.batchEntries.Count - 1 == this.currentEntryIndex)
-                    this.RebuildShownAnswers();
+                //
+                // The lists are what the page renders and what a vote changes, so they change on the
+                // dispatcher of the page only, never here on the thread pool: List<T> is not safe for
+                // a writer on one thread and a reader or a second writer on another.
+                //
+                await this.InvokeAsync(() => this.AddArrivedEntry(entry)).ConfigureAwait(false);
 
                 //
                 // Coalesced, not one render per run: every render -- this one included -- queues on
@@ -625,21 +624,41 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
                 this.RequestBackgroundUIRefresh();
             }
 
-            await this.CheckpointAssistantSession();
+            // The snapshot reads the lists, so it is taken on the dispatcher as well:
+            await this.InvokeAsync(this.CheckpointAssistantSession).ConfigureAwait(false);
         }
         finally
         {
-            // Whatever ended the batch, a canceled one as well, the form is back unless there are results:
-            this.isComparing = false;
+            await this.InvokeAsync(() =>
+            {
+                // Whatever ended the batch, a canceled one as well, the form is back unless there are results:
+                this.isComparing = false;
 
-            // Nothing left to arrive and flip this instead, now that the batch has settled itself.
-            // A stopped batch goes straight to the summary the same way: there is no point asking
-            // for votes on runs the user just chose to stop waiting for.
-            if (this.skippingRemainingVotes || token.IsCancellationRequested)
-                this.currentEntryIndex = this.runCount;
+                // Nothing left to arrive and flip this instead, now that the batch has settled itself.
+                // A stopped batch goes straight to the summary the same way: there is no point asking
+                // for votes on runs the user just chose to stop waiting for.
+                if (this.skippingRemainingVotes || token.IsCancellationRequested)
+                    this.currentEntryIndex = this.runCount;
+            }).ConfigureAwait(false);
 
             this.RequestBackgroundUIRefresh();
         }
+    }
+
+    /// <summary>
+    /// Adds a run which arrived to the batch. Called on the dispatcher of the page only, see Compare.
+    /// </summary>
+    /// <param name="entry">The run.</param>
+    private void AddArrivedEntry(ModelComparisonBatchEntry entry)
+    {
+        this.batchEntries.Add(entry);
+        this.batchVotes.Add(null);
+
+        // Only a rebuild for the entry the user is actually looking at avoids rebuilding the
+        // shown answers -- and so the chat component re-parsing them -- for runs which arrived
+        // while the user was still on an earlier one:
+        if (this.batchEntries.Count - 1 == this.currentEntryIndex)
+            this.RebuildShownAnswers();
     }
 
     /// <summary>
