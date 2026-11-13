@@ -1249,12 +1249,13 @@ public partial class ChatComponent : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// The new chat has not started yet, so the template applies right here: its text, attachments,
-    /// selections, and example conversation. For now, its text and attachments replace what the user
-    /// put in before. Picking a template is something the user did, just like typing, so the new chat
-    /// counts from now on, as long as the template brings something, see FollowComposerAsync. A thread
-    /// the new chat has already carries the template from now on. Without one, the template travels
-    /// into the thread its first content creates, and decides its workspace, see
-    /// ResolveWorkspaceOfFirstThreadAsync.
+    /// selections, and example conversation. What the user put in before stays: the text of the
+    /// template goes above it, and its attachments join those of the user. Of the template picked
+    /// before, only what the user left as it was goes again, see ChatComposerState.SwapTemplate.
+    /// Picking a template is something the user did, just like typing, so the new chat counts from now
+    /// on, as long as the template brings something, see FollowComposerAsync. A thread the new chat has
+    /// already carries the template from now on. Without one, the template travels into the thread its
+    /// first content creates, and decides its workspace, see ResolveWorkspaceOfFirstThreadAsync.
     /// </remarks>
     /// <param name="nextChatTemplate">The template the user picked.</param>
     private async Task ApplyPickedChatTemplateAsync(ChatTemplate nextChatTemplate)
@@ -1264,11 +1265,7 @@ public partial class ChatComponent : MSGComponentBase
 
         var previousChatTemplate = this.currentChatTemplate;
         this.currentChatTemplate = nextChatTemplate;
-        if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
-            this.ComposerState.SetSystemInput(this.currentChatTemplate.PredefinedUserPrompt);
-
-        // Apply template's file attachments (replaces existing):
-        this.ComposerState.ReplaceFileAttachments(this.currentChatTemplate.FileAttachments);
+        var attachmentsOfPreviousTemplate = this.ComposerState.SwapTemplate(previousChatTemplate, nextChatTemplate);
 
         if (this.ApplyChatTemplateProfileAndProvider(previousChatTemplate))
             await this.ProviderChanged.InvokeAsync(this.Provider);
@@ -1285,10 +1282,14 @@ public partial class ChatComponent : MSGComponentBase
             newChat.Blocks.Clear();
             if (this.currentChatTemplate != ChatTemplate.NO_CHAT_TEMPLATE)
                 newChat.Blocks.AddRange(this.currentChatTemplate.ExampleConversation.Select(block => block.DeepClone()));
+
+            // The draft keeps a transcript until it is taken out, see ChatDraft.MirrorAttachments, and
+            // the text a preview read of a file goes along with the file:
+            newChat.Draft.RemoveAttachments(attachmentsOfPreviousTemplate);
+            this.KeepComposerInDraft();
+            await this.ForgetPreviewedTextsAsync(newChat.ChatId, newChat.Draft.ForgetPreviewsOfDetachedFiles());
         }
 
-        this.ComposerState.MarkUserDraft();
-        this.KeepComposerInDraft();
         await this.FollowComposerAsync();
     }
 
@@ -2334,6 +2335,10 @@ public partial class ChatComponent : MSGComponentBase
     /// sources, tools, and example conversation, its profile, and its provider in the same way, and
     /// the user is asked about unsaved changes in the same way.<br/><br/>
     ///
+    /// The template of a new chat is the one the user picked, or else the one preselected in the chat
+    /// settings, never the one of the chat being left: the user picked that one for that chat only,
+    /// and carrying it over would start every following new chat with it.<br/><br/>
+    ///
     /// A new chat template takes over only once the user agreed to leave the open chat and that
     /// chat is stored or deleted. Declining leaves the open chat as it was, with its template, and
     /// the template it runs with stays the one whose preselections the next chat must not carry over.<br/><br/>
@@ -2346,7 +2351,7 @@ public partial class ChatComponent : MSGComponentBase
     /// <param name="useSameWorkspace">True starts the new chat with a thread right away, in the workspace of the open chat. False starts it outside any workspace, and its thread comes with the first message. A chat which would belong to no workspace either way, while its chat template names one, also gets its thread only with the first message, in the workspace of the template.</param>
     /// <param name="deletePreviousChat">Whether to delete the open chat first.</param>
     /// <param name="targetWorkspaceId">The workspace for the new chat, when the workspace tree asks for one. When given, the new chat gets a thread in that workspace, whatever useSameWorkspace says.</param>
-    /// <param name="chatTemplate">The chat template of the new chat, when the user picked another one. Without one, the new chat keeps the template of the open chat.</param>
+    /// <param name="chatTemplate">The chat template of the new chat, when the user picked one. Without one, the new chat starts with the template preselected in the chat settings.</param>
     /// <returns>True when the new chat started. False when the user kept the open chat, or when it could not be deleted.</returns>
     private async Task<bool> StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null, ChatTemplate? chatTemplate = null)
     {
@@ -2387,7 +2392,7 @@ public partial class ChatComponent : MSGComponentBase
         // chat gets no thread here: its first content creates one in that workspace, so that the
         // workspace is created only once there is something to keep, see ResolveWorkspaceOfFirstThreadAsync.
         //
-        var templateOfNewChat = chatTemplate ?? this.currentChatTemplate;
+        var templateOfNewChat = chatTemplate ?? this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         var startsOutsideWorkspaces = !useSameWorkspace && targetWorkspaceId is null;
         if (targetWorkspaceId is null && workspaceOfNewChat == Guid.Empty && this.SettingsManager.GetChatTemplateWorkspaceName(templateOfNewChat) is not null)
             startsOutsideWorkspaces = true;
@@ -2446,10 +2451,8 @@ public partial class ChatComponent : MSGComponentBase
         this.HasUnsavedChanges = false;
         this.ComposerState.Clear();
 
-        // The open chat is left now, so the new template takes over:
-        if (chatTemplate is not null)
-            this.currentChatTemplate = chatTemplate;
-
+        // The open chat is left now, so the template of the new chat takes over:
+        this.currentChatTemplate = templateOfNewChat;
         this.RefreshCurrentProfileAndChatTemplate();
 
         //
@@ -2683,6 +2686,19 @@ public partial class ChatComponent : MSGComponentBase
             this.loadedParameterChatId = Guid.Empty;
             this.loadedParameterWorkspaceId = Guid.Empty;
             this.ClearWorkspaceHeaderState();
+
+            //
+            // The chat which takes the place of one that went, e.g., because the user deleted it, is a
+            // new chat like any other, see StartNewChat: it starts with the template preselected in the
+            // chat settings, not with the one of the chat which went, nor with the profile and tools
+            // that template preselected. The provider follows below:
+            //
+            var previousChatTemplate = this.currentChatTemplate;
+            this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
+            this.currentProfile = this.SettingsManager.ChooseChatTemplateProfile(this.currentChatTemplate, previousChatTemplate, this.currentProfile);
+            this.ComposerState.ApplyTemplate(this.currentChatTemplate);
+            await this.ApplyChatTemplateToolSelectionAsync();
+
             await this.SyncForegroundChatAsync();
             this.ApplyAutomaticDataSourceOptions();
         }
