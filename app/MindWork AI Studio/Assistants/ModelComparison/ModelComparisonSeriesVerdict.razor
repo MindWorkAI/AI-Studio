@@ -14,10 +14,7 @@
             <MudText Typo="Typo.body1" Class="mb-1">
                 @this.VerdictText
             </MudText>
-            @* The reasoning is written by the judge, and its line breaks belong to it: *@
-            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
-                @this.SeriesTask.JudgeReasoning
-            </MudText>
+            <ModelComparisonJudgeReasoning Reasoning="@this.SeriesTask.JudgeReasoning"/>
             break;
 
         case ModelComparisonSeriesJudgeStatus.TOO_LONG:

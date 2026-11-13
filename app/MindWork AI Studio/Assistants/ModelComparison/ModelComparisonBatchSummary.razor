@@ -56,7 +56,8 @@
 
 @if (this.Batch.Entries.Count > 0)
 {
-    <MudExpansionPanels MultiExpansion="@true" Class="mb-4">
+    @* One run at a time: two open runs, each with two long answers, are hard to tell apart. *@
+    <MudExpansionPanels MultiExpansion="@false" Class="mb-4">
         @foreach (var index in Enumerable.Range(0, this.Batch.Entries.Count))
         {
             <ModelComparisonRunPanel @key="@index" Batch="@this.Batch" Index="@index"/>

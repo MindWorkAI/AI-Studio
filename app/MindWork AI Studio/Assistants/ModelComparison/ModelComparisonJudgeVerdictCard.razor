@@ -14,9 +14,7 @@
             <MudText Typo="Typo.body1" Class="mb-1">
                 @this.PreferenceText
             </MudText>
-            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
-                @judge.Reasoning
-            </MudText>
+            <ModelComparisonJudgeReasoning Reasoning="@judge.Reasoning"/>
         }
         else
         {
