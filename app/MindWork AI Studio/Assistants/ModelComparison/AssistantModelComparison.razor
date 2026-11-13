@@ -21,10 +21,10 @@
         <MudCollapse Expanded="@this.presetsSectionExpanded">
             <MudGrid Spacing="2">
                 <MudItem xs="12" sm="8">
-                    <MudSelect T="string" Value="@this.selectedPresetId" ValueChanged="@this.LoadPreset" Label="@T("Load a saved preset")" Variant="Variant.Outlined" Clearable="true" Margin="Margin.Dense">
-                        @foreach (var preset in this.SettingsManager.ConfigurationData.ModelComparison.Presets)
+                    <MudSelect T="Guid?" Value="@this.selectedPresetId" ValueChanged="@this.LoadPreset" Label="@T("Load a saved preset")" Variant="Variant.Outlined" Clearable="true" Margin="Margin.Dense">
+                        @foreach (var preset in this.presets)
                         {
-                            <MudSelectItem Value="@preset.Id">@preset.Name</MudSelectItem>
+                            <MudSelectItem T="Guid?" Value="@preset.Id">@preset.Name</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>

@@ -177,8 +177,6 @@ public sealed class Data
     
     public DataDocumentAnalysis DocumentAnalysis { get; set; } = new();
 
-    public DataModelComparison ModelComparison { get; set; } = new();
-
     /// <summary>
     /// Gets the managed Batch Processing Assistant defaults.
     /// </summary>

@@ -8,4 +8,5 @@ namespace AIStudio.Assistants.ModelComparison;
 /// </summary>
 [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(ModelComparisonJudgeAnswer))]
+[JsonSerializable(typeof(ModelComparisonPreset))]
 internal sealed partial class ModelComparisonJsonContext : JsonSerializerContext;

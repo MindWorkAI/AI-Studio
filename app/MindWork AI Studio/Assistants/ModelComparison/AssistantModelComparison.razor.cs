@@ -1,7 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
-using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Security;
 
@@ -18,6 +17,9 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
 
     [Inject]
     private PromptInjectionGuardService PromptInjectionGuard { get; init; } = null!;
+
+    [Inject]
+    private ModelComparisonStore ModelComparisonStore { get; init; } = null!;
 
     protected override Tools.Components Component => Tools.Components.MODEL_COMPARISON_ASSISTANT;
 
@@ -245,11 +247,16 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private bool requestSummaryExpanded;
 
     /// <summary>
-    /// The Id of the saved preset currently loaded into the form, or null while nothing is loaded.
-    /// Not itself persisted: it only drives which preset the rename field and the delete button act
-    /// on, for the lifetime of this session.
+    /// The saved presets, sorted by name, as the store listed them last.
     /// </summary>
-    private string? selectedPresetId;
+    private IReadOnlyList<ModelComparisonPreset> presets = [];
+
+    /// <summary>
+    /// The ID of the saved preset currently loaded into the form, or null while nothing is loaded.
+    /// Not itself persisted: it only drives which preset the rename field and the delete button act
+    /// on, for the lifetime of this page.
+    /// </summary>
+    private Guid? selectedPresetId;
 
     /// <summary>
     /// What the rename field shows for SelectedPreset. Kept apart from the preset's own
@@ -260,15 +267,80 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
 
     /// <summary>
     /// The saved preset selectedPresetId points to, or null when nothing is loaded or
-    /// the preset was deleted from another session in the meantime.
+    /// the preset was deleted in the meantime.
     /// </summary>
-    private ModelComparisonPreset? SelectedPreset => this.SettingsManager.ConfigurationData.ModelComparison.Presets.FirstOrDefault(preset => preset.Id == this.selectedPresetId);
+    private ModelComparisonPreset? SelectedPreset => this.presets.FirstOrDefault(preset => preset.Id == this.selectedPresetId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await this.ReloadPresets();
+    }
+
+    /// <summary>
+    /// Lists the saved presets anew, when the page opens and after every change.
+    /// </summary>
+    private async Task ReloadPresets()
+    {
+        try
+        {
+            this.presets = await this.ModelComparisonStore.ListPresetsAsync();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            this.Logger.LogWarning(exception, "Could not list the presets of the Model Comparison assistant.");
+        }
+    }
+
+    /// <summary>
+    /// Stores a change of the presets and lists them anew.
+    /// </summary>
+    /// <param name="change">The change: a save or a delete in the store.</param>
+    /// <returns>Whether the change was stored.</returns>
+    private async Task<bool> ChangePresets(Func<Task> change)
+    {
+        try
+        {
+            await change();
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            this.Logger.LogError(exception, "Could not store a change of the presets of the Model Comparison assistant.");
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ASSISTANT_MODEL_COMPARISON, TA("AI Studio could not save the change to your presets. Please try again.")));
+            return false;
+        }
+        finally
+        {
+            await this.ReloadPresets();
+        }
+    }
+
+    /// <summary>
+    /// Captures the form as it stands right now as a preset.
+    /// </summary>
+    /// <param name="id">The ID of the preset.</param>
+    /// <param name="name">The name of the preset.</param>
+    /// <returns>The preset.</returns>
+    private ModelComparisonPreset PresetFromForm(Guid id, string name) => new()
+    {
+        Id = id,
+        Name = name,
+        FirstProviderId = this.ProviderSettings.Id,
+        SecondProviderId = this.secondProvider.Id,
+        JudgeEnabled = this.judgeEnabled,
+        JudgeProviderId = this.judgeProvider.Id,
+        JudgeInstructions = this.judgeInstructions,
+        Context = this.inputContext,
+        Question = this.inputQuestion,
+        RunCount = this.runCount,
+    };
 
     /// <summary>
     /// Loads a saved preset's fields into the form, or clears back to a blank form when the picker
     /// was cleared.
     /// </summary>
-    private void LoadPreset(string? presetId)
+    private void LoadPreset(Guid? presetId)
     {
         this.selectedPresetId = presetId;
         var preset = this.SelectedPreset;
@@ -295,59 +367,28 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// </summary>
     private async Task SaveAsNewPreset()
     {
-        var preset = new ModelComparisonPreset
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = string.Format(DisplayCulture, T("Preset from {0}"), DateTimeOffset.Now),
-            FirstProviderId = this.ProviderSettings.Id,
-            SecondProviderId = this.secondProvider.Id,
-            JudgeEnabled = this.judgeEnabled,
-            JudgeProviderId = this.judgeProvider.Id,
-            JudgeInstructions = this.judgeInstructions,
-            Context = this.inputContext,
-            Question = this.inputQuestion,
-            RunCount = this.runCount,
-        };
+        var preset = this.PresetFromForm(Guid.NewGuid(), string.Format(DisplayCulture, T("Preset from {0}"), DateTimeOffset.Now));
+        if (!await this.ChangePresets(() => this.ModelComparisonStore.SavePresetAsync(preset)))
+            return;
 
-        this.SettingsManager.ConfigurationData.ModelComparison.Presets.Add(preset);
         this.selectedPresetId = preset.Id;
         this.presetName = preset.Name;
 
         // Opens the box so the new preset -- and the rename field to give it a real name -- is
         // actually visible, instead of the save appearing to have done nothing:
         this.presetsSectionExpanded = true;
-
-        await this.SettingsManager.StoreSettings();
     }
 
     /// <summary>
     /// Captures the form as it stands right now back into SelectedPreset, keeping its
-    /// Id and name, instead of creating a new preset next to it.
+    /// ID and name, instead of creating a new preset next to it.
     /// </summary>
     private async Task UpdateSelectedPreset()
     {
-        var preset = this.SelectedPreset;
-        if (preset is null)
+        if (this.SelectedPreset is not { } preset)
             return;
 
-        var presets = this.SettingsManager.ConfigurationData.ModelComparison.Presets;
-        var index = presets.IndexOf(preset);
-        if (index < 0)
-            return;
-
-        presets[index] = preset with
-        {
-            FirstProviderId = this.ProviderSettings.Id,
-            SecondProviderId = this.secondProvider.Id,
-            JudgeEnabled = this.judgeEnabled,
-            JudgeProviderId = this.judgeProvider.Id,
-            JudgeInstructions = this.judgeInstructions,
-            Context = this.inputContext,
-            Question = this.inputQuestion,
-            RunCount = this.runCount,
-        };
-
-        await this.SettingsManager.StoreSettings();
+        await this.ChangePresets(() => this.ModelComparisonStore.SavePresetAsync(this.PresetFromForm(preset.Id, preset.Name)));
     }
 
     /// <summary>
@@ -356,12 +397,10 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// </summary>
     private async Task PresetNameWasChanged()
     {
-        var preset = this.SelectedPreset;
-        if (preset is null || string.IsNullOrWhiteSpace(this.presetName))
+        if (this.SelectedPreset is not { } preset || string.IsNullOrWhiteSpace(this.presetName))
             return;
 
-        preset.Name = this.presetName.Trim();
-        await this.SettingsManager.StoreSettings();
+        await this.ChangePresets(() => this.ModelComparisonStore.SavePresetAsync(preset with { Name = this.presetName.Trim() }));
     }
 
     /// <summary>
@@ -384,10 +423,11 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         if (result is null || result.Canceled)
             return;
 
-        this.SettingsManager.ConfigurationData.ModelComparison.Presets.Remove(preset);
+        if (!await this.ChangePresets(() => this.ModelComparisonStore.DeletePresetAsync(preset.Id)))
+            return;
+
         this.selectedPresetId = null;
         this.presetName = string.Empty;
-        await this.SettingsManager.StoreSettings();
     }
 
     private static readonly AssistantSessionStateKey<string> INPUT_CONTEXT_STATE_KEY = new(nameof(inputContext));

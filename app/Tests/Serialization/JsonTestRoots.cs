@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using AIStudio.Assistants.BeyondFactsLab;
+using AIStudio.Assistants.ModelComparison;
 using AIStudio.Assistants.SWOTAnalysis;
 using AIStudio.Chat;
 using AIStudio.Settings;
@@ -69,6 +70,9 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(BflResult), BeyondFactsLabJson.PERSISTENCE));
         yield return Case(new(typeof(BflResearch), BeyondFactsLabJson.PERSISTENCE));
         yield return Case(new(typeof(Guid?), BeyondFactsLabJson.PERSISTENCE), "selected preparation");
+
+        // The presets of the Model Comparison assistant:
+        yield return Case(new(typeof(ModelComparisonPreset), ModelComparisonJson.PERSISTENCE));
     }
 
     private static TestCaseData Case(JsonTestRoot root, string? purpose = null)
