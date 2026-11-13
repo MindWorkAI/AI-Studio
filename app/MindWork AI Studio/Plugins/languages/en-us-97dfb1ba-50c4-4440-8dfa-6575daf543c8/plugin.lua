@@ -4227,6 +4227,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1523568309::INFORMA
 -- Successfully updated plugin file.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1524590750"] = "Successfully updated plugin file."
 
+-- The selected language plugin for comparison uses the IETF tag '{0}', which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1780571819"] = "The selected language plugin for comparison uses the IETF tag '{0}', which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."
+
+-- The selected language plugin for comparison uses the IETF tag '{0}', which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1780571819::INFORMAL"] = "The selected language plugin for comparison uses the IETF tag '{0}', which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."
+
 -- Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1893011391"] = "Was not able to load the language plugin for comparison ({0}). Please select a valid, loaded & running language plugin."
 
@@ -4283,12 +4289,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T3875738742"] = "Cop
 
 -- The data is being loaded, please wait...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T453060723"] = "The data is being loaded, please wait..."
-
--- The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T458999393"] = "The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."
-
--- The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T458999393::INFORMAL"] = "The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."
 
 -- Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T628596031"] = "Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file."
@@ -16476,12 +16476,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2348849647"] = "Last Changelog"
 -- Tools
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2499909372"] = "Tools"
 
--- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T251243691"] = "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities."
-
--- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T251243691::INFORMAL"] = "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities."
-
 -- AI models can use tools on their own, such as Web Search, Read Web Page, or Search Confluence. When you ask something a model cannot answer from what it knows, it looks it up and answers with the sources it used. You decide which tools a model may use, and you can watch it work.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2587191175"] = "AI models can use tools on their own, such as Web Search, Read Web Page, or Search Confluence. When you ask something a model cannot answer from what it knows, it looks it up and answers with the sources it used. You decide which tools a model may use, and you can watch it work."
 
@@ -16559,6 +16553,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T873851215"] = "Here's what makes MindWo
 
 -- The app is free to use, both for personal and commercial purposes.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T91074375"] = "The app is free to use, both for personal and commercial purposes."
+
+-- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, and most German and many international universities.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T953714606"] = "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, and most German and many international universities."
+
+-- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, and most German and many international universities.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T953714606::INFORMAL"] = "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, and most German and many international universities."
 
 -- Startup log file
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startup log file"
