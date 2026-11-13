@@ -129,7 +129,7 @@ else
 
         <MudCollapse Expanded="@this.requestSummaryExpanded">
             <MudText Typo="Typo.body2" Style="white-space: pre-wrap;" Class="mb-1 mt-1">
-                @request.GetQuestionPreview(QUESTION_PREVIEW_LENGTH)
+                @request.GetQuestionPreview()
             </MudText>
             @if (request.Context.Length > 0)
             {

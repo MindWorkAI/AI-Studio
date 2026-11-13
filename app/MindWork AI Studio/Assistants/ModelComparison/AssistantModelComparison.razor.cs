@@ -102,11 +102,6 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private bool ShowsBatch => this.isComparing || this.batch is { Entries.Count: > 0 };
 
     /// <summary>
-    /// How much of the question the summary above the results shows.
-    /// </summary>
-    private const int QUESTION_PREVIEW_LENGTH = 300;
-
-    /// <summary>
     /// A render already queued on the UI dispatcher, if one is still pending. Reused by RequestBackgroundUIRefresh, so
     /// a burst of runs arriving close together queues at most one more render instead of one per run.
     /// </summary>
@@ -632,7 +627,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         var record = ModelComparisonRecord.Of(
             finishedBatch,
             DateTimeOffset.UtcNow,
-            this.CurrentRequest.GetQuestionPreview(QUESTION_PREVIEW_LENGTH),
+            this.CurrentRequest.GetQuestionPreview(),
             ModelComparisonModelIdentity.Of(this.ProviderSettings),
             ModelComparisonModelIdentity.Of(this.secondProvider),
             this.judgeEnabled ? ModelComparisonModelIdentity.Of(this.judgeProvider) : null);

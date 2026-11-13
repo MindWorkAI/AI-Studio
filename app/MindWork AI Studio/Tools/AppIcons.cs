@@ -368,6 +368,9 @@ public static class AppIcons
     /// <summary>Marks a document, such as a Markdown file.</summary>
     public const string DOCUMENT = LucideIcons.FILE_TEXT;
 
+    /// <summary>Ends the work with one model on a task, such as in a comparison series of the Model Comparison assistant.</summary>
+    public const string DONE_WITH_MODEL = LucideIcons.FLAG;
+
     /// <summary>Downloads something from the internet, such as Pandoc or the content of a web page.</summary>
     public const string DOWNLOAD = LucideIcons.DOWNLOAD;
 

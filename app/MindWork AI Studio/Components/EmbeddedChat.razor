@@ -56,7 +56,7 @@ else
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
             @if (this.AllowsAttachments)
             {
-                <AttachDocuments Name="File Attachments" DocumentPaths="@this.attachments" DocumentPathsChanged="@this.AttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" Disabled="@(!this.CanSend)"/>
+                <AttachDocuments Name="File Attachments" DocumentPaths="@this.attachments" DocumentPathsChanged="@this.AttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" AllowedFileTypes="@this.AllowedFileTypes" Disabled="@(!this.CanSend)"/>
             }
             @if (this.IsRunning)
             {

@@ -22,9 +22,7 @@
                     </MudTooltip>
                     <MudText Typo="Typo.h5">@series.Name</MudText>
                 </MudStack>
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mr-3">
-                    @T("Working on tasks in a comparison series is not available yet.")
-                </MudAlert>
+                <ModelComparisonSeriesView Series="@series"/>
             }
             else if (this.showsSetup)
             {

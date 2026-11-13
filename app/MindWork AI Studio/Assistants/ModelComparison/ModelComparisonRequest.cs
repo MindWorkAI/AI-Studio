@@ -34,21 +34,12 @@ public sealed record ModelComparisonRequest
     public string LanguageName { get; }
 
     /// <summary>
-    /// Shortens the question to something which fits into a summary, and marks the cut.
+    /// Shortens the question to something which fits into a summary, and marks the cut, see
+    /// ModelComparisonQuestionPreview.
     /// </summary>
     /// <param name="maxCharacters">The number of characters of the question to keep, at most.</param>
     /// <returns>The question, or its beginning followed by an ellipsis.</returns>
-    public string GetQuestionPreview(int maxCharacters)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCharacters);
-
-        if (this.Question.Length <= maxCharacters)
-            return this.Question;
-
-        // Cutting between the two halves of a character outside the basic plane, an emoji for example, would leave half of it:
-        var length = char.IsHighSurrogate(this.Question[maxCharacters - 1]) ? maxCharacters - 1 : maxCharacters;
-        return this.Question[..length].TrimEnd() + "…";
-    }
+    public string GetQuestionPreview(int maxCharacters = ModelComparisonQuestionPreview.MAX_CHARACTERS) => ModelComparisonQuestionPreview.Of(this.Question, maxCharacters);
 
     /// <summary>
     /// Builds the prompt. Without a context, it is the question alone: headings around a lone

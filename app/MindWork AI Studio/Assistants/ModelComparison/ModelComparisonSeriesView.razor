@@ -1,0 +1,68 @@
+@inherits MSGComponentBase
+
+@if (this.seriesIssue is { } issue)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3 mr-3">
+        @issue
+    </MudAlert>
+}
+
+@if (this.Series.OpenTask is { } task)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-4 mr-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudText Typo="Typo.h6">
+                @this.TaskHeading(task)
+            </MudText>
+            <MudSpacer/>
+            <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" OnClick="@this.DiscardTaskAsync" Disabled="@this.isSaving">
+                @T("Discard task")
+            </MudButton>
+        </MudStack>
+
+        @if (task.CurrentChat is { } chat)
+        {
+            <MudText Typo="Typo.body2" Class="mb-1">
+                @this.ChatHint(task)
+            </MudText>
+            @if (this.allowedFileTypes is not null)
+            {
+                <MudText Typo="Typo.caption" Class="d-block mb-1">
+                    @TA("You cannot attach images in this series, since not both models can read them.")
+                </MudText>
+            }
+
+            <EmbeddedChat @key="@chat.ChatId"
+                          Store="@this.chatStore"
+                          Component="@COMPONENT"
+                          ChatId="@chat.ChatId"
+                          CreateThread="@this.CreateThread"
+                          Provider="@this.chatProvider"
+                          PrepareAsync="@this.prepareChat"
+                          HidesModelIdentity="true"
+                          ProviderIssue="@this.seriesIssue"
+                          AllowedFileTypes="@this.allowedFileTypes"
+                          OpeningMessage="@this.openingMessage"
+                          ExportFileName="@this.Series.Name"/>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.DONE_WITH_MODEL" OnClick="@this.FinishChatAsync" Disabled="@(!this.CanFinishChat)" Class="mt-3">
+                @T("I'm done with this model")
+            </MudButton>
+        }
+        else
+        {
+            <ModelComparisonSeriesDecision Store="@this.chatStore" SeriesTask="@task" CreateThread="@this.CreateThread" IsSaving="@this.isSaving" Vote="@this.DecideAsync"/>
+        }
+    </MudPaper>
+}
+else
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-4 mr-3">
+        <MudText Typo="Typo.body1" Class="mb-3">
+            @this.NextTaskText
+        </MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.StartTaskAsync" Disabled="@(this.seriesIssue is not null || this.isSaving)">
+            @(this.DecidedTaskCount == 0 ? T("Start a task") : T("Test another task"))
+        </MudButton>
+    </MudPaper>
+}

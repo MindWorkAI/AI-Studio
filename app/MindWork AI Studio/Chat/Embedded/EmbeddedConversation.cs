@@ -46,6 +46,11 @@ public sealed class EmbeddedConversation
     public int UserMessageCount => this.Thread?.Blocks.Count(block => block is { Role: ChatRole.USER, HideFromUser: false }) ?? 0;
 
     /// <summary>
+    /// The first message of the user which the user sees, or null before it.
+    /// </summary>
+    public ContentBlock? FirstUserMessage => this.Thread?.Blocks.FirstOrDefault(block => block is { Role: ChatRole.USER, HideFromUser: false });
+
+    /// <summary>
     /// Whether the chat holds an answer of the model which the user sees.
     /// </summary>
     public bool HasAnswer => this.Thread?.Blocks.Any(block => block is { Role: ChatRole.AI, HideFromUser: false }) ?? false;

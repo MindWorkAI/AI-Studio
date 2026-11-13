@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Chat.Embedded;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -74,6 +75,23 @@ public partial class EmbeddedChat : MSGComponentBase
     /// </summary>
     [Parameter]
     public bool AllowsAttachments { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets which files the user may attach, or null for every file a chat takes.
+    /// </summary>
+    [Parameter]
+    public FileTypeFilter[]? AllowedFileTypes { get; set; }
+
+    /// <summary>
+    /// Gets or sets a message which the chat sends by itself when it shows a conversation without any message of the
+    /// user, e.g., the first message of another chat on the same task. Sent once, when the chat loads; when it cannot
+    /// be sent, it waits in the field, so that the user can send it.
+    /// </summary>
+    /// <remarks>
+    /// The chat stores the message as it is, so give it a copy of its own, see ContentText.DeepClone.
+    /// </remarks>
+    [Parameter]
+    public ContentText? OpeningMessage { get; set; }
 
     /// <summary>
     /// Gets or sets why the provider cannot answer, or null when it can.
@@ -171,6 +189,10 @@ public partial class EmbeddedChat : MSGComponentBase
             this.attachments = [];
             this.conversation = await this.ChatService.GetAsync(this.Store, this.Component, this.ChatId, this.CreateThread);
             await this.RecountAsync();
+
+            // Not awaited: the answer arrives through ConversationChanged, and the parameters of the next render must not wait for it.
+            if (this.OpeningMessage is { } openingMessage && this.conversation is { IsAvailable: true, IsRunning: false, UserMessageCount: 0 })
+                _ = this.SendOpeningMessageAsync(openingMessage);
         }
         else if (this.countedProviderId != this.Provider.Id)
             await this.RecountAsync();
@@ -255,14 +277,38 @@ public partial class EmbeddedChat : MSGComponentBase
         var message = new ContentText { Text = this.userInput.Trim(), FileAttachments = [.. this.attachments] };
         this.userInput = string.Empty;
         this.attachments = [];
-        await this.ChatService.SendAsync(this.ChatId, new EmbeddedChatRequest
+        await this.ChatService.SendAsync(this.ChatId, this.RequestOf(message));
+    }
+
+    /// <summary>
+    /// Sends the opening message. When it cannot be sent, e.g., because the provider may not answer, the message waits
+    /// in the field instead, so that the user can send it once the reason is gone.
+    /// </summary>
+    /// <param name="message">The opening message.</param>
+    private async Task SendOpeningMessageAsync(ContentText message)
+    {
+        if (this.CanSend && await this.ChatService.SendAsync(this.ChatId, this.RequestOf(message)))
+            return;
+
+        await this.InvokeAsync(() =>
         {
-            Provider = this.Provider,
-            Message = message,
-            HidesModelIdentity = this.HidesModelIdentity,
-            PrepareAsync = this.PrepareAsync,
+            this.userInput = message.Text;
+            this.attachments = [.. message.FileAttachments];
+            this.StateHasChanged();
         });
     }
+
+    /// <summary>
+    /// Gets the request which sends a message with the provider and the preparation of this chat.
+    /// </summary>
+    /// <param name="message">The message.</param>
+    private EmbeddedChatRequest RequestOf(ContentText message) => new()
+    {
+        Provider = this.Provider,
+        Message = message,
+        HidesModelIdentity = this.HidesModelIdentity,
+        PrepareAsync = this.PrepareAsync,
+    };
 
     /// <summary>
     /// Sends the message when the user releases the shortcut they chose for the chat.

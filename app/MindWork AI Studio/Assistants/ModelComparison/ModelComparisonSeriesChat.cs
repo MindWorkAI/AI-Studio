@@ -13,7 +13,9 @@ public sealed record ModelComparisonSeriesChat
     public Guid ChatId { get; set; }
 
     /// <summary>
-    /// When the user began to work in the chat, in UTC, or null before.
+    /// When the first message of the chat was sent, in UTC, or null until the user is done with the chat. Not when the
+    /// task began: the user writes the first message only for the first chat, and the time it takes would count
+    /// against the model of that chat alone.
     /// </summary>
     public DateTimeOffset? StartedAtUtc { get; set; }
 
