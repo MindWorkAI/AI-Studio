@@ -11,7 +11,7 @@ namespace AIStudio.Tests.Assistants.ModelComparison;
 /// </summary>
 /// <remarks>
 /// What is under test is that every run is genuinely independent -- its own request to both models,
-/// its own presentation order -- not the single run itself, which <see cref="ModelComparisonRunnerTests"/>
+/// its own presentation order -- not the single run itself, which ModelComparisonRunnerTests
 /// already covers.
 /// </remarks>
 [TestFixture]

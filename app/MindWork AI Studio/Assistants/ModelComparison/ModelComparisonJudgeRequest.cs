@@ -9,7 +9,7 @@ namespace AIStudio.Assistants.ModelComparison;
 /// which answer as the user is: the answers go in as plain text, labeled "Answer A" and "Answer B",
 /// never by model name. These are the same letters the user sees, in the same order, so the judge's
 /// own words about "Answer A"/"Answer B" line up with what is on screen -- the caller has to settle
-/// the presentation order before building this, not after. <see cref="ModelComparisonVote"/> is what
+/// the presentation order before building this, not after. ModelComparisonVote is what
 /// the judge answers with, the same column terms the user's own vote uses.
 /// </remarks>
 public sealed record ModelComparisonJudgeRequest
@@ -66,7 +66,7 @@ public sealed record ModelComparisonJudgeRequest
     /// </summary>
     /// <param name="cacheBuster">
     /// An identifier to append as a plainly labeled, ignorable line, or an empty text to leave the
-    /// prompt exactly as asked. See <see cref="ModelComparisonRequest.ToPrompt"/> for why: the judge
+    /// prompt exactly as asked. See ModelComparisonRequest.ToPrompt for why: the judge
     /// is asked fresh for every run of a batch, same as the two models, and a caching gateway cannot
     /// tell that apart from one identical request repeated unless the prompt says so itself -- most
     /// of all here, where two similar answers can easily make for a near-identical judge prompt too.

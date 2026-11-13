@@ -8,7 +8,7 @@ namespace AIStudio.Tests.Assistants.ModelComparison;
 /// <remarks>
 /// The judge is asked for one JSON object and nothing else, but a model rarely holds to that
 /// perfectly. Parsing has to look past a stray sentence around the object, and has to end up with a
-/// verdict which is not <see cref="ModelComparisonJudgeVerdict.Completed"/> rather than throw when
+/// verdict which is not ModelComparisonJudgeVerdict.Completed rather than throw when
 /// there is nothing usable to read.
 /// </remarks>
 [TestFixture]

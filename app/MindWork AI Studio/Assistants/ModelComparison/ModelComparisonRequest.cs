@@ -4,7 +4,7 @@ namespace AIStudio.Assistants.ModelComparison;
 /// What both models are asked: an optional context, such as a document, and the question about it.
 /// </summary>
 /// <remarks>
-/// Both models get exactly the text <see cref="ToPrompt"/> returns, in the same shape, and nothing
+/// Both models get exactly the text ToPrompt returns, in the same shape, and nothing
 /// else. That is what makes the answers comparable: a difference in the wording of a prompt would
 /// count as a difference between the models.
 /// </remarks>

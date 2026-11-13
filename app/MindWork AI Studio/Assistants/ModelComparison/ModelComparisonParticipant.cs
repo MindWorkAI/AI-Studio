@@ -5,13 +5,13 @@ namespace AIStudio.Assistants.ModelComparison;
 /// </summary>
 /// <remarks>
 /// The way to ask is a function rather than a provider, so the comparison itself does not depend on
-/// anything of the app. <see cref="ModelComparisonProviderAdapter"/> builds the function for a real
+/// anything of the app. ModelComparisonProviderAdapter builds the function for a real
 /// provider.
 /// </remarks>
 public sealed record ModelComparisonParticipant
 {
     /// <summary>
-    /// The name to show for the model. It is copied into the answer, see <see cref="ModelComparisonAnswer.Label"/>.
+    /// The name to show for the model. It is copied into the answer, see ModelComparisonAnswer.Label.
     /// </summary>
     public required string Label { get; init; }
 

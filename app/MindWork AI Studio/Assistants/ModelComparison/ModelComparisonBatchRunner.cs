@@ -13,15 +13,15 @@ namespace AIStudio.Assistants.ModelComparison;
 /// the caller decides whether to wait for all of them together (<c>Task.WhenAll</c>) or to react to
 /// each one as it finishes (<c>Task.WhenEach</c>), for example to reveal runs to the user as they
 /// become ready instead of only once the slowest of them has answered. "Started" only means the task
-/// exists and is queued, though: <see cref="MAX_CONCURRENT_RUNS"/> of them are actually asking a
+/// exists and is queued, though: MAX_CONCURRENT_RUNS of them are actually asking a
 /// model at any one time, never more, because a whole batch's worth of requests landing on a model at
 /// once is exactly what queues up and slows every one of them down on a provider with limited
 /// concurrent capacity -- a self-hosted one most of all. A model comparison is not something run many
 /// times a day, so trading wall-clock time for going easier on the model is the right default.
 ///
-/// <see cref="Start"/> is called from a Blazor Server page, on its own synchronisation context, so
-/// <see cref="RunOneAsync"/> uses <c>ConfigureAwait(false)</c> throughout, the same as
-/// <see cref="ModelComparisonRunner"/> does further down: none of this is UI work, and resuming on
+/// Start is called from a Blazor Server page, on its own synchronisation context, so
+/// RunOneAsync uses <c>ConfigureAwait(false)</c> throughout, the same as
+/// ModelComparisonRunner does further down: none of this is UI work, and resuming on
 /// that context regardless would only queue up behind whatever the page itself is waiting to do,
 /// a click included.
 /// </remarks>
@@ -66,11 +66,11 @@ public sealed class ModelComparisonBatchRunner(ModelComparisonRunner runner)
     }
 
     /// <summary>
-    /// Waits for a free slot among <see cref="MAX_CONCURRENT_RUNS"/>, then runs one comparison.
+    /// Waits for a free slot among MAX_CONCURRENT_RUNS, then runs one comparison.
     /// </summary>
     /// <remarks>
     /// Never throws, a queued run included: cancellation while still waiting for a slot is reported
-    /// the same way <see cref="ModelComparisonRunner"/> reports a model which did not answer, not as
+    /// the same way ModelComparisonRunner reports a model which did not answer, not as
     /// a fault on the task -- every run in a batch is meant to end up as an entry to show, whatever
     /// happened to it.
     /// </remarks>

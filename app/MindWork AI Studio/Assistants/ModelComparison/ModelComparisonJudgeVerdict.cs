@@ -6,9 +6,9 @@ namespace AIStudio.Assistants.ModelComparison;
 /// What the judge said about the two answers, once it could be understood.
 /// </summary>
 /// <remarks>
-/// Built from whatever the judge model answered, the same way <see cref="ModelComparisonAnswer"/>
+/// Built from whatever the judge model answered, the same way ModelComparisonAnswer
 /// is built from what the two compared models answered: a judge which did not answer, or whose
-/// answer could not be read as the JSON it was asked for, ends up with <see cref="Completed"/>
+/// answer could not be read as the JSON it was asked for, ends up with Completed
 /// false and nothing else to show.
 /// </remarks>
 public sealed record ModelComparisonJudgeVerdict
@@ -26,14 +26,14 @@ public sealed record ModelComparisonJudgeVerdict
     public required bool Completed { get; init; }
 
     /// <summary>
-    /// Which column the judge preferred, or null when <see cref="Completed"/> is false. The same
+    /// Which column the judge preferred, or null when Completed is false. The same
     /// column terms the user's own vote uses, since the judge is asked about "Answer A"/"Answer B",
     /// never about a model.
     /// </summary>
     public ModelComparisonVote? Preferred { get; init; }
 
     /// <summary>
-    /// Why the judge decided as it did, or an empty text when <see cref="Completed"/> is false.
+    /// Why the judge decided as it did, or an empty text when Completed is false.
     /// </summary>
     public string Reasoning { get; init; } = string.Empty;
 
@@ -51,7 +51,7 @@ public sealed record ModelComparisonJudgeVerdict
 
     /// <summary>
     /// Reads the judge's answer. Never throws: whatever cannot be understood becomes a verdict
-    /// which is not <see cref="Completed"/>, the same as a judge which did not answer at all.
+    /// which is not Completed, the same as a judge which did not answer at all.
     /// </summary>
     /// <param name="label">The name of the judge model.</param>
     /// <param name="judgeAnswered">Whether the judge model answered at all, before its text is even looked at.</param>

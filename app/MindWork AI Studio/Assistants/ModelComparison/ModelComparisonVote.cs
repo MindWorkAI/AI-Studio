@@ -5,7 +5,7 @@ namespace AIStudio.Assistants.ModelComparison;
 /// </summary>
 /// <remarks>
 /// This names a column on the screen, not a model. Which model stood in a column is what
-/// <see cref="ModelComparisonPresentationOrder"/> says.
+/// ModelComparisonPresentationOrder says.
 /// </remarks>
 public enum ModelComparisonVote
 {

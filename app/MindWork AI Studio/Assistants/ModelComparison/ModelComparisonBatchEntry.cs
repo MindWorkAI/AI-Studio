@@ -5,7 +5,7 @@ namespace AIStudio.Assistants.ModelComparison;
 /// </summary>
 /// <remarks>
 /// The presentation order travels with its result because it takes both to translate a
-/// <see cref="ModelComparisonVote"/> -- the user's own vote, or the judge's -- back into a model: the
+/// ModelComparisonVote -- the user's own vote, or the judge's -- back into a model: the
 /// same column means a different model in every run.
 /// </remarks>
 public sealed record ModelComparisonBatchEntry

@@ -13,7 +13,7 @@ public sealed record ModelComparisonAnswer
 
     /// <summary>
     /// The answer without the thinking of the model. Only an answer which is
-    /// <see cref="Completed"/> is complete: after a failure or a cancellation, this is whatever
+    /// Completed is complete: after a failure or a cancellation, this is whatever
     /// arrived before, and it must not be shown as a result.
     /// </summary>
     public required string Text { get; init; }

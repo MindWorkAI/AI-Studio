@@ -53,7 +53,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// The button of the base class cannot be hidden, and repurposing it would start a session of
     /// the base class just to switch the view, with the waiting animation flashing by.
     /// </remarks>
-    protected override bool SubmitDisabled => this.isComparing || this.batchEntries.Count > 0;
+    protected override bool SubmitDisabled => this.ShowsBatch;
 
     protected override Func<Task> SubmitAction => this.Compare;
 
@@ -83,26 +83,9 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private int runCount = 1;
 
     /// <summary>
-    /// The runs of the current batch, in the order they finished -- not the order they were started
-    /// in, since every run asks the same two models the same question, and nothing distinguishes
-    /// "run 3" from "run 7" beyond how long each happened to take. Filled in one at a time as each
-    /// run completes, so the user can start voting on the first one without waiting for the slowest.
+    /// The batch which runs or ran, or null while the form is shown.
     /// </summary>
-    private readonly List<ModelComparisonBatchEntry> batchEntries = [];
-
-    /// <summary>
-    /// What the user voted for each entry of <see cref="batchEntries"/>, at the same index. Null at
-    /// an index means that entry has not been voted on yet.
-    /// </summary>
-    private readonly List<ModelComparisonVote?> batchVotes = [];
-
-    /// <summary>
-    /// Which entry of the batch the user is currently looking at. Advances once its vote is in, or
-    /// the user chose to skip it, via <see cref="GoToNextEntry"/>/<see cref="SkipThisRun"/>, so it
-    /// never skips ahead of an entry which is still blind on its own -- except when
-    /// <see cref="skippingRemainingVotes"/> jumps it straight past every run left.
-    /// </summary>
-    private int currentEntryIndex;
+    private ModelComparisonBatch? batch;
 
     /// <summary>
     /// Whether the batch is being asked right now: at least one run is still in flight. Set once the
@@ -113,112 +96,42 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private bool isComparing;
 
     /// <summary>
-    /// Whether the user chose to stop voting on the runs of this batch. Every run still resolves
-    /// itself as it arrives -- the judge, if one is configured, still judges it -- but none of them
-    /// are shown individually anymore: the summary appears once the whole batch has settled.
+    /// Whether the page shows the batch instead of the form: while it runs, and once runs arrived.
     /// </summary>
-    private bool skippingRemainingVotes;
+    private bool ShowsBatch => this.isComparing || this.batch is { Entries.Count: > 0 };
 
     /// <summary>
-    /// The entry the user is currently looking at, or null once every run has been voted on, or
-    /// before the first one has arrived.
+    /// The run the user looks at right now, or null.
     /// </summary>
-    private ModelComparisonBatchEntry? CurrentEntry => this.currentEntryIndex < this.batchEntries.Count ? this.batchEntries[this.currentEntryIndex] : null;
+    private ModelComparisonBatchEntry? CurrentEntry => this.batch?.CurrentEntry;
 
     /// <summary>
-    /// What the user voted for <see cref="CurrentEntry"/>, or null while that vote is still to come.
+    /// The vote of the user for CurrentEntry, or null while it is still to come.
     /// </summary>
-    private ModelComparisonVote? CurrentVote => this.currentEntryIndex < this.batchVotes.Count ? this.batchVotes[this.currentEntryIndex] : null;
+    private ModelComparisonVote? CurrentVote => this.batch?.CurrentVote;
 
     /// <summary>
-    /// Whether every run of the batch has both arrived and been voted on.
+    /// What the badge of a run in the progress of the batch means, for the tooltip over it: the badge alone only
+    /// shows a colour and a small icon, not enough to be sure what it stands for.
     /// </summary>
-    private bool BatchFinished => this.currentEntryIndex >= this.runCount;
-
-    /// <summary>
-    /// Whether <see cref="CurrentEntry"/> is the last run of the batch. Only used to label its "move
-    /// on" button "Finish" instead of "Next run" -- both call <see cref="GoToNextEntry"/> all the
-    /// same, which lands on the batch summary once nothing is left to move on to.
-    /// </summary>
-    private bool IsLastEntry => this.currentEntryIndex + 1 >= this.runCount;
-
-    /// <summary>
-    /// Whether the run at this index has both models' answers in yet -- and, when a judge is
-    /// configured, its verdict too, since an entry only exists once everything about it is settled.
-    /// </summary>
-    /// <param name="index">A run's position in the batch, zero-based.</param>
-    private bool RunHasArrived(int index) => index < this.batchEntries.Count;
-
-    /// <summary>
-    /// Whether the run at this index is one of the ones actually in flight right now, as opposed to
-    /// arrived already or still queued behind <see cref="ModelComparisonBatchRunner.MAX_CONCURRENT_RUNS"/>
-    /// others.
-    /// </summary>
-    /// <remarks>
-    /// Nothing tracks which run is which once they are all started -- they are interchangeable, and
-    /// only how many have arrived is known. So this counts positions, not identities: the runs still
-    /// outstanding are shown as if the ones nearest to arriving were the ones actually running, which
-    /// is true in substance even when it is not true of that exact run.
-    /// </remarks>
-    /// <param name="index">A run's position in the batch, zero-based.</param>
-    private bool RunIsActive(int index) => !this.RunHasArrived(index) && index < this.batchEntries.Count + ModelComparisonBatchRunner.MAX_CONCURRENT_RUNS;
-
-    /// <summary>
-    /// Whether the run at this index carries a completed judge verdict.
-    /// </summary>
-    /// <param name="index">A run's position in the batch, zero-based.</param>
-    private bool RunHasJudgeVerdict(int index) => index < this.batchEntries.Count && this.batchEntries[index].Result.Judge is { Completed: true };
-
-    /// <summary>
-    /// Whether the user has voted on the run at this index.
-    /// </summary>
-    /// <param name="index">A run's position in the batch, zero-based.</param>
-    private bool RunIsVoted(int index) => index < this.batchVotes.Count && this.batchVotes[index] is not null;
-
-    /// <summary>
-    /// Whether the run at this index arrived without a usable answer from at least one of the two
-    /// models -- because the batch was stopped before it got there, or because a model failed on its
-    /// own. Both are shown the same way: there is nothing left to vote on either way.
-    /// </summary>
-    /// <param name="index">A run's position in the batch, zero-based.</param>
-    private bool RunNotCompleted(int index) => this.RunHasArrived(index) && !this.batchEntries[index].Result.BothCompleted;
-
-    /// <summary>
-    /// Whether the run at this index had a usable answer, but the user moved past it -- via
-    /// <see cref="SkipThisRun"/> or <see cref="SkipRemainingVotes"/> -- without voting on it.
-    /// </summary>
-    /// <param name="index">A run's position in the batch, zero-based.</param>
-    private bool RunVoteWasSkipped(int index) => this.RunHasArrived(index) && !this.RunNotCompleted(index) && !this.RunIsVoted(index) && index < this.currentEntryIndex;
-
-    /// <summary>
-    /// What the progress badge for this run means, for the tooltip over it: the badge alone only
-    /// shows colour and a small icon, not enough on its own to be sure what each states for.
-    /// </summary>
-    /// <param name="index">A run's position in the batch, zero-based.</param>
-    private string DescribeRunStatus(int index)
+    /// <param name="shownBatch">The batch the run belongs to.</param>
+    /// <param name="index">The position of the run, zero-based.</param>
+    private string DescribeRunStatus(ModelComparisonBatch shownBatch, int index)
     {
-        var runNumber = index + 1;
+        var text = shownBatch.StatusOf(index) switch
+        {
+            ModelComparisonRunStatus.QUEUED => T("Run {0}: queued, waiting for a free slot."),
+            ModelComparisonRunStatus.RUNNING => T("Run {0}: still working."),
+            ModelComparisonRunStatus.NO_USABLE_ANSWER => T("Run {0}: no usable answer, nothing to vote on."),
+            ModelComparisonRunStatus.VOTED => T("Run {0}: voted on."),
+            ModelComparisonRunStatus.VOTE_SKIPPED => TA("Run {0}: your vote was skipped."),
 
-        if (!this.RunHasArrived(index))
-            return this.RunIsActive(index)
-                ? string.Format(DisplayCulture, T("Run {0}: still working."), runNumber)
-                : string.Format(DisplayCulture, T("Run {0}: queued, waiting for a free slot."), runNumber);
+            _ when this.judgeEnabled && !shownBatch.HasJudgeVerdict(index) => T("Run {0}: the models are done, waiting for the judge."),
+            _ when this.judgeEnabled => TA("Run {0}: the models and the judge are done, your vote is missing."),
+            _ => TA("Run {0}: the models are done, your vote is missing."),
+        };
 
-        if (this.RunNotCompleted(index))
-            return string.Format(DisplayCulture, T("Run {0}: no usable answer, nothing to vote on."), runNumber);
-
-        if (this.RunIsVoted(index))
-            return string.Format(DisplayCulture, T("Run {0}: voted on."), runNumber);
-
-        if (this.RunVoteWasSkipped(index))
-            return string.Format(DisplayCulture, TA("Run {0}: your vote was skipped."), runNumber);
-
-        if (this.judgeEnabled && !this.RunHasJudgeVerdict(index))
-            return string.Format(DisplayCulture, T("Run {0}: the models are done, waiting for the judge."), runNumber);
-
-        return this.judgeEnabled
-            ? string.Format(DisplayCulture, TA("Run {0}: the models and the judge are done, your vote is missing."), runNumber)
-            : string.Format(DisplayCulture, TA("Run {0}: the models are done, your vote is missing."), runNumber);
+        return string.Format(DisplayCulture, text, index + 1);
     }
 
     /// <summary>
@@ -227,18 +140,16 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private const int QUESTION_PREVIEW_LENGTH = 300;
 
     /// <summary>
-    /// The answers in the order of the columns, as the chat component wants them, for
-    /// <see cref="CurrentEntry"/>. Null unless both models of that entry answered. They are built
-    /// once per entry and not on every render: the component compares what it is given to decide
-    /// whether anything has to be drawn again.
+    /// The answers in the order of the columns, as the chat component wants them, for CurrentEntry. Null unless both
+    /// models of that entry answered. They are built once per entry and not on every render: the component compares
+    /// what it is given to decide whether anything has to be drawn again.
     /// </summary>
     private ContentText? answerAContent;
     private ContentText? answerBContent;
 
     /// <summary>
-    /// A render already queued on the UI dispatcher, if one is still pending. Reused by
-    /// <see cref="RequestBackgroundUIRefresh"/> so a burst of runs arriving close together queues at
-    /// most one more render instead of one per run.
+    /// A render already queued on the UI dispatcher, if one is still pending. Reused by RequestBackgroundUIRefresh, so
+    /// a burst of runs arriving close together queues at most one more render instead of one per run.
     /// </summary>
     private Task? pendingBackgroundRefresh;
 
@@ -247,13 +158,11 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// asking again while one is already queued.
     /// </summary>
     /// <remarks>
-    /// Blazor Server processes every queued render, and every click, on the same one dispatcher
-    /// queue, each in its own turn. With up to <see cref="ModelComparisonBatchRunner.MAX_CONCURRENT_RUNS"/>
-    /// runs arriving close together, a render per run queues up several of them ahead of whatever the
-    /// user just clicked -- the vote button above all -- which is exactly the multi-second stall this
-    /// avoids. A run which arrives while a render is already queued does not need one of its own: the
-    /// queued render still runs after this run was added to <see cref="batchEntries"/>, so it shows it
-    /// all the same.
+    /// Blazor Server processes every queued render, and every click, on the same one dispatcher queue, each in its own
+    /// turn. With up to ModelComparisonBatchRunner.MAX_CONCURRENT_RUNS runs arriving close together, a render per run
+    /// queues up several of them ahead of whatever the user just clicked -- the vote button above all -- which is
+    /// exactly the multi-second stall this avoids. A run which arrives while a render is already queued does not need
+    /// one of its own: the queued render still runs after this run was added to the batch, so it shows it all the same.
     /// </remarks>
     private void RequestBackgroundUIRefresh()
     {
@@ -268,15 +177,12 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// </summary>
     private void ClearBatch()
     {
-        this.batchEntries.Clear();
-        this.batchVotes.Clear();
-        this.currentEntryIndex = 0;
-        this.skippingRemainingVotes = false;
+        this.batch = null;
         this.RebuildShownAnswers();
     }
 
     /// <summary>
-    /// Builds the answers of the columns from <see cref="CurrentEntry"/>.
+    /// Builds the answers of the columns from CurrentEntry.
     /// </summary>
     /// <remarks>
     /// Called wherever the current entry changes: when it newly arrives, when the user moves on to
@@ -309,7 +215,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     protected override bool MightPreselectValues() => false;
 
     /// <summary>
-    /// The first model is <see cref="AssistantLowerBase.ProviderSettings"/>, so that everything the
+    /// The first model is ProviderSettings of the base class, so that everything the
     /// base class does with a provider keeps working for it. This is the second one.
     /// </summary>
     private AIStudio.Settings.Provider secondProvider = Settings.Provider.NONE;
@@ -321,7 +227,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private bool judgeEnabled = true;
 
     /// <summary>
-    /// The judge model, asked only when <see cref="judgeEnabled"/> is set.
+    /// The judge model, asked only when judgeEnabled is set.
     /// </summary>
     private AIStudio.Settings.Provider judgeProvider = Settings.Provider.NONE;
 
@@ -336,7 +242,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// Whether the user has tried to submit the form at least once. The judge's provider field mounts
     /// only once the judge is switched on, which can happen well after the form itself first
     /// rendered, and MudForm would otherwise mark it invalid on sight, before the user had any chance
-    /// to pick one. <see cref="ValidatingJudgeProvider"/> stays silent until this is set, regardless
+    /// to pick one. ValidatingJudgeProvider stays silent until this is set, regardless
     /// of when MudForm itself happens to call it.
     /// </summary>
     private bool hasAttemptedCompare;
@@ -350,7 +256,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// <summary>
     /// Whether the summary of the request (the question preview and the context's length) is
     /// expanded, while a batch is shown. Collapsed by default, for the same reason as
-    /// <see cref="presetsSectionExpanded"/>: useful to check back on, not something to stare at while
+    /// presetsSectionExpanded: useful to check back on, not something to stare at while
     /// a batch runs.
     /// </summary>
     private bool requestSummaryExpanded;
@@ -363,14 +269,14 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private string? selectedPresetId;
 
     /// <summary>
-    /// What the rename field shows for <see cref="SelectedPreset"/>. Kept apart from the preset's own
-    /// <see cref="ModelComparisonPreset.Name"/> so a half-typed name is not written back on every
+    /// What the rename field shows for SelectedPreset. Kept apart from the preset's own
+    /// name so a half-typed name is not written back on every
     /// keystroke, only once the field loses focus.
     /// </summary>
     private string presetName = string.Empty;
 
     /// <summary>
-    /// The saved preset <see cref="selectedPresetId"/> points to, or null when nothing is loaded or
+    /// The saved preset selectedPresetId points to, or null when nothing is loaded or
     /// the preset was deleted from another session in the meantime.
     /// </summary>
     private ModelComparisonPreset? SelectedPreset => this.SettingsManager.ConfigurationData.ModelComparison.Presets.FirstOrDefault(preset => preset.Id == this.selectedPresetId);
@@ -432,7 +338,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// Captures the form as it stands right now back into <see cref="SelectedPreset"/>, keeping its
+    /// Captures the form as it stands right now back into SelectedPreset, keeping its
     /// Id and name, instead of creating a new preset next to it.
     /// </summary>
     private async Task UpdateSelectedPreset()
@@ -462,7 +368,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// Writes a typed-in name back to <see cref="SelectedPreset"/>, once the field loses focus. An
+    /// Writes a typed-in name back to SelectedPreset, once the field loses focus. An
     /// empty name is refused rather than saved: the picker would show nothing to click on.
     /// </summary>
     private async Task PresetNameWasChanged()
@@ -476,7 +382,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// Deletes <see cref="SelectedPreset"/>, after asking: a preset can carry a long context text
+    /// Deletes SelectedPreset, after asking: a preset can carry a long context text
     /// that took real effort to assemble, and one click by mistake would lose it for good.
     /// </summary>
     private async Task DeletePreset()
@@ -505,9 +411,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private static readonly AssistantSessionStateKey<string> INPUT_QUESTION_STATE_KEY = new(nameof(inputQuestion));
     private static readonly AssistantSessionStateKey<bool> IS_COMPARING_STATE_KEY = new(nameof(isComparing));
     private static readonly AssistantSessionStateKey<int> RUN_COUNT_STATE_KEY = new(nameof(runCount));
-    private static readonly AssistantSessionStateKey<List<ModelComparisonBatchEntry>> BATCH_ENTRIES_STATE_KEY = new(nameof(batchEntries));
-    private static readonly AssistantSessionStateKey<List<ModelComparisonVote?>> BATCH_VOTES_STATE_KEY = new(nameof(batchVotes));
-    private static readonly AssistantSessionStateKey<int> CURRENT_ENTRY_INDEX_STATE_KEY = new(nameof(currentEntryIndex));
+    private static readonly AssistantSessionStateKey<ModelComparisonBatch?> BATCH_STATE_KEY = new(nameof(batch));
     private static readonly AssistantSessionStateKey<AIStudio.Settings.Provider> SECOND_PROVIDER_STATE_KEY = new(nameof(secondProvider));
     private static readonly AssistantSessionStateKey<bool> JUDGE_ENABLED_STATE_KEY = new(nameof(judgeEnabled));
     private static readonly AssistantSessionStateKey<AIStudio.Settings.Provider> JUDGE_PROVIDER_STATE_KEY = new(nameof(judgeProvider));
@@ -520,9 +424,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         state.Set(INPUT_QUESTION_STATE_KEY, this.inputQuestion);
         state.Set(IS_COMPARING_STATE_KEY, this.isComparing);
         state.Set(RUN_COUNT_STATE_KEY, this.runCount);
-        state.SetList(BATCH_ENTRIES_STATE_KEY, this.batchEntries);
-        state.SetList(BATCH_VOTES_STATE_KEY, this.batchVotes);
-        state.Set(CURRENT_ENTRY_INDEX_STATE_KEY, this.currentEntryIndex);
+        state.Set(BATCH_STATE_KEY, this.batch?.Copy());
         state.Set(SECOND_PROVIDER_STATE_KEY, this.secondProvider);
         state.Set(JUDGE_ENABLED_STATE_KEY, this.judgeEnabled);
         state.Set(JUDGE_PROVIDER_STATE_KEY, this.judgeProvider);
@@ -536,9 +438,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         state.Restore(INPUT_QUESTION_STATE_KEY, value => this.inputQuestion = value);
         state.Restore(IS_COMPARING_STATE_KEY, value => this.isComparing = value);
         state.Restore(RUN_COUNT_STATE_KEY, value => this.runCount = value);
-        state.RestoreList(BATCH_ENTRIES_STATE_KEY, this.batchEntries);
-        state.RestoreList(BATCH_VOTES_STATE_KEY, this.batchVotes);
-        state.Restore(CURRENT_ENTRY_INDEX_STATE_KEY, value => this.currentEntryIndex = value);
+        state.Restore(BATCH_STATE_KEY, value => this.batch = value?.Copy());
         state.Restore(SECOND_PROVIDER_STATE_KEY, value => this.secondProvider = value);
         state.Restore(JUDGE_ENABLED_STATE_KEY, value => this.judgeEnabled = value);
         state.Restore(JUDGE_PROVIDER_STATE_KEY, value => this.judgeProvider = value);
@@ -550,11 +450,10 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// Starts every run of the batch and reveals each one as soon as it is ready.
     /// </summary>
     /// <remarks>
-    /// The base class has already started the session, so the token of the stop button is the one
-    /// which ends every run still in flight. Cancelling it needs no special handling here: every run,
-    /// in flight or still queued behind <see cref="ModelComparisonBatchRunner.MAX_CONCURRENT_RUNS"/>,
-    /// resolves into an entry to show either way -- <see cref="ModelComparisonBatchRunner"/> never lets
-    /// a run end any other way -- so the loop below simply keeps consuming them until none are left.
+    /// The base class has already started the session, so the token of the stop button is the one which ends every run
+    /// still in flight. Cancelling it needs no special handling here: every run, in flight or still queued behind
+    /// ModelComparisonBatchRunner.MAX_CONCURRENT_RUNS, resolves into an entry to show either way -- the batch runner
+    /// never lets a run end any other way -- so the loop below simply keeps consuming them until none are left.
     /// </remarks>
     private async Task Compare()
     {
@@ -573,7 +472,8 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         if (!this.InputIsValid)
             return;
 
-        this.ClearBatch();
+        this.batch = new ModelComparisonBatch(this.runCount);
+        this.RebuildShownAnswers();
 
         // From here on, the request is shown as a summary instead of the form:
         this.isComparing = true;
@@ -616,9 +516,9 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
                 var entry = await completedTask.ConfigureAwait(false);
 
                 //
-                // The lists are what the page renders and what a vote changes, so they change on the
-                // dispatcher of the page only, never here on the thread pool: List<T> is not safe for
-                // a writer on one thread and a reader or a second writer on another.
+                // The batch is what the page renders and what a vote changes, so it changes on the
+                // dispatcher of the page only, never here on the thread pool: it is not safe for a
+                // writer on one thread and a reader or a second writer on another.
                 //
                 await this.InvokeAsync(() => this.AddArrivedEntry(entry)).ConfigureAwait(false);
 
@@ -632,7 +532,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
                 this.RequestBackgroundUIRefresh();
             }
 
-            // The snapshot reads the lists, so it is taken on the dispatcher as well:
+            // The snapshot reads the batch, so it is taken on the dispatcher as well:
             await this.InvokeAsync(this.CheckpointAssistantSession).ConfigureAwait(false);
         }
         finally
@@ -641,12 +541,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
             {
                 // Whatever ended the batch, a canceled one as well, the form is back unless there are results:
                 this.isComparing = false;
-
-                // Nothing left to arrive and flip this instead, now that the batch has settled itself.
-                // A stopped batch goes straight to the summary the same way: there is no point asking
-                // for votes on runs the user just chose to stop waiting for.
-                if (this.skippingRemainingVotes || token.IsCancellationRequested)
-                    this.currentEntryIndex = this.runCount;
+                this.batch?.Settle(token.IsCancellationRequested);
             }).ConfigureAwait(false);
 
             this.RequestBackgroundUIRefresh();
@@ -659,13 +554,10 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// <param name="entry">The run.</param>
     private void AddArrivedEntry(ModelComparisonBatchEntry entry)
     {
-        this.batchEntries.Add(entry);
-        this.batchVotes.Add(null);
-
         // Only a rebuild for the entry the user is actually looking at avoids rebuilding the
         // shown answers -- and so the chat component re-parsing them -- for runs which arrived
         // while the user was still on an earlier one:
-        if (this.batchEntries.Count - 1 == this.currentEntryIndex)
+        if (this.batch?.Add(entry) is true)
             this.RebuildShownAnswers();
     }
 
@@ -684,74 +576,67 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// Takes the vote for <see cref="CurrentEntry"/>, which ends the blind part: from here on, the
-    /// names of the models are shown.
+    /// Takes the vote for CurrentEntry, which ends the blind part: from here on, the names of the models are shown.
     /// </summary>
     /// <remarks>
-    /// The vote is final. A second click, or a second one on another button, changes nothing: once
-    /// the names are on the screen, the answers can no longer be judged without knowing them.
-    ///
-    /// The reveal is shown before the checkpoint is awaited, not after: a batch snapshot carries the
-    /// answer text of every run so far, and saving it can take a moment the click must not wait on.
+    /// The reveal is shown before the checkpoint is awaited, not after: a batch snapshot carries the answer text of
+    /// every run so far, and saving it can take a moment the click must not wait on.
     /// </remarks>
     private async Task Vote(ModelComparisonVote vote)
     {
-        if (this.CurrentVote is not null || this.CurrentEntry is not { Result.BothCompleted: true })
+        if (this.batch?.Vote(vote) is not true)
             return;
 
-        this.batchVotes[this.currentEntryIndex] = vote;
         await this.RefreshAssistantUIAsync();
         await this.CheckpointAssistantSession();
     }
 
     /// <summary>
-    /// Moves on to the next run of the batch, once the current one has been voted on -- or right
-    /// away when there was nothing to vote on, because a model of that run did not answer.
+    /// Moves on to the next run of the batch, once the current one has been voted on, or right away when there was
+    /// nothing to vote on, because a model of that run did not answer.
     /// </summary>
-    private Task GoToNextEntry()
+    private async Task GoToNextEntry()
     {
-        if (this.CurrentVote is null && this.CurrentEntry is { Result.BothCompleted: true })
-            return Task.CompletedTask;
+        if (this.batch?.GoToNextEntry() is not true)
+            return;
 
-        return this.AdvanceToNextEntry();
+        await this.ShowCurrentEntry();
     }
 
     /// <summary>
-    /// Moves on to the next run without voting on this one, even though there was something to vote
-    /// on -- the user's own choice, unlike the silent skip in <see cref="GoToNextEntry"/> for a run
-    /// with nothing to vote on.
+    /// Moves on to the next run without voting on this one.
     /// </summary>
-    private Task SkipThisRun() => this.AdvanceToNextEntry();
-
-    /// <summary>
-    /// Advances past the current entry unconditionally. <see cref="GoToNextEntry"/> and
-    /// <see cref="SkipThisRun"/> both end up here; only whether a vote is required before doing so
-    /// tells them apart.
-    /// </summary>
-    /// <remarks>
-    /// The same reveal-before-checkpoint order as <see cref="Vote"/>, for the same reason.
-    /// </remarks>
-    private async Task AdvanceToNextEntry()
+    private async Task SkipThisRun()
     {
-        this.currentEntryIndex++;
-        this.RebuildShownAnswers();
-        await this.RefreshAssistantUIAsync();
-        await this.CheckpointAssistantSession();
+        if (this.batch is null)
+            return;
+
+        this.batch.SkipThisRun();
+        await this.ShowCurrentEntry();
     }
 
     /// <summary>
-    /// Stops asking for a vote on every remaining run of this batch. A run still resolves itself as
-    /// it arrives, but none of them are shown individually anymore: the summary appears once the
-    /// whole batch has settled, which may already be the case right now.
+    /// Stops asking for a vote on every remaining run of this batch. A run still resolves itself as it arrives, but
+    /// none of them are shown individually anymore: the summary appears once the whole batch has settled, which may
+    /// already be the case right now.
     /// </summary>
     private async Task SkipRemainingVotes()
     {
-        this.skippingRemainingVotes = true;
+        if (this.batch is null)
+            return;
 
-        // Nothing left in flight to flip this later, so it has to happen here instead:
-        if (!this.isComparing)
-            this.currentEntryIndex = this.runCount;
+        this.batch.SkipRemainingVotes(this.isComparing);
+        await this.ShowCurrentEntry();
+    }
 
+    /// <summary>
+    /// Shows the run the batch moved on to, or its summary.
+    /// </summary>
+    /// <remarks>
+    /// The same reveal-before-checkpoint order as Vote, for the same reason.
+    /// </remarks>
+    private async Task ShowCurrentEntry()
+    {
         this.RebuildShownAnswers();
         await this.RefreshAssistantUIAsync();
         await this.CheckpointAssistantSession();
@@ -772,7 +657,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
 
     /// <summary>
     /// The classes of the card around an answer: it fills the height of its column, and once the
-    /// vote is in, it has a border in the colour which goes with <see cref="GetVerdictColor"/>.
+    /// vote is in, it has a border in the colour which goes with GetVerdictColor.
     /// </summary>
     /// <remarks>
     /// The classes are the ones of MudBlazor: a border two pixels wide, in the colour of the outcome.
@@ -798,7 +683,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// The icon which goes with <see cref="GetVerdictColor"/>. The colour alone would not tell
+    /// The icon which goes with GetVerdictColor. The colour alone would not tell
     /// apart who is colour blind, so every outcome has a shape of its own as well.
     /// </summary>
     /// <param name="column">The column the model's answer stood in.</param>
@@ -815,7 +700,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// the user's own vote.
     /// </summary>
     /// <remarks>
-    /// Only called once the vote is in, so the model names of <see cref="CurrentEntry"/> are the ones
+    /// Only called once the vote is in, so the model names of CurrentEntry are the ones
     /// the user is meant to see by now.
     /// </remarks>
     private string DescribeJudgePreference(ModelComparisonJudgeVerdict judge)
@@ -843,7 +728,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// judge preferred, or the judge saw a tie, in which case both columns carry the badge.
     /// </summary>
     /// <remarks>
-    /// Shown next to <see cref="AnswerCaption"/>, which already gates on the vote being in, so this
+    /// Shown next to AnswerCaption, which already gates on the vote being in, so this
     /// never has to check that itself.
     /// </remarks>
     private bool JudgePreferredThisColumn(ModelComparisonVote column)
@@ -877,7 +762,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// <summary>
     /// The active language's own English name, without a region ("German", not "German (Germany)"),
     /// for a prompt instruction the models and the judge understand regardless of their own default
-    /// language. <see cref="DisplayCulture"/> carries a region, so its neutral parent is what names
+    /// language. DisplayCulture carries a region, so its neutral parent is what names
     /// the language alone -- except for the invariant culture, which has no parent to ask.
     /// </summary>
     private static string ActiveLanguageName => DisplayCulture.IsNeutralCulture || DisplayCulture.Equals(System.Globalization.CultureInfo.InvariantCulture)
@@ -929,7 +814,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// against itself to see how consistent it is with its own answers.
     /// </summary>
     /// <remarks>
-    /// Silent until <see cref="hasAttemptedCompare"/>: this field mounts only once the judge is
+    /// Silent until hasAttemptedCompare: this field mounts only once the judge is
     /// switched on, often well after the form first rendered, and MudForm would otherwise flag it as
     /// soon as it exists, before the user had any chance to fill it in.
     /// </remarks>

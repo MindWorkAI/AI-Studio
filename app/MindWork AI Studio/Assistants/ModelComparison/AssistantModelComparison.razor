@@ -3,7 +3,7 @@
 @using AIStudio.Chat
 
 @* Two views: the form to fill in, and the batch in short while it runs and once it has. *@
-@if (this.batchEntries.Count == 0 && !this.isComparing)
+@if (!this.ShowsBatch)
 {
     <MudPaper Outlined="true" Class="pa-4 mb-4">
         @* Only the icon button toggles, the same as everywhere else in the app a header collapses a section: the rest of the row is decorative, not a second, redundant click target. Save as new preset stays outside the collapse: capturing the form right now should not need opening this box first. *@
@@ -140,41 +140,44 @@ else
             }
         </MudCollapse>
 
-        @if (this.runCount > 1)
+        @if (this.batch is { RunCount: > 1 } shownBatch)
         {
             <MudText Typo="Typo.subtitle2" Class="mt-2 mb-1">
                 @T("Progress Runs")
             </MudText>
             <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-1">
-                @for (var i = 0; i < this.runCount; i++)
+                @for (var i = 0; i < shownBatch.RunCount; i++)
                 {
                     var index = i;
+                    var status = shownBatch.StatusOf(index);
                     @* A native title attribute, not MudTooltip: while the batch is still running, this row re-renders often enough that MudTooltip's JS-side hover tracking kept losing track of which badge is which, and stopped showing anything at all. A native tooltip lives entirely in the browser, so re-rendering the content underneath it cannot break it. *@
                     @* The current entry gets a ring around its avatar: with several runs done and unvoted, position alone -- second from the left, say -- is too easy to lose track of. *@
-                    <MudStack @key="index" Row="false" Spacing="0" AlignItems="AlignItems.Center" title="@this.DescribeRunStatus(index)">
-                        <MudBadge Icon="@AppIcons.JUDGE" Color="Color.Tertiary" Overlap="true" Visible="@(this.judgeEnabled && this.RunHasJudgeVerdict(index))">
-                            <MudAvatar Size="Size.Medium" Color="@(this.RunHasArrived(index) ? Color.Primary : Color.Default)" Variant="@(this.RunIsVoted(index) ? Variant.Filled : Variant.Outlined)"
-                                       Style="@(index == this.currentEntryIndex ? "outline: 2px solid var(--mud-palette-primary); outline-offset: 2px;" : null)">
-                                @if (this.RunIsVoted(index))
+                    <MudStack @key="index" Row="false" Spacing="0" AlignItems="AlignItems.Center" title="@this.DescribeRunStatus(shownBatch, index)">
+                        <MudBadge Icon="@AppIcons.JUDGE" Color="Color.Tertiary" Overlap="true" Visible="@(this.judgeEnabled && shownBatch.HasJudgeVerdict(index))">
+                            <MudAvatar Size="Size.Medium" Color="@(status is ModelComparisonRunStatus.QUEUED or ModelComparisonRunStatus.RUNNING ? Color.Default : Color.Primary)" Variant="@(status is ModelComparisonRunStatus.VOTED ? Variant.Filled : Variant.Outlined)"
+                                       Style="@(index == shownBatch.CurrentIndex ? "outline: 2px solid var(--mud-palette-primary); outline-offset: 2px;" : null)">
+                                @switch (status)
                                 {
-                                    <MudIcon Icon="@AppIcons.VOTED"/>
-                                }
-                                else if (this.RunIsActive(index))
-                                {
-                                    @* Only the runs actually in flight get the spinner -- the ones still queued behind the concurrency limit get an hourglass instead, further down: *@
-                                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
-                                }
-                                else if (!this.RunHasArrived(index))
-                                {
-                                    <MudIcon Icon="@AppIcons.PENDING" Style="opacity: 0.5;"/>
-                                }
-                                else if (this.RunNotCompleted(index) || this.RunVoteWasSkipped(index))
-                                {
-                                    <MudIcon Icon="@AppIcons.RUN_WITHOUT_VOTE"/>
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@AppIcons.VOTE_MISSING"/>
+                                    case ModelComparisonRunStatus.VOTED:
+                                        <MudIcon Icon="@AppIcons.VOTED"/>
+                                        break;
+
+                                    case ModelComparisonRunStatus.RUNNING:
+                                        @* Only the runs actually in flight get the spinner -- the ones still queued behind the concurrency limit get an hourglass instead: *@
+                                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+                                        break;
+
+                                    case ModelComparisonRunStatus.QUEUED:
+                                        <MudIcon Icon="@AppIcons.PENDING" Style="opacity: 0.5;"/>
+                                        break;
+
+                                    case ModelComparisonRunStatus.NO_USABLE_ANSWER or ModelComparisonRunStatus.VOTE_SKIPPED:
+                                        <MudIcon Icon="@AppIcons.RUN_WITHOUT_VOTE"/>
+                                        break;
+
+                                    default:
+                                        <MudIcon Icon="@AppIcons.VOTE_MISSING"/>
+                                        break;
                                 }
                             </MudAvatar>
                         </MudBadge>
@@ -275,7 +278,7 @@ else
     /// the vote: content of the body would come before it.
     /// </remarks>
     private protected override RenderFragment BelowSubmitContent => @<div>
-        @if (this.skippingRemainingVotes && !this.BatchFinished)
+        @if (this.batch is { SkipsRemainingVotes: true, IsFinished: false })
         {
             <MudPaper Outlined="true" Class="pa-4 mb-4">
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
@@ -286,14 +289,14 @@ else
                 </MudText>
             </MudPaper>
         }
-        else if (this.isComparing && this.CurrentEntry is null)
+        else if (this.isComparing && this.batch is { CurrentEntry: null } waitingBatch)
         {
             <MudPaper Outlined="true" Class="pa-4 mb-4">
                 @* The same waiting as in the chat: a bar, and lines where the answers will appear. Both columns look alike, so this says nothing about the models. *@
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
 
                 <MudText Typo="Typo.body1" Class="mb-3">
-                    @(this.batchEntries.Count == 0 ? T("Both models are answering. This can take a while.") : T("Waiting for the next run..."))
+                    @(waitingBatch.Entries.Count == 0 ? T("Both models are answering. This can take a while.") : T("Waiting for the next run..."))
                 </MudText>
 
                 <MudGrid Spacing="3">
@@ -316,7 +319,7 @@ else
                 </MudGrid>
             </MudPaper>
         }
-        else if (this.CurrentEntry is { } entry)
+        else if (this.batch is { CurrentEntry: { } entry } currentBatch)
         {
             @if (this.answerAContent is not null && this.answerBContent is not null)
             {
@@ -363,7 +366,7 @@ else
                             <MudButton Variant="Variant.Outlined" OnClick="@(() => this.Vote(ModelComparisonVote.TIE))">
                                 @T("Both are equally good")
                             </MudButton>
-                            @if (this.runCount > 1)
+                            @if (currentBatch.RunCount > 1)
                             {
                                 <MudButton Variant="Variant.Text" OnClick="@this.SkipThisRun">
                                     @T("Skip this run")
@@ -378,7 +381,7 @@ else
                     {
                         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" AlignItems="AlignItems.Center">
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.NEXT" OnClick="@this.GoToNextEntry">
-                                @(this.IsLastEntry ? T("Finish") : T("Next run"))
+                                @(currentBatch.IsLastEntry ? T("Finish") : T("Next run"))
                             </MudButton>
                             @if (this.isComparing)
                             {
@@ -403,24 +406,24 @@ else
                     </MudText>
 
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.NEXT" OnClick="@this.GoToNextEntry">
-                        @(this.IsLastEntry ? T("Finish") : T("Next run"))
+                        @(currentBatch.IsLastEntry ? T("Finish") : T("Next run"))
                     </MudButton>
                 </MudPaper>
             }
         }
-        else if (this.BatchFinished)
+        else if (this.batch is { IsFinished: true } finishedBatch)
         {
             <MudPaper Outlined="true" Class="pa-4 mb-4">
                 <MudText Typo="Typo.h5" Class="mb-3">
-                    @(this.runCount > 1 ? string.Format(DisplayCulture, T("All {0} runs are done."), this.runCount) : T("Done."))
+                    @(finishedBatch.RunCount > 1 ? string.Format(DisplayCulture, T("All {0} runs are done."), finishedBatch.RunCount) : T("Done."))
                 </MudText>
 
-                @if (this.batchEntries.Count > 0)
+                @if (finishedBatch.Entries.Count > 0)
                 {
-                    var firstLabel = this.batchEntries[0].Result.First.Label;
-                    var secondLabel = this.batchEntries[0].Result.Second.Label;
-                    var voteSummary = ModelComparisonBatchVoteSummary.From(this.batchEntries, this.batchVotes);
-                    var judgeSummary = this.judgeEnabled ? ModelComparisonBatchJudgeSummary.From(this.batchEntries) : null;
+                    var firstLabel = finishedBatch.Entries[0].Result.First.Label;
+                    var secondLabel = finishedBatch.Entries[0].Result.Second.Label;
+                    var voteTally = finishedBatch.TallyVotes();
+                    var judgeTally = this.judgeEnabled ? finishedBatch.TallyJudgeVerdicts() : null;
 
                     <MudSimpleTable Dense="true" Hover="true" Class="mb-1">
                         <thead>
@@ -434,35 +437,35 @@ else
                         <tbody>
                             <tr>
                                 <td>@TA("Your votes")</td>
-                                <td>@voteSummary.FirstModelWins</td>
-                                <td>@voteSummary.SecondModelWins</td>
-                                <td>@voteSummary.Ties</td>
+                                <td>@voteTally.FirstModelWins</td>
+                                <td>@voteTally.SecondModelWins</td>
+                                <td>@voteTally.Ties</td>
                             </tr>
-                            @if (judgeSummary is not null)
+                            @if (judgeTally is not null)
                             {
                                 <tr>
                                     <td>@T("Judge verdicts")</td>
-                                    <td>@judgeSummary.FirstModelWins</td>
-                                    <td>@judgeSummary.SecondModelWins</td>
-                                    <td>@judgeSummary.Ties</td>
+                                    <td>@judgeTally.FirstModelWins</td>
+                                    <td>@judgeTally.SecondModelWins</td>
+                                    <td>@judgeTally.Ties</td>
                                 </tr>
                             }
                         </tbody>
                     </MudSimpleTable>
 
-                    var votesMissing = voteSummary.TotalRunCount - voteSummary.ScoredRunCount;
-                    var judgeVerdictsMissing = judgeSummary is { } summary ? summary.TotalRunCount - summary.ScoredRunCount : 0;
+                    var votesMissing = voteTally.UnscoredRunCount;
+                    var judgeVerdictsMissing = judgeTally?.UnscoredRunCount ?? 0;
 
                     @if (votesMissing > 0)
                     {
                         <MudText Typo="Typo.caption" Class="d-block">
-                            @string.Format(DisplayCulture, T("{0} of {1} runs have no usable vote -- never cast, or the run itself never got a usable answer -- and are not counted above."), votesMissing, voteSummary.TotalRunCount)
+                            @string.Format(DisplayCulture, T("{0} of {1} runs have no usable vote -- never cast, or the run itself never got a usable answer -- and are not counted above."), votesMissing, voteTally.TotalRunCount)
                         </MudText>
                     }
-                    @if (judgeSummary is not null && judgeVerdictsMissing > 0 && judgeVerdictsMissing != votesMissing)
+                    @if (judgeTally is not null && judgeVerdictsMissing > 0 && judgeVerdictsMissing != votesMissing)
                     {
                         <MudText Typo="Typo.caption" Class="d-block">
-                            @string.Format(DisplayCulture, T("{0} of {1} runs have no usable judge verdict."), judgeVerdictsMissing, judgeSummary.TotalRunCount)
+                            @string.Format(DisplayCulture, T("{0} of {1} runs have no usable judge verdict."), judgeVerdictsMissing, judgeTally.TotalRunCount)
                         </MudText>
                     }
                 }

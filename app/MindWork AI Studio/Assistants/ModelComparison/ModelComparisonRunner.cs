@@ -77,7 +77,7 @@ public sealed class ModelComparisonRunner(ILogger logger, Func<IReadOnlyList<str
     /// <remarks>
     /// The judge needs both complete answers to judge, so it is asked after them, never alongside
     /// them. Nothing here throws: a judge which fails is a verdict which is not completed, the same
-    /// as a model which did not answer in <see cref="AskAsync"/>.
+    /// as a model which did not answer in AskAsync.
     /// </remarks>
     private async Task<ModelComparisonJudgeVerdict?> AskJudgeAsync(ModelComparisonParticipant? judge, string judgeInstructions, ModelComparisonRequest request, ModelComparisonPresentationOrder presentationOrder, ModelComparisonAnswer first, ModelComparisonAnswer second, CancellationToken token)
     {
