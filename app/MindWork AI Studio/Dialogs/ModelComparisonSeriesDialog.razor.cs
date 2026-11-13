@@ -211,11 +211,11 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     /// <summary>
     /// Gets the selected data sources which every model that sees the data may see, and the way both chats search them.
     /// </summary>
-    /// <returns>The IDs of the data sources, and how they are searched, or null without any data source.</returns>
-    private async Task<(List<string> DataSourceIds, DataSourceRetrievalMode? RetrievalMode)> DataSourcesForAllAsync()
+    /// <returns>The data sources and how they are searched, or NONE without any data source.</returns>
+    private async Task<ModelComparisonSeriesDataSources> DataSourcesForAllAsync()
     {
         if (this.dataSourceOptions.DisableDataSources || !PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
-            return ([], null);
+            return ModelComparisonSeriesDataSources.NONE;
 
         List<EffectiveRetrievalMode> modes = [];
         foreach (var provider in new[] { this.firstProvider, this.secondProvider })
@@ -231,7 +231,9 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
             results.Add(await this.DataSourceService.GetDataSources(provider, this.dataSourceOptions, retrievalMode, preselectedDataSources));
 
         List<string> dataSourceIds = [.. SharedSelectionRules.DataSourcesOfAll(results).SelectedDataSources.Select(dataSource => dataSource.Id)];
-        return (dataSourceIds, dataSourceIds.Count > 0 ? retrievalMode : null);
+        return dataSourceIds.Count > 0
+            ? new(dataSourceIds, retrievalMode)
+            : ModelComparisonSeriesDataSources.NONE;
     }
 
     private async Task CreateAsync()
@@ -243,7 +245,7 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
         this.isSaving = true;
         try
         {
-            var (dataSourceIds, retrievalMode) = await this.DataSourcesForAllAsync();
+            var dataSources = await this.DataSourcesForAllAsync();
             var series = new ModelComparisonSeries
             {
                 Id = Guid.NewGuid(),
@@ -257,8 +259,8 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
                 Judge = this.judgeEnabled ? ModelComparisonModelIdentity.Of(this.judgeProvider) : null,
                 ProfileId = this.profile.Id,
                 ToolIds = this.ToolsForBoth(),
-                DataSourceIds = dataSourceIds,
-                RetrievalMode = retrievalMode,
+                DataSourceIds = [.. dataSources.DataSourceIds],
+                RetrievalMode = dataSources.RetrievalMode,
             };
 
             await this.ModelComparisonStore.SaveSeriesAsync(series);
