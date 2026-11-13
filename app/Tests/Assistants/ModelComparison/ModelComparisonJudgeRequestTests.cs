@@ -22,7 +22,8 @@ public sealed class ModelComparisonJudgeRequestTests
             Assert.That(prompt, Does.Contain("A good summary keeps every number."));
             Assert.That(prompt, Does.Contain("Answer from the first model."));
             Assert.That(prompt, Does.Contain("Answer from the second model."));
-            Assert.That(prompt, Does.Contain(REQUEST.ToPrompt()));
+            Assert.That(prompt, Does.Contain(REQUEST.ToPrompt(headingLevel: 2)), "The request stands below the heading of the judge prompt.");
+            Assert.That(prompt.ReplaceLineEndings("\n"), Does.Not.Contain("\n# Material"), "The headings of the request must not stand on the level of the answers.");
         }
     }
 

@@ -37,72 +37,60 @@
         <MudTextField T="string" @bind-Text="@this.presetName" Validation="@this.ValidatingPresetName" Immediate="@true" Label="@T("Preset name")" HelperText="@TA("Give your preset a name which tells you later what it compares.")" Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
     }
 
-    <MudPaper Outlined="true" Class="pa-4 mb-4">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
-            <MudIcon Icon="@AppIcons.MODEL" Color="Color.Primary"/>
-            <MudText Typo="Typo.subtitle1">
-                @T("Setup")
-            </MudText>
-        </MudStack>
+    <MudText Typo="Typo.h5" Class="mb-1 mt-3">@T("Models")</MudText>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+        @ModelComparisonTexts.WhatTheModelsAreFor
+    </MudJustifiedText>
+    <MudGrid Class="mb-1">
+        <MudItem xs="12" lg="6">
+            <MudText Typo="Typo.h6" Class="mb-1">@T("First model")</MudText>
+            <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingComparedProvider"/>
+        </MudItem>
+        <MudItem xs="12" lg="6">
+            <MudText Typo="Typo.h6" Class="mb-1">@T("Second model")</MudText>
+            <ProviderSelection @bind-ProviderSettings="@this.secondProvider" ValidateProvider="@this.ValidatingComparedProvider"/>
+        </MudItem>
+    </MudGrid>
 
-        <MudGrid Spacing="3" Class="mb-3">
-            <MudItem xs="12" sm="6">
-                <MudText Typo="Typo.subtitle2" Class="mb-1">
-                    @T("First model")
-                </MudText>
-                <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingComparedProvider"/>
-            </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudText Typo="Typo.subtitle2" Class="mb-1">
-                    @T("Second model")
-                </MudText>
-                <ProviderSelection @bind-ProviderSettings="@this.secondProvider" ValidateProvider="@this.ValidatingComparedProvider"/>
-            </MudItem>
-        </MudGrid>
+    <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Number of runs")</MudText>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+        @ModelComparisonTexts.WhatTheRunsAreFor
+    </MudJustifiedText>
+    <MudSelect T="int" @bind-Value="@this.runCount" Variant="Variant.Outlined" Class="mb-3">
+        <MudSelectItem Value="1">@T("1 (single comparison)")</MudSelectItem>
+        <MudSelectItem Value="3">3</MudSelectItem>
+        <MudSelectItem Value="5">5</MudSelectItem>
+        <MudSelectItem Value="10">10</MudSelectItem>
+        <MudSelectItem Value="15">15</MudSelectItem>
+        <MudSelectItem Value="20">@T("20 (heavy load on the models)")</MudSelectItem>
+    </MudSelect>
 
-        <MudSelect T="int" @bind-Value="@this.runCount" Label="@T("Number of runs")" HelperText="@TA("Repeat the same comparison several times to see how consistently the models and the judge come out the same way. You vote blindly on every run.")" Variant="Variant.Outlined">
-            <MudSelectItem Value="1">@T("1 (single comparison)")</MudSelectItem>
-            <MudSelectItem Value="3">3</MudSelectItem>
-            <MudSelectItem Value="5">5</MudSelectItem>
-            <MudSelectItem Value="10">10</MudSelectItem>
-            <MudSelectItem Value="15">15</MudSelectItem>
-            <MudSelectItem Value="20">@T("20 (heavy load on the models)")</MudSelectItem>
-        </MudSelect>
-    </MudPaper>
+    <MudText Typo="Typo.h5" Class="mb-1 mt-6">@TA("Your request")</MudText>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+        @ModelComparisonTexts.WhatTheModelsReceive
+    </MudJustifiedText>
+    <MudTextField T="string" @bind-Text="@this.inputQuestion" Validation="@this.ValidatingQuestion" AdornmentIcon="@AppIcons.QUESTIONS" Adornment="Adornment.Start" Label="@TA("Your question or task")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-    <MudPaper Outlined="true" Class="pa-4 mb-4">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
-            <MudIcon Icon="@AppIcons.PROMPT" Color="Color.Primary"/>
-            <MudText Typo="Typo.subtitle1">
-                @TA("Your request")
-            </MudText>
-        </MudStack>
+    <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Material (optional)")</MudText>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+        @ModelComparisonTexts.WhatTheMaterialIs
+    </MudJustifiedText>
+    <ReadFileContent Text="@T("Load material from a file")" @bind-FileContent="@this.inputContext" EnableDragDrop="true" CatchAllDocuments="true"/>
+    <MudTextField T="string" @bind-Text="@this.inputContext" AdornmentIcon="@AppIcons.INPUT_TEXT" Adornment="Adornment.Start" Label="@T("Material")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="24" Class="mb-3 mt-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-        <ReadFileContent Text="@T("Load the context from file")" @bind-FileContent="@this.inputContext" EnableDragDrop="true" CatchAllDocuments="true"/>
-        <MudTextField T="string" @bind-Text="@this.inputContext" AdornmentIcon="@AppIcons.INPUT_TEXT" Adornment="Adornment.Start" Label="@T("Context (optional)")" HelperText="@TA("Both models receive this text together with your question, for example the document they are supposed to summarize.")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="24" Class="mb-3 mt-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-        <MudTextField T="string" @bind-Text="@this.inputQuestion" Validation="@this.ValidatingQuestion" AdornmentIcon="@AppIcons.QUESTIONS" Adornment="Adornment.Start" Label="@TA("Your question or task")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-    </MudPaper>
-
-    <MudPaper Outlined="true" Class="pa-4 mb-4">
-        <MudSwitch T="bool" @bind-Value="@this.judgeEnabled" Color="Color.Primary">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <MudIcon Icon="@AppIcons.JUDGE" Color="Color.Primary"/>
-                <MudText Typo="Typo.subtitle1">
-                    @T("Judge (optional)")
-                </MudText>
-            </MudStack>
-        </MudSwitch>
-
+    <CompactExpansionPanel HeaderIcon="@AppIcons.JUDGE" HeaderText="@T("Judge (optional)")" Class="mt-6 mb-3" @bind-Expanded="@this.judgePanelExpanded">
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @ModelComparisonTexts.WhatTheJudgeIsFor
+        </MudJustifiedText>
+        <MudTextSwitch Label="@T("Ask a judge?")" @bind-Value="@this.judgeEnabled" LabelOn="@T("A judge assesses every run")" LabelOff="@T("No judge")"/>
         @if (this.judgeEnabled)
         {
-            <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">
-                @T("Judge model")
-            </MudText>
+            <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Judge model")</MudText>
             <ProviderSelection @bind-ProviderSettings="@this.judgeProvider" ValidateProvider="@this.ValidatingJudgeProvider"/>
 
-            <MudTextField T="string" @bind-Text="@this.judgeInstructions" AdornmentIcon="@AppIcons.JUDGE" Adornment="Adornment.Start" Label="@T("What should the judge pay particular attention to? (optional)")" HelperText="@TA("The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source. The judge never learns which model wrote which answer, and you see its verdicts only at the end.")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mt-3"/>
+            <MudTextField T="string" @bind-Text="@this.judgeInstructions" AdornmentIcon="@AppIcons.JUDGE" Adornment="Adornment.Start" Label="@T("What should the judge pay particular attention to? (optional)")" HelperText="@TA("The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source.")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mt-3"/>
         }
-    </MudPaper>
+    </CompactExpansionPanel>
 }
 else
 {
@@ -124,7 +112,7 @@ else
             @if (request.Context.Length > 0)
             {
                 <MudText Typo="Typo.caption" Class="d-block mb-1">
-                    @string.Format(DisplayCulture, T("Context: {0} characters"), request.Context.Length.CompactCount())
+                    @string.Format(DisplayCulture, T("Material: {0} characters"), request.Context.Length.CompactCount())
                 </MudText>
             }
         </MudCollapse>

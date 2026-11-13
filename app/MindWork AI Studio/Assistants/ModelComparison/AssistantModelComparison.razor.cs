@@ -166,6 +166,11 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     private bool judgeEnabled;
 
     /// <summary>
+    /// Whether the panel of the judge is open. A preset with a judge opens it, so that the user sees the judge at once.
+    /// </summary>
+    private bool judgePanelExpanded;
+
+    /// <summary>
     /// The judge model, asked only when judgeEnabled is set.
     /// </summary>
     private AIStudio.Settings.Provider judgeProvider = Settings.Provider.NONE;
@@ -314,6 +319,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         this.ProviderSettings = this.SettingsManager.GetProviderById(preset.FirstProviderId);
         this.secondProvider = this.SettingsManager.GetProviderById(preset.SecondProviderId);
         this.judgeEnabled = preset.JudgeEnabled;
+        this.judgePanelExpanded = preset.JudgeEnabled;
         this.judgeProvider = this.SettingsManager.GetProviderById(preset.JudgeProviderId);
         this.judgeInstructions = preset.JudgeInstructions;
         this.inputContext = preset.Context;
@@ -551,6 +557,17 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
+
+        //
+        // The judge model sits in a panel the user may have closed, where its field cannot show what is wrong. So the
+        // page opens the panel and says so, rather than letting every run go without a verdict:
+        //
+        if (this.judgeEnabled && this.ValidatingComparedProvider(this.judgeProvider) is not null)
+        {
+            this.judgePanelExpanded = true;
+            this.AddInputIssue(TA("The judge model cannot be used. Please select another judge model, or switch the judge off."));
+            return;
+        }
 
         // The preset keeps what was compared, also when the form changed only a moment ago:
         await this.StorePresetIfChanged();

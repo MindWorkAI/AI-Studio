@@ -1,7 +1,8 @@
 namespace AIStudio.Assistants.ModelComparison;
 
 /// <summary>
-/// What both models are asked: an optional context, such as a document, and the question about it.
+/// What both models are asked: an optional context, such as a document, and the question about it. The page calls the
+/// context the material, and so does the prompt.
 /// </summary>
 /// <remarks>
 /// Both models get exactly the text ToPrompt returns, in the same shape, and nothing
@@ -52,18 +53,18 @@ public sealed record ModelComparisonRequest
     /// LiteLLM among them -- is built to recognize and answer from its cache instead of asking again.
     /// A fixed request would silently stop being independent samples without this.
     /// </param>
+    /// <param name="headingLevel">
+    /// The level of the headings, 1 for the prompt of the models. A prompt which quotes the request below a heading of
+    /// its own, as the one of the judge does, asks for 2, so that the request stays one part of it.
+    /// </param>
     /// <returns>The user prompt both models receive.</returns>
-    public string ToPrompt(string cacheBuster = "")
+    public string ToPrompt(string cacheBuster = "", int headingLevel = 1)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(headingLevel, 1);
+        var heading = new string('#', headingLevel);
         var body = this.Context.Length == 0
             ? this.Question
-            : $"""
-               # Context
-               {this.Context}
-
-               # Question or task
-               {this.Question}
-               """;
+            : $"{heading} Material\n{this.Context}\n\n{heading} Question or task\n{this.Question}";
 
         var withLanguage = this.LanguageName.Length == 0
             ? body

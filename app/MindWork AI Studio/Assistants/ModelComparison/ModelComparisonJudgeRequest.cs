@@ -73,7 +73,7 @@ public sealed record ModelComparisonJudgeRequest
                        {{this.Criterion}}
 
                        # Request
-                       {{this.Request.ToPrompt()}}
+                       {{this.Request.ToPrompt(headingLevel: 2)}}
 
                        # Answer A
                        {{this.AnswerA}}

@@ -21,11 +21,30 @@ public sealed class ModelComparisonRequestTests
     }
 
     [Test]
-    public void AContextAndAQuestionAreSeparatedByHeadings()
+    public void TheMaterialAndAQuestionAreSeparatedByHeadings()
     {
         var request = new ModelComparisonRequest("The document.", "Summarize it.");
 
-        Assert.That(request.ToPrompt(), Is.EqualTo("# Context\nThe document.\n\n# Question or task\nSummarize it.").Or.EqualTo("# Context\r\nThe document.\r\n\r\n# Question or task\r\nSummarize it."));
+        Assert.That(request.ToPrompt(), Is.EqualTo("# Material\nThe document.\n\n# Question or task\nSummarize it."));
+    }
+
+    /// <summary>
+    /// Checks that the request can stand below a heading of another prompt as one part of it.
+    /// </summary>
+    [Test]
+    public void TheHeadingsCanStandOneLevelDeeper()
+    {
+        var request = new ModelComparisonRequest("The document.", "Summarize it.");
+
+        Assert.That(request.ToPrompt(headingLevel: 2), Is.EqualTo("## Material\nThe document.\n\n## Question or task\nSummarize it."));
+    }
+
+    [Test]
+    public void AHeadingLevelBelowOneIsRefused()
+    {
+        var request = new ModelComparisonRequest("The document.", "Summarize it.");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => request.ToPrompt(headingLevel: 0));
     }
 
     [TestCase("")]
@@ -59,7 +78,7 @@ public sealed class ModelComparisonRequestTests
     {
         var request = new ModelComparisonRequest(string.Empty, "Summarize it.");
 
-        Assert.That(request.GetQuestionPreview(300), Is.EqualTo("Summarize it."));
+        Assert.That(request.GetQuestionPreview(), Is.EqualTo("Summarize it."));
     }
 
     [Test]
