@@ -59,18 +59,11 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     protected override Func<Task> SubmitAction => this.Compare;
 
     /// <remarks>
-    /// Starts over with the form, both models included: the base class has already cleared the first
-    /// one by the time this runs.
+    /// Starts over with the selected preset as it is stored: OnDefaultsAppliedAsync fills the form with it right after
+    /// this ran.
     /// </remarks>
     protected override void ResetForm()
     {
-        this.inputContext = string.Empty;
-        this.inputQuestion = string.Empty;
-        this.secondProvider = Settings.Provider.NONE;
-        this.judgeEnabled = false;
-        this.judgeProvider = Settings.Provider.NONE;
-        this.judgeInstructions = string.Empty;
-        this.runCount = 1;
         this.hasAttemptedCompare = false;
         this.isComparing = false;
         this.ClearBatch();
@@ -144,18 +137,20 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     protected override bool MightPreselectValues() => false;
 
     /// <summary>
-    /// Starts with the models which the options of the assistant preselect, once the page opens and after every reset.
+    /// Fills the form with the selected preset, once the page opens and after every reset. The page always works in a
+    /// preset: without any, it adds one.
     /// </summary>
     /// <remarks>
-    /// The base class preselects the first model through GetPreselectedProvider, which falls back to the provider of
-    /// the whole app even when the options preselect no model, see ModelComparisonPreselection.
+    /// The base class preselects the first model through GetPreselectedProvider by then, which knows nothing of the
+    /// presets. An assistant session which the base class restores afterward brings back its own form and preset, see
+    /// RestoreCustomAssistantSessionState.
     /// </remarks>
-    protected override Task OnDefaultsAppliedAsync()
+    protected override async Task OnDefaultsAppliedAsync()
     {
-        this.ProviderSettings = this.SettingsManager.PreselectedComparisonModel;
-        this.judgeProvider = this.SettingsManager.PreselectedComparisonJudge;
-        this.judgeEnabled = this.judgeProvider != Settings.Provider.NONE;
-        return Task.CompletedTask;
+        if (this.SelectedPreset is null)
+            this.selectedPresetId = ModelComparisonPresetChoice.Choose(this.presets, this.SettingsManager.ConfigurationData.ModelComparison) ?? await this.AddNewPreset();
+
+        this.LoadSelectedPreset();
     }
 
     /// <summary>
@@ -192,58 +187,71 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     private bool hasAttemptedCompare;
 
     /// <summary>
-    /// Whether the presets box is expanded. Collapsed by default: presets are a convenience for
-    /// repeated testing, not something every visit to this assistant needs to see.
-    /// </summary>
-    private bool presetsSectionExpanded;
-
-    /// <summary>
     /// Whether the summary of the request (the question preview and the context's length) is
-    /// expanded, while a batch is shown. Collapsed by default, for the same reason as
-    /// presetsSectionExpanded: useful to check back on, not something to stare at while
-    /// a batch runs.
+    /// expanded, while a batch is shown. Collapsed by default: useful to check back on, not
+    /// something to stare at while a batch runs.
     /// </summary>
     private bool requestSummaryExpanded;
 
     /// <summary>
-    /// The saved presets, sorted by name, as the store listed them last.
+    /// The presets as they are stored, sorted by name when the store listed them last.
     /// </summary>
-    private IReadOnlyList<ModelComparisonPreset> presets = [];
+    private List<ModelComparisonPreset> presets = [];
 
     /// <summary>
-    /// The ID of the saved preset currently loaded into the form, or null while nothing is loaded.
-    /// Not itself persisted: it only drives which preset the rename field and the delete button act
-    /// on, for the lifetime of this page.
+    /// The ID of the preset the form shows and changes, or null when the store could not provide any.
     /// </summary>
     private Guid? selectedPresetId;
 
     /// <summary>
-    /// What the rename field shows for SelectedPreset. Kept apart from the preset's own
-    /// name so a half-typed name is not written back on every
-    /// keystroke, only once the field loses focus.
+    /// What the name field shows for the selected preset, which may be a name not valid yet.
     /// </summary>
     private string presetName = string.Empty;
 
     /// <summary>
-    /// The saved preset selectedPresetId points to, or null when nothing is loaded or
-    /// the preset was deleted in the meantime.
+    /// The preset selectedPresetId points to, or null when there is none.
     /// </summary>
     private ModelComparisonPreset? SelectedPreset => this.presets.FirstOrDefault(preset => preset.Id == this.selectedPresetId);
 
+    /// <summary>
+    /// Whether the presets may change right now: not while the models are being asked.
+    /// </summary>
+    private bool ArePresetControlsDisabled => this.IsProcessing;
+
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
+        // The presets come first: the base class fills the form with one of them, see OnDefaultsAppliedAsync.
         await this.ReloadPresets();
+        await base.OnInitializedAsync();
     }
 
     /// <summary>
-    /// Lists the saved presets anew, when the page opens and after every change.
+    /// Stores a change of the form, a moment after the user stopped typing.
+    /// </summary>
+    protected override async Task OnFormChange() => await this.StorePresetIfChanged();
+
+    /// <summary>
+    /// Stores what the form changed, also when the user leaves the page before the form noticed the change.
+    /// </summary>
+    /// <remarks>
+    /// The store serves the whole app, so it finishes this even after the page is gone. A newer change of the same
+    /// preset, e.g., after the user came back right away, is stored after it, since the store writes each preset one
+    /// after the other.
+    /// </remarks>
+    protected override void DisposeResources()
+    {
+        this.StorePresetIfChanged().Observe("Model Comparison: storing the preset when leaving the page");
+        base.DisposeResources();
+    }
+
+    /// <summary>
+    /// Lists the presets anew.
     /// </summary>
     private async Task ReloadPresets()
     {
         try
         {
-            this.presets = await this.ModelComparisonStore.ListPresetsAsync();
+            this.presets = [.. await this.ModelComparisonStore.ListPresetsAsync()];
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -252,7 +260,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     }
 
     /// <summary>
-    /// Stores a change of the presets and lists them anew.
+    /// Stores a change of the presets.
     /// </summary>
     /// <param name="change">The change: a save or a delete in the store.</param>
     /// <returns>Whether the change was stored.</returns>
@@ -268,10 +276,6 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
             this.Logger.LogError(exception, "Could not store a change of the presets of the Model Comparison assistant.");
             await MessageBus.INSTANCE.SendError(new(AppIcons.ASSISTANT_MODEL_COMPARISON, TA("AI Studio could not save the change to your presets. Please try again.")));
             return false;
-        }
-        finally
-        {
-            await this.ReloadPresets();
         }
     }
 
@@ -296,12 +300,10 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     };
 
     /// <summary>
-    /// Loads a saved preset's fields into the form, or clears back to a blank form when the picker
-    /// was cleared.
+    /// Fills the form with the selected preset.
     /// </summary>
-    private void LoadPreset(Guid? presetId)
+    private void LoadSelectedPreset()
     {
-        this.selectedPresetId = presetId;
         var preset = this.SelectedPreset;
         if (preset is null)
         {
@@ -321,55 +323,113 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     }
 
     /// <summary>
-    /// Captures the form as it stands right now into a new saved preset, under a placeholder name the
-    /// user is expected to change with the rename field which appears once it is selected.
+    /// Stores the form into the selected preset, when it changed anything about it.
     /// </summary>
-    private async Task SaveAsNewPreset()
+    /// <remarks>
+    /// A name which is not valid yet, e.g., an empty one while the user retypes it, is not stored: the preset keeps
+    /// the name it was stored with until the new one is valid.
+    /// </remarks>
+    private async Task StorePresetIfChanged()
     {
-        var preset = this.PresetFromForm(Guid.NewGuid(), string.Format(DisplayCulture, T("Preset from {0}"), DateTimeOffset.Now));
+        if (this.SelectedPreset is not { } storedPreset)
+            return;
+
+        var name = this.ValidatingPresetName(this.presetName) is null ? this.presetName.Trim() : storedPreset.Name;
+        var changedPreset = this.PresetFromForm(storedPreset.Id, name);
+        if (changedPreset == storedPreset)
+            return;
+
+        if (!await this.ChangePresets(() => this.ModelComparisonStore.SavePresetAsync(changedPreset)))
+            return;
+
+        // Only now, so that a store which failed is tried again with the next change. The list may have been listed anew meanwhile:
+        var index = this.presets.FindIndex(preset => preset.Id == changedPreset.Id);
+        if (index >= 0)
+            this.presets[index] = changedPreset;
+    }
+
+    /// <summary>
+    /// Switches the form to another preset, once the changes of the current one are stored.
+    /// </summary>
+    /// <param name="presetId">The ID of the preset.</param>
+    private async Task SelectedPresetChanged(Guid presetId)
+    {
+        if (this.ArePresetControlsDisabled || presetId == this.selectedPresetId || this.presets.All(preset => preset.Id != presetId))
+            return;
+
+        await this.StorePresetIfChanged();
+        await this.SelectPreset(presetId);
+    }
+
+    /// <summary>
+    /// Fills the form with a preset and forgets the complaints about the previous one.
+    /// </summary>
+    /// <param name="presetId">The ID of the preset.</param>
+    private async Task SelectPreset(Guid? presetId)
+    {
+        this.selectedPresetId = presetId;
+        this.LoadSelectedPreset();
+        this.hasAttemptedCompare = false;
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
+
+        this.ClearInputIssues();
+    }
+
+    /// <summary>
+    /// Adds a preset and switches the form to it, once the changes of the current one are stored.
+    /// </summary>
+    private async Task AddPreset()
+    {
+        if (this.ArePresetControlsDisabled)
+            return;
+
+        await this.StorePresetIfChanged();
+        if (await this.AddNewPreset() is { } presetId)
+            await this.SelectPreset(presetId);
+    }
+
+    /// <summary>
+    /// Stores a new preset with the models which the options of the assistant preselect, and lists the presets anew.
+    /// </summary>
+    /// <returns>The ID of the new preset, or null when it could not be stored.</returns>
+    private async Task<Guid?> AddNewPreset()
+    {
+        var judge = this.SettingsManager.PreselectedComparisonJudge;
+        var preset = new ModelComparisonPreset
+        {
+            Id = Guid.NewGuid(),
+
+            // With seconds, so that two presets added right after each other do not get the same name, which has to be unique:
+            Name = string.Format(DisplayCulture, T("Preset from {0}"), DateTime.Now),
+            FirstProviderId = this.SettingsManager.PreselectedComparisonModel.Id,
+            JudgeEnabled = judge != Settings.Provider.NONE,
+            JudgeProviderId = judge.Id,
+        };
+
         if (!await this.ChangePresets(() => this.ModelComparisonStore.SavePresetAsync(preset)))
-            return;
+            return null;
 
-        this.selectedPresetId = preset.Id;
-        this.presetName = preset.Name;
-
-        // Opens the box so the new preset -- and the rename field to give it a real name -- is
-        // actually visible, instead of the save appearing to have done nothing:
-        this.presetsSectionExpanded = true;
+        await this.ReloadPresets();
+        return preset.Id;
     }
 
     /// <summary>
-    /// Captures the form as it stands right now back into SelectedPreset, keeping its
-    /// ID and name, instead of creating a new preset next to it.
+    /// Gets the name the list shows for a preset: for the selected one, the name the user is typing, so that the list
+    /// never shows an outdated name. The preset itself is stored a moment later, see StorePresetIfChanged.
     /// </summary>
-    private async Task UpdateSelectedPreset()
-    {
-        if (this.SelectedPreset is not { } preset)
-            return;
-
-        await this.ChangePresets(() => this.ModelComparisonStore.SavePresetAsync(this.PresetFromForm(preset.Id, preset.Name)));
-    }
+    /// <param name="preset">The preset.</param>
+    private string ListedName(ModelComparisonPreset preset) => preset.Id == this.selectedPresetId && !string.IsNullOrWhiteSpace(this.presetName)
+        ? this.presetName.Trim()
+        : preset.Name;
 
     /// <summary>
-    /// Writes a typed-in name back to SelectedPreset, once the field loses focus. An
-    /// empty name is refused rather than saved: the picker would show nothing to click on.
-    /// </summary>
-    private async Task PresetNameWasChanged()
-    {
-        if (this.SelectedPreset is not { } preset || string.IsNullOrWhiteSpace(this.presetName))
-            return;
-
-        await this.ChangePresets(() => this.ModelComparisonStore.SavePresetAsync(preset with { Name = this.presetName.Trim() }));
-    }
-
-    /// <summary>
-    /// Deletes SelectedPreset, after asking: a preset can carry a long context text
-    /// that took real effort to assemble, and one click by mistake would lose it for good.
+    /// Deletes the selected preset, after asking: a preset can carry a long material text that took real effort to
+    /// assemble, and one click by mistake would lose it for good. The form then switches to another preset.
     /// </summary>
     private async Task DeletePreset()
     {
-        var preset = this.SelectedPreset;
-        if (preset is null)
+        if (this.ArePresetControlsDisabled || this.SelectedPreset is not { } preset)
             return;
 
         var parameters = new DialogParameters<ConfirmDialog>
@@ -385,8 +445,26 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         if (!await this.ChangePresets(() => this.ModelComparisonStore.DeletePresetAsync(preset.Id)))
             return;
 
-        this.selectedPresetId = null;
-        this.presetName = string.Empty;
+        await this.ReloadPresets();
+        await this.SelectPreset(ModelComparisonPresetChoice.Choose(this.presets, this.SettingsManager.ConfigurationData.ModelComparison) ?? await this.AddNewPreset());
+    }
+
+    /// <summary>
+    /// Checks the name of the selected preset, the same way the Document Analysis checks the names of its policies.
+    /// </summary>
+    private string? ValidatingPresetName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return TA("Please provide a name for your preset.");
+
+        var trimmedName = name.Trim();
+        if (trimmedName.Length is > 60 or < 6)
+            return TA("The name of your preset must be between 6 and 60 characters long.");
+
+        if (this.presets.Any(preset => preset.Id != this.selectedPresetId && string.Equals(preset.Name, trimmedName, StringComparison.CurrentCultureIgnoreCase)))
+            return TA("A preset with this name already exists. Please choose a different name.");
+
+        return null;
     }
 
     private static readonly AssistantSessionStateKey<string> INPUT_CONTEXT_STATE_KEY = new(nameof(inputContext));
@@ -398,6 +476,8 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     private static readonly AssistantSessionStateKey<bool> JUDGE_ENABLED_STATE_KEY = new(nameof(judgeEnabled));
     private static readonly AssistantSessionStateKey<AIStudio.Settings.Provider> JUDGE_PROVIDER_STATE_KEY = new(nameof(judgeProvider));
     private static readonly AssistantSessionStateKey<string> JUDGE_INSTRUCTIONS_STATE_KEY = new(nameof(judgeInstructions));
+    private static readonly AssistantSessionStateKey<Guid?> SELECTED_PRESET_ID_STATE_KEY = new(nameof(selectedPresetId));
+    private static readonly AssistantSessionStateKey<string> PRESET_NAME_STATE_KEY = new(nameof(presetName));
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
@@ -411,9 +491,18 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         state.Set(JUDGE_ENABLED_STATE_KEY, this.judgeEnabled);
         state.Set(JUDGE_PROVIDER_STATE_KEY, this.judgeProvider);
         state.Set(JUDGE_INSTRUCTIONS_STATE_KEY, this.judgeInstructions);
+        state.Set(SELECTED_PRESET_ID_STATE_KEY, this.selectedPresetId);
+        state.Set(PRESET_NAME_STATE_KEY, this.presetName);
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The restored form belongs to the preset of the session, which therefore wins over the one OnDefaultsAppliedAsync
+    /// chose: otherwise, the next change would store this form into another preset. When the preset of the session was
+    /// deleted meanwhile, the form shows the chosen preset instead, unless the session holds a batch: its results belong
+    /// to the form of the session. The preset list is not shown along with a batch, so this does not happen through
+    /// this page. The base class restores the first model before this method, so loading the preset here wins over it.
+    /// </remarks>
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
         state.Restore(INPUT_CONTEXT_STATE_KEY, value => this.inputContext = value);
@@ -425,6 +514,16 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         state.Restore(JUDGE_ENABLED_STATE_KEY, value => this.judgeEnabled = value);
         state.Restore(JUDGE_PROVIDER_STATE_KEY, value => this.judgeProvider = value);
         state.Restore(JUDGE_INSTRUCTIONS_STATE_KEY, value => this.judgeInstructions = value);
+
+        Guid? sessionPresetId = null;
+        state.Restore(SELECTED_PRESET_ID_STATE_KEY, value => sessionPresetId = value);
+        if (sessionPresetId is { } presetId && this.presets.Any(preset => preset.Id == presetId))
+        {
+            this.selectedPresetId = presetId;
+            state.Restore(PRESET_NAME_STATE_KEY, value => this.presetName = value);
+        }
+        else if (this.batch is null)
+            this.LoadSelectedPreset();
     }
 
     /// <summary>
@@ -452,6 +551,9 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
+
+        // The preset keeps what was compared, also when the form changed only a moment ago:
+        await this.StorePresetIfChanged();
 
         this.ClearBatch();
         this.batch = new ModelComparisonBatch(this.runCount);

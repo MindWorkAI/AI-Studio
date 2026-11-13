@@ -992,9 +992,6 @@ public static class AppIcons
     /// <summary>Saves something, such as a chat, a setting, or a plugin.</summary>
     public const string SAVE = LucideIcons.SAVE;
 
-    /// <summary>Saves the current inputs as a new preset, such as a setup of the Model Comparison assistant.</summary>
-    public const string SAVE_AS_PRESET = LucideIcons.BOOKMARK_PLUS;
-
     /// <summary>Signals that AI Studio could not save or write something, such as a file, a conversation, or settings.</summary>
     public const string SAVE_FAILED = LucideIcons.SAVE_OFF;
 

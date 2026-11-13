@@ -4,48 +4,38 @@
 @* Two views: the form to fill in, and the batch in short while it runs and once it has. *@
 @if (!this.ShowsBatch)
 {
-    <MudPaper Outlined="true" Class="pa-4 mb-4">
-        @* Only the icon button toggles, the same as everywhere else in the app a header collapses a section: the rest of the row is decorative, not a second, redundant click target. Save as new preset stays outside the collapse: capturing the form right now should not need opening this box first. *@
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2" Wrap="Wrap.Wrap">
-            <MudIcon Icon="@AppIcons.PRESET" Color="Color.Primary"/>
-            <MudText Typo="Typo.subtitle1" Class="flex-grow-1">
-                @T("Presets")
-            </MudText>
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@AppIcons.SAVE_AS_PRESET" OnClick="@this.SaveAsNewPreset">
-                @T("Save as new preset")
-            </MudButton>
-            <MudIconButton Icon="@(this.presetsSectionExpanded ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)" Size="Size.Small" OnClick="@(() => this.presetsSectionExpanded = !this.presetsSectionExpanded)" title="@(this.presetsSectionExpanded ? T("Collapse") : T("Expand"))"/>
-        </MudStack>
+    <MudText Typo="Typo.h5" Class="mb-1">
+        @T("Presets")
+    </MudText>
 
-        <MudCollapse Expanded="@this.presetsSectionExpanded">
-            <MudGrid Spacing="2">
-                <MudItem xs="12" sm="8">
-                    <MudSelect T="Guid?" Value="@this.selectedPresetId" ValueChanged="@this.LoadPreset" Label="@T("Load a saved preset")" Variant="Variant.Outlined" Clearable="true" Margin="Margin.Dense">
-                        @foreach (var preset in this.presets)
-                        {
-                            <MudSelectItem T="Guid?" Value="@preset.Id">@preset.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="4">
-                    <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Wrap="Wrap.Wrap">
-                        @if (this.SelectedPreset is not null)
-                        {
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.SAVE" OnClick="@this.UpdateSelectedPreset">
-                                @T("Update preset")
-                            </MudButton>
-                            <MudIconButton Icon="@AppIcons.DELETE" OnClick="@this.DeletePreset" title="@T("Delete this preset")"/>
-                        }
-                    </MudStack>
-                </MudItem>
-            </MudGrid>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+        @TA("A preset keeps everything you set up below, so that you can run the same comparison again later, e.g., once a new model is available. You always work in a preset, and AI Studio saves your changes by itself.")
+    </MudJustifiedText>
 
-            @if (this.SelectedPreset is not null)
-            {
-                <MudTextField T="string" @bind-Text="@this.presetName" OnBlur="@this.PresetNameWasChanged" Label="@T("Preset name")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2"/>
-            }
-        </MudCollapse>
-    </MudPaper>
+    <MudList T="Guid" Disabled="@this.ArePresetControlsDisabled" Color="Color.Primary" Class="mb-1" SelectedValue="@(this.selectedPresetId ?? Guid.Empty)" SelectedValueChanged="@this.SelectedPresetChanged">
+        @foreach (var preset in this.presets)
+        {
+            <MudListItem T="Guid" @key="@preset.Id" Icon="@AppIcons.PRESET" Value="@preset.Id">
+                @this.ListedName(preset)
+            </MudListItem>
+        }
+    </MudList>
+
+    <MudStack Row="@true" Class="mt-1">
+        <MudButton OnClick="@this.AddPreset" Disabled="@this.ArePresetControlsDisabled" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Add preset")
+        </MudButton>
+        <MudButton OnClick="@this.DeletePreset" Disabled="@(this.ArePresetControlsDisabled || this.SelectedPreset is null)" Variant="Variant.Filled" Color="Color.Error">
+            @T("Delete this preset")
+        </MudButton>
+    </MudStack>
+
+    <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6" />
+
+    @if (this.SelectedPreset is not null)
+    {
+        <MudTextField T="string" @bind-Text="@this.presetName" Validation="@this.ValidatingPresetName" Immediate="@true" Label="@T("Preset name")" HelperText="@TA("Give your preset a name which tells you later what it compares.")" Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+    }
 
     <MudPaper Outlined="true" Class="pa-4 mb-4">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
