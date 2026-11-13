@@ -3750,12 +3750,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2202387805"] = "Sie k
 -- You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries or data types. For example, one embedding for texts, another for images, and a third for videos, etc.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2202387805::INFORMAL"] = "Du kannst mehr als eine Einbettungsmethode angeben. Das ist nützlich, wenn du unterschiedliche Einbettungen für verschiedene Abfragen oder Datentypen verwenden möchtest. Zum Beispiel eine Einbettung für Texte, eine andere für Bilder und eine dritte für Videos usw."
 
--- Operating system on which your ERI will run
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2205711729"] = "Betriebssystem, auf dem Ihr ERI-Server ausgeführt wird"
-
--- Operating system on which your ERI will run
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2205711729::INFORMAL"] = "Betriebssystem, auf dem dein ERI-Server ausgeführt wird"
-
 -- You can integrate additional libraries. Perhaps you want to evaluate the prompts in advance using a machine learning method or analyze them with a text mining approach? Or maybe you want to preprocess images in the prompts? For such advanced scenarios, you can specify which libraries you want to use here. It's best to describe which library you want to integrate for which purpose. This way, the LLM that writes the ERI server for you can try to use these libraries effectively. This should result in less rework being necessary. If you don't know the necessary libraries, you can instead attempt to describe the intended use. The LLM can then attempt to choose suitable libraries. However, hallucinations can occur, and fictional libraries might be selected.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2241311898"] = "Sie können zusätzliche Bibliotheken integrieren. Vielleicht möchten Sie die Prompts im Voraus mit einer Machine-Learning-Methode auswerten oder sie mithilfe eines Text-Mining-Ansatzes analysieren? Oder möchten Sie vielleicht Bilder in den Prompts vorverarbeiten? Für solche erweiterten Szenarien können Sie hier angeben, welche Bibliotheken Sie verwenden möchten. Beschreiben Sie am besten, welche Bibliothek Sie für welchen Zweck einbinden möchten. So kann das LLM, das den ERI-Server für Sie erstellt, versuchen, diese Bibliotheken effektiv zu nutzen. Dadurch sollte weniger Nacharbeit nötig sein. Falls Sie die benötigten Bibliotheken nicht kennen, können Sie stattdessen versuchen, den geplanten Einsatzzweck zu beschreiben. Das LLM kann dann versuchen, passende Bibliotheken auszuwählen. Allerdings können dabei Halluzinationen auftreten und fiktive Bibliotheken gewählt werden."
 
@@ -3791,6 +3785,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2417944396::INFORMAL"
 
 -- Data source settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2440619931"] = "Datenquellen-Einstellungen"
+
+-- Operating system on which your ERI server will run
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2445003908"] = "Betriebssystem, auf dem Ihr ERI-Server läuft"
+
+-- Operating system on which your ERI server will run
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2445003908::INFORMAL"] = "Betriebssystem, auf dem dein ERI-Server läuft"
 
 -- The LLM may need to generate many files. This reaches the request limit of most providers. Typically, only a certain number of requests can be made per minute, and only a maximum number of tokens can be generated per minute. AI Studio automatically considers this.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T248288139"] = "Das LLM muss möglicherweise viele Dateien generieren. Dadurch wird das Anfrage-Limit der meisten LLM-Anbieter erreicht. In der Regel kann nur eine bestimmte Anzahl von Anfragen pro Minute gestellt werden, und es darf nur eine maximale Anzahl von Token pro Minute erzeugt werden. AI Studio berücksichtigt dies automatisch."
@@ -4839,6 +4839,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 -- (Optional) Specify aspects the optimizer should emphasize in the resulting prompt, such as output structure, or constraints.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3686962588::INFORMAL"] = "(Optional) Gib Aspekte an, auf die der Optimierer bei der Erstellung des Prompts achten soll, z. B. die Struktur der Ausgabe oder Einschränkungen."
 
+-- Use these recommendations, which are based on the default prompt guide, to improve your prompts. The suggestions are updated based on your latest prompt optimization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3776036863"] = "Nutzen Sie diese Empfehlungen, die auf dem Leitfaden für den Standard-Prompt basieren, um Ihre Prompts zu verbessern. Die Vorschläge werden auf Grundlage Ihrer neuesten Prompt-Optimierung aktualisiert."
+
+-- Use these recommendations, which are based on the default prompt guide, to improve your prompts. The suggestions are updated based on your latest prompt optimization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3776036863::INFORMAL"] = "Nutze diese Empfehlungen, die auf dem Leitfaden für den Standard-Prompt basieren, um deine Prompts zu verbessern. Die Vorschläge werden auf Grundlage deiner neuesten Prompt-Optimierung aktualisiert."
+
 -- View default prompt guide
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T4017099405"] = "Standard-Prompting-Leitfaden anzeigen"
 
@@ -4898,12 +4904,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 
 -- Language for the optimized prompt
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T773621440"] = "Sprache für den optimierten Prompt"
-
--- Use these recommendations, that are based on the default prompt guide, to improve your prompts. The suggestions are updated based on your latest prompt optimization.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T805885769"] = "Verwenden Sie diese Empfehlungen, die auf dem Standard-Prompting-Leitfaden basieren, um Ihre Prompts zu verbessern. Die Vorschläge werden basierend auf Ihrer letzten Prompt-Optimierung aktualisiert."
-
--- Use these recommendations, that are based on the default prompt guide, to improve your prompts. The suggestions are updated based on your latest prompt optimization.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T805885769::INFORMAL"] = "Verwende diese Empfehlungen, die auf dem Standard-Prompting-Leitfaden basieren, um deine Prompts zu verbessern. Die Vorschläge werden basierend auf deiner letzten Prompt-Optimierung aktualisiert."
 
 -- For complex tasks, write prompts in English.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T85710437"] = "Schreiben Sie die Prompts für komplexe Aufgaben in Englisch."
@@ -10611,12 +10611,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2552381261::INFORMAL"] 
 -- No, prohibit profile use for this template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579080722"] = "Nein, die Profilnutzung für diese Vorlage verbieten"
 
--- You might want to predefine a first message that will be copied into the user prompt, when you use this chat template. This message could for example be a blueprint for a structured message that this chat template is defined to work with.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579208700"] = "Sie können eine Nachricht vordefinieren, die als Benutzereingabe verwendet wird, wenn Sie diese Chat-Vorlage verwenden. Diese Nachricht könnte beispielsweise eine Vorlage für eine strukturierte Nachricht sein, für die diese Chat-Vorlage entwickelt wurde."
-
--- You might want to predefine a first message that will be copied into the user prompt, when you use this chat template. This message could for example be a blueprint for a structured message that this chat template is defined to work with.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579208700::INFORMAL"] = "Du kannst eine Nachricht vordefinieren, die als Benutzereingabe verwendet wird, wenn du diese Chat-Vorlage verwendest. Diese Nachricht könnte beispielsweise eine Vorlage für eine strukturierte Nachricht sein, für die diese Chat-Vorlage entwickelt wurde."
-
 -- Does this chat template preselect a profile?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2602340928"] = "Wählt diese Chat-Vorlage ein Profil vorab aus?"
 
@@ -10823,6 +10817,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900237532"] = "Anbieter
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900713019"] = "Abbrechen"
+
+-- You might want to predefine a first message that will be copied into the user prompt when you use this chat template. This message could, for example, be a blueprint for a structured message that this chat template is defined to work with.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T942268234"] = "Vielleicht möchten Sie eine erste Nachricht vordefinieren, die beim Verwenden dieser Chat-Vorlage in die Nutzereingabe kopiert wird. Diese Nachricht könnte beispielsweise als Vorlage für eine strukturierte Nachricht dienen, für die diese Chat-Vorlage ausgelegt ist."
+
+-- You might want to predefine a first message that will be copied into the user prompt when you use this chat template. This message could, for example, be a blueprint for a structured message that this chat template is defined to work with.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T942268234::INFORMAL"] = "Vielleicht möchtest du eine erste Nachricht vordefinieren, die beim Verwenden dieser Chat-Vorlage in die Nutzereingabe kopiert wird. Diese Nachricht könnte beispielsweise als Vorlage für eine strukturierte Nachricht dienen, für die diese Chat-Vorlage ausgelegt ist."
 
 -- Preselected tools
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T975962532"] = "Vorausgewählte Werkzeuge"
