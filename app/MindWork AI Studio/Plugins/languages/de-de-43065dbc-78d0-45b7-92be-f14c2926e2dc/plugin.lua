@@ -8773,10 +8773,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANE
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T354528094"] = "Es sind keine Optionen vorausgewählt"
 
 -- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3577764214"] = "Wenn diese Option aktiviert ist, können Sie einige Agentenoptionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3577764214"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3577764214::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Agentenoptionen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3577764214::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
 
 -- Preselect text content cleaner options?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3659087305"] = "Optionen des Agenten zur Inhaltsbereinigung vorauswählen?"
@@ -8794,10 +8794,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESEL
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T354528094"] = "Es sind keine Optionen vorausgewählt"
 
 -- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3577764214"] = "Wenn diese Option aktiviert ist, können Sie einige Agentenoptionen vorauswählen. Das kann nützlich sein, wenn Sie ein LLM bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3577764214"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3577764214::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Agentenoptionen vorauswählen. Das kann nützlich sein, wenn du ein LLM bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3577764214::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
 
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3875604319"] = "Optionen sind vorausgewählt"
@@ -8833,10 +8833,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONT
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T354528094"] = "Es sind keine Optionen vorausgewählt"
 
 -- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3577764214"] = "Wenn diese Option aktiviert ist, können Sie einige Agentenoptionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3577764214"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3577764214::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Agentenoptionen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3577764214::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
 
 -- More active agents also mean that a corresponding number of requests are made simultaneously. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 to 6 agents.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3819544890"] = "Mehr aktive Agenten bedeuten auch, dass entsprechend viele Anfragen gleichzeitig gestellt werden. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn Sie unsicher sind, wählen Sie eine niedrige Einstellung zwischen 1 und 6 Agenten."
@@ -13642,10 +13642,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3008159782"
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3087504452"] = "Teilnehmer müssen nicht anreisen oder abreisen"
 
 -- When enabled, you can preselect most agenda options. This might be useful when you need to create similar agendas often.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3144058429"] = "Wenn diese Option aktiviert ist, können Sie die meisten Optionen für die Tagesordnung vorauswählen. Das ist hilfreich, wenn Sie häufig ähnliche Tagesordnungen erstellen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3144058429"] = "Wenn diese Option aktiviert ist, können Sie die meisten Agendaoptionen vorauswählen. Das kann nützlich sein, wenn Sie häufig ähnliche Agenden erstellen."
 
 -- When enabled, you can preselect most agenda options. This might be useful when you need to create similar agendas often.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3144058429::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die meisten Optionen für die Tagesordnung vorauswählen. Das ist hilfreich, wenn du häufig ähnliche Tagesordnungen erstellst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3144058429::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die meisten Agendaoptionen vorauswählen. Das kann nützlich sein, wenn du häufig ähnliche Agenden erstellst."
 
 -- Preselect whether there is a joint dinner
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGAGENDA::T3175009548"] = "Vorauswählen, ob ein gemeinsames Abendessen stattfindet"
@@ -13747,10 +13747,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2571
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2658119722"] = "Statistiken"
 
 -- When enabled, you can preselect options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2785309303"] = "Wenn diese Option aktiviert ist, können Sie Optionen vorauswählen. Das kann hilfreich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes Sprachmodell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2785309303"] = "Wenn diese Option aktiviert ist, können Sie Optionen vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2785309303::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du Optionen vorauswählen. Das kann hilfreich sein, wenn du eine bestimmte Sprache oder ein bestimmtes Sprachmodell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2785309303::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du Optionen vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM bevorzugst."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T3448155331"] = "Schließen"
@@ -14110,10 +14110,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1757092713"] 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1773585398"] = "Tastenkombination zum Senden der Eingabe"
 
 -- When enabled, you can preselect chat options. This might be useful when you prefer a specific provider.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1850635765"] = "Wenn diese Option aktiviert ist, können Sie Chatoptionen vorauswählen. Das kann nützlich sein, wenn Sie einen bestimmten Anbieter bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1850635765"] = "Wenn diese Option aktiviert ist, können Sie Chat-Optionen vorauswählen. Das kann nützlich sein, wenn Sie einen bestimmten Anbieter bevorzugen."
 
 -- When enabled, you can preselect chat options. This might be useful when you prefer a specific provider.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1850635765::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du Chatoptionen vorauswählen. Das kann nützlich sein, wenn du einen bestimmten Anbieter bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1850635765::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du Chat-Optionen vorauswählen. Das kann nützlich sein, wenn du einen bestimmten Anbieter bevorzugst."
 
 -- Provider selection when creating new chats
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T189306836"] = "Anbieterauswahl beim Erstellen neuer Chats"
@@ -14359,10 +14359,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T36293728
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T488190224"] = "ERI-Serveroptionen sind vorausgewählt"
 
 -- When enabled, you can preselect the grammar & spell checker options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1391848886"] = "Wenn diese Option aktiviert ist, können Sie die Optionen für die Grammatik- und Rechtschreibprüfung vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1391848886"] = "Wenn diese Option aktiviert ist, können Sie die Optionen für die Grammatik- und Rechtschreibprüfung vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect the grammar & spell checker options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1391848886::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Optionen für die Grammatik- und Rechtschreibprüfung vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1391848886::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Optionen für die Grammatik- und Rechtschreibprüfung vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM bevorzugst."
 
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1417990312"] = "Zielsprache vorauswählen"
@@ -14422,22 +14422,22 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3448155331"] 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
 
 -- When enabled, you can preselect the localization options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T85809675"] = "Wenn diese Option aktiviert ist, können Sie die Lokalisierungsoptionen vorauswählen. Das kann hilfreich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T85809675"] = "Wenn diese Option aktiviert ist, können Sie die Lokalisierungsoptionen vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect the localization options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T85809675::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Lokalisierungsoptionen vorauswählen. Das kann hilfreich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGI18N::T85809675::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Lokalisierungsoptionen vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM bevorzugst."
 
 -- Preselect the icon source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T1116652851"] = "Iconquelle vorauswählen"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T1116652851"] = "Icon-Quelle vorauswählen"
 
 -- Which icon source should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T1229467237"] = "Welche Icon-Quelle soll vorausgewählt sein?"
 
 -- When enabled, you can preselect the icon options. This might be useful when you prefer a specific icon source or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T1289778379"] = "Wenn diese Option aktiviert ist, können Sie die Icon-Optionen vorauswählen. Das kann hilfreich sein, wenn Sie eine bestimmte Quelle für Icons oder ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T1289778379"] = "Wenn diese Option aktiviert ist, können Sie die Icon-Optionen vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Icon-Quelle oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect the icon options. This might be useful when you prefer a specific icon source or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T1289778379::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Icon-Optionen vorauswählen. Das kann hilfreich sein, wenn du eine bestimmte Quelle für Icons oder ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T1289778379::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Icon-Optionen vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Icon-Quelle oder ein bestimmtes LLM bevorzugst."
 
 -- Assistant: Icon Finder Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T1570765862"] = "Assistent: Optionen für den Icon Finder"
@@ -14500,10 +14500,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T380468
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T3825475093"] = "Die Stellenbeschreibung vorauswählen?"
 
 -- When enabled, you can preselect some job posting options. This might be useful when you prefer a specific LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T3861766667"] = "Wenn diese Option aktiviert ist, können Sie einige Optionen für Stellenanzeigen vorauswählen. Das kann hilfreich sein, wenn Sie ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T3861766667"] = "Wenn diese Option aktiviert ist, können Sie einige Optionen für Stellenanzeigen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect some job posting options. This might be useful when you prefer a specific LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T3861766667::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Optionen für Stellenanzeigen vorauswählen. Das kann hilfreich sein, wenn du ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T3861766667::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Optionen für Stellenanzeigen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
 
 -- Content cleaner agent is preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
@@ -14512,10 +14512,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1013787
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1030372436"] = "Der Web-Content-Reader wird angezeigt"
 
 -- When enabled, you can preselect some legal check options. This might be useful when you prefer a specific LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1163917027"] = "Wenn diese Option aktiviert ist, können Sie einige Optionen für die rechtliche Prüfung vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1163917027"] = "Wenn diese Option aktiviert ist, können Sie einige Optionen für die rechtliche Prüfung vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect some legal check options. This might be useful when you prefer a specific LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1163917027::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Optionen für die rechtliche Prüfung vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1163917027::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Optionen für die rechtliche Prüfung vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
 
 -- Preselect legal check options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1563865738"] = "Optionen für die rechtliche Prüfung vorauswählen?"
@@ -14539,10 +14539,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1766361
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
 
 -- When enabled, the web content reader is preselected. This might be useful when you prefer to load legal content from the web very often.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1993094764"] = "Wenn diese Option aktiviert ist, ist der Webinhaltsleser vorausgewählt. Das kann hilfreich sein, wenn Sie häufig rechtliche Inhalte aus dem Web laden möchten."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1993094764"] = "Wenn diese Option aktiviert ist, wird der Web-Content-Reader vorausgewählt. Das kann nützlich sein, wenn Sie häufig juristische Inhalte aus dem Internet laden möchten."
 
 -- When enabled, the web content reader is preselected. This might be useful when you prefer to load legal content from the web very often.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1993094764::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Webinhaltsleser vorausgewählt. Das kann hilfreich sein, wenn du häufig rechtliche Inhalte aus dem Web laden möchtest."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1993094764::INFORMAL"] = "Wenn diese Option aktiviert ist, wird der Web-Content-Reader vorausgewählt. Das kann nützlich sein, wenn du häufig juristische Inhalte aus dem Internet laden möchtest."
 
 -- Hide the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2090693677"] = "Web-Content-Reader ausblenden?"
@@ -14569,10 +14569,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3649428
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4033382756"] = "Assistent: Optionen für die rechtliche Prüfung"
 
 -- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the legal content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4049873385"] = "Wenn diese Option aktiviert ist, ist der Agent zur Bereinigung von Inhalten vorausgewählt. Das kann nützlich sein, wenn Sie juristische Inhalte vor der Übersetzung bereinigen möchten."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4049873385"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn Sie den rechtlichen Inhalt bereinigen möchten, bevor Sie ihn übersetzen."
 
 -- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the legal content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4049873385::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Agent zur Bereinigung von Inhalten vorausgewählt. Das kann nützlich sein, wenn du juristische Inhalte vor der Übersetzung bereinigen möchtest."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4049873385::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn du den rechtlichen Inhalt bereinigen möchtest, bevor du ihn übersetzt."
 
 -- Preselect the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T629158142"] = "Den Web-Content-Reader vorauswählen?"
@@ -14596,10 +14596,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2382415529
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2571465005"] = "Sprache vorauswählen"
 
 -- When enabled, you can preselect options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2785309303"] = "Wenn diese Option aktiviert ist, können Sie Optionen vorab auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2785309303"] = "Wenn diese Option aktiviert ist, können Sie Optionen vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2785309303::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du Optionen vorab auswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T2785309303::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du Optionen vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM bevorzugst."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T3448155331"] = "Schließen"
@@ -14770,10 +14770,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3745021518
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T553954963"] = "Es sind keine Optionen für „Text umformulieren & verbessern“ vorausgewählt"
 
 -- When enabled, you can preselect the rewrite & improve text options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T993706855"] = "Wenn diese Option aktiviert ist, können Sie die Optionen zum Umformulieren und Verbessern von Texten vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T993706855"] = "Wenn diese Option aktiviert ist, können Sie Optionen für „Text umformulieren & verbessern“ vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect the rewrite & improve text options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T993706855::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Optionen zum Umformulieren und Verbessern von Texten vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T993706855::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du Optionen für „Text umformulieren & verbessern“ vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM bevorzugst."
 
 -- Preselect the audience expertise
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1017131030"] = "Expertise der Zielgruppe vorauswählen"
@@ -15043,10 +15043,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T234516261
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T2382415529"] = "Eine andere Sprache vorauswählen"
 
 -- When enabled, you can preselect synonym options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T238529950"] = "Wenn diese Funktion aktiviert ist, können Sie Synonymoptionen vorauswählen. Das kann hilfreich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T238529950"] = "Wenn diese Option aktiviert ist, können Sie Synonymoptionen vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect synonym options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T238529950::INFORMAL"] = "Wenn diese Funktion aktiviert ist, kannst du Synonymoptionen vorauswählen. Das kann hilfreich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T238529950::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du Synonymoptionen vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM bevorzugst."
 
 -- Synonym options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T2390458990"] = "Synonymoptionen sind vorausgewählt"
@@ -15082,10 +15082,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T141
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1462295644"] = "Eine andere Zielsprache vorauswählen"
 
 -- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the content before summarizing it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T154694569"] = "Wenn diese Option aktiviert ist, wird der Agent zum Bereinigen von Inhalten vorausgewählt. Das kann hilfreich sein, wenn Sie Inhalte lieber vor dem Zusammenfassen bereinigen möchten."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T154694569"] = "Wenn diese Option aktiviert ist, wird der Agent zur Inhaltsbereinigung automatisch vorausgewählt. Das kann nützlich sein, wenn Sie den Inhalt bereinigen möchten, bevor Sie ihn zusammenfassen."
 
 -- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the content before summarizing it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T154694569::INFORMAL"] = "Wenn diese Option aktiviert ist, wird der Agent zum Bereinigen von Inhalten vorausgewählt. Das kann hilfreich sein, wenn du Inhalte lieber vor dem Zusammenfassen bereinigen möchtest."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T154694569::INFORMAL"] = "Wenn diese Option aktiviert ist, wird der Agent zur Inhaltsbereinigung automatisch vorausgewählt. Das kann nützlich sein, wenn du den Inhalt bereinigen möchtest, bevor du ihn zusammenfasst."
 
 -- When activated, the web content reader is hidden and cannot be used. As a result, the user interface becomes a bit easier to use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1633101895"] = "Wenn diese Option aktiviert ist, wird der Web-Content-Reader ausgeblendet und kann nicht verwendet werden. Dadurch wird die Benutzeroberfläche etwas einfacher zu bedienen."
@@ -15106,10 +15106,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T209
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2355441996"] = "Optionen für die Textzusammenfassung sind vorausgewählt"
 
 -- When enabled, you can preselect the text summarizer options. This might be useful when you prefer a specific language, complexity, or LLM.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2449139605"] = "Wenn diese Option aktiviert ist, können Sie die Optionen für die Textzusammenfassung vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache, einen bestimmten Komplexitätsgrad oder ein bestimmtes LLM bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2449139605"] = "Wenn diese Option aktiviert ist, können Sie die Optionen für die Textzusammenfassung vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache, eine bestimmte Komplexität oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect the text summarizer options. This might be useful when you prefer a specific language, complexity, or LLM.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2449139605::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Optionen für die Textzusammenfassung vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache, einen bestimmten Komplexitätsgrad oder ein bestimmtes LLM bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2449139605::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Optionen für die Textzusammenfassung vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache, eine bestimmte Komplexität oder ein bestimmtes LLM bevorzugst."
 
 -- Web content reader is hidden
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2799795311"] = "Der Web-Content-Reader ist ausgeblendet"
@@ -15124,10 +15124,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T344
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
 
 -- When enabled, the web content reader is preselected. This might be useful when you prefer to load content from the web very often.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3548268499"] = "Wenn diese Option aktiviert ist, ist der Webinhalte-Leser vorausgewählt. Das kann nützlich sein, wenn Sie häufig Inhalte aus dem Web laden möchten."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3548268499"] = "Wenn diese Option aktiviert ist, ist der Web-Content-Reader vorausgewählt. Das kann nützlich sein, wenn Sie häufig Inhalte aus dem Internet laden."
 
 -- When enabled, the web content reader is preselected. This might be useful when you prefer to load content from the web very often.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3548268499::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Webinhalte-Leser vorausgewählt. Das kann nützlich sein, wenn du häufig Inhalte aus dem Web laden möchtest."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3548268499::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Web-Content-Reader vorausgewählt. Das kann nützlich sein, wenn du häufig Inhalte aus dem Internet lädst."
 
 -- Web content reader is preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3641773985"] = "Der Web-Content-Reader ist vorausgewählt"
@@ -15208,10 +15208,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T344815
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
 
 -- When enabled, the web content reader is preselected. This might be useful when you prefer to load content from the web very often.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3548268499"] = "Wenn diese Option aktiviert ist, ist der Leser für Webinhalte vorausgewählt. Das kann nützlich sein, wenn Sie häufig Inhalte aus dem Web laden möchten."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3548268499"] = "Wenn diese Option aktiviert ist, ist der Web-Content-Reader vorausgewählt. Das kann nützlich sein, wenn Sie häufig Inhalte aus dem Internet laden."
 
 -- When enabled, the web content reader is preselected. This might be useful when you prefer to load content from the web very often.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3548268499::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Leser für Webinhalte vorausgewählt. Das kann nützlich sein, wenn du häufig Inhalte aus dem Web laden möchtest."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3548268499::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Web-Content-Reader vorausgewählt. Das kann nützlich sein, wenn du häufig Inhalte aus dem Internet lädst."
 
 -- Web content reader is preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3641773985"] = "Der Web-Content-Reader ist vorausgewählt"
@@ -15220,19 +15220,19 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T364177
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
 
 -- When enabled, you can preselect the translator options. This might be useful when you prefer a specific target language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T4195511669"] = "Wenn diese Option aktiviert ist, können Sie die Übersetzungsoptionen vorauswählen. Das kann hilfreich sein, wenn Sie eine bestimmte Zielsprache oder ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T4195511669"] = "Wenn diese Option aktiviert ist, können Sie die Übersetzeroptionen vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Zielsprache oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect the translator options. This might be useful when you prefer a specific target language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T4195511669::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Übersetzungsoptionen vorauswählen. Das kann hilfreich sein, wenn du eine bestimmte Zielsprache oder ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T4195511669::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Übersetzeroptionen vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Zielsprache oder ein bestimmtes LLM bevorzugst."
 
 -- Preselect the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T629158142"] = "Den Web-Content-Reader vorauswählen?"
 
 -- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T82436938"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann hilfreich sein, wenn Sie Inhalte vor dem Übersetzen bereinigen möchten."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T82436938"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn Sie den Inhalt vor der Übersetzung bereinigen möchten."
 
 -- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T82436938::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann hilfreich sein, wenn du Inhalte vor dem Übersetzen bereinigen möchtest."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T82436938::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn du den Inhalt vor der Übersetzung bereinigen möchtest."
 
 -- How fast should the live translation react?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T884246296"] = "Wie schnell soll die Live-Übersetzung reagieren?"
@@ -15340,10 +15340,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1766
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1766361623::INFORMAL"] = "Wähle, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
 
 -- When enabled, you can preselect the e-mail options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1781333371"] = "Wenn diese Option aktiviert ist, können Sie die E-Mail-Optionen vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1781333371"] = "Wenn diese Option aktiviert ist, können Sie die E-Mail-Optionen vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM bevorzugen."
 
 -- When enabled, you can preselect the e-mail options. This might be useful when you prefer a specific language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1781333371::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die E-Mail-Optionen vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T1781333371::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die E-Mail-Optionen vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Sprache oder ein bestimmtes LLM bevorzugst."
 
 -- Assistant: Writing E-Mails Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T2021226503"] = "Assistent: Optionen zum Schreiben von E-Mails"
