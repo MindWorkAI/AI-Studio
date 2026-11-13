@@ -9,10 +9,11 @@ namespace AIStudio.Assistants.ModelComparison;
 /// The card of one answer of the Model Comparison assistant, with its title above.
 /// </summary>
 /// <remarks>
-/// The same markup for both answers of a run, so that nothing but the position tells them apart. From the breakpoint
-/// md of MudBlazor on, the two cards are in one row of the grid and fill it, so they are equally high however long the
-/// answers are. That is why the names of the models are not part of the card: how long a name is would make the cards
-/// differ, see ModelComparisonAnswerCaption. In a narrower window, the second card stands below the first one.
+/// The same markup for both answers of a run, so that nothing but the position tells them apart. The card fills the
+/// column of the grid it stands in; from the breakpoint md of MudBlazor on, both columns are in one row, so the cards
+/// are equally high however long the answers are. That is why the names of the models are not part of the card: how
+/// long a name is would make the cards differ, see ModelComparisonAnswerCaption. In a narrower window, the second card
+/// stands below the first one. The column itself belongs to the page, see ModelComparisonVoteColumns.
 /// </remarks>
 public partial class ModelComparisonAnswerCard : MSGComponentBase
 {
@@ -41,13 +42,6 @@ public partial class ModelComparisonAnswerCard : MSGComponentBase
     /// </summary>
     [Parameter]
     public string CardClass { get; set; } = ModelComparisonOutcome.FILL_THE_COLUMN;
-
-    /// <summary>
-    /// Gets or sets further classes of the column, e.g., its order in the grid, which differs in a narrow window:
-    /// there, what belongs to an answer follows right below it.
-    /// </summary>
-    [Parameter]
-    public string ItemClass { get; set; } = string.Empty;
 
     /// <summary>
     /// The answer as the chat component wants it. Built once per answer, and not on every render: the chat component

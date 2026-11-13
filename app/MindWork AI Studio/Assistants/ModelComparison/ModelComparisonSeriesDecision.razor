@@ -4,29 +4,17 @@
     @TA("Which chat helped you more with your task? Read both chats again if you like. You still do not know which model answered in which chat.")
 </MudJustifiedText>
 
-<MudGrid Spacing="3" Class="mb-3">
-    <MudItem xs="12" md="6">
+<ModelComparisonVoteColumns ALabel="@T("Chat 1 helped more")" BLabel="@T("Chat 2 helped more")" TieLabel="@T("Both helped equally")" Disabled="@this.IsSaving" Vote="@this.Vote">
+    <ColumnA>
         <MudText Typo="Typo.h6" Class="mb-2">
             @T("Chat 1")
         </MudText>
         <EmbeddedChat Store="@this.Store" Component="@COMPONENT" ChatId="@this.SeriesTask.ChatOne.ChatId" CreateThread="@this.CreateThread" HidesModelIdentity="true" IsReadOnly="true" ExportFileName="@T("Chat 1")"/>
-    </MudItem>
-    <MudItem xs="12" md="6">
+    </ColumnA>
+    <ColumnB>
         <MudText Typo="Typo.h6" Class="mb-2">
             @T("Chat 2")
         </MudText>
         <EmbeddedChat Store="@this.Store" Component="@COMPONENT" ChatId="@this.SeriesTask.ChatTwo.ChatId" CreateThread="@this.CreateThread" HidesModelIdentity="true" IsReadOnly="true" ExportFileName="@T("Chat 2")"/>
-    </MudItem>
-</MudGrid>
-
-<MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
-    <MudButton Variant="Variant.Filled" Disabled="@this.IsSaving" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.COLUMN_A))">
-        @T("Chat 1 helped more")
-    </MudButton>
-    <MudButton Variant="Variant.Filled" Disabled="@this.IsSaving" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.COLUMN_B))">
-        @T("Chat 2 helped more")
-    </MudButton>
-    <MudButton Variant="Variant.Outlined" Disabled="@this.IsSaving" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.TIE))">
-        @T("Both helped equally")
-    </MudButton>
-</MudStack>
+    </ColumnB>
+</ModelComparisonVoteColumns>

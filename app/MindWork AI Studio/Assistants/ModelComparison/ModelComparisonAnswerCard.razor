@@ -1,7 +1,7 @@
 @using AIStudio.Chat
 @inherits MSGComponentBase
 
-<MudItem xs="12" md="6" Class="@($"d-flex flex-column {this.ItemClass}")">
+<div class="d-flex flex-column flex-grow-1">
     <MudText Typo="Typo.subtitle1">
         @this.Title
     </MudText>
@@ -15,4 +15,4 @@
             @T("This model did not answer.")
         </MudAlert>
     }
-</MudItem>
+</div>

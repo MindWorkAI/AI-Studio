@@ -13,7 +13,8 @@ namespace AIStudio.Assistants.ModelComparison;
 /// <remarks>
 /// The chats keep their places, the first chat on the left: the order in which the user met the models was drawn at
 /// random already, see ModelComparisonSeriesTask.FirstModelIsChatOne, and a vote names a chat, not a model. The chats
-/// stand side by side on wide windows and below each other on narrow ones, so that long answers stay readable.
+/// stand side by side on wide windows and below each other on narrow ones, so that long answers stay readable, each
+/// with its button below it, as the answers in the mode Answer Variance, see ModelComparisonVoteColumns.
 /// </remarks>
 public partial class ModelComparisonSeriesDecision : MSGComponentBase
 {
