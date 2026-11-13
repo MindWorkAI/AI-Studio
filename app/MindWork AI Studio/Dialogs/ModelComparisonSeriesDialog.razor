@@ -30,11 +30,11 @@
             <MudGrid Class="mb-1">
                 <MudItem xs="12" lg="6">
                     <MudText Typo="Typo.subtitle1" Class="mb-1">@T("First model")</MudText>
-                    <ProviderSelection ProviderSettings="@this.firstProvider" ProviderSettingsChanged="@this.FirstProviderChanged"/>
+                    <ProviderSelectionWithConfidence ProviderSettings="@this.firstProvider" ProviderSettingsChanged="@this.FirstProviderChanged"/>
                 </MudItem>
                 <MudItem xs="12" lg="6">
                     <MudText Typo="Typo.subtitle1" Class="mb-1">@T("Second model")</MudText>
-                    <ProviderSelection ProviderSettings="@this.secondProvider" ProviderSettingsChanged="@this.SecondProviderChanged"/>
+                    <ProviderSelectionWithConfidence ProviderSettings="@this.secondProvider" ProviderSettingsChanged="@this.SecondProviderChanged"/>
                 </MudItem>
             </MudGrid>
 
@@ -46,7 +46,7 @@
                 @if (this.judgeEnabled)
                 {
                     <MudText Typo="Typo.subtitle1" Class="mb-1 mt-3">@T("Judge model")</MudText>
-                    <ProviderSelection ProviderSettings="@this.judgeProvider" ProviderSettingsChanged="@this.JudgeProviderChanged"/>
+                    <ProviderSelectionWithConfidence ProviderSettings="@this.judgeProvider" ProviderSettingsChanged="@this.JudgeProviderChanged"/>
                 }
             </CompactExpansionPanel>
 

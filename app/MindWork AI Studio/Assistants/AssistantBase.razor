@@ -186,7 +186,7 @@
                     </MudButton>
                 }
 
-                @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
+                @if (this.ShowsProviderConfidence)
                 {
                     <ConfidenceInfo LLMProvider="@this.ProviderSettings.UsedLLMProvider"/>
                 }

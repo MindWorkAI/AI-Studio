@@ -134,6 +134,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual bool ShowReset => true;
 
     /// <summary>
+    /// Whether the footer shows the confidence card of the selected provider, and the submit button its confidence,
+    /// when the user wants to see confidences, see DataConfidence.ShowProviderConfidence.
+    /// </summary>
+    /// <remarks>
+    /// An assistant which works with several providers at once turns this off: the footer would show only one of them.
+    /// It shows the confidence next to each provider selection instead, see ProviderSelectionWithConfidence.
+    /// </remarks>
+    protected virtual bool ShowProviderConfidence => true;
+
+    /// <summary>
     /// Whether the system prompt starts with the current date and time.
     /// </summary>
     /// <remarks>
@@ -360,7 +370,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
 
-    private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
+    private bool ShowsProviderConfidence => this.ShowProviderConfidence && this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence;
+
+    private string SubmitButtonStyle => this.ShowsProviderConfidence ?this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
 
     private IReadOnlyList<Tools.Components> VisibleSendToAssistants => this.AssistantLaunchService.GetDestinationsFor(this.Component);
     

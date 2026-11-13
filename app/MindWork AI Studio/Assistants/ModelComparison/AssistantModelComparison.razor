@@ -44,11 +44,11 @@
     <MudGrid Class="mb-1">
         <MudItem xs="12" lg="6">
             <MudText Typo="Typo.h6" Class="mb-1">@T("First model")</MudText>
-            <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingComparedProvider"/>
+            <ProviderSelectionWithConfidence @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingComparedProvider"/>
         </MudItem>
         <MudItem xs="12" lg="6">
             <MudText Typo="Typo.h6" Class="mb-1">@T("Second model")</MudText>
-            <ProviderSelection @bind-ProviderSettings="@this.secondProvider" ValidateProvider="@this.ValidatingComparedProvider"/>
+            <ProviderSelectionWithConfidence @bind-ProviderSettings="@this.secondProvider" ValidateProvider="@this.ValidatingComparedProvider"/>
         </MudItem>
     </MudGrid>
 
@@ -86,7 +86,7 @@
         @if (this.judgeEnabled)
         {
             <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Judge model")</MudText>
-            <ProviderSelection @bind-ProviderSettings="@this.judgeProvider" ValidateProvider="@this.ValidatingJudgeProvider"/>
+            <ProviderSelectionWithConfidence @bind-ProviderSettings="@this.judgeProvider" ValidateProvider="@this.ValidatingJudgeProvider"/>
 
             <MudTextField T="string" @bind-Text="@this.judgeInstructions" AdornmentIcon="@AppIcons.JUDGE" Adornment="Adornment.Start" Label="@T("What should the judge pay particular attention to? (optional)")" HelperText="@TA("The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source.")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mt-3"/>
         }

@@ -44,6 +44,12 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
 
     protected override bool ShowCopyResult => false;
 
+    /// <remarks>
+    /// Two models and a judge: the footer would show the confidence of the first model only. Each model selection
+    /// shows the confidence of its own model instead.
+    /// </remarks>
+    protected override bool ShowProviderConfidence => false;
+
     protected override string SubmitText => T("Compare");
 
     /// <summary>
