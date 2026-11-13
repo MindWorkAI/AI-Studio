@@ -442,7 +442,7 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             this.Logger.LogError(exception, "Could not store a comparison series of the Model Comparison assistant.");
-            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, T("AI Studio could not save the comparison series. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not save the comparison series. Please try again.")));
             return false;
         }
         finally

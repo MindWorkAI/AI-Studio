@@ -86,7 +86,7 @@ public partial class ModelComparisonResultsDialog : MSGComponentBase
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             this.Logger.LogError(exception, "Could not delete the results of the Model Comparison assistant.");
-            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_MODEL_COMPARISON, T("AI Studio could not delete all results. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_MODEL_COMPARISON, TA("AI Studio could not delete all results. Please try again.")));
         }
         finally
         {

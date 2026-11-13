@@ -127,7 +127,7 @@ public partial class AssistantModelComparisonTasks : MSGComponentBase
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             this.Logger.LogError(exception, "Could not delete a comparison series of the Model Comparison assistant.");
-            await this.MessageBus.SendError(new(AppIcons.DELETE, T("AI Studio could not delete the comparison series. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.DELETE, TA("AI Studio could not delete the comparison series. Please try again.")));
         }
 
         await this.ReloadSeriesAsync();
