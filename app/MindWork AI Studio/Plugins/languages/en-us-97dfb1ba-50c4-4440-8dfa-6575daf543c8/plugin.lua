@@ -3558,11 +3558,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::WRITINGSTYLESEXTENSIONS::T64124106
 -- Self-hosted LLM providers are allowed: users cannot choose any cloud-based provider
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T1196461290"] = "Self-hosted LLM providers are allowed: users cannot choose any cloud-based provider"
 
--- Please select what kind of LLM provider are allowed for this data source
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T1641796568"] = "Please select what kind of LLM provider are allowed for this data source"
+-- Please select which kinds of LLM providers are allowed for this data source.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T2900980049"] = "Please select which kinds of LLM providers are allowed for this data source."
 
--- Please select what kind of LLM provider are allowed for this data source
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T1641796568::INFORMAL"] = "Please select what kind of LLM provider are allowed for this data source"
+-- Please select which kinds of LLM providers are allowed for this data source.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T2900980049::INFORMAL"] = "Please select which kinds of LLM providers are allowed for this data source."
 
 -- Any LLM provider is allowed: users might choose a cloud-based or a self-hosted provider
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ALLOWEDLLMPROVIDERSEXTENSIONS::T3264558650"] = "Any LLM provider is allowed: users might choose a cloud-based or a self-hosted provider"
@@ -8706,12 +8706,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Choose File"
 -- External Assistants rated below this audit level are treated as insufficiently reviewed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "External Assistants rated below this audit level are treated as insufficiently reviewed."
 
--- The audit shows you all security risks and information, if you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1701891173"] = "The audit shows you all security risks and information, if you consider this rating false at your own discretion, you can decide to install it anyway (not recommended)."
-
--- The audit shows you all security risks and information, if you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1701891173::INFORMAL"] = "The audit shows you all security risks and information, if you consider this rating false at your own discretion, you can decide to install it anyway (not recommended)."
-
 -- Users may still activate plugins below the minimum Audit-Level
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1840342259"] = "Users may still activate plugins below the minimum Audit-Level"
 
@@ -8738,6 +8732,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDI
 
 -- External Assistant can be activated without an audit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2915620630"] = "External Assistant can be activated without an audit"
+
+-- The audit shows you all security risks and information. If you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3081698423"] = "The audit shows you all security risks and information. If you consider this rating false at your own discretion, you can decide to install it anyway (not recommended)."
+
+-- The audit shows you all security risks and information. If you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3081698423::INFORMAL"] = "The audit shows you all security risks and information. If you consider this rating false at your own discretion, you can decide to install it anyway (not recommended)."
 
 -- Security audit is done manually by the user
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3568079552"] = "Security audit is done manually by the user"
@@ -19851,12 +19851,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3667396132"] = "The
 -- The field NAME is empty. The name must be a non-empty string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3763759727"] = "The field NAME is empty. The name must be a non-empty string."
 
--- The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3890922974"] = "The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated."
-
--- The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3890922974::INFORMAL"] = "The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated."
-
 -- The field SUPPORT_CONTACT does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T4189964941"] = "The field SUPPORT_CONTACT does not exist or is not a valid string."
 
@@ -19868,6 +19862,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T471697173"] = "The 
 
 -- The table CATEGORIES is empty. At least one category is necessary. Valid categories are: {0}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T529114360"] = "The table CATEGORIES is empty. At least one category is necessary. Valid categories are: {0}."
+
+-- The field DEPRECATION_MESSAGE does not exist or is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T652086723"] = "The field DEPRECATION_MESSAGE does not exist or is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated."
+
+-- The field DEPRECATION_MESSAGE does not exist or is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T652086723::INFORMAL"] = "The field DEPRECATION_MESSAGE does not exist or is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated."
 
 -- The field IS_MAINTAINED does not exist or is not a valid boolean.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T773237915"] = "The field IS_MAINTAINED does not exist or is not a valid boolean."
@@ -22410,6 +22410,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Maximum Content Characters
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2801581200"] = "Maximum Content Characters"
 
+-- (Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat has read one or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2994712441"] = "(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat has read one or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."
+
+-- (Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat has read one or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2994712441::INFORMAL"] = "(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat has read one or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."
+
 -- Allowed private host '{0}' is not valid.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3089707139"] = "Allowed private host '{0}' is not valid."
 
@@ -22421,12 +22427,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- Read Web Page
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3612587998"] = "Read Web Page"
-
--- (Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3698872955"] = "(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."
-
--- (Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3698872955::INFORMAL"] = "(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."
 
 -- Load a web page and extract its readable content, links, and page details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3715690061"] = "Load a web page and extract its readable content, links, and page details."
