@@ -1537,10 +1537,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3741175
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3741175627::INFORMAL"] = "Du bist nicht sicher, ob das Lab zu deiner Aufgabe passt? Frag es unter „Passt das Lab zu meiner Aufgabe?“."
 
 -- In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476"] = "Im Schritt „{0}“ recherchieren Agenten des Labs zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Sie starten von selbst, sobald Sie die Rahmendaten bestätigen, sofern die Websuche in AI Studio eingerichtet ist. Sie können sie jederzeit erneut starten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476"] = "Im Schritt „{0}“ recherchieren Agenten des Labs zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Die Agenten starten von selbst, sobald Sie die Rahmendaten bestätigen, sofern die Websuche in AI Studio eingerichtet ist. Sie können sie jederzeit erneut starten."
 
 -- In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476::INFORMAL"] = "Im Schritt „{0}“ recherchieren Agenten des Labs zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Sie starten von selbst, sobald du die Rahmendaten bestätigst, sofern die Websuche in AI Studio eingerichtet ist. Du kannst sie jederzeit erneut starten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476::INFORMAL"] = "Im Schritt „{0}“ recherchieren Agenten des Labs zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Die Agenten starten von selbst, sobald du die Rahmendaten bestätigst, sofern die Websuche in AI Studio eingerichtet ist. Du kannst sie jederzeit erneut starten."
 
 -- Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3813171730"] = "Ist ein Schritt weitgehend geklärt, lassen Sie das Lab unter dem Gespräch seinen Arbeitsstand erstellen. Sie prüfen und bearbeiten ihn, und sobald Sie ihn bestätigen, bauen die späteren Schritte darauf auf. Außerdem schlägt das Lab Werte für leere Felder in „Ihre Angaben“ vor, die Sie einzeln übernehmen."
@@ -2260,10 +2260,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T39894125
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T4258942199"] = "Vorschau"
 
 -- The file holds your details, your confirmed work states, your conversations, and the materials you confirmed. It never holds the name of your preparation, your material, the research on the web, or the date, the place, and the web page of the event.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T47760612"] = "Die Datei enthält Ihre Angaben, Ihre bestätigten Arbeitsstände, Ihre Gespräche und die Materialien, die Sie bestätigt haben. Sie enthält nie den Namen Ihrer Vorbereitung, Ihr Material, die Recherche im Web oder den Termin, den Ort und die Webseite der Veranstaltung."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T47760612"] = "Die Datei enthält Ihre Angaben, Ihre bestätigten Arbeitsstände, Ihre Gespräche und die Materialien, die Sie bestätigt haben. Nie darin enthalten sind der Name Ihrer Vorbereitung, Ihr Material, die Recherche im Web sowie der Termin, der Ort und die Webseite der Veranstaltung."
 
 -- The file holds your details, your confirmed work states, your conversations, and the materials you confirmed. It never holds the name of your preparation, your material, the research on the web, or the date, the place, and the web page of the event.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T47760612::INFORMAL"] = "Die Datei enthält deine Angaben, deine bestätigten Arbeitsstände, deine Gespräche und die Materialien, die du bestätigt hast. Sie enthält nie den Namen deiner Vorbereitung, dein Material, die Recherche im Web oder den Termin, den Ort und die Webseite der Veranstaltung."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T47760612::INFORMAL"] = "Die Datei enthält deine Angaben, deine bestätigten Arbeitsstände, deine Gespräche und die Materialien, die du bestätigt hast. Nie darin enthalten sind der Name deiner Vorbereitung, dein Material, die Recherche im Web sowie der Termin, der Ort und die Webseite der Veranstaltung."
 
 -- Would you like to share your session with the research team of the BeyondFacts Lab, so that it can develop the lab further? Before you share it, AI Studio removes the personal details it recognizes: links, e-mail addresses, paths, phone numbers, and the names and terms below. It follows fixed rules and may miss something, so please check the preview before you send it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREDIALOG::T483133022"] = "Möchten Sie Ihre Sitzung mit dem Forschungsteam des BeyondFacts Lab teilen, damit es das Lab weiterentwickeln kann? Bevor Sie sie teilen, entfernt AI Studio die persönlichen Angaben, die es erkennt: Links, E-Mail-Adressen, Pfade, Telefonnummern sowie die unten aufgeführten Namen und Begriffe. Die Erkennung folgt festen Regeln und kann etwas übersehen. Bitte prüfen Sie daher die Vorschau, bevor Sie die Sitzung senden."
@@ -2764,10 +2764,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1428868592"] 
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T145442870"] = "Kacheltitel (optional)"
 
 -- The direct chat launcher tile has no input form of its own. It opens a new chat right away, with the provider, profile, chat template, and data sources you select below. Name a workspace for that chat, or leave the workspace empty to open a disappearing chat.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1455505413"] = "Die Kachel für den Chat-Schnellstart verfügt über kein eigenes Eingabeformular. Sie öffnet einen neuen Chat – mit dem Anbieter, Profil, der Chat-Vorlage und den Datenquellen, die Sie unten auswählen. Benennen Sie einen Arbeitsbereich für diesen Chat oder lassen Sie den Arbeitsbereich leer, um einen selbstlöschenden Chat zu öffnen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1455505413"] = "Die Kachel für den Chat-Schnellstart verfügt über kein eigenes Eingabeformular. Stattdessen öffnet sie sofort einen neuen Chat – mit dem Anbieter, Profil, der Chat-Vorlage und den Datenquellen, die Sie unten auswählen. Benennen Sie einen Arbeitsbereich für diesen Chat oder lassen Sie den Arbeitsbereich leer, um einen selbstlöschenden Chat zu öffnen."
 
 -- The direct chat launcher tile has no input form of its own. It opens a new chat right away, with the provider, profile, chat template, and data sources you select below. Name a workspace for that chat, or leave the workspace empty to open a disappearing chat.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1455505413::INFORMAL"] = "Die Kachel für den Chat-Schnellstart verfügt über kein eigenes Eingabeformular. Sie öffnet einen neuen Chat – mit dem Anbieter, Profil, der Chat-Vorlage und den Datenquellen, die du unten auswählst. Benenne einen Arbeitsbereich für diesen Chat oder lass den Arbeitsbereich leer, um einen selbstlöschenden Chat zu öffnen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1455505413::INFORMAL"] = "Die Kachel für den Chat-Schnellstart verfügt über kein eigenes Eingabeformular. Stattdessen öffnet sie sofort einen neuen Chat – mit dem Anbieter, Profil, der Chat-Vorlage und den Datenquellen, die du unten auswählst. Benenne einen Arbeitsbereich für diesen Chat oder lass den Arbeitsbereich leer, um einen selbstlöschenden Chat zu öffnen."
 
 -- Additional changes (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1502888752"] = "Zusätzliche Änderungen (optional)"
@@ -7579,10 +7579,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T509585668"] = "Ihre Chats i
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T509585668::INFORMAL"] = "Deine Chats in Arbeitsbereichen mit ihren Transkripten."
 
 -- Log files. They help when something goes wrong, but they hold none of your data.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T53143530"] = "Protokolldateien. Sie helfen, wenn etwas schiefgeht, enthalten aber keine Ihrer Daten."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T53143530"] = "Protokolldateien. Diese helfen, wenn etwas schiefgeht, enthalten aber keine Ihrer Daten."
 
 -- Log files. They help when something goes wrong, but they hold none of your data.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T53143530::INFORMAL"] = "Protokolldateien. Sie helfen, wenn etwas schiefgeht, enthalten aber keine deiner Daten."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T53143530::INFORMAL"] = "Protokolldateien. Diese helfen, wenn etwas schiefgeht, enthalten aber keine deiner Daten."
 
 -- AI Studio keeps your data in two folders on this computer. When you back up your computer with a tool of your own, such as [Restic](https://restic.net), [Borg](https://www.borgbackup.org), or [Time Machine](https://support.apple.com/en-us/104984), this shows which of their contents belong into the backup and which it can leave out. Click a path to copy it to the clipboard, or use the folder button to open it in your file manager.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T69622543"] = "AI Studio speichert Ihre Daten in zwei Ordnern auf diesem Rechner. Wenn Sie Ihren Rechner mit einem eigenen Programm sichern, etwa mit [Restic](https://restic.net), [Borg](https://www.borgbackup.org) oder [Time Machine](https://support.apple.com/de-de/104984), sehen Sie hier, welche Inhalte dieser Ordner in die Sicherung gehören und welche sie auslassen kann. Klicken Sie auf einen Pfad, um ihn in die Zwischenablage zu kopieren, oder auf das Ordnersymbol, um ihn in Ihrem Dateimanager zu öffnen."
@@ -9820,10 +9820,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T4097602620"] = "Dieses We
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T641009275"] = "1 nicht verfügbares Werkzeug anzeigen, das ausgewählt ist"
 
 -- You can switch off tools you never need in the app settings, under Tool Settings. They then no longer appear here.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T732483684"] = "Werkzeuge, die Sie nie benötigen, können Sie in den App-Einstellungen unter „Werkzeugeinstellungen“ deaktivieren. Sie erscheinen dann hier nicht mehr."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T732483684"] = "Werkzeuge, die Sie nie benötigen, können Sie in den App-Einstellungen unter „Werkzeugeinstellungen“ deaktivieren. Dann erscheinen sie hier nicht mehr."
 
 -- You can switch off tools you never need in the app settings, under Tool Settings. They then no longer appear here.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T732483684::INFORMAL"] = "Werkzeuge, die du nie benötigst, kannst du in den App-Einstellungen unter „Werkzeugeinstellungen“ deaktivieren. Sie erscheinen dann hier nicht mehr."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T732483684::INFORMAL"] = "Werkzeuge, die du nie benötigst, kannst du in den App-Einstellungen unter „Werkzeugeinstellungen“ deaktivieren. Dann erscheinen sie hier nicht mehr."
 
 -- Tool Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T749664565"] = "Werkzeugauswahl"
@@ -10474,10 +10474,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3100082920"] =
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3100082920::INFORMAL"] = "Möchtest du den vorherigen Lauf fortsetzen und nur die fehlenden und fehlgeschlagenen Dokumente verarbeiten, oder möchtest du einen völlig neuen Lauf starten, der alle Dokumente erneut verarbeitet?"
 
 -- Please note: the log lists {0} more document(s) as successfully processed, but their results no longer exist. They count as missing and are processed again when you continue the run.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3505810382"] = "Bitte beachten Sie: Die Log-Datei führt {0} weitere(s) Dokument(e) als erfolgreich verarbeitet auf, deren Ergebnisse jedoch nicht mehr vorliegen. Sie zählen als fehlend und werden beim Fortsetzen erneut verarbeitet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3505810382"] = "Bitte beachten Sie: Die Log-Datei führt {0} weitere(s) Dokument(e) als erfolgreich verarbeitet auf, deren Ergebnisse jedoch nicht mehr vorliegen. Diese Dokumente zählen als fehlend und werden beim Fortsetzen erneut verarbeitet."
 
 -- Please note: the log lists {0} more document(s) as successfully processed, but their results no longer exist. They count as missing and are processed again when you continue the run.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3505810382::INFORMAL"] = "Bitte beachte: Die Log-Datei führt {0} weitere(s) Dokument(e) als erfolgreich verarbeitet auf, deren Ergebnisse jedoch nicht mehr vorliegen. Sie zählen als fehlend und werden beim Fortsetzen erneut verarbeitet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3505810382::INFORMAL"] = "Bitte beachte: Die Log-Datei führt {0} weitere(s) Dokument(e) als erfolgreich verarbeitet auf, deren Ergebnisse jedoch nicht mehr vorliegen. Diese Dokumente zählen als fehlend und werden beim Fortsetzen erneut verarbeitet."
 
 -- There is already a log of a previous batch run in the output folder.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3762601235"] = "Im Ausgabeordner liegt bereits eine Log-Datei eines vorherigen Stapellaufs."
@@ -13705,7 +13705,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T1766
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T180921696"] = "Zurücksetzen"
 
 -- No restriction. You can retrieve as many biases as you want per day.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2305356277"] = "Keine Einschränkung. Sie können beliebig viele Verzerrungen pro Tag abrufen"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2305356277"] = "Keine Einschränkung. Sie können beliebig viele Verzerrungen pro Tag abrufen."
 
 -- No restriction. You can retrieve as many biases as you want per day.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2305356277::INFORMAL"] = "Keine Einschränkung. Du kannst beliebig viele Verzerrungen pro Tag abrufen."
@@ -16333,7 +16333,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3799572475"] = "Dateien ohne Date
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3865031940"] = "Aktionen"
 
 -- These file types and folders were found in the folder of the data source, but its file patterns or its list of excluded files and folders leave them out. They are intentionally excluded and do not affect the indexing status. Excluded folders are not searched at all.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T4007318423"] = "Diese Dateitypen und Ordner wurden im Ordner der Datenquelle gefunden, aber ihre Dateimuster oder ihre Liste ausgeschlossener Dateien und Ordner lassen sie aus. Sie fehlen absichtlich und wirken sich nicht auf den Indexierungsstatus aus. Ausgeschlossene Ordner werden gar nicht durchsucht."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T4007318423"] = "Diese Dateitypen und Ordner wurden im Ordner der Datenquelle gefunden, aber ihre Dateimuster oder ihre Liste ausgeschlossener Dateien und Ordner lassen sie aus. Diese fehlen absichtlich und wirken sich nicht auf den Indexierungsstatus aus. Ausgeschlossene Ordner werden gar nicht durchsucht."
 
 -- Between two steps, AI Studio pauses for {0} to {1} seconds, to spare an embedding server which many people share.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T4167794090"] = "Zwischen zwei Etappen pausiert AI Studio {0} bis {1} Sekunden, um einen Einbettungsserver zu entlasten, den sich viele Nutzer teilen."
@@ -16555,7 +16555,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID-Konflikt: Die
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T117115925"] = "SQLite speichert lokale RAG-Index-Metadaten, durchsuchbaren Text der Blöcke sowie Datei-Fingerabdrücke, die verwendet werden, um zu entscheiden, ob lokale Dateien erneut indexiert werden müssen – und das ohne einen eigenen Datenbankserver oder eine SQLite-Installation im System."
 
 -- This is a private AI Studio installation. It runs without an enterprise configuration.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "Dies ist eine private AI-Studio-Installation. Sie läuft ohne Unternehmenskonfiguration."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "Dies ist eine private AI-Studio-Installation, die ohne Unternehmenskonfiguration läuft."
 
 -- Copies the configuration origin to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T125850635"] = "Kopiert den Ursprung der Konfiguration in die Zwischenablage"
@@ -16585,7 +16585,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1402243995"] = "Updates werden v
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1402243995::INFORMAL"] = "Updates werden von deiner Organisation verwaltet. Wenn du Fragen zur Aktualisierung von AI Studio hast, wende dich an deine IT-Abteilung."
 
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "Diese Bibliothek wird verwendet, um die MudBlazor-Bibliothek zu erweitern. Sie stellt zusätzliche Komponenten bereit, die nicht Teil der MudBlazor-Bibliothek sind."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "Diese Bibliothek wird verwendet, um die MudBlazor-Bibliothek zu erweitern, und stellt zusätzliche Komponenten bereit, die nicht Teil der MudBlazor-Bibliothek sind."
 
 -- Trademarks & Brand Assets
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421823619"] = "Marken und Markenressourcen"
@@ -16690,10 +16690,10 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Serv
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2043537691"] = "Das Confluence-Logo von Atlassian kennzeichnet das Werkzeug „Confluence durchsuchen“."
 
 -- AI Studio shows the logo of an AI provider next to its entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2124655767"] = "AI Studio zeigt neben dem jeweiligen Eintrag das Logo eines KI-Anbieters, damit Sie auf einen Blick sehen können, mit welchem Dienst ein Anbieter verbunden ist. Alle Produktnamen, Logos und Marken sind Eigentum ihrer jeweiligen Inhaber. Ihre Verwendung dient hier ausschließlich der Kennzeichnung kompatibler Dienste und bedeutet keine Empfehlung, Unterstützung oder Geschäftsbeziehung zwischen MindWork AI Studio und diesen Unternehmen."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2124655767"] = "AI Studio zeigt neben dem jeweiligen Eintrag das Logo eines KI-Anbieters, damit Sie auf einen Blick sehen können, mit welchem Dienst ein Anbieter verbunden ist. Alle Produktnamen, Logos und Marken sind Eigentum ihrer jeweiligen Inhaber. Hier dienen sie ausschließlich der Kennzeichnung kompatibler Dienste und bedeuten keine Empfehlung, Unterstützung oder Geschäftsbeziehung zwischen MindWork AI Studio und diesen Unternehmen."
 
 -- AI Studio shows the logo of an AI provider next to its entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2124655767::INFORMAL"] = "AI Studio zeigt neben dem jeweiligen Eintrag das Logo eines KI-Anbieters, damit du auf einen Blick sehen kannst, mit welchem Dienst ein Anbieter verbunden ist. Alle Produktnamen, Logos und Marken sind Eigentum ihrer jeweiligen Inhaber. Ihre Verwendung dient hier ausschließlich der Kennzeichnung kompatibler Dienste und bedeutet keine Empfehlung, Unterstützung oder Geschäftsbeziehung zwischen MindWork AI Studio und diesen Unternehmen."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2124655767::INFORMAL"] = "AI Studio zeigt neben dem jeweiligen Eintrag das Logo eines KI-Anbieters, damit du auf einen Blick sehen kannst, mit welchem Dienst ein Anbieter verbunden ist. Alle Produktnamen, Logos und Marken sind Eigentum ihrer jeweiligen Inhaber. Hier dienen sie ausschließlich der Kennzeichnung kompatibler Dienste und bedeuten keine Empfehlung, Unterstützung oder Geschäftsbeziehung zwischen MindWork AI Studio und diesen Unternehmen."
 
 -- The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2146481269"] = "Das Projekt windows-rs ermöglicht den Zugriff auf Windows-APIs aus Rust. Wir verwenden mehrere Bibliotheken aus diesem Projekt: windows-registry wird verwendet, um die gewünschte Konfiguration in Windows-Unternehmensumgebungen auszulesen. Die Bibliotheken windows und windows-collections werden verwendet, um den nativen Windows-Dialog zum Teilen zu öffnen, zum Beispiel wenn Sie ein Plugin mit anderen teilen."
@@ -16882,16 +16882,16 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2989678330"] = "Kopiert den Fing
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2999154325"] = "Die TOML-Bibliothek analysiert beim Start der Laufzeitumgebung den eingebetteten Phrasenkatalog zur Erkennung von Prompt-Injection. Dadurch bleiben die Erkennungsregeln von der Rust-Implementierung getrennt und lassen sich leichter pflegen."
 
 -- This library identifies files by their content. It is used for document streaming and as the first safety and media classification step before local audio processing.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3002755581"] = "Diese Bibliothek identifiziert Dateien anhand ihres Inhalts. Sie wird für das Streaming von Dokumenten sowie als erste Sicherheits- und Medienklassifizierungsstufe vor der lokalen Audioverarbeitung verwendet."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3002755581"] = "Diese Bibliothek identifiziert Dateien anhand ihres Inhalts. AI Studio verwendet sie für das Streaming von Dokumenten sowie als erste Sicherheits- und Medienklassifizierungsstufe vor der lokalen Audioverarbeitung."
 
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Änderungsprotokoll"
 
 -- Test configuration: nobody deployed this configuration. It is valid until you restart AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3019585985"] = "Testkonfiguration: Niemand hat diese Konfiguration bereitgestellt. Sie ist gültig, bis Sie AI Studio neu starten."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3019585985"] = "Testkonfiguration: Niemand hat diese Konfiguration bereitgestellt. Bis Sie AI Studio neu starten, bleibt sie gültig."
 
 -- Test configuration: nobody deployed this configuration. It is valid until you restart AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3019585985::INFORMAL"] = "Testkonfiguration: Niemand hat diese Konfiguration bereitgestellt. Sie ist gültig, bis du AI Studio neu startest."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3019585985::INFORMAL"] = "Testkonfiguration: Niemand hat diese Konfiguration bereitgestellt. Bis du AI Studio neu startest, bleibt sie gültig."
 
 -- External HTTPS custom root certificates are configured but not active.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3021325354"] = "Externe benutzerdefinierte HTTPS-Stammzertifikate sind konfiguriert, aber nicht aktiv."
@@ -17068,7 +17068,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4058524336"] = "Zulässige Hosts
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4060906280"] = "Diese Bibliothek wird von der Rust-Laufzeitumgebung verwendet, um den Benutzernamen des aktuellen Benutzers auszulesen, z. B. wenn ein von einer Organisation verwalteter ERI-Server den OS-Benutzernamen für die Authentifizierung verwendet."
 
 -- This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "Diese Bibliothek wird verwendet, um asynchrone Datenströme in Rust zu erstellen. Sie ermöglicht es uns, mit Datenströmen zu arbeiten, die asynchron bereitgestellt werden, wodurch sich Ereignisse oder Daten, die nach und nach eintreffen, leichter verarbeiten lassen. Wir nutzen dies zum Beispiel, um beliebige Daten aus dem Dateisystem an das Einbettungssystem zu übertragen."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "Diese Bibliothek wird verwendet, um asynchrone Datenströme in Rust zu erstellen. Damit können wir mit Datenströmen arbeiten, die asynchron bereitgestellt werden, wodurch sich Ereignisse oder Daten, die nach und nach eintreffen, leichter verarbeiten lassen. Wir nutzen dies zum Beispiel, um beliebige Daten aus dem Dateisystem an das Einbettungssystem zu übertragen."
 
 -- Ropus provides the Opus encoder and decoder used by the media pipeline.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4113556626"] = "Ropus stellt den Opus-Encoder und -Decoder bereit, die von der Medienpipeline verwendet werden."
@@ -17119,7 +17119,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T485678418"] = "Apache ECharts is
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T551035563"] = "Protokollanzeige öffnen"
 
 -- This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "Dies ist eine Bibliothek, die die Grundlagen für asynchrones Programmieren in Rust bereitstellt. Sie enthält zentrale Trait-Definitionen wie Stream sowie Hilfsfunktionen wie join!, select! und verschiedene Methoden zur Kombination von Futures, die einen ausdrucksstarken asynchronen Kontrollfluss ermöglichen."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "Dies ist eine Bibliothek, die die Grundlagen für asynchrones Programmieren in Rust bereitstellt. Dazu gehören zentrale Trait-Definitionen wie Stream sowie Hilfsfunktionen wie join!, select! und verschiedene Methoden zur Kombination von Futures, die einen ausdrucksstarken asynchronen Kontrollfluss ermöglichen."
 
 -- Your Data Folders
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T570573187"] = "Ihre Datenordner"
@@ -17182,10 +17182,10 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "Für einige Daten
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T906183311"] = "Update-Anleitung"
 
 -- A test configuration is active. It acts like a configuration of your organization and may, for example, approve assistant plugins. AI Studio removes it the next time you start the app.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T923110805"] = "Eine Testkonfiguration ist aktiv. Sie funktioniert wie eine Konfiguration Ihrer Organisation und kann beispielsweise Assistenten-Plugins freigeben. AI Studio entfernt sie beim nächsten Start der App."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T923110805"] = "Eine Testkonfiguration ist aktiv und funktioniert wie eine Konfiguration Ihrer Organisation; sie kann beispielsweise Assistenten-Plugins freigeben. AI Studio entfernt sie beim nächsten Start der App."
 
 -- A test configuration is active. It acts like a configuration of your organization and may, for example, approve assistant plugins. AI Studio removes it the next time you start the app.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T923110805::INFORMAL"] = "Eine Testkonfiguration ist aktiv. Sie funktioniert wie eine Konfiguration deiner Organisation und kann beispielsweise Assistenten-Plugins freigeben. AI Studio entfernt sie beim nächsten Start der App."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T923110805::INFORMAL"] = "Eine Testkonfiguration ist aktiv und funktioniert wie eine Konfiguration deiner Organisation; sie kann beispielsweise Assistenten-Plugins freigeben. AI Studio entfernt sie beim nächsten Start der App."
 
 -- We use this library to read the sections of OneNote notebooks. This allows us to insert OneNote pages into prompts and take them into account in RAG processes. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T938136536"] = "Wir verwenden diese Bibliothek, um die Abschnitte von OneNote-Notizbüchern zu lesen. So ist es möglich, OneNote-Seiten in Prompts einzufügen und in RAG-Prozessen zu berücksichtigen. Der genaue, unter der MPL lizenzierte Quellcode ist im verlinkten Repository verfügbar und in den mit AI Studio gebündelten Offline-Hinweisen angegeben."
@@ -17293,7 +17293,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3342440765::INFORMAL"] = "Deine Orga
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3355474457"] = "Plugin-Archiv teilen"
 
 -- Your organization has disabled sharing plugins.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3379469503"] = "Ihre Organisation hat das Teilen von Plugins deaktiviert"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3379469503"] = "Ihre Organisation hat das Teilen von Plugins deaktiviert."
 
 -- Your organization has disabled sharing plugins.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3379469503::INFORMAL"] = "Deine Organisation hat das Teilen von Plugins deaktiviert."
@@ -18706,10 +18706,10 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T1555760974::INFORMA
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2205693550"] = "Was AI Studio bereits vorbereitet hat, bleibt für jede Datei erhalten, die es am neuen Speicherort unverändert findet, also mit demselben Dateityp, derselben Größe und demselben Änderungsdatum. In einem Ordner muss eine solche Datei außerdem ihren Namen behalten und im selben Unterordner liegen."
 
 -- They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2343773457"] = "Sie beantworten weiterhin Stichwortsuchen, aber die Suche nach Bedeutung funktioniert nicht mehr, und es können keine weiteren Dokumente für sie vorbereitet werden. Bereits vorbereitete Datenquellen bleiben zudem an diesen Anbieter gebunden, sodass Sie sie nicht einfach auf einen anderen umstellen können."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2343773457"] = "Diese Datenquellen beantworten weiterhin Stichwortsuchen, aber die Suche nach Bedeutung funktioniert nicht mehr, und es können keine weiteren Dokumente für sie vorbereitet werden. Bereits vorbereitete Datenquellen bleiben zudem an diesen Anbieter gebunden, sodass Sie sie nicht einfach auf einen anderen umstellen können."
 
 -- They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2343773457::INFORMAL"] = "Sie beantworten weiterhin Stichwortsuchen, aber die Suche nach Bedeutung funktioniert nicht mehr, und es können keine weiteren Dokumente für sie vorbereitet werden. Bereits vorbereitete Datenquellen bleiben zudem an diesen Anbieter gebunden, sodass du sie nicht einfach auf einen anderen umstellen kannst."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2343773457::INFORMAL"] = "Diese Datenquellen beantworten weiterhin Stichwortsuchen, aber die Suche nach Bedeutung funktioniert nicht mehr, und es können keine weiteren Dokumente für sie vorbereitet werden. Bereits vorbereitete Datenquellen bleiben zudem an diesen Anbieter gebunden, sodass du sie nicht einfach auf einen anderen umstellen kannst."
 
 -- and {0} more.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2519847121"] = "und {0} weitere."
@@ -19036,7 +19036,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1947951545
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2009776477"] = "Kein lesbarer Text"
 
 -- The file '{0}' is not a readable PDF, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T212983471"] = "Die Datei „{0}“ ist keine lesbare PDF-Datei und wurde nicht indexiert. Sie ist möglicherweise beschädigt oder wurde unvollständig übertragen. AI Studio liest sie erneut ein, sobald sich die Datei ändert."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T212983471"] = "Die Datei „{0}“ ist keine lesbare PDF-Datei und wurde nicht indexiert. Möglicherweise ist sie beschädigt oder wurde unvollständig übertragen. AI Studio liest sie erneut ein, sobald sich die Datei ändert."
 
 -- The file '{0}' is not a readable spreadsheet, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2156961139"] = "Die Datei „{0}“ ist keine lesbare Tabellenkalkulation und wurde nicht indexiert. Möglicherweise ist sie beschädigt oder unvollständig übertragen worden. AI Studio liest sie erneut ein, sobald sich die Datei ändert."
@@ -19075,7 +19075,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3236411826
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3311894040"] = "Pandoc nicht verfügbar"
 
 -- The file '{0}' is not a text file, so it was not indexed. Its content could not be read as text, which means it might have a wrong file extension. AI Studio reads it again as soon as the file changes.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3512647923"] = "Die Datei „{0}“ ist keine Textdatei und wurde nicht indexiert. Ihr Inhalt konnte nicht als Text gelesen werden; möglicherweise hat sie die falsche Dateiendung. AI Studio liest sie erneut ein, sobald sich die Datei ändert."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3512647923"] = "Die Datei „{0}“ ist keine Textdatei und wurde nicht indexiert. Der Inhalt konnte nicht als Text gelesen werden; möglicherweise hat sie die falsche Dateiendung. AI Studio liest sie erneut ein, sobald sich die Datei ändert."
 
 -- No content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3513709999"] = "Kein Inhalt"
@@ -19141,7 +19141,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2701144378::I
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2793077828"] = "Das Lesen der Datei „{0}“ dauerte zu lange und wurde abgebrochen. Daher wurde die Datei nicht gesendet. Wenn die Datei auf einem Netzlaufwerk gespeichert ist, könnte die Verbindung langsam oder unterbrochen sein."
 
 -- The file '{0}' is not a readable PDF and was not sent. It might be damaged or transferred incompletely.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2891768359"] = "Die Datei „{0}“ ist keine lesbare PDF-Datei und wurde nicht gesendet. Sie ist möglicherweise beschädigt oder wurde unvollständig übertragen."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2891768359"] = "Die Datei „{0}“ ist keine lesbare PDF-Datei und wurde nicht gesendet. Möglicherweise ist sie beschädigt oder wurde unvollständig übertragen."
 
 -- No text could be read from the file '{0}', so it was not sent. It might contain images only, such as a scanned PDF without a text layer, or no readable text at all.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2897122009"] = "Aus der Datei „{0}“ konnte kein Text gelesen werden, daher wurde sie nicht gesendet. Möglicherweise enthält sie nur Bilder, etwa ein gescanntes PDF ohne Textebene, oder gar keinen lesbaren Text."
@@ -19156,7 +19156,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3297602719"] 
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3297602719::INFORMAL"] = "Die Datei „{0}“ ist tatsächlich eine {1} und wurde als solche gelesen. Bitte korrigiere deren Dateiendung."
 
 -- The file '{0}' is not a text file and was not sent. Its content could not be read as text, so it might have a wrong file extension.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3303873344"] = "Die Datei „{0}“ ist keine Textdatei und wurde nicht gesendet. Ihr Inhalt konnte nicht als Text gelesen werden; möglicherweise hat sie die falsche Dateiendung."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3303873344"] = "Die Datei „{0}“ ist keine Textdatei und wurde nicht gesendet. Der Inhalt konnte nicht als Text gelesen werden; möglicherweise hat sie die falsche Dateiendung."
 
 -- The file '{0}' could not be read and was not sent.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3527027650"] = "Die Datei „{0}“ konnte nicht gelesen und daher nicht gesendet werden."
