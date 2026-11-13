@@ -88,7 +88,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
         //
         // Only a chat has data sources to search: the chat of the app, and the chats of a comparison series of the
-        // Model Comparison assistant. The Answer Test of that assistant runs as the same component, but its chats keep
+        // Model Comparison assistant. Its mode Answer Variance runs as the same component, but its chats keep
         // the data sources switched off, see ModelComparisonProviderAdapter:
         //
         VisibleIn = new()

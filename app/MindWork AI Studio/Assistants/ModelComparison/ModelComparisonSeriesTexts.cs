@@ -1,7 +1,7 @@
 namespace AIStudio.Assistants.ModelComparison;
 
 /// <summary>
-/// The long explanations of the Field Test of the Model Comparison assistant, which its page and the dialog of a new
+/// The long explanations of the mode Everyday Tasks of the Model Comparison assistant, which its page and the dialog of a new
 /// comparison series share.
 /// </summary>
 public static class ModelComparisonSeriesTexts

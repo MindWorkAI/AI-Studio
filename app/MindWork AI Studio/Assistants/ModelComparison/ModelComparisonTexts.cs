@@ -1,7 +1,7 @@
 namespace AIStudio.Assistants.ModelComparison;
 
 /// <summary>
-/// The long explanations of the Answer Test of the Model Comparison assistant.
+/// The long explanations of the mode Answer Variance of the Model Comparison assistant.
 /// </summary>
 public static class ModelComparisonTexts
 {
@@ -20,7 +20,7 @@ public static class ModelComparisonTexts
     /// <summary>
     /// What the two models receive, and what they do not, unlike in the chat.
     /// </summary>
-    public static string WhatTheModelsReceive => TA("Both models receive your question or task and the material below, and nothing else: no tools, no data sources, no mailboxes, and no web pages, even when you use them in the chat. A web address in your request stays plain text, which no model opens. That way, the answers show what the models themselves make of the same text. To compare how well two models help you with tools, data sources, and your own files, use the Field Test.");
+    public static string WhatTheModelsReceive => TA("Both models receive your question or task and the material below, and nothing else: no tools, no data sources, no mailboxes, and no web pages, even when you use them in the chat. A web address in your request stays plain text, which no model opens. That way, the answers show what the models themselves make of the same text. To compare how well two models help you with tools, data sources, and your own files, use the mode “Everyday Tasks”.");
 
     /// <summary>
     /// What the material is, and where it comes from.

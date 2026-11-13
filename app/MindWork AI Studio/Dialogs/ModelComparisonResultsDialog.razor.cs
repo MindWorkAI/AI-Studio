@@ -70,10 +70,10 @@ public partial class ModelComparisonResultsDialog : MSGComponentBase
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { dialog => dialog.Message, TA("Are you sure you want to delete all results of the Answer Test? Your presets and the comparison series of the Field Test stay. This cannot be undone.") },
+            { dialog => dialog.Message, TA("Are you sure you want to delete all results of the mode “Answer Variance”? Your presets and the comparison series of the mode “Everyday Tasks” stay. This cannot be undone.") },
         };
 
-        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete the results of the Answer Test"), parameters, DialogOptions.FULLSCREEN);
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete the results of “Answer Variance”"), parameters, DialogOptions.FULLSCREEN);
         var result = await reference.Result;
         if (result is null || result.Canceled)
             return;

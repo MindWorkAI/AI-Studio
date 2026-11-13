@@ -12,9 +12,9 @@ public static class ModelComparisonModeExtensions
         /// </summary>
         public string Name => mode switch
         {
-            ModelComparisonMode.TASKS => TB("Field Test"),
+            ModelComparisonMode.TASKS => TB("Everyday Tasks"),
 
-            _ => TB("Answer Test"),
+            _ => TB("Answer Variance"),
         };
 
         /// <summary>

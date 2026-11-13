@@ -3,12 +3,12 @@ using AIStudio.Settings.DataModel;
 namespace AIStudio.Assistants.ModelComparison;
 
 /// <summary>
-/// Decides which preset the Answer Test works in, since it always works in one.
+/// Decides which preset the mode Answer Variance works in, since it always works in one.
 /// </summary>
 public static class ModelComparisonPresetChoice
 {
     /// <summary>
-    /// Chooses the preset the Answer Test opens with, and the one it continues with after a preset was deleted: the
+    /// Chooses the preset the mode Answer Variance opens with, and the one it continues with after a preset was deleted: the
     /// preselected preset of the options, or else the first one.
     /// </summary>
     /// <remarks>

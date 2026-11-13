@@ -19,7 +19,7 @@
         else if (this.statistics.IsEmpty)
         {
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-                @TA("There are no results yet. They appear here as soon as you vote on the answers in the Answer Test, or once you look at the result of a comparison series in the Field Test.")
+                @TA("There are no results yet. They appear here as soon as you vote on the answers in the mode “Answer Variance”, or once you look at the result of a comparison series in the mode “Everyday Tasks”.")
             </MudAlert>
         }
         else
@@ -140,7 +140,7 @@
                     @if (shownStatistics.Speeds.Count == 0)
                     {
                         <MudJustifiedText Typo="Typo.body1">
-                            @T("Only the Answer Test measures how fast the models answer.")
+                            @T("Only the mode “Answer Variance” measures how fast the models answer.")
                         </MudJustifiedText>
                     }
                     else
@@ -155,7 +155,7 @@
         @if (this.statistics is { ComparisonCount: > 0 })
         {
             <MudButton OnClick="@this.DeleteAllResultsAsync" Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" Disabled="@this.isDeleting">
-                @T("Delete the results of the Answer Test")
+                @T("Delete the results of “Answer Variance”")
             </MudButton>
         }
         <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">

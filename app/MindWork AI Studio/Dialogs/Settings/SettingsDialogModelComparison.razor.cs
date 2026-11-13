@@ -14,7 +14,7 @@ public partial class SettingsDialogModelComparison : SettingsDialogBase
     private ILogger<SettingsDialogModelComparison> Logger { get; init; } = null!;
 
     /// <summary>
-    /// The presets of the Answer Test, as the store listed them when the dialog opened.
+    /// The presets of the mode Answer Variance, as the store listed them when the dialog opened.
     /// </summary>
     private IReadOnlyList<ModelComparisonPreset> presets = [];
 

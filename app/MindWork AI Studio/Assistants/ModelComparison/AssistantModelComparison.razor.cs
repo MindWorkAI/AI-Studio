@@ -24,7 +24,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
 
     protected override string Title => ModelComparisonMode.STABILITY.PageTitle;
 
-    protected override string Description => TA("Send the same request to two models and compare their answers side by side. You vote blindly for the better answer and learn at the end which model wrote which answer.");
+    protected override string Description => TA("Send the same request to two models, once or many times, and compare their answers side by side. You vote blindly for the better answer, see how much the answers vary, and learn at the end which model wrote which answer.");
 
     protected override string SystemPrompt => string.Empty;
 

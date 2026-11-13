@@ -150,7 +150,7 @@ public partial class AssistantModelComparisonTasks : MSGComponentBase
     private void SwitchMode() => this.NavigationManager.NavigateTo(Routes.ASSISTANT_MODEL_COMPARISON);
 
     /// <summary>
-    /// Opens the options of the assistant, which both modes share, as the Answer Test does through its base class.
+    /// Opens the options of the assistant, which both modes share, as the mode Answer Variance does through its base class.
     /// </summary>
     private async Task OpenSettingsDialog() => await this.DialogService.ShowAsync<SettingsDialogModelComparison>(null, new DialogParameters(), DialogOptions.FULLSCREEN);
 }

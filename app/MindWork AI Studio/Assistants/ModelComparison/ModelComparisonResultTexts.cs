@@ -11,7 +11,7 @@ public static class ModelComparisonResultTexts
     /// <summary>
     /// What the dialog of all results shows, and what its filter does.
     /// </summary>
-    public static string WhatTheResultsShow => TA("Here you see what all your comparisons say about the models. The Answer Test adds your votes on the answers of two models to the same request, and the Field Test adds your decisions on real tasks. A comparison series of the Field Test counts only once you looked at its result, and only with the tasks you decided before, while you did not know the models yet. Choose above whether the results of both modes count, or those of one of them.");
+    public static string WhatTheResultsShow => TA("Here you see what all your comparisons say about the models. The mode “Answer Variance” adds your votes on the answers of two models to the same request, and the mode “Everyday Tasks” adds your decisions on real tasks. A comparison series counts only once you looked at its result, and only with the tasks you decided before, while you did not know the models yet. Choose above whether the results of both modes count, or those of one of them.");
 
     /// <summary>
     /// How to read the share of wins, its likely range, and the assessment.
@@ -41,5 +41,5 @@ public static class ModelComparisonResultTexts
     /// <summary>
     /// What the summary of the runs of one request shows, and what it cannot tell.
     /// </summary>
-    public static string WhatTheBatchSummaryShows => TA("Here you see how your votes and the verdicts of the judge turned out for this request. A single request tells you little about how the models do in general: compare them on several requests, and on real tasks in the Field Test, before you choose one. The results of all comparisons put everything together.");
+    public static string WhatTheBatchSummaryShows => TA("Here you see how your votes and the verdicts of the judge turned out for this request. A single request tells you little about how the models do in general: compare them on several requests, and on real tasks in the mode “Everyday Tasks”, before you choose one. The results of all comparisons put everything together.");
 }

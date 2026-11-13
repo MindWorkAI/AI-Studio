@@ -29,8 +29,8 @@ public partial class ModelComparisonModeChoice : MSGComponentBase
 
     private IReadOnlyList<AssistantModeOption<ModelComparisonMode>> Options =>
     [
-        new(ModelComparisonMode.STABILITY, ModelComparisonMode.STABILITY.Icon, ModelComparisonMode.STABILITY.Name, TA("Send the same request to both models, once or many times in a row, and vote blindly for the better answer each time. You learn how consistently each model answers, and an optional judge model gives its own verdict. At the end, you see which model wrote which answer.")),
-        new(ModelComparisonMode.TASKS, ModelComparisonMode.TASKS.Icon, ModelComparisonMode.TASKS.Name, TA("Work on a real task with one of the two models, with follow-up questions, tools, and data sources, and then on the same task with the other one. Afterward, you decide which chat helped you more, without knowing which model was which. Each task adds to the result, over days or weeks.")),
+        new(ModelComparisonMode.STABILITY, ModelComparisonMode.STABILITY.Icon, ModelComparisonMode.STABILITY.Name, TA("Send the same request to both models, once or many times in a row, and vote blindly for the better answer each time. You learn which model answers better, and how much its answers vary from run to run. An optional judge model gives its own verdict. At the end, you see which model wrote which answer.")),
+        new(ModelComparisonMode.TASKS, ModelComparisonMode.TASKS.Icon, ModelComparisonMode.TASKS.Name, TA("Work on a real task of your everyday work with one of the two models, with follow-up questions, tools, and data sources, and then on the same task with the other one. Afterward, you decide which chat helped you more, without knowing which model was which. Each task adds to the result, over days or weeks.")),
     ];
 
     private void ChooseMode(ModelComparisonMode mode) => this.NavigationManager.NavigateTo(mode.Route);

@@ -58,7 +58,7 @@ public sealed class DataModelComparison(Expression<Func<Data, DataModelCompariso
     public string PreselectedJudgeProvider { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedJudgeProvider, NO_MODEL);
 
     /// <summary>
-    /// Gets or sets the ID of the preset which the Answer Test opens with, or an empty text for none.
+    /// Gets or sets the ID of the preset which the mode Answer Variance opens with, or an empty text for none.
     /// </summary>
     /// <remarks>
     /// Not managed: the presets belong to the user alone, as files of the data directory, so no organization can
