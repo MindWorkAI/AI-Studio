@@ -1,0 +1,47 @@
+@inherits MSGComponentBase
+
+<MudText Typo="Typo.subtitle2" Class="mt-2 mb-1">
+    @T("Progress of the runs")
+</MudText>
+<MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-1">
+    @for (var i = 0; i < this.Batch.RunCount; i++)
+    {
+        var index = i;
+        var status = this.Batch.StatusOf(index);
+        @* A native title attribute, not MudTooltip: while the batch is still running, this row re-renders often enough that MudTooltip's JS-side hover tracking kept losing track of which badge is which, and stopped showing anything at all. A native tooltip lives entirely in the browser, so re-rendering the content underneath it cannot break it. *@
+        @* The current entry gets a ring around its avatar: with several runs done and unvoted, position alone -- second from the left, say -- is too easy to lose track of. *@
+        <MudStack @key="index" Row="false" Spacing="0" AlignItems="AlignItems.Center" title="@this.DescribeStatus(index)">
+            <MudBadge Icon="@AppIcons.JUDGE" Color="Color.Tertiary" Overlap="true" Visible="@(this.JudgeEnabled && this.Batch.HasJudgeVerdict(index))">
+                <MudAvatar Size="Size.Medium" Color="@(status is ModelComparisonRunStatus.QUEUED or ModelComparisonRunStatus.RUNNING ? Color.Default : Color.Primary)" Variant="@(status is ModelComparisonRunStatus.VOTED ? Variant.Filled : Variant.Outlined)"
+                           Style="@(index == this.Batch.CurrentIndex ? "outline: 2px solid var(--mud-palette-primary); outline-offset: 2px;" : null)">
+                    @switch (status)
+                    {
+                        case ModelComparisonRunStatus.VOTED:
+                            <MudIcon Icon="@AppIcons.VOTED"/>
+                            break;
+
+                        case ModelComparisonRunStatus.RUNNING:
+                            @* Only the runs actually in flight get the spinner -- the ones still queued behind the concurrency limit get an hourglass instead: *@
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+                            break;
+
+                        case ModelComparisonRunStatus.QUEUED:
+                            <MudIcon Icon="@AppIcons.PENDING" Style="opacity: 0.5;"/>
+                            break;
+
+                        case ModelComparisonRunStatus.NO_USABLE_ANSWER or ModelComparisonRunStatus.VOTE_SKIPPED:
+                            <MudIcon Icon="@AppIcons.RUN_WITHOUT_VOTE"/>
+                            break;
+
+                        default:
+                            <MudIcon Icon="@AppIcons.VOTE_MISSING"/>
+                            break;
+                    }
+                </MudAvatar>
+            </MudBadge>
+            <MudText Typo="Typo.caption" Class="mt-1">
+                @(index + 1)
+            </MudText>
+        </MudStack>
+    }
+</MudStack>

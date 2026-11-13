@@ -26,4 +26,17 @@ public sealed record ModelComparisonRunResult
     /// answer and a failure would say nothing about the models.
     /// </summary>
     public bool BothCompleted => this.First.Completed && this.Second.Completed;
+
+    /// <summary>
+    /// Gets the answer of a model of the run.
+    /// </summary>
+    /// <param name="model">The first or the second model; a tie names no model.</param>
+    /// <returns>The answer of that model.</returns>
+    public ModelComparisonAnswer AnswerOf(ModelComparisonModelChoice model) => model switch
+    {
+        ModelComparisonModelChoice.FIRST => this.First,
+        ModelComparisonModelChoice.SECOND => this.Second,
+
+        _ => throw new ArgumentOutOfRangeException(nameof(model), model, $"The choice '{model}' names no model."),
+    };
 }

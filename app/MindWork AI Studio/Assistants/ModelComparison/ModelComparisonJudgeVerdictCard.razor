@@ -1,0 +1,28 @@
+@inherits MSGComponentBase
+
+@if (this.Result.Judge is { } judge)
+{
+    <MudPaper Outlined="true" Class="pa-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+            <MudIcon Icon="@AppIcons.JUDGE" Size="Size.Small"/>
+            <MudText Typo="Typo.subtitle1">
+                @string.Format(ModelComparisonFormat.Culture, T("Judge: {0}"), judge.Label)
+            </MudText>
+        </MudStack>
+        @if (judge.Completed)
+        {
+            <MudText Typo="Typo.body1" Class="mb-1">
+                @this.PreferenceText
+            </MudText>
+            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
+                @judge.Reasoning
+            </MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2">
+                @T("The judge did not give a usable verdict.")
+            </MudText>
+        }
+    </MudPaper>
+}

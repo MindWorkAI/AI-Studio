@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
@@ -103,55 +102,9 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private bool ShowsBatch => this.isComparing || this.batch is { Entries.Count: > 0 };
 
     /// <summary>
-    /// What the badge of a run in the progress of the batch means, for the tooltip over it: the badge alone only
-    /// shows a colour and a small icon, not enough to be sure what it stands for.
-    /// </summary>
-    /// <param name="shownBatch">The batch the run belongs to.</param>
-    /// <param name="index">The position of the run, zero-based.</param>
-    private string DescribeRunStatus(ModelComparisonBatch shownBatch, int index)
-    {
-        var text = shownBatch.StatusOf(index) switch
-        {
-            ModelComparisonRunStatus.QUEUED => T("Run {0}: queued, waiting for a free slot."),
-            ModelComparisonRunStatus.RUNNING => T("Run {0}: still working."),
-            ModelComparisonRunStatus.NO_USABLE_ANSWER => T("Run {0}: no usable answer, nothing to vote on."),
-            ModelComparisonRunStatus.VOTED => T("Run {0}: voted on."),
-            ModelComparisonRunStatus.VOTE_SKIPPED => TA("Run {0}: your vote was skipped."),
-
-            _ when this.judgeEnabled && !shownBatch.HasJudgeVerdict(index) => TA("Run {0}: the judge gave no usable verdict, your vote is missing."),
-            _ when this.judgeEnabled => TA("Run {0}: the models and the judge are done, your vote is missing."),
-            _ => TA("Run {0}: the models are done, your vote is missing."),
-        };
-
-        return string.Format(DisplayCulture, text, index + 1);
-    }
-
-    /// <summary>
     /// How much of the question the summary above the results shows.
     /// </summary>
     private const int QUESTION_PREVIEW_LENGTH = 300;
-
-    /// <summary>
-    /// The answers of the batch as the chat component wants them. Each is built once, and not on every render: the
-    /// component compares what it is given to decide whether anything has to be drawn again, and a new one would make
-    /// it parse the whole Markdown again.
-    /// </summary>
-    private readonly Dictionary<ModelComparisonAnswer, ContentText> shownAnswers = new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>
-    /// Gets the answer as the chat component wants it.
-    /// </summary>
-    /// <param name="answer">The answer of a model.</param>
-    /// <returns>The answer for the chat component, the same one on every render.</returns>
-    private ContentText ShownAnswer(ModelComparisonAnswer answer)
-    {
-        if (this.shownAnswers.TryGetValue(answer, out var content))
-            return content;
-
-        content = new ContentText { Text = answer.Text };
-        this.shownAnswers[answer] = content;
-        return content;
-    }
 
     /// <summary>
     /// A render already queued on the UI dispatcher, if one is still pending. Reused by RequestBackgroundUIRefresh, so
@@ -181,11 +134,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// <summary>
     /// Forgets the current batch, which brings the form back.
     /// </summary>
-    private void ClearBatch()
-    {
-        this.batch = null;
-        this.shownAnswers.Clear();
-    }
+    private void ClearBatch() => this.batch = null;
 
     private string inputContext = string.Empty;
     private string inputQuestion = string.Empty;
@@ -704,158 +653,9 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// How a model did in the vote of the user, as a colour: green when its answer was preferred, red when the other
-    /// one was, orange when the user found them equally good.
+    /// The culture of the active language, see ModelComparisonFormat.Culture.
     /// </summary>
-    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
-    /// <param name="model">The model whose outcome this is.</param>
-    private static Color OutcomeColor(ModelComparisonModelChoice? voteChoice, ModelComparisonModelChoice model) => voteChoice switch
-    {
-        null => Color.Default,
-        ModelComparisonModelChoice.TIE => Color.Warning,
-        { } chosen when chosen == model => Color.Success,
-
-        _ => Color.Error,
-    };
-
-    /// <summary>
-    /// The icon which goes with OutcomeColor. The colour alone would not tell apart who is colour blind, so every
-    /// outcome has a shape of its own as well.
-    /// </summary>
-    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
-    /// <param name="model">The model whose outcome this is.</param>
-    private static string OutcomeIcon(ModelComparisonModelChoice? voteChoice, ModelComparisonModelChoice model) => voteChoice switch
-    {
-        null => AppIcons.VOTE_MISSING,
-        ModelComparisonModelChoice.TIE => AppIcons.VOTE_TIE,
-        { } chosen when chosen == model => AppIcons.VOTE_WON,
-
-        _ => AppIcons.VOTE_LOST,
-    };
-
-    /// <summary>
-    /// The classes of the card around an answer: it fills the height of its column, and with a vote of the user, it
-    /// has a border in the colour which goes with OutcomeColor.
-    /// </summary>
-    /// <remarks>
-    /// The classes are the ones of MudBlazor: a border two pixels wide, in the colour of the outcome. They override
-    /// the thin grey line of the card, which is why they are told to win. While the user votes, and for a run without
-    /// a vote, the answers stand in the plain frame of the chat.
-    /// </remarks>
-    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
-    /// <param name="model">The model whose answer the card shows.</param>
-    private static string AnswerCardClass(ModelComparisonModelChoice? voteChoice, ModelComparisonModelChoice model)
-    {
-        if (voteChoice is null)
-            return FILL_THE_COLUMN;
-
-        var colour = OutcomeColor(voteChoice, model) switch
-        {
-            Color.Success => "mud-border-success",
-            Color.Warning => "mud-border-warning",
-
-            _ => "mud-border-error",
-        };
-
-        return $"{FILL_THE_COLUMN} border-2 border-solid {colour}";
-    }
-
-    /// <summary>
-    /// Makes the card of an answer as high as its column, so that both cards of a run are equally high.
-    /// </summary>
-    private const string FILL_THE_COLUMN = "flex-grow-1";
-
-    /// <summary>
-    /// Names a model of a run, or says that both answers were equally good.
-    /// </summary>
-    /// <param name="entry">The run.</param>
-    /// <param name="choice">A model, or a tie.</param>
-    private string NameOf(ModelComparisonBatchEntry entry, ModelComparisonModelChoice choice) => choice switch
-    {
-        ModelComparisonModelChoice.FIRST => entry.Result.First.Label,
-        ModelComparisonModelChoice.SECOND => entry.Result.Second.Label,
-
-        _ => T("Equally good"),
-    };
-
-    /// <summary>
-    /// Says in the title of a run in the summary what the user chose.
-    /// </summary>
-    /// <param name="entry">The run.</param>
-    /// <param name="index">The position of the run, zero-based.</param>
-    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
-    private string DescribeRun(ModelComparisonBatchEntry entry, int index, ModelComparisonModelChoice? voteChoice)
-    {
-        var runNumber = index + 1;
-        if (!entry.Result.BothCompleted)
-            return string.Format(DisplayCulture, T("Run {0}: at least one model did not answer"), runNumber);
-
-        return voteChoice switch
-        {
-            null => string.Format(DisplayCulture, TA("Run {0}: without your vote"), runNumber),
-            ModelComparisonModelChoice.TIE => string.Format(DisplayCulture, TA("Run {0}: you found both answers equally good"), runNumber),
-
-            { } chosen => string.Format(DisplayCulture, TA("Run {0}: you preferred {1}"), runNumber, this.NameOf(entry, chosen)),
-        };
-    }
-
-    /// <summary>
-    /// Names what the judge preferred, by the name of the model, and says whether that matches the vote of the user.
-    /// </summary>
-    /// <param name="entry">The run.</param>
-    /// <param name="judgeChoice">The model the judge preferred, or null without a usable verdict.</param>
-    /// <param name="voteChoice">The model the user preferred, or null without a vote.</param>
-    private string DescribeJudgePreference(ModelComparisonBatchEntry entry, ModelComparisonModelChoice? judgeChoice, ModelComparisonModelChoice? voteChoice)
-    {
-        if (judgeChoice is not { } preferred)
-            return string.Empty;
-
-        if (preferred is ModelComparisonModelChoice.TIE)
-            return voteChoice switch
-            {
-                null => T("The judge saw both answers as equally good."),
-                ModelComparisonModelChoice.TIE => TA("The judge saw both answers as equally good, matching your own vote."),
-
-                _ => TA("The judge saw both answers as equally good, while you preferred one of them."),
-            };
-
-        var preferredName = this.NameOf(entry, preferred);
-        return voteChoice switch
-        {
-            null => string.Format(DisplayCulture, T("The judge preferred {0}."), preferredName),
-            { } chosen when chosen == preferred => string.Format(DisplayCulture, TA("The judge preferred {0}, matching your own vote."), preferredName),
-
-            _ => string.Format(DisplayCulture, TA("The judge preferred {0}, differing from your own vote."), preferredName),
-        };
-    }
-
-    /// <summary>
-    /// Whether the badge of the judge belongs on the answer of this model: either the judge preferred it, or the judge
-    /// saw a tie, in which case both answers carry the badge.
-    /// </summary>
-    /// <param name="judgeChoice">The model the judge preferred, or null without a usable verdict.</param>
-    /// <param name="model">The model whose answer this is.</param>
-    private static bool JudgePreferred(ModelComparisonModelChoice? judgeChoice, ModelComparisonModelChoice model) => judgeChoice is ModelComparisonModelChoice.TIE || judgeChoice == model;
-
-    /// <summary>
-    /// Describes how long an answer took: until the first piece arrived, and until it was complete.
-    /// Shown together with the name of the model in the summary.
-    /// </summary>
-    private string DescribeTimes(ModelComparisonAnswer answer) => string.Format(
-        DisplayCulture,
-        T("First token after {0}, complete after {1}"),
-        FormatDuration(answer.FirstTokenTime),
-        FormatDuration(answer.TotalTime));
-
-    private static string FormatDuration(TimeSpan? duration) => duration is { } value
-        ? $"{value.TotalSeconds.ToString("0.0", DisplayCulture)} s"
-        : "-";
-
-    /// <summary>
-    /// The culture of the active language. Qualified with its namespace because the namespace of the
-    /// localization assistant, AIStudio.Assistants.I18N, hides the class I18N from every assistant.
-    /// </summary>
-    private static System.Globalization.CultureInfo DisplayCulture => Tools.PluginSystem.I18N.I.Culture;
+    private static System.Globalization.CultureInfo DisplayCulture => ModelComparisonFormat.Culture;
 
     /// <summary>
     /// The active language's own English name, without a region ("German", not "German (Germany)"),

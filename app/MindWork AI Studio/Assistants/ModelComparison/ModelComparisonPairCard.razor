@@ -1,0 +1,44 @@
+@inherits MSGComponentBase
+
+<MudPaper Outlined="@true" Class="pa-3 mb-3">
+    <MudText Typo="Typo.subtitle1">
+        @string.Format(T("{0} vs. {1}"), this.Pairing.First.Label, this.Pairing.Second.Label)
+    </MudText>
+    <MudText Typo="Typo.caption" Class="d-block mb-2">
+        @string.Format(ModelComparisonFormat.Culture, T("Stored comparisons: {0}"), this.Pairing.ComparisonCount.CompactCount())
+    </MudText>
+    <MudSimpleTable Dense="@true" Hover="@true">
+        <thead>
+            <tr>
+                <th></th>
+                <th>@this.Pairing.First.Label</th>
+                <th>@T("Equally good")</th>
+                <th>@this.Pairing.Second.Label</th>
+                <th>@T("Assessment")</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@TA("Your votes")</td>
+                <td>@this.Pairing.Votes.FirstModelWins.CompactCount()</td>
+                <td>@this.Pairing.Votes.Ties.CompactCount()</td>
+                <td>@this.Pairing.Votes.SecondModelWins.CompactCount()</td>
+                <td>
+                    <ModelComparisonAssessment Text="@this.SignificanceText(this.Pairing.WinShareOfFirstByVotes)" Significance="@this.Pairing.WinShareOfFirstByVotes.Significance" IsPair="@true"/>
+                </td>
+            </tr>
+            @if (this.Pairing.JudgeVerdicts.ScoredRunCount > 0)
+            {
+                <tr>
+                    <td>@T("Judge verdicts")</td>
+                    <td>@this.Pairing.JudgeVerdicts.FirstModelWins.CompactCount()</td>
+                    <td>@this.Pairing.JudgeVerdicts.Ties.CompactCount()</td>
+                    <td>@this.Pairing.JudgeVerdicts.SecondModelWins.CompactCount()</td>
+                    <td>
+                        <ModelComparisonAssessment Text="@this.SignificanceText(this.Pairing.WinShareOfFirstByJudges)" Significance="@this.Pairing.WinShareOfFirstByJudges.Significance" IsPair="@true"/>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+</MudPaper>
