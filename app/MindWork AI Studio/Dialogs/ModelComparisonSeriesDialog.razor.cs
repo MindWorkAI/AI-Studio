@@ -28,6 +28,16 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
+    /// <summary>
+    /// The series whose setup the new one takes over, or null for a new series with the preselected options.
+    /// </summary>
+    /// <remarks>
+    /// Only the setup carries over; the tasks stay in their series. What is no longer available is left out, see
+    /// ModelComparisonSeriesCopy.
+    /// </remarks>
+    [Parameter]
+    public ModelComparisonSeries? BasedOn { get; set; }
+
     [Inject]
     private ToolRegistry ToolRegistry { get; init; } = null!;
 
@@ -61,6 +71,11 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
         RetrievalMode = DataSourceRetrievalMode.SEMANTIC_SEARCH,
     };
 
+    /// <summary>
+    /// The parts of the series in BasedOn which the new series cannot take over.
+    /// </summary>
+    private IReadOnlyList<ModelComparisonSeriesPart> missingParts = [];
+
     private string? issue;
     private bool isSaving;
 
@@ -69,6 +84,23 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        if (this.BasedOn is { } series)
+        {
+            var selectableToolIds = await this.ToolRegistry.FilterSelectableToolIdsAsync(COMPONENT, series.ToolIds);
+            var copy = ModelComparisonSeriesCopy.Of(this.SettingsManager, series, selectableToolIds);
+            this.seriesName = series.Name;
+            this.firstProvider = copy.First;
+            this.secondProvider = copy.Second;
+            this.judgeEnabled = copy.JudgeEnabled;
+            this.judgePanelExpanded = copy.JudgeEnabled;
+            this.judgeProvider = copy.Judge;
+            this.profile = copy.Profile;
+            this.selectedToolIds = copy.ToolIds;
+            this.dataSourceOptions = copy.DataSourceOptions;
+            this.missingParts = copy.MissingParts;
+            return;
+        }
+
         this.profile = this.SettingsManager.GetPreselectedProfile(COMPONENT);
         this.firstProvider = this.SettingsManager.PreselectedComparisonModel;
         this.judgeProvider = this.SettingsManager.PreselectedComparisonJudge;
@@ -99,6 +131,25 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
         T("Tools: {0}, data sources: {1}"),
         this.selectedToolIds.Count.CompactCount(),
         (this.dataSourceOptions.DisableDataSources ? 0 : this.dataSourceOptions.PreselectedDataSourceIds.Count).CompactCount());
+
+    /// <summary>
+    /// Tells what the new series starts with, when it takes over the setup of another one.
+    /// </summary>
+    private string BasedOnText => string.Format(TA("This series starts with the setup of the series '{0}'. You can change all of it before you create the series. The tasks stay in their series."), this.BasedOn?.Name);
+
+    /// <summary>
+    /// Tells why a part of the series in BasedOn is left out, and what the user can do about it.
+    /// </summary>
+    private string MissingPartText(ModelComparisonSeriesPart part) => part switch
+    {
+        ModelComparisonSeriesPart.FIRST_MODEL => TA("The first model is no longer available, uses another model now, or may no longer be used by this assistant. Please choose it anew."),
+        ModelComparisonSeriesPart.SECOND_MODEL => TA("The second model is no longer available, uses another model now, or may no longer be used by this assistant. Please choose it anew."),
+        ModelComparisonSeriesPart.JUDGE => TA("The judge model is no longer available, uses another model now, or may no longer be used by this assistant. Please choose another one, or switch the judge off."),
+        ModelComparisonSeriesPart.PROFILE => TA("The profile no longer exists, so the series starts without a profile."),
+        ModelComparisonSeriesPart.TOOLS => TA("Some tools are no longer available, so the series starts without them."),
+        ModelComparisonSeriesPart.DATA_SOURCES => TA("Some data sources are no longer available, so the series starts without them."),
+        _ => string.Empty,
+    };
 
     private void FirstProviderChanged(AIStudio.Settings.Provider provider) => this.firstProvider = provider;
 

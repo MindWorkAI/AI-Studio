@@ -79,9 +79,15 @@ public partial class AssistantModelComparisonTasks : MSGComponentBase
     /// <summary>
     /// Lets the user set up a new series in its dialog, and opens the series once the dialog stored it.
     /// </summary>
-    private async Task CreateSeriesAsync()
+    /// <param name="basedOn">The series whose setup the new one takes over, or null for the preselected options.</param>
+    private async Task CreateSeriesAsync(ModelComparisonSeries? basedOn)
     {
-        var reference = await this.DialogService.ShowAsync<ModelComparisonSeriesDialog>(T("New comparison series"), DialogOptions.FULLSCREEN);
+        var parameters = new DialogParameters<ModelComparisonSeriesDialog>
+        {
+            { dialog => dialog.BasedOn, basedOn }
+        };
+
+        var reference = await this.DialogService.ShowAsync<ModelComparisonSeriesDialog>(T("New comparison series"), parameters, DialogOptions.FULLSCREEN);
         var result = await reference.Result;
         if (result is null || result.Canceled || result.Data is not ModelComparisonSeries series)
             return;

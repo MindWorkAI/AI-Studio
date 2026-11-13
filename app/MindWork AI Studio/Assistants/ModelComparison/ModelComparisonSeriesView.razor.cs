@@ -168,7 +168,7 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
         this.secondProvider = ModelComparisonProviderCheck.ProviderAsItWas(this.SettingsManager, this.Series.SecondProviderId, this.Series.Second);
 
         if (this.firstProvider.UsedLLMProvider is LLMProviders.NONE || this.secondProvider.UsedLLMProvider is LLMProviders.NONE)
-            this.seriesIssue = TA("One of the two models is no longer available as it was when the series began: its provider was deleted, or it uses another model now. You cannot work on another task in this series.");
+            this.seriesIssue = TA("One of the two models is no longer available as it was when the series began: its provider was deleted, or it uses another model now. You cannot work on another task in this series, but you can start a new series with its setup and choose the model anew.");
         else
             this.seriesIssue = ModelComparisonProviderCheck.IssueOf(this.SettingsManager, this.firstProvider) ?? ModelComparisonProviderCheck.IssueOf(this.SettingsManager, this.secondProvider);
 

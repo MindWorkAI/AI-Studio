@@ -9,6 +9,17 @@
                 @ModelComparisonSeriesTexts.WhatASeriesIs
             </MudJustifiedText>
 
+            @if (this.BasedOn is not null)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+                    <MudText Typo="Typo.body1">@this.BasedOnText</MudText>
+                    @foreach (var part in this.missingParts)
+                    {
+                        <MudText Typo="Typo.body1" Class="mt-2">@this.MissingPartText(part)</MudText>
+                    }
+                </MudAlert>
+            }
+
             <MudText Typo="Typo.h6" Class="mb-1">@T("Name")</MudText>
             <MudTextField T="string" @bind-Text="@this.seriesName" Label="@T("Name of the series")" Placeholder="@T("e.g., Weekly reports")" Variant="Variant.Outlined" Immediate="@true" MaxLength="60" Counter="60" Class="mb-3"/>
 

@@ -25,8 +25,13 @@
                         <MudIconButton Icon="@AppIcons.BACK_TO_LIST" OnClick="@this.CloseSeries"/>
                     </MudTooltip>
                     <MudText Typo="Typo.h5">@series.Name</MudText>
+                    <MudSpacer/>
+                    <MudTooltip Text="@T("Start a new series with this setup")">
+                        <MudIconButton Icon="@AppIcons.DUPLICATE" OnClick="@(async () => await this.CreateSeriesAsync(series))"/>
+                    </MudTooltip>
                 </MudStack>
-                <ModelComparisonSeriesView Series="@series"/>
+                @* A new series started from this one replaces it here, and it must not inherit the state of its view: *@
+                <ModelComparisonSeriesView @key="@series.Id" Series="@series"/>
             }
             else
             {
@@ -34,7 +39,7 @@
                     @TA("Work on a real task with one of two models, and then on the same task with the other one. Afterward, you decide which chat helped you more, without knowing which model was which. A comparison series collects your tasks over days or weeks, until you want to see the result.")
                 </MudJustifiedText>
 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.CreateSeriesAsync" Class="mb-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@(async () => await this.CreateSeriesAsync(null))" Class="mb-4">
                     @T("New comparison series")
                 </MudButton>
 
@@ -61,6 +66,9 @@
                                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.COMPARISON_TASKS" OnClick="@(() => this.OpenSeries(entry))">
                                     @T("Open")
                                 </MudButton>
+                                <MudTooltip Text="@T("Start a new series with this setup")">
+                                    <MudIconButton Icon="@AppIcons.DUPLICATE" OnClick="@(async () => await this.CreateSeriesAsync(entry))"/>
+                                </MudTooltip>
                                 <MudTooltip Text="@T("Delete series")">
                                     <MudIconButton Icon="@AppIcons.DELETE" Color="Color.Error" OnClick="@(async () => await this.DeleteSeriesAsync(entry))"/>
                                 </MudTooltip>
