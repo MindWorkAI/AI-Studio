@@ -372,7 +372,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private bool ShowsProviderConfidence => this.ShowProviderConfidence && this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence;
 
-    private string SubmitButtonStyle => this.ShowsProviderConfidence ?this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
+    private string SubmitButtonStyle => this.ShowsProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
 
     private IReadOnlyList<Tools.Components> VisibleSendToAssistants => this.AssistantLaunchService.GetDestinationsFor(this.Component);
     
