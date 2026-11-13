@@ -3,6 +3,7 @@ using AIStudio.Agents.AssistantAudit;
 using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.ModelComparison;
 using AIStudio.Assistants.VisualBriefing;
+using AIStudio.Chat.Embedded;
 using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
@@ -238,6 +239,7 @@ internal sealed class Program
         builder.Services.AddSingleton<BflResearchRunner>();
         builder.Services.AddSingleton<BflMaterialService>();
         builder.Services.AddSingleton<ModelComparisonStore>();
+        builder.Services.AddSingleton<EmbeddedChatService>();
         builder.Services.AddSingleton<PluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();

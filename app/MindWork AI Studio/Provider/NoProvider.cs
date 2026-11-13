@@ -18,6 +18,9 @@ public class NoProvider : IProvider
     public string InstanceName { get; set; } = "None";
 
     /// <inheritdoc />
+    public bool HidesIdentity { get; set; }
+
+    /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     /// <inheritdoc />

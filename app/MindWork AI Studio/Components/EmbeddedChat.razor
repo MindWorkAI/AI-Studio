@@ -1,0 +1,67 @@
+@using AIStudio.Chat
+@inherits MSGComponentBase
+
+@if (this.conversation is null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
+}
+else if (this.conversation.Thread is not { } thread)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
+        @T("AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.")
+    </MudAlert>
+}
+else
+{
+    @if (!this.conversation.HasVisibleMessages && !this.IsRunning && !string.IsNullOrWhiteSpace(this.Introduction))
+    {
+        <MudText Typo="Typo.body2" Class="mb-3">@this.Introduction</MudText>
+    }
+
+    @foreach (var block in thread.Blocks)
+    {
+        @if (block is { HideFromUser: false, Content: not null })
+        {
+            <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" ExportTitle="@T("Export message")" ExportFileName="@this.ExportFileName"/>
+        }
+    }
+
+    @if (!this.IsReadOnly)
+    {
+        @if (this.ProviderIssue is { } issue)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Warning" Class="mb-2">@issue</MudText>
+        }
+
+        @* Laid out like the input of the chat page: sending through the icon in the field, and the tokens as its helper text. *@
+        <MudTextField T="string"
+                      @bind-Value="@this.userInput"
+                      Immediate="true"
+                      Lines="3"
+                      Sizing="InputSizing.Auto"
+                      MaxLines="12"
+                      Variant="Variant.Outlined"
+                      Label="@TA("Your message")"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@AppIcons.SEND"
+                      AdornmentColor="@(this.CanSendMessage ? Color.Primary : Color.Default)"
+                      AdornmentAriaLabel="@T("Send")"
+                      OnAdornmentClick="@this.SendAsync"
+                      OnKeyUp="@this.InputKeyEventAsync"
+                      UserAttributes="@this.inputAttributes"
+                      HelperText="@this.TokenText"
+                      Class="mt-2"
+                      Disabled="@(!this.CanSend)"/>
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
+            @if (this.AllowsAttachments)
+            {
+                <AttachDocuments Name="File Attachments" DocumentPaths="@this.attachments" DocumentPathsChanged="@this.AttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" Disabled="@(!this.CanSend)"/>
+            }
+            @if (this.IsRunning)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@AppIcons.STOP" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
+            }
+        </MudStack>
+    }
+}

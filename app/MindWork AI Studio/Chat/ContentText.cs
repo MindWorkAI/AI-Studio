@@ -573,7 +573,7 @@ public sealed class ContentText : IContent
             var modelLoadResult = await provider.GetTextModels(token: token);
             if (!modelLoadResult.Success)
             {
-                var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.InstanceName);
+                var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.NameForUser);
                 if (!string.IsNullOrWhiteSpace(userMessage))
                     await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, userMessage));
 
@@ -598,7 +598,7 @@ public sealed class ContentText : IContent
         {
             var emptyModelsMessage = string.Format(
                 TB("We could load models from '{0}', but the provider did not return any usable text models."),
-                provider.InstanceName);
+                provider.NameForUser);
 
             await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, emptyModelsMessage));
             LOGGER.LogWarning("Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).", provider.InstanceName, provider.Provider);
@@ -610,9 +610,9 @@ public sealed class ContentText : IContent
         
         var message = string.Format(
             TA("The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."),
-            chatModel.Id,
-            provider.InstanceName,
-            provider.Provider);
+            provider.ModelNameForUser(chatModel),
+            provider.NameForUser,
+            provider.TypeForUser);
         
         await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, message));
         LOGGER.LogWarning("Skipping AI request because model '{ModelId}' is not available from '{ProviderInstanceName}' (provider={ProviderType}).", chatModel.Id, provider.InstanceName, provider.Provider);
