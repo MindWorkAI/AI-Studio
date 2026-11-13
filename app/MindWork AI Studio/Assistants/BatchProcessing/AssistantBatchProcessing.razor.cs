@@ -129,9 +129,9 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string promptAttachmentsContent = string.Empty;
 
     private BatchProcessingOutputMode outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
-    private FileExportFormat resultFileFormat = FileExportFormat.MARKDOWN;
+    private FileExportFormat resultFileFormat = DataBatchProcessing.DEFAULT_RESULT_FILE_FORMAT;
     private string resultColumnHeader = string.Empty;
-    private BatchProcessingTableFormat tableFormat = BatchProcessingTableFormat.CSV;
+    private BatchProcessingTableFormat tableFormat = DataBatchProcessing.DEFAULT_TABLE_FORMAT;
     private string csvFileName = string.Empty;
     private BatchProcessingCsvSeparator csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
     private string customCsvSeparator = string.Empty;
@@ -218,9 +218,9 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.promptFilePath = string.Empty;
             this.selectedPolicy = null;
             this.outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
-            this.resultFileFormat = FileExportFormat.MARKDOWN;
+            this.resultFileFormat = DataBatchProcessing.DEFAULT_RESULT_FILE_FORMAT;
             this.resultColumnHeader = string.Empty;
-            this.tableFormat = BatchProcessingTableFormat.CSV;
+            this.tableFormat = DataBatchProcessing.DEFAULT_TABLE_FORMAT;
             this.csvFileName = string.Empty;
             this.csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
             this.customCsvSeparator = string.Empty;

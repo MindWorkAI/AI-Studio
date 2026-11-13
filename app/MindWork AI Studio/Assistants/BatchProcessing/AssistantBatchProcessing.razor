@@ -9,7 +9,7 @@
 
 <SelectDirectory Label="@T("Folder containing your documents")" DirectoryDialogTitle="@T("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
 
-<MudTextSwitch Label="@T("Include subfolders?")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, process files in subfolders as well")" LabelOff="@T("No, only process files in the selected folder")"/>
+<MudTextSwitch Label="@T("Subfolders as documents")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, treat every subfolder as a document")"LabelOff="@T("No, only process files in the selected folder")"/>
 
 @if (this.includeSubdirectories)
 {
@@ -236,7 +236,7 @@ else
 <MudTextSlider T="int" Label="@T("Maximum pause between files")" Min="@this.EffectiveMinimumDelaySeconds" Max="@DataBatchProcessing.MAX_DELAY_SECONDS" Step="1" Unit="@T("seconds")" @bind-Value="@this.maximumDelaySeconds" Disabled="@(() => this.isProcessingBatch)"/>
 
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-    @T("Before the next file starts, AI Studio waits for a random number of whole seconds from this interval. The minimum is always 6 seconds and the maximum is 300 seconds (5 minutes). Restored files and the end of a run do not add another pause.")
+    @T("Before the next file starts, AI Studio waits for a random number of whole seconds from this interval. The minimum is always 3 seconds and the maximum is 300 seconds (5 minutes). Restored files and the end of a run do not add another pause.")
 </MudJustifiedText>
 
 @if (this.pauseBeforeNextFileSeconds > 0)

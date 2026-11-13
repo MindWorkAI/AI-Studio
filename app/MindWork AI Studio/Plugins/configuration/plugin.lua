@@ -860,7 +860,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator"] = "^"
 --
 -- Enforce the lower end of the random pause between files for the organization.
--- The value must be between 6 and 300 seconds. Users can configure only the upper
+-- The value must be between 3 and 300 seconds. Users can configure only the upper
 -- end of the interval while this setting is managed by a configuration plugin.
 -- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumDelaySeconds"] = 12
 --
