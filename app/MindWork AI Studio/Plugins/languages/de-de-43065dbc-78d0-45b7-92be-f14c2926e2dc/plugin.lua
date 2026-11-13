@@ -4630,10 +4630,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1326490469::INFORMAL"] = "Gib deiner Voreinstellung einen Namen, aus dem später hervorgeht, was sie vergleicht."
 
 -- The judge model cannot be used. Please select another judge model, or switch the judge off.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1376336992"] = "Das Bewertungsmodell kann nicht verwendet werden. Bitte wählen Sie ein anderes Bewertungsmodell aus oder deaktivieren Sie die Bewertungsfunktion."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1376336992"] = "Das Richtermodell kann nicht verwendet werden. Bitte wählen Sie ein anderes Richtermodell aus oder schalten Sie den Richter aus."
 
 -- The judge model cannot be used. Please select another judge model, or switch the judge off.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1376336992::INFORMAL"] = "Das Bewertungsmodell kann nicht verwendet werden. Bitte wähle ein anderes Bewertungsmodell aus oder deaktiviere die Bewertungsfunktion."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1376336992::INFORMAL"] = "Das Richtermodell kann nicht verwendet werden. Bitte wähle ein anderes Richtermodell aus oder schalte den Richter aus."
 
 -- Please provide a name for your preset.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1408294373"] = "Bitte geben Sie einen Namen für Ihre Voreinstellung ein."
@@ -4687,10 +4687,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2267053576"] = "1 (einzelner Vergleich)"
 
 -- The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2490942889"] = "Das Bewertungsmodell sieht die Anfrage und beide Antworten bereits und bewertet sie allein anhand dieser Informationen, sofern Sie hier nichts Spezifischeres hinzufügen, zum Beispiel: Eine gute Zusammenfassung übernimmt alle Zahlen und nennt ihre Quelle."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2490942889"] = "Der Richter sieht die Anfrage und beide Antworten bereits und urteilt allein danach, sofern Sie hier nichts Genaueres ergänzen, zum Beispiel: Eine gute Zusammenfassung übernimmt alle Zahlen und nennt ihre Quelle."
 
 -- The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2490942889::INFORMAL"] = "Das Bewertungsmodell sieht die Anfrage und beide Antworten bereits und bewertet sie allein anhand dieser Informationen, sofern du hier nichts Spezifischeres hinzufügst, zum Beispiel: Eine gute Zusammenfassung übernimmt alle Zahlen und nennt ihre Quelle."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2490942889::INFORMAL"] = "Der Richter sieht die Anfrage und beide Antworten bereits und urteilt allein danach, sofern du hier nichts Genaueres ergänzt, zum Beispiel: Eine gute Zusammenfassung übernimmt alle Zahlen und nennt ihre Quelle."
 
 -- No judge
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2562272449"] = "Kein Richter"
@@ -4711,7 +4711,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3065222761::INFORMAL"] = "Der Name deiner Voreinstellung muss zwischen 6 und 60 Zeichen lang sein."
 
 -- A judge assesses every run
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3109664129"] = "Ein Judge bewertet jeden Durchlauf."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3109664129"] = "Ein Richter beurteilt jeden Durchlauf"
 
 -- Are you sure you want to delete the preset '{0}'? This cannot be undone.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3246395362"] = "Möchten Sie die Voreinstellung „{0}“ wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden."
@@ -4783,7 +4783,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1401622761"] = "Öffnen"
 
 -- Start a new series with this setup
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1452503898"] = "Mit dieser Konfiguration eine neue Serie starten"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1452503898"] = "Neue Vergleichsreihe mit dieser Einrichtung starten"
 
 -- Results of all comparisons
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1990305431"] = "Ergebnisse aller Vergleiche"
@@ -4834,10 +4834,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T4249192191"] = "Neue Vergleichsreihe"
 
 -- Open a series to work on another task or to look at its result. The list does not name the models, so that you do not learn which one is which before you look at the result. To compare the same models again, or to replace one of them with a new model, start a new series with the setup of an existing one.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T922224005"] = "Öffnen Sie eine Serie, um eine weitere Aufgabe zu bearbeiten oder sich das Ergebnis anzusehen. In der Liste sind die Modelle nicht benannt, damit Sie vor dem Ansehen des Ergebnisses nicht erkennen, welches Modell welches ist. Wenn Sie dieselben Modelle erneut vergleichen oder eines davon durch ein neues ersetzen möchten, starten Sie eine neue Serie mit den Einstellungen einer bestehenden Serie."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T922224005"] = "Öffnen Sie eine Vergleichsreihe, um eine weitere Aufgabe zu bearbeiten oder sich ihr Ergebnis anzusehen. Die Liste nennt die Modelle nicht, damit Sie nicht erfahren, welches welches ist, bevor Sie sich das Ergebnis ansehen. Wenn Sie dieselben Modelle erneut vergleichen oder eines davon durch ein neues Modell ersetzen möchten, starten Sie eine neue Vergleichsreihe mit der Einrichtung einer bestehenden."
 
 -- Open a series to work on another task or to look at its result. The list does not name the models, so that you do not learn which one is which before you look at the result. To compare the same models again, or to replace one of them with a new model, start a new series with the setup of an existing one.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T922224005::INFORMAL"] = "Öffne eine Serie, um eine weitere Aufgabe zu bearbeiten oder dir das Ergebnis anzusehen. In der Liste sind die Modelle nicht benannt, damit du vor dem Ansehen des Ergebnisses nicht erkennst, welches Modell welches ist. Wenn du dieselben Modelle erneut vergleichen oder eines davon durch ein neues ersetzen möchtest, starte eine neue Serie mit den Einstellungen einer bestehenden Serie."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T922224005::INFORMAL"] = "Öffne eine Vergleichsreihe, um eine weitere Aufgabe zu bearbeiten oder dir ihr Ergebnis anzusehen. Die Liste nennt die Modelle nicht, damit du nicht erfährst, welches welches ist, bevor du dir das Ergebnis ansiehst. Wenn du dieselben Modelle erneut vergleichen oder eines davon durch ein neues Modell ersetzen möchtest, starte eine neue Vergleichsreihe mit der Einrichtung einer bestehenden."
 
 -- First token after {0}, complete after {1}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONANSWERCAPTION::T1658271318"] = "Erstes Token nach {0}, vollständig nach {1}"
@@ -4963,7 +4963,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODEEXTEN
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODEEXTENSIONS::T4007443053"] = "Antworttest"
 
 -- Field Test
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODEEXTENSIONS::T4285530213"] = "Feldtest"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODEEXTENSIONS::T4285530213"] = "Praxistest"
 
 -- {0} is clearly better
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONPAIRCARD::T1539751573"] = "{0} ist eindeutig besser"
@@ -5044,16 +5044,16 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRANKING::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRANKING::T877424713"] = "Noch nicht eindeutig"
 
 -- “Compared” counts the runs and tasks with both your vote and a verdict of the judge, “Same choice” those in which the judge chose the same as you, and “Agreement” their share. The higher it is, the more the judge decides like you, and the more its verdicts tell you where you did not vote yourself.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T1602691513"] = "„Verglichen“ zählt die Durchläufe und Aufgaben, für die sowohl Ihre Stimme als auch ein Urteil des Bewertungsmodells vorliegen. „Gleiche Wahl“ zählt diejenigen, bei denen das Bewertungsmodell dieselbe Wahl getroffen hat wie Sie, und „Übereinstimmung“ gibt deren Anteil an. Je höher dieser Wert ist, desto öfter entscheidet das Bewertungsmodell wie Sie und desto besser zeigen seine Urteile, wie Sie bei Aufgaben entschieden hätten, bei denen Sie selbst nicht abgestimmt haben."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T1602691513"] = "„Verglichen“ zählt die Durchläufe und Aufgaben, für die sowohl Ihre Stimme als auch ein Urteil des Richters vorliegen, „Gleiche Wahl“ diejenigen, in denen der Richter dasselbe gewählt hat wie Sie, und „Übereinstimmung“ gibt deren Anteil an. Je höher er ist, desto eher entscheidet der Richter wie Sie und desto mehr sagen seine Urteile dort aus, wo Sie selbst nicht abgestimmt haben."
 
 -- “Compared” counts the runs and tasks with both your vote and a verdict of the judge, “Same choice” those in which the judge chose the same as you, and “Agreement” their share. The higher it is, the more the judge decides like you, and the more its verdicts tell you where you did not vote yourself.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T1602691513::INFORMAL"] = "„Verglichen“ zählt die Durchläufe und Aufgaben, für die sowohl deine Stimme als auch ein Urteil des Bewertungsmodells vorliegen. „Gleiche Wahl“ zählt diejenigen, bei denen das Bewertungsmodell dieselbe Wahl getroffen hat wie du, und „Übereinstimmung“ gibt deren Anteil an. Je höher dieser Wert ist, desto öfter entscheidet das Bewertungsmodell wie du und desto besser zeigen seine Urteile, wie du bei Aufgaben entschieden hättest, bei denen du selbst nicht abgestimmt hast."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T1602691513::INFORMAL"] = "„Verglichen“ zählt die Durchläufe und Aufgaben, für die sowohl deine Stimme als auch ein Urteil des Richters vorliegen, „Gleiche Wahl“ diejenigen, in denen der Richter dasselbe gewählt hat wie du, und „Übereinstimmung“ gibt deren Anteil an. Je höher er ist, desto eher entscheidet der Richter wie du und desto mehr sagen seine Urteile dort aus, wo du selbst nicht abgestimmt hast."
 
 -- The effort tells you how much each model asked of you until you were done with a task: how many messages you wrote on average, your first one included, and how long you worked with the model. For the time, AI Studio takes the median: half of the tasks took less, half took more, so that a chat left open overnight does not distort the picture. Fewer messages and less time can mean that a model understood you sooner.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2051424113"] = "Der Aufwand zeigt Ihnen, wie viel Aufwand das jeweilige Modell von Ihnen verlangt hat, bis Sie eine Aufgabe abgeschlossen hatten: wie viele Nachrichten Sie durchschnittlich geschrieben haben, Ihre erste mitgezählt, und wie lange Sie mit dem Modell gearbeitet haben. Für die Zeitangabe verwendet AI Studio den Median: Die Hälfte der Aufgaben dauerte kürzer, die andere Hälfte länger. So verzerrt ein über Nacht offener Chat das Ergebnis nicht. Weniger Nachrichten und weniger Zeit können bedeuten, dass ein Modell Sie schneller verstanden hat."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2051424113"] = "Der Aufwand zeigt Ihnen, wie viel Ihnen jedes Modell abverlangt hat, bis Sie mit einer Aufgabe fertig waren: wie viele Nachrichten Sie im Durchschnitt geschrieben haben, Ihre erste mitgezählt, und wie lange Sie mit dem Modell gearbeitet haben. Für die Zeit nimmt AI Studio den Median: Die Hälfte der Aufgaben dauerte kürzer, die andere Hälfte länger. So verzerrt ein über Nacht offener Chat das Bild nicht. Weniger Nachrichten und weniger Zeit können bedeuten, dass ein Modell Sie schneller verstanden hat."
 
 -- The effort tells you how much each model asked of you until you were done with a task: how many messages you wrote on average, your first one included, and how long you worked with the model. For the time, AI Studio takes the median: half of the tasks took less, half took more, so that a chat left open overnight does not distort the picture. Fewer messages and less time can mean that a model understood you sooner.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2051424113::INFORMAL"] = "Der Aufwand zeigt dir, wie viel Aufwand das jeweilige Modell von dir verlangt hat, bis du eine Aufgabe abgeschlossen hattest: wie viele Nachrichten du durchschnittlich geschrieben hast, deine erste mitgezählt, und wie lange du mit dem Modell gearbeitet hast. Für die Zeitangabe verwendet AI Studio den Median: Die Hälfte der Aufgaben dauerte kürzer, die andere Hälfte länger. So verzerrt ein über Nacht offener Chat das Ergebnis nicht. Weniger Nachrichten und weniger Zeit können bedeuten, dass ein Modell dich schneller verstanden hat."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2051424113::INFORMAL"] = "Der Aufwand zeigt dir, wie viel dir jedes Modell abverlangt hat, bis du mit einer Aufgabe fertig warst: wie viele Nachrichten du im Durchschnitt geschrieben hast, deine erste mitgezählt, und wie lange du mit dem Modell gearbeitet hast. Für die Zeit nimmt AI Studio den Median: Die Hälfte der Aufgaben dauerte kürzer, die andere Hälfte länger. So verzerrt ein über Nacht offener Chat das Bild nicht. Weniger Nachrichten und weniger Zeit können bedeuten, dass ein Modell dich schneller verstanden hat."
 
 -- The result counts only the tasks you decided without knowing the models. It shows how often each model helped you more, whether that is clearly more than chance, and how much effort each model cost you.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2144465448"] = "Das Ergebnis berücksichtigt nur die Aufgaben, bei denen Sie entschieden haben, ohne zu wissen, von welchen Modellen die Antworten stammen. Es zeigt, wie oft Ihnen jedes Modell mehr geholfen hat, ob das deutlich über dem Zufallsniveau liegt und wie viel Aufwand jedes Modell Sie gekostet hat."
@@ -5062,28 +5062,28 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEX
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2144465448::INFORMAL"] = "Das Ergebnis berücksichtigt nur die Aufgaben, bei denen du entschieden hast, ohne zu wissen, von welchen Modellen die Antworten stammen. Es zeigt, wie oft dir jedes Modell mehr geholfen hat, ob das deutlich über dem Zufallsniveau liegt und wie viel Aufwand jedes Modell dich gekostet hat."
 
 -- The columns follow the order in the heading: the first model, both equally good, the second model. The assessment says whether one of the two is clearly better. That is the case only when the likely range of its share of wins, at a confidence of 95 percent, lies entirely above one half; the ties do not count toward the share.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2456227034"] = "Die Spalten sind in derselben Reihenfolge angeordnet wie in der Überschrift: das erste Modell, beide gleich gut, das zweite Modell. Die Bewertung gibt an, ob eines der beiden Modelle eindeutig besser ist. Das ist nur dann der Fall, wenn das 95-Prozent-Konfidenzintervall für seinen Anteil an den Siegen vollständig über 50 Prozent liegt; Unentschieden fließen in diesen Anteil nicht ein."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2456227034"] = "Die Spalten folgen der Reihenfolge in der Überschrift: das erste Modell, beide gleich gut, das zweite Modell. Die Einschätzung sagt, ob eines der beiden eindeutig besser ist. Das ist nur dann der Fall, wenn der wahrscheinliche Bereich seines Anteils der Siege bei einer Sicherheit von 95 Prozent vollständig über der Hälfte liegt; Unentschieden zählen für diesen Anteil nicht."
 
 -- The columns follow the order in the heading: the first model, both equally good, the second model. The assessment says whether one of the two is clearly better. That is the case only when the likely range of its share of wins, at a confidence of 95 percent, lies entirely above one half; the ties do not count toward the share.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2456227034::INFORMAL"] = "Die Spalten sind in derselben Reihenfolge angeordnet wie in der Überschrift: das erste Modell, beide gleich gut, das zweite Modell. Die Bewertung gibt an, ob eines der beiden Modelle eindeutig besser ist. Das ist nur dann der Fall, wenn das 95-Prozent-Konfidenzintervall für seinen Anteil an den Siegen vollständig über 50 Prozent liegt; Unentschieden fließen in diesen Anteil nicht ein."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2456227034::INFORMAL"] = "Die Spalten folgen der Reihenfolge in der Überschrift: das erste Modell, beide gleich gut, das zweite Modell. Die Einschätzung sagt, ob eines der beiden eindeutig besser ist. Das ist nur dann der Fall, wenn der wahrscheinliche Bereich seines Anteils der Siege bei einer Sicherheit von 95 Prozent vollständig über der Hälfte liegt; Unentschieden zählen für diesen Anteil nicht."
 
 -- Here you see how your votes and the verdicts of the judge turned out for this request. A single request tells you little about how the models do in general: compare them on several requests, and on real tasks in the Field Test, before you choose one. The results of all comparisons put everything together.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2998349069"] = "Hier sehen Sie, wie Ihre Stimmen und die Urteile des Bewertungsmodells für diese Anfrage ausgefallen sind. Eine einzelne Anfrage sagt wenig darüber aus, wie gut die Modelle im Allgemeinen abschneiden: Vergleichen Sie sie anhand mehrerer Anfragen und bei realen Aufgaben im Praxistest, bevor Sie sich für eines entscheiden. Die Ergebnisse aller Vergleiche ergeben zusammen ein Gesamtbild."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2998349069"] = "Hier sehen Sie, wie Ihre Stimmen und die Urteile des Richters für diese Anfrage ausgefallen sind. Eine einzelne Anfrage sagt wenig darüber aus, wie gut die Modelle im Allgemeinen abschneiden: Vergleichen Sie sie anhand mehrerer Anfragen und bei echten Aufgaben im Praxistest, bevor Sie sich für eines entscheiden. Die Ergebnisse aller Vergleiche führen alles zusammen."
 
 -- Here you see how your votes and the verdicts of the judge turned out for this request. A single request tells you little about how the models do in general: compare them on several requests, and on real tasks in the Field Test, before you choose one. The results of all comparisons put everything together.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2998349069::INFORMAL"] = "Hier siehst du, wie deine Stimmen und die Urteile des Bewertungsmodells für diese Anfrage ausgefallen sind. Eine einzelne Anfrage sagt wenig darüber aus, wie gut die Modelle im Allgemeinen abschneiden: Vergleiche sie anhand mehrerer Anfragen und bei realen Aufgaben im Praxistest, bevor du dich für eines entscheidest. Die Ergebnisse aller Vergleiche ergeben zusammen ein Gesamtbild."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T2998349069::INFORMAL"] = "Hier siehst du, wie deine Stimmen und die Urteile des Richters für diese Anfrage ausgefallen sind. Eine einzelne Anfrage sagt wenig darüber aus, wie gut die Modelle im Allgemeinen abschneiden: Vergleiche sie anhand mehrerer Anfragen und bei echten Aufgaben im Praxistest, bevor du dich für eines entscheidest. Die Ergebnisse aller Vergleiche führen alles zusammen."
 
 -- The share of wins counts only the runs and tasks which one of the models won, not the ties. With few of them, chance plays a large part. Therefore, a model counts as clearly better or clearly worse only when the likely range of its share, at a confidence of 95 percent, lies entirely above or below one half. Many runs of the same request tell you a lot about that request, but little about others, so compare the models on different requests and tasks, too.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T3079420033"] = "Die Gewinnquote berücksichtigt nur die Durchläufe und Aufgaben, die eines der Modelle gewonnen hat; Unentschieden zählen nicht. Bei wenigen Durchläufen und Aufgaben spielt der Zufall eine große Rolle. Deshalb gilt ein Modell nur dann als eindeutig besser oder schlechter, wenn das 95-Prozent-Konfidenzintervall seiner Gewinnquote vollständig über oder unter 50 Prozent liegt. Viele Durchläufe derselben Anfrage sagen viel über diese Anfrage aus, aber wenig über andere. Vergleichen Sie die Modelle daher auch anhand verschiedener Anfragen und Aufgaben."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T3079420033"] = "Der Anteil der Siege berücksichtigt nur die Durchläufe und Aufgaben, die eines der Modelle gewonnen hat, nicht die Unentschieden. Bei wenigen davon spielt der Zufall eine große Rolle. Deshalb gilt ein Modell nur dann als eindeutig besser oder schlechter, wenn der wahrscheinliche Bereich seines Anteils bei einer Sicherheit von 95 Prozent vollständig über oder unter der Hälfte liegt. Viele Durchläufe derselben Anfrage sagen viel über diese Anfrage aus, aber wenig über andere. Vergleichen Sie die Modelle daher auch anhand verschiedener Anfragen und Aufgaben."
 
 -- The share of wins counts only the runs and tasks which one of the models won, not the ties. With few of them, chance plays a large part. Therefore, a model counts as clearly better or clearly worse only when the likely range of its share, at a confidence of 95 percent, lies entirely above or below one half. Many runs of the same request tell you a lot about that request, but little about others, so compare the models on different requests and tasks, too.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T3079420033::INFORMAL"] = "Die Gewinnquote berücksichtigt nur die Durchläufe und Aufgaben, die eines der Modelle gewonnen hat; Unentschieden zählen nicht. Bei wenigen Durchläufen und Aufgaben spielt der Zufall eine große Rolle. Deshalb gilt ein Modell nur dann als eindeutig besser oder schlechter, wenn das 95-Prozent-Konfidenzintervall seiner Gewinnquote vollständig über oder unter 50 Prozent liegt. Viele Durchläufe derselben Anfrage sagen viel über diese Anfrage aus, aber wenig über andere. Vergleiche die Modelle daher auch anhand verschiedener Anfragen und Aufgaben."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T3079420033::INFORMAL"] = "Der Anteil der Siege berücksichtigt nur die Durchläufe und Aufgaben, die eines der Modelle gewonnen hat, nicht die Unentschieden. Bei wenigen davon spielt der Zufall eine große Rolle. Deshalb gilt ein Modell nur dann als eindeutig besser oder schlechter, wenn der wahrscheinliche Bereich seines Anteils bei einer Sicherheit von 95 Prozent vollständig über oder unter der Hälfte liegt. Viele Durchläufe derselben Anfrage sagen viel über diese Anfrage aus, aber wenig über andere. Vergleiche die Modelle daher auch anhand verschiedener Anfragen und Aufgaben."
 
 -- Here you see what all your comparisons say about the models. The Answer Test adds your votes on the answers of two models to the same request, and the Field Test adds your decisions on real tasks. A comparison series of the Field Test counts only once you looked at its result, and only with the tasks you decided before, while you did not know the models yet. Choose above whether the results of both modes count, or those of one of them.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T3371696481"] = "Hier sehen Sie, was alle Ihre Vergleiche über die Modelle aussagen. Der Antworttest fasst Ihre Stimmen zu den Antworten zweier Modelle auf dieselbe Anfrage zusammen. Im Feldtest fließen Ihre Entscheidungen bei echten Aufgaben ein. Eine Vergleichsreihe im Feldtest wird erst berücksichtigt, nachdem Sie sich ihr Ergebnis angesehen haben, und auch dann nur für Aufgaben, bei denen Sie Ihre Entscheidung getroffen haben, bevor Sie wussten, welche Modelle es waren. Wählen Sie oben aus, ob die Ergebnisse beider Modi oder nur eines Modus berücksichtigt werden sollen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T3371696481"] = "Hier sehen Sie, was alle Ihre Vergleiche über die Modelle aussagen. Aus dem Antworttest fließen Ihre Stimmen zu den Antworten zweier Modelle auf dieselbe Anfrage ein, aus dem Praxistest Ihre Entscheidungen bei echten Aufgaben. Eine Vergleichsreihe des Praxistests zählt erst, nachdem Sie sich ihr Ergebnis angesehen haben, und nur mit den Aufgaben, die Sie davor entschieden haben, als Sie die Modelle noch nicht kannten. Wählen Sie oben, ob die Ergebnisse beider Modi zählen oder nur die eines Modus."
 
 -- Here you see what all your comparisons say about the models. The Answer Test adds your votes on the answers of two models to the same request, and the Field Test adds your decisions on real tasks. A comparison series of the Field Test counts only once you looked at its result, and only with the tasks you decided before, while you did not know the models yet. Choose above whether the results of both modes count, or those of one of them.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T3371696481::INFORMAL"] = "Hier siehst du, was alle deine Vergleiche über die Modelle aussagen. Der Antworttest fasst deine Stimmen zu den Antworten zweier Modelle auf dieselbe Anfrage zusammen. Im Feldtest fließen deine Entscheidungen bei echten Aufgaben ein. Eine Vergleichsreihe im Feldtest wird erst berücksichtigt, nachdem du dir ihr Ergebnis angesehen hast, und auch dann nur für Aufgaben, bei denen du deine Entscheidung getroffen hast, bevor du wusstest, welche Modelle es waren. Wähle oben aus, ob die Ergebnisse beider Modi oder nur eines Modus berücksichtigt werden sollen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRESULTTEXTS::T3371696481::INFORMAL"] = "Hier siehst du, was alle deine Vergleiche über die Modelle aussagen. Aus dem Antworttest fließen deine Stimmen zu den Antworten zweier Modelle auf dieselbe Anfrage ein, aus dem Praxistest deine Entscheidungen bei echten Aufgaben. Eine Vergleichsreihe des Praxistests zählt erst, nachdem du dir ihr Ergebnis angesehen hast, und nur mit den Aufgaben, die du davor entschieden hast, als du die Modelle noch nicht kanntest. Wähle oben, ob die Ergebnisse beider Modi zählen oder nur die eines Modus."
 
 -- Run {0}: without your vote
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONRUNPANEL::T1440259155"] = "Durchlauf {0}: ohne Ihre Stimme"
@@ -5227,28 +5227,28 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESRES
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESRESULT::T3510794091::INFORMAL"] = "Du hast in dieser Vergleichsreihe keine Aufgabe ohne Kenntnis der Modelle entschieden, daher gibt es kein Ergebnis."
 
 -- After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It gives you a second opinion which does not depend on your own taste, and in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2057033694"] = "Nachdem Sie eine Aufgabe selbst bewertet haben, liest ein drittes Modell beide Chats und gibt ein eigenes Urteil ab, ohne zu wissen, welches Modell welchen Chat verfasst hat. So erhalten Sie eine zweite Meinung, die nicht von Ihrem persönlichen Geschmack abhängt. In der Auswertung der Serie sehen Sie, wie oft das Modell Ihrer Einschätzung zugestimmt hat. Da das Bewertungsmodell beide Chats vollständig liest, muss es auch Ihre Datenquellen einsehen dürfen. Pro Aufgabe ist eine zusätzliche Anfrage erforderlich."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2057033694"] = "Nachdem Sie selbst über eine Aufgabe abgestimmt haben, liest ein drittes Modell beide Chats und gibt ein eigenes Urteil ab, ohne zu wissen, welches Modell welchen Chat geschrieben hat. So erhalten Sie eine zweite Meinung, die nicht von Ihrem persönlichen Geschmack abhängt, und im Ergebnis der Vergleichsreihe sehen Sie, wie oft der Richter Ihnen zugestimmt hat. Da er beide Chats vollständig liest, muss er auch Ihre Datenquellen sehen dürfen. Er kostet eine zusätzliche Anfrage pro Aufgabe."
 
 -- After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It gives you a second opinion which does not depend on your own taste, and in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2057033694::INFORMAL"] = "Nachdem du eine Aufgabe selbst bewertet hast, liest ein drittes Modell beide Chats und gibt ein eigenes Urteil ab, ohne zu wissen, welches Modell welchen Chat verfasst hat. So erhältst du eine zweite Meinung, die nicht von deinem persönlichen Geschmack abhängt. In der Auswertung der Serie siehst du, wie oft das Modell deiner Einschätzung zugestimmt hat. Da das Bewertungsmodell beide Chats vollständig liest, muss es auch deine Datenquellen einsehen dürfen. Pro Aufgabe ist eine zusätzliche Anfrage erforderlich."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2057033694::INFORMAL"] = "Nachdem du selbst über eine Aufgabe abgestimmt hast, liest ein drittes Modell beide Chats und gibt ein eigenes Urteil ab, ohne zu wissen, welches Modell welchen Chat geschrieben hat. So erhältst du eine zweite Meinung, die nicht von deinem persönlichen Geschmack abhängt, und im Ergebnis der Vergleichsreihe siehst du, wie oft der Richter dir zugestimmt hat. Da er beide Chats vollständig liest, muss er auch deine Datenquellen sehen dürfen. Er kostet eine zusätzliche Anfrage pro Aufgabe."
 
 -- Both models work with the same profile, the same tools, and the same data sources, so that the comparison stays fair. AI Studio therefore offers only what each of them may use: the model with the lower confidence decides which tools and data sources you can choose, and the tool selection lists the others with the reason. When both models can search the data sources themselves, they do so with Semantic Search; otherwise, AI Studio searches them with every message for both. In each task, you can attach files to your message, which both models receive; images only when both models can read them.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2709626367"] = "Beide Modelle verwenden dasselbe Profil, dieselben Werkzeuge und dieselben Datenquellen, damit der Vergleich fair bleibt. AI Studio bietet daher nur an, was beide Modelle nutzen können: Das Modell mit der geringeren Konfidenz bestimmt, welche Werkzeuge und Datenquellen Sie auswählen können. In der Werkzeugauswahl werden die übrigen mit Begründung aufgeführt. Wenn beide Modelle die Datenquellen selbst durchsuchen können, nutzen sie dafür die Semantische Suche. Andernfalls durchsucht AI Studio die Datenquellen für beide Modelle bei jeder Nachricht. Bei jeder Aufgabe können Sie Ihrer Nachricht Dateien anhängen, die beide Modelle erhalten – Bilder jedoch nur, wenn beide Modelle sie lesen können."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2709626367"] = "Beide Modelle verwenden dasselbe Profil, dieselben Werkzeuge und dieselben Datenquellen, damit der Vergleich fair bleibt. AI Studio bietet daher nur an, was beide Modelle nutzen dürfen: Das Modell mit dem geringeren Vertrauensniveau bestimmt, welche Werkzeuge und Datenquellen Sie auswählen können, und die Werkzeugauswahl führt die übrigen mit Begründung auf. Wenn beide Modelle die Datenquellen selbst durchsuchen können, nutzen sie dafür die semantische Suche. Andernfalls durchsucht AI Studio die Datenquellen für beide Modelle bei jeder Nachricht. Bei jeder Aufgabe können Sie Ihrer Nachricht Dateien anhängen, die beide Modelle erhalten – Bilder jedoch nur, wenn beide Modelle sie lesen können."
 
 -- Both models work with the same profile, the same tools, and the same data sources, so that the comparison stays fair. AI Studio therefore offers only what each of them may use: the model with the lower confidence decides which tools and data sources you can choose, and the tool selection lists the others with the reason. When both models can search the data sources themselves, they do so with Semantic Search; otherwise, AI Studio searches them with every message for both. In each task, you can attach files to your message, which both models receive; images only when both models can read them.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2709626367::INFORMAL"] = "Beide Modelle verwenden dasselbe Profil, dieselben Werkzeuge und dieselben Datenquellen, damit der Vergleich fair bleibt. AI Studio bietet daher nur an, was beide Modelle nutzen können: Das Modell mit der geringeren Konfidenz bestimmt, welche Werkzeuge und Datenquellen du auswählen kannst. In der Werkzeugauswahl werden die übrigen mit Begründung aufgeführt. Wenn beide Modelle die Datenquellen selbst durchsuchen können, nutzen sie dafür die Semantische Suche. Andernfalls durchsucht AI Studio die Datenquellen für beide Modelle bei jeder Nachricht. Bei jeder Aufgabe kannst du deiner Nachricht Dateien anhängen, die beide Modelle erhalten – Bilder jedoch nur, wenn beide Modelle sie lesen können."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2709626367::INFORMAL"] = "Beide Modelle verwenden dasselbe Profil, dieselben Werkzeuge und dieselben Datenquellen, damit der Vergleich fair bleibt. AI Studio bietet daher nur an, was beide Modelle nutzen dürfen: Das Modell mit dem geringeren Vertrauensniveau bestimmt, welche Werkzeuge und Datenquellen du auswählen kannst, und die Werkzeugauswahl führt die übrigen mit Begründung auf. Wenn beide Modelle die Datenquellen selbst durchsuchen können, nutzen sie dafür die semantische Suche. Andernfalls durchsucht AI Studio die Datenquellen für beide Modelle bei jeder Nachricht. Bei jeder Aufgabe kannst du deiner Nachricht Dateien anhängen, die beide Modelle erhalten – Bilder jedoch nur, wenn beide Modelle sie lesen können."
 
 -- Choose the two models you want to compare, e.g., the model you work with every day and a new one. For every task, AI Studio decides at random which model you chat with first, and it hides their names until you look at the result of the series.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T326613437"] = "Wählen Sie die beiden Modelle aus, die Sie vergleichen möchten, zum Beispiel das Modell, mit dem Sie täglich arbeiten, und ein neues Modell. Bei jeder Aufgabe entscheidet AI Studio zufällig, mit welchem Modell Sie zuerst chatten. Die Namen der Modelle bleiben verborgen, bis Sie sich die Ergebnisse der Reihe ansehen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T326613437"] = "Wählen Sie die beiden Modelle aus, die Sie vergleichen möchten, zum Beispiel das Modell, mit dem Sie täglich arbeiten, und ein neues Modell. Bei jeder Aufgabe entscheidet AI Studio zufällig, mit welchem Modell Sie zuerst chatten. Die Namen der Modelle bleiben verborgen, bis Sie sich das Ergebnis der Reihe ansehen."
 
 -- Choose the two models you want to compare, e.g., the model you work with every day and a new one. For every task, AI Studio decides at random which model you chat with first, and it hides their names until you look at the result of the series.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T326613437::INFORMAL"] = "Wähle die beiden Modelle aus, die du vergleichen möchtest, zum Beispiel das Modell, mit dem du täglich arbeitest, und ein neues Modell. Bei jeder Aufgabe entscheidet AI Studio zufällig, mit welchem Modell du zuerst chattest. Die Namen der Modelle bleiben verborgen, bis du dir die Ergebnisse der Reihe ansiehst."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T326613437::INFORMAL"] = "Wähle die beiden Modelle aus, die du vergleichen möchtest, zum Beispiel das Modell, mit dem du täglich arbeitest, und ein neues Modell. Bei jeder Aufgabe entscheidet AI Studio zufällig, mit welchem Modell du zuerst chattest. Die Namen der Modelle bleiben verborgen, bis du dir das Ergebnis der Reihe ansiehst."
 
 -- A task runs in four steps. First, you start it, and AI Studio chooses at random which of the two models you chat with first. Second, you work on your task in the chat as you always do: you can attach files, and the model uses the profile, tools, and data sources of the series. Third, once you are done, the other model gets your first message with its files, and you continue the same task with it. Fourth, you decide which chat helped you more; when the series has a judge, it gives its own verdict afterward. You can look at the result of the series whenever you like. Since it names the models, the tasks you decide afterward no longer count as blind.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T49281341"] = "Eine Aufgabe läuft in vier Schritten ab. Zuerst starten Sie die Aufgabe, und AI Studio wählt zufällig aus, mit welchem der beiden Modelle Sie zuerst chatten. Anschließend bearbeiten Sie Ihre Aufgabe wie gewohnt im Chat: Sie können Dateien anhängen, und das Modell verwendet das Profil, die Tools und die Datenquellen der Serie. Sobald Sie fertig sind, erhält das andere Modell Ihre erste Nachricht samt Dateien, und Sie setzen dieselbe Aufgabe mit ihm fort. Danach entscheiden Sie, welcher Chat Ihnen mehr geholfen hat. Wenn die Serie ein Bewertungsmodell hat, gibt dieses anschließend sein eigenes Urteil ab. Sie können sich das Ergebnis der Serie jederzeit ansehen. Da darin die Namen der Modelle angezeigt werden, gelten Ihre anschließenden Entscheidungen nicht mehr als Blindbewertungen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T49281341"] = "Eine Aufgabe läuft in vier Schritten ab. Zuerst starten Sie die Aufgabe, und AI Studio wählt zufällig aus, mit welchem der beiden Modelle Sie zuerst chatten. Dann bearbeiten Sie Ihre Aufgabe wie gewohnt im Chat: Sie können Dateien anhängen, und das Modell verwendet das Profil, die Werkzeuge und die Datenquellen der Vergleichsreihe. Sobald Sie fertig sind, erhält das andere Modell Ihre erste Nachricht samt Dateien, und Sie setzen dieselbe Aufgabe mit ihm fort. Zuletzt entscheiden Sie, welcher Chat Ihnen mehr geholfen hat; hat die Vergleichsreihe einen Richter, gibt er danach sein eigenes Urteil ab. Das Ergebnis der Vergleichsreihe können Sie sich jederzeit ansehen. Da es die Modelle nennt, gelten die Aufgaben, die Sie danach entscheiden, nicht mehr als blind."
 
 -- A task runs in four steps. First, you start it, and AI Studio chooses at random which of the two models you chat with first. Second, you work on your task in the chat as you always do: you can attach files, and the model uses the profile, tools, and data sources of the series. Third, once you are done, the other model gets your first message with its files, and you continue the same task with it. Fourth, you decide which chat helped you more; when the series has a judge, it gives its own verdict afterward. You can look at the result of the series whenever you like. Since it names the models, the tasks you decide afterward no longer count as blind.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T49281341::INFORMAL"] = "Eine Aufgabe läuft in vier Schritten ab. Zuerst startest du die Aufgabe, und AI Studio wählt zufällig aus, mit welchem der beiden Modelle du zuerst chattest. Anschließend bearbeitest du deine Aufgabe wie gewohnt im Chat: du kannst Dateien anhängen, und das Modell verwendet das Profil, die Tools und die Datenquellen der Serie. Sobald du fertig bist, erhält das andere Modell deine erste Nachricht samt Dateien, und du setzt dieselbe Aufgabe mit ihm fort. Danach entscheidest du, welcher Chat dir mehr geholfen hat. Wenn die Serie ein Bewertungsmodell hat, gibt dieses anschließend sein eigenes Urteil ab. Du kannst dir das Ergebnis der Serie jederzeit ansehen. Da darin die Namen der Modelle angezeigt werden, gelten deine anschließenden Entscheidungen nicht mehr als Blindbewertungen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T49281341::INFORMAL"] = "Eine Aufgabe läuft in vier Schritten ab. Zuerst startest du die Aufgabe, und AI Studio wählt zufällig aus, mit welchem der beiden Modelle du zuerst chattest. Dann bearbeitest du deine Aufgabe wie gewohnt im Chat: Du kannst Dateien anhängen, und das Modell verwendet das Profil, die Werkzeuge und die Datenquellen der Vergleichsreihe. Sobald du fertig bist, erhält das andere Modell deine erste Nachricht samt Dateien, und du setzt dieselbe Aufgabe mit ihm fort. Zuletzt entscheidest du, welcher Chat dir mehr geholfen hat; hat die Vergleichsreihe einen Richter, gibt er danach sein eigenes Urteil ab. Das Ergebnis der Vergleichsreihe kannst du dir jederzeit ansehen. Da es die Modelle nennt, gelten die Aufgaben, die du danach entscheidest, nicht mehr als blind."
 
 -- A comparison series collects your real tasks over days or weeks. You work on each task with one of the two models, and then on the same task with the other one; the second chat starts with your first message of the first one. Afterward, you decide which chat helped you more. You learn which model was which only when you look at the result of the series.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T863629402"] = "Eine Vergleichsreihe sammelt Ihre tatsächlichen Aufgaben über Tage oder Wochen hinweg. Sie bearbeiten jede Aufgabe zunächst mit einem der beiden Modelle und anschließend dieselbe Aufgabe mit dem anderen. Der zweite Chat beginnt mit Ihrer ersten Nachricht aus dem ersten Chat. Danach entscheiden Sie, welcher Chat Ihnen mehr geholfen hat. Erst wenn Sie sich das Ergebnis der Reihe ansehen, erfahren Sie, welches Modell welches war."
@@ -5320,10 +5320,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIE
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T1119857700::INFORMAL"] = "Arbeite jetzt mit dem anderen Modell an derselben Aufgabe weiter. Es hat deine erste Nachricht bereits erhalten. Wenn du fertig bist, entscheidest du, welcher Chat dir mehr geholfen hat."
 
 -- One of the two models is no longer available as it was when the series began: its provider was deleted, or it uses another model now. You cannot work on another task in this series, but you can start a new series with its setup and choose the model anew.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T116035530"] = "Eines der beiden Modelle ist nicht mehr so verfügbar wie zu Beginn der Reihe: Entweder wurde sein Anbieter gelöscht oder inzwischen wird ein anderes Modell verwendet. Sie können keine weitere Aufgabe in dieser Reihe bearbeiten, aber mit derselben Konfiguration eine neue Reihe starten und das Modell erneut auswählen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T116035530"] = "Eines der beiden Modelle ist nicht mehr so verfügbar wie zu Beginn der Reihe: Sein Anbieter wurde gelöscht, oder er verwendet inzwischen ein anderes Modell. Sie können keine weitere Aufgabe in dieser Reihe bearbeiten, aber eine neue Reihe mit ihrer Einrichtung starten und das Modell neu auswählen."
 
 -- One of the two models is no longer available as it was when the series began: its provider was deleted, or it uses another model now. You cannot work on another task in this series, but you can start a new series with its setup and choose the model anew.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T116035530::INFORMAL"] = "Eines der beiden Modelle ist nicht mehr so verfügbar wie zu Beginn der Reihe: Entweder wurde sein Anbieter gelöscht oder inzwischen wird ein anderes Modell verwendet. Du kannst keine weitere Aufgabe in dieser Reihe bearbeiten, aber mit derselben Konfiguration eine neue Reihe starten und das Modell erneut auswählen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T116035530::INFORMAL"] = "Eines der beiden Modelle ist nicht mehr so verfügbar wie zu Beginn der Reihe: Sein Anbieter wurde gelöscht, oder er verwendet inzwischen ein anderes Modell. Du kannst keine weitere Aufgabe in dieser Reihe bearbeiten, aber eine neue Reihe mit ihrer Einrichtung starten und das Modell neu auswählen."
 
 -- Task {0}: chat 1
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T134264261"] = "Aufgabe {0}: Chat 1"
@@ -5341,7 +5341,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIE
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T1811212186::INFORMAL"] = "AI Studio konnte die Vergleichsreihe nicht speichern. Bitte versuche es erneut."
 
 -- How a task works
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2064032605"] = "So funktioniert eine Aufgabe"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2064032605"] = "So läuft eine Aufgabe ab"
 
 -- Start your first task. You work on it with one of the two models first, and then with the other one. AI Studio chooses at random which model you meet first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2374282918"] = "Beginnen Sie mit Ihrer ersten Aufgabe. Sie bearbeiten sie zunächst mit einem der beiden Modelle und anschließend mit dem anderen. AI Studio wählt zufällig aus, mit welchem Modell Sie zuerst arbeiten."
@@ -5362,10 +5362,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIE
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T3114690087::INFORMAL"] = "Möchtest du diese Aufgabe und beide zugehörigen Chats wirklich verwerfen? Die Aufgabe wird nicht auf das Ergebnis angerechnet. Dies kann nicht rückgängig gemacht werden."
 
 -- You cannot attach images in this series, since not both models can read them. Other files, such as documents, work as usual.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T3203252119"] = "Sie können in dieser Serie keine Bilder anhängen, da nicht beide Modelle sie verarbeiten können. Andere Dateien, etwa Dokumente, funktionieren wie gewohnt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T3203252119"] = "Sie können in dieser Reihe keine Bilder anhängen, da nicht beide Modelle sie lesen können. Andere Dateien, etwa Dokumente, funktionieren wie gewohnt."
 
 -- You cannot attach images in this series, since not both models can read them. Other files, such as documents, work as usual.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T3203252119::INFORMAL"] = "Du kannst in dieser Serie keine Bilder anhängen, da nicht beide Modelle sie verarbeiten können. Andere Dateien, etwa Dokumente, funktionieren wie gewohnt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T3203252119::INFORMAL"] = "Du kannst in dieser Reihe keine Bilder anhängen, da nicht beide Modelle sie lesen können. Andere Dateien, etwa Dokumente, funktionieren wie gewohnt."
 
 -- The result tells you which model answered in which chat. Tasks you decide afterward no longer count as blind: the result shows them apart, and the results of all comparisons leave them out. Do you want to see the result?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T3217444240"] = "Das Ergebnis zeigt Ihnen, welches Modell in welchem Chat geantwortet hat. Aufgaben, die Sie danach entscheiden, gelten nicht mehr als blind: Das Ergebnis weist sie getrennt aus, und die Ergebnisse aller Vergleiche lassen sie weg. Möchten Sie das Ergebnis sehen?"
@@ -5410,10 +5410,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSPEEDS::T
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSPEEDS::T517769867"] = "Bis zur vollständigen Antwort"
 
 -- Every model answers a little differently each time, so a single comparison says little. With several runs, AI Studio asks both models the same request again and again, and you vote on every run blindly. The more runs, the more the result tells you, but each run costs one request per model, and one more with a judge.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T2158946259"] = "Jedes Modell antwortet jedes Mal ein wenig anders, deshalb sagt ein einzelner Vergleich wenig aus. Bei mehreren Durchläufen stellt AI Studio beiden Modellen wiederholt dieselbe Anfrage, und Sie stimmen bei jedem Durchlauf ab, ohne zu wissen, welches Modell welche Antwort gegeben hat. Je mehr Durchläufe, desto aussagekräftiger das Ergebnis. Allerdings kostet jeder Durchlauf eine Anfrage pro Modell und eine zusätzliche Anfrage an ein Bewertungsmodell."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T2158946259"] = "Jedes Modell antwortet jedes Mal ein wenig anders, deshalb sagt ein einzelner Vergleich wenig aus. Bei mehreren Durchläufen stellt AI Studio beiden Modellen wiederholt dieselbe Anfrage, und Sie stimmen bei jedem Durchlauf ab, ohne zu wissen, welches Modell welche Antwort gegeben hat. Je mehr Durchläufe, desto aussagekräftiger das Ergebnis. Allerdings kostet jeder Durchlauf eine Anfrage pro Modell und mit Richter eine weitere."
 
 -- Every model answers a little differently each time, so a single comparison says little. With several runs, AI Studio asks both models the same request again and again, and you vote on every run blindly. The more runs, the more the result tells you, but each run costs one request per model, and one more with a judge.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T2158946259::INFORMAL"] = "Jedes Modell antwortet jedes Mal ein wenig anders, deshalb sagt ein einzelner Vergleich wenig aus. Bei mehreren Durchläufen stellt AI Studio beiden Modellen wiederholt dieselbe Anfrage, und du stimmst bei jedem Durchlauf ab, ohne zu wissen, welches Modell welche Antwort gegeben hat. Je mehr Durchläufe, desto aussagekräftiger das Ergebnis. Allerdings kostet jeder Durchlauf eine Anfrage pro Modell und eine zusätzliche Anfrage an ein Bewertungsmodell."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T2158946259::INFORMAL"] = "Jedes Modell antwortet jedes Mal ein wenig anders, deshalb sagt ein einzelner Vergleich wenig aus. Bei mehreren Durchläufen stellt AI Studio beiden Modellen wiederholt dieselbe Anfrage, und du stimmst bei jedem Durchlauf ab, ohne zu wissen, welches Modell welche Antwort gegeben hat. Je mehr Durchläufe, desto aussagekräftiger das Ergebnis. Allerdings kostet jeder Durchlauf eine Anfrage pro Modell und mit Richter eine weitere."
 
 -- The material is a text which both models work on, e.g., a document to summarize, an email to answer, or code to review. Paste it, or load it from a file, e.g., from a PDF document, whose text AI Studio then reads. Leave it empty when your question stands on its own.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T2347517054"] = "Das Material ist ein Text, mit dem beide Modelle arbeiten, z. B. ein Dokument, das zusammengefasst werden soll, eine E-Mail, auf die geantwortet werden soll, oder Code, der überprüft werden soll. Fügen Sie den Text ein oder laden Sie ihn aus einer Datei, z. B. einem PDF-Dokument, dessen Text AI Studio dann einliest. Lassen Sie das Feld leer, wenn Ihre Frage für sich allein steht."
@@ -5428,10 +5428,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T3
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T3922082479::INFORMAL"] = "Beide Modelle erhalten deine Frage oder Aufgabe und das untenstehende Material – und sonst nichts: keine Werkzeuge, Datenquellen, Postfächer oder Webseiten, auch dann nicht, wenn du diese im Chat verwendest. Eine Webadresse in deiner Anfrage bleibt reiner Text, den keines der Modelle öffnet. So zeigen die Antworten, was die Modelle aus demselben Text machen. Wenn du vergleichen möchtest, wie gut zwei Modelle dich mit Werkzeugen, Datenquellen und deinen eigenen Dateien unterstützen, nutze den Praxistest."
 
 -- A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It gives you a second opinion which does not depend on your own taste, and it pays attention to what you name below. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your criteria deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T4040478889"] = "Ein Bewertungsmodell ist ein drittes Modell, das die Anfrage und die beiden Antworten jedes Durchlaufs liest und entscheidet, welche Antwort besser ist – genauso blind wie Sie. Es gibt Ihnen eine zweite Meinung, die nicht von Ihrem eigenen Geschmack abhängt, und achtet auf die unten genannten Kriterien. Am Ende sehen Sie, wie oft das Bewertungsmodell Ihrer Einschätzung zugestimmt hat: Wenn das nur selten der Fall ist, sollten Sie Ihre Stimmen oder Kriterien noch einmal überprüfen. Die Urteile sehen Sie erst, nachdem Sie selbst abgestimmt haben. Pro Durchlauf ist dafür eine zusätzliche Anfrage erforderlich."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T4040478889"] = "Ein Richter ist ein drittes Modell, das die Anfrage und die beiden Antworten jedes Durchlaufs liest und entscheidet, welche Antwort besser ist – genauso blind wie Sie. Er gibt Ihnen eine zweite Meinung, die nicht von Ihrem eigenen Geschmack abhängt, und achtet auf die Kriterien, die Sie unten nennen. Am Ende sehen Sie, wie oft der Richter Ihnen zugestimmt hat: Wenn das nur selten der Fall ist, sollten Sie Ihre Stimmen oder Kriterien noch einmal überprüfen. Seine Urteile sehen Sie erst nach Ihren eigenen Stimmen, und er kostet eine zusätzliche Anfrage pro Durchlauf."
 
 -- A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It gives you a second opinion which does not depend on your own taste, and it pays attention to what you name below. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your criteria deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T4040478889::INFORMAL"] = "Ein Bewertungsmodell ist ein drittes Modell, das die Anfrage und die beiden Antworten jedes Durchlaufs liest und entscheidet, welche Antwort besser ist – genauso blind wie du. Es gibt dir eine zweite Meinung, die nicht von deinem eigenen Geschmack abhängt, und achtet auf die unten genannten Kriterien. Am Ende siehst du, wie oft das Bewertungsmodell deiner Einschätzung zugestimmt hat: Wenn das nur selten der Fall ist, solltest du deine Stimmen oder Kriterien noch einmal überprüfen. Die Urteile siehst du erst, nachdem du selbst abgestimmt hast. Pro Durchlauf ist dafür eine zusätzliche Anfrage erforderlich."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T4040478889::INFORMAL"] = "Ein Richter ist ein drittes Modell, das die Anfrage und die beiden Antworten jedes Durchlaufs liest und entscheidet, welche Antwort besser ist – genauso blind wie du. Er gibt dir eine zweite Meinung, die nicht von deinem eigenen Geschmack abhängt, und achtet auf die Kriterien, die du unten nennst. Am Ende siehst du, wie oft der Richter dir zugestimmt hat: Wenn das nur selten der Fall ist, solltest du deine Stimmen oder Kriterien noch einmal überprüfen. Seine Urteile siehst du erst nach deinen eigenen Stimmen, und er kostet eine zusätzliche Anfrage pro Durchlauf."
 
 -- Choose the two models you want to compare. Both receive the same request, and AI Studio shows their answers side by side, in a random order and without their names: you vote for the better answer blindly and learn only at the end which model wrote which. You may also choose the same model twice. Then the comparison shows how much its answers vary when you ask it the same thing again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T477339319"] = "Wählen Sie die beiden Modelle aus, die Sie vergleichen möchten. Beide erhalten dieselbe Anfrage, und AI Studio zeigt ihre Antworten nebeneinander an – in zufälliger Reihenfolge und ohne ihre Namen. Sie stimmen blind darüber ab, welche Antwort besser ist, und erfahren erst am Ende, welches Modell welche Antwort verfasst hat. Sie können auch zweimal dasselbe Modell auswählen. Dann zeigt der Vergleich, wie stark seine Antworten variieren, wenn Sie ihm dieselbe Anfrage erneut stellen."
@@ -8824,10 +8824,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T147584079"] = "Sie 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T147584079::INFORMAL"] = "Du hast die semantische Suche in den Werkzeugeinstellungen deaktiviert. Daher nutzt AI Studio das klassische RAG und durchsucht deine Datenquellen bei jeder Nachricht."
 
 -- One of the selected models cannot use tools, so AI Studio uses classic RAG for all of them instead and searches your data sources with every message.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1491430062"] = "Eines der ausgewählten Modelle kann keine Tools verwenden. Daher nutzt AI Studio stattdessen für alle Modelle klassisches RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1491430062"] = "Eines der ausgewählten Modelle kann keine Werkzeuge verwenden. Daher nutzt AI Studio für alle Modelle das klassische RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
 
 -- One of the selected models cannot use tools, so AI Studio uses classic RAG for all of them instead and searches your data sources with every message.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1491430062::INFORMAL"] = "Eines der ausgewählten Modelle kann keine Tools verwenden. Daher nutzt AI Studio stattdessen für alle Modelle klassisches RAG und durchsucht deine Datenquellen bei jeder Nachricht."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1491430062::INFORMAL"] = "Eines der ausgewählten Modelle kann keine Werkzeuge verwenden. Daher nutzt AI Studio für alle Modelle das klassische RAG und durchsucht deine Datenquellen bei jeder Nachricht."
 
 -- Data Source Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T15302104"] = "Datenauswahl"
@@ -8875,10 +8875,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2382076848"] = "Wen
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2382076848::INFORMAL"] = "Wenn das Modell eines Chats keine Werkzeuge verwenden kann, nutzt AI Studio das klassische RAG und durchsucht deine Datenquellen bei jeder Nachricht."
 
 -- One of the selected providers is not trusted enough for Semantic Search, so AI Studio uses classic RAG for all of them instead and searches your data sources with every message.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2654482616"] = "Einer der ausgewählten Anbieter ist für die semantische Suche nicht vertrauenswürdig genug. Deshalb verwendet AI Studio stattdessen für alle ausgewählten Anbieter klassisches RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2654482616"] = "Einer der ausgewählten Anbieter ist für die semantische Suche nicht vertrauenswürdig genug. Daher nutzt AI Studio für alle das klassische RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
 
 -- One of the selected providers is not trusted enough for Semantic Search, so AI Studio uses classic RAG for all of them instead and searches your data sources with every message.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2654482616::INFORMAL"] = "Einer der ausgewählten Anbieter ist für die semantische Suche nicht vertrauenswürdig genug. Deshalb verwendet AI Studio stattdessen für alle ausgewählten Anbieter klassisches RAG und durchsucht deine Datenquellen bei jeder Nachricht."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2654482616::INFORMAL"] = "Einer der ausgewählten Anbieter ist für die semantische Suche nicht vertrauenswürdig genug. Daher nutzt AI Studio für alle das klassische RAG und durchsucht deine Datenquellen bei jeder Nachricht."
 
 -- Whenever a question calls for it, the AI picks the fitting ones among these data sources itself.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2854302511"] = "Wann immer eine Frage es erfordert, wählt die KI selbst die passenden unter diesen Datenquellen aus."
@@ -10759,7 +10759,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T749664565"] = "Werkzeugau
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T953828816"] = "Derzeit kann kein Werkzeug ausgewählt werden."
 
 -- This tool requires provider confidence {0}. The selected provider with the lowest confidence has {1}.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T966234001"] = "Dieses Tool erfordert einen Anbieter-Konfidenzwert von {0}. Der ausgewählte Anbieter mit dem niedrigsten Konfidenzwert hat einen Wert von {1}."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T966234001"] = "Dieses Werkzeug erfordert das Vertrauensniveau {0}. Der ausgewählte Anbieter mit dem niedrigsten Vertrauensniveau hat {1}."
 
 -- Select tools
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T998515990"] = "Werkzeuge auswählen"
@@ -13504,10 +13504,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1058933136"] 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T119967148"] = "{0}: {1} Vergleiche mit {2} Durchläufen."
 
 -- Are you sure you want to delete all results of the Answer Test? Your presets and the comparison series of the Field Test stay. This cannot be undone.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1377253929"] = "Möchten Sie wirklich alle Ergebnisse des Antworttests löschen? Ihre Voreinstellungen und die Vergleichsreihe des Feldtests bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1377253929"] = "Möchten Sie wirklich alle Ergebnisse des Antworttests löschen? Ihre Voreinstellungen und die Vergleichsreihen des Praxistests bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
 
 -- Are you sure you want to delete all results of the Answer Test? Your presets and the comparison series of the Field Test stay. This cannot be undone.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1377253929::INFORMAL"] = "Möchtest du wirklich alle Ergebnisse des Antworttests löschen? Deine Voreinstellungen und die Vergleichsreihe des Feldtests bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1377253929::INFORMAL"] = "Möchtest du wirklich alle Ergebnisse des Antworttests löschen? Deine Voreinstellungen und die Vergleichsreihen des Praxistests bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
 
 -- All results
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1647689906"] = "Alle Ergebnisse"
@@ -13555,10 +13555,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T2888156258"] 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T2888156258::INFORMAL"] = "Wie oft jedes Modell nach deinen Stimmen gewonnen hat. Ein Vergleich eines Modells mit sich selbst wird hier nicht mitgezählt, da er lediglich zeigt, wie konsistent das Modell antwortet."
 
 -- There are no results yet. They appear here as soon as you vote on the answers in the Answer Test, or once you look at the result of a comparison series in the Field Test.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T2998816301"] = "Es gibt noch keine Ergebnisse. Sie werden hier angezeigt, sobald Sie im Antworttest über die Antworten abgestimmt oder sich im Feldtest das Ergebnis einer Vergleichsreihe angesehen haben."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T2998816301"] = "Es gibt noch keine Ergebnisse. Sie erscheinen hier, sobald Sie im Antworttest über die Antworten abgestimmt oder sich im Praxistest das Ergebnis einer Vergleichsreihe angesehen haben."
 
 -- There are no results yet. They appear here as soon as you vote on the answers in the Answer Test, or once you look at the result of a comparison series in the Field Test.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T2998816301::INFORMAL"] = "Es gibt noch keine Ergebnisse. Sie werden hier angezeigt, sobald du im Antworttest über die Antworten abgestimmt oder dir im Feldtest das Ergebnis einer Vergleichsreihe angesehen hast."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T2998816301::INFORMAL"] = "Es gibt noch keine Ergebnisse. Sie erscheinen hier, sobald du im Antworttest über die Antworten abgestimmt oder dir im Praxistest das Ergebnis einer Vergleichsreihe angesehen hast."
 
 -- Ranking by the judges
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T3071310071"] = "Rangliste nach den Richtern"
@@ -13576,7 +13576,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T3243788701::I
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T3347779221"] = "Richter"
 
 -- {0}: {1} comparison series with {2} tasks decided without knowing the models.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T3355735368"] = "{0}: {1} Vergleichsreihen mit {2} Aufgaben, die ohne Kenntnis der Modelle bewertet wurden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T3355735368"] = "{0}: {1} Vergleichsreihen mit {2} Aufgaben, die ohne Kenntnis der Modelle entschieden wurden."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T3448155331"] = "Schließen"
@@ -13603,31 +13603,31 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T3831905913::I
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T865427974"] = "Paare"
 
 -- Judge (optional)
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1206060603"] = "Bewertungsmodell (optional)"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1206060603"] = "Richter (optional)"
 
 -- This series starts with the setup of the series '{0}'. You can change all of it before you create the series. The tasks stay in their series.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T134968648"] = "Diese Serie beginnt mit der Einrichtung der Serie „{0}“. Sie können vor dem Erstellen der Serie noch alles daran ändern. Die Aufgaben bleiben ihrer Serie zugeordnet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T134968648"] = "Diese Vergleichsreihe beginnt mit der Einrichtung der Vergleichsreihe „{0}“. Sie können alles davon ändern, bevor Sie die Vergleichsreihe erstellen. Die Aufgaben bleiben in ihrer Vergleichsreihe."
 
 -- This series starts with the setup of the series '{0}'. You can change all of it before you create the series. The tasks stay in their series.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T134968648::INFORMAL"] = "Diese Serie beginnt mit der Einrichtung der Serie „{0}“. Du kannst vor dem Erstellen der Serie noch alles daran ändern. Die Aufgaben bleiben ihrer Serie zugeordnet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T134968648::INFORMAL"] = "Diese Vergleichsreihe beginnt mit der Einrichtung der Vergleichsreihe „{0}“. Du kannst alles davon ändern, bevor du die Vergleichsreihe erstellst. Die Aufgaben bleiben in ihrer Vergleichsreihe."
 
 -- Please choose two different models. A series compares how well two models help you.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1531478547"] = "Bitte wählen Sie zwei unterschiedliche Modelle aus. Eine Serie vergleicht, wie gut zwei Modelle Sie unterstützen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1531478547"] = "Bitte wählen Sie zwei unterschiedliche Modelle aus. Eine Vergleichsreihe vergleicht, wie gut Ihnen zwei Modelle helfen."
 
 -- Please choose two different models. A series compares how well two models help you.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1531478547::INFORMAL"] = "Bitte wähle zwei unterschiedliche Modelle aus. Eine Serie vergleicht, wie gut zwei Modelle dich unterstützen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1531478547::INFORMAL"] = "Bitte wähle zwei unterschiedliche Modelle aus. Eine Vergleichsreihe vergleicht, wie gut dir zwei Modelle helfen."
 
 -- Create series
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2037222750"] = "Serie erstellen"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2037222750"] = "Vergleichsreihe erstellen"
 
 -- Name of the series
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2083243781"] = "Name der Serie"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2083243781"] = "Name der Vergleichsreihe"
 
 -- Please give the series a name, so that you find it again.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2512778872"] = "Bitte geben Sie der Serie einen Namen, damit Sie sie wiederfinden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2512778872"] = "Bitte geben Sie der Vergleichsreihe einen Namen, damit Sie sie wiederfinden."
 
 -- Please give the series a name, so that you find it again.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2512778872::INFORMAL"] = "Bitte gib der Serie einen Namen, damit du sie wiederfindest."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2512778872::INFORMAL"] = "Bitte gib der Vergleichsreihe einen Namen, damit du sie wiederfindest."
 
 -- No judge
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2562272449"] = "Kein Richter"
@@ -13636,19 +13636,19 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2562272449"] =
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T266367750"] = "Name"
 
 -- The profile no longer exists, so the series starts without a profile.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2782528640"] = "Das Profil existiert nicht mehr. Daher wird die Serie ohne Profil gestartet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2782528640"] = "Das Profil existiert nicht mehr, daher beginnt die Vergleichsreihe ohne Profil."
 
 -- The profile no longer exists, so the series starts without a profile.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2782528640::INFORMAL"] = "Das Profil existiert nicht mehr. Daher wird die Serie ohne Profil gestartet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2782528640::INFORMAL"] = "Das Profil existiert nicht mehr, daher beginnt die Vergleichsreihe ohne Profil."
 
 -- Models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T30216107"] = "Modelle"
 
 -- The second model is no longer available, uses another model now, or may no longer be used by this assistant. Please choose it anew.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T3472943722"] = "Das zweite Modell ist nicht mehr verfügbar, verwendet jetzt ein anderes Modell oder kann von diesem Assistenten möglicherweise nicht mehr verwendet werden. Bitte wählen Sie es erneut aus."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T3472943722"] = "Das zweite Modell ist nicht mehr verfügbar, verwendet jetzt ein anderes Modell oder darf von diesem Assistenten nicht mehr verwendet werden. Bitte wählen Sie es erneut aus."
 
 -- The second model is no longer available, uses another model now, or may no longer be used by this assistant. Please choose it anew.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T3472943722::INFORMAL"] = "Das zweite Modell ist nicht mehr verfügbar, verwendet jetzt ein anderes Modell oder kann von diesem Assistenten möglicherweise nicht mehr verwendet werden. Bitte wähle es erneut aus."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T3472943722::INFORMAL"] = "Das zweite Modell ist nicht mehr verfügbar, verwendet jetzt ein anderes Modell oder darf von diesem Assistenten nicht mehr verwendet werden. Bitte wähle es erneut aus."
 
 -- Ask a judge?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T3641185871"] = "Einen Richter fragen?"
@@ -13669,7 +13669,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T3741421828"] =
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T3741421828::INFORMAL"] = "AI Studio konnte die neue Vergleichsreihe nicht speichern. Bitte versuche es erneut."
 
 -- Profile, tools, and data sources
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T3936393556"] = "Profil, Tools und Datenquellen"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T3936393556"] = "Profil, Werkzeuge und Datenquellen"
 
 -- Choose both models first: what you can select here depends on them.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T4030857378"] = "Wählen Sie zuerst beide Modelle aus. Welche Auswahlmöglichkeiten Ihnen hier zur Verfügung stehen, hängt von den Modellen ab."
@@ -13681,28 +13681,28 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T4030857378::IN
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T4044223184"] = "Erstes Modell"
 
 -- A judge assesses every task
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T4111877217"] = "Ein Bewertungsmodell beurteilt jede Aufgabe."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T4111877217"] = "Ein Richter beurteilt jede Aufgabe"
 
 -- Some data sources are no longer available, so the series starts without them.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T511469979"] = "Einige Datenquellen sind nicht mehr verfügbar, daher beginnt die Reihe ohne sie."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T511469979"] = "Einige Datenquellen sind nicht mehr verfügbar, daher beginnt die Vergleichsreihe ohne sie."
 
 -- Some data sources are no longer available, so the series starts without them.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T511469979::INFORMAL"] = "Einige Datenquellen sind nicht mehr verfügbar, daher beginnt die Reihe ohne sie."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T511469979::INFORMAL"] = "Einige Datenquellen sind nicht mehr verfügbar, daher beginnt die Vergleichsreihe ohne sie."
 
 -- Some tools are no longer available, so the series starts without them.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T600304160"] = "Einige Tools sind nicht mehr verfügbar. Daher beginnt die Reihe ohne sie."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T600304160"] = "Einige Werkzeuge sind nicht mehr verfügbar, daher beginnt die Vergleichsreihe ohne sie."
 
 -- Some tools are no longer available, so the series starts without them.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T600304160::INFORMAL"] = "Einige Tools sind nicht mehr verfügbar. Daher beginnt die Reihe ohne sie."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T600304160::INFORMAL"] = "Einige Werkzeuge sind nicht mehr verfügbar, daher beginnt die Vergleichsreihe ohne sie."
 
 -- e.g., Weekly reports
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T795365587"] = "z. B. wöchentliche Berichte"
 
 -- The judge model is no longer available, uses another model now, or may no longer be used by this assistant. Please choose another one, or switch the judge off.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T805855292"] = "Das Bewertungsmodell ist nicht mehr verfügbar, wurde inzwischen durch ein anderes Modell ersetzt oder darf von diesem Assistenten möglicherweise nicht mehr verwendet werden. Bitte wählen Sie ein anderes Modell aus oder deaktivieren Sie die Bewertungsfunktion."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T805855292"] = "Das Richtermodell ist nicht mehr verfügbar, verwendet jetzt ein anderes Modell oder darf von diesem Assistenten nicht mehr verwendet werden. Bitte wählen Sie ein anderes aus, oder schalten Sie den Richter aus."
 
 -- The judge model is no longer available, uses another model now, or may no longer be used by this assistant. Please choose another one, or switch the judge off.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T805855292::INFORMAL"] = "Das Bewertungsmodell ist nicht mehr verfügbar, wurde inzwischen durch ein anderes Modell ersetzt oder darf von diesem Assistenten möglicherweise nicht mehr verwendet werden. Bitte wähle ein anderes Modell aus oder deaktiviere die Bewertungsfunktion."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T805855292::INFORMAL"] = "Das Richtermodell ist nicht mehr verfügbar, verwendet jetzt ein anderes Modell oder darf von diesem Assistenten nicht mehr verwendet werden. Bitte wähle ein anderes aus, oder schalte den Richter aus."
 
 -- Second model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T867467332"] = "Zweites Modell"
@@ -13711,7 +13711,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T867467332"] = 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T900713019"] = "Abbrechen"
 
 -- Judge model
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T953975257"] = "Bewertungsmodell"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T953975257"] = "Richtermodell"
 
 -- Unfortunately, Pandoc's GPL license isn't compatible with the AI Studios licenses. However, software under the GPL is free to use and free of charge. You'll need to accept the GPL license before we can download and install Pandoc for you automatically (recommended). Alternatively, you might download it yourself using the instructions below or install it otherwise, e.g., by using a package manager of your operating system.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1001483402"] = "Leider ist die GPL-Lizenz von Pandoc nicht mit der Lizenz von AI Studio kompatibel. Software unter der GPL-Lizenz ist jedoch kostenlos und frei nutzbar. Sie müssen die GPL-Lizenz akzeptieren, bevor wir Pandoc automatisch für Sie herunterladen und installieren können (empfohlen). Alternativ können Sie Pandoc auch selbst herunterladen – entweder mit den untenstehenden Anweisungen oder auf anderem Weg, zum Beispiel über den Paketmanager Ihres Betriebssystems."
@@ -15727,13 +15727,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T10
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T1094542630"] = "Vorausgewählte Voreinstellung"
 
 -- No Model Comparison options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T1495085044"] = "Keine Optionen für den Modellvergleich vorausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T1495085044"] = "Es sind keine Optionen für den Modellvergleich vorausgewählt"
 
 -- The Answer Test opens with this preset.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2123901732"] = "Der Antworttest wird mit dieser Voreinstellung geöffnet."
 
 -- Model Comparison options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2330752759"] = "Die Optionen für den Modellvergleich sind vorausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2330752759"] = "Optionen für den Modellvergleich sind vorausgewählt"
 
 -- The preselected preset no longer exists. Please select another preset.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2696863075"] = "Die vorausgewählte Voreinstellung existiert nicht mehr. Bitte wählen Sie eine andere Voreinstellung."
@@ -15742,10 +15742,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T26
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2696863075::INFORMAL"] = "Die vorausgewählte Voreinstellung existiert nicht mehr. Bitte wähle eine andere Voreinstellung."
 
 -- Every new preset of the Answer Test and every new comparison series of the Field Test starts with this model as its first model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2779070024"] = "Dieses Modell steht bei jeder neuen Voreinstellung für den Antworttest und bei jeder neuen Vergleichsreihe für den Feldtest an erster Stelle."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2779070024"] = "Jede neue Voreinstellung des Antworttests und jede neue Vergleichsreihe des Praxistests beginnt mit diesem Modell als erstem Modell."
 
 -- Every new preset of the Answer Test and every new comparison series of the Field Test starts with this model as its first model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2779070024::INFORMAL"] = "Dieses Modell steht bei jeder neuen Voreinstellung für den Antworttest und bei jeder neuen Vergleichsreihe für den Feldtest an erster Stelle."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2779070024::INFORMAL"] = "Jede neue Voreinstellung des Antworttests und jede neue Vergleichsreihe des Praxistests beginnt mit diesem Modell als erstem Modell."
 
 -- No model preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T2802610587"] = "Kein Modell vorausgewählt"
@@ -15763,13 +15763,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T34
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T3640087463"] = "Optionen für den Modellvergleich vorauswählen?"
 
 -- Preselected judge model
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T3746033265"] = "Vorausgewähltes Bewertungsmodell"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T3746033265"] = "Vorausgewähltes Richtermodell"
 
 -- A preselected judge model switches the judge on in every new preset and every new comparison series. Without one, the judge stays off until you switch it on.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T3884208586"] = "Ein vorausgewähltes Bewertungsmodell aktiviert die Bewertungsfunktion in jeder neuen Voreinstellung und jeder neuen Vergleichsreihe. Ohne ein ausgewähltes Bewertungsmodell bleibt die Bewertungsfunktion deaktiviert, bis Sie sie aktivieren."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T3884208586"] = "Ein vorausgewähltes Richtermodell schaltet den Richter in jeder neuen Voreinstellung und jeder neuen Vergleichsreihe ein. Ohne eines bleibt der Richter aus, bis Sie ihn einschalten."
 
 -- A preselected judge model switches the judge on in every new preset and every new comparison series. Without one, the judge stays off until you switch it on.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T3884208586::INFORMAL"] = "Ein vorausgewähltes Bewertungsmodell aktiviert die Bewertungsfunktion in jeder neuen Voreinstellung und jeder neuen Vergleichsreihe. Ohne ein ausgewähltes Bewertungsmodell bleibt die Bewertungsfunktion deaktiviert, bis du sie aktivierst."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T3884208586::INFORMAL"] = "Ein vorausgewähltes Richtermodell schaltet den Richter in jeder neuen Voreinstellung und jeder neuen Vergleichsreihe ein. Ohne eines bleibt der Richter aus, bis du ihn einschaltest."
 
 -- Missing preset ({0})
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T413828499"] = "Fehlende Voreinstellung ({0})"
