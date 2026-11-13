@@ -13,7 +13,8 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 /// The registry drops a definition it cannot accept with no more than a warning in the log. For
 /// Semantic Search, that would quietly bring back the classic RAG process in every chat. The tool
 /// is offered without anybody selecting it, and only where there are data sources to search: in a
-/// chat, never in an assistant, and only when the user lets the model search them itself.
+/// chat, including the chats of a comparison series, never in another assistant, and only when the
+/// user lets the model search them itself.
 /// </remarks>
 [TestFixture]
 [NonParallelizable]
@@ -45,6 +46,52 @@ public sealed class SemanticSearchToolDefinitionTests : ToolRegistryTestBase
         var runnableTools = await registry.GetRunnableToolsAsync(context, [ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID], mayRunTools: true);
 
         Assert.That(runnableTools, Is.Empty, "An assistant has no data sources to search, even when something names the tool.");
+    }
+
+    [Test]
+    public async Task AComparisonSeriesIsOfferedTheToolWithoutSelectingIt()
+    {
+        var registry = this.CreateRegistry(new TestTool(Tool().GetDefinition()));
+        var provider = ToolCapableProvider();
+        var context = new ToolResolutionContext
+        {
+            Provider = provider,
+            Component = AIStudio.Tools.Components.MODEL_COMPARISON_ASSISTANT,
+            ProviderConfidence = provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level,
+            ChatThread = new ChatThread(),
+        };
+
+        var runnableTools = await registry.GetRunnableToolsAsync(context, [], mayRunTools: true);
+
+        Assert.That(runnableTools.Select(tool => tool.Definition.Id), Is.EqualTo(new[] { ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID }), "The chats of a comparison series are chats, and the user chose their data sources.");
+    }
+
+    /// <summary>
+    /// Checks that the Answer Test of the Model Comparison assistant offers no data source, though it runs as the same
+    /// component as the comparison series.
+    /// </summary>
+    /// <remarks>
+    /// Its chats keep the data source options of a new chat thread, which switch the data sources off. The preview of
+    /// the data sources is on, so that the test does not pass because of it.
+    /// </remarks>
+    [Test]
+    public async Task TheAnswerTestOffersNoDataSource()
+    {
+        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Add(PreviewFeatures.PRE_RAG_2024);
+        var provider = ToolCapableProvider();
+        var context = new ToolResolutionContext
+        {
+            Provider = provider,
+            Component = AIStudio.Tools.Components.MODEL_COMPARISON_ASSISTANT,
+            ProviderConfidence = provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level,
+            ChatThread = new ChatThread(),
+        };
+
+        // Switched-off data sources decide before any data source is checked, so the tool needs no other of its services:
+        var tool = new SemanticSearchTool(this.SettingsManager, null!, null!, null!, null!);
+        var function = await tool.ResolveFunctionAsync(tool.GetDefinition(), context);
+
+        Assert.That(function, Is.Null, "Both models of the Answer Test receive the request alone.");
     }
 
     [Test]

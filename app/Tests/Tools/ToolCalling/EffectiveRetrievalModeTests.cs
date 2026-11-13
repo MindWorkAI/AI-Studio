@@ -84,6 +84,21 @@ public sealed class EffectiveRetrievalModeTests : ToolRegistryTestBase
         Assert.That(mode, Is.EqualTo(new EffectiveRetrievalMode(DataSourceRetrievalMode.EVERY_MESSAGE, ToolOfferBlockReason.NOT_AVAILABLE_HERE)));
     }
 
+    /// <summary>
+    /// Checks that the chats of a comparison series search their data sources themselves, as every other chat does.
+    /// </summary>
+    /// <remarks>
+    /// Before, the tool was visible in the chat of the app alone, and every comparison series fell back to the
+    /// classic process without the user having chosen it.
+    /// </remarks>
+    [Test]
+    public async Task AComparisonSeriesSearchesItself()
+    {
+        var mode = await this.GetModeAsync(DataSourceRetrievalMode.SEMANTIC_SEARCH, ToolCapableProvider(), AIStudio.Tools.Components.MODEL_COMPARISON_ASSISTANT);
+
+        Assert.That(mode, Is.EqualTo(new EffectiveRetrievalMode(DataSourceRetrievalMode.SEMANTIC_SEARCH, ToolOfferBlockReason.NONE)));
+    }
+
     // Stating its definition needs none of the services the tool searches with:
     private Task<EffectiveRetrievalMode> GetModeAsync(DataSourceRetrievalMode preference, AIStudio.Settings.Provider provider, AIStudio.Tools.Components component = AIStudio.Tools.Components.CHAT)
     {

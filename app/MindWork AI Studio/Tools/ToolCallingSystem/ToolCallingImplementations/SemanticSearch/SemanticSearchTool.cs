@@ -86,11 +86,14 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         Id = ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID,
         ImplementationKey = ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID,
 
-        // Only a chat has data sources to search:
+        //
+        // Only a chat has data sources to search: the chat of the app, and the chats of a comparison series of the
+        // Model Comparison assistant. The Answer Test of that assistant runs as the same component, but its chats keep
+        // the data sources switched off, see ModelComparisonProviderAdapter:
+        //
         VisibleIn = new()
         {
-            Chat = true,
-            Assistants = false,
+            AllowedComponents = [Components.CHAT, Components.MODEL_COMPARISON_ASSISTANT],
         },
 
         Activation = ToolActivation.CONTEXT,
