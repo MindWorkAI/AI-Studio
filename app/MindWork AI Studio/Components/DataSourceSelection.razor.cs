@@ -68,6 +68,42 @@ public partial class DataSourceSelection : MSGComponentBase
     [Parameter]
     public bool ConfiguresChatDefaults { get; set; } = true;
 
+    /// <summary>
+    /// Where the chats run which search these data sources. It decides, among other things, whether the models may
+    /// search the data sources themselves, see ToolRegistry.GetEffectiveRetrievalModeAsync.
+    /// </summary>
+    [Parameter]
+    public Tools.Components Component { get; set; } = Tools.Components.CHAT;
+
+    /// <summary>
+    /// Further models which chat with the same data source options, e.g., the second model of a comparison series.
+    /// </summary>
+    /// <remarks>
+    /// The selection then offers only the data sources each model may use, and Semantic Search only when each model
+    /// can search itself, see SharedSelectionRules. Without further models, it offers what LLMProvider alone may use.
+    /// </remarks>
+    [Parameter]
+    public IReadOnlyList<AIStudio.Settings.Provider> AdditionalProviders { get; set; } = [];
+
+    /// <summary>
+    /// Further models which read what the data sources gave without searching them, e.g., the judge of a comparison
+    /// series, which reads both chats. Each of them must be allowed every data source the selection offers, but they
+    /// have no say in how the data sources are searched.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<AIStudio.Settings.Provider> AdditionalReaders { get; set; } = [];
+
+    /// <summary>
+    /// Whether the user may let an AI select the data sources and validate what they gave.
+    /// </summary>
+    /// <remarks>
+    /// Without, the user selects the data sources by hand, and the selection neither shows the switches for the AI nor
+    /// listens for the data sources an AI selected elsewhere: e.g., a comparison series which gives both models the
+    /// same data sources. Options which switch the AI on count as switched off then.
+    /// </remarks>
+    [Parameter]
+    public bool AllowsAutomaticSelection { get; set; } = true;
+
     [Inject]
     private DataSourceService DataSourceService { get; init; } = null!;
 
@@ -97,13 +133,13 @@ public partial class DataSourceSelection : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.RAG_AUTO_DATA_SOURCES_SELECTED ]);
-        
+        this.ApplyFilters([], this.AllowsAutomaticSelection ? [ Event.RAG_AUTO_DATA_SOURCES_SELECTED ] : []);
+
         //
         // Load the settings:
         //
-        this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
-        this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
+        this.aiBasedSourceSelection = this.IsAutomaticSelectionOn;
+        this.aiBasedValidation = this.IsAutomaticValidationOn;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
         this.retrievalMode = this.DataSourceOptions.RetrievalMode;
         this.waitingForDataSources = this.areDataSourcesEnabled && this.SelectionMode is not DataSourceSelectionMode.CONFIGURATION_MODE;
@@ -124,8 +160,8 @@ public partial class DataSourceSelection : MSGComponentBase
     {
         if (!this.internalChange)
         {
-            this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
-            this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
+            this.aiBasedSourceSelection = this.IsAutomaticSelectionOn;
+            this.aiBasedValidation = this.IsAutomaticValidationOn;
             this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
             this.retrievalMode = this.DataSourceOptions.RetrievalMode;
             this.selectedDataSources = this.GetDataSourcesFromConfiguredIds();
@@ -177,6 +213,21 @@ public partial class DataSourceSelection : MSGComponentBase
         this.StateHasChanged();
     }
 
+    /// <summary>
+    /// Whether an AI selects the data sources, see AllowsAutomaticSelection.
+    /// </summary>
+    private bool IsAutomaticSelectionOn => this.AllowsAutomaticSelection && this.DataSourceOptions.AutomaticDataSourceSelection;
+
+    /// <summary>
+    /// Whether an AI validates what the data sources gave, see AllowsAutomaticSelection.
+    /// </summary>
+    private bool IsAutomaticValidationOn => this.AllowsAutomaticSelection && this.DataSourceOptions.AutomaticValidation;
+
+    /// <summary>
+    /// The models which chat with these data sources.
+    /// </summary>
+    private IReadOnlyList<AIStudio.Settings.Provider> ChattingProviders => [this.LLMProvider, .. this.AdditionalProviders];
+
     private SelectionMode GetListSelectionMode() => this.aiBasedSourceSelection ? MudBlazor.SelectionMode.SingleSelection : MudBlazor.SelectionMode.MultiSelection;
     
     private IReadOnlyCollection<DataSourceAgentSelected> GetSelectedDataSourcesWithAI() => this.DataSourcesAISelected.Where(n => n.Selected).ToList();
@@ -189,9 +240,9 @@ public partial class DataSourceSelection : MSGComponentBase
     {
         this.DataSourceOptions = options;
         this.DataSourcesAISelected = aiSelectedDataSources ?? [];
-        
-        this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
-        this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
+
+        this.aiBasedSourceSelection = this.IsAutomaticSelectionOn;
+        this.aiBasedValidation = this.IsAutomaticValidationOn;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
         this.retrievalMode = this.DataSourceOptions.RetrievalMode;
         this.selectedDataSources = this.GetDataSourcesFromConfiguredIds();
@@ -263,13 +314,23 @@ public partial class DataSourceSelection : MSGComponentBase
         // would never come back, while the RAG process keeps reading it from the preselection.
         //
         // How the chat searches decides whether the agents of the RAG process see the data, and
-        // with that which data sources the provider of the chat may use at all. This component
-        // only ever selects for a chat:
+        // with that which data sources the provider of the chat may use at all. With several
+        // models, all of them search the same way, and each must be allowed every data source:
         //
-        var effectiveMode = await this.ToolRegistry.GetEffectiveRetrievalModeAsync(this.DataSourceOptions, this.LLMProvider, Tools.Components.CHAT);
-        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, effectiveMode.Mode, this.GetDataSourcesFromConfiguredIds());
+        var preselectedDataSources = this.GetDataSourcesFromConfiguredIds();
+        List<EffectiveRetrievalMode> modes = [];
+        foreach (var provider in this.ChattingProviders)
+            modes.Add(await this.ToolRegistry.GetEffectiveRetrievalModeAsync(this.DataSourceOptions, provider, this.Component));
+
+        var effectiveMode = SharedSelectionRules.RetrievalModeOfAll(modes);
+        List<AllowedSelectedDataSources> results = [];
+        foreach (var provider in this.ChattingProviders.Concat(this.AdditionalReaders))
+            results.Add(await this.DataSourceService.GetDataSources(provider, this.DataSourceOptions, effectiveMode.Mode, preselectedDataSources));
+
         if (generation != this.loadAndApplyFiltersGeneration)
             return;
+
+        var sources = SharedSelectionRules.DataSourcesOfAll(results);
 
         this.effectiveRetrievalMode = effectiveMode;
         this.availableDataSources = sources.AllowedDataSources;
@@ -392,6 +453,8 @@ public partial class DataSourceSelection : MSGComponentBase
     private string GetSemanticSearchUnavailableMessage() => this.effectiveRetrievalMode.SemanticSearchBlockReason switch
     {
         ToolOfferBlockReason.TOOLS_SWITCHED_OFF => TA("Your organization has switched tools off, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS when this.AdditionalProviders.Count > 0 => TA("One of the selected models cannot use tools, so AI Studio uses classic RAG for all of them instead and searches your data sources with every message."),
+        ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW when this.AdditionalProviders.Count > 0 => TA("One of the selected providers is not trusted enough for Semantic Search, so AI Studio uses classic RAG for all of them instead and searches your data sources with every message."),
         ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS => TA("The selected model cannot use tools, so AI Studio uses classic RAG instead and searches your data sources with every message."),
         ToolOfferBlockReason.TOOL_SWITCHED_OFF => TA("Your organization has switched Semantic Search off, so AI Studio uses classic RAG instead and searches your data sources with every message."),
         ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER => TA("You switched Semantic Search off in the tool settings, so AI Studio uses classic RAG instead and searches your data sources with every message."),

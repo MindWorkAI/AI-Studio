@@ -16,6 +16,17 @@ public partial class ToolSelection : MSGComponentBase
     public required AIStudio.Settings.Provider LLMProvider { get; set; }
 
     /// <summary>
+    /// Further models which work with the same tools, e.g., the second model of a comparison series.
+    /// </summary>
+    /// <remarks>
+    /// The selection then offers only what every model may use: tools only when each of them can call tools, and each
+    /// tool by the lowest confidence among them, see SharedSelectionRules. Without further models, it offers what
+    /// LLMProvider alone may use.
+    /// </remarks>
+    [Parameter]
+    public IReadOnlyList<AIStudio.Settings.Provider> AdditionalProviders { get; set; } = [];
+
+    /// <summary>
     /// Where the chat of this selection may still send data, because of the mailboxes it read from.
     /// </summary>
     /// <remarks>
@@ -60,7 +71,12 @@ public partial class ToolSelection : MSGComponentBase
         await base.OnInitializedAsync();
     }
 
-    private ToolCallingAvailability ToolCallingAvailability => this.LLMProvider.GetToolCallingAvailability();
+    /// <summary>
+    /// Every model which works with the selected tools.
+    /// </summary>
+    private IEnumerable<AIStudio.Settings.Provider> AllProviders => [this.LLMProvider, .. this.AdditionalProviders];
+
+    private ToolCallingAvailability ToolCallingAvailability => SharedSelectionRules.ToolCallingOfAll(this.AllProviders.Select(provider => provider.GetToolCallingAvailability()));
 
     private bool SupportsTools => this.ToolCallingAvailability.IsAvailable;
 
@@ -70,9 +86,12 @@ public partial class ToolSelection : MSGComponentBase
 
     private string UnsupportedToolsMessage => this.ToolCallingAvailability.Message;
 
-    private ConfidenceLevel ProviderConfidence => this.LLMProvider == AIStudio.Settings.Provider.NONE
+    /// <summary>
+    /// The confidence which counts for the tools: the lowest of all models, see SharedSelectionRules.LowestConfidence.
+    /// </summary>
+    private ConfidenceLevel ProviderConfidence => SharedSelectionRules.LowestConfidence(this.AllProviders.Select(provider => provider == AIStudio.Settings.Provider.NONE
         ? ConfidenceLevel.NONE
-        : this.LLMProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level;
+        : provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level));
 
     private async Task ToggleSelection()
     {
@@ -193,7 +212,9 @@ public partial class ToolSelection : MSGComponentBase
             return null;
 
         return string.Format(
-            this.T("This tool requires provider confidence {0}. The selected provider has {1}."),
+            this.AdditionalProviders.Count == 0
+                ? this.T("This tool requires provider confidence {0}. The selected provider has {1}.")
+                : this.T("This tool requires provider confidence {0}. The selected provider with the lowest confidence has {1}."),
             GetMinimumProviderConfidence(item).Name,
             this.ProviderConfidence.Name);
     }

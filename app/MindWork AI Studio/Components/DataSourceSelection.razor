@@ -70,10 +70,13 @@
                                 <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@TA("Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).")" LabelOff="@TA("No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).")" ValueChanged="@this.SemanticSearchChanged" Dense="@true" Disabled="@this.ReadOnly"/>
                             }
 
-                            <MudTextSwitch Label="@T("AI-based data source selection")" Value="@this.aiBasedSourceSelection" LabelOn="@T("Yes, let the AI decide which data sources are needed.")" LabelOff="@T("No, I manually decide which data source to use.")" ValueChanged="@this.AutoModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
+                            @if (this.AllowsAutomaticSelection)
+                            {
+                                <MudTextSwitch Label="@T("AI-based data source selection")" Value="@this.aiBasedSourceSelection" LabelOn="@T("Yes, let the AI decide which data sources are needed.")" LabelOff="@T("No, I manually decide which data source to use.")" ValueChanged="@this.AutoModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
+                            }
 
                             @* With Semantic Search, no agent takes part: nothing would validate the retrieved data. *@
-                            @if (this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && !this.IsSemanticSearchEffective)
+                            @if (this.AllowsAutomaticSelection && this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && !this.IsSemanticSearchEffective)
                             {
                                 <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
                             }
