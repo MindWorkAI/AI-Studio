@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.ModelComparison;
 
@@ -33,6 +34,16 @@ public static class ModelComparisonProviderAdapter
             Ask = (prompt, token) => StreamAnswer(provider, providerSettings, settingsManager, component, title, prompt, token),
         };
     }
+
+    /// <summary>
+    /// Creates the filter which the answers of both models pass before the judge reads them.
+    /// </summary>
+    /// <param name="guard">The prompt injection filter of the app.</param>
+    /// <param name="reportingScope">The batch the answers belong to, so the user hears once, when it is over, what the filter removed.</param>
+    /// <param name="title">The title of the assistant, as the source the report names.</param>
+    /// <returns>The filter, for ModelComparisonRunner.</returns>
+    public static Func<IReadOnlyList<string>, Task<IReadOnlyList<string>>> CreateJudgeInputFilter(PromptInjectionGuardService guard, PromptInjectionReportingScope reportingScope, string title) =>
+        answers => guard.SanitizeAsync([.. answers.Select(answer => new PromptInjectionText(answer, PromptInjectionSource.ModelAnswer(title)))], reportingScope);
 
     /// <summary>
     /// Asks the model straight through the provider, without <c>ContentText.CreateFromProviderAsync</c>.

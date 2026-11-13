@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Security;
 
 using Microsoft.AspNetCore.Components;
 
@@ -14,6 +15,9 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private PromptInjectionGuardService PromptInjectionGuard { get; init; } = null!;
 
     protected override Tools.Components Component => Tools.Components.MODEL_COMPARISON_ASSISTANT;
 
@@ -580,7 +584,11 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
 
         try
         {
-            var batchRunner = new ModelComparisonBatchRunner(new ModelComparisonRunner(this.Logger));
+            // One action for the whole batch: the user hears once, when it is over, what the filter removed from the answers the judge read:
+            await using var promptInjectionScope = this.PromptInjectionGuard.BeginAction();
+
+            var judgeInputFilter = ModelComparisonProviderAdapter.CreateJudgeInputFilter(this.PromptInjectionGuard, promptInjectionScope, this.Title);
+            var batchRunner = new ModelComparisonBatchRunner(new ModelComparisonRunner(this.Logger, judgeInputFilter));
             var judge = this.judgeEnabled
                 ? ModelComparisonProviderAdapter.CreateParticipant(this.judgeProvider, this.SettingsManager, this.Component, this.Title)
                 : null;

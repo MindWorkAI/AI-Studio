@@ -213,7 +213,7 @@ public sealed class ModelComparisonBatchRunnerTests
         }
     }
 
-    private static ModelComparisonBatchRunner CreateBatchRunner() => new(new ModelComparisonRunner(NullLogger.Instance));
+    private static ModelComparisonBatchRunner CreateBatchRunner() => new(new ModelComparisonRunner(NullLogger.Instance, answers => Task.FromResult(answers)));
 
     private static ModelComparisonParticipant CreateParticipant(string id, Func<string, CancellationToken, IAsyncEnumerable<string>> ask) => new()
     {

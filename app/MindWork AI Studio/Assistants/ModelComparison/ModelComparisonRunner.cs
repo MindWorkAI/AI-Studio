@@ -23,8 +23,12 @@ namespace AIStudio.Assistants.ModelComparison;
 /// context, the very thing a click on the page also has to wait its turn on.
 /// </remarks>
 /// <param name="logger">Where to say why a model did not answer. The users see no reason: the text of an error may name a provider.</param>
+/// <param name="filterJudgeInputs">
+/// Filters the two answers before the judge reads them, and gives them back in the same order. In the app, this is
+/// the prompt injection filter, see ModelComparisonProviderAdapter.CreateJudgeInputFilter.
+/// </param>
 /// <param name="timeProvider">The clock which measures the times. The system clock, unless a test brings its own.</param>
-public sealed class ModelComparisonRunner(ILogger logger, TimeProvider? timeProvider = null)
+public sealed class ModelComparisonRunner(ILogger logger, Func<IReadOnlyList<string>, Task<IReadOnlyList<string>>> filterJudgeInputs, TimeProvider? timeProvider = null)
 {
     private readonly TimeProvider time = timeProvider ?? TimeProvider.System;
 
@@ -84,7 +88,24 @@ public sealed class ModelComparisonRunner(ILogger logger, TimeProvider? timeProv
             ? (first.Text, second.Text)
             : (second.Text, first.Text);
 
-        var judgeRequest = new ModelComparisonJudgeRequest(request, judgeInstructions, answerA, answerB, request.LanguageName);
+        //
+        // Both answers were written by a model, and a model may repeat what it read, a document of the context for
+        // example, together with any instructions hidden in it. They reach the judge as part of its prompt, so they
+        // pass the prompt injection filter first, the same as an answer which is sent on to another assistant. A
+        // judge which cannot get filtered answers is not asked at all:
+        //
+        IReadOnlyList<string> filteredAnswers;
+        try
+        {
+            filteredAnswers = await filterJudgeInputs([answerA, answerB]).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "The answers could not be filtered for the judge '{Label}' of the model comparison.", judge.Label);
+            return ModelComparisonJudgeVerdict.Parse(judge.Label, false, string.Empty);
+        }
+
+        var judgeRequest = new ModelComparisonJudgeRequest(request, judgeInstructions, filteredAnswers[0], filteredAnswers[1], request.LanguageName);
         var judgeAnswer = await this.AskAsync(judge, judgeRequest.ToPrompt(Guid.NewGuid().ToString("N")), token).ConfigureAwait(false);
 
         return ModelComparisonJudgeVerdict.Parse(judgeAnswer.Label, judgeAnswer.Completed, judgeAnswer.Text);
