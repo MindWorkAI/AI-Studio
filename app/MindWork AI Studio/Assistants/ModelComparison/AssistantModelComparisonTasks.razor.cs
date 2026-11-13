@@ -14,8 +14,9 @@ namespace AIStudio.Assistants.ModelComparison;
 /// other, and decides which chat helped more.
 /// </summary>
 /// <remarks>
-/// The page shows one of three views: the list of the comparison series, the form of a new series, or an opened
-/// series. A series lives in ModelComparisonStore, so the user can continue it after days or weeks.
+/// The page shows one of two views: the list of the comparison series or an opened series. A new series comes from
+/// ModelComparisonSeriesDialog. A series lives in ModelComparisonStore, so the user can continue it after days or
+/// weeks.
 /// </remarks>
 public partial class AssistantModelComparisonTasks : MSGComponentBase
 {
@@ -38,11 +39,6 @@ public partial class AssistantModelComparisonTasks : MSGComponentBase
     /// All comparison series, or null while they load.
     /// </summary>
     private IReadOnlyList<ModelComparisonSeries>? allSeries;
-
-    /// <summary>
-    /// Whether the form of a new series shows.
-    /// </summary>
-    private bool showsSetup;
 
     /// <summary>
     /// The series the user opened, or null while the list shows.
@@ -80,13 +76,16 @@ public partial class AssistantModelComparisonTasks : MSGComponentBase
             : string.Format(culture, T("Started {0}, decided tasks: {1}"), started, decided);
     }
 
-    private void OpenSetup() => this.showsSetup = true;
-
-    private void CloseSetup() => this.showsSetup = false;
-
-    private async Task SeriesCreatedAsync(ModelComparisonSeries series)
+    /// <summary>
+    /// Lets the user set up a new series in its dialog, and opens the series once the dialog stored it.
+    /// </summary>
+    private async Task CreateSeriesAsync()
     {
-        this.showsSetup = false;
+        var reference = await this.DialogService.ShowAsync<ModelComparisonSeriesDialog>(T("New comparison series"), DialogOptions.FULLSCREEN);
+        var result = await reference.Result;
+        if (result is null || result.Canceled || result.Data is not ModelComparisonSeries series)
+            return;
+
         await this.ReloadSeriesAsync();
         this.OpenSeries(series);
     }

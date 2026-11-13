@@ -28,17 +28,13 @@
                 </MudStack>
                 <ModelComparisonSeriesView Series="@series"/>
             }
-            else if (this.showsSetup)
-            {
-                <ModelComparisonSeriesSetup SeriesCreated="@this.SeriesCreatedAsync" Canceled="@this.CloseSetup"/>
-            }
             else
             {
                 <MudJustifiedText Typo="Typo.body1" Class="mb-3 mr-3">
                     @TA("Work on a real task with one of two models, and then on the same task with the other one. Afterward, you decide which chat helped you more, without knowing which model was which. A comparison series collects your tasks over days or weeks, until you want to see the result.")
                 </MudJustifiedText>
 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.OpenSetup" Class="mb-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.CreateSeriesAsync" Class="mb-4">
                     @T("New comparison series")
                 </MudButton>
 
