@@ -1,0 +1,16 @@
+@inherits MSGComponentBase
+
+<MudStack Row="true" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center" Spacing="4" Class="@this.Class">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+        <MudIcon Icon="@AppIcons.PROFILE" Size="Size.Small"/>
+        <MudText Typo="Typo.body2">@this.profileText</MudText>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+        <MudIcon Icon="@AppIcons.TOOL" Size="Size.Small"/>
+        <MudText Typo="Typo.body2">@this.toolsText</MudText>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+        <MudIcon Icon="@AppIcons.DATA_SOURCE" Size="Size.Small"/>
+        <MudText Typo="Typo.body2">@this.dataSourcesText</MudText>
+    </MudStack>
+</MudStack>

@@ -77,6 +77,11 @@ else
             <ModelComparisonSeriesVerdict SeriesTask="@decidedTask" TaskNumber="@(this.Series.Tasks.IndexOf(decidedTask) + 1)" IsJudging="@this.isJudging" AskJudge="@(() => this.AskJudgeAsync(decidedTask))"/>
         }
 
+        <MudText Typo="Typo.subtitle2">
+            @T("Setup of this series")
+        </MudText>
+        <ModelComparisonSeriesSetupLine Series="@this.Series" Class="mb-3"/>
+
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @this.NextTaskText
         </MudJustifiedText>
