@@ -190,7 +190,7 @@ else
 
 @if (this.selectedAuthenticationMethods.Contains(Auth.KERBEROS))
 {
-    <MudSelect Disabled="@this.IsERIInputDisabled" T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="@TA("Operating system on which your ERI will run")" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
+    <MudSelect Disabled="@this.IsERIInputDisabled" T="OperatingSystem" @bind-Value="@this.selectedOperatingSystem" Label="@TA("Operating system on which your ERI server will run")" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateOperatingSystem" Class="mb-1">
         @foreach (var os in Enum.GetValues<OperatingSystem>())
         {
             <MudSelectItem Value="@os">
