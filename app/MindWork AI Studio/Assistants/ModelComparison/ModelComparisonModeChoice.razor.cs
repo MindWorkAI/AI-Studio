@@ -1,0 +1,37 @@
+using AIStudio.Components;
+
+using Microsoft.AspNetCore.Components;
+
+namespace AIStudio.Assistants.ModelComparison;
+
+/// <summary>
+/// The start page of the Model Comparison assistant, where the user chooses between its two modes.
+/// </summary>
+/// <remarks>
+/// The tile of the assistant leads here. Each mode has a page of its own, so that the assistant session of the
+/// stability mode survives a visit to the other mode, and a link or the browser history may lead to either directly.
+/// </remarks>
+public partial class ModelComparisonModeChoice : MSGComponentBase
+{
+    [Inject]
+    private NavigationManager NavigationManager { get; init; } = null!;
+
+    #region Overrides of MSGComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (!ModelComparisonAccess.CanOpen(this.SettingsManager, T("Model Comparison")))
+            this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
+    }
+
+    #endregion
+
+    private IReadOnlyList<AssistantModeOption<ModelComparisonMode>> Options =>
+    [
+        new(ModelComparisonMode.STABILITY, ModelComparisonMode.STABILITY.Icon, T("Compare answers"), TA("Send the same request to both models, once or many times in a row, and vote blindly for the better answer each time. You learn how consistently each model answers, and an optional judge model gives its own verdict. At the end, you see which model wrote which answer.")),
+        new(ModelComparisonMode.TASKS, ModelComparisonMode.TASKS.Icon, T("Compare on real tasks"), TA("Work on a real task with one of the two models, with follow-up questions, tools, and data sources, and then on the same task with the other one. Afterward, you decide which chat helped you more, without knowing which model was which. Each task adds to the result, over days or weeks.")),
+    ];
+
+    private void ChooseMode(ModelComparisonMode mode) => this.NavigationManager.NavigateTo(mode.Route);
+}

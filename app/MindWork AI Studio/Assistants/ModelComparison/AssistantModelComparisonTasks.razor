@@ -1,0 +1,20 @@
+@attribute [Route(Routes.ASSISTANT_MODEL_COMPARISON_TASKS)]
+@inherits MSGComponentBase
+
+<div class="inner-scrolling-context">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
+        <MudText Typo="Typo.h3">
+            @T("Model Comparison")
+        </MudText>
+        <MudSpacer/>
+        <MudTooltip Text="@T("Switch mode")">
+            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SWITCH_ASSISTANT_MODE" OnClick="@this.SwitchMode"/>
+        </MudTooltip>
+    </MudStack>
+
+    <InnerScrolling>
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mr-3">
+            @T("Comparing two models on real tasks is not available yet.")
+        </MudAlert>
+    </InnerScrolling>
+</div>

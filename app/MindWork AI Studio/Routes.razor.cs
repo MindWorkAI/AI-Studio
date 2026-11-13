@@ -36,6 +36,8 @@ public sealed partial class Routes
     public const string ASSISTANT_DOCUMENT_ANALYSIS = "/assistant/document-analysis";
     public const string ASSISTANT_BATCH_PROCESSING = "/assistant/batch-processing";
     public const string ASSISTANT_MODEL_COMPARISON = "/assistant/model-comparison";
+    public const string ASSISTANT_MODEL_COMPARISON_STABILITY = "/assistant/model-comparison/stability";
+    public const string ASSISTANT_MODEL_COMPARISON_TASKS = "/assistant/model-comparison/tasks";
     public const string ASSISTANT_DYNAMIC = "/assistant/dynamic";
     public const string ASSISTANT_META_ASSISTANT = "/assistant/builder";
     public const string ASSISTANT_LOG_VIEWER = "/assistant/log-viewer";

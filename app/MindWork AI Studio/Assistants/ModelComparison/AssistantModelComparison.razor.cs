@@ -594,6 +594,12 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private async Task OpenResultsDialog() => await this.DialogService.ShowAsync<ModelComparisonResultsDialog>(T("Results of all comparisons"), DialogOptions.FULLSCREEN);
 
     /// <summary>
+    /// Goes back to the choice between the two modes. A batch in progress goes on, and the assistant session brings it
+    /// back on return.
+    /// </summary>
+    private void SwitchMode() => this.NavigationManager.NavigateTo(Routes.ASSISTANT_MODEL_COMPARISON);
+
+    /// <summary>
     /// Takes the vote for the current run and moves on to the next one, or to the summary after the last run. The
     /// names of the models stay hidden until the summary, see ModelComparisonBatch.Vote.
     /// </summary>

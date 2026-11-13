@@ -1,0 +1,15 @@
+@attribute [Route(Routes.ASSISTANT_MODEL_COMPARISON)]
+@inherits MSGComponentBase
+
+<div class="inner-scrolling-context">
+    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
+        @T("Model Comparison")
+    </MudText>
+
+    <InnerScrolling>
+        <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-3 mr-3">
+            @TA("Compare two models without knowing which one answers. Choose what you want to find out.")
+        </MudText>
+        <AssistantModeChoice TMode="ModelComparisonMode" Options="@this.Options" ModeChosen="@this.ChooseMode"/>
+    </InnerScrolling>
+</div>

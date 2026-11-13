@@ -1,4 +1,4 @@
-@attribute [Route(Routes.ASSISTANT_MODEL_COMPARISON)]
+@attribute [Route(Routes.ASSISTANT_MODEL_COMPARISON_STABILITY)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
 @using AIStudio.Chat
 
@@ -193,9 +193,14 @@ else
 
 @code {
 
-    private protected override RenderFragment HeaderActions => @<MudTooltip Text="@T("Results of all comparisons")">
-        <MudIconButton Variant="Variant.Text" Icon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.OpenResultsDialog"/>
-    </MudTooltip>;
+    private protected override RenderFragment HeaderActions => @<MudStack Row="true" Spacing="0">
+        <MudTooltip Text="@T("Results of all comparisons")">
+            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.OpenResultsDialog"/>
+        </MudTooltip>
+        <MudTooltip Text="@T("Switch mode")">
+            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SWITCH_ASSISTANT_MODE" OnClick="@this.SwitchMode"/>
+        </MudTooltip>
+    </MudStack>;
 
     /// <summary>
     /// The card of one answer, with its title above.

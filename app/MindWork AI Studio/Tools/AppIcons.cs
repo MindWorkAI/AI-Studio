@@ -254,6 +254,12 @@ public static class AppIcons
     /// <summary>Shows the results of all model comparisons, with charts.</summary>
     public const string COMPARISON_RESULTS = LucideIcons.CHART_COLUMN_STACKED;
 
+    /// <summary>Stands for comparing how consistently two models answer the same request, in the Model Comparison assistant.</summary>
+    public const string COMPARISON_STABILITY = LucideIcons.REPEAT_2;
+
+    /// <summary>Stands for comparing two models while working on real tasks with each of them, in the Model Comparison assistant.</summary>
+    public const string COMPARISON_TASKS = LucideIcons.BRIEFCASE_BUSINESS;
+
     /// <summary>Marks the messages of a compiler that the coding assistant takes as input.</summary>
     public const string COMPILER_MESSAGES = LucideIcons.TRIANGLE_EXCLAMATION_POINT;
 
@@ -1105,6 +1111,9 @@ public static class AppIcons
 
     /// <summary>Marks an on/off value, such as the switch component of an assistant plugin or a boolean value.</summary>
     public const string SWITCH = LucideIcons.TOGGLE_RIGHT;
+
+    /// <summary>Goes back to the choice between the modes of an assistant, such as those of the Model Comparison assistant.</summary>
+    public const string SWITCH_ASSISTANT_MODE = LucideIcons.ARROW_RIGHT_LEFT;
 
     /// <summary>Marks a chat message from the system role, such as the system prompt.</summary>
     public const string SYSTEM_ROLE = LucideIcons.COG;
