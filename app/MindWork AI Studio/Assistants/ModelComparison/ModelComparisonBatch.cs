@@ -33,8 +33,9 @@ public sealed class ModelComparisonBatch(int runCount)
     public IReadOnlyList<ModelComparisonBatchEntry> Entries => this.entries;
 
     /// <summary>
-    /// Which run the user looks at right now, by its position. Moves on only once the vote is in, or once the user chose
-    /// to skip the run, so it never passes a run the user has not seen; only SkipRemainingVotes and Settle jump to the end.
+    /// Which run the user looks at right now, by its position. Moves on only once the vote is in, once the user chose to
+    /// skip the run, or once the user saw that the run has nothing to vote on, so it never passes a run the user has not
+    /// seen; only SkipRemainingVotes and Settle jump to the end.
     /// </summary>
     public int CurrentIndex { get; private set; }
 
@@ -50,18 +51,13 @@ public sealed class ModelComparisonBatch(int runCount)
     public ModelComparisonBatchEntry? CurrentEntry => this.CurrentIndex < this.entries.Count ? this.entries[this.CurrentIndex] : null;
 
     /// <summary>
-    /// The vote of the user for CurrentEntry, or null while it is still to come.
-    /// </summary>
-    public ModelComparisonVote? CurrentVote => this.CurrentIndex < this.votes.Count ? this.votes[this.CurrentIndex] : null;
-
-    /// <summary>
     /// Whether the user is through with every run of the batch.
     /// </summary>
     public bool IsFinished => this.CurrentIndex >= this.RunCount;
 
     /// <summary>
-    /// Whether CurrentEntry is the last run of the batch, so that the button which moves on says "Finish" instead of
-    /// "Next run". Both do the same: after the last run, the summary follows.
+    /// Whether CurrentEntry is the last run of the batch, so that the button which moves past a run without answers
+    /// says "Finish" instead of "Next run". Both do the same: after the last run, the summary follows.
     /// </summary>
     public bool IsLastEntry => this.CurrentIndex + 1 >= this.RunCount;
 
@@ -69,40 +65,39 @@ public sealed class ModelComparisonBatch(int runCount)
     /// Adds a run which arrived.
     /// </summary>
     /// <param name="entry">The run.</param>
-    /// <returns>Whether the run is the one the user looks at now, so what is shown of it has to be built.</returns>
-    public bool Add(ModelComparisonBatchEntry entry)
+    public void Add(ModelComparisonBatchEntry entry)
     {
         this.entries.Add(entry);
         this.votes.Add(null);
-        return this.entries.Count - 1 == this.CurrentIndex;
     }
 
     /// <summary>
-    /// Takes the vote of the user for CurrentEntry.
+    /// Takes the vote of the user for CurrentEntry and moves on to the next run.
     /// </summary>
     /// <remarks>
-    /// The vote is final. A second click, or a click on another button, changes nothing: once the names are shown, the
-    /// answers can no longer be judged without knowing them. A run without both answers has nothing to vote on.
+    /// The vote is final, and nothing about the run is revealed before the batch is over: neither the names of the
+    /// models nor the verdict of the judge. A user who knew which model wrote which answer in one run would recognize
+    /// its style in the next one, and the votes after that would no longer be blind.
     /// </remarks>
     /// <param name="vote">The column the user preferred, or a tie.</param>
-    /// <returns>Whether the vote was taken.</returns>
+    /// <returns>Whether the vote was taken; not for a run without both answers, which has nothing to vote on.</returns>
     public bool Vote(ModelComparisonVote vote)
     {
-        if (this.CurrentVote is not null || this.CurrentEntry is not { Result.BothCompleted: true })
+        if (this.CurrentEntry is not { Result.BothCompleted: true })
             return false;
 
         this.votes[this.CurrentIndex] = vote;
+        this.CurrentIndex++;
         return true;
     }
 
     /// <summary>
-    /// Moves on to the next run, once the user voted on the current one, or right away when the current run has
-    /// nothing to vote on.
+    /// Moves on past a run which has nothing to vote on, because at least one model did not answer.
     /// </summary>
-    /// <returns>Whether the batch moved on.</returns>
+    /// <returns>Whether the batch moved on; not for a run with both answers, which takes a vote or a skip.</returns>
     public bool GoToNextEntry()
     {
-        if (this.CurrentVote is null && this.CurrentEntry is { Result.BothCompleted: true })
+        if (this.CurrentEntry is not { Result.BothCompleted: false })
             return false;
 
         this.CurrentIndex++;
@@ -111,7 +106,7 @@ public sealed class ModelComparisonBatch(int runCount)
 
     /// <summary>
     /// Moves on to the next run without a vote on the current one, although it has something to vote on: the choice
-    /// of the user, unlike the silent move in GoToNextEntry past a run with nothing to vote on.
+    /// of the user, unlike GoToNextEntry, which moves past a run with nothing to vote on.
     /// </summary>
     public void SkipThisRun() => this.CurrentIndex++;
 
@@ -176,24 +171,32 @@ public sealed class ModelComparisonBatch(int runCount)
     public bool HasJudgeVerdict(int index) => index < this.entries.Count && this.entries[index].Result.Judge is { Completed: true };
 
     /// <summary>
+    /// Which model the user preferred in the run at this position.
+    /// </summary>
+    /// <param name="index">The position of an arrived run, zero-based.</param>
+    /// <returns>The model, a tie, or null when the user did not vote on the run.</returns>
+    public ModelComparisonModelChoice? VoteChoiceAt(int index) => this.votes[index] is { } vote
+        ? this.entries[index].PresentationOrder.ToModelChoice(vote)
+        : null;
+
+    /// <summary>
+    /// Which model the judge preferred in the run at this position.
+    /// </summary>
+    /// <param name="index">The position of an arrived run, zero-based.</param>
+    /// <returns>The model, a tie, or null when the run has no usable verdict of a judge.</returns>
+    public ModelComparisonModelChoice? JudgeChoiceAt(int index) => this.entries[index].Result.Judge is { Completed: true, Preferred: { } preferred }
+        ? this.entries[index].PresentationOrder.ToModelChoice(preferred)
+        : null;
+
+    /// <summary>
     /// Counts the votes of the user across the runs which arrived.
     /// </summary>
-    public ModelComparisonTally TallyVotes() => ModelComparisonTally.Of(
-    [
-        .. this.entries.Select((entry, index) => this.votes[index] is { } vote
-            ? entry.PresentationOrder.ToModelChoice(vote)
-            : (ModelComparisonModelChoice?)null),
-    ]);
+    public ModelComparisonTally TallyVotes() => ModelComparisonTally.Of([.. Enumerable.Range(0, this.entries.Count).Select(this.VoteChoiceAt)]);
 
     /// <summary>
     /// Counts the verdicts of the judge across the runs which arrived.
     /// </summary>
-    public ModelComparisonTally TallyJudgeVerdicts() => ModelComparisonTally.Of(
-    [
-        .. this.entries.Select(entry => entry.Result.Judge is { Completed: true, Preferred: { } preferred }
-            ? entry.PresentationOrder.ToModelChoice(preferred)
-            : (ModelComparisonModelChoice?)null),
-    ]);
+    public ModelComparisonTally TallyJudgeVerdicts() => ModelComparisonTally.Of([.. Enumerable.Range(0, this.entries.Count).Select(this.JudgeChoiceAt)]);
 
     /// <summary>
     /// Copies the batch, for a snapshot of the assistant session: a snapshot must not change with the batch it was

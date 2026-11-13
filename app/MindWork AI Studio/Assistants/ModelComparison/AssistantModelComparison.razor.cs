@@ -23,7 +23,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
 
     protected override string Title => T("Model Comparison");
 
-    protected override string Description => TA("Send the same request to two models and compare their answers side by side. You vote blindly for the better answer, and only after your vote you learn which model wrote which answer.");
+    protected override string Description => TA("Send the same request to two models and compare their answers side by side. You vote blindly for the better answer and learn at the end which model wrote which answer.");
 
     protected override string SystemPrompt => string.Empty;
 
@@ -47,7 +47,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
 
     /// <summary>
     /// Once there are results, the request is not editable, so there is nothing to submit. The way
-    /// to the next comparison is the button below the vote.
+    /// to the next comparison is the button below the summary.
     /// </summary>
     /// <remarks>
     /// The button of the base class cannot be hidden, and repurposing it would start a session of
@@ -101,16 +101,6 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private bool ShowsBatch => this.isComparing || this.batch is { Entries.Count: > 0 };
 
     /// <summary>
-    /// The run the user looks at right now, or null.
-    /// </summary>
-    private ModelComparisonBatchEntry? CurrentEntry => this.batch?.CurrentEntry;
-
-    /// <summary>
-    /// The vote of the user for CurrentEntry, or null while it is still to come.
-    /// </summary>
-    private ModelComparisonVote? CurrentVote => this.batch?.CurrentVote;
-
-    /// <summary>
     /// What the badge of a run in the progress of the batch means, for the tooltip over it: the badge alone only
     /// shows a colour and a small icon, not enough to be sure what it stands for.
     /// </summary>
@@ -126,7 +116,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
             ModelComparisonRunStatus.VOTED => T("Run {0}: voted on."),
             ModelComparisonRunStatus.VOTE_SKIPPED => TA("Run {0}: your vote was skipped."),
 
-            _ when this.judgeEnabled && !shownBatch.HasJudgeVerdict(index) => T("Run {0}: the models are done, waiting for the judge."),
+            _ when this.judgeEnabled && !shownBatch.HasJudgeVerdict(index) => TA("Run {0}: the judge gave no usable verdict, your vote is missing."),
             _ when this.judgeEnabled => TA("Run {0}: the models and the judge are done, your vote is missing."),
             _ => TA("Run {0}: the models are done, your vote is missing."),
         };
@@ -140,12 +130,26 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private const int QUESTION_PREVIEW_LENGTH = 300;
 
     /// <summary>
-    /// The answers in the order of the columns, as the chat component wants them, for CurrentEntry. Null unless both
-    /// models of that entry answered. They are built once per entry and not on every render: the component compares
-    /// what it is given to decide whether anything has to be drawn again.
+    /// The answers of the batch as the chat component wants them. Each is built once, and not on every render: the
+    /// component compares what it is given to decide whether anything has to be drawn again, and a new one would make
+    /// it parse the whole Markdown again.
     /// </summary>
-    private ContentText? answerAContent;
-    private ContentText? answerBContent;
+    private readonly Dictionary<ModelComparisonAnswer, ContentText> shownAnswers = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>
+    /// Gets the answer as the chat component wants it.
+    /// </summary>
+    /// <param name="answer">The answer of a model.</param>
+    /// <returns>The answer for the chat component, the same one on every render.</returns>
+    private ContentText ShownAnswer(ModelComparisonAnswer answer)
+    {
+        if (this.shownAnswers.TryGetValue(answer, out var content))
+            return content;
+
+        content = new ContentText { Text = answer.Text };
+        this.shownAnswers[answer] = content;
+        return content;
+    }
 
     /// <summary>
     /// A render already queued on the UI dispatcher, if one is still pending. Reused by RequestBackgroundUIRefresh, so
@@ -178,28 +182,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private void ClearBatch()
     {
         this.batch = null;
-        this.RebuildShownAnswers();
-    }
-
-    /// <summary>
-    /// Builds the answers of the columns from CurrentEntry.
-    /// </summary>
-    /// <remarks>
-    /// Called wherever the current entry changes: when it newly arrives, when the user moves on to
-    /// the next one, after a reset, and after the state has been restored. What is shown is derived
-    /// from the entry, never stored on its own.
-    /// </remarks>
-    private void RebuildShownAnswers()
-    {
-        if (this.CurrentEntry is not { Result.BothCompleted: true } entry)
-        {
-            this.answerAContent = null;
-            this.answerBContent = null;
-            return;
-        }
-
-        this.answerAContent = new ContentText { Text = entry.PresentationOrder.InColumnA(entry.Result).Text };
-        this.answerBContent = new ContentText { Text = entry.PresentationOrder.InColumnB(entry.Result).Text };
+        this.shownAnswers.Clear();
     }
 
     private string inputContext = string.Empty;
@@ -443,11 +426,10 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         state.Restore(JUDGE_ENABLED_STATE_KEY, value => this.judgeEnabled = value);
         state.Restore(JUDGE_PROVIDER_STATE_KEY, value => this.judgeProvider = value);
         state.Restore(JUDGE_INSTRUCTIONS_STATE_KEY, value => this.judgeInstructions = value);
-        this.RebuildShownAnswers();
     }
 
     /// <summary>
-    /// Starts every run of the batch and reveals each one as soon as it is ready.
+    /// Starts every run of the batch and shows each one for the vote as soon as it is ready.
     /// </summary>
     /// <remarks>
     /// The base class has already started the session, so the token of the stop button is the one which ends every run
@@ -472,8 +454,8 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         if (!this.InputIsValid)
             return;
 
+        this.ClearBatch();
         this.batch = new ModelComparisonBatch(this.runCount);
-        this.RebuildShownAnswers();
 
         // From here on, the request is shown as a summary instead of the form:
         this.isComparing = true;
@@ -520,7 +502,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
                 // dispatcher of the page only, never here on the thread pool: it is not safe for a
                 // writer on one thread and a reader or a second writer on another.
                 //
-                await this.InvokeAsync(() => this.AddArrivedEntry(entry)).ConfigureAwait(false);
+                await this.InvokeAsync(() => this.batch?.Add(entry)).ConfigureAwait(false);
 
                 //
                 // Coalesced, not one render per run: every render -- this one included -- queues on
@@ -549,25 +531,12 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// Adds a run which arrived to the batch. Called on the dispatcher of the page only, see Compare.
-    /// </summary>
-    /// <param name="entry">The run.</param>
-    private void AddArrivedEntry(ModelComparisonBatchEntry entry)
-    {
-        // Only a rebuild for the entry the user is actually looking at avoids rebuilding the
-        // shown answers -- and so the chat component re-parsing them -- for runs which arrived
-        // while the user was still on an earlier one:
-        if (this.batch?.Add(entry) is true)
-            this.RebuildShownAnswers();
-    }
-
-    /// <summary>
     /// Goes back from the results to the request, which is as the user left it.
     /// </summary>
     /// <remarks>
-    /// Offered without a question once every run has been voted on, or when a run has nothing to
-    /// vote on because a model did not answer. Before that, stopping the batch (the button next to
-    /// its progress) reaches the same screen: whatever has arrived by then stays shown.
+    /// Offered with the summary, once the user is through with every run. Before that, stopping the
+    /// batch (the button next to its progress) reaches the same screen: whatever has arrived by then
+    /// stays shown.
     /// </remarks>
     private async Task StartNewBatch()
     {
@@ -576,24 +545,19 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// Takes the vote for CurrentEntry, which ends the blind part: from here on, the names of the models are shown.
+    /// Takes the vote for the current run and moves on to the next one, or to the summary after the last run. The
+    /// names of the models stay hidden until the summary, see ModelComparisonBatch.Vote.
     /// </summary>
-    /// <remarks>
-    /// The reveal is shown before the checkpoint is awaited, not after: a batch snapshot carries the answer text of
-    /// every run so far, and saving it can take a moment the click must not wait on.
-    /// </remarks>
     private async Task Vote(ModelComparisonVote vote)
     {
         if (this.batch?.Vote(vote) is not true)
             return;
 
-        await this.RefreshAssistantUIAsync();
-        await this.CheckpointAssistantSession();
+        await this.ShowCurrentEntry();
     }
 
     /// <summary>
-    /// Moves on to the next run of the batch, once the current one has been voted on, or right away when there was
-    /// nothing to vote on, because a model of that run did not answer.
+    /// Moves on past a run which has nothing to vote on, because a model of that run did not answer.
     /// </summary>
     private async Task GoToNextEntry()
     {
@@ -633,45 +597,62 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// Shows the run the batch moved on to, or its summary.
     /// </summary>
     /// <remarks>
-    /// The same reveal-before-checkpoint order as Vote, for the same reason.
+    /// The next run is shown before the checkpoint is awaited, not after: a batch snapshot carries the answer text of
+    /// every run so far, and saving it can take a moment the click must not wait on.
     /// </remarks>
     private async Task ShowCurrentEntry()
     {
-        this.RebuildShownAnswers();
         await this.RefreshAssistantUIAsync();
         await this.CheckpointAssistantSession();
     }
 
     /// <summary>
-    /// How a model did in the vote, as a colour: green when its answer was preferred, red when the
-    /// other one was, orange when the user found them equally good.
+    /// How a model did in the vote of the user, as a colour: green when its answer was preferred, red when the other
+    /// one was, orange when the user found them equally good.
     /// </summary>
-    /// <param name="column">The column the model's answer stood in.</param>
-    private Color GetVerdictColor(ModelComparisonVote column) => this.CurrentVote switch
+    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
+    /// <param name="model">The model whose outcome this is.</param>
+    private static Color OutcomeColor(ModelComparisonModelChoice? voteChoice, ModelComparisonModelChoice model) => voteChoice switch
     {
-        ModelComparisonVote.TIE => Color.Warning,
-        { } vote when vote == column => Color.Success,
+        null => Color.Default,
+        ModelComparisonModelChoice.TIE => Color.Warning,
+        { } chosen when chosen == model => Color.Success,
 
         _ => Color.Error,
     };
 
     /// <summary>
-    /// The classes of the card around an answer: it fills the height of its column, and once the
-    /// vote is in, it has a border in the colour which goes with GetVerdictColor.
+    /// The icon which goes with OutcomeColor. The colour alone would not tell apart who is colour blind, so every
+    /// outcome has a shape of its own as well.
+    /// </summary>
+    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
+    /// <param name="model">The model whose outcome this is.</param>
+    private static string OutcomeIcon(ModelComparisonModelChoice? voteChoice, ModelComparisonModelChoice model) => voteChoice switch
+    {
+        null => AppIcons.VOTE_MISSING,
+        ModelComparisonModelChoice.TIE => AppIcons.VOTE_TIE,
+        { } chosen when chosen == model => AppIcons.VOTE_WON,
+
+        _ => AppIcons.VOTE_LOST,
+    };
+
+    /// <summary>
+    /// The classes of the card around an answer: it fills the height of its column, and with a vote of the user, it
+    /// has a border in the colour which goes with OutcomeColor.
     /// </summary>
     /// <remarks>
-    /// The classes are the ones of MudBlazor: a border two pixels wide, in the colour of the outcome.
-    /// They override the thin grey line of the card, which is why they are told to win. Before the
-    /// vote, the answers stand in the plain frame of the chat.
+    /// The classes are the ones of MudBlazor: a border two pixels wide, in the colour of the outcome. They override
+    /// the thin grey line of the card, which is why they are told to win. While the user votes, and for a run without
+    /// a vote, the answers stand in the plain frame of the chat.
     /// </remarks>
-    /// <param name="column">The column the model's answer stood in.</param>
-    private string GetAnswerCardClass(ModelComparisonVote column)
+    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
+    /// <param name="model">The model whose answer the card shows.</param>
+    private static string AnswerCardClass(ModelComparisonModelChoice? voteChoice, ModelComparisonModelChoice model)
     {
-        const string FILL_THE_COLUMN = "flex-grow-1";
-        if (this.CurrentVote is null)
+        if (voteChoice is null)
             return FILL_THE_COLUMN;
 
-        var colour = this.GetVerdictColor(column) switch
+        var colour = OutcomeColor(voteChoice, model) switch
         {
             Color.Success => "mud-border-success",
             Color.Warning => "mud-border-warning",
@@ -683,65 +664,85 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// The icon which goes with GetVerdictColor. The colour alone would not tell
-    /// apart who is colour blind, so every outcome has a shape of its own as well.
+    /// Makes the card of an answer as high as its column, so that both cards of a run are equally high.
     /// </summary>
-    /// <param name="column">The column the model's answer stood in.</param>
-    private string GetVerdictIcon(ModelComparisonVote column) => this.CurrentVote switch
-    {
-        ModelComparisonVote.TIE => AppIcons.VOTE_TIE,
-        { } vote when vote == column => AppIcons.VOTE_WON,
+    private const string FILL_THE_COLUMN = "flex-grow-1";
 
-        _ => AppIcons.VOTE_LOST,
+    /// <summary>
+    /// Names a model of a run, or says that both answers were equally good.
+    /// </summary>
+    /// <param name="entry">The run.</param>
+    /// <param name="choice">A model, or a tie.</param>
+    private string NameOf(ModelComparisonBatchEntry entry, ModelComparisonModelChoice choice) => choice switch
+    {
+        ModelComparisonModelChoice.FIRST => entry.Result.First.Label,
+        ModelComparisonModelChoice.SECOND => entry.Result.Second.Label,
+
+        _ => T("Equally good"),
     };
 
     /// <summary>
-    /// Names what the judge preferred, by the model's revealed name, and says whether that matches
-    /// the user's own vote.
+    /// Says in the title of a run in the summary what the user chose.
     /// </summary>
-    /// <remarks>
-    /// Only called once the vote is in, so the model names of CurrentEntry are the ones
-    /// the user is meant to see by now.
-    /// </remarks>
-    private string DescribeJudgePreference(ModelComparisonJudgeVerdict judge)
+    /// <param name="entry">The run.</param>
+    /// <param name="index">The position of the run, zero-based.</param>
+    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
+    private string DescribeRun(ModelComparisonBatchEntry entry, int index, ModelComparisonModelChoice? voteChoice)
     {
-        if (judge.Preferred is not { } preferred || this.CurrentEntry is not { } entry)
-            return string.Empty;
+        var runNumber = index + 1;
+        if (!entry.Result.BothCompleted)
+            return string.Format(DisplayCulture, T("Run {0}: at least one model did not answer"), runNumber);
 
-        var agreesWithVote = this.CurrentVote == preferred;
-        if (preferred is ModelComparisonVote.TIE)
-            return agreesWithVote
-                ? TA("The judge saw both answers as equally good, matching your own vote.")
-                : TA("The judge saw both answers as equally good, while you preferred one of them.");
+        return voteChoice switch
+        {
+            null => string.Format(DisplayCulture, TA("Run {0}: without your vote"), runNumber),
+            ModelComparisonModelChoice.TIE => string.Format(DisplayCulture, TA("Run {0}: you found both answers equally good"), runNumber),
 
-        var preferredAnswer = preferred is ModelComparisonVote.COLUMN_A
-            ? entry.PresentationOrder.InColumnA(entry.Result)
-            : entry.PresentationOrder.InColumnB(entry.Result);
-
-        return agreesWithVote
-            ? string.Format(DisplayCulture, TA("The judge preferred {0}, matching your own vote."), preferredAnswer.Label)
-            : string.Format(DisplayCulture, TA("The judge preferred {0}, differing from your own vote."), preferredAnswer.Label);
+            { } chosen => string.Format(DisplayCulture, TA("Run {0}: you preferred {1}"), runNumber, this.NameOf(entry, chosen)),
+        };
     }
 
     /// <summary>
-    /// Whether the judge's badge belongs on the answer in this column: either it is the one the
-    /// judge preferred, or the judge saw a tie, in which case both columns carry the badge.
+    /// Names what the judge preferred, by the name of the model, and says whether that matches the vote of the user.
     /// </summary>
-    /// <remarks>
-    /// Shown next to AnswerCaption, which already gates on the vote being in, so this
-    /// never has to check that itself.
-    /// </remarks>
-    private bool JudgePreferredThisColumn(ModelComparisonVote column)
+    /// <param name="entry">The run.</param>
+    /// <param name="judgeChoice">The model the judge preferred, or null without a usable verdict.</param>
+    /// <param name="voteChoice">The model the user preferred, or null without a vote.</param>
+    private string DescribeJudgePreference(ModelComparisonBatchEntry entry, ModelComparisonModelChoice? judgeChoice, ModelComparisonModelChoice? voteChoice)
     {
-        if (this.CurrentEntry is not { Result.Judge: { Completed: true, Preferred: { } preferred } })
-            return false;
+        if (judgeChoice is not { } preferred)
+            return string.Empty;
 
-        return preferred is ModelComparisonVote.TIE || preferred == column;
+        if (preferred is ModelComparisonModelChoice.TIE)
+            return voteChoice switch
+            {
+                null => T("The judge saw both answers as equally good."),
+                ModelComparisonModelChoice.TIE => TA("The judge saw both answers as equally good, matching your own vote."),
+
+                _ => TA("The judge saw both answers as equally good, while you preferred one of them."),
+            };
+
+        var preferredName = this.NameOf(entry, preferred);
+        return voteChoice switch
+        {
+            null => string.Format(DisplayCulture, T("The judge preferred {0}."), preferredName),
+            { } chosen when chosen == preferred => string.Format(DisplayCulture, TA("The judge preferred {0}, matching your own vote."), preferredName),
+
+            _ => string.Format(DisplayCulture, TA("The judge preferred {0}, differing from your own vote."), preferredName),
+        };
     }
+
+    /// <summary>
+    /// Whether the badge of the judge belongs on the answer of this model: either the judge preferred it, or the judge
+    /// saw a tie, in which case both answers carry the badge.
+    /// </summary>
+    /// <param name="judgeChoice">The model the judge preferred, or null without a usable verdict.</param>
+    /// <param name="model">The model whose answer this is.</param>
+    private static bool JudgePreferred(ModelComparisonModelChoice? judgeChoice, ModelComparisonModelChoice model) => judgeChoice is ModelComparisonModelChoice.TIE || judgeChoice == model;
 
     /// <summary>
     /// Describes how long an answer took: until the first piece arrived, and until it was complete.
-    /// Shown together with the name of the model, once the vote is in.
+    /// Shown together with the name of the model in the summary.
     /// </summary>
     private string DescribeTimes(ModelComparisonAnswer answer) => string.Format(
         DisplayCulture,

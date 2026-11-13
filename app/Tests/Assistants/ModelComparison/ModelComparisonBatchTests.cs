@@ -13,29 +13,31 @@ namespace AIStudio.Tests.Assistants.ModelComparison;
 public sealed class ModelComparisonBatchTests
 {
     [Test]
-    public void OnlyTheRunTheUserLooksAtNeedsToBeShown()
+    public void ARunWaitsUntilTheUserIsThroughWithTheOnesBefore()
     {
         var batch = new ModelComparisonBatch(3);
+        batch.Add(Entry());
+        batch.Add(Entry());
 
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(batch.Add(Entry()), Is.True, "The first run is the one the user looks at.");
-            Assert.That(batch.Add(Entry()), Is.False, "The second run waits until the user is through with the first.");
-            Assert.That(batch.CurrentEntry, Is.SameAs(batch.Entries[0]));
-        }
+        Assert.That(batch.CurrentEntry, Is.SameAs(batch.Entries[0]));
     }
 
     [Test]
-    public void AVoteIsFinal()
+    public void AVoteMovesOnToTheNextRun()
     {
-        var batch = new ModelComparisonBatch(1);
+        var batch = new ModelComparisonBatch(2);
         batch.Add(Entry());
+        batch.Add(Entry());
+
+        var voteTaken = batch.Vote(ModelComparisonVote.COLUMN_A);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(batch.Vote(ModelComparisonVote.COLUMN_A), Is.True);
-            Assert.That(batch.Vote(ModelComparisonVote.COLUMN_B), Is.False);
-            Assert.That(batch.CurrentVote, Is.EqualTo(ModelComparisonVote.COLUMN_A));
+            Assert.That(voteTaken, Is.True);
+            Assert.That(batch.CurrentEntry, Is.SameAs(batch.Entries[1]));
+            Assert.That(batch.VoteChoiceAt(0), Is.EqualTo(ModelComparisonModelChoice.FIRST));
+            Assert.That(batch.VoteChoiceAt(1), Is.Null, "The next run is still to be voted on.");
+            Assert.That(batch.IsLastEntry, Is.True);
         }
     }
 
@@ -48,27 +50,21 @@ public sealed class ModelComparisonBatchTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(batch.Vote(ModelComparisonVote.TIE), Is.False);
-            Assert.That(batch.CurrentVote, Is.Null);
+            Assert.That(batch.CurrentIndex, Is.Zero);
+            Assert.That(batch.VoteChoiceAt(0), Is.Null);
         }
     }
 
     [Test]
-    public void TheBatchMovesOnOnlyOnceTheVoteIsIn()
+    public void ARunWithBothAnswersIsLeftOnlyByAVoteOrASkip()
     {
         var batch = new ModelComparisonBatch(2);
         batch.Add(Entry());
-        batch.Add(Entry());
-
-        var movedBeforeTheVote = batch.GoToNextEntry();
-        batch.Vote(ModelComparisonVote.COLUMN_B);
-        var movedAfterTheVote = batch.GoToNextEntry();
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(movedBeforeTheVote, Is.False);
-            Assert.That(movedAfterTheVote, Is.True);
-            Assert.That(batch.CurrentIndex, Is.EqualTo(1));
-            Assert.That(batch.IsLastEntry, Is.True);
+            Assert.That(batch.GoToNextEntry(), Is.False);
+            Assert.That(batch.CurrentIndex, Is.Zero);
         }
     }
 
@@ -78,7 +74,11 @@ public sealed class ModelComparisonBatchTests
         var batch = new ModelComparisonBatch(2);
         batch.Add(EntryWithoutAnAnswer());
 
-        Assert.That(batch.GoToNextEntry(), Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(batch.GoToNextEntry(), Is.True);
+            Assert.That(batch.CurrentIndex, Is.EqualTo(1));
+        }
     }
 
     [Test]
@@ -87,7 +87,6 @@ public sealed class ModelComparisonBatchTests
         var batch = new ModelComparisonBatch(1);
         batch.Add(Entry());
         batch.Vote(ModelComparisonVote.TIE);
-        batch.GoToNextEntry();
 
         using (Assert.EnterMultipleScope())
         {
@@ -240,6 +239,7 @@ public sealed class ModelComparisonBatchTests
 
         using (Assert.EnterMultipleScope())
         {
+            Assert.That(batch.JudgeChoiceAt(1), Is.EqualTo(ModelComparisonModelChoice.FIRST), "Column B of the second run is the first model.");
             Assert.That(tally.ScoredRunCount, Is.EqualTo(3));
             Assert.That(tally.FirstModelWins, Is.EqualTo(3));
             Assert.That(tally.SecondModelWins, Is.Zero);
@@ -289,7 +289,8 @@ public sealed class ModelComparisonBatchTests
         {
             Assert.That(copy.RunCount, Is.EqualTo(3));
             Assert.That(copy.Entries, Has.Count.EqualTo(1));
-            Assert.That(copy.CurrentVote, Is.Null);
+            Assert.That(copy.CurrentIndex, Is.Zero);
+            Assert.That(copy.VoteChoiceAt(0), Is.Null);
             Assert.That(copy.SkipsRemainingVotes, Is.True);
         }
     }
@@ -298,7 +299,6 @@ public sealed class ModelComparisonBatchTests
     {
         batch.Add(entry);
         batch.Vote(vote);
-        batch.GoToNextEntry();
     }
 
     private static ModelComparisonBatchEntry Entry() => Entry(ModelComparisonPresentationOrder.FIRST_MODEL_FIRST);

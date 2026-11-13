@@ -71,7 +71,7 @@
             </MudItem>
         </MudGrid>
 
-        <MudSelect T="int" @bind-Value="@this.runCount" Label="@T("Number of runs")" HelperText="@TA("Repeat the same comparison several times to see how consistently the models -- and the judge -- come out the same way. Every run gets its own blind vote.")" Variant="Variant.Outlined">
+        <MudSelect T="int" @bind-Value="@this.runCount" Label="@T("Number of runs")" HelperText="@TA("Repeat the same comparison several times to see how consistently the models and the judge come out the same way. You vote blindly on every run.")" Variant="Variant.Outlined">
             <MudSelectItem Value="1">@T("1 (single comparison)")</MudSelectItem>
             <MudSelectItem Value="3">3</MudSelectItem>
             <MudSelectItem Value="5">5</MudSelectItem>
@@ -99,7 +99,7 @@
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                 <MudIcon Icon="@AppIcons.JUDGE" Color="Color.Primary"/>
                 <MudText Typo="Typo.subtitle1">
-                    @T("LLM judge (optional)")
+                    @T("Judge (optional)")
                 </MudText>
             </MudStack>
         </MudSwitch>
@@ -111,7 +111,7 @@
             </MudText>
             <ProviderSelection @bind-ProviderSettings="@this.judgeProvider" ValidateProvider="@this.ValidatingJudgeProvider"/>
 
-            <MudTextField T="string" @bind-Text="@this.judgeInstructions" AdornmentIcon="@AppIcons.JUDGE" Adornment="Adornment.Start" Label="@T("What should the judge pay particular attention to? (Optional)")" HelperText="@TA("The judge already sees the request and both answers, and judges by that alone unless you add something more specific here, for example: a good summary keeps every number and names its source. It never learns which model wrote which answer, and its opinion is shown to you only after your own vote.")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mt-3"/>
+            <MudTextField T="string" @bind-Text="@this.judgeInstructions" AdornmentIcon="@AppIcons.JUDGE" Adornment="Adornment.Start" Label="@T("What should the judge pay particular attention to? (optional)")" HelperText="@TA("The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source. The judge never learns which model wrote which answer, and you see its verdicts only at the end.")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mt-3"/>
         }
     </MudPaper>
 }
@@ -143,7 +143,7 @@ else
         @if (this.batch is { RunCount: > 1 } shownBatch)
         {
             <MudText Typo="Typo.subtitle2" Class="mt-2 mb-1">
-                @T("Progress Runs")
+                @T("Progress of the runs")
             </MudText>
             <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-1">
                 @for (var i = 0; i < shownBatch.RunCount; i++)
@@ -202,32 +202,48 @@ else
     /// are. That is why the names of the models are not part of the card: how long a name is
     /// would make the cards differ.
     /// </remarks>
-    /// <param name="title">"Answer A" or "Answer B".</param>
-    /// <param name="content">The answer.</param>
-    /// <param name="column">The column this is, as the vote names it.</param>
-    private RenderFragment AnswerCard(string title, ContentText content, ModelComparisonVote column) => @<MudItem xs="6" Class="d-flex flex-column">
+    /// <param name="title">"Answer A" or "Answer B" while the user votes, "First model" or "Second model" in the summary.</param>
+    /// <param name="answer">The answer.</param>
+    /// <param name="time">When the run ended. Both answers of a run show this one time: a time of their own would tell the faster model from the slower one.</param>
+    /// <param name="cardClass">The classes of the card, see AnswerCardClass.</param>
+    private RenderFragment AnswerCard(string title, ModelComparisonAnswer answer, DateTimeOffset time, string cardClass) => @<MudItem xs="6" Class="d-flex flex-column">
         <MudText Typo="Typo.subtitle1">
             @title
         </MudText>
-        <ContentBlockComponent Role="ChatRole.AI" Type="ContentType.TEXT" Time="@this.CurrentEntry!.Result.Time" Content="@content" Class="@this.GetAnswerCardClass(column)"/>
+        @if (answer.Completed)
+        {
+            <ContentBlockComponent Role="ChatRole.AI" Type="ContentType.TEXT" Time="@time" Content="@this.ShownAnswer(answer)" Class="@cardClass"/>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="@cardClass">
+                @T("This model did not answer.")
+            </MudAlert>
+        }
     </MudItem>;
 
     /// <summary>
-    /// What is said about the model of an answer once the vote is in: its name, and how long it took.
+    /// What the summary says about the model of an answer: its name, how the user voted, whether the judge preferred
+    /// it, and how long it took.
     /// </summary>
     /// <remarks>
     /// Below the answer, not above it: an answer can be long, and what stands above it is out of
     /// sight by the time it has been read.
     /// </remarks>
-    /// <param name="answer">The answer in this column, which knows who wrote it.</param>
-    /// <param name="column">The column this is, as the vote names it.</param>
-    private RenderFragment AnswerCaption(ModelComparisonAnswer answer, ModelComparisonVote column) => @<MudItem xs="6">
+    /// <param name="answer">The answer, which knows who wrote it.</param>
+    /// <param name="model">The model whose answer this is.</param>
+    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
+    /// <param name="judgeChoice">The model the judge preferred in the run, or null without a usable verdict.</param>
+    private RenderFragment AnswerCaption(ModelComparisonAnswer answer, ModelComparisonModelChoice model, ModelComparisonModelChoice? voteChoice, ModelComparisonModelChoice? judgeChoice) => @<MudItem xs="6">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-            <MudIcon Icon="@this.GetVerdictIcon(column)" Color="@this.GetVerdictColor(column)" Size="Size.Small"/>
-            <MudText Typo="Typo.body1" Color="@this.GetVerdictColor(column)" Class="font-weight-bold">
+            @if (voteChoice is not null)
+            {
+                <MudIcon Icon="@OutcomeIcon(voteChoice, model)" Color="@OutcomeColor(voteChoice, model)" Size="Size.Small"/>
+            }
+            <MudText Typo="Typo.body1" Color="@OutcomeColor(voteChoice, model)" Class="font-weight-bold">
                 @answer.Label
             </MudText>
-            @if (this.JudgePreferredThisColumn(column))
+            @if (JudgePreferred(judgeChoice, model))
             {
                 <MudChip T="string" Icon="@AppIcons.JUDGE" Size="Size.Medium" Variant="Variant.Filled" Color="Color.Tertiary" Class="font-weight-bold">
                     @T("Judge")
@@ -240,22 +256,24 @@ else
     </MudItem>;
 
     /// <summary>
-    /// What the judge said about the two answers, shown once the vote is in -- the same point at
-    /// which the names of the two compared models are revealed. Never shown before, so it cannot
-    /// anchor the user's own vote.
+    /// What the judge said about the two answers of a run. Shown only in the summary, so it cannot anchor a vote of the
+    /// user.
     /// </summary>
+    /// <param name="entry">The run.</param>
     /// <param name="judge">What the judge said, or that it could not be understood.</param>
-    private RenderFragment JudgeVerdictCard(ModelComparisonJudgeVerdict judge) => @<MudPaper Outlined="true" Class="pa-3 mb-3">
+    /// <param name="voteChoice">The model the user preferred in the run, or null without a vote.</param>
+    /// <param name="judgeChoice">The model the judge preferred in the run, or null without a usable verdict.</param>
+    private RenderFragment JudgeVerdictCard(ModelComparisonBatchEntry entry, ModelComparisonJudgeVerdict judge, ModelComparisonModelChoice? voteChoice, ModelComparisonModelChoice? judgeChoice) => @<MudPaper Outlined="true" Class="pa-3">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
             <MudIcon Icon="@AppIcons.JUDGE" Size="Size.Small"/>
             <MudText Typo="Typo.subtitle1">
-                @string.Format(DisplayCulture, T("LLM judge: {0}"), judge.Label)
+                @string.Format(DisplayCulture, T("Judge: {0}"), judge.Label)
             </MudText>
         </MudStack>
         @if (judge.Completed)
         {
             <MudText Typo="Typo.body1" Class="mb-1">
-                @this.DescribeJudgePreference(judge)
+                @this.DescribeJudgePreference(entry, judgeChoice, voteChoice)
             </MudText>
             <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
                 @judge.Reasoning
@@ -270,8 +288,55 @@ else
     </MudPaper>;
 
     /// <summary>
-    /// Everything which follows the Compare button: the wait, the answers, the vote, and the way to
-    /// the next run of the batch.
+    /// One run in the summary, with the names of the models: closed, a line with the vote of the user and the choice
+    /// of the judge; open, both answers, the outcome, the times, and the verdict of the judge with its reasoning.
+    /// </summary>
+    /// <remarks>
+    /// The answers stand in the order of the models, not in the columns of the vote: the columns were drawn fresh for
+    /// every run, and across several runs, only the names say anything.
+    /// </remarks>
+    /// <param name="finishedBatch">The batch.</param>
+    /// <param name="index">The position of the run, zero-based.</param>
+    private RenderFragment RunPanel(ModelComparisonBatch finishedBatch, int index)
+    {
+        var entry = finishedBatch.Entries[index];
+        var voteChoice = finishedBatch.VoteChoiceAt(index);
+        var judgeChoice = finishedBatch.JudgeChoiceAt(index);
+
+        // A single run is open from the start: there is nothing else to look at.
+        return @<MudExpansionPanel Class="border-solid border rounded-lg" Expanded="@(finishedBatch.RunCount == 1)">
+            <TitleContent>
+                <div class="d-flex align-center">
+                    <MudText Typo="Typo.subtitle1">
+                        @this.DescribeRun(entry, index, voteChoice)
+                    </MudText>
+                    <MudSpacer/>
+                    @if (judgeChoice is { } choice)
+                    {
+                        <MudChip T="string" Icon="@AppIcons.JUDGE" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary" Class="mr-2">
+                            @this.NameOf(entry, choice)
+                        </MudChip>
+                    }
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <MudGrid Class="mb-3" Spacing="3">
+                    @this.AnswerCard(T("First model"), entry.Result.First, entry.Result.Time, AnswerCardClass(voteChoice, ModelComparisonModelChoice.FIRST))
+                    @this.AnswerCard(T("Second model"), entry.Result.Second, entry.Result.Time, AnswerCardClass(voteChoice, ModelComparisonModelChoice.SECOND))
+                    @this.AnswerCaption(entry.Result.First, ModelComparisonModelChoice.FIRST, voteChoice, judgeChoice)
+                    @this.AnswerCaption(entry.Result.Second, ModelComparisonModelChoice.SECOND, voteChoice, judgeChoice)
+                </MudGrid>
+
+                @if (entry.Result.Judge is { } judge)
+                {
+                    @this.JudgeVerdictCard(entry, judge, voteChoice, judgeChoice)
+                }
+            </ChildContent>
+        </MudExpansionPanel>;
+    }
+
+    /// <summary>
+    /// Everything which follows the Compare button: the wait, the answers, the vote, and the summary.
     /// </summary>
     /// <remarks>
     /// Rendered by the base class below its submit row. This is where the button has to stay above
@@ -283,9 +348,7 @@ else
             <MudPaper Outlined="true" Class="pa-4 mb-4">
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
                 <MudText Typo="Typo.body1">
-                    @(this.judgeEnabled
-                        ? T("Skipping the remaining votes. Waiting for the judges to finish...")
-                        : T("Skipping the remaining votes. Waiting for the rest of the batch to finish..."))
+                    @TA("You skipped the remaining votes. The summary follows once the remaining runs are done.")
                 </MudText>
             </MudPaper>
         }
@@ -321,82 +384,49 @@ else
         }
         else if (this.batch is { CurrentEntry: { } entry } currentBatch)
         {
-            @if (this.answerAContent is not null && this.answerBContent is not null)
+            @if (entry.Result.BothCompleted)
             {
-                var columnA = entry.PresentationOrder.InColumnA(entry.Result);
-                var columnB = entry.PresentationOrder.InColumnB(entry.Result);
-
                 <MudPaper Outlined="true" Class="pa-4 mb-4">
-                    @* Until the vote is in, nothing on this screen may say which model wrote which answer: no name, no time. A small model is usually faster, so a time would give the model away. *@
+                    @* Until the batch is over, nothing on this screen may say which model wrote which answer: no name, no time. A small model is usually faster, so a time would give the model away. *@
                     <MudText Typo="Typo.h5" Class="mb-3">
-                        @T("Answers")
+                        @(currentBatch.RunCount > 1 ? string.Format(DisplayCulture, T("Run {0} of {1}"), currentBatch.CurrentIndex + 1, currentBatch.RunCount) : T("Answers"))
                     </MudText>
 
-                    @if (this.CurrentVote is null)
-                    {
-                        <MudText Typo="Typo.body2" Class="mb-3">
-                            @TA("You do not know yet which model wrote which answer, and the columns are in random order. Compare them by what they say.")
-                        </MudText>
-                    }
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        @TA("You do not know which model wrote which answer, and the columns are in random order. Compare them by what they say. You learn the names at the end.")
+                    </MudText>
 
                     @* Two columns in every width, and the two cards in the same row: that is what keeps them equally high. *@
                     <MudGrid Class="mb-3" Spacing="3">
-                        @this.AnswerCard(T("Answer A"), this.answerAContent!, ModelComparisonVote.COLUMN_A)
-                        @this.AnswerCard(T("Answer B"), this.answerBContent!, ModelComparisonVote.COLUMN_B)
-                        @if (this.CurrentVote is not null)
-                        {
-                            @this.AnswerCaption(columnA, ModelComparisonVote.COLUMN_A)
-                            @this.AnswerCaption(columnB, ModelComparisonVote.COLUMN_B)
-                        }
+                        @this.AnswerCard(T("Answer A"), entry.PresentationOrder.InColumnA(entry.Result), entry.Result.Time, FILL_THE_COLUMN)
+                        @this.AnswerCard(T("Answer B"), entry.PresentationOrder.InColumnB(entry.Result), entry.Result.Time, FILL_THE_COLUMN)
                     </MudGrid>
 
-                    @if (this.CurrentVote is null)
-                    {
-                        <MudText Typo="Typo.h6" Class="mb-2">
-                            @T("Which answer is better?")
-                        </MudText>
+                    <MudText Typo="Typo.h6" Class="mb-2">
+                        @T("Which answer is better?")
+                    </MudText>
 
-                        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
-                            <MudButton Variant="Variant.Filled" OnClick="@(() => this.Vote(ModelComparisonVote.COLUMN_A))">
-                                @T("Answer A is better")
+                    <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
+                        <MudButton Variant="Variant.Filled" OnClick="@(() => this.Vote(ModelComparisonVote.COLUMN_A))">
+                            @T("Answer A is better")
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" OnClick="@(() => this.Vote(ModelComparisonVote.COLUMN_B))">
+                            @T("Answer B is better")
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" OnClick="@(() => this.Vote(ModelComparisonVote.TIE))">
+                            @T("Both are equally good")
+                        </MudButton>
+                        @if (currentBatch.RunCount > 1)
+                        {
+                            <MudButton Variant="Variant.Text" OnClick="@this.SkipThisRun">
+                                @T("Skip this run")
                             </MudButton>
-                            <MudButton Variant="Variant.Filled" OnClick="@(() => this.Vote(ModelComparisonVote.COLUMN_B))">
-                                @T("Answer B is better")
+                            <MudButton Variant="Variant.Text" OnClick="@this.SkipRemainingVotes">
+                                @T("Skip remaining votes")
                             </MudButton>
-                            <MudButton Variant="Variant.Outlined" OnClick="@(() => this.Vote(ModelComparisonVote.TIE))">
-                                @T("Both are equally good")
-                            </MudButton>
-                            @if (currentBatch.RunCount > 1)
-                            {
-                                <MudButton Variant="Variant.Text" OnClick="@this.SkipThisRun">
-                                    @T("Skip this run")
-                                </MudButton>
-                                <MudButton Variant="Variant.Text" OnClick="@this.SkipRemainingVotes">
-                                    @T("Skip remaining votes")
-                                </MudButton>
-                            }
-                        </MudStack>
-                    }
-                    else
-                    {
-                        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" AlignItems="AlignItems.Center">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.NEXT" OnClick="@this.GoToNextEntry">
-                                @(currentBatch.IsLastEntry ? T("Finish") : T("Next run"))
-                            </MudButton>
-                            @if (this.isComparing)
-                            {
-                                <MudText Typo="Typo.caption">
-                                    @T("More runs are still being generated in the background.")
-                                </MudText>
-                            }
-                        </MudStack>
-                    }
+                        }
+                    </MudStack>
                 </MudPaper>
-
-                @if (this.CurrentVote is not null && entry.Result.Judge is { } judge)
-                {
-                    @this.JudgeVerdictCard(judge)
-                }
             }
             else
             {
@@ -459,17 +489,27 @@ else
                     @if (votesMissing > 0)
                     {
                         <MudText Typo="Typo.caption" Class="d-block">
-                            @string.Format(DisplayCulture, T("{0} of {1} runs have no usable vote -- never cast, or the run itself never got a usable answer -- and are not counted above."), votesMissing, voteTally.TotalRunCount)
+                            @string.Format(DisplayCulture, TA("{0} of {1} runs have no vote from you, because you skipped them or a model did not answer. They are not counted above."), votesMissing, voteTally.TotalRunCount)
                         </MudText>
                     }
-                    @if (judgeTally is not null && judgeVerdictsMissing > 0 && judgeVerdictsMissing != votesMissing)
+                    @if (judgeTally is not null && judgeVerdictsMissing > 0)
                     {
                         <MudText Typo="Typo.caption" Class="d-block">
-                            @string.Format(DisplayCulture, T("{0} of {1} runs have no usable judge verdict."), judgeVerdictsMissing, judgeTally.TotalRunCount)
+                            @string.Format(DisplayCulture, T("{0} of {1} runs have no usable judge verdict. They are not counted above."), judgeVerdictsMissing, judgeTally.TotalRunCount)
                         </MudText>
                     }
                 }
             </MudPaper>
+
+            @if (finishedBatch.Entries.Count > 0)
+            {
+                <MudExpansionPanels MultiExpansion="@true" Class="mb-4">
+                    @for (var i = 0; i < finishedBatch.Entries.Count; i++)
+                    {
+                        @this.RunPanel(finishedBatch, i)
+                    }
+                </MudExpansionPanels>
+            }
 
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.RESET" OnClick="@this.StartNewBatch">
                 @T("Start a new request")
