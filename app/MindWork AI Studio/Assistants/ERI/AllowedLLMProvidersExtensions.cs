@@ -10,7 +10,7 @@ public static class AllowedLLMProvidersExtensions
     {
         public string Description => provider switch
         {
-            AllowedLLMProviders.NONE => TA("Please select what kind of LLM provider are allowed for this data source"),
+            AllowedLLMProviders.NONE => TA("Please select which kinds of LLM providers are allowed for this data source."),
             AllowedLLMProviders.ANY => TB("Any LLM provider is allowed: users might choose a cloud-based or a self-hosted provider"),
             AllowedLLMProviders.SELF_HOSTED => TB("Self-hosted LLM providers are allowed: users cannot choose any cloud-based provider"),
 

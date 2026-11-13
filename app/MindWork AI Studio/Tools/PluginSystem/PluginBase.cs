@@ -511,7 +511,7 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
         if (!this.State.Environment["DEPRECATION_MESSAGE"].TryRead(out deprecationMessage))
         {
             deprecationMessage = string.Empty;
-            message = TA("The field DEPRECATION_MESSAGE does not exist, is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.");
+            message = TA("The field DEPRECATION_MESSAGE does not exist or is not a valid string. This message is optional: use an empty string to indicate that the plugin is not deprecated.");
             return false;
         }
         
