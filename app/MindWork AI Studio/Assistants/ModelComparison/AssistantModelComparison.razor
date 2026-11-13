@@ -193,6 +193,10 @@ else
 
 @code {
 
+    private protected override RenderFragment HeaderActions => @<MudTooltip Text="@T("Results of all comparisons")">
+        <MudIconButton Variant="Variant.Text" Icon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.OpenResultsDialog"/>
+    </MudTooltip>;
+
     /// <summary>
     /// The card of one answer, with its title above.
     /// </summary>
@@ -511,9 +515,14 @@ else
                 </MudExpansionPanels>
             }
 
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.RESET" OnClick="@this.StartNewBatch">
-                @T("Start a new request")
-            </MudButton>
+            <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.RESET" OnClick="@this.StartNewBatch">
+                    @T("Start a new request")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.OpenResultsDialog">
+                    @T("Results of all comparisons")
+                </MudButton>
+            </MudStack>
         }
     </div>;
 

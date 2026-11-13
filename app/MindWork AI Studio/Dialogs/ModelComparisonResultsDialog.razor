@@ -1,0 +1,247 @@
+@using AIStudio.Assistants.ModelComparison
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        @if (this.statistics is null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="@true" Class="mb-3"/>
+        }
+        else if (this.statistics.ComparisonCount == 0)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                @TA("There are no results yet. As soon as you vote on the answers of a comparison, its results appear here.")
+            </MudAlert>
+        }
+        else
+        {
+            var shownStatistics = this.statistics;
+            <MudText Typo="Typo.body1" Class="mb-3">
+                @string.Format(DisplayCulture, T("Stored comparisons: {0}, with {1} runs in total."), shownStatistics.ComparisonCount.CompactCount(), shownStatistics.RunCount.CompactCount())
+            </MudText>
+
+            <MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" TabPanelsClass="pa-4">
+                <MudTabPanel Text="@TA("Your votes")" Icon="@AppIcons.VOTED">
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        @TA("How often each model won by your votes. A comparison of a model with itself does not count here, since it only shows how consistently that model answers.")
+                    </MudText>
+                    @if (shownStatistics.VoteRanking.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @TA("You have not voted on two different models yet.")
+                        </MudText>
+                    }
+                    else
+                    {
+                        @this.Ranking(shownStatistics.VoteRanking)
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="@T("Pairs")" Icon="@AppIcons.ASSISTANT_MODEL_COMPARISON">
+                    @if (shownStatistics.Pairings.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @T("No two different models were compared with each other yet.")
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mb-3">
+                            @TA("How often each of two models won when they competed directly, by your votes and by the verdicts of the judges.")
+                        </MudText>
+                        @foreach (var pairing in shownStatistics.Pairings)
+                        {
+                            @this.Pair(pairing)
+                        }
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="@T("Judges")" Icon="@AppIcons.JUDGE">
+                    @if (shownStatistics.JudgeAgreements.Count == 0 && shownStatistics.JudgeRanking.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @T("No judge has given a usable verdict yet.")
+                        </MudText>
+                    }
+                    else
+                    {
+                        @if (shownStatistics.JudgeAgreements.Count > 0)
+                        {
+                            <MudText Typo="Typo.subtitle1">
+                                @TA("Agreement with your votes")
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mb-2">
+                                @TA("How often each judge chose the same as you. Only runs with both your vote and a verdict of the judge count.")
+                            </MudText>
+                            <MudSimpleTable Dense="@true" Hover="@true" Class="mb-6">
+                                <thead>
+                                    <tr>
+                                        <th>@T("Judge")</th>
+                                        <th>@T("Compared runs")</th>
+                                        <th>@T("Same choice")</th>
+                                        <th>@T("Agreement")</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var agreement in shownStatistics.JudgeAgreements)
+                                    {
+                                        <tr @key="agreement.Judge.Key">
+                                            <td>@agreement.Judge.Label</td>
+                                            <td>@agreement.ComparedRuns.CompactCount()</td>
+                                            <td>@agreement.Agreements.CompactCount()</td>
+                                            <td>@FormatShare(agreement.Share)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+
+                        @if (shownStatistics.JudgeRanking.Count > 0)
+                        {
+                            <MudText Typo="Typo.subtitle1">
+                                @T("Ranking by the judges")
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mb-3">
+                                @T("How often each model won by the verdicts of the judges.")
+                            </MudText>
+                            @this.Ranking(shownStatistics.JudgeRanking)
+                        }
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="@T("Speed")" Icon="@AppIcons.ELAPSED_TIME">
+                    @{ var timedSpeeds = TimedSpeeds(shownStatistics.Speeds); }
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        @T("The median time each model took, so that a single slow answer does not distort the picture. Only complete answers count. The times also depend on the length of the answers and on how busy the servers were.")
+                    </MudText>
+                    @if (timedSpeeds.Count > 0)
+                    {
+                        <MudChart T="double" ChartType="ChartType.Bar" ChartLabels="@ModelLabels(timedSpeeds.Select(speed => speed.Model))" ChartSeries="@this.SpeedSeries(timedSpeeds)" ChartOptions="@SpeedChartOptions(timedSpeeds)" Width="100%" Height="300px"/>
+                    }
+                    <MudSimpleTable Dense="@true" Hover="@true" Class="mt-3">
+                        <thead>
+                            <tr>
+                                <th>@T("Model")</th>
+                                <th>@T("Complete answers")</th>
+                                <th>@T("Until the first token")</th>
+                                <th>@T("Until the complete answer")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var speed in shownStatistics.Speeds)
+                            {
+                                <tr @key="speed.Model.Key">
+                                    <td>@speed.Model.Label</td>
+                                    <td>@speed.AnswerCount.CompactCount()</td>
+                                    <td>@FormatDuration(speed.MedianFirstTokenTime)</td>
+                                    <td>@FormatDuration(speed.MedianTotalTime)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudTabPanel>
+            </MudTabs>
+
+            <MudText Typo="Typo.caption" Class="d-block mt-3">
+                @TA("The share of wins counts only the runs which one of the models won, not the ties. With few runs, chance plays a large part. Therefore, a model counts as clearly better or clearly worse only when the likely range of its share, at a confidence of 95 percent, lies entirely above or below one half. Many runs of the same request tell you a lot about that request, but little about others, so compare the models on different requests, too.")
+            </MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (this.statistics is { ComparisonCount: > 0 })
+        {
+            <MudButton OnClick="@this.DeleteAllResultsAsync" Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" Disabled="@this.isDeleting">
+                @T("Delete all results")
+            </MudButton>
+        }
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    /// <summary>
+    /// A ranking of the models: their wins, ties, and losses as a chart, and as a table with their share of wins and
+    /// how sure that share is.
+    /// </summary>
+    private RenderFragment Ranking(IReadOnlyList<ModelComparisonModelStanding> ranking) => @<div>
+        <MudChart T="double" ChartType="ChartType.StackedBar" ChartLabels="@ModelLabels(ranking.Select(standing => standing.Model))" ChartSeries="@this.OutcomeSeries(ranking)" ChartOptions="@OutcomeChartOptions(ranking)" Width="100%" Height="300px"/>
+        <MudSimpleTable Dense="@true" Hover="@true" Class="mt-3">
+            <thead>
+                <tr>
+                    <th>@T("Model")</th>
+                    <th>@T("Wins")</th>
+                    <th>@T("Ties")</th>
+                    <th>@T("Losses")</th>
+                    <th>@T("Share of wins")</th>
+                    <th>@T("Likely range")</th>
+                    <th>@T("Assessment")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var standing in ranking)
+                {
+                    <tr @key="standing.Model.Key">
+                        <td>@standing.Model.Label</td>
+                        <td>@standing.Wins.CompactCount()</td>
+                        <td>@standing.Ties.CompactCount()</td>
+                        <td>@standing.Losses.CompactCount()</td>
+                        <td>@FormatShare(standing.WinShare.Share)</td>
+                        <td>@this.FormatRange(standing.WinShare)</td>
+                        <td>@Assessment(this.SignificanceText(standing.WinShare.Significance), standing.WinShare.Significance, isPair: false)</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </div>;
+
+    /// <summary>
+    /// How two models did against each other, by the votes and, when there are any, by the verdicts of the judges.
+    /// </summary>
+    private RenderFragment Pair(ModelComparisonPairing pairing) => @<MudPaper @key="@ModelComparisonPairKey.Of(pairing.First.Key, pairing.Second.Key)" Outlined="@true" Class="pa-3 mb-3">
+        <MudText Typo="Typo.subtitle1">
+            @string.Format(T("{0} vs. {1}"), pairing.First.Label, pairing.Second.Label)
+        </MudText>
+        <MudText Typo="Typo.caption" Class="d-block mb-2">
+            @string.Format(DisplayCulture, T("Stored comparisons: {0}"), pairing.ComparisonCount.CompactCount())
+        </MudText>
+        <MudSimpleTable Dense="@true" Hover="@true">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>@pairing.First.Label</th>
+                    <th>@T("Equally good")</th>
+                    <th>@pairing.Second.Label</th>
+                    <th>@T("Assessment")</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>@TA("Your votes")</td>
+                    <td>@pairing.Votes.FirstModelWins.CompactCount()</td>
+                    <td>@pairing.Votes.Ties.CompactCount()</td>
+                    <td>@pairing.Votes.SecondModelWins.CompactCount()</td>
+                    <td>@Assessment(this.PairSignificanceText(pairing, pairing.WinShareOfFirstByVotes), pairing.WinShareOfFirstByVotes.Significance, isPair: true)</td>
+                </tr>
+                @if (pairing.JudgeVerdicts.ScoredRunCount > 0)
+                {
+                    <tr>
+                        <td>@T("Judge verdicts")</td>
+                        <td>@pairing.JudgeVerdicts.FirstModelWins.CompactCount()</td>
+                        <td>@pairing.JudgeVerdicts.Ties.CompactCount()</td>
+                        <td>@pairing.JudgeVerdicts.SecondModelWins.CompactCount()</td>
+                        <td>@Assessment(this.PairSignificanceText(pairing, pairing.WinShareOfFirstByJudges), pairing.WinShareOfFirstByJudges.Significance, isPair: true)</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </MudPaper>;
+
+    /// <summary>
+    /// An assessment with its icon and color, so that it never depends on the color alone.
+    /// </summary>
+    private static RenderFragment Assessment(string text, ModelComparisonSignificance significance, bool isPair) => @<MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1">
+        <MudIcon Icon="@SignificanceIcon(significance, isPair)" Color="@SignificanceColor(significance, isPair)" Size="Size.Small"/>
+        <MudText Typo="Typo.body2">@text</MudText>
+    </MudStack>;
+}

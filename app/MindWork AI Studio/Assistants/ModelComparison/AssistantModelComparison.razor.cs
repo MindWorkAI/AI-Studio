@@ -588,6 +588,12 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
+    /// Shows what all stored comparisons say about the models. The results of a batch are stored once its
+    /// summary shows, so the dialog counts them already.
+    /// </summary>
+    private async Task OpenResultsDialog() => await this.DialogService.ShowAsync<ModelComparisonResultsDialog>(T("Results of all comparisons"), DialogOptions.FULLSCREEN);
+
+    /// <summary>
     /// Takes the vote for the current run and moves on to the next one, or to the summary after the last run. The
     /// names of the models stay hidden until the summary, see ModelComparisonBatch.Vote.
     /// </summary>

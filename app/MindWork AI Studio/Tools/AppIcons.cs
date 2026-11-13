@@ -230,6 +230,12 @@ public static class AppIcons
     /// <summary>Clears an input, such as a search, a filter, or a shortcut.</summary>
     public const string CLEAR = LucideIcons.ERASER;
 
+    /// <summary>Marks a model which won clearly more than half of its decided model comparisons.</summary>
+    public const string CLEARLY_BETTER = LucideIcons.TRENDING_UP;
+
+    /// <summary>Marks a model which won clearly less than half of its decided model comparisons.</summary>
+    public const string CLEARLY_WORSE = LucideIcons.TRENDING_DOWN;
+
     /// <summary>Clears a chosen folder, such as the picture library of the slide assistant.</summary>
     public const string CLEAR_FOLDER = LucideIcons.FOLDER_X;
 
@@ -244,6 +250,9 @@ public static class AppIcons
 
     /// <summary>Marks the name of a company, such as the employer in a job posting.</summary>
     public const string COMPANY = LucideIcons.BUILDING;
+
+    /// <summary>Shows the results of all model comparisons, with charts.</summary>
+    public const string COMPARISON_RESULTS = LucideIcons.CHART_COLUMN_STACKED;
 
     /// <summary>Marks the messages of a compiler that the coding assistant takes as input.</summary>
     public const string COMPILER_MESSAGES = LucideIcons.TRIANGLE_EXCLAMATION_POINT;
@@ -745,6 +754,9 @@ public static class AppIcons
 
     /// <summary>Marks a step that has not started yet, such as a research of the BeyondFacts Lab.</summary>
     public const string NOT_STARTED = LucideIcons.CIRCLE_DASHED;
+
+    /// <summary>Marks a result which may still be chance, such as a model with too few decided model comparisons.</summary>
+    public const string NOT_YET_CLEAR = LucideIcons.HOURGLASS;
 
     /// <summary>Removes the selected template, so that no template is used.</summary>
     public const string NO_TEMPLATE = LucideIcons.SQUARE_DASHED;

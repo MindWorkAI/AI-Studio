@@ -86,6 +86,38 @@ public sealed class ModelComparisonStoreResultTests
     }
 
     [Test]
+    public async Task DeletingAllResultsKeepsThePresets()
+    {
+        var store = this.CreateStore();
+        await store.SaveResultAsync(Record());
+        await store.SaveResultAsync(Record());
+        await store.SavePresetAsync(new ModelComparisonPreset { Id = Guid.NewGuid(), Name = "Weekly report" });
+
+        var unreadablePath = Path.Combine(this.ResultsDirectory, $"{Guid.NewGuid():D}.json");
+        await File.WriteAllTextAsync(unreadablePath, """{ "fieldOfANewerVersion": true }""");
+
+        await store.DeleteAllResultsAsync();
+
+        var records = await ReadAllAsync(this.CreateStore());
+        var presets = await this.CreateStore().ListPresetsAsync();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(records, Is.Empty);
+            Assert.That(File.Exists(unreadablePath), Is.False, "Deleting all results takes the files this version cannot read along.");
+            Assert.That(presets, Has.Count.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public async Task DeletingAllResultsWithoutAnyDoesNothing()
+    {
+        await this.CreateStore().DeleteAllResultsAsync();
+
+        Assert.That(await ReadAllAsync(this.CreateStore()), Is.Empty);
+    }
+
+    [Test]
     public async Task NoStoredComparisonsReadAsNone()
     {
         var records = await ReadAllAsync(this.CreateStore());

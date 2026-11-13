@@ -69,4 +69,37 @@ public sealed partial class ModelComparisonStore
                 yield return record with { Id = recordId };
         }
     }
+
+    /// <summary>
+    /// Deletes all stored comparisons, the presets aside.
+    /// </summary>
+    /// <remarks>
+    /// Unlike reading, deleting takes the files this version cannot read along: the user asked for all results to go.
+    /// </remarks>
+    /// <param name="token">The cancellation token.</param>
+    public async Task DeleteAllResultsAsync(CancellationToken token = default)
+    {
+        await this.InitializeAsync(token);
+        if (!Directory.Exists(this.ResultsDirectory))
+            return;
+
+        foreach (var path in Directory.EnumerateFiles(this.ResultsDirectory, "*.json").ToList())
+        {
+            token.ThrowIfCancellationRequested();
+            if (!Guid.TryParseExact(Path.GetFileNameWithoutExtension(path), "D", out var recordId))
+                continue;
+
+            var gate = this.GetLock(recordId);
+            await gate.WaitAsync(token);
+            try
+            {
+                File.Delete(path);
+            }
+            finally
+            {
+                gate.Release();
+                this.ForgetLock(recordId);
+            }
+        }
+    }
 }

@@ -38,4 +38,9 @@ public sealed record ModelComparisonPairing
     /// The share of the decided votes which the first model won, with how sure that share is.
     /// </summary>
     public ModelComparisonWinShare WinShareOfFirstByVotes => ModelComparisonWinShare.Of(this.Votes.FirstModelWins, this.Votes.SecondModelWins);
+
+    /// <summary>
+    /// The share of the decided verdicts of the judges which the first model won, with how sure that share is.
+    /// </summary>
+    public ModelComparisonWinShare WinShareOfFirstByJudges => ModelComparisonWinShare.Of(this.JudgeVerdicts.FirstModelWins, this.JudgeVerdicts.SecondModelWins);
 }
