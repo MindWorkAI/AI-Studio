@@ -72,7 +72,7 @@
             
             @if(this.availableAuthMethods.Count > 0 || this.dataAuthMethod != default)
             {
-                <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName" Label="Authentication Method" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
+                <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName" Label="@T("Authentication Method")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
                     @foreach (var authMethod in this.availableAuthMethods)
                     {
                         <MudSelectItem Value="@authMethod">

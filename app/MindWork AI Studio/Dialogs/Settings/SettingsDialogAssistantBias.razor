@@ -11,7 +11,7 @@
         <MudField Label="@T("Assistant: Bias of the Day")" Variant="Variant.Outlined" Class="mb-4">
             <ConfigurationOption OptionDescription="@T("Restrict to one bias a day?")" LabelOn="@TA("Yes, you can only retrieve one bias per day")" LabelOff="@TA("No restriction. You can retrieve as many biases as you want per day.")" State="@(() => this.SettingsManager.ConfigurationData.BiasOfTheDay.RestrictOneBiasPerDay)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.BiasOfTheDay.RestrictOneBiasPerDay = updatedState)"/>
 
-            <MudField Label="Statistics" Variant="Variant.Outlined" Class="mb-2">
+            <MudField Label="@T("Statistics")" Variant="Variant.Outlined" Class="mb-2">
                 <MudText Typo="Typo.body1">
                     @this.StatText
                 </MudText>
