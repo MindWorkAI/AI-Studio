@@ -38,18 +38,26 @@
                 </MudJustifiedText>
             }
 
-            <EmbeddedChat @key="@chat.ChatId"
-                          Store="@this.chatStore"
-                          Component="@COMPONENT"
-                          ChatId="@chat.ChatId"
-                          CreateThread="@this.CreateThread"
-                          Provider="@this.chatProvider"
-                          PrepareAsync="@this.prepareChat"
-                          HidesModelIdentity="true"
-                          ProviderIssue="@this.seriesIssue"
-                          AllowedFileTypes="@this.allowedFileTypes"
-                          OpeningMessage="@this.openingMessage"
-                          ExportFileName="@this.Series.Name"/>
+            @* Only once everything this chat needs is ready, see ShowOpenTaskAsync: *@
+            @if (this.shownChat is { } shown && shown.ChatId == chat.ChatId)
+            {
+                <EmbeddedChat @key="@shown.ChatId"
+                              Store="@this.chatStore"
+                              Component="@COMPONENT"
+                              ChatId="@shown.ChatId"
+                              CreateThread="@this.CreateThread"
+                              Provider="@shown.Provider"
+                              PrepareAsync="@this.prepareChat"
+                              HidesModelIdentity="true"
+                              ProviderIssue="@this.seriesIssue"
+                              AllowedFileTypes="@this.allowedFileTypes"
+                              OpeningMessage="@this.openingMessage"
+                              ExportFileName="@this.Series.Name"/>
+            }
+            else
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-3"/>
+            }
 
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.DONE_WITH_MODEL" OnClick="@this.FinishChatAsync" Disabled="@(!this.CanFinishChat)" Class="mt-3">
                 @T("I'm done with this model")

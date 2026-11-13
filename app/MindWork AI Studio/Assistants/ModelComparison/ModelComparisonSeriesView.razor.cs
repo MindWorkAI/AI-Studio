@@ -96,9 +96,10 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     private EmbeddedConversation? currentConversation;
 
     /// <summary>
-    /// The provider which answers in the chat the user works in right now.
+    /// The chat which shows, with its provider, or null while no chat shows. It is set together with everything else
+    /// the chat needs, once all of that is known, see ShowOpenTaskAsync.
     /// </summary>
-    private AIStudio.Settings.Provider chatProvider = AIStudio.Settings.Provider.NONE;
+    private ModelComparisonShownChat? shownChat;
 
     /// <summary>
     /// Readies a request of the chat the user works in right now, with the provider of that chat.
@@ -184,33 +185,40 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     /// <summary>
     /// Shows the task the user works on, as far as it got, and what the chat of that step needs.
     /// </summary>
+    /// <remarks>
+    /// No chat shows until its provider and its first message are known: the view renders while this method waits,
+    /// and also while the series is stored right before, when the task already is in its next chat. A chat shown then
+    /// would load without the first message, which it sends only when it opens, or would send it to the model of the
+    /// previous chat. The markup therefore shows a chat only when shownChat is the current chat of the task.
+    /// </remarks>
     private async Task ShowOpenTaskAsync()
     {
+        this.shownChat = null;
         this.currentConversation = null;
         this.openingMessage = null;
-        this.chatProvider = AIStudio.Settings.Provider.NONE;
-        if (this.Series.OpenTask is not { CurrentChat: { } chat } task)
+        if (this.Series.OpenTask is not { } task || ModelComparisonShownChat.Of(task, this.firstProvider, this.secondProvider) is not { } chat)
             return;
 
-        // The first model answers in the first chat when it was drawn for it, and in the second chat otherwise:
-        var provider = (task.State is ModelComparisonSeriesTaskState.FIRST_CHAT) == task.FirstModelIsChatOne ? this.firstProvider : this.secondProvider;
-        this.chatProvider = provider;
-        this.prepareChat = thread => this.PrepareAsync(thread, provider);
-
-        if (task.State is ModelComparisonSeriesTaskState.SECOND_CHAT)
+        ContentText? firstMessage = null;
+        if (chat.OpensWithFirstMessage)
         {
-            var firstChat = await this.ConversationOf(task.ChatOne);
-            this.openingMessage = firstChat.FirstUserMessage?.Content?.DeepClone() as ContentText;
+            var firstChat = await this.ConversationOf(task.ChatOne.ChatId);
+            firstMessage = firstChat.FirstUserMessage?.Content?.DeepClone() as ContentText;
         }
 
-        this.currentConversation = await this.ConversationOf(chat);
+        var conversation = await this.ConversationOf(chat.ChatId);
+        var provider = chat.Provider;
+        this.prepareChat = thread => this.PrepareAsync(thread, provider);
+        this.openingMessage = firstMessage;
+        this.currentConversation = conversation;
+        this.shownChat = chat;
     }
 
     /// <summary>
     /// Gets a chat of the series from the service which runs it.
     /// </summary>
-    /// <param name="chat">The chat, as the series keeps it.</param>
-    private Task<EmbeddedConversation> ConversationOf(ModelComparisonSeriesChat chat) => this.ChatService.GetAsync(this.chatStore, COMPONENT, chat.ChatId, this.CreateThread);
+    /// <param name="chatId">The ID of the chat.</param>
+    private Task<EmbeddedConversation> ConversationOf(Guid chatId) => this.ChatService.GetAsync(this.chatStore, COMPONENT, chatId, this.CreateThread);
 
     /// <summary>
     /// Creates a chat of the series, for a chat which has no stored thread yet.
@@ -338,8 +346,8 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
         this.StateHasChanged();
         try
         {
-            var chatOne = await this.ConversationOf(task.ChatOne);
-            var chatTwo = await this.ConversationOf(task.ChatTwo);
+            var chatOne = await this.ConversationOf(task.ChatOne.ChatId);
+            var chatTwo = await this.ConversationOf(task.ChatTwo.ChatId);
             await this.SeriesJudge.JudgeAsync(this.Series, task, chatOne.Thread, chatTwo.Thread, ModelComparisonMode.TASKS.PageTitle, this.judgeCancellation.Token);
         }
         catch (OperationCanceledException)
