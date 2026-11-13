@@ -4789,7 +4789,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1401622761"] = "Öffnen"
 
 -- Start a new series with this setup
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1452503898"] = "Neue Vergleichsreihe mit dieser Einrichtung starten"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1452503898"] = "Neue Vergleichsreihe mit diesen Einstellungen starten"
 
 -- Results of all comparisons
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1990305431"] = "Ergebnisse aller Vergleiche"
@@ -4801,7 +4801,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2045889708"] = "Modus wechseln"
 
 -- Name of the series
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2083243781"] = "Name der Serie"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2083243781"] = "Name der Vergleichsreihe"
 
 -- Are you sure you want to delete the comparison series '{0}' with all its chats? This cannot be undone.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2398358753"] = "Möchten Sie die Vergleichsreihe „{0}“ wirklich einschließlich aller Chats löschen? Dieser Vorgang kann nicht rückgängig gemacht werden."
@@ -4834,7 +4834,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T3355849203"] = "Umbenennen"
 
 -- Rename series
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T3550827604"] = "Serie umbenennen"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T3550827604"] = "Vergleichsreihe umbenennen"
 
 -- AI Studio could not delete the comparison series. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T3650237868"] = "AI Studio konnte die Vergleichsreihe nicht löschen. Bitte versuchen Sie es erneut."
@@ -4855,10 +4855,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T4249192191"] = "Neue Vergleichsreihe"
 
 -- Open a series to work on another task or to look at its result. The list does not name the models, so that you do not learn which one is which before you look at the result. To compare the same models again, or to replace one of them with a new model, start a new series with the setup of an existing one.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T922224005"] = "Öffnen Sie eine Vergleichsreihe, um eine weitere Aufgabe zu bearbeiten oder sich ihr Ergebnis anzusehen. Die Liste nennt die Modelle nicht, damit Sie nicht erfahren, welches welches ist, bevor Sie sich das Ergebnis ansehen. Wenn Sie dieselben Modelle erneut vergleichen oder eines davon durch ein neues Modell ersetzen möchten, starten Sie eine neue Vergleichsreihe mit der Einrichtung einer bestehenden."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T922224005"] = "Öffnen Sie eine Vergleichsreihe, um eine weitere Aufgabe zu bearbeiten oder sich ihr Ergebnis anzusehen. Die Liste nennt die Modelle nicht, damit Sie nicht erfahren, welches welches ist, bevor Sie sich das Ergebnis ansehen. Wenn Sie dieselben Modelle erneut vergleichen oder eines davon durch ein neues Modell ersetzen möchten, starten Sie eine neue Vergleichsreihe mit den Einstellungen einer bestehenden."
 
 -- Open a series to work on another task or to look at its result. The list does not name the models, so that you do not learn which one is which before you look at the result. To compare the same models again, or to replace one of them with a new model, start a new series with the setup of an existing one.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T922224005::INFORMAL"] = "Öffne eine Vergleichsreihe, um eine weitere Aufgabe zu bearbeiten oder dir ihr Ergebnis anzusehen. Die Liste nennt die Modelle nicht, damit du nicht erfährst, welches welches ist, bevor du dir das Ergebnis ansiehst. Wenn du dieselben Modelle erneut vergleichen oder eines davon durch ein neues Modell ersetzen möchtest, starte eine neue Vergleichsreihe mit der Einrichtung einer bestehenden."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T922224005::INFORMAL"] = "Öffne eine Vergleichsreihe, um eine weitere Aufgabe zu bearbeiten oder dir ihr Ergebnis anzusehen. Die Liste nennt die Modelle nicht, damit du nicht erfährst, welches welches ist, bevor du dir das Ergebnis ansiehst. Wenn du dieselben Modelle erneut vergleichen oder eines davon durch ein neues Modell ersetzen möchtest, starte eine neue Vergleichsreihe mit den Einstellungen einer bestehenden."
 
 -- First token after {0}, complete after {1}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONANSWERCAPTION::T1658271318"] = "Erstes Token nach {0}, vollständig nach {1}"
@@ -4927,7 +4927,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONEFFORTCHA
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONEFFORTCHARTS::T1422468824::INFORMAL"] = "Deine Nachrichten im Durchschnitt"
 
 -- Median time
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONEFFORTCHARTS::T2152829620"] = "Medianzeit"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONEFFORTCHARTS::T2152829620"] = "Zeit (Median)"
 
 -- The judge saw both answers as equally good, matching your own vote.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEVERDICTCARD::T110452334"] = "Der Richter hielt beide Antworten für gleich gut, wie Sie selbst."
@@ -4996,22 +4996,22 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODEEXTEN
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODEEXTENSIONS::T3575446502"] = "Antwortvarianz"
 
 -- A series with this name already exists. Please choose a different name.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T1933751712"] = "Eine Serie mit diesem Namen existiert bereits. Bitte wählen Sie einen anderen Namen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T1933751712"] = "Eine Vergleichsreihe mit diesem Namen ist bereits vorhanden. Bitte wählen Sie einen anderen Namen."
 
 -- A series with this name already exists. Please choose a different name.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T1933751712::INFORMAL"] = "Eine Serie mit diesem Namen existiert bereits. Bitte wähle einen anderen Namen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T1933751712::INFORMAL"] = "Eine Vergleichsreihe mit diesem Namen ist bereits vorhanden. Bitte wähle einen anderen Namen."
 
 -- Please give the series a name, so that you find it again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T2512778872"] = "Bitte geben Sie der Serie einen Namen, damit Sie sie wiederfinden."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T2512778872"] = "Bitte geben Sie der Vergleichsreihe einen Namen, damit Sie sie wiederfinden."
 
 -- Please give the series a name, so that you find it again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T2512778872::INFORMAL"] = "Bitte gib der Serie einen Namen, damit du sie wiederfindest."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T2512778872::INFORMAL"] = "Bitte gib der Vergleichsreihe einen Namen, damit du sie wiederfindest."
 
 -- The name of your series may have at most {0} characters.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T4001587725"] = "Der Name Ihrer Serie darf höchstens {0} Zeichen lang sein."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T4001587725"] = "Der Name Ihrer Vergleichsreihe darf höchstens {0} Zeichen lang sein."
 
 -- The name of your series may have at most {0} characters.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T4001587725::INFORMAL"] = "Der Name deiner Serie darf höchstens {0} Zeichen lang sein."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T4001587725::INFORMAL"] = "Der Name deiner Vergleichsreihe darf höchstens {0} Zeichen lang sein."
 
 -- {0} is clearly better
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONPAIRCARD::T1539751573"] = "{0} ist eindeutig besser"
@@ -5398,16 +5398,16 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIE
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T1119857700::INFORMAL"] = "Arbeite jetzt mit dem anderen Modell an derselben Aufgabe weiter. Es hat deine erste Nachricht bereits erhalten. Wenn du fertig bist, entscheidest du, welcher Chat dir mehr geholfen hat."
 
 -- One of the two models is no longer available as it was when the series began: its provider was deleted, or it uses another model now. You cannot work on another task in this series, but you can start a new series with its setup and choose the model anew.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T116035530"] = "Eines der beiden Modelle ist nicht mehr so verfügbar wie zu Beginn der Reihe: Sein Anbieter wurde gelöscht, oder er verwendet inzwischen ein anderes Modell. Sie können keine weitere Aufgabe in dieser Reihe bearbeiten, aber eine neue Reihe mit ihrer Einrichtung starten und das Modell neu auswählen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T116035530"] = "Eines der beiden Modelle ist nicht mehr so verfügbar wie zu Beginn der Reihe: Sein Anbieter wurde gelöscht, oder er verwendet inzwischen ein anderes Modell. Sie können keine weitere Aufgabe in dieser Reihe bearbeiten, aber eine neue Reihe mit ihren Einstellungen starten und das Modell neu auswählen."
 
 -- One of the two models is no longer available as it was when the series began: its provider was deleted, or it uses another model now. You cannot work on another task in this series, but you can start a new series with its setup and choose the model anew.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T116035530::INFORMAL"] = "Eines der beiden Modelle ist nicht mehr so verfügbar wie zu Beginn der Reihe: Sein Anbieter wurde gelöscht, oder er verwendet inzwischen ein anderes Modell. Du kannst keine weitere Aufgabe in dieser Reihe bearbeiten, aber eine neue Reihe mit ihrer Einrichtung starten und das Modell neu auswählen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T116035530::INFORMAL"] = "Eines der beiden Modelle ist nicht mehr so verfügbar wie zu Beginn der Reihe: Sein Anbieter wurde gelöscht, oder er verwendet inzwischen ein anderes Modell. Du kannst keine weitere Aufgabe in dieser Reihe bearbeiten, aber eine neue Reihe mit ihren Einstellungen starten und das Modell neu auswählen."
 
 -- You have seen the result of this series, so you know which model answers in which chat. Another task therefore no longer counts as blind: the result shows it apart, and the results of all comparisons leave it out. To compare blindly again, start a new series with the setup of this one. Do you want to test another task in this series anyway?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T1163964876"] = "Sie haben das Ergebnis dieser Serie bereits gesehen und wissen daher, welches Modell in welchem Chat antwortet. Ein weiterer Test gilt deshalb nicht mehr als Blindtest: Sein Ergebnis wird separat angezeigt und aus allen Vergleichsergebnissen ausgeschlossen. Wenn Sie wieder einen Blindvergleich durchführen möchten, starten Sie eine neue Serie mit denselben Einstellungen wie für diese. Möchten Sie trotzdem eine weitere Aufgabe in dieser Serie testen?"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T1163964876"] = "Sie haben das Ergebnis dieser Vergleichsreihe bereits gesehen und wissen daher, welches Modell in welchem Chat antwortet. Eine weitere Aufgabe gilt deshalb nicht mehr als blind: Das Ergebnis weist sie getrennt aus, und die Ergebnisse aller Vergleiche lassen sie weg. Um wieder blind zu vergleichen, starten Sie eine neue Vergleichsreihe mit den Einstellungen dieser Reihe. Möchten Sie trotzdem eine weitere Aufgabe in dieser Vergleichsreihe testen?"
 
 -- You have seen the result of this series, so you know which model answers in which chat. Another task therefore no longer counts as blind: the result shows it apart, and the results of all comparisons leave it out. To compare blindly again, start a new series with the setup of this one. Do you want to test another task in this series anyway?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T1163964876::INFORMAL"] = "Du hast das Ergebnis dieser Serie bereits gesehen und weißt daher, welches Modell in welchem Chat antwortet. Ein weiterer Test gilt deshalb nicht mehr als Blindtest: Sein Ergebnis wird separat angezeigt und aus allen Vergleichsergebnissen ausgeschlossen. Wenn du wieder einen Blindvergleich durchführen möchtest, starte eine neue Serie mit denselben Einstellungen wie für diese. Möchtest du trotzdem eine weitere Aufgabe in dieser Serie testen?"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T1163964876::INFORMAL"] = "Du hast das Ergebnis dieser Vergleichsreihe bereits gesehen und weißt daher, welches Modell in welchem Chat antwortet. Eine weitere Aufgabe gilt deshalb nicht mehr als blind: Das Ergebnis weist sie getrennt aus, und die Ergebnisse aller Vergleiche lassen sie weg. Um wieder blind zu vergleichen, starte eine neue Vergleichsreihe mit den Einstellungen dieser Reihe. Möchtest du trotzdem eine weitere Aufgabe in dieser Vergleichsreihe testen?"
 
 -- Task {0}: chat 1
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T134264261"] = "Aufgabe {0}: Chat 1"
@@ -5473,7 +5473,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIE
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T3692047609"] = "Aufgabe starten"
 
 -- Setup of this series
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T3798429422"] = "Einrichtung dieser Vergleichsreihe"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T3798429422"] = "Einstellungen dieser Vergleichsreihe"
 
 -- Hide the result
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T4133577695"] = "Ergebnis ausblenden"
@@ -13693,10 +13693,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T922668471"] =
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1206060603"] = "Richter (optional)"
 
 -- This series starts with the setup of the series '{0}'. You can change all of it before you create the series. The tasks stay in their series.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T134968648"] = "Diese Vergleichsreihe beginnt mit der Einrichtung der Vergleichsreihe „{0}“. Sie können alles davon ändern, bevor Sie die Vergleichsreihe erstellen. Die Aufgaben bleiben in ihrer Vergleichsreihe."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T134968648"] = "Diese Vergleichsreihe beginnt mit den Einstellungen der Vergleichsreihe „{0}“. Sie können alles davon ändern, bevor Sie die Vergleichsreihe erstellen. Die Aufgaben bleiben in ihrer Vergleichsreihe."
 
 -- This series starts with the setup of the series '{0}'. You can change all of it before you create the series. The tasks stay in their series.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T134968648::INFORMAL"] = "Diese Vergleichsreihe beginnt mit der Einrichtung der Vergleichsreihe „{0}“. Du kannst alles davon ändern, bevor du die Vergleichsreihe erstellst. Die Aufgaben bleiben in ihrer Vergleichsreihe."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T134968648::INFORMAL"] = "Diese Vergleichsreihe beginnt mit den Einstellungen der Vergleichsreihe „{0}“. Du kannst alles davon ändern, bevor du die Vergleichsreihe erstellst. Die Aufgaben bleiben in ihrer Vergleichsreihe."
 
 -- Please choose two different models. A series compares how well two models help you.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1531478547"] = "Bitte wählen Sie zwei unterschiedliche Modelle aus. Eine Vergleichsreihe vergleicht, wie gut Ihnen zwei Modelle helfen."
