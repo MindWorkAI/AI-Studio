@@ -278,11 +278,15 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
         : TA("Now work on the same task with the other model. It got your first message already. Once you are done, you decide which chat helped you more.");
 
     /// <summary>
-    /// Begins a new task, with a model drawn at random for the first chat.
+    /// Begins a new task, with a model drawn at random for the first chat. Once the user saw the result, it asks each
+    /// time: the user knows the models then, so the task is no longer blind.
     /// </summary>
     private async Task StartTaskAsync()
     {
         if (this.seriesIssue is not null || this.Series.OpenTask is not null)
+            return;
+
+        if (this.Series.IsResolved && !await this.ConfirmTaskWhichIsNotBlindAsync())
             return;
 
         var task = ModelComparisonSeriesTask.Begin(DateTimeOffset.UtcNow, Random.Shared.Next(2) == 0);
@@ -294,6 +298,22 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
         }
 
         await this.ShowOpenTaskAsync();
+    }
+
+    /// <summary>
+    /// Asks the user whether to test another task in a series whose result they saw.
+    /// </summary>
+    /// <returns>True when the user wants to.</returns>
+    private async Task<bool> ConfirmTaskWhichIsNotBlindAsync()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { dialog => dialog.Message, TA("You have seen the result of this series, so you know which model answers in which chat. Another task therefore no longer counts as blind: the result shows it apart, and the results of all comparisons leave it out. To compare blindly again, start a new series with the setup of this one. Do you want to test another task in this series anyway?") },
+        };
+
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Test another task"), parameters, DialogOptions.FULLSCREEN);
+        var result = await reference.Result;
+        return result is { Canceled: false };
     }
 
     /// <summary>
