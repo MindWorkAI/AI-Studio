@@ -858,7 +858,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private string? ValidateAnalysisRules(string analysisRules)
     {
         if(string.IsNullOrWhiteSpace(analysisRules))
-            return TA("Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.");
+            return TA("Please provide a description of your analysis rules. These rules will be used to instruct the AI on how to analyze the documents.");
         
         return null;
     }
@@ -866,7 +866,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private string? ValidateOutputRules(string outputRules)
     {
         if(string.IsNullOrWhiteSpace(outputRules))
-            return TA("Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.");
+            return TA("Please provide a description of your output rules. These rules will be used to instruct the AI on how to format the output of the analysis.");
         
         return null;
     }
