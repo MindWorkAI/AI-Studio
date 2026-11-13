@@ -18,13 +18,8 @@
             }
         </MudText>
         
+        @* One gear for all settings: the window it opens lists the workspaces next to the chat. *@
         <MudToolBar WrapContent="false" Gutters="false">
-            @if (!this.SettingsManager.ConfigurationData.Workspace.IsChatListShown)
-            {
-                <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenWorkspacesSettingsDialog())"/>
-                </MudTooltip>
-            }
             <MudTooltip Text="@T("Show the chat options")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                 <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenChatSettingsDialog"/>
             </MudTooltip>
@@ -74,9 +69,6 @@
                     <MudText Typo="Typo.h6" Style="writing-mode: vertical-lr; word-spacing: 0.5em;">
                         @T("Your workspaces")
                     </MudText>
-                    <MudTooltip Text="@T("Configure your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                        <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" OnClick="@(async () => await this.OpenWorkspacesSettingsDialog())"/>
-                    </MudTooltip>
                 </MudStack>
             </MudPaper>
 

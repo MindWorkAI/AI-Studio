@@ -4090,6 +4090,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Profile u
 -- The selected provider is not allowed in this chat due to data security or confidence-level requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2672162875"] = "The selected provider is not allowed in this chat due to data security or confidence-level requirements."
 
+-- Chats here are not stored. Starting a new chat deletes the current one, together with everything in it. Do you want to start a new chat?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2710402939"] = "Chats here are not stored. Starting a new chat deletes the current one, together with everything in it. Do you want to start a new chat?"
+
 -- Bulleted List
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2957125464"] = "Bulleted List"
 
@@ -6645,6 +6648,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1516264254"] = "Save chat"
 
 -- Rename Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T156144855"] = "Rename Chat"
+
+-- Not stored: this chat is gone when you close AI Studio or start a new chat here
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1567207437"] = "Not stored: this chat is gone when you close AI Studio or start a new chat here"
 
 -- Add workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1586005241"] = "Add workspace"

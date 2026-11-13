@@ -351,7 +351,7 @@ public sealed record ChatThread
     /// Starting a new chat there opens it again, with everything the user put into it. It counts from
     /// the first thing the user put into it, and its first message makes it a chat like any other.
     /// Until then, it is stored the way its place stores chats, together with this mark, so that it is
-    /// still the new chat of its place after a restart, see NewChatRegistry for the places which keep
+    /// still the new chat of its place after a restart, see ChatsInMemory for the places which keep
     /// it in memory. A copy made with a with expression keeps the mark, since it is still the same chat.
     /// Only a new chat writes it, so every other chat is stored as it was before.
     /// </remarks>

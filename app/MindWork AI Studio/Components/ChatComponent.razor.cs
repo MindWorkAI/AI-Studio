@@ -108,7 +108,7 @@ public partial class ChatComponent : MSGComponentBase
     private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
 
     [Inject]
-    private NewChatRegistry NewChatRegistry { get; init; } = null!;
+    private ChatsInMemory ChatsInMemory { get; init; } = null!;
 
     [Inject]
     private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
@@ -131,9 +131,8 @@ public partial class ChatComponent : MSGComponentBase
     /// <remarks>
     /// While the user saves chats by hand, the workspace sidebar shows it, see <see cref="this.SaveState"/>.
     /// While chats are stored automatically, the flag is set only for the moment until a change is
-    /// stored, which the sidebar has no reason to show. The new chat of a place shows it on its row
-    /// even while it is not open, see NewChatRegistry, but leaving it loses nothing, see
-    /// AreChangesLostWhenLeft.
+    /// stored, which the sidebar has no reason to show. A chat in memory shows it on its row even while
+    /// it is not open, see ChatsInMemory, but leaving it loses nothing, see AreChangesLostWhenLeft.
     /// </remarks>
     private bool HasUnsavedChanges
     {
@@ -143,18 +142,30 @@ public partial class ChatComponent : MSGComponentBase
             field = value;
             var isShown = value && this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY;
             this.SaveState?.SetUnsavedChanges(this.ChatThread?.ChatId ?? Guid.Empty, isShown);
-            if (this.ChatThread is { IsNewChat: true } newChat)
-                this.NewChatRegistry.SetUnsavedChanges(newChat.ChatId, isShown);
+            if (this.ChatThread is { } chat)
+                this.ChatsInMemory.SetUnsavedChanges(chat.ChatId, isShown);
         }
     }
+
+    /// <summary>
+    /// Whether the open chat stays as it is when the user leaves it: the new chat of a place, and any
+    /// chat which lives in memory, see ChatsInMemory, such as the one chat of a place which never stores.
+    /// </summary>
+    private bool IsKeptWhenLeft => this.IsNewChat || this.ChatsInMemory.Contains(this.ChatThread!.ChatId);
 
     /// <summary>
     /// Whether leaving the open chat loses changes the user did not save.
     /// </summary>
     /// <remarks>
-    /// Never for the new chat of a place, which stays where it is until the user sends it, see NewChatRegistry.
+    /// Never for a chat which stays as it is when left, see IsKeptWhenLeft.
     /// </remarks>
-    private bool AreChangesLostWhenLeft => this.HasUnsavedChanges && !this.IsNewChat;
+    private bool AreChangesLostWhenLeft => this.HasUnsavedChanges && !this.IsKeptWhenLeft;
+
+    /// <summary>
+    /// Whether the chats of the given place are never stored, so that the place has exactly one chat, see ChatsInMemory.
+    /// </summary>
+    /// <param name="workspaceId">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    private bool IsNeverStored(Guid workspaceId) => this.SettingsManager.ConfigurationData.Workspace.GetStorageBehavior(workspaceId) is WorkspaceStorageBehavior.DISABLE_WORKSPACES;
 
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
@@ -544,7 +555,7 @@ public partial class ChatComponent : MSGComponentBase
         // chat, e.g., after the sidebar was shown or hidden, and not for a chat an assistant sent here:
         //
         else if (deferredRequest is null && this.ChatThread is null && !this.ComposerState.HasUserDraft)
-            await this.OpenNewChatOfPlaceAsync(Guid.Empty);
+            await this.ReopenChatOfPlaceAsync(Guid.Empty);
 
         //
         // A text sent here, e.g., by an assistant, goes into the field for the next message:
@@ -1209,7 +1220,7 @@ public partial class ChatComponent : MSGComponentBase
 
             // The copy shares the draft, but storing or keeping the former thread would bring the former profile back:
             this.draftAutosave?.Follow(this.ChatThread);
-            this.NewChatRegistry.Follow(this.ChatThread);
+            this.ChatsInMemory.Follow(this.ChatThread);
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
     }
@@ -1616,7 +1627,8 @@ public partial class ChatComponent : MSGComponentBase
     /// <remarks>
     /// Where chats are stored automatically, the new chat is stored right away the first time, and the
     /// draft autosave stores every change afterward, see StoreDraftAsync. Anywhere else, it lives in
-    /// the NewChatRegistry, where chats are saved by hand with unsaved changes, until the user saves it.
+    /// memory, see ChatsInMemory: where chats are saved by hand, with unsaved changes until the user
+    /// saves it; where chats are never stored, for the whole session.
     /// </remarks>
     /// <param name="chat">The new chat.</param>
     /// <param name="isNameChanged">Whether its name changed, which the list has to show.</param>
@@ -1637,8 +1649,8 @@ public partial class ChatComponent : MSGComponentBase
         }
         else
         {
-            var isKeptAlready = this.NewChatRegistry.Contains(chat.ChatId);
-            this.NewChatRegistry.Keep(chat);
+            var isKeptAlready = this.ChatsInMemory.Contains(chat.ChatId);
+            this.ChatsInMemory.Keep(chat);
             this.HasUnsavedChanges = true;
             isNameChanged |= !isKeptAlready;
         }
@@ -1674,9 +1686,9 @@ public partial class ChatComponent : MSGComponentBase
             if (!isGone)
                 return;
         }
-        else if (this.NewChatRegistry.Contains(chat.ChatId))
+        else if (this.ChatsInMemory.Contains(chat.ChatId))
         {
-            this.NewChatRegistry.Forget(chat.ChatId);
+            this.ChatsInMemory.Forget(chat.ChatId);
 
             // Deleting a chat takes what its previews read along. Without a chat on the disk, that is up to us:
             await this.ForgetPreviewedTextsAsync(chat.ChatId, chat.Draft.PreviewedTexts.Select(previewedText => previewedText.ProvenanceId).ToList());
@@ -1690,43 +1702,99 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// Opens the new chat of a place again, when it has one, with everything the user put into it.
+    /// The place a new chat goes to: the given workspace, or for the chats outside of workspaces the
+    /// workspace which the chat template names, since its chats go there.
     /// </summary>
     /// <remarks>
-    /// The new chat lives in memory, see NewChatRegistry, or it is stored, marked as new, see
-    /// ChatThread.IsNewChat. For the chats outside of workspaces, a chat template which names a
-    /// workspace decides the place: its chats go there. Such a workspace may not exist yet, since it
-    /// comes with the first content of a chat; then it has no new chat either.
+    /// Such a workspace may not exist yet: it comes with the first content of a chat, see
+    /// ResolveWorkspaceOfFirstThreadAsync. Then it has no chat to open again either.
     /// </remarks>
     /// <param name="workspaceId">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
-    /// <returns>True when the place had a new chat, which is open now.</returns>
-    private async Task<bool> OpenNewChatOfPlaceAsync(Guid workspaceId)
+    /// <param name="chatTemplate">The chat template of the new chat.</param>
+    /// <returns>The workspace, Guid.Empty for the chats outside of workspaces, or null while the workspace of the template does not exist.</returns>
+    private async Task<Guid?> FindPlaceOfNewChatAsync(Guid workspaceId, ChatTemplate chatTemplate)
     {
-        var place = workspaceId;
-        if (place == Guid.Empty && this.SettingsManager.GetChatTemplateWorkspaceName(this.currentChatTemplate) is { } templateWorkspaceName)
-        {
-            place = await WorkspaceBehaviour.FindWorkspaceIdByNameAsync(templateWorkspaceName);
-            if (place == Guid.Empty)
-                return false;
-        }
+        if (workspaceId != Guid.Empty || this.SettingsManager.GetChatTemplateWorkspaceName(chatTemplate) is not { } templateWorkspaceName)
+            return workspaceId;
+
+        var templateWorkspaceId = await WorkspaceBehaviour.FindWorkspaceIdByNameAsync(templateWorkspaceName);
+        return templateWorkspaceId == Guid.Empty ? null : templateWorkspaceId;
+    }
+
+    /// <summary>
+    /// Opens the chat a place keeps again, when it has one, with everything the user put into it.
+    /// </summary>
+    /// <remarks>
+    /// That is the new chat of the place, which lives in memory, see ChatsInMemory, or is stored,
+    /// marked as new, see ChatThread.IsNewChat. A place which never stores its chats keeps its one
+    /// chat in memory, also after its first message.
+    /// </remarks>
+    /// <param name="workspaceId">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    /// <returns>True when the place had a chat to open again, which is open now.</returns>
+    private async Task<bool> ReopenChatOfPlaceAsync(Guid workspaceId)
+    {
+        if (await this.FindPlaceOfNewChatAsync(workspaceId, this.currentChatTemplate) is not { } place)
+            return false;
 
         //
         // The open chat may be that new chat itself, e.g., when the user clicks New chat in it. It
         // stays the very thread it is, which a transcript being made for it is going to arrive in:
         //
-        var newChat = this.ChatThread is { IsNewChat: true } openChat && openChat.WorkspaceId == place && WorkspaceBehaviour.IsChatExisting(new(openChat.WorkspaceId, openChat.ChatId))
+        var keptChat = this.ChatThread is { IsNewChat: true } openChat && openChat.WorkspaceId == place && WorkspaceBehaviour.IsChatExisting(new(openChat.WorkspaceId, openChat.ChatId))
             ? openChat
-            : this.NewChatRegistry.Find(place);
+            : this.ChatsInMemory.Find(place);
 
-        if (newChat is null && await WorkspaceBehaviour.FindStoredNewChatAsync(place) is { } storedNewChat)
-            newChat = await WorkspaceBehaviour.LoadChatAsync(storedNewChat);
+        if (keptChat is null && await WorkspaceBehaviour.FindStoredNewChatAsync(place) is { } storedNewChat)
+            keptChat = await WorkspaceBehaviour.LoadChatAsync(storedNewChat);
 
-        if (newChat is null)
+        if (keptChat is null)
             return false;
 
-        this.ChatThread = newChat;
-        await this.LoadedChatChanged(hasUnsavedChanges: this.NewChatRegistry.HasUnsavedChanges(newChat.ChatId));
+        this.ChatThread = keptChat;
+        await this.LoadedChatChanged(hasUnsavedChanges: this.ChatsInMemory.HasUnsavedChanges(keptChat.ChatId));
         return true;
+    }
+
+    /// <summary>
+    /// Asks the user before a new chat replaces the one chat of a place which never stores its chats.
+    /// </summary>
+    /// <remarks>
+    /// That place has exactly one chat, so a new chat there starts over, and the chat it keeps is gone
+    /// for good. Only a chat which holds something is worth the question.
+    /// </remarks>
+    /// <param name="place">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    /// <returns>True when the new chat may start.</returns>
+    private async Task<bool> MayStartOverInPlaceAsync(Guid place)
+    {
+        if (this.ChatsInMemory.Find(place) is not { } keptChat || (keptChat.Draft.IsEmpty && !keptChat.Blocks.Any(block => !block.HideFromUser)))
+            return true;
+
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Message, T("Chats here are not stored. Starting a new chat deletes the current one, together with everything in it. Do you want to start a new chat?") },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Start New Chat"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false };
+    }
+
+    /// <summary>
+    /// Lets the one chat of a place which never stores its chats go, so that a new chat starts there.
+    /// </summary>
+    /// <remarks>
+    /// An answer still being written for it stops, and the transcripts which only the chat knows are
+    /// deleted along with it, see ChatsInMemory.Discard.
+    /// </remarks>
+    /// <param name="place">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    private async Task StartOverInPlaceAsync(Guid place)
+    {
+        if (this.ChatsInMemory.Find(place) is not { } keptChat)
+            return;
+
+        await this.AIJobService.CancelChatGenerationAsync(keptChat.ChatId);
+        this.ChatsInMemory.Discard(keptChat);
+        this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForChat(keptChat.ChatId));
     }
 
     /// <summary>
@@ -2017,12 +2085,16 @@ public partial class ChatComponent : MSGComponentBase
 
         //
         // With its first message, the new chat of a place becomes a chat like any other, and the
-        // next new chat there starts empty:
+        // next new chat there starts empty. A place which never stores its chats keeps it in memory,
+        // as its one chat, until the user starts a new one there:
         //
         if (isNewChat)
         {
             this.ChatThread.IsNewChat = false;
-            this.NewChatRegistry.Forget(this.ChatThread.ChatId);
+            if (this.IsNeverStored(this.ChatThread.WorkspaceId))
+                this.ChatsInMemory.Keep(this.ChatThread);
+            else
+                this.ChatsInMemory.Forget(this.ChatThread.ChatId);
         }
 
         var time = DateTimeOffset.Now;
@@ -2152,9 +2224,10 @@ public partial class ChatComponent : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// Only while chats are stored automatically, the AI job stores the answer, so that the user finds
-    /// it when coming back. Otherwise, the answer would end up nowhere, and writing it would only cost
-    /// the user. The user was asked before, since an answer being written counts as an unsaved change
-    /// then.<br/><br/>
+    /// it when coming back. A chat which lives in memory gets the answer as well, see ChatsInMemory,
+    /// since the job writes it into the very thread which is kept there. Otherwise, the answer would
+    /// end up nowhere, and writing it would only cost the user. The user was asked before, since an
+    /// answer being written counts as an unsaved change then.<br/><br/>
     ///
     /// Called only where the user leaves a chat: opening another one, starting a new one, or leaving the
     /// chat page. Never when this component goes away, since the page creates it anew, e.g., whenever the
@@ -2164,7 +2237,7 @@ public partial class ChatComponent : MSGComponentBase
     /// <param name="workspaceId">The workspace the chat lies in, which decides how it is stored.</param>
     private async Task StopAnswerOfLeftChatAsync(Guid chatId, Guid workspaceId)
     {
-        if (chatId == Guid.Empty || this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(workspaceId))
+        if (chatId == Guid.Empty || this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(workspaceId) || this.ChatsInMemory.Contains(chatId))
             return;
 
         await this.AIJobService.CancelChatGenerationAsync(chatId);
@@ -2289,10 +2362,11 @@ public partial class ChatComponent : MSGComponentBase
         //
         // Want the user to manage the chat storage manually? In that case, we have to ask the user
         // about possible data loss. An answer still being written is lost as well, whenever chats are
-        // not stored automatically, since leaving stops it, see StopAnswerOfLeftChatAsync:
+        // not stored automatically, since leaving stops it, see StopAnswerOfLeftChatAsync. Not for a
+        // chat which stays as it is when left, see IsKeptWhenLeft:
         //
         var storageBehavior = this.ChatStorage;
-        if ((storageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.AreChangesLostWhenLeft) || (storageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY && this.IsCurrentChatStreaming))
+        if ((storageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.AreChangesLostWhenLeft) || (storageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY && this.IsCurrentChatStreaming && !this.IsKeptWhenLeft))
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
@@ -2304,6 +2378,28 @@ public partial class ChatComponent : MSGComponentBase
             if (dialogResult is null || dialogResult.Canceled)
                 return false;
         }
+
+        //
+        // A target workspace always means a new chat in that workspace, no matter what
+        // useSameWorkspace says. The workspace of the chat template fills in only where the new chat
+        // would belong to no workspace otherwise. A workspace asked for on purpose wins: the one of
+        // the workspace list, and the open one for the button that starts a new chat in it. Such a
+        // chat gets no thread here: its first content creates one in that workspace, so that the
+        // workspace is created only once there is something to keep, see ResolveWorkspaceOfFirstThreadAsync.
+        //
+        var templateOfNewChat = chatTemplate ?? this.currentChatTemplate;
+        var startsOutsideWorkspaces = !useSameWorkspace && targetWorkspaceId is null;
+        if (targetWorkspaceId is null && workspaceOfNewChat == Guid.Empty && this.SettingsManager.GetChatTemplateWorkspaceName(templateOfNewChat) is not null)
+            startsOutsideWorkspaces = true;
+
+        //
+        // A place which never stores its chats has only one chat, which the new chat replaces. The
+        // user is asked before anything changes, since they may still want to keep it:
+        //
+        var placeOfNewChat = await this.FindPlaceOfNewChatAsync(startsOutsideWorkspaces ? Guid.Empty : workspaceOfNewChat, templateOfNewChat);
+        var startsOver = placeOfNewChat.HasValue && this.IsNeverStored(placeOfNewChat.Value);
+        if (startsOver && !await this.MayStartOverInPlaceAsync(placeOfNewChat.GetValueOrDefault()))
+            return false;
 
         //
         // The chat being left keeps the message the user started in it. This comes before deleting
@@ -2357,22 +2453,13 @@ public partial class ChatComponent : MSGComponentBase
         this.RefreshCurrentProfileAndChatTemplate();
 
         //
-        // A target workspace always means a new chat in that workspace, no matter what
-        // useSameWorkspace says. The workspace of the chat template fills in only where the new chat
-        // would belong to no workspace otherwise. A workspace asked for on purpose wins: the one of
-        // the workspace list, and the open one for the button that starts a new chat in it. Such a
-        // chat gets no thread here: its first content creates one in that workspace, so that the
-        // workspace is created only once there is something to keep, see ResolveWorkspaceOfFirstThreadAsync.
+        // A place which never stores its chats starts over, as the user agreed above. Any other
+        // place has its new chat already, perhaps: it opens again as the user left it, and only a
+        // chat template the user picked changes it:
         //
-        var startsOutsideWorkspaces = !useSameWorkspace && targetWorkspaceId is null;
-        if (targetWorkspaceId is null && workspaceOfNewChat == Guid.Empty && this.SettingsManager.GetChatTemplateWorkspaceName(this.currentChatTemplate) is not null)
-            startsOutsideWorkspaces = true;
-
-        //
-        // The place has its new chat already. It opens again as the user left it, and only a chat
-        // template the user picked changes it:
-        //
-        if (await this.OpenNewChatOfPlaceAsync(startsOutsideWorkspaces ? Guid.Empty : workspaceOfNewChat))
+        if (startsOver)
+            await this.StartOverInPlaceAsync(placeOfNewChat.GetValueOrDefault());
+        else if (await this.ReopenChatOfPlaceAsync(startsOutsideWorkspaces ? Guid.Empty : workspaceOfNewChat))
         {
             if (chatTemplate is not null)
                 await this.ApplyPickedChatTemplateAsync(chatTemplate);
@@ -2603,7 +2690,7 @@ public partial class ChatComponent : MSGComponentBase
         await this.SelectProviderWhenLoadingChat();
 
         // The new chat of the chats outside of workspaces opens, e.g., after the open chat was deleted, as the user left it:
-        if (this.ChatThread is null && await this.OpenNewChatOfPlaceAsync(Guid.Empty))
+        if (this.ChatThread is null && await this.ReopenChatOfPlaceAsync(Guid.Empty))
             return;
 
         this.isPositionAfterLoadPending = true;
@@ -3020,16 +3107,19 @@ public partial class ChatComponent : MSGComponentBase
                 if(this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                     return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult) (object) false));
 
+                // A chat which stays as it is when left loses nothing, its answer included, see ChatsInMemory:
+                if (this.IsKeptWhenLeft)
+                    return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult) (object) false));
+
                 // Nothing stores an answer being written now, and leaving stops it, see StopAnswerOfLeftChatAsync:
                 if (this.IsCurrentChatStreaming)
                     return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult) (object) true));
 
                 //
                 // A message the user started is part of its chat: changing it counts as a change of the
-                // chat, and a message which came back from the disk with the chat is saved already. The
-                // new chat of a place loses nothing when left, see NewChatRegistry:
+                // chat, and a message which came back from the disk with the chat is saved already:
                 //
-                return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult)(object)this.AreChangesLostWhenLeft));
+                return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult)(object)this.HasUnsavedChanges));
         }
 
         return Task.FromResult(MessageBusAnswer<TResult>.NONE);
@@ -3047,8 +3137,8 @@ public partial class ChatComponent : MSGComponentBase
             await this.tokenTracker.DisposeAsync();
 
         //
-        // Stores what is still pending, before the chat is left. A new chat which lives in memory needs
-        // nothing here: the NewChatRegistry outlives this component:
+        // Stores what is still pending, before the chat is left. A chat which lives in memory needs
+        // nothing here, since ChatsInMemory outlives this component:
         //
         if (this.draftAutosave is not null)
             await this.draftAutosave.DisposeAsync();

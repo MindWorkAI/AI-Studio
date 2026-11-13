@@ -1583,7 +1583,7 @@ public static partial class WorkspaceBehaviour
     /// Asks the user whether to delete the given chat.
     /// </summary>
     /// <remarks>
-    /// The one place which words this question, also for a new chat which lives in memory only, see NewChatRegistry.
+    /// The one place which words this question, also for a new chat which lives in memory only, see ChatsInMemory.
     /// </remarks>
     /// <param name="dialogService">Used to ask.</param>
     /// <param name="chat">The chat to delete.</param>
