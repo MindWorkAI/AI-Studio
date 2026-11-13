@@ -56,8 +56,9 @@ public static class ModelComparisonProviderAdapter
         string prompt,
         [EnumeratorCancellation] CancellationToken token)
     {
+        // Fails for a provider the organization prohibited as well, see SettingsManager.IsProviderUsable:
         if (!settingsManager.IsProviderConfident(providerSettings, component))
-            throw new InvalidOperationException($"The provider '{providerSettings.InstanceName}' does not meet the confidence requirements of the model comparison.");
+            throw new InvalidOperationException($"The provider '{providerSettings.InstanceName}' may not be used by the model comparison: the organization prohibited it, or it does not meet the confidence requirements.");
 
         var chatThread = new ChatThread
         {

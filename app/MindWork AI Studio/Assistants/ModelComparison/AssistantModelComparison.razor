@@ -61,13 +61,13 @@
                 <MudText Typo="Typo.subtitle2" Class="mb-1">
                     @T("First model")
                 </MudText>
-                <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+                <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingComparedProvider"/>
             </MudItem>
             <MudItem xs="12" sm="6">
                 <MudText Typo="Typo.subtitle2" Class="mb-1">
                     @T("Second model")
                 </MudText>
-                <ProviderSelection @bind-ProviderSettings="@this.secondProvider" ValidateProvider="@this.ValidatingSecondProvider"/>
+                <ProviderSelection @bind-ProviderSettings="@this.secondProvider" ValidateProvider="@this.ValidatingComparedProvider"/>
             </MudItem>
         </MudGrid>
 

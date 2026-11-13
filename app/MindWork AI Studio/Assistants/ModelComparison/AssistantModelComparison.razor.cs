@@ -889,20 +889,24 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     }
 
     /// <summary>
-    /// Checks the second model. The selection only offers providers which meet the confidence
-    /// requirements, but it keeps what was chosen earlier: a provider selected before the
-    /// requirements were raised must not be sent a request all the same.
+    /// Checks a model of the comparison: either compared model or the judge. The selection only offers
+    /// providers which may be used, but it keeps what was chosen earlier, and a preset brings back what
+    /// was chosen when it was saved: a provider which the organization prohibited since, or one selected
+    /// before the confidence requirements were raised, must not be sent a request all the same.
     /// </summary>
     /// <remarks>
-    /// <see cref="ModelComparisonProviderAdapter"/> refuses such a provider as well, but only once
-    /// the run has started, and then the model shows up as one which did not answer. Here the
-    /// user is told before that.
+    /// ModelComparisonProviderAdapter refuses such a provider as well, but only once the run has
+    /// started, and then the model shows up as one which did not answer. Here the user is told before
+    /// that.
     /// </remarks>
-    private string? ValidatingSecondProvider(AIStudio.Settings.Provider provider)
+    private string? ValidatingComparedProvider(AIStudio.Settings.Provider provider)
     {
         var selectionIssue = this.ValidatingProvider(provider);
         if (selectionIssue is not null)
             return selectionIssue;
+
+        if (this.SettingsManager.IsProviderProhibited(provider.UsedLLMProvider))
+            return TA("The use of this provider has been prohibited by your organization. Please select a different provider.");
 
         if (!this.SettingsManager.IsProviderConfident(provider, this.Component))
             return TA("This provider does not meet the confidence requirements of this assistant. Please choose another one.");
@@ -923,16 +927,6 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// </remarks>
     private string? ValidatingJudgeProvider(AIStudio.Settings.Provider provider)
     {
-        if (!this.hasAttemptedCompare)
-            return null;
-
-        var selectionIssue = this.ValidatingProvider(provider);
-        if (selectionIssue is not null)
-            return selectionIssue;
-
-        if (!this.SettingsManager.IsProviderConfident(provider, this.Component))
-            return TA("This provider does not meet the confidence requirements of this assistant. Please choose another one.");
-
-        return null;
+        return this.hasAttemptedCompare ? this.ValidatingComparedProvider(provider) : null;
     }
 }
