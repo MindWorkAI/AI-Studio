@@ -26,9 +26,9 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     private const Tools.Components COMPONENT = Tools.Components.MODEL_COMPARISON_ASSISTANT;
 
     /// <summary>
-    /// How long the name of a series may be.
+    /// How long the name of a series may be, see ModelComparisonNames.
     /// </summary>
-    private const int MAX_NAME_LENGTH = 60;
+    private const int MAX_NAME_LENGTH = ModelComparisonNames.MAX_SERIES_NAME_LENGTH;
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -166,19 +166,10 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     };
 
     /// <summary>
-    /// Checks the name of the series: it is needed, and no other series may have it.
+    /// Checks the name of the series, see ModelComparisonNames.SeriesNameIssue.
     /// </summary>
     /// <returns>The issue, or null when the name is fine.</returns>
-    private string? ValidatingSeriesName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            return TA("Please give the series a name, so that you find it again.");
-
-        if (ModelComparisonNames.IsTaken(name, this.takenSeriesNames))
-            return TA("A series with this name already exists. Please choose a different name.");
-
-        return null;
-    }
+    private string? ValidatingSeriesName(string name) => ModelComparisonNames.SeriesNameIssue(name, this.takenSeriesNames);
 
     private void FirstProviderChanged(AIStudio.Settings.Provider provider) => this.firstProvider = provider;
 

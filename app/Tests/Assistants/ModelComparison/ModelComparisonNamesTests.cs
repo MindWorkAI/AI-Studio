@@ -48,6 +48,36 @@ public sealed class ModelComparisonNamesTests
         Assert.That(ModelComparisonNames.FreeNameFrom("Weekly reports (2)", takenNames, MAX_LENGTH), Is.EqualTo("Weekly reports (3)"), "A copy of a copy must not become \"Weekly reports (2) (2)\".");
     }
 
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void ASeriesNeedsAName(string? name)
+    {
+        Assert.That(ModelComparisonNames.SeriesNameIssue(name, []), Is.Not.Null);
+    }
+
+    [Test]
+    public void ASeriesNameMayNotBeTooLong()
+    {
+        var longestName = new string('a', ModelComparisonNames.MAX_SERIES_NAME_LENGTH);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ModelComparisonNames.SeriesNameIssue(longestName, []), Is.Null);
+            Assert.That(ModelComparisonNames.SeriesNameIssue($"  {longestName}  ", []), Is.Null, "Spaces around the name do not count, since they are not stored.");
+            Assert.That(ModelComparisonNames.SeriesNameIssue(longestName + "a", []), Is.Not.Null);
+        }
+    }
+
+    [Test]
+    public void ASeriesNameMayNotBeTakenByAnotherSeries()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ModelComparisonNames.SeriesNameIssue("weekly REPORTS", ["Weekly reports"]), Is.Not.Null);
+            Assert.That(ModelComparisonNames.SeriesNameIssue("Weekly reports", ["Daily mails"]), Is.Null);
+        }
+    }
+
     [Test]
     public void ALongNameIsShortenedForItsNumber()
     {

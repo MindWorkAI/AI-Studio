@@ -11,6 +11,34 @@ namespace AIStudio.Assistants.ModelComparison;
 /// </remarks>
 public static partial class ModelComparisonNames
 {
+    private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(ModelComparisonNames).Namespace, nameof(ModelComparisonNames));
+
+    /// <summary>
+    /// How long the name of a comparison series may be, so that it fits the list of the series.
+    /// </summary>
+    public const int MAX_SERIES_NAME_LENGTH = 60;
+
+    /// <summary>
+    /// Checks the name of a comparison series, for a new series as well as for renaming one: it is needed, it fits,
+    /// and no other series has it.
+    /// </summary>
+    /// <param name="name">The name.</param>
+    /// <param name="takenNames">The names of the other series, without the one being renamed.</param>
+    /// <returns>Why the name does not work, or null when it does.</returns>
+    public static string? SeriesNameIssue(string? name, IEnumerable<string> takenNames)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return TA("Please give the series a name, so that you find it again.");
+
+        if (name.Trim().Length > MAX_SERIES_NAME_LENGTH)
+            return string.Format(CultureInfo.InvariantCulture, TA("The name of your series may have at most {0} characters."), MAX_SERIES_NAME_LENGTH);
+
+        if (IsTaken(name, takenNames))
+            return TA("A series with this name already exists. Please choose a different name.");
+
+        return null;
+    }
+
     /// <summary>
     /// Tells whether a name is taken already.
     /// </summary>

@@ -105,6 +105,49 @@ public partial class AssistantModelComparisonTasks : MSGComponentBase
     }
 
     /// <summary>
+    /// Asks for a new name of a series and stores it. The series is the one the list or the open view holds, so that
+    /// both show the new name right away.
+    /// </summary>
+    private async Task RenameSeriesAsync(ModelComparisonSeries series)
+    {
+        // The names of the other series, as stored now, so that the new name stays unique:
+        var takenNames = (await this.ModelComparisonStore.ListSeriesAsync()).Where(entry => entry.Id != series.Id).Select(entry => entry.Name).ToList();
+        var parameters = new DialogParameters<SingleInputDialog>
+        {
+            { dialog => dialog.Message, TA("Enter a new name for this comparison series.") },
+            { dialog => dialog.InputHeaderText, T("Name of the series") },
+            { dialog => dialog.UserInput, series.Name },
+            { dialog => dialog.ConfirmText, T("Rename") },
+            { dialog => dialog.ConfirmColor, Color.Primary },
+
+            // The name rule rejects an empty name itself, in the same words as the dialog of a new series:
+            { dialog => dialog.AllowEmptyInput, true },
+            { dialog => dialog.AdditionalValidation, candidate => ModelComparisonNames.SeriesNameIssue(candidate, takenNames) },
+        };
+
+        var reference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename series"), parameters, DialogOptions.FULLSCREEN);
+        var result = await reference.Result;
+        if (result is null || result.Canceled || result.Data is not string name || ModelComparisonNames.SeriesNameIssue(name, takenNames) is not null)
+            return;
+
+        var previousName = series.Name;
+        series.Name = name.Trim();
+        try
+        {
+            await this.ModelComparisonStore.SaveSeriesAsync(series);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            series.Name = previousName;
+            this.Logger.LogError(exception, "Could not rename a comparison series of the Model Comparison assistant.");
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not rename the comparison series. Please try again.")));
+        }
+
+        if (this.openSeries is null)
+            await this.ReloadSeriesAsync();
+    }
+
+    /// <summary>
     /// Deletes a series with its chats after asking.
     /// </summary>
     private async Task DeleteSeriesAsync(ModelComparisonSeries series)

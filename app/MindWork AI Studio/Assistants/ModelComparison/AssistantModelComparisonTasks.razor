@@ -25,6 +25,9 @@
                         <MudIconButton Icon="@AppIcons.BACK_TO_LIST" OnClick="@this.CloseSeries"/>
                     </MudTooltip>
                     <MudText Typo="Typo.h5">@series.Name</MudText>
+                    <MudTooltip Text="@T("Rename series")">
+                        <MudIconButton Icon="@AppIcons.RENAME" OnClick="@(async () => await this.RenameSeriesAsync(series))"/>
+                    </MudTooltip>
                     <MudSpacer/>
                     <MudTooltip Text="@T("Start a new series with this setup")">
                         <MudIconButton Icon="@AppIcons.DUPLICATE" OnClick="@(async () => await this.CreateSeriesAsync(series))"/>
@@ -70,6 +73,9 @@
                                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.COMPARISON_TASKS" OnClick="@(() => this.OpenSeries(entry))">
                                     @T("Open")
                                 </MudButton>
+                                <MudTooltip Text="@T("Rename series")">
+                                    <MudIconButton Icon="@AppIcons.RENAME" OnClick="@(async () => await this.RenameSeriesAsync(entry))"/>
+                                </MudTooltip>
                                 <MudTooltip Text="@T("Start a new series with this setup")">
                                     <MudIconButton Icon="@AppIcons.DUPLICATE" OnClick="@(async () => await this.CreateSeriesAsync(entry))"/>
                                 </MudTooltip>
