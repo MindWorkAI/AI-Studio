@@ -239,6 +239,7 @@ internal sealed class Program
         builder.Services.AddSingleton<BflResearchRunner>();
         builder.Services.AddSingleton<BflMaterialService>();
         builder.Services.AddSingleton<ModelComparisonStore>();
+        builder.Services.AddSingleton<ModelComparisonSeriesJudge>();
         builder.Services.AddSingleton<EmbeddedChatService>();
         builder.Services.AddSingleton<PluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();

@@ -24,8 +24,8 @@ namespace AIStudio.Assistants.ModelComparison;
 /// </remarks>
 /// <param name="logger">Where to say why a model did not answer. The users see no reason: the text of an error may name a provider.</param>
 /// <param name="filterJudgeInputs">
-/// Filters the two answers before the judge reads them, and gives them back in the same order. In the app, this is
-/// the prompt injection filter, see ModelComparisonProviderAdapter.CreateJudgeInputFilter.
+/// Filters the two answers, or the two chats, before the judge reads them, and gives them back in the same order. In
+/// the app, this is the prompt injection filter, see ModelComparisonProviderAdapter.CreateJudgeInputFilter.
 /// </param>
 /// <param name="timeProvider">The clock which measures the times. The system clock, unless a test brings its own.</param>
 public sealed class ModelComparisonRunner(ILogger logger, Func<IReadOnlyList<string>, Task<IReadOnlyList<string>>> filterJudgeInputs, TimeProvider? timeProvider = null)
@@ -94,21 +94,56 @@ public sealed class ModelComparisonRunner(ILogger logger, Func<IReadOnlyList<str
         // pass the prompt injection filter first, the same as an answer which is sent on to another assistant. A
         // judge which cannot get filtered answers is not asked at all:
         //
-        IReadOnlyList<string> filteredAnswers;
-        try
-        {
-            filteredAnswers = await filterJudgeInputs([answerA, answerB]).ConfigureAwait(false);
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "The answers could not be filtered for the judge '{Label}' of the model comparison.", judge.Label);
+        if (await this.FilterForJudgeAsync(judge, [answerA, answerB]).ConfigureAwait(false) is not { } filteredAnswers)
             return ModelComparisonJudgeVerdict.Parse(judge.Label, false, string.Empty);
-        }
 
         var judgeRequest = new ModelComparisonJudgeRequest(request, judgeInstructions, filteredAnswers[0], filteredAnswers[1], request.LanguageName);
         var judgeAnswer = await this.AskAsync(judge, judgeRequest.ToPrompt(Guid.NewGuid().ToString("N")), token).ConfigureAwait(false);
 
         return ModelComparisonJudgeVerdict.Parse(judgeAnswer.Label, judgeAnswer.Completed, judgeAnswer.Text);
+    }
+
+    /// <summary>
+    /// Asks the judge about the two chats of a task of a comparison series, see ModelComparisonChatJudgeRequest.
+    /// </summary>
+    /// <remarks>
+    /// The chats hold answers of models, so they pass the same filter as the answers of a run before the judge reads
+    /// them. Nothing here throws: a judge which fails, or which is canceled, gives a verdict which is not completed.
+    /// </remarks>
+    /// <param name="judge">The judge.</param>
+    /// <param name="transcriptOfChatOne">The first chat, see ChatTranscript.</param>
+    /// <param name="transcriptOfChatTwo">The second chat.</param>
+    /// <param name="languageName">The language of the reasoning, by its English name, or an empty text to leave it to the judge.</param>
+    /// <param name="token">Cancels the judge.</param>
+    /// <returns>The verdict: COLUMN_A names the first chat, COLUMN_B the second one.</returns>
+    public async Task<ModelComparisonJudgeVerdict> JudgeChatsAsync(ModelComparisonParticipant judge, string transcriptOfChatOne, string transcriptOfChatTwo, string languageName, CancellationToken token)
+    {
+        if (await this.FilterForJudgeAsync(judge, [transcriptOfChatOne, transcriptOfChatTwo]).ConfigureAwait(false) is not { } filteredChats)
+            return ModelComparisonJudgeVerdict.Parse(judge.Label, false, string.Empty, ModelComparisonJudgeFormat.CHATS);
+
+        var judgeRequest = new ModelComparisonChatJudgeRequest(filteredChats[0], filteredChats[1], languageName);
+        var judgeAnswer = await this.AskAsync(judge, judgeRequest.ToPrompt(Guid.NewGuid().ToString("N")), token).ConfigureAwait(false);
+
+        return ModelComparisonJudgeVerdict.Parse(judgeAnswer.Label, judgeAnswer.Completed, judgeAnswer.Text, ModelComparisonJudgeFormat.CHATS);
+    }
+
+    /// <summary>
+    /// Passes what the judge reads through the filter.
+    /// </summary>
+    /// <param name="judge">The judge, for the log.</param>
+    /// <param name="inputs">The two texts the judge compares.</param>
+    /// <returns>The filtered texts in the same order, or null when they could not be filtered: then the judge is not asked at all.</returns>
+    private async Task<IReadOnlyList<string>?> FilterForJudgeAsync(ModelComparisonParticipant judge, IReadOnlyList<string> inputs)
+    {
+        try
+        {
+            return await filterJudgeInputs(inputs).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "The texts could not be filtered for the judge '{Label}' of the model comparison.", judge.Label);
+            return null;
+        }
     }
 
     /// <summary>

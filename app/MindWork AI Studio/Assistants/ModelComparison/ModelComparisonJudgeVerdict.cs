@@ -56,7 +56,17 @@ public sealed record ModelComparisonJudgeVerdict
     /// <param name="label">The name of the judge model.</param>
     /// <param name="judgeAnswered">Whether the judge model answered at all, before its text is even looked at.</param>
     /// <param name="judgeText">What the judge model answered.</param>
-    public static ModelComparisonJudgeVerdict Parse(string label, bool judgeAnswered, string judgeText)
+    public static ModelComparisonJudgeVerdict Parse(string label, bool judgeAnswered, string judgeText) => Parse(label, judgeAnswered, judgeText, ModelComparisonJudgeFormat.ANSWERS);
+
+    /// <summary>
+    /// Reads the judge's answer about the two things a format names, e.g., two chats. Never throws, see the other
+    /// overload.
+    /// </summary>
+    /// <param name="label">The name of the judge model.</param>
+    /// <param name="judgeAnswered">Whether the judge model answered at all, before its text is even looked at.</param>
+    /// <param name="judgeText">What the judge model answered.</param>
+    /// <param name="format">How the judge was asked to name the two, see ModelComparisonJudgeFormat.</param>
+    public static ModelComparisonJudgeVerdict Parse(string label, bool judgeAnswered, string judgeText, ModelComparisonJudgeFormat format)
     {
         var notCompleted = new ModelComparisonJudgeVerdict { Label = label, Completed = false };
         if (!judgeAnswered)
@@ -69,7 +79,7 @@ public sealed record ModelComparisonJudgeVerdict
         try
         {
             var parsed = JsonSerializer.Deserialize<ModelComparisonJudgeAnswer>(json, JSON_OPTIONS);
-            if (parsed is null || ParsePreference(parsed.Preferred) is not { } preference)
+            if (parsed is null || format.VoteOf(parsed.Preferred) is not { } preference)
                 return notCompleted;
 
             return new ModelComparisonJudgeVerdict
@@ -85,17 +95,4 @@ public sealed record ModelComparisonJudgeVerdict
             return notCompleted;
         }
     }
-
-    /// <summary>
-    /// Reads the column the judge named. "A" and "B" rather than the enum's own member names, since
-    /// those are what the judge was asked to answer with.
-    /// </summary>
-    private static ModelComparisonVote? ParsePreference(string? preferred) => preferred?.Trim().ToUpperInvariant() switch
-    {
-        "A" => ModelComparisonVote.COLUMN_A,
-        "B" => ModelComparisonVote.COLUMN_B,
-        "TIE" => ModelComparisonVote.TIE,
-
-        _ => null,
-    };
 }

@@ -14,6 +14,16 @@ public static class ModelComparisonFormat
     public static CultureInfo Culture => Tools.PluginSystem.I18N.I.Culture;
 
     /// <summary>
+    /// Gets the English name of the active language, without a region ("German", not "German (Germany)"), for an
+    /// instruction which the models and the judges understand regardless of their own default language. The culture
+    /// carries a region, so its neutral parent names the language alone, except for the invariant culture, which has
+    /// no parent to ask.
+    /// </summary>
+    public static string LanguageName => Culture.IsNeutralCulture || Culture.Equals(CultureInfo.InvariantCulture)
+        ? Culture.EnglishName
+        : Culture.Parent.EnglishName;
+
+    /// <summary>
     /// Formats seconds with one decimal place, e.g., "2.5 s".
     /// </summary>
     /// <param name="seconds">The seconds.</param>

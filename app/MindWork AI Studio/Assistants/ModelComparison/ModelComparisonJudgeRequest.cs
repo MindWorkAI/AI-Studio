@@ -47,13 +47,6 @@ public sealed record ModelComparisonJudgeRequest
     public string LanguageName { get; }
 
     /// <summary>
-    /// Tells the judge which language to answer in, or nothing when no language was given.
-    /// </summary>
-    private string LanguageInstruction => this.LanguageName.Length == 0
-        ? string.Empty
-        : $" Write the reasoning in {this.LanguageName}, regardless of the language of the request or the answers.";
-
-    /// <summary>
     /// What the judge is told to look for: the generic criterion alone, or that criterion refined by
     /// what the user wrote, when they wrote anything.
     /// </summary>
@@ -88,15 +81,9 @@ public sealed record ModelComparisonJudgeRequest
                        # Answer B
                        {{this.AnswerB}}
 
-                       Decide which answer is better, or whether they are equally good. Respond with exactly one JSON object and nothing else, in this shape:
-
-                       {"preferred": "A", "reasoning": "A short explanation, a few sentences at most."}
-
-                       The value of "preferred" must be exactly one of "A", "B", or "TIE". In the reasoning, refer to each answer only by its letter, A or B, never by a model name -- translated into whatever language you write the reasoning in, not forced into English.{{this.LanguageInstruction}}
+                       Decide which answer is better, or whether they are equally good. {{ModelComparisonJudgeFormat.ANSWERS.AnswerInstructions(this.LanguageName)}}
                        """;
 
-        return cacheBuster.Length == 0
-            ? prompt
-            : $"{prompt}\n\n(Request ID: {cacheBuster}. This has no bearing on your verdict; it is only here so repeated requests are not answered from a cache.)";
+        return ModelComparisonJudgeFormat.WithCacheBuster(prompt, cacheBuster);
     }
 }

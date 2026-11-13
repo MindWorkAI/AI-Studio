@@ -139,7 +139,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// them, are asked to answer in the app's active language, regardless of what language the
     /// question itself is written in.
     /// </summary>
-    private ModelComparisonRequest CurrentRequest => new(this.inputContext, this.inputQuestion, ActiveLanguageName);
+    private ModelComparisonRequest CurrentRequest => new(this.inputContext, this.inputQuestion, ModelComparisonFormat.LanguageName);
 
     protected override bool MightPreselectValues() => false;
 
@@ -651,16 +651,6 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// The culture of the active language, see ModelComparisonFormat.Culture.
     /// </summary>
     private static System.Globalization.CultureInfo DisplayCulture => ModelComparisonFormat.Culture;
-
-    /// <summary>
-    /// The active language's own English name, without a region ("German", not "German (Germany)"),
-    /// for a prompt instruction the models and the judge understand regardless of their own default
-    /// language. DisplayCulture carries a region, so its neutral parent is what names
-    /// the language alone -- except for the invariant culture, which has no parent to ask.
-    /// </summary>
-    private static string ActiveLanguageName => DisplayCulture.IsNeutralCulture || DisplayCulture.Equals(System.Globalization.CultureInfo.InvariantCulture)
-        ? DisplayCulture.EnglishName
-        : DisplayCulture.Parent.EnglishName;
 
     /// <summary>
     /// Only the question is required. A comparison without a context is a comparison of how two

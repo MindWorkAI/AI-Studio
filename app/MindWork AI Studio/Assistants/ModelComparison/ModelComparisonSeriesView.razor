@@ -58,6 +58,11 @@
 else
 {
     <MudPaper Outlined="true" Class="pa-4 mb-4 mr-3">
+        @if (this.Series.Judge is not null && this.LastDecidedTask is { } decidedTask)
+        {
+            <ModelComparisonSeriesVerdict SeriesTask="@decidedTask" TaskNumber="@(this.Series.Tasks.IndexOf(decidedTask) + 1)" IsJudging="@this.isJudging" AskJudge="@(() => this.AskJudgeAsync(decidedTask))"/>
+        }
+
         <MudText Typo="Typo.body1" Class="mb-3">
             @this.NextTaskText
         </MudText>

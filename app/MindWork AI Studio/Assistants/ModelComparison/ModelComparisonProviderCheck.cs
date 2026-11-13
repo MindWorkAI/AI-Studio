@@ -30,4 +30,20 @@ public static class ModelComparisonProviderCheck
 
         return null;
     }
+
+    /// <summary>
+    /// Gets the provider of a model which a comparison series keeps, as long as it still uses the same model as when
+    /// the series began.
+    /// </summary>
+    /// <param name="settingsManager">The settings.</param>
+    /// <param name="providerId">The ID of the provider.</param>
+    /// <param name="identity">The model as it was when the series began.</param>
+    /// <returns>The provider, or NONE when it was deleted or uses another model now.</returns>
+    public static AIStudio.Settings.Provider ProviderAsItWas(SettingsManager settingsManager, string providerId, ModelComparisonModelIdentity identity)
+    {
+        var provider = settingsManager.GetProviderById(providerId);
+        return provider.UsedLLMProvider is not LLMProviders.NONE && ModelComparisonModelIdentity.Of(provider).IsSameModelAs(identity)
+            ? provider
+            : AIStudio.Settings.Provider.NONE;
+    }
 }

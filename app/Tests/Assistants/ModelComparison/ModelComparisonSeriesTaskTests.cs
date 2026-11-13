@@ -110,6 +110,46 @@ public sealed class ModelComparisonSeriesTaskTests
         }
     }
 
+    [TestCase(true, ModelComparisonVote.COLUMN_A, ModelComparisonModelChoice.FIRST, 1)]
+    [TestCase(true, ModelComparisonVote.COLUMN_B, ModelComparisonModelChoice.SECOND, 2)]
+    [TestCase(false, ModelComparisonVote.COLUMN_A, ModelComparisonModelChoice.SECOND, 1)]
+    [TestCase(false, ModelComparisonVote.COLUMN_B, ModelComparisonModelChoice.FIRST, 2)]
+    public void TheVerdictOfTheJudgeNamesAModelOfTheSeriesAndItsChatAgain(bool firstModelIsChatOne, ModelComparisonVote judgeVote, ModelComparisonModelChoice expectedChoice, int expectedChatNumber)
+    {
+        var task = DecidingTask(firstModelIsChatOne);
+        task.Decide(ModelComparisonVote.TIE, DECIDED, isBlind: true);
+
+        task.TakeVerdict(new ModelComparisonJudgeVerdict { Label = "judge", Completed = true, Preferred = judgeVote, Reasoning = "Chat 1 was right." });
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(task.JudgeStatus, Is.EqualTo(ModelComparisonSeriesJudgeStatus.VERDICT));
+            Assert.That(task.JudgeChoice, Is.EqualTo(expectedChoice));
+            Assert.That(task.ChatNumberOf(expectedChoice), Is.EqualTo(expectedChatNumber));
+            Assert.That(task.JudgeReasoning, Is.EqualTo("Chat 1 was right."));
+        }
+    }
+
+    [Test]
+    public void AJudgeWithoutAUsableVerdictLeavesNoChoice()
+    {
+        var task = DecidingTask(firstModelIsChatOne: true);
+        task.Decide(ModelComparisonVote.COLUMN_A, DECIDED, isBlind: true);
+        task.TakeVerdict(new ModelComparisonJudgeVerdict { Label = "judge", Completed = true, Preferred = ModelComparisonVote.COLUMN_B, Reasoning = "first try" });
+
+        task.TakeVerdict(new ModelComparisonJudgeVerdict { Label = "judge", Completed = false });
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(task.JudgeStatus, Is.EqualTo(ModelComparisonSeriesJudgeStatus.NO_VERDICT));
+            Assert.That(task.JudgeChoice, Is.Null);
+            Assert.That(task.JudgeReasoning, Is.Empty);
+        }
+
+        task.SkipJudge(ModelComparisonSeriesJudgeStatus.TOO_LONG);
+        Assert.That(task.JudgeStatus, Is.EqualTo(ModelComparisonSeriesJudgeStatus.TOO_LONG));
+    }
+
     private static ModelComparisonSeriesTask DecidingTask(bool firstModelIsChatOne)
     {
         var task = ModelComparisonSeriesTask.Begin(BEGUN, firstModelIsChatOne);

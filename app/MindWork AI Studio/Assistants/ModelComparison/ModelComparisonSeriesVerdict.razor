@@ -1,0 +1,50 @@
+@inherits MSGComponentBase
+
+<MudPaper Outlined="true" Class="pa-3 mb-3">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+        <MudIcon Icon="@AppIcons.JUDGE" Size="Size.Small"/>
+        <MudText Typo="Typo.subtitle1">
+            @string.Format(ModelComparisonFormat.Culture, T("Judge on task {0}"), this.TaskNumber)
+        </MudText>
+    </MudStack>
+
+    @switch (this.SeriesTask.JudgeStatus)
+    {
+        case ModelComparisonSeriesJudgeStatus.VERDICT:
+            <MudText Typo="Typo.body1" Class="mb-1">
+                @this.VerdictText
+            </MudText>
+            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
+                @this.SeriesTask.JudgeReasoning
+            </MudText>
+            break;
+
+        case ModelComparisonSeriesJudgeStatus.TOO_LONG:
+            <MudText Typo="Typo.body2">
+                @T("Both chats together are too long for the judge, so it did not judge this task.")
+            </MudText>
+            break;
+
+        case ModelComparisonSeriesJudgeStatus.UNAVAILABLE:
+            <MudText Typo="Typo.body2">
+                @T("The judge is no longer available as it was when the series began, so it did not judge this task.")
+            </MudText>
+            break;
+
+        case ModelComparisonSeriesJudgeStatus.NOT_ASKED or ModelComparisonSeriesJudgeStatus.NO_VERDICT when this.IsJudging:
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2"/>
+            <MudText Typo="Typo.body2">
+                @T("The judge reads both chats. This can take a while.")
+            </MudText>
+            break;
+
+        default:
+            <MudText Typo="Typo.body2" Class="mb-2">
+                @(this.SeriesTask.JudgeStatus is ModelComparisonSeriesJudgeStatus.NO_VERDICT ? T("The judge did not give a usable verdict.") : T("The judge has not judged this task yet."))
+            </MudText>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@AppIcons.JUDGE" OnClick="@(() => this.AskJudge.InvokeAsync())">
+                @T("Ask the judge")
+            </MudButton>
+            break;
+    }
+</MudPaper>

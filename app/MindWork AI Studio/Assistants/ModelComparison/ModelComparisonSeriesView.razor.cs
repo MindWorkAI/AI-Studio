@@ -51,6 +51,9 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     private ToolRegistry ToolRegistry { get; init; } = null!;
 
     [Inject]
+    private ModelComparisonSeriesJudge SeriesJudge { get; init; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
@@ -109,6 +112,17 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
 
     private bool isSaving;
 
+    /// <summary>
+    /// Stops the judge when the user leaves the series: the series might be opened again meanwhile, and two copies of
+    /// it must not overwrite each other. The user can ask the judge again later.
+    /// </summary>
+    private readonly CancellationTokenSource judgeCancellation = new();
+
+    /// <summary>
+    /// Whether the judge reads the chats of a task right now.
+    /// </summary>
+    private bool isJudging;
+
     #region Overrides of MSGComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -132,6 +146,8 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     protected override void DisposeResources()
     {
         this.ChatService.ConversationChanged -= this.OnConversationChangedAsync;
+        this.judgeCancellation.Cancel();
+        this.judgeCancellation.Dispose();
         base.DisposeResources();
     }
 
@@ -142,8 +158,8 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     /// </summary>
     private void CheckModels()
     {
-        this.firstProvider = this.ProviderAsItWas(this.Series.FirstProviderId, this.Series.First);
-        this.secondProvider = this.ProviderAsItWas(this.Series.SecondProviderId, this.Series.Second);
+        this.firstProvider = ModelComparisonProviderCheck.ProviderAsItWas(this.SettingsManager, this.Series.FirstProviderId, this.Series.First);
+        this.secondProvider = ModelComparisonProviderCheck.ProviderAsItWas(this.SettingsManager, this.Series.SecondProviderId, this.Series.Second);
 
         if (this.firstProvider.UsedLLMProvider is LLMProviders.NONE || this.secondProvider.UsedLLMProvider is LLMProviders.NONE)
             this.seriesIssue = TA("One of the two models is no longer available as it was when the series began: its provider was deleted, or it uses another model now. You cannot work on another task in this series.");
@@ -151,20 +167,6 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
             this.seriesIssue = ModelComparisonProviderCheck.IssueOf(this.SettingsManager, this.firstProvider) ?? ModelComparisonProviderCheck.IssueOf(this.SettingsManager, this.secondProvider);
 
         this.allowedFileTypes = this.firstProvider.SupportsImageInput() && this.secondProvider.SupportsImageInput() ? null : FILES_WITHOUT_IMAGES;
-    }
-
-    /// <summary>
-    /// Gets the provider of a model of the series, as long as it still uses the same model as when the series began.
-    /// </summary>
-    /// <param name="providerId">The ID of the provider.</param>
-    /// <param name="identity">The model as it was when the series began.</param>
-    /// <returns>The provider, or NONE when it was deleted or uses another model now.</returns>
-    private AIStudio.Settings.Provider ProviderAsItWas(string providerId, ModelComparisonModelIdentity identity)
-    {
-        var provider = this.SettingsManager.GetProviderById(providerId);
-        return provider.UsedLLMProvider is not LLMProviders.NONE && ModelComparisonModelIdentity.Of(provider).IsSameModelAs(identity)
-            ? provider
-            : AIStudio.Settings.Provider.NONE;
     }
 
     /// <summary>
@@ -231,6 +233,8 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
 
     private int DecidedTaskCount => this.Series.Tasks.Count(task => task.State is ModelComparisonSeriesTaskState.DONE);
 
+    private ModelComparisonSeriesTask? LastDecidedTask => this.Series.Tasks.LastOrDefault(task => task.State is ModelComparisonSeriesTaskState.DONE);
+
     private string NextTaskText => this.DecidedTaskCount == 0
         ? TA("Start your first task. You work on it with one of the two models first, and then with the other one. AI Studio chooses at random which model you meet first.")
         : string.Format(ModelComparisonFormat.Culture, TA("Decided tasks so far: {0}. Do you want to test another task?"), this.DecidedTaskCount);
@@ -296,7 +300,7 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     }
 
     /// <summary>
-    /// Takes the decision of the user.
+    /// Takes the decision of the user, and then asks the judge, so that its verdict cannot anchor the decision.
     /// </summary>
     /// <param name="vote">The chat the user chose: COLUMN_A for the first chat, COLUMN_B for the second one.</param>
     private async Task DecideAsync(ModelComparisonVote vote)
@@ -306,6 +310,37 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
 
         await this.SaveAsync();
         await this.ShowOpenTaskAsync();
+        await this.AskJudgeAsync(task);
+    }
+
+    /// <summary>
+    /// Asks the judge of the series about a decided task and stores its verdict.
+    /// </summary>
+    /// <param name="task">The decided task.</param>
+    private async Task AskJudgeAsync(ModelComparisonSeriesTask task)
+    {
+        if (this.isJudging || this.Series.Judge is null || task.State is not ModelComparisonSeriesTaskState.DONE)
+            return;
+
+        this.isJudging = true;
+        this.StateHasChanged();
+        try
+        {
+            var chatOne = await this.ConversationOf(task.ChatOne);
+            var chatTwo = await this.ConversationOf(task.ChatTwo);
+            await this.SeriesJudge.JudgeAsync(this.Series, task, chatOne.Thread, chatTwo.Thread, T("Model Comparison"), this.judgeCancellation.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // The user left the series; the task waits for the judge until the user asks again.
+            return;
+        }
+        finally
+        {
+            this.isJudging = false;
+        }
+
+        await this.SaveAsync();
     }
 
     /// <summary>

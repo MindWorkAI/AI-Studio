@@ -64,9 +64,15 @@ public sealed record ModelComparisonSeriesTask
     public ModelComparisonModelChoice? JudgeChoice { get; set; }
 
     /// <summary>
-    /// Why the judge chose so, or empty without a usable verdict.
+    /// Why the judge chose so, or empty without a usable verdict. It names the chats as "Chat 1" and "Chat 2", never a
+    /// model.
     /// </summary>
     public string JudgeReasoning { get; set; } = string.Empty;
+
+    /// <summary>
+    /// What became of the judge for this task.
+    /// </summary>
+    public ModelComparisonSeriesJudgeStatus JudgeStatus { get; set; } = ModelComparisonSeriesJudgeStatus.NOT_ASKED;
 
     /// <summary>
     /// Whether the user decided without knowing the models, i.e., before the result of the series was shown.
@@ -179,4 +185,39 @@ public sealed record ModelComparisonSeriesTask
         this.State = ModelComparisonSeriesTaskState.DONE;
         return true;
     }
+
+    /// <summary>
+    /// Takes the verdict of the judge about both chats, and keeps it in terms of the models of the series.
+    /// </summary>
+    /// <param name="verdict">The verdict, in which COLUMN_A names the first chat, see ModelComparisonRunner.JudgeChatsAsync.</param>
+    public void TakeVerdict(ModelComparisonJudgeVerdict verdict)
+    {
+        if (verdict is { Completed: true, Preferred: { } preferred })
+        {
+            this.JudgeChoice = this.Order.ToModelChoice(preferred);
+            this.JudgeReasoning = verdict.Reasoning;
+            this.JudgeStatus = ModelComparisonSeriesJudgeStatus.VERDICT;
+            return;
+        }
+
+        this.SkipJudge(ModelComparisonSeriesJudgeStatus.NO_VERDICT);
+    }
+
+    /// <summary>
+    /// Notes why the judge has no verdict on this task.
+    /// </summary>
+    /// <param name="status">Why; anything but VERDICT.</param>
+    public void SkipJudge(ModelComparisonSeriesJudgeStatus status)
+    {
+        this.JudgeChoice = null;
+        this.JudgeReasoning = string.Empty;
+        this.JudgeStatus = status;
+    }
+
+    /// <summary>
+    /// Gets the number of the chat in which a model of the series answered.
+    /// </summary>
+    /// <param name="model">The first or the second model of the series.</param>
+    /// <returns>1 for the first chat, 2 for the second one.</returns>
+    public int ChatNumberOf(ModelComparisonModelChoice model) => (model is ModelComparisonModelChoice.FIRST) == this.FirstModelIsChatOne ? 1 : 2;
 }
