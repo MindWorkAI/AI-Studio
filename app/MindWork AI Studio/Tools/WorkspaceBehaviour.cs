@@ -1622,8 +1622,45 @@ public static partial class WorkspaceBehaviour
     /// </remarks>
     internal static async Task<bool> DeleteChatWithoutAskingAsync(Guid workspaceId, Guid chatId)
     {
+        if (!await DeleteChatDirectoryAsync(workspaceId, chatId, beforeDeleting: null))
+            return false;
+
+        // What the chat received goes with it:
+        await ChatProvenance.ForgetChatsAsync([chatId]);
+        return true;
+    }
+
+    /// <summary>
+    /// Takes a chat off the disk while it lives on in memory, because it moves into a place which never stores its chats.
+    /// </summary>
+    /// <remarks>
+    /// Unlike deleting the chat, this keeps what the chat received, since the chat is still there. The
+    /// transcripts of the message being written lie in the directory of the chat, and go back into the
+    /// staging area, from where storing the chat again would take them. A transcript of a sent message
+    /// would go with the directory, but only a new chat moves this way, and it has sent nothing yet.
+    /// </remarks>
+    /// <param name="chat">The chat, which still names the place it is stored in.</param>
+    /// <returns>True when the chat is off the disk, which includes it never having been there. False when another operation holds it.</returns>
+    internal static Task<bool> TakeChatOffDiskAsync(ChatThread chat)
+    {
+        var chatDirectory = GetChatDirectory(chat.WorkspaceId, chat.ChatId);
+        return DeleteChatDirectoryAsync(chat.WorkspaceId, chat.ChatId, beforeDeleting: () => chat.Draft.ReplaceAttachments(attachment =>
+            attachment is ManagedTranscriptAttachment { IsStaged: false } transcript && PathTools.IsInsideDirectory(chatDirectory, transcript.FilePath) && File.Exists(transcript.FilePath)
+                ? ManagedTranscriptAttachment.StageAgain(transcript)
+                : attachment));
+    }
+
+    /// <summary>
+    /// Deletes the directory of a chat, while holding the chat, and removes the chat from the cache.
+    /// </summary>
+    /// <param name="workspaceId">Workspace that owns the chat; an empty id means a temporary chat.</param>
+    /// <param name="chatId">Chat whose directory goes.</param>
+    /// <param name="beforeDeleting">What has to happen while the chat is held, before its directory goes, or null.</param>
+    /// <returns>True when the directory is gone, which includes it never having been there. False when another operation holds the chat.</returns>
+    private static async Task<bool> DeleteChatDirectoryAsync(Guid workspaceId, Guid chatId, Action? beforeDeleting)
+    {
         var chatDirectory = GetChatDirectory(workspaceId, chatId);
-        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(workspaceId, chatId, nameof(DeleteChatWithoutAskingAsync));
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(workspaceId, chatId, nameof(DeleteChatDirectoryAsync));
 
         // Another operation holds the chat, so it stays where it is:
         if (!acquired)
@@ -1631,6 +1668,7 @@ public static partial class WorkspaceBehaviour
 
         try
         {
+            beforeDeleting?.Invoke();
             if (Directory.Exists(chatDirectory))
                 Directory.Delete(chatDirectory, true);
 
@@ -1642,8 +1680,6 @@ public static partial class WorkspaceBehaviour
             ForgetChatSemaphore(workspaceId, chatId);
         }
 
-        // What the chat received goes with it:
-        await ChatProvenance.ForgetChatsAsync([chatId]);
         return true;
     }
 

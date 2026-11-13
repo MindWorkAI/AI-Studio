@@ -42,12 +42,35 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
     /// <returns>The staged managed attachment.</returns>
     public static async Task<ManagedTranscriptAttachment> CreateStagedAsync(string originalPath, string transcript)
     {
-        var operationDirectory = Path.Combine(SettingsManager.DataDirectory!, "media-staging", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(operationDirectory);
         var originalFileName = Path.GetFileName(originalPath);
-        var stagingPath = Path.Combine(operationDirectory, $"{Guid.NewGuid():N}.md");
+        var stagingPath = CreateStagingPath();
         await WriteMarkdownAsync(stagingPath, originalFileName, transcript);
         return FromPath(stagingPath, originalFileName, isStaged: true);
+    }
+
+    /// <summary>
+    /// Moves the file of a transcript which a chat owns back into the staging area, e.g., because the chat leaves the disk while it lives on in memory.
+    /// </summary>
+    /// <remarks>
+    /// Storing the chat again takes the transcript into its directory, as it does with every transcript
+    /// which was made before the chat was stored. The transcript keeps the entry of the text it was sent
+    /// with, since it is still the same transcript of the same chat.
+    /// </remarks>
+    /// <param name="transcript">The transcript in the directory of its chat.</param>
+    /// <returns>The staged transcript.</returns>
+    public static ManagedTranscriptAttachment StageAgain(ManagedTranscriptAttachment transcript)
+    {
+        var stagingPath = CreateStagingPath();
+        File.Move(transcript.FilePath, stagingPath);
+        return FromPath(stagingPath, transcript.OriginalFileName, isStaged: true) with { ProvenanceId = transcript.ProvenanceId, Version = transcript.Version };
+    }
+
+    /// <summary>Creates an operation-specific directory in the staging area and returns the path of a new transcript file inside.</summary>
+    private static string CreateStagingPath()
+    {
+        var operationDirectory = Path.Combine(SettingsManager.DataDirectory!, "media-staging", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(operationDirectory);
+        return Path.Combine(operationDirectory, $"{Guid.NewGuid():N}.md");
     }
 
     /// <summary>Writes transcript Markdown to a temporary file and atomically publishes it.</summary>

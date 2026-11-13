@@ -251,4 +251,53 @@ public sealed class ChatDraftTests
 
         Assert.That(thread.Draft.Text, Is.EqualTo("Summarize the meeting"), "Both are the same chat, and the transcription service may still hold the former one.");
     }
+
+    [Test]
+    public void JoiningPutsTheOtherMessageBelow()
+    {
+        var draft = new ChatDraft();
+        draft.SetText("Take minutes of the meeting below.");
+        draft.AddAttachments([AGENDA]);
+        var other = new ChatDraft();
+        other.SetText("Summarize the call");
+        other.AddAttachments([AGENDA, STAGED_TRANSCRIPT]);
+
+        draft.Join(other);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(draft.Text, Is.EqualTo("Take minutes of the meeting below.\n\nSummarize the call"), "Nothing of either message gets lost.");
+            Assert.That(draft.FileAttachments.Select(attachment => attachment.FilePath), Is.EqualTo(new[] { AGENDA.FilePath, STAGED_TRANSCRIPT.FilePath }), "A file attached to both is attached once, and the transcript goes along.");
+            Assert.That(draft.MediaTranscripts, Has.Count.EqualTo(1), "The transcript is still a transcript, whose file the chat manages.");
+        }
+    }
+
+    [Test]
+    public void JoiningIntoAnEmptyMessageTakesTheOtherAsItIs()
+    {
+        var draft = new ChatDraft();
+        var other = new ChatDraft();
+        other.SetText("Summarize the call");
+
+        draft.Join(other);
+
+        Assert.That(draft.Text, Is.EqualTo("Summarize the call"));
+    }
+
+    [Test]
+    public void JoiningLeavesTheStoredTextsOfTheOtherChatBehind()
+    {
+        var other = new ChatDraft();
+        other.AddAttachments([MINUTES with { ProvenanceId = Guid.NewGuid() }]);
+        var draft = new ChatDraft();
+
+        draft.Join(other);
+        var joined = draft.FileAttachments.Single();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(joined.FilePath, Is.EqualTo(MINUTES.FilePath));
+            Assert.That(joined.ProvenanceId, Is.Null, "The stored text belongs to the other chat, which goes. This chat reads the file anew when it sends it.");
+        }
+    }
 }

@@ -148,6 +148,21 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
+    /// Clears whether the open chat holds unsaved changes, since the user leaves it.
+    /// </summary>
+    /// <remarks>
+    /// A chat which lives in memory stays as it is when left, see ChatsInMemory, and so does whether it
+    /// holds unsaved changes: the list keeps showing them, and the chat brings them back when it opens again.
+    /// </remarks>
+    private void ClearUnsavedChangesOfLeftChat()
+    {
+        var keptChatId = this.ChatThread is { } leftChat && this.ChatsInMemory.HasUnsavedChanges(leftChat.ChatId) ? leftChat.ChatId : Guid.Empty;
+        this.HasUnsavedChanges = false;
+        if (keptChatId != Guid.Empty)
+            this.ChatsInMemory.SetUnsavedChanges(keptChatId, true);
+    }
+
+    /// <summary>
     /// Whether the open chat stays as it is when the user leaves it: the new chat of a place, and any
     /// chat which lives in memory, see ChatsInMemory, such as the one chat of a place which never stores.
     /// </summary>
@@ -764,6 +779,9 @@ public partial class ChatComponent : MSGComponentBase
         this.loadedParameterChatId = chatId;
         this.loadedParameterWorkspaceId = workspaceId;
 
+        // The user opened this chat where it is:
+        this.isWorkspaceChosenByChatTemplate = false;
+
         //
         // The chat being left keeps the message the user started in it. The new chat keeps its
         // message all along, see KeepComposerInDraft:
@@ -964,18 +982,22 @@ public partial class ChatComponent : MSGComponentBase
         : T("Profile usage is disabled according to your chat template settings.");
 
     /// <summary>
-    /// Whether the open chat can move into a workspace, which is exactly when the workspace tree offers it.
+    /// Whether the open chat can move into a workspace.
     /// </summary>
     /// <remarks>
-    /// A chat not stored yet has no directory to move. The new chat of a place stays there as well,
-    /// since the place it goes to may have a new chat already. While an answer is generated or a
+    /// A stored chat moves with its directory. A sent chat which lies on no disk moves as well, e.g.,
+    /// the one chat of a place which never stores its chats, see MoveChatFromMemoryAsync. The new chat
+    /// of a place moves as soon as it holds something of the user's, also from memory, and joins the
+    /// new chat the workspace has already, see MoveOpenNewChatAsync. While an answer is generated or a
     /// transcript is made, the chat stays where it is, just like in the tree. The directory check
     /// comes last, because this runs with every render.
     /// </remarks>
-    private bool CanThreadBeMoved => this.ChatThread is { IsNewChat: false }
+    private bool CanThreadBeMoved => this.ChatThread is not null
                                      && !this.IsCurrentChatStreaming
                                      && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)
-                                     && WorkspaceBehaviour.IsChatExisting(new LoadChat(this.ChatThread.WorkspaceId, this.ChatThread.ChatId));
+                                     && (this.ChatThread.IsNewChat
+                                         ? this.HasNewChatContent()
+                                         : this.ChatThread.Blocks.Any(block => !block.HideFromUser) || WorkspaceBehaviour.IsChatExisting(new LoadChat(this.ChatThread.WorkspaceId, this.ChatThread.ChatId)));
 
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
@@ -1083,15 +1105,21 @@ public partial class ChatComponent : MSGComponentBase
     /// without one.
     /// </remarks>
     /// <returns>The ID of the workspace, or Guid.Empty for none.</returns>
-    private async Task<Guid> ResolveWorkspaceOfFirstThreadAsync()
+    private Task<Guid> ResolveWorkspaceOfFirstThreadAsync() => this.ResolvePlaceOfChatAsync(this.currentWorkspaceId, this.currentChatTemplate);
+
+    /// <summary>
+    /// The place a chat with content goes to: the given workspace, or for the chats outside of
+    /// workspaces the workspace which the chat template names, opened or created by its name.
+    /// </summary>
+    /// <param name="workspaceId">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    /// <param name="chatTemplate">The chat template of the chat.</param>
+    /// <returns>The ID of the workspace, or Guid.Empty for none, also when the workspace of the template cannot be used.</returns>
+    private async Task<Guid> ResolvePlaceOfChatAsync(Guid workspaceId, ChatTemplate chatTemplate)
     {
-        if (this.currentWorkspaceId != Guid.Empty)
-            return this.currentWorkspaceId;
+        if (workspaceId != Guid.Empty || this.SettingsManager.GetChatTemplateWorkspaceName(chatTemplate) is not { } workspaceName)
+            return workspaceId;
 
-        if (this.SettingsManager.GetChatTemplateWorkspaceName(this.currentChatTemplate) is not { } workspaceName)
-            return Guid.Empty;
-
-        return await WorkspaceBehaviour.ResolveOrCreateChatTemplateWorkspaceAsync(workspaceName, this.currentChatTemplate.GetSafeName());
+        return await WorkspaceBehaviour.ResolveOrCreateChatTemplateWorkspaceAsync(workspaceName, chatTemplate.GetSafeName());
     }
 
     /// <summary>
@@ -1114,15 +1142,22 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// Whether the open chat is in the workspace which the given chat template names.
+    /// Whether the chat template of the open chat took it into its workspace, rather than the user.
     /// </summary>
     /// <remarks>
-    /// Such a workspace was the choice of the template rather than of the user, so a chat started
-    /// with another template does not have to stay there.
+    /// A template which names a workspace takes a chat from outside of workspaces there, see
+    /// ChatTemplate.WorkspaceName. That workspace is no choice of the user: picking no template again
+    /// brings the new chat back, and a chat started with another template does not have to stay there.
+    /// The workspace alone cannot tell, since the user may well have chosen the very workspace the
+    /// template names. So this counts from the moment a template took the chat there, until the user
+    /// opens, starts, or moves a chat.
     /// </remarks>
-    private bool IsInWorkspaceOfChatTemplate(ChatTemplate chatTemplate) => this.currentWorkspaceId != Guid.Empty
-        && this.SettingsManager.GetChatTemplateWorkspaceName(chatTemplate) is { } workspaceName
-        && string.Equals(WorkspaceBehaviour.NormalizeWorkspaceName(this.currentWorkspaceName), workspaceName, StringComparison.OrdinalIgnoreCase);
+    private bool isWorkspaceChosenByChatTemplate;
+
+    /// <summary>
+    /// Whether the open chat is in a workspace which its chat template chose, rather than the user, see isWorkspaceChosenByChatTemplate.
+    /// </summary>
+    private bool IsInWorkspaceOfChatTemplate => this.isWorkspaceChosenByChatTemplate && this.currentWorkspaceId != Guid.Empty;
 
     /// <summary>
     /// The data source options a chat starts with: those of its chat template, or the chat defaults.
@@ -1237,7 +1272,17 @@ public partial class ChatComponent : MSGComponentBase
             // chat, unless that place is merely the workspace of the current template: then the new
             // template decides where its chat goes.
             //
-            await this.StartNewChat(useSameWorkspace: !this.IsInWorkspaceOfChatTemplate(this.currentChatTemplate), chatTemplate: nextChatTemplate);
+            await this.StartNewChat(useSameWorkspace: !this.IsInWorkspaceOfChatTemplate, chatTemplate: nextChatTemplate);
+            return;
+        }
+
+        //
+        // A template which belongs to another place takes the new chat along, with everything the
+        // user put into it:
+        //
+        if (await this.IsPlaceOfNewChatChangingAsync(nextChatTemplate))
+        {
+            await this.MoveNewChatToPlaceOfTemplateAsync(nextChatTemplate);
             return;
         }
 
@@ -1617,6 +1662,9 @@ public partial class ChatComponent : MSGComponentBase
         this.RefreshCurrentProfileAndChatTemplate();
         var chat = this.NewChatThread(string.Empty, workspaceId);
         chat.IsNewChat = true;
+
+        // A workspace other than the one shown is the one of the chat template:
+        this.isWorkspaceChosenByChatTemplate = workspaceId != this.currentWorkspaceId;
         this.ChatThread = chat;
         await this.PublishNewChatThreadAsync();
         return chat;
@@ -1723,6 +1771,216 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
+    /// Whether a chat template the user picked for the open new chat belongs to another place.
+    /// </summary>
+    /// <remarks>
+    /// A template which names a workspace decides the place of a chat which would belong to no
+    /// workspace otherwise, see ChatTemplate.WorkspaceName. A workspace which only the template of the
+    /// open chat chose is no choice of the user, see IsInWorkspaceOfChatTemplate. A new chat without a
+    /// thread belongs where its first content will put it, see ResolveWorkspaceOfFirstThreadAsync.
+    /// </remarks>
+    /// <param name="nextChatTemplate">The template the user picked.</param>
+    /// <returns>True when the template goes to the new chat of another place.</returns>
+    private async Task<bool> IsPlaceOfNewChatChangingAsync(ChatTemplate nextChatTemplate)
+    {
+        var chosenWorkspaceId = this.ChosenWorkspaceId;
+        Guid? placeNow = this.ChatThread is { } openChat ? openChat.WorkspaceId : await this.FindPlaceOfNewChatAsync(chosenWorkspaceId, this.currentChatTemplate);
+        var placeNext = await this.FindPlaceOfNewChatAsync(chosenWorkspaceId, nextChatTemplate);
+        if (placeNow.HasValue || placeNext.HasValue)
+            return placeNow != placeNext;
+
+        // Both are workspaces of a template which do not exist yet:
+        return !string.Equals(this.SettingsManager.GetChatTemplateWorkspaceName(this.currentChatTemplate), this.SettingsManager.GetChatTemplateWorkspaceName(nextChatTemplate), StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// The workspace of the open chat as the user chose it: none, when only its chat template chose it, see IsInWorkspaceOfChatTemplate.
+    /// </summary>
+    private Guid ChosenWorkspaceId => this.IsInWorkspaceOfChatTemplate ? Guid.Empty : this.currentWorkspaceId;
+
+    /// <summary>
+    /// Takes the open new chat into the place of a chat template the user picked for it, see IsPlaceOfNewChatChangingAsync.
+    /// </summary>
+    /// <remarks>
+    /// What the template of the open chat brought goes first, as far as the user left it as it was,
+    /// see ApplyPickedChatTemplateAsync: it belonged to the place the chat leaves. Everything else the
+    /// user put into the chat goes along, see MoveOpenNewChatAsync, and the picked template applies
+    /// there. Picking no template again therefore brings the message back where it came from. A new
+    /// chat which holds nothing of the user's has nothing to take along: the template goes to the new
+    /// chat of its place, as it does from a chat which was sent.<br/><br/>
+    ///
+    /// A transcript being made arrives in the chat it was made for, so the chat stays where it is until
+    /// the transcript is there.
+    /// </remarks>
+    /// <param name="nextChatTemplate">The template the user picked.</param>
+    private async Task MoveNewChatToPlaceOfTemplateAsync(ChatTemplate nextChatTemplate)
+    {
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.HourglassTop, T("This chat template belongs to another workspace. Please pick it again once the transcript is done, so that your message can go along.")));
+            return;
+        }
+
+        var chosenWorkspaceId = this.ChosenWorkspaceId;
+        await this.ApplyPickedChatTemplateAsync(ChatTemplate.NO_CHAT_TEMPLATE);
+        if (this.ChatThread is not { IsNewChat: true } || !this.HasNewChatContent())
+        {
+            await this.StartNewChat(chatTemplate: nextChatTemplate);
+            return;
+        }
+
+        var targetPlace = await this.ResolvePlaceOfChatAsync(chosenWorkspaceId, nextChatTemplate);
+        if (!await this.MoveOpenNewChatAsync(targetPlace))
+            return;
+
+        // Somewhere else than where the user chose, the template took the chat:
+        this.isWorkspaceChosenByChatTemplate = targetPlace != chosenWorkspaceId;
+        await this.ApplyPickedChatTemplateAsync(nextChatTemplate);
+    }
+
+    /// <summary>
+    /// Takes the open new chat into another place, with everything the user put into it.
+    /// </summary>
+    /// <remarks>
+    /// A place has at most one new chat. When the place has one already, the open one joins it: its
+    /// message goes below the message of the other, and the open one goes, see JoinNewChatAsync. So
+    /// nothing gets lost, and nothing needs a question. Otherwise, the open one moves there, see
+    /// MoveNewChatIntoPlaceAsync. A place which never stores has one chat; when that one was sent
+    /// already, it is no new chat to join, and the user decides whether it goes, as for a new chat
+    /// there, see MayStartOverInPlaceAsync. Then the chat of the place opens.
+    /// </remarks>
+    /// <param name="targetPlace">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    /// <returns>True when the chat is in that place now. False when the user kept the chat of that place, or when another operation held a chat.</returns>
+    private async Task<bool> MoveOpenNewChatAsync(Guid targetPlace)
+    {
+        if (this.ChatThread is not { IsNewChat: true } chat)
+            return false;
+
+        if (chat.WorkspaceId == targetPlace)
+            return true;
+
+        var keptChat = await this.FindKeptChatOfPlaceAsync(targetPlace);
+        if (keptChat is { IsNewChat: false })
+        {
+            if (!await this.MayStartOverInPlaceAsync(targetPlace))
+                return false;
+
+            await this.StartOverInPlaceAsync(targetPlace);
+            keptChat = null;
+        }
+
+        // The draft holds all of the composer, and nothing stores the chat in its old place afterward:
+        await Task.WhenAny(this.followingComposer);
+        this.KeepComposerInDraft();
+        await this.FlushDraftAsync();
+
+        var chatInPlace = keptChat is null
+            ? await this.MoveNewChatIntoPlaceAsync(chat, targetPlace)
+            : await this.JoinNewChatAsync(chat, keptChat);
+
+        if (chatInPlace is null)
+            return false;
+
+        this.ChatThread = chatInPlace;
+        await this.LoadedChatChanged(hasUnsavedChanges: this.ChatsInMemory.HasUnsavedChanges(chatInPlace.ChatId));
+
+        // The list reads anew where the chats lie now, also those which only changed their place in memory:
+        if (this.Workspaces is not null)
+            await this.Workspaces.ShowStoredChatsAsync();
+
+        return true;
+    }
+
+    /// <summary>
+    /// Moves a new chat into a place which has none, and keeps it the way that place keeps chats.
+    /// </summary>
+    /// <remarks>
+    /// A chat on the disk moves with its directory, see WorkspaceBehaviour.MoveChatAsync, unless the
+    /// place never stores chats: then it leaves the disk, see WorkspaceBehaviour.TakeChatOffDiskAsync.
+    /// A chat in memory only changes its place, and is stored right away where chats are stored
+    /// automatically. Where chats are saved by hand, it holds unsaved changes, unless it moved just as
+    /// the user saved it.
+    /// </remarks>
+    /// <param name="chat">The new chat.</param>
+    /// <param name="targetPlace">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    /// <returns>The chat, or null when another operation held it.</returns>
+    private async Task<ChatThread?> MoveNewChatIntoPlaceAsync(ChatThread chat, Guid targetPlace)
+    {
+        var targetStorage = this.SettingsManager.ConfigurationData.Workspace.GetStorageBehavior(targetPlace);
+        var isOnDisk = WorkspaceBehaviour.IsChatExisting(new(chat.WorkspaceId, chat.ChatId));
+        var hasUnsavedChanges = !isOnDisk || this.ChatsInMemory.HasUnsavedChanges(chat.ChatId);
+
+        if (isOnDisk && targetStorage is WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+        {
+            if (!await WorkspaceBehaviour.TakeChatOffDiskAsync(chat))
+                return null;
+
+            chat.WorkspaceId = targetPlace;
+        }
+        else if (isOnDisk)
+            await this.MoveAndListChatAsync(chat, targetPlace);
+        else
+        {
+            chat.WorkspaceId = targetPlace;
+            if (targetStorage is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+                await this.StoreAndListChatAsync(chat);
+        }
+
+        this.ChatsInMemory.Forget(chat.ChatId);
+        if (targetStorage is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        {
+            this.ChatsInMemory.Keep(chat);
+            this.ChatsInMemory.SetUnsavedChanges(chat.ChatId, targetStorage is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && hasUnsavedChanges);
+        }
+
+        return chat;
+    }
+
+    /// <summary>
+    /// Joins a new chat into the new chat another place has already, so that the place keeps one.
+    /// </summary>
+    /// <remarks>
+    /// The message of the joining chat goes below the message of the other, see ChatDraft.Join. Its
+    /// transcripts go along: those in its directory go back into the staging area first, since the
+    /// directory goes with the chat, see WorkspaceBehaviour.TakeChatOffDiskAsync. The other chat is
+    /// kept the way its place keeps chats.
+    /// </remarks>
+    /// <param name="chat">The new chat which joins the other.</param>
+    /// <param name="keptChat">The new chat of the place.</param>
+    /// <returns>The new chat of the place, or null when another operation held the joining chat.</returns>
+    private async Task<ChatThread?> JoinNewChatAsync(ChatThread chat, ChatThread keptChat)
+    {
+        if (!await WorkspaceBehaviour.TakeChatOffDiskAsync(chat))
+            return null;
+
+        keptChat.Draft.Join(chat.Draft);
+        this.ChatsInMemory.Forget(chat.ChatId);
+        await ChatProvenance.ForgetChatsAsync([chat.ChatId]);
+
+        if (this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(keptChat.WorkspaceId))
+            await this.StoreAndListChatAsync(keptChat);
+        else
+            this.ChatsInMemory.SetUnsavedChanges(keptChat.ChatId, this.SettingsManager.ConfigurationData.Workspace.GetStorageBehavior(keptChat.WorkspaceId) is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY);
+
+        return keptChat;
+    }
+
+    /// <summary>
+    /// The chat a place keeps, if any: the one in memory, see ChatsInMemory, or the stored new chat of the place.
+    /// </summary>
+    /// <param name="place">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    /// <returns>The chat, or null.</returns>
+    private async Task<ChatThread?> FindKeptChatOfPlaceAsync(Guid place)
+    {
+        if (this.ChatsInMemory.Find(place) is { } chatInMemory)
+            return chatInMemory;
+
+        return await WorkspaceBehaviour.FindStoredNewChatAsync(place) is { } storedNewChat
+            ? await WorkspaceBehaviour.LoadChatAsync(storedNewChat)
+            : null;
+    }
+
+    /// <summary>
     /// Opens the chat a place keeps again, when it has one, with everything the user put into it.
     /// </summary>
     /// <remarks>
@@ -1743,14 +2001,13 @@ public partial class ChatComponent : MSGComponentBase
         //
         var keptChat = this.ChatThread is { IsNewChat: true } openChat && openChat.WorkspaceId == place && WorkspaceBehaviour.IsChatExisting(new(openChat.WorkspaceId, openChat.ChatId))
             ? openChat
-            : this.ChatsInMemory.Find(place);
-
-        if (keptChat is null && await WorkspaceBehaviour.FindStoredNewChatAsync(place) is { } storedNewChat)
-            keptChat = await WorkspaceBehaviour.LoadChatAsync(storedNewChat);
+            : await this.FindKeptChatOfPlaceAsync(place);
 
         if (keptChat is null)
             return false;
 
+        // A place other than the one asked for is the workspace of the chat template:
+        this.isWorkspaceChosenByChatTemplate = place != workspaceId;
         this.ChatThread = keptChat;
         await this.LoadedChatChanged(hasUnsavedChanges: this.ChatsInMemory.HasUnsavedChanges(keptChat.ChatId));
         return true;
@@ -1858,6 +2115,20 @@ public partial class ChatComponent : MSGComponentBase
     /// </remarks>
     /// <param name="chat">The chat to store.</param>
     private Task StoreAndListChatAsync(ChatThread chat) => this.Workspaces is not null ? this.Workspaces.StoreChatAsync(chat) : WorkspaceBehaviour.StoreChatAsync(chat);
+
+    /// <summary>
+    /// Moves a stored chat with its directory into another place.
+    /// </summary>
+    /// <remarks>
+    /// Like storing, the move goes through the workspace component whenever there is one, so its tree
+    /// shows the chat in the new place right away. What the user did not save reaches the new place
+    /// only while that place stores chats automatically, see WorkspaceBehaviour.MoveChatAsync.
+    /// </remarks>
+    /// <param name="chat">The chat to move.</param>
+    /// <param name="targetPlace">The workspace, or Guid.Empty for the chats outside of workspaces.</param>
+    private Task MoveAndListChatAsync(ChatThread chat, Guid targetPlace) => this.Workspaces is not null
+        ? this.Workspaces.MoveChatAsync(chat, targetPlace)
+        : WorkspaceBehaviour.MoveChatAsync(chat, targetPlace, this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(targetPlace));
 
     /// <summary>
     /// Stores a chat for the draft autosave, see ChatDraftAutosave.
@@ -2064,7 +2335,11 @@ public partial class ChatComponent : MSGComponentBase
         // Create a new chat thread if necessary:
         if (this.ChatThread is null)
         {
-            this.ChatThread = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput), await this.ResolveWorkspaceOfFirstThreadAsync());
+            var workspaceId = await this.ResolveWorkspaceOfFirstThreadAsync();
+
+            // A workspace other than the one shown is the one of the chat template:
+            this.isWorkspaceChosenByChatTemplate = workspaceId != this.currentWorkspaceId;
+            this.ChatThread = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput), workspaceId);
             await this.PublishNewChatThreadAsync();
         }
         else
@@ -2448,12 +2723,15 @@ public partial class ChatComponent : MSGComponentBase
         //
         // Reset our state:
         //
-        this.HasUnsavedChanges = false;
+        this.ClearUnsavedChangesOfLeftChat();
         this.ComposerState.Clear();
 
         // The open chat is left now, so the template of the new chat takes over:
         this.currentChatTemplate = templateOfNewChat;
         this.RefreshCurrentProfileAndChatTemplate();
+
+        // The new chat starts where the user asked for it, unless its template takes it elsewhere, see ReopenChatOfPlaceAsync and CreateNewChatThreadAsync:
+        this.isWorkspaceChosenByChatTemplate = false;
 
         //
         // A place which never stores its chats starts over, as the user agreed above. Any other
@@ -2571,20 +2849,58 @@ public partial class ChatComponent : MSGComponentBase
         var workspaceId = dialogResult.Data is Guid id ? id : Guid.Empty;
         if (workspaceId == Guid.Empty)
             return;
-        
+
+        // The new chat of a place goes with everything the user put into it, and joins the new chat the workspace has already:
+        if (this.IsNewChat)
+        {
+            if (await this.MoveOpenNewChatAsync(workspaceId))
+                this.isWorkspaceChosenByChatTemplate = false;
+
+            return;
+        }
+
         //
-        // Like saving and copying, the move goes through the workspace component whenever there is
-        // one, so its tree shows the chat in the new place right away. Nothing the user did not save
-        // gets lost, so nothing is asked: it reaches the new place only while chats are stored
-        // automatically, and otherwise stays unsaved, see WorkspaceBehaviour.MoveChatAsync:
+        // Nothing the user did not save gets lost, so nothing is asked: it reaches the new place only
+        // while chats are stored automatically, and otherwise stays unsaved, see MoveAndListChatAsync
+        // and MoveChatFromMemoryAsync:
         //
         var previousWorkspaceId = this.ChatThread!.WorkspaceId;
-        if (this.Workspaces is not null)
-            await this.Workspaces.MoveChatAsync(this.ChatThread!, workspaceId);
+        if (WorkspaceBehaviour.IsChatExisting(new(previousWorkspaceId, this.ChatThread.ChatId)))
+            await this.MoveAndListChatAsync(this.ChatThread!, workspaceId);
         else
-            await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId, this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(workspaceId));
+            await this.MoveChatFromMemoryAsync(this.ChatThread!, workspaceId);
 
         await this.FollowMovedChatAsync(previousWorkspaceId);
+    }
+
+    /// <summary>
+    /// Moves a sent chat which lies on no disk into a workspace, e.g., the one chat of a place which never stores its chats.
+    /// </summary>
+    /// <remarks>
+    /// The chat only changes its place, and leaves the one it came from: a place which never stores
+    /// has no chat afterward, see ChatsInMemory. Where chats are stored automatically, it is stored
+    /// right away, which takes the transcripts of the message being written out of the staging area,
+    /// so the composer shows them where they lie now. Otherwise, it holds changes the user did not
+    /// save yet. Moving is offered for workspaces only while they store their chats, see
+    /// DataWorkspace.CanChatsGoIntoWorkspaces, so the target never is a place which never stores.
+    /// </remarks>
+    /// <param name="chat">The open chat.</param>
+    /// <param name="targetPlace">The workspace.</param>
+    private async Task MoveChatFromMemoryAsync(ChatThread chat, Guid targetPlace)
+    {
+        this.ChatsInMemory.Forget(chat.ChatId);
+        chat.WorkspaceId = targetPlace;
+        if (this.SettingsManager.ConfigurationData.Workspace.IsStoredAutomatically(targetPlace))
+        {
+            await this.StoreAndListChatAsync(chat);
+            this.ComposerState.ReplaceFileAttachments(chat.Draft.FileAttachments);
+            this.HasUnsavedChanges = false;
+            return;
+        }
+
+        this.HasUnsavedChanges = true;
+        if (this.Workspaces is not null)
+            await this.Workspaces.ShowStoredChatsAsync();
     }
 
     /// <summary>
@@ -2595,11 +2911,12 @@ public partial class ChatComponent : MSGComponentBase
     /// whether the user moved the chat from here or through the workspace tree. What has to change are
     /// the paths of its attachments: the move took the chat directory along, and with it the
     /// transcripts of audio and video files. Left with their old paths, the composer would send
-    /// references to files which are gone.
+    /// references to files which are gone. The workspace is the user's choice from now on.
     /// </remarks>
     /// <param name="previousWorkspaceId">The workspace the chat came from, or Guid.Empty for a temporary chat.</param>
     private async Task FollowMovedChatAsync(Guid previousWorkspaceId)
     {
+        this.isWorkspaceChosenByChatTemplate = false;
         var chatId = this.ChatThread!.ChatId;
         var workspaceId = this.ChatThread.WorkspaceId;
         var relocatedAttachments = this.ComposerState.FileAttachments
@@ -2732,7 +3049,7 @@ public partial class ChatComponent : MSGComponentBase
         if (this.ChatThread is not null)
             await this.StopAnswerOfLeftChatAsync(this.ChatThread.ChatId, this.ChatThread.WorkspaceId);
 
-        this.HasUnsavedChanges = false;
+        this.ClearUnsavedChangesOfLeftChat();
         this.ComposerState.Clear();
         this.ClearWorkspaceHeaderState();
         

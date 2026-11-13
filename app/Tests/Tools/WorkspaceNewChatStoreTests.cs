@@ -149,6 +149,32 @@ public sealed class WorkspaceNewChatStoreTests
         }
     }
 
+    [Test]
+    public async Task ANewChatTakenOffTheDiskKeepsTheTranscriptsOfItsMessage()
+    {
+        //
+        // A new chat which moves into a place that never stores chats leaves the disk, while it lives
+        // on in memory. Storing it took its transcript into its directory, which goes:
+        //
+        var workspaceId = await CreateWorkspaceAsync("Projects");
+        var newChat = new ChatThread { WorkspaceId = workspaceId, ChatId = Guid.NewGuid(), Name = "Transcription: kickoff.mp4", IsNewChat = true };
+        newChat.Draft.AddAttachments([await ManagedTranscriptAttachment.CreateStagedAsync("/media/kickoff.mp4", "We start on Monday.")]);
+        await WorkspaceBehaviour.StoreChatAsync(newChat);
+        var storedTranscript = newChat.Draft.MediaTranscripts.Single();
+
+        var isOffTheDisk = await WorkspaceBehaviour.TakeChatOffDiskAsync(newChat);
+        var transcript = newChat.Draft.MediaTranscripts.Single();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(storedTranscript.IsStaged, Is.False, "Storing took the transcript into the directory of the chat.");
+            Assert.That(isOffTheDisk, Is.True);
+            Assert.That(WorkspaceBehaviour.IsChatExisting(new LoadChat(workspaceId, newChat.ChatId)), Is.False, "A place which never stores keeps nothing on the disk.");
+            Assert.That(transcript.IsStaged, Is.True, "The transcript waits in the staging area, from where storing the chat again would take it.");
+            Assert.That(File.ReadAllText(transcript.FilePath), Does.Contain("We start on Monday."), "A transcript took a while and may have cost money, so it must not go with the directory.");
+        }
+    }
+
     private static async Task<Guid> CreateWorkspaceAsync(string name)
     {
         var result = await WorkspaceBehaviour.TryCreateWorkspaceAsync(name);

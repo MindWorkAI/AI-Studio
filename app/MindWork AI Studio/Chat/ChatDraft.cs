@@ -198,6 +198,31 @@ public sealed class ChatDraft
     }
 
     /// <summary>
+    /// Takes over the message of another draft, below the message this draft holds.
+    /// </summary>
+    /// <remarks>
+    /// That is what joining two new chats does, when one of them goes into a place which has a new chat
+    /// already. A file attached to both is attached once. What the provenance store keeps for the other
+    /// chat stays there, the texts its previews read included: it belongs to that chat, and this one
+    /// reads the files anew when it sends them.
+    /// </remarks>
+    /// <param name="other">The draft whose message joins this one.</param>
+    public void Join(ChatDraft other)
+    {
+        var otherText = other.Text;
+        var otherAttachments = other.FileAttachments.Select(attachment => attachment.WithoutStoredText()).ToList();
+        lock (this.stateLock)
+        {
+            if (string.IsNullOrWhiteSpace(this.Text))
+                this.Text = otherText;
+            else if (!string.IsNullOrWhiteSpace(otherText))
+                this.Text = $"{this.Text}\n\n{otherText}";
+
+            this.FileAttachments = Combine(this.FileAttachments, otherAttachments);
+        }
+    }
+
+    /// <summary>
     /// Empties the draft, which is what sending it does: its attachments belong to the new message from then on.
     /// </summary>
     /// <remarks>

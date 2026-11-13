@@ -4048,6 +4048,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1543974632"] = "The media
 -- {0}, of which approx. {1} from tools
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1614399447"] = "{0}, of which approx. {1} from tools"
 
+-- This chat template belongs to another workspace. Please pick it again once the transcript is done, so that your message can go along.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1786907950"] = "This chat template belongs to another workspace. Please pick it again once the transcript is done, so that your message can go along."
+
 -- The use of this provider has been prohibited by your organization. Please select a different provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1807387355"] = "The use of this provider has been prohibited by your organization. Please select a different provider."
 
