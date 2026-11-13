@@ -1,4 +1,5 @@
 using AIStudio.Assistants.ModelComparison;
+using AIStudio.Chat.Embedded;
 using AIStudio.Components;
 
 using Microsoft.AspNetCore.Components;
@@ -22,6 +23,9 @@ public partial class ModelComparisonResultsDialog : MSGComponentBase
     private ModelComparisonStore ModelComparisonStore { get; init; } = null!;
 
     [Inject]
+    private EmbeddedChatService ChatService { get; init; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
@@ -31,6 +35,12 @@ public partial class ModelComparisonResultsDialog : MSGComponentBase
     /// The statistics of all stored comparisons, or null while they are being read.
     /// </summary>
     private ModelComparisonStatistics? statistics;
+
+    /// <summary>
+    /// All comparison series, also those whose result the user has not seen yet; none while the source counts the
+    /// compared answers alone.
+    /// </summary>
+    private IReadOnlyList<ModelComparisonSeries> listedSeries = [];
 
     /// <summary>
     /// Which results the statistics count.
@@ -56,8 +66,8 @@ public partial class ModelComparisonResultsDialog : MSGComponentBase
     private async Task LoadStatisticsAsync()
     {
         this.statistics = null;
-        IReadOnlyList<ModelComparisonSeries> series = this.source is ModelComparisonResultSource.ANSWERS ? [] : await this.ModelComparisonStore.ListSeriesAsync();
-        this.statistics = await ModelComparisonStatistics.ComputeAsync(this.ModelComparisonStore.ReadResultsAsync(), series, this.source);
+        this.listedSeries = this.source is ModelComparisonResultSource.ANSWERS ? [] : await this.ModelComparisonStore.ListSeriesAsync();
+        this.statistics = await ModelComparisonStatistics.ComputeAsync(this.ModelComparisonStore.ReadResultsAsync(), this.listedSeries, this.source);
     }
 
     private async Task SourceChanged(ModelComparisonResultSource changedSource)
@@ -66,19 +76,69 @@ public partial class ModelComparisonResultsDialog : MSGComponentBase
         await this.LoadStatisticsAsync();
     }
 
-    private async Task DeleteAllResultsAsync()
+    /// <summary>
+    /// Whether deleting takes the results of the mode Answer Variance along: the chosen source counts them, and there
+    /// are some.
+    /// </summary>
+    private bool DeletesResults => this.source is not ModelComparisonResultSource.TASKS && this.statistics is { ComparisonCount: > 0 };
+
+    /// <summary>
+    /// Whether deleting takes the comparison series along: the chosen source counts them, and there are some. The
+    /// results of the mode Everyday Tasks are the decided tasks of the series, so deleting them means deleting the
+    /// series, also those whose result the user has not seen yet, for a fresh start.
+    /// </summary>
+    private bool DeletesSeries => this.source is not ModelComparisonResultSource.ANSWERS && this.listedSeries.Count > 0;
+
+    private string DeleteText => this.DeletesResults
+        ? this.DeletesSeries ? T("Delete all results and comparison series") : T("Delete the results of “Answer Variance”")
+        : T("Delete all comparison series");
+
+    private string DeleteQuestion => this.DeletesResults
+        ? this.DeletesSeries
+            ? TA("Are you sure you want to delete all results of the mode “Answer Variance” and all comparison series of the mode “Everyday Tasks” with their chats, also those whose result you have not seen yet? Your presets stay. This cannot be undone.")
+            : TA("Are you sure you want to delete all results of the mode “Answer Variance”? Your presets and the comparison series of the mode “Everyday Tasks” stay. This cannot be undone.")
+        : TA("Are you sure you want to delete all comparison series of the mode “Everyday Tasks” with their chats, also those whose result you have not seen yet? Your presets and the results of the mode “Answer Variance” stay. This cannot be undone.");
+
+    /// <summary>
+    /// Deletes what the chosen source counts, after asking.
+    /// </summary>
+    private async Task DeleteAsync()
     {
+        var deletesResults = this.DeletesResults;
+        var deletesSeries = this.DeletesSeries;
+        if (!deletesResults && !deletesSeries)
+            return;
+
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { dialog => dialog.Message, TA("Are you sure you want to delete all results of the mode “Answer Variance”? Your presets and the comparison series of the mode “Everyday Tasks” stay. This cannot be undone.") },
+            { dialog => dialog.Message, this.DeleteQuestion },
         };
 
-        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete the results of “Answer Variance”"), parameters, DialogOptions.FULLSCREEN);
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(this.DeleteText, parameters, DialogOptions.FULLSCREEN);
         var result = await reference.Result;
         if (result is null || result.Canceled)
             return;
 
         this.isDeleting = true;
+        try
+        {
+            if (deletesResults)
+                await this.DeleteResultsAsync();
+
+            if (deletesSeries)
+                await this.DeleteSeriesAsync();
+        }
+        finally
+        {
+            this.isDeleting = false;
+        }
+
+        // Reads anew in any case: a failure may have deleted a part already.
+        await this.LoadStatisticsAsync();
+    }
+
+    private async Task DeleteResultsAsync()
+    {
         try
         {
             await this.ModelComparisonStore.DeleteAllResultsAsync();
@@ -88,13 +148,26 @@ public partial class ModelComparisonResultsDialog : MSGComponentBase
             this.Logger.LogError(exception, "Could not delete the results of the Model Comparison assistant.");
             await this.MessageBus.SendError(new(AppIcons.ASSISTANT_MODEL_COMPARISON, TA("AI Studio could not delete all results. Please try again.")));
         }
-        finally
+    }
+
+    private async Task DeleteSeriesAsync()
+    {
+        // An answer which still runs would otherwise try to store its chat into a deleted series:
+        foreach (var task in this.listedSeries.SelectMany(series => series.Tasks))
         {
-            this.isDeleting = false;
+            await this.ChatService.ForgetAsync(task.ChatOne.ChatId);
+            await this.ChatService.ForgetAsync(task.ChatTwo.ChatId);
         }
 
-        // Reads anew in any case: a failure may have deleted a part of the results already.
-        await this.LoadStatisticsAsync();
+        try
+        {
+            await this.ModelComparisonStore.DeleteAllSeriesAsync();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            this.Logger.LogError(exception, "Could not delete the comparison series of the Model Comparison assistant.");
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_MODEL_COMPARISON, TA("AI Studio could not delete all comparison series. Please try again.")));
+        }
     }
 
     private void Close() => this.MudDialog.Close(DialogResult.Ok(true));

@@ -152,10 +152,10 @@
         }
     </DialogContent>
     <DialogActions>
-        @if (this.statistics is { ComparisonCount: > 0 })
+        @if (this.DeletesResults || this.DeletesSeries)
         {
-            <MudButton OnClick="@this.DeleteAllResultsAsync" Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" Disabled="@this.isDeleting">
-                @T("Delete the results of “Answer Variance”")
+            <MudButton OnClick="@this.DeleteAsync" Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" Disabled="@this.isDeleting">
+                @this.DeleteText
             </MudButton>
         }
         <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">

@@ -185,7 +185,19 @@ public partial class AssistantModelComparisonTasks : MSGComponentBase
     /// <summary>
     /// Shows what all stored comparisons say about the models, the series whose result the user saw included.
     /// </summary>
-    private async Task OpenResultsDialog() => await this.DialogService.ShowAsync<ModelComparisonResultsDialog>(T("Results of all comparisons"), DialogOptions.FULLSCREEN);
+    /// <remarks>
+    /// The user may delete all series there. Afterward, the list is read anew, and an open series which is gone
+    /// closes, which also stops its judge.
+    /// </remarks>
+    private async Task OpenResultsDialog()
+    {
+        var reference = await this.DialogService.ShowAsync<ModelComparisonResultsDialog>(T("Results of all comparisons"), DialogOptions.FULLSCREEN);
+        await reference.Result;
+
+        await this.ReloadSeriesAsync();
+        if (this.openSeries is { } series && this.allSeries!.All(entry => entry.Id != series.Id))
+            this.openSeries = null;
+    }
 
     /// <summary>
     /// Goes back to the choice between the two modes.

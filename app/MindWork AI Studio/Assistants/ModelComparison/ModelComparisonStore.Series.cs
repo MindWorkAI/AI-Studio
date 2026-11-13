@@ -164,6 +164,28 @@ public sealed partial class ModelComparisonStore
     }
 
     /// <summary>
+    /// Deletes all comparison series together with their chats, the presets and the results of the mode Answer
+    /// Variance aside.
+    /// </summary>
+    /// <remarks>
+    /// Unlike listing, deleting takes the series this version cannot read along: the user asked for all series to go.
+    /// </remarks>
+    /// <param name="token">The cancellation token.</param>
+    public async Task DeleteAllSeriesAsync(CancellationToken token = default)
+    {
+        await this.InitializeAsync(token);
+        if (!Directory.Exists(this.AllSeriesDirectory))
+            return;
+
+        foreach (var directory in Directory.EnumerateDirectories(this.AllSeriesDirectory).ToList())
+        {
+            token.ThrowIfCancellationRequested();
+            if (Guid.TryParseExact(Path.GetFileName(directory), "D", out var seriesId))
+                await this.DeleteSeriesAsync(seriesId, token);
+        }
+    }
+
+    /// <summary>
     /// Loads a chat of a comparison series.
     /// </summary>
     /// <param name="seriesId">The ID of the series.</param>

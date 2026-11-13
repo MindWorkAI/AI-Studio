@@ -159,6 +159,46 @@ public sealed class ModelComparisonStoreSeriesTests
     }
 
     [Test]
+    public async Task DeletingAllSeriesDeletesTheirChatsButKeepsThePresetsAndTheResults()
+    {
+        var store = this.CreateStore();
+        var first = Series(EARLIER);
+        var second = Series(LATER);
+        await store.CreateSeriesAsync(first);
+        await store.CreateSeriesAsync(second);
+        await store.SaveSeriesChatAsync(first.Id, new ChatThread { ChatId = Guid.NewGuid() });
+        await store.SavePresetAsync(new ModelComparisonPreset { Id = Guid.NewGuid(), Name = "Weekly report" });
+        await store.SaveResultAsync(new ModelComparisonRecord { Id = Guid.NewGuid() });
+
+        var unreadableDirectory = Path.Combine(this.dataDirectory, ModelComparisonStore.ROOT_DIRECTORY_NAME, "series", Guid.NewGuid().ToString("D"));
+        Directory.CreateDirectory(unreadableDirectory);
+        await File.WriteAllTextAsync(Path.Combine(unreadableDirectory, "series.json"), """{ "fieldOfANewerVersion": true }""");
+
+        await store.DeleteAllSeriesAsync();
+
+        var results = 0;
+        await foreach (var _ in this.CreateStore().ReadResultsAsync())
+            results++;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(await this.CreateStore().ListSeriesAsync(), Is.Empty);
+            Assert.That(store.ReadAllSeriesChatLocations(), Is.Empty);
+            Assert.That(Directory.Exists(unreadableDirectory), Is.False, "Deleting all series takes the series this version cannot read along.");
+            Assert.That(await this.CreateStore().ListPresetsAsync(), Has.Count.EqualTo(1));
+            Assert.That(results, Is.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public async Task DeletingAllSeriesWithoutAnyDoesNothing()
+    {
+        await this.CreateStore().DeleteAllSeriesAsync();
+
+        Assert.That(await this.CreateStore().ListSeriesAsync(), Is.Empty);
+    }
+
+    [Test]
     public async Task AChatThisVersionCannotOpenIsReportedAndKept()
     {
         var store = this.CreateStore();
