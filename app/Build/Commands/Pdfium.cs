@@ -9,7 +9,7 @@ namespace Build.Commands;
 
 public static class Pdfium
 {
-    private const int MAX_DOWNLOAD_ATTEMPTS = 3;
+    private const int MAX_INSTALL_ATTEMPTS = 3;
 
     private static readonly TimeSpan CONNECT_TIMEOUT = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RESPONSE_TIMEOUT = TimeSpan.FromSeconds(60);
@@ -77,7 +77,7 @@ public static class Pdfium
             return;
         }
 
-        for (var attempt = 1; attempt <= MAX_DOWNLOAD_ATTEMPTS; attempt++)
+        for (var attempt = 1; attempt <= MAX_INSTALL_ATTEMPTS; attempt++)
         {
             try
             {
@@ -88,7 +88,7 @@ public static class Pdfium
             catch (Exception exception) when (IsTransientFailure(exception))
             {
                 Console.Write($" failed: {DescribeFailure(exception)}");
-                if (attempt < MAX_DOWNLOAD_ATTEMPTS)
+                if (attempt < MAX_INSTALL_ATTEMPTS)
                 {
                     Console.Write($" Retrying in {RETRY_DELAY.TotalSeconds:0} seconds ...");
                     await Task.Delay(RETRY_DELAY);
@@ -97,7 +97,7 @@ public static class Pdfium
         }
 
         Console.WriteLine();
-        Console.WriteLine($"- Error: Could not download Pdfium {version} for {rid.UserFriendlyName} from {pdfiumUrl} in {MAX_DOWNLOAD_ATTEMPTS} attempts.");
+        Console.WriteLine($"- Error: Could not install Pdfium {version} for {rid.UserFriendlyName} from {pdfiumUrl} in {MAX_INSTALL_ATTEMPTS} attempts.");
         if (File.Exists(pdfiumLibTargetPath))
             Console.WriteLine("  To build with the library which is already present, use --offline.");
 
@@ -172,12 +172,14 @@ public static class Pdfium
 
             //
             // Deploy the library. The marker goes first, so that it never describes a library
-            // which was only half replaced:
+            // which was only half replaced. The directory of the marker does not exist before the
+            // first Rust build, which comes after this step on a fresh clone, and File.Delete
+            // throws when a directory is missing:
             //
             Console.Write(" deploying ...");
+            Directory.CreateDirectory(Path.GetDirectoryName(versionMarkerPath)!);
             File.Delete(versionMarkerPath);
             File.Move(pdfiumLibTmpTargetPath, pdfiumLibTargetPath, true);
-            Directory.CreateDirectory(Path.GetDirectoryName(versionMarkerPath)!);
             await File.WriteAllTextAsync(versionMarkerPath, versionMarker, Environment.UTF8_NO_BOM);
         }
         catch (OperationCanceledException) when (attemptTimeout.IsCancellationRequested)
@@ -199,14 +201,14 @@ public static class Pdfium
     }
 
     /// <summary>
-    /// Whether another attempt may succeed where a download attempt failed with the given exception.
+    /// Whether another attempt may succeed where an attempt to install the library failed with the given exception.
     /// </summary>
     /// <param name="exception">The exception the attempt failed with.</param>
-    /// <returns>True, when the download is worth another attempt.</returns>
+    /// <returns>True, when the installation is worth another attempt.</returns>
     private static bool IsTransientFailure(Exception exception) => exception is HttpRequestException or OperationCanceledException or TimeoutException or IOException or InvalidDataException;
 
     /// <summary>
-    /// Describes why a download attempt failed, in one line.
+    /// Describes why an attempt to install the library failed, in one line.
     /// </summary>
     /// <remarks>
     /// The innermost exception names the actual cause, such as the socket error behind an HttpRequestException

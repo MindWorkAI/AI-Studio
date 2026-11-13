@@ -17412,6 +17412,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2640760894"] = "Werden Sie einer 
 -- Become one of our titans
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2640760894::INFORMAL"] = "Werde einer unserer Titanen"
 
+-- Thank you, Carsten, for fixing the first build after a fresh clone of AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2698568606"] = "Vielen Dank, Carsten, dass du den ersten Build nach einem frischen Klon von AI Studio repariert hast."
+
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T2929332068"] = "Unterstützer"
 
