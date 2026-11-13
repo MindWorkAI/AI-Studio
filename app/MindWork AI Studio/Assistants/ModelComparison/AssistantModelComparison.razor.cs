@@ -892,17 +892,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// </remarks>
     private string? ValidatingComparedProvider(AIStudio.Settings.Provider provider)
     {
-        var selectionIssue = this.ValidatingProvider(provider);
-        if (selectionIssue is not null)
-            return selectionIssue;
-
-        if (this.SettingsManager.IsProviderProhibited(provider.UsedLLMProvider))
-            return TA("The use of this provider has been prohibited by your organization. Please select a different provider.");
-
-        if (!this.SettingsManager.IsProviderConfident(provider, this.Component))
-            return TA("This provider does not meet the confidence requirements of this assistant. Please choose another one.");
-
-        return null;
+        return this.ValidatingProvider(provider) ?? ModelComparisonProviderCheck.IssueOf(this.SettingsManager, provider);
     }
 
     /// <summary>

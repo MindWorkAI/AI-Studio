@@ -188,6 +188,9 @@ public static class AppIcons
     /// <summary>Backs up the data of AI Studio.</summary>
     public const string BACKUP = LucideIcons.ARCHIVE_ARROW_DOWN;
 
+    /// <summary>Goes back from an opened item to the list it belongs to, such as from a comparison series to all series.</summary>
+    public const string BACK_TO_LIST = LucideIcons.ARROW_LEFT;
+
     /// <summary>Marks something as blocked, such as a provider prohibited by the organization or a plugin below the required security level.</summary>
     public const string BLOCKED = LucideIcons.BAN;
 

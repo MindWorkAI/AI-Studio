@@ -1,20 +1,76 @@
 @attribute [Route(Routes.ASSISTANT_MODEL_COMPARISON_TASKS)]
 @inherits MSGComponentBase
 
-<div class="inner-scrolling-context">
-    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
-        <MudText Typo="Typo.h3">
-            @T("Model Comparison")
-        </MudText>
-        <MudSpacer/>
-        <MudTooltip Text="@T("Switch mode")">
-            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SWITCH_ASSISTANT_MODE" OnClick="@this.SwitchMode"/>
-        </MudTooltip>
-    </MudStack>
+<CascadingValue Value="Components.MODEL_COMPARISON_ASSISTANT">
+    <div class="inner-scrolling-context">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
+            <MudText Typo="Typo.h3">
+                @T("Model Comparison")
+            </MudText>
+            <MudSpacer/>
+            <MudTooltip Text="@T("Switch mode")">
+                <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SWITCH_ASSISTANT_MODE" OnClick="@this.SwitchMode"/>
+            </MudTooltip>
+        </MudStack>
 
-    <InnerScrolling>
-        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mr-3">
-            @T("Comparing two models on real tasks is not available yet.")
-        </MudAlert>
-    </InnerScrolling>
-</div>
+        <InnerScrolling>
+            @if (this.openSeries is { } series)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3 mr-3">
+                    <MudTooltip Text="@T("Back to all series")">
+                        <MudIconButton Icon="@AppIcons.BACK_TO_LIST" OnClick="@this.CloseSeries"/>
+                    </MudTooltip>
+                    <MudText Typo="Typo.h5">@series.Name</MudText>
+                </MudStack>
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mr-3">
+                    @T("Working on tasks in a comparison series is not available yet.")
+                </MudAlert>
+            }
+            else if (this.showsSetup)
+            {
+                <ModelComparisonSeriesSetup SeriesCreated="@this.SeriesCreatedAsync" Canceled="@this.CloseSetup"/>
+            }
+            else
+            {
+                <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-3 mr-3">
+                    @TA("Work on a real task with one of two models, and then on the same task with the other one. Afterward, you decide which chat helped you more, without knowing which model was which. A comparison series collects your tasks over days or weeks, until you want to see the result.")
+                </MudText>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.OpenSetup" Class="mb-4">
+                    @T("New comparison series")
+                </MudButton>
+
+                <MudText Typo="Typo.h5" Class="mb-2">@TA("Your comparison series")</MudText>
+                @if (this.allSeries is null)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
+                }
+                else if (this.allSeries.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mb-3">@TA("You have no comparison series yet.")</MudText>
+                }
+                else
+                {
+                    @foreach (var entry in this.allSeries)
+                    {
+                        <MudPaper @key="@entry.Id" Outlined="true" Class="pa-3 mb-2 mr-3">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.subtitle1">@entry.Name</MudText>
+                                    <MudText Typo="Typo.caption">@this.DescribeSeries(entry)</MudText>
+                                </MudStack>
+                                <MudSpacer/>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.COMPARISON_TASKS" OnClick="@(() => this.OpenSeries(entry))">
+                                    @T("Open")
+                                </MudButton>
+                                <MudTooltip Text="@T("Delete series")">
+                                    <MudIconButton Icon="@AppIcons.DELETE" Color="Color.Error" OnClick="@(async () => await this.DeleteSeriesAsync(entry))"/>
+                                </MudTooltip>
+                            </MudStack>
+                        </MudPaper>
+                    }
+                }
+            }
+        </InnerScrolling>
+    </div>
+</CascadingValue>
