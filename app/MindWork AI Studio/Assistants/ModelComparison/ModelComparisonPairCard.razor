@@ -7,7 +7,8 @@
     <MudText Typo="Typo.caption" Class="d-block mb-2">
         @this.CaptionText
     </MudText>
-    <MudSimpleTable Dense="@true" Hover="@true">
+    <MudChart T="double" ChartType="ChartType.StackedBar" ChartLabels="@this.ChartLabels" ChartSeries="@this.OutcomeSeries" ChartOptions="@this.ChartOptions" Width="100%" Height="220px"/>
+    <MudSimpleTable Dense="@true" Hover="@true" Class="mt-3">
         <thead>
             <tr>
                 <th></th>

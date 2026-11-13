@@ -23,6 +23,17 @@ public static class ModelComparisonCharts
     public static readonly string[] SPEED_PALETTE = ["#2a78d6", "#d95926"];
 
     /// <summary>
+    /// The colors of the first model of a pair, of a tie, and of the second model. Not the red of a loss: a win of
+    /// the second model is a loss of the first one, and red would favor one side.
+    /// </summary>
+    public static readonly string[] PAIR_PALETTE = ["#2a78d6", "#898781", "#d95926"];
+
+    /// <summary>
+    /// The color of a chart with a single series, e.g., the effort with each model.
+    /// </summary>
+    public static readonly string[] SINGLE_PALETTE = ["#2a78d6"];
+
+    /// <summary>
     /// Above this many models, the names below the bars are tilted, so that long names do not run into each other.
     /// </summary>
     private const int MAX_UPRIGHT_LABELS = 4;
