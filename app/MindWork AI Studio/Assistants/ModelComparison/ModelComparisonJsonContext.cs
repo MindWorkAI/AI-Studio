@@ -10,4 +10,5 @@ namespace AIStudio.Assistants.ModelComparison;
 [JsonSerializable(typeof(ModelComparisonJudgeAnswer))]
 [JsonSerializable(typeof(ModelComparisonPreset))]
 [JsonSerializable(typeof(ModelComparisonRecord))]
+[JsonSerializable(typeof(ModelComparisonSeries))]
 internal sealed partial class ModelComparisonJsonContext : JsonSerializerContext;

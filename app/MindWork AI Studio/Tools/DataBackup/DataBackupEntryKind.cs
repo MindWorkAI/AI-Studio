@@ -47,7 +47,7 @@ public enum DataBackupEntryKind
     BEYOND_FACTS_LAB,
 
     /// <summary>
-    /// The presets and the results of the Model Comparison assistant.
+    /// The presets, the results, and the comparison series with their chats of the Model Comparison assistant.
     /// </summary>
     MODEL_COMPARISONS,
 

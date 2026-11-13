@@ -83,7 +83,7 @@ public partial class DataFolders : MSGComponentBase
         DataBackupEntryKind.TOKENIZERS => TA("The tokenizers you chose for your providers."),
         DataBackupEntryKind.VISUAL_BRIEFINGS => TA("Your projects in the Visual Briefing Assistant."),
         DataBackupEntryKind.BEYOND_FACTS_LAB => TA("Your preparations in the BeyondFacts Lab, with their material and conversations."),
-        DataBackupEntryKind.MODEL_COMPARISONS => TA("Your presets and results in the Model Comparison assistant."),
+        DataBackupEntryKind.MODEL_COMPARISONS => TA("Your presets, results, and comparison series with their chats in the Model Comparison assistant."),
         DataBackupEntryKind.DATA_SOURCE_INDEX => TA("The index of your local data sources: which files AI Studio embedded, and their text."),
         DataBackupEntryKind.VECTOR_STORES => TA("The embeddings of your local data sources."),
         DataBackupEntryKind.MEDIA_TRANSCRIPTS => TA("The transcripts of the audio and video files in your local data sources."),

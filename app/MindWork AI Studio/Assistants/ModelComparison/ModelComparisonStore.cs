@@ -83,13 +83,14 @@ public sealed partial class ModelComparisonStore(ILogger<ModelComparisonStore> l
     /// <param name="targetPath">The file to write.</param>
     /// <param name="value">The new content.</param>
     /// <param name="token">The cancellation token.</param>
-    private static async Task WriteJsonAtomicAsync<T>(string targetPath, T value, CancellationToken token)
+    /// <param name="options">The JSON options, those of the assistant by default; a chat takes those of the workspaces.</param>
+    private static async Task WriteJsonAtomicAsync<T>(string targetPath, T value, CancellationToken token, JsonSerializerOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
         var temporaryPath = $"{targetPath}.tmp-{Guid.NewGuid():N}";
         try
         {
-            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(value, JSON_OPTIONS), new UTF8Encoding(false), token);
+            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(value, options ?? JSON_OPTIONS), new UTF8Encoding(false), token);
             await using (var stream = new FileStream(temporaryPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 4_096, true))
                 await stream.FlushAsync(token);
 

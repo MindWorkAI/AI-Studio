@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 using AIStudio.Assistants.BeyondFactsLab;
+using AIStudio.Assistants.ModelComparison;
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tests.Tools.Databases;
@@ -143,6 +144,30 @@ public sealed class ProvenanceCleanupServiceTests
     }
 
     [Test]
+    public async Task WhatAChatOfAComparisonSeriesReceivedSurvivesTheCleanup()
+    {
+        var comparisonStore = this.CreateComparisonStore();
+        var seriesId = Guid.NewGuid();
+        await comparisonStore.SaveSeriesAsync(new ModelComparisonSeries { Id = seriesId, Name = "Reports" });
+
+        var thread = new ChatThread { ChatId = Guid.NewGuid() };
+        var referenced = await this.store.Client.StoreAsync(thread.ChatId, ProvenanceKind.WEB_PAGE, "of a page the chat of the series read", null, TOKEN);
+        var unreferenced = await this.store.Client.StoreAsync(thread.ChatId, ProvenanceKind.WEB_PAGE, "of an answer which is gone", null, TOKEN);
+        thread.Blocks.Add(new ContentBlock
+        {
+            ContentType = ContentType.TEXT,
+            Role = ChatRole.AI,
+            Content = new ContentText { Text = "According to the page …", SourcePassages = [new SourcePassage { SourceUrl = "https://example.org/", ProvenanceId = referenced }] }
+        });
+        await comparisonStore.SaveSeriesChatAsync(seriesId, thread);
+
+        await this.RunAsync(RestoreStateWith(report: null));
+
+        var entries = await this.store.Client.GetEntriesAsync([referenced!.Value, unreferenced!.Value], TOKEN);
+        Assert.That(entries.Keys, Is.EquivalentTo(new[] { referenced.Value }), "The chat of the series is read like any other chat.");
+    }
+
+    [Test]
     public async Task WhatTheOnboardingOfTheLabReceivedSurvivesTheCleanup()
     {
         var labStore = this.CreateLabStore();
@@ -181,6 +206,8 @@ public sealed class ProvenanceCleanupServiceTests
 
     private BeyondFactsLabStore CreateLabStore() => new(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.testDirectory });
 
+    private ModelComparisonStore CreateComparisonStore() => new(NullLogger<ModelComparisonStore>.Instance, new ModelComparisonStorageOptions { DataDirectory = this.testDirectory });
+
     /// <summary>
     /// Stores a chat whose file was written long before the last cleanup, which is noted as if it ran a minute ago.
     /// </summary>
@@ -201,7 +228,7 @@ public sealed class ProvenanceCleanupServiceTests
         // Only entries stored before the start of the service may be removed, and the test stored them just now:
         await Task.Delay(TimeSpan.FromMilliseconds(10), TOKEN);
 
-        using var service = new ProvenanceCleanupService(this.store.CreateClientProvider(), dataRestoreService, this.CreateLabStore(), NullLogger<ProvenanceCleanupService>.Instance);
+        using var service = new ProvenanceCleanupService(this.store.CreateClientProvider(), dataRestoreService, this.CreateLabStore(), this.CreateComparisonStore(), NullLogger<ProvenanceCleanupService>.Instance);
         await service.StartAsync(TOKEN);
         await service.ExecuteTask!;
     }

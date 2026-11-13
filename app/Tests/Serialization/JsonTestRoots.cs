@@ -74,6 +74,7 @@ public static partial class JsonTestRoots
         // The presets and the stored results of the Model Comparison assistant:
         yield return Case(new(typeof(ModelComparisonPreset), ModelComparisonJson.PERSISTENCE));
         yield return Case(new(typeof(ModelComparisonRecord), ModelComparisonJson.PERSISTENCE));
+        yield return Case(new(typeof(ModelComparisonSeries), ModelComparisonJson.PERSISTENCE));
     }
 
     private static TestCaseData Case(JsonTestRoot root, string? purpose = null)
