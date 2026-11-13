@@ -3343,10 +3343,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3584374593::INFORMAL"] = "Ein Regelwerk mit diesem Namen existiert bereits. Bitte wähle einen anderen Namen."
 
 -- Please provide a description of your analysis rules. These rules will be used to instruct the AI on how to analyze the documents.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3650246981"] = "Bitte beschreiben Sie Ihre Analyseregeln. Diese Regeln geben der KI vor, wie sie die Dokumente analysieren soll."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3650246981"] = "Bitte geben Sie eine Beschreibung Ihrer Analyseregeln an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Dokumente analysiert werden sollen."
 
 -- Please provide a description of your analysis rules. These rules will be used to instruct the AI on how to analyze the documents.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3650246981::INFORMAL"] = "Bitte beschreibe deine Analyseregeln. Diese Regeln geben der KI vor, wie sie die Dokumente analysieren soll."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3650246981::INFORMAL"] = "Bitte gib eine Beschreibung deiner Analyseregeln an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Dokumente analysiert werden sollen."
 
 -- Load analysis rules from document
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3813558135"] = "Regeln für die Analyse aus einem Dokument laden"
@@ -3367,10 +3367,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T4293094335"] = "Regelwerk löschen"
 
 -- Please provide a description of your output rules. These rules will be used to instruct the AI on how to format the output of the analysis.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T596486262"] = "Bitte geben Sie eine Beschreibung Ihrer Ausgaberegeln an. Diese Regeln dienen dazu, der KI vorzugeben, wie sie die Analyse formatieren soll."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T596486262"] = "Bitte geben Sie eine Beschreibung der Regeln für die Ausgabe an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Ausgabe der Analyse formatiert werden soll."
 
 -- Please provide a description of your output rules. These rules will be used to instruct the AI on how to format the output of the analysis.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T596486262::INFORMAL"] = "Bitte gib eine Beschreibung deiner Ausgaberegeln an. Diese Regeln dienen dazu, der KI vorzugeben, wie sie die Analyse formatieren soll."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T596486262::INFORMAL"] = "Bitte gib eine Beschreibung der Regeln für die Ausgabe an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Ausgabe der Analyse formatiert werden soll."
 
 -- After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T726434276"] = "Nachdem die KI alle Dokumente verarbeitet hat, benötigt sie Ihre Anweisungen, wie das Ergebnis formatiert werden soll. Möchten Sie eine strukturierte Liste mit Schlüsselwörtern oder einen fließenden Text? Soll die Ausgabe Emojis enthalten oder in formeller Geschäftssprache verfasst sein? Alle diese Präferenzen können Sie in den Ausgaberegeln festlegen. Dort können Sie auch eine gewünschte Struktur vordefinieren – zum Beispiel durch Verwendung von Markdown-Formatierung, um Überschriften, Absätze oder Aufzählungspunkte zu definieren."
@@ -3826,10 +3826,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T266367750"] = "Name"
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2903289059"] = "ERI-Server erstellen"
 
 -- The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to regenerate the code for your ERI server. To avoid having to enter everything again each time, all your inputs and decisions can be automatically saved. Would you like this?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T292612545"] = "Die ERI-Spezifikation wird sich im Laufe der Zeit ändern. Wahrscheinlich möchten Sie Ihren ERI-Server auf dem neuesten Stand halten. Dazu müssen Sie möglicherweise den Code für Ihren ERI-Server neu generieren. Damit Sie nicht jedes Mal alles erneut eingeben müssen, können alle Ihre Eingaben und Entscheidungen automatisch gespeichert werden. Möchten Sie das?"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T292612545"] = "Die ERI-Spezifikation wird sich im Laufe der Zeit ändern. Sie möchten wahrscheinlich, dass Ihr ERI-Server immer auf dem neuesten Stand ist. Das bedeutet, dass Sie den Code für Ihren ERI-Server eventuell erneut generieren müssen. Damit Sie nicht jedes Mal alles erneut eingeben müssen, können alle Ihre Eingaben und Entscheidungen automatisch gespeichert werden. Möchten Sie das?"
 
 -- The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to regenerate the code for your ERI server. To avoid having to enter everything again each time, all your inputs and decisions can be automatically saved. Would you like this?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T292612545::INFORMAL"] = "Die ERI-Spezifikation wird sich im Laufe der Zeit ändern. Wahrscheinlich möchtest du deinen ERI-Server auf dem neuesten Stand halten. Dazu musst du möglicherweise den Code für deinen ERI-Server neu generieren. Damit du nicht jedes Mal alles erneut eingeben musst, können alle deine Eingaben und Entscheidungen automatisch gespeichert werden. Möchtest du das?"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T292612545::INFORMAL"] = "Die ERI-Spezifikation wird sich im Laufe der Zeit ändern. Du möchtest wahrscheinlich, dass dein ERI-Server immer auf dem neuesten Stand ist. Das bedeutet, dass du den Code für deinen ERI-Server eventuell erneut generieren musst. Damit du nicht jedes Mal alles erneut eingeben musst, können alle deine Eingaben und Entscheidungen automatisch gespeichert werden. Möchtest du das?"
 
 -- Data retrieval settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T295114338"] = "Datenabruf-Einstellungen"
@@ -7549,10 +7549,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T346886000"] = "Plugins Ihre
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T346886000::INFORMAL"] = "Plugins deiner Organisation. Deine Organisation stellt sie wieder bereit."
 
 -- AI Studio keeps your data in two folders on this computer. When you back up your computer with a tool of your own, such as [Restic](https://restic.net), [Borg](https://www.borgbackup.org), or [Time Machine](https://support.apple.com/en-us/104984), this shows which of their contents belong in the backup and which it can leave out. Click a path to copy it to the clipboard, or use the folder button to open it in your file manager.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3596708716"] = "AI Studio speichert Ihre Daten in zwei Ordnern auf diesem Computer. Wenn Sie Ihren Computer mit einem Tool Ihrer Wahl sichern, zum Beispiel mit [Restic](https://restic.net), [Borg](https://www.borgbackup.org) oder [Time Machine](https://support.apple.com/en-us/104984), erfahren Sie hier, welche Inhalte dieser Ordner in die Sicherung gehören und welche Sie auslassen können. Klicken Sie auf einen Pfad, um ihn in die Zwischenablage zu kopieren, oder auf die Ordnerschaltfläche, um den Ordner in Ihrem Dateimanager zu öffnen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3596708716"] = "AI Studio speichert Ihre Daten in zwei Ordnern auf diesem Rechner. Wenn Sie Ihren Rechner mit einem eigenen Programm sichern, etwa mit [Restic](https://restic.net), [Borg](https://www.borgbackup.org) oder [Time Machine](https://support.apple.com/de-de/104984), sehen Sie hier, welche Inhalte dieser Ordner in die Sicherung gehören und welche sie auslassen kann. Klicken Sie auf einen Pfad, um ihn in die Zwischenablage zu kopieren, oder auf das Ordnersymbol, um ihn in Ihrem Dateimanager zu öffnen."
 
 -- AI Studio keeps your data in two folders on this computer. When you back up your computer with a tool of your own, such as [Restic](https://restic.net), [Borg](https://www.borgbackup.org), or [Time Machine](https://support.apple.com/en-us/104984), this shows which of their contents belong in the backup and which it can leave out. Click a path to copy it to the clipboard, or use the folder button to open it in your file manager.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3596708716::INFORMAL"] = "AI Studio speichert deine Daten in zwei Ordnern auf diesem Computer. Wenn du deinen Computer mit einem Tool deiner Wahl sicherst, zum Beispiel mit [Restic](https://restic.net), [Borg](https://www.borgbackup.org) oder [Time Machine](https://support.apple.com/en-us/104984), erfährst du hier, welche Inhalte dieser Ordner in die Sicherung gehören und welche du auslassen kannst. Klicke auf einen Pfad, um ihn in die Zwischenablage zu kopieren, oder auf die Ordnerschaltfläche, um den Ordner in deinem Dateimanager zu öffnen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3596708716::INFORMAL"] = "AI Studio speichert deine Daten in zwei Ordnern auf diesem Rechner. Wenn du deinen Rechner mit einem eigenen Programm sicherst, etwa mit [Restic](https://restic.net), [Borg](https://www.borgbackup.org) oder [Time Machine](https://support.apple.com/de-de/104984), siehst du hier, welche Inhalte dieser Ordner in die Sicherung gehören und welche sie auslassen kann. Klicke auf einen Pfad, um ihn in die Zwischenablage zu kopieren, oder auf das Ordnersymbol, um ihn in deinem Dateimanager zu öffnen."
 
 -- Back up the indexes of your data sources only while AI Studio is closed. AI Studio writes to them while it runs, so a copy made meanwhile may not fit together, and AI Studio would have to embed your data sources anew.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3655837348"] = "Sichern Sie die Indexe Ihrer Datenquellen nur, wenn AI Studio geschlossen ist. Während AI Studio läuft, schreibt es in diese Indexe. Eine Kopie, die währenddessen entsteht, passt deshalb womöglich nicht zusammen, und AI Studio müsste Ihre Datenquellen neu einbetten."
@@ -17647,10 +17647,10 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauens
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951::INFORMAL"] = "Das Vertrauensniveau dieses Anbieters wurde **noch nicht** gründlich **untersucht und bewertet**. Wir wissen nicht, ob deine Daten sicher sind."
 
 -- No provider selected. Please select a provider to see its confidence level.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1030912284"] = "Kein Anbieter ausgewählt. Bitte wählen Sie einen Anbieter aus, um dessen Konfidenzniveau anzuzeigen."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1030912284"] = "Kein Anbieter ausgewählt. Bitte wählen Sie einen Anbieter aus, um dessen Vertrauensniveau zu sehen."
 
 -- No provider selected. Please select a provider to see its confidence level.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1030912284::INFORMAL"] = "Kein Anbieter ausgewählt. Bitte wähle einen Anbieter aus, um dessen Konfidenzniveau anzuzeigen."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1030912284::INFORMAL"] = "Kein Anbieter ausgewählt. Bitte wähle einen Anbieter aus, um dessen Vertrauensniveau zu sehen."
 
 -- You or your organization operate the LLM locally or within your trusted network. In terms of data processing and security, this is the best possible way.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2124364471"] = "Sie oder Ihre Organisation betreiben das LLM lokal oder innerhalb Ihres vertrauenswürdigen Netzwerks. In Bezug auf Datenverarbeitung und Sicherheit ist dies die bestmögliche Lösung."
