@@ -84,8 +84,9 @@ public partial class EmbeddedChat : MSGComponentBase
 
     /// <summary>
     /// Gets or sets a message which the chat sends by itself when it shows a conversation without any message of the
-    /// user, e.g., the first message of another chat on the same task. Sent once, when the chat loads; when it cannot
-    /// be sent, it waits in the field, so that the user can send it.
+    /// user, e.g., the first message of another chat on the same task. Sent once per chat, when the chat loads or, when
+    /// the message arrives later, as soon as it does; when it cannot be sent, it waits in the field, so that the user
+    /// can send it. See EmbeddedChatOpening.SendsNow.
     /// </summary>
     /// <remarks>
     /// The chat stores the message as it is, so give it a copy of its own, see ContentText.DeepClone.
@@ -148,6 +149,11 @@ public partial class EmbeddedChat : MSGComponentBase
     private Guid shownChatId;
 
     /// <summary>
+    /// The ID of the chat which sent its opening message already, so that it sends the message only once.
+    /// </summary>
+    private Guid openedChatId;
+
+    /// <summary>
     /// The message the user writes.
     /// </summary>
     private string userInput = string.Empty;
@@ -189,13 +195,16 @@ public partial class EmbeddedChat : MSGComponentBase
             this.attachments = [];
             this.conversation = await this.ChatService.GetAsync(this.Store, this.Component, this.ChatId, this.CreateThread);
             await this.RecountAsync();
-
-            // Not awaited: the answer arrives through ConversationChanged, and the parameters of the next render must not wait for it.
-            if (this.OpeningMessage is { } openingMessage && this.conversation is { IsAvailable: true, IsRunning: false, UserMessageCount: 0 })
-                _ = this.SendOpeningMessageAsync(openingMessage);
         }
         else if (this.countedProviderId != this.Provider.Id)
             await this.RecountAsync();
+
+        // Not awaited: the answer arrives through ConversationChanged, and the parameters of the next render must not wait for it.
+        if (EmbeddedChatOpening.SendsNow(this.OpeningMessage, this.conversation, this.openedChatId == this.ChatId))
+        {
+            this.openedChatId = this.ChatId;
+            _ = this.SendOpeningMessageAsync(this.OpeningMessage!);
+        }
     }
 
     protected override void DisposeResources()
