@@ -34,7 +34,7 @@ public partial class AssistantBatchProcessing
     /// Reads the log of the previous run and asks the user how to proceed.
     /// </summary>
     /// <returns>The previous log and results, or <c>null</c> when the user canceled.</returns>
-    private async Task<(Dictionary<string, BatchProcessingLogEntry> PreviousLog, Dictionary<string, string> PreviousResults)?> LoadPreviousRunAsync(string resolvedOutputDirectory, IReadOnlyList<string> files)
+    private async Task<(Dictionary<string, BatchProcessingLogEntry> PreviousLog, Dictionary<string, string> PreviousResults)?> LoadPreviousRunAsync(string resolvedOutputDirectory, IReadOnlyList<BatchProcessingUnit> units)
     {
         var previousLog = await this.ReadLogAsync(Path.Join(resolvedOutputDirectory, LOG_FILENAME));
 
@@ -48,9 +48,9 @@ public partial class AssistantBatchProcessing
 
         var numCompletedInLog = 0;
         var numRestorable = 0;
-        foreach (var file in files)
+        foreach (var unit in units)
         {
-            var relativePath = Path.GetRelativePath(this.inputDirectory, file);
+            var relativePath = unit.RelativePath;
             if (previousLog.TryGetValue(relativePath, out var entry) && entry.WasSuccessful)
                 numCompletedInLog++;
 
@@ -58,7 +58,7 @@ public partial class AssistantBatchProcessing
                 numRestorable++;
         }
 
-        var decision = await this.AskResumeDecisionAsync(numRestorable, files.Count - numRestorable, numCompletedInLog - numRestorable);
+        var decision = await this.AskResumeDecisionAsync(numRestorable, units.Count - numRestorable, numCompletedInLog - numRestorable);
         if (decision is null)
             return null;
 
@@ -118,25 +118,45 @@ public partial class AssistantBatchProcessing
     /// </summary>
     private async Task WriteResultsTableAsync(string resolvedOutputDirectory)
     {
+        var targetFilePath = Path.Join(resolvedOutputDirectory, this.ResolveResultsFileName());
+        if (this.tableFormat is BatchProcessingTableFormat.EXCEL)
+        {
+            List<IReadOnlyList<string>> rows = [[T("File"), this.ResultColumnHeader]];
+            rows.AddRange(this.fileResults
+                .Where(x => x.Status is BatchProcessingFileStatus.DONE)
+                .Select(fileResult => (IReadOnlyList<string>)[fileResult.RelativePath, fileResult.ResultText]));
+
+            await this.WriteOutputFileAsync(targetFilePath, tempFilePath =>
+            {
+                using var stream = File.Create(tempFilePath);
+                BatchProcessingExcel.Write(stream, rows);
+                return Task.CompletedTask;
+            });
+
+            return;
+        }
+
         var separator = this.csvSeparator.Character(this.customCsvSeparator);
         var sb = new StringBuilder();
         sb.Append(CsvWriter.ToRow(separator, T("File"), this.ResultColumnHeader)).Append(CsvWriter.ROW_END);
         foreach (var fileResult in this.fileResults.Where(x => x.Status is BatchProcessingFileStatus.DONE))
             sb.Append(CsvWriter.ToRow(separator, fileResult.RelativePath, fileResult.ResultText)).Append(CsvWriter.ROW_END);
 
-        await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, this.ResolveResultsFileName()), sb.ToString());
+        await this.WriteCsvFileAsync(targetFilePath, sb.ToString());
     }
 
-    private async Task WriteCsvFileAsync(string targetFilePath, string content)
+    // We write a CSV file with a byte order mark, so that spreadsheet
+    // applications recognize the UTF-8 encoding of, e.g., umlauts:
+    private Task WriteCsvFileAsync(string targetFilePath, string content) => this.WriteOutputFileAsync(targetFilePath, tempFilePath => File.WriteAllTextAsync(tempFilePath, content, new UTF8Encoding(true), CancellationToken.None));
+
+    private async Task WriteOutputFileAsync(string targetFilePath, Func<string, Task> writeFile)
     {
         // Write to a sibling file first, then rename. This way, an aborted
         // write can never destroy the results of the previous files:
         var tempFilePath = targetFilePath + ".tmp";
         try
         {
-            // We write the CSV file with a byte order mark, so that spreadsheet
-            // applications recognize the UTF-8 encoding of, e.g., umlauts:
-            await File.WriteAllTextAsync(tempFilePath, content, new UTF8Encoding(true), CancellationToken.None);
+            await writeFile(tempFilePath);
             File.Move(tempFilePath, targetFilePath, true);
         }
         catch (Exception e)
@@ -213,9 +233,19 @@ public partial class AssistantBatchProcessing
             if (!File.Exists(resultsFilePath))
                 return results;
 
-            var content = await File.ReadAllTextAsync(resultsFilePath);
-            var configuredSeparator = this.csvSeparator.Character(this.customCsvSeparator);
-            var rows = BatchProcessingCsv.ParseWithDetectedSeparator(content, [2], configuredSeparator, ';', '|', ',', '\t');
+            IEnumerable<IReadOnlyList<string>> rows;
+            if (this.tableFormat is BatchProcessingTableFormat.EXCEL)
+            {
+                await using var stream = File.OpenRead(resultsFilePath);
+                rows = BatchProcessingExcel.Read(stream);
+            }
+            else
+            {
+                var content = await File.ReadAllTextAsync(resultsFilePath);
+                var configuredSeparator = this.csvSeparator.Character(this.customCsvSeparator);
+                rows = BatchProcessingCsv.ParseWithDetectedSeparator(content, [2], configuredSeparator, ';', '|', ',', '\t');
+            }
+
             foreach (var row in rows.Skip(1))
             {
                 if (row.Count < 2 || string.IsNullOrWhiteSpace(row[0]))
@@ -239,13 +269,14 @@ public partial class AssistantBatchProcessing
     /// <remarks>
     /// Two documents of the same run may share their name and differ only in
     /// their extension, e.g., report.docx and report.pdf. Both would map to
-    /// report_result.md, so we add a counter for the second one. Otherwise, one
-    /// result would silently overwrite the other.
+    /// report_result.md, so we add a counter for the second one. The same holds
+    /// for a subfolder named report next to them. Otherwise, one result would
+    /// silently overwrite the other.
     /// </remarks>
-    private string CreateResultFileName(string sourceFileName)
+    /// <param name="stem">The name of the document without its extension, or the name of the subfolder.</param>
+    private string CreateResultFileName(string stem)
     {
         var extension = this.resultFileFormat.FileExtension;
-        var stem = Path.GetFileNameWithoutExtension(sourceFileName);
         var candidate = $"{stem}{RESULT_FILE_SUFFIX}{extension}";
 
         var counter = 2;
@@ -259,15 +290,29 @@ public partial class AssistantBatchProcessing
     }
 
     /// <summary>
-    /// Resolves the file name of the CSV results table. This is the only output
+    /// Resolves the file name of the results table. This is the only output
     /// file the user may name; the log always uses <see cref="LOG_FILENAME"/>.
     /// </summary>
+    /// <remarks>
+    /// The name always ends with the extension of the chosen table format. A name
+    /// with the extension of the other format gets the right one instead, so that
+    /// switching the format never writes an Excel workbook named results.csv.
+    /// </remarks>
     private string ResolveResultsFileName()
     {
         var name = this.csvFileName.Trim();
         if (string.IsNullOrWhiteSpace(name))
-            return DEFAULT_RESULTS_FILENAME;
+            name = DEFAULT_RESULTS_FILENAME;
 
-        return name.EndsWith(CSV_EXTENSION, StringComparison.OrdinalIgnoreCase) ? name : $"{name}{CSV_EXTENSION}";
+        foreach (var format in Enum.GetValues<BatchProcessingTableFormat>())
+        {
+            if (!name.EndsWith(format.FileExtension, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            name = name[..^format.FileExtension.Length];
+            break;
+        }
+
+        return $"{name}{this.tableFormat.FileExtension}";
     }
 }

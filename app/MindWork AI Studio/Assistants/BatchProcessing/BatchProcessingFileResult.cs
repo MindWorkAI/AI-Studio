@@ -28,6 +28,20 @@ public sealed class BatchProcessingFileResult
     public required string RelativePath { get; init; }
 
     /// <summary>
+    /// The files of a subfolder of the input folder, which are merged and sent to the model together.
+    /// Empty for a single file.
+    /// </summary>
+    /// <remarks>
+    /// For a subfolder, FilePath, FileName, and RelativePath name the subfolder, cf. BatchProcessingUnit.
+    /// </remarks>
+    public IReadOnlyList<string> MemberFiles { get; init; } = [];
+
+    /// <summary>
+    /// Whether this is a subfolder whose files are merged.
+    /// </summary>
+    public bool IsFolder => this.MemberFiles.Count > 0;
+
+    /// <summary>
     /// The processing state of the file.
     /// </summary>
     public BatchProcessingFileStatus Status { get; set; } = BatchProcessingFileStatus.QUEUED;

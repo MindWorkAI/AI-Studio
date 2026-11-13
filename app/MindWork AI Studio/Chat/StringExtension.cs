@@ -2,21 +2,105 @@
 
 public static class StringExtensions
 {
+    /// <summary>
+    /// The markers with which open models write their thinking into the answer itself, as pairs of
+    /// the opening and the closing marker.
+    /// </summary>
+    /// <remarks>
+    /// DeepSeek, Qwen, GLM, Kimi K2, Nemotron, and MiniMax write &lt;think&gt;, Magistral [THINK],
+    /// Command A of Cohere its own markers, older versions of Kimi ◁think▷, and Gemma 4 a channel
+    /// named thought. A server which separates the thinking, e.g., into reasoning_content, leaves
+    /// none of them in the answer.
+    /// </remarks>
+    private const string THINK_OPEN = "<think>";
+    private const string THINK_CLOSE = "</think>";
+
+    private static readonly (string Open, string Close)[] THINKING_MARKERS =
+    [
+        (THINK_OPEN, THINK_CLOSE),
+        ("[THINK]", "[/THINK]"),
+        ("<|START_THINKING|>", "<|END_THINKING|>"),
+        ("◁think▷", "◁/think▷"),
+        ("<|channel>thought", "<channel|>"),
+    ];
+
+    /// <summary>
+    /// Where gpt-oss starts its thinking in the Harmony format, when the server leaves the channels in the answer.
+    /// </summary>
+    private const string HARMONY_ANALYSIS = "<|channel|>analysis";
+
+    /// <summary>
+    /// How a message of the model starts in the Harmony format, when the server leaves it in the answer.
+    /// </summary>
+    private const string HARMONY_START = "<|start|>assistant";
+
+    /// <summary>
+    /// Where gpt-oss starts its answer in the Harmony format.
+    /// </summary>
+    private const string HARMONY_FINAL = "<|channel|>final<|message|>";
+
+    private static readonly string[] HARMONY_END_TOKENS = ["<|return|>", "<|end|>"];
+
     /// <param name="text">The text.</param>
     extension(string text)
     {
+        /// <summary>
+        /// Removes the thinking which a model wrote into its answer, so that only the answer remains.
+        /// </summary>
+        /// <remarks>
+        /// Recognizes the markers of THINKING_MARKERS and the channels of the Harmony format:
+        /// <list type="bullet">
+        /// <item>One or several blocks of thinking at the beginning are removed, also after a blank line.</item>
+        /// <item>A block which is not closed yet means that the model is still thinking, so nothing remains.</item>
+        /// <item>A closing &lt;/think&gt; without its opening one ends the thinking as well: since Qwen 3.5, the
+        /// opening marker is part of the prompt, and only the closing one appears in the answer. It counts only when
+        /// no &lt;think&gt; stands before it, so that an answer which explains these markers stays whole.</item>
+        /// <item>The Harmony format of gpt-oss counts only when the answer starts with it.</item>
+        /// </list>
+        /// Thinking in the middle of an answer stays, as does thinking in plain text, such as that of Granite 3.2:
+        /// neither can be told apart from an answer which merely mentions it.
+        /// </remarks>
+        /// <returns>The answer without the thinking; the text as it was when there is none.</returns>
         public string RemoveThinkTags()
         {
-            const string OPEN_TAG = "<think>";
-            const string CLOSE_TAG = "</think>";
-            if (string.IsNullOrWhiteSpace(text) || !text.StartsWith(OPEN_TAG, StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(text))
                 return text;
-        
-            var endIndex = text.IndexOf(CLOSE_TAG, StringComparison.Ordinal);
-            if (endIndex == -1)
-                return string.Empty;
-        
-            return text[(endIndex + CLOSE_TAG.Length)..];
+
+            //
+            // The Harmony format counts only when the answer starts with the thinking of gpt-oss, so
+            // that an answer which merely quotes its markers stays whole. Without the final channel,
+            // gpt-oss is still thinking:
+            //
+            var rest = text.AsSpan().TrimStart();
+            if (rest.StartsWith(HARMONY_ANALYSIS, StringComparison.Ordinal) || rest.StartsWith(HARMONY_START + HARMONY_ANALYSIS, StringComparison.Ordinal))
+            {
+                var finalChannel = text.LastIndexOf(HARMONY_FINAL, StringComparison.Ordinal);
+                return finalChannel < 0 ? string.Empty : WithoutHarmonyEndTokens(text[(finalChannel + HARMONY_FINAL.Length)..]);
+            }
+
+            var removedBlock = false;
+            while (ClosingMarkerOfLeadingBlock(rest) is { } close)
+            {
+                var end = rest.IndexOf(close, StringComparison.Ordinal);
+                if (end < 0)
+                    return string.Empty;
+
+                rest = rest[(end + close.Length)..].TrimStart();
+                removedBlock = true;
+            }
+
+            if (removedBlock)
+                return rest.ToString();
+
+            //
+            // Only the models with <think> put the opening marker into the prompt, so only their closing
+            // marker counts on its own:
+            //
+            var orphanEnd = text.IndexOf(THINK_CLOSE, StringComparison.Ordinal);
+            if (orphanEnd < 0 || text.AsSpan(0, orphanEnd).Contains(THINK_OPEN, StringComparison.Ordinal))
+                return text;
+
+            return text[(orphanEnd + THINK_CLOSE.Length)..].TrimStart();
         }
 
         /// <summary>
@@ -37,5 +121,40 @@ public static class StringExtensions
             var end = char.IsHighSurrogate(text[maxCharacters - 1]) ? maxCharacters - 1 : maxCharacters;
             return string.Concat(text.AsSpan(0, end).TrimEnd(), "...");
         }
+    }
+
+    /// <summary>
+    /// The closing marker of the block of thinking the text starts with, or null when it starts with none.
+    /// </summary>
+    private static string? ClosingMarkerOfLeadingBlock(ReadOnlySpan<char> text)
+    {
+        foreach (var (open, close) in THINKING_MARKERS)
+            if (text.StartsWith(open, StringComparison.Ordinal))
+                return close;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Removes the tokens with which the Harmony format ends a message, which a server may leave in the answer.
+    /// </summary>
+    private static string WithoutHarmonyEndTokens(string answer)
+    {
+        var trimmed = answer.TrimEnd();
+        var removedToken = true;
+        while (removedToken)
+        {
+            removedToken = false;
+            foreach (var token in HARMONY_END_TOKENS)
+            {
+                if (!trimmed.EndsWith(token, StringComparison.Ordinal))
+                    continue;
+
+                trimmed = trimmed[..^token.Length].TrimEnd();
+                removedToken = true;
+            }
+        }
+
+        return trimmed.TrimStart();
     }
 }

@@ -491,6 +491,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         if (!resultFileFormatIsValid && settingsTable.TryGetValue("DataBatchProcessing.ResultFileFormat", out _))
             LOG.LogWarning("The Batch Processing result file format configured by plugin {ConfigPluginId} must be one of {ResultFileFormats}.", this.Id, string.Join(", ", FileExportFormat.AnswerFormats));
 
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.TableFormat, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvFileName, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultColumnHeader, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvSeparator, this.Id, settingsTable, dryRun);

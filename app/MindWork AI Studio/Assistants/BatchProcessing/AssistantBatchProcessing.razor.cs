@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
@@ -20,8 +21,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private ModelImageService ModelImageService { get; init; } = null!;
 
     private const string DEFAULT_OUTPUT_DIRECTORY_NAME = "ai-results";
-    private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
-    private const string CSV_EXTENSION = ".csv";
+    private const string DEFAULT_RESULTS_FILENAME = "batch-results";
     internal const string RESULT_FILE_SUFFIX = "_result";
     private const string TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private const char LOG_SEPARATOR = ';';
@@ -83,6 +83,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.ApplyFormDefaults();
         this.importedPrompt = string.Empty;
         this.promptFileLoadIssue = string.Empty;
+        this.promptAttachments = [];
+        this.promptAttachmentsContent = string.Empty;
         this.fileResults.Clear();
         this.usedResultFileNames.Clear();
         this.hasReportedWriteFailure = false;
@@ -119,9 +121,17 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string promptFilePath = string.Empty;
     private string promptFileLoadIssue = string.Empty;
     private DataDocumentAnalysisPolicy? selectedPolicy;
+    private HashSet<FileAttachment> promptAttachments = [];
+
+    /// <summary>
+    /// The text of the attachments to the instructions, read once when a run starts, cf. LoadPromptAttachmentsAsync.
+    /// </summary>
+    private string promptAttachmentsContent = string.Empty;
+
     private BatchProcessingOutputMode outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
-    private FileExportFormat resultFileFormat = FileExportFormat.MARKDOWN;
+    private FileExportFormat resultFileFormat = DataBatchProcessing.DEFAULT_RESULT_FILE_FORMAT;
     private string resultColumnHeader = string.Empty;
+    private BatchProcessingTableFormat tableFormat = DataBatchProcessing.DEFAULT_TABLE_FORMAT;
     private string csvFileName = string.Empty;
     private BatchProcessingCsvSeparator csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
     private string customCsvSeparator = string.Empty;
@@ -208,8 +218,9 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.promptFilePath = string.Empty;
             this.selectedPolicy = null;
             this.outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
-            this.resultFileFormat = FileExportFormat.MARKDOWN;
+            this.resultFileFormat = DataBatchProcessing.DEFAULT_RESULT_FILE_FORMAT;
             this.resultColumnHeader = string.Empty;
+            this.tableFormat = DataBatchProcessing.DEFAULT_TABLE_FORMAT;
             this.csvFileName = string.Empty;
             this.csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
             this.customCsvSeparator = string.Empty;
@@ -233,6 +244,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.outputMode = settings.OutputMode;
         this.resultFileFormat = settings.ResultFileFormat;
         this.resultColumnHeader = settings.ResultColumnHeader;
+        this.tableFormat = settings.TableFormat;
         this.csvFileName = settings.CsvFileName;
         this.csvSeparator = settings.CsvSeparator;
         this.customCsvSeparator = settings.CustomCsvSeparator;

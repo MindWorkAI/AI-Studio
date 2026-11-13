@@ -13,7 +13,9 @@ public partial class AssistantBatchProcessing
         if (runPreparation is null)
             return;
 
-        var (resolvedOutputDirectory, files) = runPreparation.Value;
+        var (resolvedOutputDirectory, units) = runPreparation.Value;
+        if (!await this.LoadPromptAttachmentsAsync())
+            return;
 
         //
         // Every format but Markdown is written by Pandoc, so it has to be there before the first
@@ -36,20 +38,20 @@ public partial class AssistantBatchProcessing
         var previousResults = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (File.Exists(Path.Join(resolvedOutputDirectory, LOG_FILENAME)))
         {
-            var previousRun = await this.LoadPreviousRunAsync(resolvedOutputDirectory, files);
+            var previousRun = await this.LoadPreviousRunAsync(resolvedOutputDirectory, units);
             if (previousRun is null)
                 return;
 
             (previousLog, previousResults) = previousRun.Value;
         }
 
-        this.PrepareFileResults(resolvedOutputDirectory, files, previousLog, previousResults);
+        this.PrepareFileResults(resolvedOutputDirectory, units, previousLog, previousResults);
         await this.WarnAboutUnreadableImagesAsync();
         await this.CheckpointAssistantSession();
         await this.RunBatchAsync(resolvedOutputDirectory);
     }
 
-    private void PrepareFileResults(string resolvedOutputDirectory, IReadOnlyList<string> files, Dictionary<string, BatchProcessingLogEntry> previousLog, Dictionary<string, string> previousResults)
+    private void PrepareFileResults(string resolvedOutputDirectory, IReadOnlyList<BatchProcessingUnit> units, Dictionary<string, BatchProcessingLogEntry> previousLog, Dictionary<string, string> previousResults)
     {
         this.ClearInputIssues();
         this.fileResults.Clear();
@@ -57,14 +59,15 @@ public partial class AssistantBatchProcessing
         this.hasReportedWriteFailure = false;
         this.numProcessedFiles = 0;
         this.pauseBeforeNextFileSeconds = 0;
-        foreach (var file in files)
+        foreach (var unit in units)
         {
-            var relativePath = Path.GetRelativePath(this.inputDirectory, file);
+            var relativePath = unit.RelativePath;
             var fileResult = new BatchProcessingFileResult
             {
-                FilePath = file,
-                FileName = Path.GetFileName(file),
+                FilePath = unit.Path,
+                FileName = Path.GetFileName(unit.Path),
                 RelativePath = relativePath,
+                MemberFiles = unit.MemberFiles,
             };
 
             var canRestore = this.CanRestoreFromPreviousRun(relativePath, resolvedOutputDirectory, previousLog, previousResults, out var logEntry);
@@ -97,17 +100,27 @@ public partial class AssistantBatchProcessing
     /// </summary>
     /// <remarks>
     /// Counts only the images which this run still processes. Images done by an earlier run of a
-    /// continued batch keep their results and do not fail.
+    /// continued batch keep their results and do not fail. An image within a subfolder counts as
+    /// well, since it lets the whole subfolder fail.
     /// </remarks>
     private async Task WarnAboutUnreadableImagesAsync()
     {
-        var numImages = this.fileResults.Count(fileResult => fileResult.Status is not BatchProcessingFileStatus.DONE && IsImage(fileResult.FilePath));
+        var numImages = this.fileResults
+            .Where(fileResult => fileResult.Status is not BatchProcessingFileStatus.DONE)
+            .Sum(fileResult => FilesOf(fileResult).Count(IsImage));
         if (numImages == 0 || this.ProviderSettings.SupportsImageInput())
             return;
 
-        var warning = numImages == 1
-            ? T("The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.")
-            : string.Format(T("The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual."), numImages);
+        //
+        // An image in a subfolder lets the whole subfolder fail, documents included:
+        //
+        var imageInFolder = this.fileResults.Any(fileResult => fileResult.IsFolder && fileResult.Status is not BatchProcessingFileStatus.DONE && fileResult.MemberFiles.Any(IsImage));
+        var warning = (numImages == 1, imageInFolder) switch
+        {
+            (_, true) => T("The selected model cannot read images, so the images among the selected files will fail, and so will every subfolder which contains an image. All other files are processed as usual."),
+            (true, _) => T("The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual."),
+            _ => string.Format(T("The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual."), numImages),
+        };
 
         await this.MessageBus.SendWarning(new(AppIcons.IMAGE_NOT_SUPPORTED, warning));
     }
@@ -219,7 +232,7 @@ public partial class AssistantBatchProcessing
         string aiAnswer;
         try
         {
-            (aiAnswer, fileResult.UsedTools) = await this.CallAIAsync(fileResult.FileName, input.Value, token);
+            (aiAnswer, fileResult.UsedTools) = await this.CallAIAsync(fileResult, input.Value, token);
         }
         catch (OperationCanceledException)
         {
@@ -246,7 +259,7 @@ public partial class AssistantBatchProcessing
         // call, and quietly leaves out an image which is gone by then. The answer would be about
         // nothing and must not count as a result, so that continuing the run processes the image again:
         //
-        if (input.Value.Image is { Exists: false })
+        if (input.Value.Images.Any(image => !image.Exists))
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The image was no longer available while the model was asked about it."));
             return;
@@ -269,7 +282,11 @@ public partial class AssistantBatchProcessing
                 // the notice would repeat in every row and get in the way of whoever processes the table.
                 //
                 var resultText = this.DisclosureService.AddDisclosureToMarkdown(aiAnswer);
-                var resultFilePath = Path.Join(resolvedOutputDirectory, this.CreateResultFileName(fileResult.FileName));
+                //
+                // A subfolder keeps its whole name, e.g., 'Case 2026.11' becomes 'Case 2026.11_result.md':
+                //
+                var resultStem = fileResult.IsFolder ? fileResult.FileName : Path.GetFileNameWithoutExtension(fileResult.FileName);
+                var resultFilePath = Path.Join(resolvedOutputDirectory, this.CreateResultFileName(resultStem));
                 if (this.resultFileFormat.UsesPandoc)
                 {
                     //

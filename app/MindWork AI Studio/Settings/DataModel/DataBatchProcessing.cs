@@ -12,12 +12,14 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessing>>? configSelection = null)
 {
     public const string DEFAULT_FILE_PATTERNS = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm";
-    public const int MIN_DELAY_SECONDS = 6;
+    public const int MIN_DELAY_SECONDS = 3;
     public const int MAX_DELAY_SECONDS = 300;
     public const int DEFAULT_MIN_DELAY_SECONDS = 6;
     public const int DEFAULT_MAX_DELAY_SECONDS = 10;
     public const bool DEFAULT_INCLUDE_SUBDIRECTORIES = false;
     public const bool DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS = false;
+    public const FileExportFormat DEFAULT_RESULT_FILE_FORMAT = FileExportFormat.MICROSOFT_WORD;
+    public const BatchProcessingTableFormat DEFAULT_TABLE_FORMAT = BatchProcessingTableFormat.EXCEL;
 
     /// <summary>
     /// Initializes an unmanaged Batch Processing settings instance.
@@ -60,7 +62,7 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
     /// The tabular formats belong to the output mode TABLE_ONLY, which writes one table for the
     /// whole run instead of one file per document.
     /// </remarks>
-    public FileExportFormat ResultFileFormat { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultFileFormat, FileExportFormat.MARKDOWN);
+    public FileExportFormat ResultFileFormat { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultFileFormat, DEFAULT_RESULT_FILE_FORMAT);
 
     /// <summary>
     /// Whether the result files can be written in a format: only in one which holds an entire answer.
@@ -72,6 +74,14 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
     /// </remarks>
     public static bool IsValidResultFileFormat(FileExportFormat format) => FileExportFormat.AnswerFormats.Contains(format);
 
+    /// <summary>
+    /// The file format of the results table, which the output mode TABLE_ONLY writes.
+    /// </summary>
+    public BatchProcessingTableFormat TableFormat { get; set; } = ManagedConfiguration.Register(configSelection, value => value.TableFormat, DEFAULT_TABLE_FORMAT);
+
+    /// <summary>
+    /// The file name of the results table. Despite its name, it serves the Excel format as well.
+    /// </summary>
     public string CsvFileName { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvFileName, string.Empty);
 
     public string ResultColumnHeader { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultColumnHeader, string.Empty);

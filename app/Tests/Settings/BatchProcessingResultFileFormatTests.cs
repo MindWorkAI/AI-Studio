@@ -52,12 +52,12 @@ public sealed class BatchProcessingResultFileFormatTests
     [Test]
     public async Task APluginPreselectsAFormatForEntireAnswers()
     {
-        var processed = await ProcessAsync("MICROSOFT_WORD");
+        var processed = await ProcessAsync("OPEN_DOCUMENT_TEXT");
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(processed, Is.True);
-            Assert.That(this.ResultFileFormat, Is.EqualTo(FileExportFormat.MICROSOFT_WORD));
+            Assert.That(this.ResultFileFormat, Is.EqualTo(FileExportFormat.OPEN_DOCUMENT_TEXT));
         }
     }
 

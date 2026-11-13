@@ -70,6 +70,13 @@ internal sealed class BatchProcessingOutputFolder(string inputDirectory, string 
             || string.Equals(fileName, resultsFileName, StringComparison.OrdinalIgnoreCase))
             return true;
 
+        //
+        // The results table of the other table format, written before the user switched the format:
+        //
+        if (string.Equals(Path.GetFileNameWithoutExtension(fileName), Path.GetFileNameWithoutExtension(resultsFileName), StringComparison.OrdinalIgnoreCase)
+            && Enum.GetValues<BatchProcessingTableFormat>().Any(format => string.Equals(Path.GetExtension(fileName), format.FileExtension, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
         var stem = Path.GetFileNameWithoutExtension(fileName);
         var suffixIndex = stem.LastIndexOf(AssistantBatchProcessing.RESULT_FILE_SUFFIX, StringComparison.OrdinalIgnoreCase);
         if (suffixIndex < 0)

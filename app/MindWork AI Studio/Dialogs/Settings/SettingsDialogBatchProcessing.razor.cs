@@ -67,6 +67,13 @@ public partial class SettingsDialogBatchProcessing : SettingsDialogBase
             .Select(value => new ConfigurationSelectData<FileExportFormat>(value.Name, value))
     ];
 
+    private static IReadOnlyList<ConfigurationSelectData<BatchProcessingTableFormat>> TableFormatData =>
+    [
+        .. Enum
+            .GetValues<BatchProcessingTableFormat>()
+            .Select(value => new ConfigurationSelectData<BatchProcessingTableFormat>(value.Name, value))
+    ];
+
     private IReadOnlyList<ConfigurationSelectData<BatchProcessingCsvSeparator>> CsvSeparatorData =>
     [
         .. Enum

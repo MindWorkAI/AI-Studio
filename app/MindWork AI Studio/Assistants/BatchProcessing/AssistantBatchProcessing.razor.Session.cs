@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
 
@@ -18,9 +19,12 @@ public partial class AssistantBatchProcessing
     private static readonly AssistantSessionStateKey<string> PROMPT_FILE_PATH_STATE_KEY = new(nameof(promptFilePath));
     private static readonly AssistantSessionStateKey<string> PROMPT_FILE_LOAD_ISSUE_STATE_KEY = new(nameof(promptFileLoadIssue));
     private static readonly AssistantSessionStateKey<DataDocumentAnalysisPolicy?> SELECTED_POLICY_STATE_KEY = new(nameof(selectedPolicy));
+    private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> PROMPT_ATTACHMENTS_STATE_KEY = new(nameof(promptAttachments));
+    private static readonly AssistantSessionStateKey<string> PROMPT_ATTACHMENTS_CONTENT_STATE_KEY = new(nameof(promptAttachmentsContent));
     private static readonly AssistantSessionStateKey<BatchProcessingOutputMode> OUTPUT_MODE_STATE_KEY = new(nameof(outputMode));
     private static readonly AssistantSessionStateKey<FileExportFormat> RESULT_FILE_FORMAT_STATE_KEY = new(nameof(resultFileFormat));
     private static readonly AssistantSessionStateKey<string> RESULT_COLUMN_HEADER_STATE_KEY = new(nameof(resultColumnHeader));
+    private static readonly AssistantSessionStateKey<BatchProcessingTableFormat> TABLE_FORMAT_STATE_KEY = new(nameof(tableFormat));
     private static readonly AssistantSessionStateKey<string> CSV_FILE_NAME_STATE_KEY = new(nameof(csvFileName));
     private static readonly AssistantSessionStateKey<BatchProcessingCsvSeparator> CSV_SEPARATOR_STATE_KEY = new(nameof(csvSeparator));
     private static readonly AssistantSessionStateKey<string> CUSTOM_CSV_SEPARATOR_STATE_KEY = new(nameof(customCsvSeparator));
@@ -50,9 +54,12 @@ public partial class AssistantBatchProcessing
         state.Set(PROMPT_FILE_PATH_STATE_KEY, this.promptFilePath);
         state.Set(PROMPT_FILE_LOAD_ISSUE_STATE_KEY, this.promptFileLoadIssue);
         state.Set(SELECTED_POLICY_STATE_KEY, this.selectedPolicy);
+        state.SetHashSet(PROMPT_ATTACHMENTS_STATE_KEY, this.promptAttachments);
+        state.Set(PROMPT_ATTACHMENTS_CONTENT_STATE_KEY, this.promptAttachmentsContent);
         state.Set(OUTPUT_MODE_STATE_KEY, this.outputMode);
         state.Set(RESULT_FILE_FORMAT_STATE_KEY, this.resultFileFormat);
         state.Set(RESULT_COLUMN_HEADER_STATE_KEY, this.resultColumnHeader);
+        state.Set(TABLE_FORMAT_STATE_KEY, this.tableFormat);
         state.Set(CSV_FILE_NAME_STATE_KEY, this.csvFileName);
         state.Set(CSV_SEPARATOR_STATE_KEY, this.csvSeparator);
         state.Set(CUSTOM_CSV_SEPARATOR_STATE_KEY, this.customCsvSeparator);
@@ -83,9 +90,12 @@ public partial class AssistantBatchProcessing
         state.Restore(PROMPT_FILE_PATH_STATE_KEY, value => this.promptFilePath = value);
         state.Restore(PROMPT_FILE_LOAD_ISSUE_STATE_KEY, value => this.promptFileLoadIssue = value);
         state.Restore(SELECTED_POLICY_STATE_KEY, value => this.selectedPolicy = value);
+        state.RestoreHashSet(PROMPT_ATTACHMENTS_STATE_KEY, this.promptAttachments);
+        state.Restore(PROMPT_ATTACHMENTS_CONTENT_STATE_KEY, value => this.promptAttachmentsContent = value);
         state.Restore(OUTPUT_MODE_STATE_KEY, value => this.outputMode = value);
         state.Restore(RESULT_FILE_FORMAT_STATE_KEY, value => this.resultFileFormat = value);
         state.Restore(RESULT_COLUMN_HEADER_STATE_KEY, value => this.resultColumnHeader = value);
+        state.Restore(TABLE_FORMAT_STATE_KEY, value => this.tableFormat = value);
         state.Restore(CSV_FILE_NAME_STATE_KEY, value => this.csvFileName = value);
         state.Restore(CSV_SEPARATOR_STATE_KEY, value => this.csvSeparator = value);
         state.Restore(CUSTOM_CSV_SEPARATOR_STATE_KEY, value => this.customCsvSeparator = value);
@@ -111,11 +121,13 @@ public partial class AssistantBatchProcessing
             FilePath = source.FilePath,
             FileName = source.FileName,
             RelativePath = source.RelativePath,
+            MemberFiles = source.MemberFiles,
             Status = source.Status,
             Message = source.Message,
             ResultText = source.ResultText,
             ModelName = source.ModelName,
             ProcessedAt = source.ProcessedAt,
+            UsedTools = source.UsedTools,
         };
     }
 }
