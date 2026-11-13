@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Provider;
 
 namespace AIStudio.Assistants.ModelComparison;
@@ -46,10 +48,14 @@ public sealed record ModelComparisonModelIdentity
     };
 
     /// <summary>
+    /// Gets what tells this model apart from others, whatever the label.
+    /// </summary>
+    [JsonIgnore]
+    public ModelComparisonModelKey Key => ModelComparisonModelKey.Of(this.LLMProvider, this.Hostname, this.ModelId);
+
+    /// <summary>
     /// Whether both identities name the same model, whatever the label.
     /// </summary>
     /// <param name="other">The other identity.</param>
-    public bool IsSameModelAs(ModelComparisonModelIdentity other) => this.LLMProvider == other.LLMProvider
-        && string.Equals(this.Hostname, other.Hostname, StringComparison.OrdinalIgnoreCase)
-        && string.Equals(this.ModelId, other.ModelId, StringComparison.Ordinal);
+    public bool IsSameModelAs(ModelComparisonModelIdentity other) => this.Key == other.Key;
 }

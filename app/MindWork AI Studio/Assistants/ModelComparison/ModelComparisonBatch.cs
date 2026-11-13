@@ -196,12 +196,12 @@ public sealed class ModelComparisonBatch(int runCount)
     /// <summary>
     /// Counts the votes of the user across the runs which arrived.
     /// </summary>
-    public ModelComparisonTally TallyVotes() => ModelComparisonTally.Of([.. Enumerable.Range(0, this.entries.Count).Select(this.VoteChoiceAt)]);
+    public ModelComparisonTally TallyVotes() => ModelComparisonTally.Of(Enumerable.Range(0, this.entries.Count).Select(this.VoteChoiceAt));
 
     /// <summary>
     /// Counts the verdicts of the judge across the runs which arrived.
     /// </summary>
-    public ModelComparisonTally TallyJudgeVerdicts() => ModelComparisonTally.Of([.. Enumerable.Range(0, this.entries.Count).Select(this.JudgeChoiceAt)]);
+    public ModelComparisonTally TallyJudgeVerdicts() => ModelComparisonTally.Of(Enumerable.Range(0, this.entries.Count).Select(this.JudgeChoiceAt));
 
     /// <summary>
     /// Copies the batch, for a snapshot of the assistant session: a snapshot must not change with the batch it was

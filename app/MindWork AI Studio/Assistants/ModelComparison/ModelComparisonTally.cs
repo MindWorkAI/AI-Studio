@@ -32,15 +32,33 @@ public sealed record ModelComparisonTally
     public int UnscoredRunCount => this.TotalRunCount - this.ScoredRunCount;
 
     /// <summary>
+    /// The tally of no runs at all.
+    /// </summary>
+    public static readonly ModelComparisonTally NONE = new()
+    {
+        TotalRunCount = 0,
+        FirstModelWins = 0,
+        SecondModelWins = 0,
+        Ties = 0,
+    };
+
+    /// <summary>
     /// Counts the choices of several runs.
     /// </summary>
     /// <param name="choices">The choice of each run, already turned from a column into a model; null for a run without a usable choice.</param>
     /// <returns>The tally.</returns>
-    public static ModelComparisonTally Of(IReadOnlyCollection<ModelComparisonModelChoice?> choices) => new()
+    public static ModelComparisonTally Of(IEnumerable<ModelComparisonModelChoice?> choices) => choices.Aggregate(NONE, (tally, choice) => tally.Plus(choice));
+
+    /// <summary>
+    /// Counts one more run.
+    /// </summary>
+    /// <param name="choice">The choice of the run, already turned from a column into a model; null for a run without a usable choice.</param>
+    /// <returns>The tally with the run.</returns>
+    public ModelComparisonTally Plus(ModelComparisonModelChoice? choice) => this with
     {
-        TotalRunCount = choices.Count,
-        FirstModelWins = choices.Count(choice => choice is ModelComparisonModelChoice.FIRST),
-        SecondModelWins = choices.Count(choice => choice is ModelComparisonModelChoice.SECOND),
-        Ties = choices.Count(choice => choice is ModelComparisonModelChoice.TIE),
+        TotalRunCount = this.TotalRunCount + 1,
+        FirstModelWins = this.FirstModelWins + (choice is ModelComparisonModelChoice.FIRST ? 1 : 0),
+        SecondModelWins = this.SecondModelWins + (choice is ModelComparisonModelChoice.SECOND ? 1 : 0),
+        Ties = this.Ties + (choice is ModelComparisonModelChoice.TIE ? 1 : 0),
     };
 }
