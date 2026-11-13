@@ -229,7 +229,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         }
         else if (comparisonPlugin.IETFTag != this.selectedTargetLanguage.IETFTag)
         {
-            this.loadingIssue = string.Format(TA("The selected language plugin for comparison uses the IETF tag '{0}' which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."), comparisonPlugin.IETFTag, this.selectedTargetLanguage.IETFTag);
+            this.loadingIssue = string.Format(TA("The selected language plugin for comparison uses the IETF tag '{0}', which does not match the selected target language '{1}'. Please select a valid, loaded & running language plugin which matches the target language."), comparisonPlugin.IETFTag, this.selectedTargetLanguage.IETFTag);
             this.selectedLanguagePlugin = null;
         }
         else
