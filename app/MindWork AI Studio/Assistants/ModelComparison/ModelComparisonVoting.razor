@@ -12,36 +12,55 @@
             @TA("You do not know which model wrote which answer, and the columns are in random order. Compare them by what they say. You learn the names at the end.")
         </MudText>
 
-        @* Two columns in every width, and the two cards in the same row: that is what keeps them equally high. *@
-        <MudGrid Class="mb-3" Spacing="3">
-            <ModelComparisonAnswerCard Title="@T("Answer A")" Answer="@this.Entry.PresentationOrder.InColumnA(this.Entry.Result)" Time="@this.Entry.Result.Time"/>
-            <ModelComparisonAnswerCard Title="@T("Answer B")" Answer="@this.Entry.PresentationOrder.InColumnB(this.Entry.Result)" Time="@this.Entry.Result.Time"/>
-        </MudGrid>
+        @* From the breakpoint md on, both cards stand in the same row, which keeps them equally high, and the question
+           with its buttons follows below: the button of each answer under its column, the tie between them. In a
+           narrower window, the question comes first, and each answer is followed by its own button, with a line
+           between the two answers. The order classes arrange both from the same markup. *@
+        <MudGrid Spacing="3">
+            <MudItem xs="12" Class="order-0 order-md-3">
+                <MudText Typo="Typo.h6">
+                    @T("Which answer is better?")
+                </MudText>
+            </MudItem>
 
-        <MudText Typo="Typo.h6" Class="mb-2">
-            @T("Which answer is better?")
-        </MudText>
+            <ModelComparisonAnswerCard Title="@T("Answer A")" Answer="@this.Entry.PresentationOrder.InColumnA(this.Entry.Result)" Time="@this.Entry.Result.Time" ItemClass="order-1 order-md-1"/>
+            <MudItem xs="12" md="4" Class="d-flex justify-center justify-md-start order-2 order-md-4">
+                <MudButton Variant="Variant.Filled" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.COLUMN_A))">
+                    @T("Answer A is better")
+                </MudButton>
+            </MudItem>
 
-        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
-            <MudButton Variant="Variant.Filled" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.COLUMN_A))">
-                @T("Answer A is better")
-            </MudButton>
-            <MudButton Variant="Variant.Filled" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.COLUMN_B))">
-                @T("Answer B is better")
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.TIE))">
-                @T("Both are equally good")
-            </MudButton>
+            <MudItem xs="12" Class="d-md-none order-3">
+                <MudDivider/>
+            </MudItem>
+
+            <ModelComparisonAnswerCard Title="@T("Answer B")" Answer="@this.Entry.PresentationOrder.InColumnB(this.Entry.Result)" Time="@this.Entry.Result.Time" ItemClass="order-4 order-md-2"/>
+            <MudItem xs="12" md="4" Class="d-flex justify-center justify-md-end order-5 order-md-6">
+                <MudButton Variant="Variant.Filled" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.COLUMN_B))">
+                    @T("Answer B is better")
+                </MudButton>
+            </MudItem>
+
+            <MudItem xs="12" md="4" Class="d-flex justify-center order-6 order-md-5">
+                <MudButton Variant="Variant.Outlined" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.TIE))">
+                    @T("Both are equally good")
+                </MudButton>
+            </MudItem>
+
             @if (this.Batch.RunCount > 1)
             {
-                <MudButton Variant="Variant.Text" OnClick="@(() => this.SkipThisRun.InvokeAsync())">
-                    @T("Skip this run")
-                </MudButton>
-                <MudButton Variant="Variant.Text" OnClick="@(() => this.SkipRemainingVotes.InvokeAsync())">
-                    @T("Skip remaining votes")
-                </MudButton>
+                <MudItem xs="12" Class="d-flex justify-center order-7 order-md-7">
+                    <MudStack Row="true" Wrap="Wrap.Wrap" Justify="Justify.Center" Spacing="2">
+                        <MudButton Variant="Variant.Text" OnClick="@(() => this.SkipThisRun.InvokeAsync())">
+                            @T("Skip this run")
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" OnClick="@(() => this.SkipRemainingVotes.InvokeAsync())">
+                            @T("Skip remaining votes")
+                        </MudButton>
+                    </MudStack>
+                </MudItem>
             }
-        </MudStack>
+        </MudGrid>
     </MudPaper>
 }
 else

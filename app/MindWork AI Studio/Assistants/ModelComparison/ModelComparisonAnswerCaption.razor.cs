@@ -39,6 +39,13 @@ public partial class ModelComparisonAnswerCaption : MSGComponentBase
     public ModelComparisonModelChoice? JudgeChoice { get; set; }
 
     /// <summary>
+    /// Gets or sets further classes of the column, e.g., its order in the grid, which differs in a narrow window:
+    /// there, the caption follows right below its answer.
+    /// </summary>
+    [Parameter]
+    public string ItemClass { get; set; } = string.Empty;
+
+    /// <summary>
     /// Says how long the answer took: until the first piece arrived, and until it was complete.
     /// </summary>
     private string TimesText => string.Format(

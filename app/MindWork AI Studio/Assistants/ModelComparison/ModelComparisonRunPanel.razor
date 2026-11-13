@@ -17,11 +17,16 @@
         </div>
     </TitleContent>
     <ChildContent>
+        @* From the breakpoint md on, both cards in one row and both captions in the next; in a narrower window, each
+           caption right below its answer, with a line between the two answers. *@
         <MudGrid Class="mb-3" Spacing="3">
-            <ModelComparisonAnswerCard Title="@T("First model")" Answer="@this.Entry.Result.First" Time="@this.Entry.Result.Time" CardClass="@ModelComparisonOutcome.CardClassOf(this.VoteChoice, ModelComparisonModelChoice.FIRST)"/>
-            <ModelComparisonAnswerCard Title="@T("Second model")" Answer="@this.Entry.Result.Second" Time="@this.Entry.Result.Time" CardClass="@ModelComparisonOutcome.CardClassOf(this.VoteChoice, ModelComparisonModelChoice.SECOND)"/>
-            <ModelComparisonAnswerCaption Answer="@this.Entry.Result.First" Model="@ModelComparisonModelChoice.FIRST" VoteChoice="@this.VoteChoice" JudgeChoice="@this.JudgeChoice"/>
-            <ModelComparisonAnswerCaption Answer="@this.Entry.Result.Second" Model="@ModelComparisonModelChoice.SECOND" VoteChoice="@this.VoteChoice" JudgeChoice="@this.JudgeChoice"/>
+            <ModelComparisonAnswerCard Title="@T("First model")" Answer="@this.Entry.Result.First" Time="@this.Entry.Result.Time" CardClass="@ModelComparisonOutcome.CardClassOf(this.VoteChoice, ModelComparisonModelChoice.FIRST)" ItemClass="order-1 order-md-1"/>
+            <ModelComparisonAnswerCaption Answer="@this.Entry.Result.First" Model="@ModelComparisonModelChoice.FIRST" VoteChoice="@this.VoteChoice" JudgeChoice="@this.JudgeChoice" ItemClass="order-2 order-md-3"/>
+            <MudItem xs="12" Class="d-md-none order-3">
+                <MudDivider/>
+            </MudItem>
+            <ModelComparisonAnswerCard Title="@T("Second model")" Answer="@this.Entry.Result.Second" Time="@this.Entry.Result.Time" CardClass="@ModelComparisonOutcome.CardClassOf(this.VoteChoice, ModelComparisonModelChoice.SECOND)" ItemClass="order-4 order-md-2"/>
+            <ModelComparisonAnswerCaption Answer="@this.Entry.Result.Second" Model="@ModelComparisonModelChoice.SECOND" VoteChoice="@this.VoteChoice" JudgeChoice="@this.JudgeChoice" ItemClass="order-5 order-md-4"/>
         </MudGrid>
 
         <ModelComparisonJudgeVerdictCard Result="@this.Entry.Result" VoteChoice="@this.VoteChoice" JudgeChoice="@this.JudgeChoice"/>

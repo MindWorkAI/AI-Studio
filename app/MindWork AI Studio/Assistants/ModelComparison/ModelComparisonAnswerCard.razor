@@ -1,7 +1,7 @@
 @using AIStudio.Chat
 @inherits MSGComponentBase
 
-<MudItem xs="6" Class="d-flex flex-column">
+<MudItem xs="12" md="6" Class="@($"d-flex flex-column {this.ItemClass}")">
     <MudText Typo="Typo.subtitle1">
         @this.Title
     </MudText>
