@@ -8,7 +8,10 @@ public partial class AssistantBatchProcessing
     private static readonly AssistantSessionStateKey<string> INPUT_DIRECTORY_STATE_KEY = new(nameof(inputDirectory));
     private static readonly AssistantSessionStateKey<string> OUTPUT_DIRECTORY_STATE_KEY = new(nameof(outputDirectory));
     private static readonly AssistantSessionStateKey<string> FILE_PATTERNS_STATE_KEY = new(nameof(filePatterns));
+    private static readonly AssistantSessionStateKey<string> EXCLUDE_PATTERNS_STATE_KEY = new(nameof(excludePatterns));
+    private static readonly AssistantSessionStateKey<int> MAX_FILE_SIZE_MEGABYTES_STATE_KEY = new(nameof(maxFileSizeMegabytes));
     private static readonly AssistantSessionStateKey<bool> INCLUDE_SUBDIRECTORIES_STATE_KEY = new(nameof(includeSubdirectories));
+    private static readonly AssistantSessionStateKey<bool> INCLUDE_HIDDEN_FILES_AND_FOLDERS_STATE_KEY = new(nameof(includeHiddenFilesAndFolders));
     private static readonly AssistantSessionStateKey<BatchProcessingPromptSource> PROMPT_SOURCE_STATE_KEY = new(nameof(promptSource));
     private static readonly AssistantSessionStateKey<string> FREE_PROMPT_STATE_KEY = new(nameof(freePrompt));
     private static readonly AssistantSessionStateKey<string> IMPORTED_PROMPT_STATE_KEY = new(nameof(importedPrompt));
@@ -28,6 +31,7 @@ public partial class AssistantBatchProcessing
     private static readonly AssistantSessionStateKey<bool> IS_PROCESSING_BATCH_STATE_KEY = new(nameof(isProcessingBatch));
     private static readonly AssistantSessionStateKey<bool> HAS_REPORTED_WRITE_FAILURE_STATE_KEY = new(nameof(hasReportedWriteFailure));
     private static readonly AssistantSessionStateKey<int> NUM_PROCESSED_FILES_STATE_KEY = new(nameof(numProcessedFiles));
+    private static readonly AssistantSessionStateKey<int> NUM_TOO_LARGE_FILES_STATE_KEY = new(nameof(numTooLargeFiles));
     private static readonly AssistantSessionStateKey<int> PAUSE_BEFORE_NEXT_FILE_SECONDS_STATE_KEY = new(nameof(pauseBeforeNextFileSeconds));
 
     /// <inheritdoc />
@@ -36,7 +40,10 @@ public partial class AssistantBatchProcessing
         state.Set(INPUT_DIRECTORY_STATE_KEY, this.inputDirectory);
         state.Set(OUTPUT_DIRECTORY_STATE_KEY, this.outputDirectory);
         state.Set(FILE_PATTERNS_STATE_KEY, this.filePatterns);
+        state.Set(EXCLUDE_PATTERNS_STATE_KEY, this.excludePatterns);
+        state.Set(MAX_FILE_SIZE_MEGABYTES_STATE_KEY, this.maxFileSizeMegabytes);
         state.Set(INCLUDE_SUBDIRECTORIES_STATE_KEY, this.includeSubdirectories);
+        state.Set(INCLUDE_HIDDEN_FILES_AND_FOLDERS_STATE_KEY, this.includeHiddenFilesAndFolders);
         state.Set(PROMPT_SOURCE_STATE_KEY, this.promptSource);
         state.Set(FREE_PROMPT_STATE_KEY, this.freePrompt);
         state.Set(IMPORTED_PROMPT_STATE_KEY, this.importedPrompt);
@@ -56,6 +63,7 @@ public partial class AssistantBatchProcessing
         state.Set(IS_PROCESSING_BATCH_STATE_KEY, this.isProcessingBatch);
         state.Set(HAS_REPORTED_WRITE_FAILURE_STATE_KEY, this.hasReportedWriteFailure);
         state.Set(NUM_PROCESSED_FILES_STATE_KEY, this.numProcessedFiles);
+        state.Set(NUM_TOO_LARGE_FILES_STATE_KEY, this.numTooLargeFiles);
         state.Set(PAUSE_BEFORE_NEXT_FILE_SECONDS_STATE_KEY, this.pauseBeforeNextFileSeconds);
     }
 
@@ -65,7 +73,10 @@ public partial class AssistantBatchProcessing
         state.Restore(INPUT_DIRECTORY_STATE_KEY, value => this.inputDirectory = value);
         state.Restore(OUTPUT_DIRECTORY_STATE_KEY, value => this.outputDirectory = value);
         state.Restore(FILE_PATTERNS_STATE_KEY, value => this.filePatterns = value);
+        state.Restore(EXCLUDE_PATTERNS_STATE_KEY, value => this.excludePatterns = value);
+        state.Restore(MAX_FILE_SIZE_MEGABYTES_STATE_KEY, value => this.maxFileSizeMegabytes = value);
         state.Restore(INCLUDE_SUBDIRECTORIES_STATE_KEY, value => this.includeSubdirectories = value);
+        state.Restore(INCLUDE_HIDDEN_FILES_AND_FOLDERS_STATE_KEY, value => this.includeHiddenFilesAndFolders = value);
         state.Restore(PROMPT_SOURCE_STATE_KEY, value => this.promptSource = value);
         state.Restore(FREE_PROMPT_STATE_KEY, value => this.freePrompt = value);
         state.Restore(IMPORTED_PROMPT_STATE_KEY, value => this.importedPrompt = value);
@@ -89,6 +100,7 @@ public partial class AssistantBatchProcessing
         state.Restore(IS_PROCESSING_BATCH_STATE_KEY, value => this.isProcessingBatch = value);
         state.Restore(HAS_REPORTED_WRITE_FAILURE_STATE_KEY, value => this.hasReportedWriteFailure = value);
         state.Restore(NUM_PROCESSED_FILES_STATE_KEY, value => this.numProcessedFiles = value);
+        state.Restore(NUM_TOO_LARGE_FILES_STATE_KEY, value => this.numTooLargeFiles = value);
         state.Restore(PAUSE_BEFORE_NEXT_FILE_SECONDS_STATE_KEY, value => this.pauseBeforeNextFileSeconds = value);
     }
 

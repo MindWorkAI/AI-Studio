@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using SharedTools;
 
@@ -28,8 +29,37 @@ public sealed record EmbeddingProvider(
     int TokenLimit = 0,
     bool AllowUserProvidedAPIKey = false,
     string CustomIconDataUrl = "",
-    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
+    bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost. Keep them first and in the order of the parameters, which is
+    // the order they get stored in:
+    //
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public override string Name { get; set; } = Name;
+    public LLMProviders UsedLLMProvider { get; set; } = UsedLLMProvider;
+    public Model Model { get; set; } = Model;
+    public bool IsSelfHosted { get; set; } = IsSelfHosted;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+    public string Hostname { get; set; } = Hostname;
+    public Host Host { get; set; } = Host;
+
+    [JsonConverter(typeof(DataDirectoryRelativePathConverter))]
+    public string TokenizerPath { get; set; } = TokenizerPath;
+
+    public string TokenizerFingerprint { get; set; } = TokenizerFingerprint;
+    public int EmbeddingBatchSize { get; set; } = EmbeddingBatchSize;
+    public int TokenLimit { get; set; } = TokenLimit;
+    public bool AllowUserProvidedAPIKey { get; set; } = AllowUserProvidedAPIKey;
+    public string CustomIconDataUrl { get; set; } = CustomIconDataUrl;
+    public HFInferenceProvider HFInferenceProvider { get; set; } = HFInferenceProvider;
+    public bool PromptForUserAPIKey { get; set; } = PromptForUserAPIKey;
+
     public const int DEFAULT_TOKEN_LIMIT = 8192;
     public const int DEFAULT_EMBEDDING_BATCH_SIZE = 1;
 
@@ -47,7 +77,7 @@ public sealed record EmbeddingProvider(
 
     /// <inheritdoc />
     [JsonIgnore]
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToSecretId()}" : this.UsedLLMProvider.ToSecretId();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.SecretId}" : this.UsedLLMProvider.SecretId;
 
     /// <inheritdoc />
     [JsonIgnore]
@@ -61,7 +91,7 @@ public sealed record EmbeddingProvider(
 
     #endregion
 
-    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject provider)
+    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, bool dryRun, out ConfigurationBaseObject provider)
     {
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -127,9 +157,7 @@ public sealed record EmbeddingProvider(
             embeddingBatchSize = DEFAULT_EMBEDDING_BATCH_SIZE;
         }
 
-        var allowUserProvidedApiKey = false;
-        if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
-            allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
+        var apiKeyOptions = UserProvidedAPIKeyOptions.Read(table);
 
         var hfInferenceProvider = HFInferenceProvider.NONE;
         if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
@@ -165,7 +193,8 @@ public sealed record EmbeddingProvider(
             TokenizerPath = tokenizerPath,
             EmbeddingBatchSize = embeddingBatchSize,
             TokenLimit = tokenLimit,
-            AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            AllowUserProvidedAPIKey = apiKeyOptions.AllowUserProvidedAPIKey,
+            PromptForUserAPIKey = apiKeyOptions.PromptForUserAPIKey,
             CustomIconDataUrl = customIconDataUrl,
             HFInferenceProvider = hfInferenceProvider,
         };
@@ -173,7 +202,7 @@ public sealed record EmbeddingProvider(
         // Handle an encrypted API key if present. When the user manages their own key for this
         // embedding provider, we must never enqueue an embedded key: doing so would overwrite the
         // user's key in the OS keyring on every configuration reload.
-        if (allowUserProvidedApiKey)
+        if (apiKeyOptions.AllowUserProvidedAPIKey)
         {
             if (table.TryGetValue("APIKey", out var ignoredApiKeyValue) && ignoredApiKeyValue.TryRead<string>(out var ignoredApiKeyText) && !string.IsNullOrWhiteSpace(ignoredApiKeyText))
                 LOGGER.LogWarning($"The configured embedding provider {idx} sets both AllowUserProvidedAPIKey and an embedded APIKey. Ignoring the embedded key: the user manages their own key for this provider. (Plugin ID: {configPluginId})");
@@ -181,7 +210,7 @@ public sealed record EmbeddingProvider(
         else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
-                LOGGER.LogWarning($"The configured embedding provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+                LOGGER.LogWarning($"The configured embedding provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             else
             {
                 var encryption = PluginFactory.EnterpriseEncryption;
@@ -189,13 +218,20 @@ public sealed record EmbeddingProvider(
                 {
                     if (encryption.TryDecrypt(apiKeyText, out var decryptedApiKey))
                     {
-                        // Queue the API key for storage in the OS keyring:
-                        PendingEnterpriseApiKeys.Add(new(
-                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
-                            name,
-                            decryptedApiKey,
-                            SecretStoreType.EMBEDDING_PROVIDER));
-                        LOGGER.LogDebug($"Successfully decrypted API key for embedding provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        //
+                        // Queue the API key for storage in the OS keyring. A dry run only checks the
+                        // configuration, so it queues nothing: the start which follows it would
+                        // otherwise store the key once more for every dry run before it:
+                        //
+                        if (!dryRun)
+                        {
+                            PendingEnterpriseApiKeys.Add(new(
+                                $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.SecretId}",
+                                name,
+                                decryptedApiKey,
+                                SecretStoreType.EMBEDDING_PROVIDER));
+                            LOGGER.LogDebug($"Successfully decrypted API key for embedding provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        }
                     }
                     else
                         LOGGER.LogWarning($"Failed to decrypt API key for embedding provider {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
@@ -250,13 +286,15 @@ public sealed record EmbeddingProvider(
                           """;
         }
 
+        var tokenizerPathLine = ExportedTokenizerPath.BuildLuaField(this.TokenizerPath, TokenizerModelId.ForEmbeddingProvider(this), "    ");
+
         return $$"""
                 CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
 
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+                    {{tokenizerPathLine}}
                     ["TokenLimit"] = {{this.EffectiveTokenLimit}},
                     ["EmbeddingBatchSize"] = {{this.EffectiveEmbeddingBatchSize}},
 

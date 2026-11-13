@@ -37,10 +37,17 @@ public sealed record ModelComparisonJudgeVerdict
     /// </summary>
     public string Reasoning { get; init; } = string.Empty;
 
-    private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
+    /// <summary>
+    /// How the JSON of the judge is read: as forgiving as models write it, with comments and trailing commas.
+    /// </summary>
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    };
+        PropertyNameCaseInsensitive = true,
+        AllowTrailingCommas = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        TypeInfoResolver = ModelComparisonJsonContext.Default,
+    }.AsReadOnly();
 
     /// <summary>
     /// Reads the judge's answer. Never throws: whatever cannot be understood becomes a verdict
@@ -55,13 +62,13 @@ public sealed record ModelComparisonJudgeVerdict
         if (!judgeAnswered)
             return notCompleted;
 
-        var json = ExtractJsonObject(judgeText);
-        if (json.Length == 0)
+        var json = ModelAnswerJson.ExtractObject(judgeText);
+        if (json.IsWhiteSpace())
             return notCompleted;
 
         try
         {
-            var parsed = JsonSerializer.Deserialize<JudgeResponse>(json, JSON_SERIALIZER_OPTIONS);
+            var parsed = JsonSerializer.Deserialize<ModelComparisonJudgeAnswer>(json, JSON_OPTIONS);
             if (parsed is null || ParsePreference(parsed.Preferred) is not { } preference)
                 return notCompleted;
 
@@ -91,20 +98,4 @@ public sealed record ModelComparisonJudgeVerdict
 
         _ => null,
     };
-
-    /// <summary>
-    /// Cuts out the JSON object the judge was asked for, from the first '{' to the last '}'. The
-    /// judge is asked for nothing but that object, but models add a sentence around it all the same.
-    /// </summary>
-    private static string ExtractJsonObject(string text)
-    {
-        var start = text.IndexOf('{');
-        var end = text.LastIndexOf('}');
-        if (start < 0 || end <= start)
-            return string.Empty;
-
-        return text[start..(end + 1)];
-    }
-
-    private sealed record JudgeResponse(string Preferred, string? Reasoning);
 }

@@ -14,7 +14,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.GROQ.ToSecretId();
+    public override string Id => LLMProviders.GROQ.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Groq";
@@ -72,7 +72,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
     
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         throw this.CreateEmbeddingsNotSupportedException();

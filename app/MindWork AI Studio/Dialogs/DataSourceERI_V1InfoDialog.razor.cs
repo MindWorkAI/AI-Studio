@@ -4,6 +4,7 @@ using System.Text;
 
 using AIStudio.Assistants.ERI;
 using AIStudio.Components;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
@@ -52,6 +53,11 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, ISecretId
     
     private string Port => this.DataSource.Port == 0 ? string.Empty : $"{this.DataSource.Port}";
 
+    /// <summary>
+    /// The level which applies, including what the organization or the security policy demands.
+    /// </summary>
+    private string OutboundDataRestrictionName => this.DataSource.GetEffectiveOutboundDataRestriction(this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction).Name;
+
     private async Task<(bool Success, DataSourceERI_V1 EffectiveDataSource)> CreateEffectiveDataSource()
     {
         this.effectiveUsername = this.DataSource.Username;
@@ -97,9 +103,9 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, ISecretId
         foreach (var (paramName, description) in parameters)
         {
             sb.Append(T("Parameter: "));
-            sb.AppendLine(paramName);
-            sb.AppendLine(description);
-            sb.AppendLine();
+            sb.AppendLineLF(paramName);
+            sb.AppendLineLF(description);
+            sb.AppendLineLF();
         }
 
         return sb.ToString();

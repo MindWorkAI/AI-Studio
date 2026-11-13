@@ -3,7 +3,7 @@ using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
-public sealed partial class RustService
+public sealed partial class RustService : ITokenizerStorage
 {
     internal const int MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH = 200_000;
 
@@ -15,9 +15,7 @@ public sealed partial class RustService
 
     public async Task<TokenizerResponse> ValidateTokenizer(string filePath)
     {
-        var result = await this.http.PostAsJsonAsync("/tokenizer/validate", new {
-            file_path = filePath,
-        }, this.jsonRustSerializerOptions);
+        var result = await this.http.PostAsJsonAsync("/tokenizer/validate", new ValidateTokenizerRequest(filePath), JSON_OPTIONS);
 
         if (!result.IsSuccessStatusCode)
         {
@@ -25,7 +23,7 @@ public sealed partial class RustService
             return CreateUnavailableTokenizerResponse("An error occured while sending the path to the Rust framework for validation: "+result.StatusCode);
         }
 
-        var response = await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+        var response = await result.Content.ReadFromJsonAsync<TokenizerResponse>(JSON_OPTIONS);
 
         return response;
     }
@@ -33,10 +31,7 @@ public sealed partial class RustService
     public async Task<TokenizerResponse> StoreTokenizer(string modelId, string filePath)
     {
         this.logger!.LogInformation($"Storing tokenizer for model '{modelId}' from file '{filePath}'");
-        var result = await this.http.PostAsJsonAsync("/tokenizer/store", new {
-            model_id = modelId,
-            file_path = filePath,
-        }, this.jsonRustSerializerOptions);
+        var result = await this.http.PostAsJsonAsync("/tokenizer/store", new StoreTokenizerRequest(modelId, filePath), JSON_OPTIONS);
 
         if (!result.IsSuccessStatusCode)
         {
@@ -44,15 +39,13 @@ public sealed partial class RustService
             return CreateUnavailableTokenizerResponse("An error occured while sending the path to the Rust framework for storing: "+result.StatusCode);
         }
 
-        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(JSON_OPTIONS);
     }
 
     public async Task<TokenizerResponse> DeleteTokenizer(string modelId)
     {
         this.logger!.LogInformation($"Deleting tokenizer for model '{modelId}'");
-        var result = await this.http.PostAsJsonAsync("/tokenizer/delete", new {
-            model_id = modelId,
-        }, this.jsonRustSerializerOptions);
+        var result = await this.http.PostAsJsonAsync("/tokenizer/delete", new DeleteTokenizerRequest(modelId), JSON_OPTIONS);
 
         if (!result.IsSuccessStatusCode)
         {
@@ -60,7 +53,7 @@ public sealed partial class RustService
             return CreateUnavailableTokenizerResponse("An error occured while sending the tokenizer delete request to the Rust framework: "+result.StatusCode);
         }
 
-        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(JSON_OPTIONS);
     }
     
     public Task<TokenizerResponse?> GetTokenCount(AIStudio.Settings.Provider provider, string text, CancellationToken cancellationToken = default) =>
@@ -71,10 +64,7 @@ public sealed partial class RustService
 
     private async Task<TokenizerResponse?> GetTokenCount(string providerName, string tokenizerPath, string text, CancellationToken cancellationToken)
     {
-        var result = await this.http.PostAsJsonAsync("/tokenizer/count", new {
-            text,
-            tokenizer_path = tokenizerPath,
-        }, this.jsonRustSerializerOptions, cancellationToken);
+        var result = await this.http.PostAsJsonAsync("/tokenizer/count", new CountTokensRequest(text, tokenizerPath), JSON_OPTIONS, cancellationToken);
 
         if (!result.IsSuccessStatusCode)
         {
@@ -82,6 +72,6 @@ public sealed partial class RustService
             return CreateUnavailableTokenizerResponse("Error while getting token count from Rust service: "+result.StatusCode);
         }
 
-        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions, cancellationToken);
+        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(JSON_OPTIONS, cancellationToken);
     }
 }

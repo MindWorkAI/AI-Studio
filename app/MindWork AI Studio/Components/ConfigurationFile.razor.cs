@@ -25,7 +25,7 @@ public partial class ConfigurationFile : ConfigurationBaseCore
     /// The icon to display next to the textfield.
     /// </summary>
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.AttachFile;
+    public string Icon { get; set; } = AppIcons.FILE;
 
     /// <summary>
     /// The color of the icon to use.
@@ -45,8 +45,22 @@ public partial class ConfigurationFile : ConfigurationBaseCore
     [Parameter]
     public FileTypeFilter[]? Filter { get; set; }
 
+    /// <summary>
+    /// Shows a button at the end of the field which empties it.
+    /// </summary>
+    /// <remarks>
+    /// For settings where an empty path means something of its own, such as the default prompt guide
+    /// or no template at all. MudBlazor shows the button only while the field holds a path and can be
+    /// edited, so a locked setting keeps its path.
+    /// </remarks>
+    [Parameter]
+    public bool Clearable { get; set; }
+
     [Inject]
     private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private ILogger<ConfigurationFile> Logger { get; init; } = null!;
 
     private string internalText = string.Empty;
     private bool isFileDialogOpen;
@@ -82,10 +96,10 @@ public partial class ConfigurationFile : ConfigurationBaseCore
 
     #endregion
 
-    private void InternalUpdate(string text)
+    private void InternalUpdate(string? text)
     {
         this.timer.Stop();
-        this.internalText = text;
+        this.internalText = text ?? string.Empty;
         this.timer.Start();
     }
 
@@ -109,6 +123,40 @@ public partial class ConfigurationFile : ConfigurationBaseCore
         {
             this.isFileDialogOpen = false;
         }
+    }
+
+    /// <summary>
+    /// Takes the first dropped path which leads to a usable file.
+    /// </summary>
+    /// <param name="paths">The dropped paths.</param>
+    private async Task PathsDropped(List<string> paths)
+    {
+        var path = DroppedFile.FirstUsable(paths, this.Filter);
+        if (path is null)
+        {
+            this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a file.", paths.Count);
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, DroppedFile.WarningFor(paths)));
+            return;
+        }
+
+        this.Logger.LogInformation("The user dropped the file '{DroppedFilePath}'.", path);
+        this.timer.Stop();
+        this.internalText = path;
+        await this.OptionChanged(path);
+    }
+
+    /// <summary>
+    /// Empties the field at once.
+    /// </summary>
+    /// <remarks>
+    /// The text field reports the empty text as well, which would apply it only after the delay meant
+    /// for typing. A click needs no such delay, so the timer stops and the change applies right away.
+    /// </remarks>
+    private async Task ClearFile()
+    {
+        this.timer.Stop();
+        this.internalText = string.Empty;
+        await this.OptionChanged(string.Empty);
     }
 
     private async Task OptionChanged(string updatedText)

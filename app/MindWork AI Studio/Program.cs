@@ -1,10 +1,13 @@
 using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
+using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
+using AIStudio.Tools.Mathematics;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
@@ -14,6 +17,9 @@ using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mathematics;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.SemanticSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.SearXNG;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Staan;
@@ -22,17 +28,13 @@ using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HostFiltering;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
 
 using MudBlazor.Services;
 
 using MudExtensions.Services;
-
-#if !DEBUG
-using System.Reflection;
-using Microsoft.Extensions.FileProviders;
-#endif
 
 namespace AIStudio;
 
@@ -93,7 +95,14 @@ internal sealed class Program
         }
         
         API_TOKEN = apiToken;
-        
+
+        var uiToken = Environment.GetEnvironmentVariable(AppAccessPolicy.UI_TOKEN_ENVIRONMENT_VARIABLE);
+        if(string.IsNullOrWhiteSpace(uiToken))
+        {
+            Console.WriteLine($"Error: The {AppAccessPolicy.UI_TOKEN_ENVIRONMENT_VARIABLE} environment variable is not set.");
+            return;
+        }
+
         using var rust = new RustService(rustApiPort, certificateFingerprint);
         var appPort = await rust.GetAppPort();
         if(appPort == 0)
@@ -161,24 +170,49 @@ internal sealed class Program
             config.SnackbarConfiguration.HideTransitionDuration = 500;
             config.SnackbarConfiguration.ShowTransitionDuration = 500;
             config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
+
+            // Since MudBlazor 9, a click outside an open menu or select also reaches the page behind
+            // it. We keep both modal, so that such a click only closes them:
+            config.PopoverOptions.ModalOverlay = true;
         });
 
-        builder.Services.AddMemoryCache(); // Needed for the Markdown library
         builder.Services.AddMudMarkdownServices();
-        builder.Services.AddSingleton(new MudTheme());
+
+        //
+        // Code blocks in Markdown take their colors from the palettes, see MudMarkdownThemeProvider in the
+        // main layout. Their backgrounds stay those of the code blocks before, so that a code block still
+        // stands out against a white card:
+        //
+        builder.Services.AddSingleton(new MudTheme
+        {
+            PaletteLight = new MudMarkdownPaletteLight { CodeHighlight = MudCodeHighlightThemes.Light.LightPlus with { Background = "#F0F0F0" } },
+            PaletteDark = new MudMarkdownPaletteDark { CodeHighlight = MudCodeHighlightThemes.Dark.DarkPlus with { Background = "#444444" } },
+        });
         builder.Services.AddSingleton(MessageBus.INSTANCE);
         builder.Services.AddSingleton(rust);
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<AIGeneratedContentDisclosureService>();
         builder.Services.AddSingleton<PromptInjectionGuardService>();
+        builder.Services.AddSingleton<ModelImageService>();
         builder.Services.AddSingleton<ToolSettingsService>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
+        builder.Services.AddSingleton<IToolImplementation, ConfluenceSearchTool>();
         builder.Services.AddSingleton<IWebSearchBackend, SearXNGSearchBackend>();
         builder.Services.AddSingleton<IWebSearchBackend, StaanSearchBackend>();
         builder.Services.AddSingleton<IWebSearchBackend, TavilySearchBackend>();
         builder.Services.AddSingleton<IToolImplementation, WebSearchTool>();
+        builder.Services.AddSingleton<IToolImplementation, SemanticSearchTool>();
+        builder.Services.AddSingleton<IToolImplementation, SearchMailsTool>();
+        builder.Services.AddSingleton<IToolImplementation, ReadMailTool>();
+        builder.Services.AddSingleton<IToolImplementation, CountMailsTool>();
+        builder.Services.AddSingleton<IToolCollection, MailboxToolCollection>();
+        builder.Services.AddSingleton<MathComputationService>();
+        builder.Services.AddSingleton<IToolImplementation, CalculateTool>();
+        builder.Services.AddSingleton<IToolImplementation, ComputeSymbolicallyTool>();
+        builder.Services.AddSingleton<IToolCollection, MathematicsToolCollection>();
         builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
         builder.Services.AddSingleton<ToolRegistry>();
         builder.Services.AddSingleton<ToolExecutor>();
@@ -196,13 +230,25 @@ internal sealed class Program
         builder.Services.AddSingleton<VisualBriefingBuildOrchestrator>();
         builder.Services.AddSingleton<VisualBriefingPreviewTokenService>();
         builder.Services.AddSingleton<IMediaTranscriptStorage, VisualBriefingTranscriptStorage>();
+        builder.Services.AddSingleton<BeyondFactsLabStore>();
+        builder.Services.AddSingleton<BflConversationService>();
+        builder.Services.AddSingleton<BflWorkStateGenerator>();
+        builder.Services.AddSingleton<BflResultGenerator>();
+        builder.Services.AddSingleton<BflResearchRunner>();
+        builder.Services.AddSingleton<BflMaterialService>();
         builder.Services.AddSingleton<PluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
+        builder.Services.AddSingleton<DataSourceDescriptionService>();
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
+        builder.Services.AddSingleton<DataBackupService>();
+        builder.Services.AddSingleton<DataRestoreService>();
+        builder.Services.AddSingleton<LocalIndexSearchService>();
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
+        builder.Services.AddSingleton<MailboxRetrievalService>();
         builder.Services.AddSingleton<DirectChatService>();
+        builder.Services.AddScoped<AssistantLaunchService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         
         // Stateless: every method works on its arguments alone, so one instance serves everyone.
@@ -215,12 +261,19 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<TranscriptStagingCleanupService>();
+        builder.Services.AddHostedService<ProvenanceCleanupService>();
+        builder.Services.AddHostedService<DataRestoreFollowUpService>();
+
+        // Compatibility shim, see documentation/compatibility-shims/2026-10-relative-data-paths.md. Remove after 2027-04-14:
+        builder.Services.AddHostedService<RelativeDataPathsMigrationService>();
+
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<DataSourceEmbeddingService>());
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>(serviceProvider => serviceProvider.GetRequiredService<GlobalShortcutService>());
+        builder.Services.AddHostedService<InterfaceSizeService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
-        builder.Services.AddScoped<NativeShareService>();
+        builder.Services.AddSingleton<NativeShareService>();
         builder.Services.AddScoped<PluginShareService>();
 
         //
@@ -255,12 +308,18 @@ internal sealed class Program
                 options.KeepAliveInterval = TimeSpan.FromSeconds(30);
             });
 
-        builder.Services.AddSingleton(new HttpClient
-        {
-            BaseAddress = new Uri($"http://localhost:{appPort}")
-        });
+        // For absolute URLs only. The app reads its own files through WebRootFiles:
+        builder.Services.AddSingleton(new HttpClient());
+        builder.Services.AddSingleton<WebRootFiles>();
 
-        builder.WebHost.UseUrls($"http://localhost:{appPort}");
+        //
+        // We listen on the IPv4 loopback address only, where the app window goes. With localhost, the
+        // server would listen on the IPv6 loopback address as well, and a client which resolves
+        // localhost could end up with another process holding that port there.
+        //
+        builder.WebHost.UseUrls($"http://127.0.0.1:{appPort}");
+        builder.Services.Configure<HostFilteringOptions>(AppAccessPolicy.ConfigureHostFiltering);
+        builder.Services.AddSingleton(new AppAccessPolicy(appPort, uiToken));
 
         #if DEBUG
         builder.WebHost.UseWebRoot("wwwroot");
@@ -296,7 +355,11 @@ internal sealed class Program
         // Store the service provider (DI). We need it later for some classes,
         // which are not part of the request pipeline:
         SERVICE_PROVIDER = app.Services;
-        
+
+        // The texts of TA() address the person as the app settings say:
+        var settingsForTexts = app.Services.GetRequiredService<SettingsManager>();
+        I18N.UseAddressFormOf(() => settingsForTexts.ConfigurationData.App.AddressForm);
+
         // Initialize the encryption service:
         programLogger.LogInformation("Initializing the encryption service.");
         var encryptionLogger = app.Services.GetRequiredService<ILogger<Encryption>>();
@@ -315,6 +378,13 @@ internal sealed class Program
         
         DATABASE_CLIENT_PROVIDER = app.Services.GetRequiredService<DatabaseClientProvider>();
 
+        //
+        // These two come first, so that no request reaches anything else without passing them. We add
+        // the host filtering ourselves instead of relying on the defaults of ASP.NET Core to do so:
+        //
+        app.UseHostFiltering();
+        app.UseMiddleware<AppAccessMiddleware>();
+
         programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
         app.Use(FileHandler.HandlerAsync);
@@ -323,10 +393,9 @@ internal sealed class Program
         app.UseStaticFiles();
         app.UseDeveloperExceptionPage();
 #else
-        var fileProvider = new ManifestEmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program))!, "wwwroot");
         app.UseStaticFiles(new StaticFileOptions
         {
-            FileProvider = fileProvider,
+            FileProvider = app.Services.GetRequiredService<WebRootFiles>().FileProvider,
             RequestPath = string.Empty,
         });
 #endif

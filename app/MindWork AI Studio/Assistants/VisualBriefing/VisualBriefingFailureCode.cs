@@ -19,6 +19,11 @@ public enum VisualBriefingFailureCode
     PROVIDER_NOT_SELECTED,
 
     /// <summary>
+    /// The selected provider may not see the content of the briefing.
+    /// </summary>
+    PROVIDER_NOT_ALLOWED,
+
+    /// <summary>
     /// The selected model lacks a required capability.
     /// </summary>
     MODEL_CAPABILITY_MISSING,

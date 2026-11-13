@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.GrammarSpelling;
@@ -11,6 +12,9 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     
     protected override string Description => T("Check the grammar and spelling of a text.");
     
+    // The prompt of this assistant forbids explanations, so the chat gets a prompt of its own, which keeps the rules of the language:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
+
     protected override string SystemPrompt => 
         $"""
         You are an expert in languages and their rules. For example, you know how US and UK English or German in
@@ -19,6 +23,21 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
         never ask the user for additional information. You do not attempt to improve the wording of the text.
         Your response includes only the corrected text. Do not explain your changes. If no changes are needed,
         you return the text unchanged.
+        """;
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues a check of spelling and grammar, for follow-up questions about it.
+    /// </summary>
+    private string CreateChatSystemPrompt() =>
+        $"""
+        You are an expert in languages and their rules. For example, you know how US and UK English or German in
+        Germany and German in Austria differ. The user had a text checked for spelling and grammar according to the
+        rules of {this.SystemPromptLanguage()}: the conversation so far holds the text and its corrected version.
+        Now you answer the user's follow-up questions about the corrections, e.g., which rule applies or why a sentence
+        changed, and you check further texts or revise the corrected text when the user asks for it. When you correct a
+        text, you correct only its spelling and grammar and keep its wording, unless the user asks otherwise.
+
+        Answer questions in the language the user writes in.
         """;
     
     protected override bool AllowProfiles => false;
@@ -31,7 +50,6 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     [
         new SendToButton
         {
-            Self = Tools.Components.GRAMMAR_SPELLING_ASSISTANT,
             UseResultingContentBlockData = false,
             GetText = () => string.IsNullOrWhiteSpace(this.correctedText) ? this.inputText : this.correctedText
         },
@@ -68,16 +86,9 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
         return false;
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_GRAMMAR_SPELLING_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputText = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputText = payload.Text;
 
     #endregion
 
@@ -111,7 +122,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     private string? ValidateText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -119,7 +130,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }
@@ -131,7 +142,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
             CommonLanguages.AS_IS => "the source language",
             CommonLanguages.OTHER => this.customTargetLanguage,
             
-            _ => $"{this.selectedTargetLanguage.Name()}",
+            _ => $"{this.selectedTargetLanguage.Name}",
         };
 
         if (string.IsNullOrWhiteSpace(lang))
@@ -142,7 +153,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
 
     private async Task ProofreadText()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

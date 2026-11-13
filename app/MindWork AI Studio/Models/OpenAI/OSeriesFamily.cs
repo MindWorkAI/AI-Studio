@@ -36,26 +36,38 @@ public sealed class OSeriesFamily : ModelFamily
             .Apis(RESPONSES_API)
             .Reasoning(ReasoningSupport.ALWAYS)
             .ContextWindow(200_000)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base")
+            .SystemPromptRole(SystemPromptRole.DEVELOPER);
 
+        //
+        // The first mini and the preview came out before OpenAI let a reasoning model take
+        // instructions of its own, so whatever the system prompt says has to reach them as a
+        // message of the person.
+        //
         builder.Rule("o1-mini").AsPrefix()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT)
             .Apis(CHAT_COMPLETION_API)
             .Reasoning(ReasoningSupport.ALWAYS)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base")
+            .SystemPromptRole(SystemPromptRole.USER);
+
+        builder.Rule("o1-preview").AsPrefix().InheritsFrom("o1")
+            .SystemPromptRole(SystemPromptRole.USER);
 
         builder.Rule("o3").AsPrefix()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
             .Apis(RESPONSES_API)
             .Reasoning(ReasoningSupport.ALWAYS)
             .ContextWindow(200_000)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base")
+            .SystemPromptRole(SystemPromptRole.DEVELOPER);
 
         builder.Rule("o3-mini").AsPrefix()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
             .Apis(RESPONSES_API)
             .Reasoning(ReasoningSupport.ALWAYS)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base")
+            .SystemPromptRole(SystemPromptRole.DEVELOPER);
 
         // The one mini which is not cut down: it is the o3 generation under another number.
         builder.Rule("o4-mini").AsPrefix().InheritsFrom("o3");

@@ -27,11 +27,12 @@ public sealed class CapabilityCharacterizationTests
     /// How many columns a snapshot line carries after the model ID.
     /// </summary>
     /// <remarks>
-    /// The capabilities, the kind, the context window, the image limit, and the tokenizer. Adding a
-    /// column to the snapshot means raising this, and forgetting to would split a line inside its
-    /// last column instead of in front of it -- which makes every model look changed at once.
+    /// The capabilities, the kind, the context window, the image limit, the tokenizer, and the system
+    /// prompt role. Adding a column to the snapshot means raising this, and forgetting to would split
+    /// a line inside its last column instead of in front of it -- which makes every model look
+    /// changed at once.
     /// </remarks>
-    private const int TRAILING_COLUMNS = 5;
+    private const int TRAILING_COLUMNS = 6;
 
     [Test]
     public void TheCorpusStillGetsTheAnswersTheSnapshotRecorded()
@@ -57,7 +58,7 @@ public sealed class CapabilityCharacterizationTests
         }
 
         File.WriteAllText(CapabilitySnapshot.ACTUAL_FILE_PATH, current);
-        Assert.Fail($"The capabilities of {DescribeDifference(recorded, current)}{Environment.NewLine}{Environment.NewLine}The full result was written to {CapabilitySnapshot.ACTUAL_FILE_PATH}.");
+        Assert.Fail($"The capabilities of {DescribeDifference(recorded, current)}\n\nThe full result was written to {CapabilitySnapshot.ACTUAL_FILE_PATH}.");
     }
 
     /// <summary>
@@ -75,19 +76,19 @@ public sealed class CapabilityCharacterizationTests
         var added = currentLines.Keys.Except(recordedLines.Keys).ToList();
         var removed = recordedLines.Keys.Except(currentLines.Keys).ToList();
 
-        var message = new StringBuilder($"{changed.Count} model(s) changed, {added.Count} came into the corpus, {removed.Count} left it:").Append(Environment.NewLine);
+        var message = new StringBuilder($"{changed.Count} model(s) changed, {added.Count} came into the corpus, {removed.Count} left it:").Append('\n');
         foreach (var model in changed.Take(LINES_SHOWN))
         {
-            message.Append(Environment.NewLine).Append("  ").Append(model);
-            message.Append(Environment.NewLine).Append("    was: ").Append(recordedLines[model]);
-            message.Append(Environment.NewLine).Append("    now: ").Append(currentLines[model]);
+            message.Append('\n').Append("  ").Append(model);
+            message.Append('\n').Append("    was: ").Append(recordedLines[model]);
+            message.Append('\n').Append("    now: ").Append(currentLines[model]);
         }
 
         foreach (var model in added.Take(LINES_SHOWN))
-            message.Append(Environment.NewLine).Append("  + ").Append(model).Append(": ").Append(currentLines[model]);
+            message.Append('\n').Append("  + ").Append(model).Append(": ").Append(currentLines[model]);
 
         foreach (var model in removed.Take(LINES_SHOWN))
-            message.Append(Environment.NewLine).Append("  - ").Append(model).Append(": ").Append(recordedLines[model]);
+            message.Append('\n').Append("  - ").Append(model).Append(": ").Append(recordedLines[model]);
 
         return message.ToString();
     }

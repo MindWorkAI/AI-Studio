@@ -117,7 +117,13 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     [Parameter]
     public ProviderCapabilityOverrides? DataCapabilityOverrides { get; set; }
-    
+
+    /// <summary>
+    /// The API key an imported provider brought along. When editing, the dialog loads the stored key instead.
+    /// </summary>
+    [Parameter]
+    public string ImportedAPIKey { get; set; } = string.Empty;
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -147,7 +153,16 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     /// The list of used instance names. We need this to check for uniqueness.
     /// </summary>
     private List<string> UsedInstanceNames { get; set; } = [];
-    
+
+    /// <summary>
+    /// Whether the organization prohibited the selected provider.
+    /// </summary>
+    /// <remarks>
+    /// The provider stays selectable, so that nobody wonders where it went. The dialog then shows
+    /// the reason instead of the form, and nothing can be stored.
+    /// </remarks>
+    private bool IsProviderProhibited => this.SettingsManager.IsProviderProhibited(this.DataLLMProvider);
+
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
@@ -192,7 +207,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
-            IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually(),
+            IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually,
             GetCustomTokenizerValidationIssue = () => this.dataCustomTokenizerValidationIssue,
             IsModelSelectionHidden = () => this.IsLLMModelSelectionHidden,
         };
@@ -226,7 +241,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (this.IsLLMModelSelectionHidden)
             return Model.SYSTEM_MODEL;
 
-        if (this.DataLLMProvider.IsLLMModelProvidedManually())
+        if (this.DataLLMProvider.IsLLMModelProvidedManually)
             return new Model(this.dataManuallyModel, null);
 
         return this.DataModel;
@@ -254,16 +269,18 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                                   || this.capabilityOverrides.HasOverrides
                                   || (this.ShowTokenizerSettings && !string.IsNullOrWhiteSpace(this.DataTokenizerPath));
         
+        // An edited provider fills the form, and so does an imported one:
+        this.dataFilePath = this.DataTokenizerPath;
+
+        // When using Fireworks, we must copy the model name:
+        if (this.DataLLMProvider.IsLLMModelProvidedManually)
+            this.dataManuallyModel = this.DataModel.Id;
+
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
-            this.dataFilePath = this.DataTokenizerPath;
-            
-            // When using Fireworks, we must copy the model name:
-            if (this.DataLLMProvider.IsLLMModelProvidedManually())
-                this.dataManuallyModel = this.DataModel.Id;
-            
+
             // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
             // token of its own, and any of these servers can sit behind an authenticating proxy.
             // So we try for every host and treat a missing key as the normal case (isTrying).
@@ -282,12 +299,20 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 // state, not a storage failure -- the user is just about to set their own key:
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
-                    this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
-                    await this.form.Validate();
+                    this.dataAPIKeyStorageIssue = string.Format(TA("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
+                    await this.form.ValidateAsync();
                 }
             }
 
             await this.ReloadModels();
+        }
+        else
+        {
+            this.dataAPIKey = this.ImportedAPIKey;
+
+            // An import does not contact the server, so its model is the only one to choose until the user loads the models:
+            if (!string.IsNullOrWhiteSpace(this.DataModel.Id))
+                this.availableModels.Add(this.DataModel);
         }
     }
 
@@ -296,7 +321,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -309,7 +334,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
     // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
     // silently end up in the wrong keyring row and never be found again.
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.SecretId}" : this.DataLLMProvider.SecretId;
 
     public string SecretName => this.DataInstanceName;
 
@@ -317,9 +342,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private async Task Store()
     {
+        if (this.IsProviderProhibited)
+            return;
+
         this.dataStoreWasAttempted = true;
         await this.dataTokenizerValidationTask;
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             this.dataAPIKeyStorageIssue = string.Empty;
 
@@ -348,7 +376,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             if (!string.IsNullOrWhiteSpace(this.dataFilePath))
             {
                 this.dataCustomTokenizerValidationIssue = tokenizerResponse.Message;
-                await this.form.Validate();
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -366,8 +394,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey, SecretStoreType.LLM_PROVIDER);
             if (!storeResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
-                await this.form.Validate();
+                this.dataAPIKeyStorageIssue = string.Format(TA("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -380,8 +408,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             var deleteResponse = await this.RustService.DeleteAPIKey(this, SecretStoreType.LLM_PROVIDER);
             if (!deleteResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
-                await this.form.Validate();
+                this.dataAPIKeyStorageIssue = string.Format(TA("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
+                await this.form.ValidateAsync();
                 return;
             }
 
@@ -393,8 +421,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     
     private string? ValidateManuallyModel(string manuallyModel)
     {
-        if (this.DataLLMProvider.IsLLMModelProvidedManually() && string.IsNullOrWhiteSpace(manuallyModel))
-            return T("Please enter a model name.");
+        if (this.DataLLMProvider.IsLLMModelProvidedManually && string.IsNullOrWhiteSpace(manuallyModel))
+            return TA("Please enter a model name.");
         
         return null;
     }
@@ -407,7 +435,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
         {
             this.dataAPIKeyStorageIssue = string.Empty;
-            await this.form.Validate();
+            await this.form.ValidateAsync();
         }
     }
 
@@ -419,7 +447,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.isTokenizerFileDialogOpen = true;
         try
         {
-            var response = await this.RustService.SelectFile(T("Choose a custom tokenizer here"), [ FileTypes.JSON ], string.IsNullOrWhiteSpace(this.dataFilePath) ? null : this.dataFilePath);
+            var response = await this.RustService.SelectFile(TA("Choose a custom tokenizer here"), [ FileTypes.JSON ], string.IsNullOrWhiteSpace(this.dataFilePath) ? null : this.dataFilePath);
             if (!response.UserCancelled)
                 await this.OnDataFilePathChanged(response.SelectedFilePath);
         }
@@ -455,11 +483,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         }
 
         this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a tokenizer.", paths.Count);
-        await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Please drop a tokenizer file in the JSON format.")));
+        await this.MessageBus.SendWarning(new(AppIcons.WARNING, TA("Please drop a tokenizer file in the JSON format.")));
     }
 
-    private async Task OnDataFilePathChanged(string filePath)
+    private async Task OnDataFilePathChanged(string? changedFilePath)
     {
+        var filePath = changedFilePath ?? string.Empty;
         this.dataFilePath = filePath;
         var validationRevision = ++this.dataTokenizerValidationRevision;
         this.dataTokenizerValidationTask = this.ValidateCustomTokenizer(filePath, validationRevision);
@@ -469,9 +498,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             return;
 
         if (this.dataStoreWasAttempted)
-            await this.form.Validate();
+            await this.form.ValidateAsync();
         else
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
     }
 
     private async Task ValidateCustomTokenizer(string filePath, int validationRevision)
@@ -501,7 +530,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 return;
 
             this.Logger.LogError(e, "Failed to validate custom tokenizer.");
-            this.dataCustomTokenizerValidationIssue = T("Failed to validate the selected tokenizer. Please try again.");
+            this.dataCustomTokenizerValidationIssue = TA("Failed to validate the selected tokenizer. Please try again.");
         }
     }
 
@@ -577,6 +606,10 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     
     private async Task ReloadModels()
     {
+        // Loading the models would contact the provider:
+        if (this.IsProviderProhibited)
+            return;
+
         this.dataLoadingModelsIssue = string.Empty;
         var currentProviderSettings = this.CreateProviderSettings();
         var provider = currentProviderSettings.CreateProvider();
@@ -590,7 +623,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 this.dataLoadingModelsIssue = result.FailureReason.ToUserMessage(provider.InstanceName);
 
             // Order descending by ID means that the newest models probably come first:
-            var orderedModels = result.Models.OrderByDescending(n => n.Id);
+            var orderedModels = result.Models.OrderByDescending(n => n.Id, Model.ID_ORDER);
 
             this.availableModels.Clear();
             this.availableModels.AddRange(orderedModels);
@@ -599,7 +632,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         catch (Exception e)
         {
             this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
-            this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
+            this.dataLoadingModelsIssue = TA("We are currently unable to communicate with the provider to load models. Please try again later.");
         }
     }
     
@@ -816,7 +849,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         {
             var context = this.GetAutomaticModelProfile().Context;
             return context.IsKnown
-                ? string.Format(T("Detected: {0} tokens. Leave the field empty to use that."), context.DefaultTokens.ToString("N0", this.currentCulture))
+                ? string.Format(TA("Detected: {0} tokens. Leave the field empty to use that."), context.DefaultTokens.ToString("N0", this.currentCulture))
                 : T("Nobody has stated a window for this model. Left empty, the chat counts the tokens of a conversation without saying what they may grow to.");
         }
     }
@@ -905,7 +938,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         }
         catch (JsonException)
         {
-            return T("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
+            return TA("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
         }
     }
 
@@ -1038,7 +1071,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         if (objectStack.Count != 0)
         {
-            errorMessage = T("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
+            errorMessage = TA("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
             return false;
         }
 

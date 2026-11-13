@@ -1,6 +1,6 @@
-using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -15,6 +15,12 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private UpdatePolicyMode updatePolicyMode;
 
+    /// <summary>
+    /// Whether the language of the app tells a formal address from an informal one, so that the form of address
+    /// is a choice at all.
+    /// </summary>
+    private bool offersFormOfAddress;
+
     private bool CannotUpdateItself => this.updatePolicyMode is UpdatePolicyMode.FLATPAK or UpdatePolicyMode.MANAGED_INSTALLATION or UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION or UpdatePolicyMode.DEVELOPMENT;
 
     private UpdateInterval DisplayedUpdateInterval => this.CannotUpdateItself
@@ -27,9 +33,9 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private string UpdateIntervalHelp => this.updatePolicyMode switch
     {
-        UpdatePolicyMode.ENTERPRISE_DISABLED => T("Your organization has disabled update checks and installations."),
+        UpdatePolicyMode.ENTERPRISE_DISABLED => TA("Your organization has disabled update checks and installations."),
         UpdatePolicyMode.FLATPAK => T("AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app."),
-        UpdatePolicyMode.MANAGED_INSTALLATION => T("This installation does not check for updates itself. Contact the person or organization that installed AI Studio for update information."),
+        UpdatePolicyMode.MANAGED_INSTALLATION => TA("This installation does not check for updates itself. Contact the person or organization that installed AI Studio for update information."),
         UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => T("AI Studio cannot update itself from its current location, so it does not check for updates."),
         UpdatePolicyMode.DEVELOPMENT => T("Development builds do not check for updates."),
         _ => T("How often should we check for app updates?")
@@ -37,10 +43,10 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private string UpdateInstallationHelp => this.updatePolicyMode switch
     {
-        UpdatePolicyMode.ENTERPRISE_DISABLED => T("This setting has no effect while updates are disabled by your organization."),
-        UpdatePolicyMode.FLATPAK => T("AI Studio cannot install updates when running as a Flatpak. Update it using the Flatpak source or bundle from which you installed it."),
-        UpdatePolicyMode.MANAGED_INSTALLATION => T("AI Studio cannot install updates into this installation. Contact the person or organization that installed it for new versions."),
-        UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => T("AI Studio cannot install updates into its current installation location. Install new versions yourself."),
+        UpdatePolicyMode.ENTERPRISE_DISABLED => TA("This setting has no effect while updates are disabled by your organization."),
+        UpdatePolicyMode.FLATPAK => TA("AI Studio cannot install updates when running as a Flatpak. Update it using the Flatpak source or bundle from which you installed it."),
+        UpdatePolicyMode.MANAGED_INSTALLATION => TA("AI Studio cannot install updates into this installation. Contact the person or organization that installed it for new versions."),
+        UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => TA("AI Studio cannot install updates into its current installation location. Install new versions yourself."),
         UpdatePolicyMode.DEVELOPMENT => T("Development builds do not install updates."),
         _ => T("Should updates be installed automatically or manually?")
     };
@@ -56,6 +62,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.GLOBAL_SHORTCUT_CHANGED ]);
         await base.OnInitializedAsync();
         this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
+        this.offersFormOfAddress = (await this.SettingsManager.GetActiveLanguagePlugin()).HasInformalAddress();
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
@@ -65,6 +72,13 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
         if (triggeredEvent is Event.GLOBAL_SHORTCUT_CHANGED)
             this.StateHasChanged();
+
+        // Another language might offer the choice, or no longer:
+        if (triggeredEvent is Event.PLUGINS_RELOADED)
+        {
+            this.offersFormOfAddress = (await this.SettingsManager.GetActiveLanguagePlugin()).HasInformalAddress();
+            this.StateHasChanged();
+        }
 
         await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
@@ -91,11 +105,11 @@ public partial class SettingsPanelApp : SettingsPanelBase
     
     private string GetStartPageHelpText()
     {
-        var helpText = T("Choose which page AI Studio should open first when you start the app. Changes take effect the next time you launch AI Studio.");
+        var helpText = TA("Choose which page AI Studio should open first when you start the app. Changes take effect the next time you launch AI Studio.");
         if (!ManagedConfiguration.TryGet(x => x.App, x => x.StartPage, out var meta) || meta.ManagedMode is not ManagedConfigurationMode.EDITABLE_DEFAULT)
             return helpText;
 
-        return $"{helpText} {T("Your organization provided a default start page, but you can still change it.")}";
+        return $"{helpText} {TA("Your organization provided a default start page, but you can still change it.")}";
     }
 
     private IEnumerable<ConfigurationSelectData<string>> GetFilteredTranscriptionProviders()
@@ -105,7 +119,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(Tools.Components.APP_SETTINGS);
         foreach (var provider in this.SettingsManager.GetAllTranscriptionProviders())
         {
-            if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+            if (this.SettingsManager.IsProviderUsable(provider.UsedLLMProvider, minimumLevel))
                 yield return new(provider.Name, provider.Id);
         }
     }
@@ -129,14 +143,14 @@ public partial class SettingsPanelApp : SettingsPanelBase
         // Several configuration plugins may contribute at the same time, e.g. one preview feature
         // for the whole organization and another one for a single department:
         if (ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) && meta.HasPluginContribution)
-            return meta.PluginContributions.Values.SelectMany(contribution => contribution).Where(x => !x.IsReleased()).ToHashSet();
+            return meta.PluginContributions.Values.SelectMany(contribution => contribution).Where(x => !x.IsReleased).ToHashSet();
 
         return [];
     }
 
     private bool IsPluginContributedPreviewFeature(PreviewFeatures feature)
     {
-        if (feature.IsReleased())
+        if (feature.IsReleased)
             return false;
 
         if (!ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) || !meta.HasPluginContribution)
@@ -147,14 +161,14 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private HashSet<PreviewFeatures> GetSelectedPreviewFeatures()
     {
-        var enabled = this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Where(x => !x.IsReleased()).ToHashSet();
+        var enabled = this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Where(x => !x.IsReleased).ToHashSet();
         enabled.UnionWith(this.GetPluginContributedPreviewFeatures());
         return enabled;
     }
 
     private string GetExternalHttpCustomRootCertificateAllowedHostsText()
     {
-        return string.Join(Environment.NewLine, this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts.Order(StringComparer.OrdinalIgnoreCase));
+        return string.Join('\n',this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts.Order(StringComparer.OrdinalIgnoreCase));
     }
 
     private bool AreExternalHttpCustomRootCertificateDetailsDisabled()
@@ -194,5 +208,11 @@ public partial class SettingsPanelApp : SettingsPanelBase
     {
         this.SettingsManager.ConfigurationData.App.LanguagePluginId = pluginId;
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+    }
+
+    private async Task UpdateAddressForm(AddressForm addressForm)
+    {
+        this.SettingsManager.ConfigurationData.App.AddressForm = addressForm;
+        await this.MessageBus.SendMessage<bool>(this, Event.ADDRESS_FORM_CHANGED);
     }
 }

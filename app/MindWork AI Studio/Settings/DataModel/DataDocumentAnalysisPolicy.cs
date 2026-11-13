@@ -1,7 +1,9 @@
 using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
 
-using Lua;
+using SharedTools;
+
+using LuaTable = Lua.LuaTable;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -10,20 +12,20 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger<DataDocumentAnalysisPolicy>();
 
     /// <inheritdoc />
-    public override string Id { get; init; } = string.Empty;
+    public override string Id { get; set; } = string.Empty;
     
     /// <inheritdoc />
-    public override uint Num { get; init; }
+    public override uint Num { get; set; }
     
     /// <inheritdoc />
     public override string Name
     {
         get => this.PolicyName;
-        init => this.PolicyName = value;
+        set => this.PolicyName = value;
     }
     
     /// <inheritdoc />
-    public override bool IsEnterpriseConfiguration { get; init; }
+    public override bool IsEnterpriseConfiguration { get; set; }
     
     /// <summary>
     /// The name of the document analysis policy.
@@ -41,7 +43,7 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     public bool IsProtected { get; set; }
     
     /// <inheritdoc />
-    public override Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = Guid.Empty;
 
     /// <summary>
     /// The rules for the document analysis policy.
@@ -84,7 +86,9 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     /// <summary>
     /// Hide the policy definition section in the UI?
     /// If true, the policy definition panel will be hidden and only the document selection will be shown.
-    /// This is useful for enterprise configurations where users should not see or modify the policy details.
+    /// This is useful for enterprise configurations where users would find the policy details overwhelming.
+    /// It keeps the assistant simple, not the policy a secret: a chat which continues an analysis gets the
+    /// whole policy as its system prompt.
     /// </summary>
     public bool HidePolicyDefinition { get; set; }
 
@@ -177,7 +181,56 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
         };
-        
+
         return true;
+    }
+
+    /// <summary>
+    /// Exports the policy as a Lua configuration section.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the other exports, this one keeps the ID of the policy.
+    /// </remarks>
+    /// <returns>A Lua configuration section string.</returns>
+    public string ExportAsConfigurationSection()
+    {
+        var preselectedProvider = string.IsNullOrWhiteSpace(this.PreselectedProvider) ? string.Empty : this.PreselectedProvider;
+        var preselectedProfile = string.IsNullOrWhiteSpace(this.PreselectedProfile) ? string.Empty : this.PreselectedProfile;
+        var id = string.IsNullOrWhiteSpace(this.Id) ? Guid.NewGuid().ToString() : this.Id;
+        var allowedToolIds = string.Join(", ", this.AllowedToolIds.OrderBy(x => x, StringComparer.Ordinal).Select(x => LuaTools.ToLuaStringLiteral(x)));
+
+        return $$"""
+                 CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
+                     ["Id"] = "{{LuaTools.EscapeLuaString(id)}}",
+                     ["PolicyName"] = {{LuaTools.ToLuaStringLiteral(this.PolicyName.Trim())}},
+                     ["PolicyDescription"] = {{LuaTools.ToLuaStringLiteral(this.PolicyDescription.Trim())}},
+
+                     ["AnalysisRules"] = {{LuaTools.ToLuaStringLiteral(this.AnalysisRules.Trim(), forceLongString: true)}},
+
+                     ["OutputRules"] = {{LuaTools.ToLuaStringLiteral(this.OutputRules.Trim(), forceLongString: true)}},
+
+                     -- Optional: minimum provider confidence required for this policy.
+                     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+                     ["MinimumProviderConfidence"] = "{{this.MinimumProviderConfidence}}",
+
+                     -- The tools an analysis with this policy may use, by tool ID.
+                     -- This is a limit, not a preselection: a tool which is not listed here cannot
+                     -- be used for this policy. An empty list means no tools. A listed tool must
+                     -- still meet the confidence requirements of the provider in use.
+                     ["AllowedToolIds"] = { {{allowedToolIds}} },
+
+                     -- Optional: preselect a provider or profile by ID.
+                     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
+                     ["PreselectedProvider"] = "{{LuaTools.EscapeLuaString(preselectedProvider)}}",
+                     ["PreselectedProfile"] = "{{LuaTools.EscapeLuaString(preselectedProfile)}}",
+
+                     -- Optional: hide the policy definition section in the UI.
+                     -- When set to true, users will only see the document selection interface
+                     -- and cannot view or modify the policy settings.
+                     -- This is useful for enterprise configurations where policy details should remain hidden.
+                     -- Allowed values are: true, false (default: false)
+                     ["HidePolicyDefinition"] = {{this.HidePolicyDefinition.ToString().ToLowerInvariant()}},
+                 }
+                 """;
     }
 }

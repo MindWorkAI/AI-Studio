@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Rust;
@@ -147,7 +148,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                     VisualBriefingBuildStage.SOURCE_PREPARATION,
                     "A briefing source is no longer reachable.",
                     $"Source {source.SourceId:D} failed the reachability check.");
-            var sourceHash = await VisualBriefingHashing.ComputeFileAsync(source.Path, token);
+            var sourceHash = await FileContentHash.ComputeAsync(source.Path, token);
             var transcriptHash = string.Empty;
             if (source.IsMedia)
             {
@@ -231,6 +232,28 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                 VisualBriefingBuildStage.SOURCE_PREPARATION,
                 "Please select an LLM provider.",
                 "No provider is selected.");
+    }
+
+    /// <summary>
+    /// Ensures the selected provider may see what the briefing holds.
+    /// </summary>
+    /// <remarks>
+    /// A text sent to the briefing demands what it demanded where it came from, see VisualBriefingManifest.Restrictions,
+    /// and a provider the organization prohibited may see nothing at all. The provider call of each stage would refuse
+    /// such a provider as well, but only once the build runs, and the stage would fail without telling why.
+    /// </remarks>
+    /// <param name="manifest">The briefing manifest.</param>
+    /// <param name="provider">The provider.</param>
+    internal static void ValidateProviderMaySeeContent(VisualBriefingManifest manifest, ProviderSettings provider)
+    {
+        if (manifest.Restrictions.IsLLMProviderAllowed(provider))
+            return;
+
+        throw new VisualBriefingBuildException(
+            VisualBriefingFailureCode.PROVIDER_NOT_ALLOWED,
+            VisualBriefingBuildStage.SOURCE_PREPARATION,
+            "The selected provider may not see the content of this briefing.",
+            $"ProviderFamily={provider.UsedLLMProvider}; RequiredConfidence={manifest.Restrictions.ProviderConfidence}; DataSecurity={manifest.Restrictions.DataSecurity}.");
     }
 
     /// <summary>

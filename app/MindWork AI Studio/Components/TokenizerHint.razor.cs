@@ -25,6 +25,8 @@ public partial class TokenizerHint : ComponentBase
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(TokenizerHint).Namespace, nameof(TokenizerHint));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(TokenizerHint).Namespace, nameof(TokenizerHint));
+
     /// <summary>
     /// Which provider the model is served by.
     /// </summary>
@@ -61,7 +63,7 @@ public partial class TokenizerHint : ComponentBase
 
     private static string Describe(TokenizerRef tokenizer) => tokenizer.Kind switch
     {
-        TokenizerKind.HUGGING_FACE => string.Format(TB("This model uses the tokenizer of {0}. Download its tokenizer.json file and select it below to count exactly instead of estimating."), tokenizer.Id),
+        TokenizerKind.HUGGING_FACE => string.Format(TA("This model uses the tokenizer of {0}. Download its tokenizer.json file and select it below to count exactly instead of estimating."), tokenizer.Id),
         TokenizerKind.TIKTOKEN => string.Format(TB("This model uses OpenAI's {0} encoding, which does not come as a tokenizer.json file. AI Studio therefore estimates the token count with its built-in tokenizer."), tokenizer.Id),
         TokenizerKind.PROVIDER_API => string.Format(TB("The vendor of this model publishes no tokenizer file and counts through their API instead ({0}). AI Studio therefore estimates the token count with its built-in tokenizer."), tokenizer.Id),
 

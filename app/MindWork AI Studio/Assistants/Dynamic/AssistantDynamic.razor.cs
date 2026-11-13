@@ -9,7 +9,6 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.Services;
-using AIStudio.Tools.ToolCallingSystem;
 using Lua;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
@@ -30,6 +29,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     
     protected override string Title => this.title;
     protected override string Description => this.description;
+    protected override ChatSystemPromptChoice ChatSystemPrompt => this.assistantPlugin?.ChatSystemPrompt ?? ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
     protected override string SystemPrompt => this.systemPrompt;
     protected override bool AllowProfiles => this.allowProfiles;
     protected override bool ShowProfileSelection => this.showFooterProfileSelection;
@@ -46,6 +46,12 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     // Dynamic assistants do not have dedicated settings yet. Their internal identity keeps their
     // session and media state separate while ComponentsExtensions derives their defaults from chat.
     protected override Tools.Components Component => Tools.Components.DYNAMIC_ASSISTANT;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Empty for an assistant somebody built for themselves, see MayShareAssistantName.
+    /// </remarks>
+    protected override string RuntimeAssistantName => this.sharesAssistantName ? this.assistantPlugin?.Name ?? string.Empty : string.Empty;
 
     /// <summary>
     /// Gets the plugin ID as the assistant session instance ID.
@@ -69,6 +75,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private PluginAssistantAudit? audit;
     private string securityMessage = string.Empty;
     private bool isSecurityBlocked;
+    private bool sharesAssistantName;
     private PluginAssistants? pendingChatLauncher;
     private const string ASSISTANT_QUERY_KEY = "assistantId";
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
@@ -88,6 +95,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<PluginAssistantAudit?> AUDIT_STATE_KEY = new(nameof(audit));
     private static readonly AssistantSessionStateKey<string> SECURITY_MESSAGE_STATE_KEY = new(nameof(securityMessage));
     private static readonly AssistantSessionStateKey<bool> IS_SECURITY_BLOCKED_STATE_KEY = new(nameof(isSecurityBlocked));
+    private static readonly AssistantSessionStateKey<bool> SHARES_ASSISTANT_NAME_STATE_KEY = new(nameof(sharesAssistantName));
 
     private bool CanReviseCurrentAssistant => this.assistantPlugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(this.assistantPlugin.PluginPath);
 
@@ -110,6 +118,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         state.Set(AUDIT_STATE_KEY, this.audit);
         state.Set(SECURITY_MESSAGE_STATE_KEY, this.securityMessage);
         state.Set(IS_SECURITY_BLOCKED_STATE_KEY, this.isSecurityBlocked);
+        state.Set(SHARES_ASSISTANT_NAME_STATE_KEY, this.sharesAssistantName);
     }
 
     /// <inheritdoc />
@@ -131,6 +140,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         state.Restore(AUDIT_STATE_KEY, value => this.audit = value);
         state.Restore(SECURITY_MESSAGE_STATE_KEY, value => this.securityMessage = value);
         state.Restore(IS_SECURITY_BLOCKED_STATE_KEY, value => this.isSecurityBlocked = value);
+        state.Restore(SHARES_ASSISTANT_NAME_STATE_KEY, value => this.sharesAssistantName = value);
     }
 
     #region Implementation of AssistantBase
@@ -171,13 +181,14 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.systemPrompt = pluginAssistant.SystemPrompt;
         this.submitText = pluginAssistant.SubmitText;
         this.allowProfiles = pluginAssistant.AllowProfiles;
-        this.assistantToolIds = ReadPluginToolIds(pluginAssistant);
+        this.assistantToolIds = this.ReadPluginToolIds(pluginAssistant);
         this.showFooterProfileSelection = !pluginAssistant.HasEmbeddedProfileSelection;
         this.pluginPath = pluginAssistant.PluginPath;
         var pluginHash = pluginAssistant.ComputeAuditHash();
         this.audit = this.SettingsManager.ConfigurationData.AssistantPluginAudits.FirstOrDefault(x => x.PluginId == pluginAssistant.Id && x.PluginHash == pluginHash);
 
         var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, pluginAssistant);
+        this.sharesAssistantName = MayShareAssistantName(pluginAssistant, securityState);
         if (!securityState.CanStartAssistant)
         {
             this.assistantPlugin = pluginAssistant;
@@ -298,7 +309,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         if (updatedPlugin is not null && !updatedPlugin.StartsChatDirectly)
             this.ApplyUpdatedAssistantPlugin(updatedPlugin);
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
+        await this.MessageBus.SendSuccess(new(AppIcons.REVISE_ASSISTANT, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
 
@@ -316,7 +327,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         var result = await this.DirectChatService.TryCreateAssistantChatAsync(launcherPlugin);
         if (result.Request is null)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, result.ErrorMessage));
+            await this.MessageBus.SendError(new(AppIcons.ERROR, result.ErrorMessage));
             this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
             return;
         }
@@ -334,24 +345,24 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             var componentSummary = this.assistantPlugin.CreateAuditComponentSummary();
             if (!string.IsNullOrWhiteSpace(componentSummary))
             {
-                builder.AppendLine("Current component overview:");
-                builder.AppendLine(componentSummary);
-                builder.AppendLine();
+                builder.AppendLineLF("Current component overview:");
+                builder.AppendLineLF(componentSummary);
+                builder.AppendLineLF();
             }
         }
 
         var promptPreview = await this.CollectUserPromptAsync();
         if (!string.IsNullOrWhiteSpace(promptPreview))
         {
-            builder.AppendLine("Current prompt preview from the assistant form:");
-            builder.AppendLine(promptPreview);
-            builder.AppendLine();
+            builder.AppendLineLF("Current prompt preview from the assistant form:");
+            builder.AppendLineLF(promptPreview);
+            builder.AppendLineLF();
         }
 
         if (this.ResultingContentBlock?.Content is ContentText text && !string.IsNullOrWhiteSpace(text.Text))
         {
-            builder.AppendLine("Last assistant response visible in this session:");
-            builder.AppendLine(text.Text);
+            builder.AppendLineLF("Last assistant response visible in this session:");
+            builder.AppendLineLF(text.Text);
         }
 
         return builder.ToString().Trim();
@@ -366,7 +377,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.systemPrompt = updatedPlugin.SystemPrompt;
         this.submitText = updatedPlugin.SubmitText;
         this.allowProfiles = updatedPlugin.AllowProfiles;
-        this.assistantToolIds = ReadPluginToolIds(updatedPlugin);
+        this.assistantToolIds = this.ReadPluginToolIds(updatedPlugin);
         this.showFooterProfileSelection = !updatedPlugin.HasEmbeddedProfileSelection;
         this.pluginPath = updatedPlugin.PluginPath;
         var pluginHash = updatedPlugin.ComputeAuditHash();
@@ -375,6 +386,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, updatedPlugin);
         this.securityMessage = securityState.CanStartAssistant ? string.Empty : securityState.Description;
         this.isSecurityBlocked = !securityState.CanStartAssistant;
+        this.sharesAssistantName = MayShareAssistantName(updatedPlugin, securityState);
 
         this.assistantState.Clear();
         if (this.RootComponent is not null)
@@ -384,6 +396,22 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     #endregion
 
     /// <summary>
+    /// Whether requests may name this assistant plugin, e.g., in the User-Agent for self-hosted servers.
+    /// </summary>
+    /// <remarks>
+    /// Only assistants from AI Studio itself or from the organization are named: those shipped with
+    /// the app, rolled out by its configuration server, or approved by it. Everybody can build an
+    /// assistant of their own with the Assistant Builder, and its name may well be personal, such as
+    /// an application to one particular company. That name stays on the device; the request still
+    /// names the component, so the operators can count it as an assistant all the same.
+    /// </remarks>
+    /// <param name="plugin">The assistant plugin.</param>
+    /// <param name="securityState">Its security state, which tells whether the organization approved it.</param>
+    /// <returns>True when its name may be shared; otherwise, false.</returns>
+    private static bool MayShareAssistantName(PluginAssistants plugin, PluginAssistantSecurityState securityState) =>
+        plugin.IsInternal || plugin.IsManagedByConfigServer || securityState.IsEnterpriseApproved;
+
+    /// <summary>
     /// Reads the tools this plugin names for its assistant.
     /// </summary>
     /// <remarks>
@@ -391,7 +419,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     /// a plugin installed later, and dropping it here would silently turn a plugin that names tools
     /// into one that lets the user choose.
     /// </remarks>
-    private static HashSet<string>? ReadPluginToolIds(PluginAssistants plugin) => plugin.AssistantToolIds is { } toolIds ? ToolSelectionRules.NormalizeSelection(toolIds) : null;
+    private HashSet<string>? ReadPluginToolIds(PluginAssistants plugin) => plugin.AssistantToolIds is { } toolIds ? this.ToolRegistry.NormalizeSelection(toolIds) : null;
 
     private string ResolveImageSource(AssistantImage image)
     {
@@ -680,7 +708,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile? profile)
     {
         if (profile != null && profile != Profile.NO_PROFILE) return null;
-        return !string.IsNullOrWhiteSpace(profileSelection.ValidationMessage) ? profileSelection.ValidationMessage : this.T("Please select one of your profiles.");
+        return !string.IsNullOrWhiteSpace(profileSelection.ValidationMessage) ? profileSelection.ValidationMessage : this.TA("Please select one of your profiles.");
     }
     
     private async Task Submit()
@@ -712,6 +740,6 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             }
         }
         
-        return prompt.Append(Environment.NewLine).ToString();
+        return prompt.AppendLineLF().ToString();
     }
 }

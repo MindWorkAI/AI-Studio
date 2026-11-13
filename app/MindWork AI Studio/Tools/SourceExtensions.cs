@@ -10,6 +10,97 @@ public static partial class SourceExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SourceExtensions).Namespace, nameof(SourceExtensions));
 
+    /// <summary>
+    /// The scheme of the address a mail leaves as a source, when a mail tool found or read it.
+    /// </summary>
+    private const string MAIL_SOURCE_SCHEME = "mailbox";
+
+    /// <summary>
+    /// The address of the source a mail leaves in a chat.
+    /// </summary>
+    /// <remarks>
+    /// Unique per mail, since the sources of a chat are told apart by their address, see
+    /// MergeSources. No browser and no program can open it; the list of sources shows such a
+    /// source as text, see IsMailSource.
+    /// </remarks>
+    /// <param name="mailboxId">The id of the mailbox.</param>
+    /// <param name="mailId">The id of the mail.</param>
+    /// <returns>The address.</returns>
+    public static string CreateMailSourceUrl(string mailboxId, string mailId) => $"{MAIL_SOURCE_SCHEME}://{mailboxId}/{mailId}";
+
+    /// <param name="source">The source.</param>
+    extension(ISource source)
+    {
+        /// <summary>
+        /// Whether a source names a mail in one of the mailboxes of the user.
+        /// </summary>
+        /// <returns>True for a mail, which nothing can open by its address.</returns>
+        public bool IsMailSource() =>
+            Uri.TryCreate(source.URL.Trim(), UriKind.Absolute, out var address) && address.Scheme.Equals(MAIL_SOURCE_SCHEME, StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Whether nothing can open a source by its address: a mail, or the passage of a data source
+        /// whose path names nothing to open, see CreateRetrievalSourceUrl.
+        /// </summary>
+        /// <returns>True for a source which is named as text, without a link.</returns>
+        public bool HasNoLink() =>
+            Uri.TryCreate(source.URL.Trim(), UriKind.Absolute, out var address)
+            && (address.Scheme.Equals(MAIL_SOURCE_SCHEME, StringComparison.OrdinalIgnoreCase) || address.Scheme.Equals(RETRIEVAL_SOURCE_SCHEME, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>
+        /// Reads which document a source names, and which page of it.
+        /// </summary>
+        /// <remarks>
+        /// Only a source which names a file has such a location; a web source is opened by the browser
+        /// and never asks. The page rides in the fragment of the link as `page=N`, which is what the PDF
+        /// open parameters call for. A chat written before v26.9.1 carries `chunk=N` instead, which names
+        /// nothing a program could be sent to: such a source keeps its document and loses only the page.
+        /// </remarks>
+        /// <param name="location">The document and its page, or the default when the source names no file.</param>
+        /// <returns>Whether the source names a file.</returns>
+        public bool TryGetDocumentLocation(out SourceDocumentLocation location)
+        {
+            location = default;
+            if (string.IsNullOrWhiteSpace(source.URL))
+                return false;
+
+            var cleanedUrl = source.URL.Trim().Replace("\r", string.Empty).Replace("\n", string.Empty);
+            if (!Uri.TryCreate(cleanedUrl, UriKind.Absolute, out var absoluteUri) || !absoluteUri.IsFile)
+                return false;
+
+            //
+            // The link was made from a path of this system, so reading it back gives that path again --
+            // percent-encoded spaces and umlauts included, and with the separators this system uses.
+            //
+            var path = absoluteUri.LocalPath;
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            location = new(path, ReadPageFromFragment(absoluteUri.Fragment));
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// The scheme of the address a passage of a data source leaves as a source, when its path is nothing a program can open.
+    /// </summary>
+    private const string RETRIEVAL_SOURCE_SCHEME = "retrieval";
+
+    /// <summary>
+    /// The address of the source a passage of a data source leaves in a chat, when its path is
+    /// nothing a program can open, e.g., a path which only the ERI server knows.
+    /// </summary>
+    /// <remarks>
+    /// Made from the name and the path the data source gave, so that the passages of one document
+    /// gather under one source, see MergeSources. The host is the same for all of them, since the
+    /// identity of an address writes its host in lower case. Like the address of a mail, nothing can
+    /// open it, see HasNoLink.
+    /// </remarks>
+    /// <param name="name">The name of the content, e.g., the document.</param>
+    /// <param name="path">The path the data source gave, which may be empty.</param>
+    /// <returns>The address.</returns>
+    public static string CreateRetrievalSourceUrl(string name, string path) => $"{RETRIEVAL_SOURCE_SCHEME}://context/{Uri.EscapeDataString(name)}/{Uri.EscapeDataString(path)}";
+
     private static void AppendMarkdownLink(StringBuilder sb, string title, string url)
     {
         sb.Append('[');
@@ -80,46 +171,119 @@ public static partial class SourceExtensions
         return c is '-' or '.' or '_' or '~' or ':' or '/' or '?' or '#' or '[' or ']' or '@' or '!' or '$' or '&' or '\'' or '(' or ')' or '*' or '+' or ',' or ';' or '=';
     }
     
-    /// <summary>
-    /// Sorts a list of sources into the groups it is shown in, and numbers them.
-    /// </summary>
-    /// <remarks>
-    /// The order of the groups and the running number are what a reader follows, and they have to
-    /// be the same wherever the list appears: in the chat, in an exported document, and in the
-    /// clipboard. This is why both the chat and the Markdown below ask here instead of sorting the
-    /// list themselves.
-    /// </remarks>
-    /// <param name="sources">The list of sources to sort.</param>
-    /// <returns>The groups which have sources, in the order they are shown; empty when there are none.</returns>
-    public static IReadOnlyList<SourceGroup> GroupSources(this IList<Source> sources)
+    /// <param name="sources">The list of sources.</param>
+    extension(IList<Source> sources)
     {
-        var llmSources = new List<Source>();
-        var toolSources = new List<Source>();
-        var ragSources = new List<Source>();
-        foreach (var source in sources)
+        /// <summary>
+        /// Sorts a list of sources into the groups it is shown in, and numbers them.
+        /// </summary>
+        /// <remarks>
+        /// The order of the groups and the running number are what a reader follows, and they have to
+        /// be the same wherever the list appears: in the chat, in an exported document, and in the
+        /// clipboard. This is why both the chat and the Markdown below ask here instead of sorting the
+        /// list themselves.
+        /// </remarks>
+        /// <returns>The groups which have sources, in the order they are shown; empty when there are none.</returns>
+        public IReadOnlyList<SourceGroup> GroupSources()
         {
-            switch (source.Origin)
+            var llmSources = new List<Source>();
+            var toolSources = new List<Source>();
+            var ragSources = new List<Source>();
+            foreach (var source in sources)
             {
-                case SourceOrigin.LLM:
-                    llmSources.Add(source);
-                    break;
+                switch (source.Origin)
+                {
+                    case SourceOrigin.LLM:
+                        llmSources.Add(source);
+                        break;
 
-                case SourceOrigin.TOOL:
-                    toolSources.Add(source);
-                    break;
+                    case SourceOrigin.TOOL:
+                        toolSources.Add(source);
+                        break;
 
-                case SourceOrigin.RAG:
-                    ragSources.Add(source);
-                    break;
+                    case SourceOrigin.RAG:
+                        ragSources.Add(source);
+                        break;
+                }
             }
+
+            var groups = new List<SourceGroup>(3);
+            var sourceNum = 0;
+            AddGroup(groups, TB("Sources provided by the AI"), llmSources, ref sourceNum);
+            AddGroup(groups, TB("Sources used by tools"), toolSources, ref sourceNum);
+            AddGroup(groups, TB("Sources provided by the data providers"), ragSources, ref sourceNum);
+            return groups;
         }
 
-        var groups = new List<SourceGroup>(3);
-        var sourceNum = 0;
-        AddGroup(groups, TB("Sources provided by the AI"), llmSources, ref sourceNum);
-        AddGroup(groups, TB("Sources used by tools"), toolSources, ref sourceNum);
-        AddGroup(groups, TB("Sources provided by the data providers"), ragSources, ref sourceNum);
-        return groups;
+        /// <summary>
+        /// Converts a list of sources to a markdown-formatted string.
+        /// </summary>
+        /// <param name="keepPageAnchors">Whether a link into a local file may name its page; see the method below.</param>
+        /// <returns>A markdown-formatted string representing the sources.</returns>
+        public string ToMarkdown(bool keepPageAnchors = true)
+        {
+            var sb = new StringBuilder();
+            foreach (var group in sources.GroupSources())
+            {
+                if (sb.Length > 0)
+                    sb.AppendLineLF();
+
+                sb.Append("## ");
+                sb.AppendLineLF(group.Heading);
+
+                foreach (var numberedSource in group.Sources)
+                {
+                    sb.Append($"- [{numberedSource.Number}] ");
+
+                    // A link to a mail, or to what only a data source knows, would lead nowhere in a document or in the clipboard, so it is named only:
+                    if (numberedSource.Source.HasNoLink())
+                        sb.Append(EscapeMarkdownLinkText(numberedSource.Source.Title));
+                    else
+                        AppendMarkdownLink(sb, numberedSource.Source.Title, keepPageAnchors ? numberedSource.Source.URL : WithoutPageAnchor(numberedSource.Source.URL));
+
+                    sb.AppendLineLF();
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Converts a list of sources to a markdown-formatted string, headed by a title of its own.
+        /// </summary>
+        /// <remarks>
+        /// The chat shows the sources in a box below the answer, so the reader sees where the one ends
+        /// and the others begin. An exported document is one text: without a heading of its own, the
+        /// source list would read like one more section the model wrote. This is why the export asks
+        /// for this and the chat does not.
+        /// </remarks>
+        /// <param name="keepPageAnchors">Whether a link into a local file may name its page.</param>
+        /// <returns>A markdown-formatted string representing the sources, or an empty string when there are none.</returns>
+        public string ToExportMarkdown(bool keepPageAnchors = true)
+        {
+            var sourcesMarkdown = sources.ToMarkdown(keepPageAnchors);
+            if (string.IsNullOrWhiteSpace(sourcesMarkdown))
+                return string.Empty;
+
+            return $"# {TB("Sources")}\n\n{sourcesMarkdown}";
+        }
+
+        /// <summary>
+        /// Merges a list of added sources into an existing list of sources, avoiding duplicates based on normalized URLs.
+        /// </summary>
+        /// <param name="addedSources">The list of sources to add.</param>
+        public void MergeSources(IEnumerable<ISource> addedSources)
+        {
+            var sourceIdentities = sources
+                .Select(source => GetSourceIdentity(source.URL))
+                .ToHashSet(StringComparer.Ordinal);
+
+            foreach (var addedSource in addedSources)
+            {
+                if (sourceIdentities.Add(GetSourceIdentity(addedSource.URL)))
+                    sources.Add((Source)addedSource);
+            }
+        }
     }
 
     private static void AddGroup(ICollection<SourceGroup> groups, string heading, IReadOnlyList<Source> sources, ref int sourceNum)
@@ -132,35 +296,6 @@ public static partial class SourceExtensions
             numberedSources.Add(new(++sourceNum, source));
 
         groups.Add(new(heading, numberedSources));
-    }
-
-    /// <summary>
-    /// Converts a list of sources to a markdown-formatted string.
-    /// </summary>
-    /// <param name="sources">The list of sources to convert.</param>
-    /// <param name="keepPageAnchors">Whether a link into a local file may name its page; see the method below.</param>
-    /// <returns>A markdown-formatted string representing the sources.</returns>
-    public static string ToMarkdown(this IList<Source> sources, bool keepPageAnchors = true)
-    {
-        var sb = new StringBuilder();
-        foreach (var group in sources.GroupSources())
-        {
-            if (sb.Length > 0)
-                sb.AppendLine();
-
-            sb.Append("## ");
-            sb.AppendLine(group.Heading);
-
-            foreach (var numberedSource in group.Sources)
-            {
-                var url = keepPageAnchors ? numberedSource.Source.URL : WithoutPageAnchor(numberedSource.Source.URL);
-                sb.Append($"- [{numberedSource.Number}] ");
-                AppendMarkdownLink(sb, numberedSource.Source.Title, url);
-                sb.AppendLine();
-            }
-        }
-
-        return sb.ToString();
     }
 
     /// <summary>
@@ -186,61 +321,6 @@ public static partial class SourceExtensions
         return absoluteUri.GetComponents(UriComponents.AbsoluteUri & ~UriComponents.Fragment, UriFormat.UriEscaped);
     }
 
-    /// <summary>
-    /// Converts a list of sources to a markdown-formatted string, headed by a title of its own.
-    /// </summary>
-    /// <remarks>
-    /// The chat shows the sources in a box below the answer, so the reader sees where the one ends
-    /// and the others begin. An exported document is one text: without a heading of its own, the
-    /// source list would read like one more section the model wrote. This is why the export asks
-    /// for this and the chat does not.
-    /// </remarks>
-    /// <param name="sources">The list of sources to convert.</param>
-    /// <param name="keepPageAnchors">Whether a link into a local file may name its page.</param>
-    /// <returns>A markdown-formatted string representing the sources, or an empty string when there are none.</returns>
-    public static string ToExportMarkdown(this IList<Source> sources, bool keepPageAnchors = true)
-    {
-        var sourcesMarkdown = sources.ToMarkdown(keepPageAnchors);
-        if (string.IsNullOrWhiteSpace(sourcesMarkdown))
-            return string.Empty;
-
-        return $"# {TB("Sources")}{Environment.NewLine}{Environment.NewLine}{sourcesMarkdown}";
-    }
-
-    /// <summary>
-    /// Reads which document a source names, and which page of it.
-    /// </summary>
-    /// <remarks>
-    /// Only a source which names a file has such a location; a web source is opened by the browser
-    /// and never asks. The page rides in the fragment of the link as `page=N`, which is what the PDF
-    /// open parameters call for. A chat written before v26.9.1 carries `chunk=N` instead, which names
-    /// nothing a program could be sent to: such a source keeps its document and loses only the page.
-    /// </remarks>
-    /// <param name="source">The source to read.</param>
-    /// <param name="location">The document and its page, or the default when the source names no file.</param>
-    /// <returns>Whether the source names a file.</returns>
-    public static bool TryGetDocumentLocation(this ISource source, out SourceDocumentLocation location)
-    {
-        location = default;
-        if (string.IsNullOrWhiteSpace(source.URL))
-            return false;
-
-        var cleanedUrl = source.URL.Trim().Replace("\r", string.Empty).Replace("\n", string.Empty);
-        if (!Uri.TryCreate(cleanedUrl, UriKind.Absolute, out var absoluteUri) || !absoluteUri.IsFile)
-            return false;
-
-        //
-        // The link was made from a path of this system, so reading it back gives that path again --
-        // percent-encoded spaces and umlauts included, and with the separators this system uses.
-        //
-        var path = absoluteUri.LocalPath;
-        if (string.IsNullOrWhiteSpace(path))
-            return false;
-
-        location = new(path, ReadPageFromFragment(absoluteUri.Fragment));
-        return true;
-    }
-
     private static int? ReadPageFromFragment(string fragment)
     {
         const string PAGE_PARAMETER = "page=";
@@ -257,24 +337,15 @@ public static partial class SourceExtensions
     }
 
     /// <summary>
-    /// Merges a list of added sources into an existing list of sources, avoiding duplicates based on normalized URLs.
+    /// What tells two sources apart: the address without its fragment.
     /// </summary>
-    /// <param name="sources">The existing list of sources to merge into.</param>
-    /// <param name="addedSources">The list of sources to add.</param>
-    public static void MergeSources(this IList<Source> sources, IEnumerable<ISource> addedSources)
-    {
-        var sourceIdentities = sources
-            .Select(source => GetSourceIdentity(source.URL))
-            .ToHashSet(StringComparer.Ordinal);
-
-        foreach (var addedSource in addedSources)
-        {
-            if (sourceIdentities.Add(GetSourceIdentity(addedSource.URL)))
-                sources.Add((Source)addedSource);
-        }
-    }
-
-    private static string GetSourceIdentity(string url)
+    /// <remarks>
+    /// The passages of an answer are matched to their sources by the same identity, see
+    /// SourcePassageExtensions.GetPassagesOf, so a source and its passages always agree.
+    /// </remarks>
+    /// <param name="url">The address of a source.</param>
+    /// <returns>The identity of the source.</returns>
+    internal static string GetSourceIdentity(string url)
     {
         var cleanedUrl = url.Trim().Replace("\r", string.Empty).Replace("\n", string.Empty);
         if (!Uri.TryCreate(cleanedUrl, UriKind.Absolute, out var absoluteUri))

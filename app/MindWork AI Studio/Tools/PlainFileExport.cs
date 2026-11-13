@@ -1,8 +1,12 @@
 using System.Text;
 
+using AIStudio.Chat;
+using AIStudio.Tools.CodeHighlighting;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
+using Markdig.Extensions.Mathematics;
 using Markdig.Extensions.Tables;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
@@ -16,19 +20,27 @@ public static class PlainFileExport
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PlainFileExport).Namespace, nameof(PlainFileExport));
 
     /// <summary>
-    /// Reads every table a message holds, in the order they appear in it.
+    /// Reads every file a message holds, in the order they appear in it.
     /// </summary>
     /// <remarks>
-    /// Two kinds of tables end up in an answer. Almost always it is a Markdown table written with
-    /// pipes, which is what a model produces on its own; we turn its cells into a file. Rarely a
-    /// model answers with a fenced code block marked as csv or tsv, which already is the finished
-    /// file: we hand that through untouched rather than taking it apart and reassembling it.
+    /// Three kinds of files end up in an answer. Almost always it is a Markdown table written with
+    /// pipes, which is what a model produces on its own; we turn its cells into a file. Besides,
+    /// every fenced code block is a file. A model marks it as a format we write, such as html, latex,
+    /// markdown, or csv, whenever it was asked for a web page, a document, or data; any other block
+    /// is code, in whatever language the model named, or in none. Either way, the block already is
+    /// the finished file: we hand it through untouched rather than taking it apart and reassembling
+    /// it. We do not judge what the block holds, either. A browser shows a fragment of HTML just as
+    /// well as an entire page, and a LaTeX fragment or a few lines of code are still what the user
+    /// asked for. Last, every formula the chat shows on its own is a file of LaTeX, see
+    /// MarkdownRenderPlanner, whether the model wrote it between $$ or into a code block of LaTeX.
     /// </remarks>
-    /// <param name="markdown">The Markdown text of the message.</param>
+    /// <param name="plan">The text of the message as the chat renders it: the position of each file
+    /// refers to its source.</param>
     /// <param name="separator">The separator to write a Markdown table with, see CsvWriter.SeparatorFor.</param>
-    /// <returns>The tables, or an empty list when the message holds none.</returns>
-    public static IReadOnlyList<MessageTable> ExtractTables(string markdown, char separator)
+    /// <returns>The files, or an empty list when the message holds none.</returns>
+    internal static IReadOnlyList<MessageFile> ExtractFiles(MarkdownRenderPlan plan, char separator)
     {
+        var markdown = plan.Source;
         if (string.IsNullOrWhiteSpace(markdown))
             return [];
 
@@ -40,39 +52,73 @@ public static class PlainFileExport
         var document = Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE);
 
         //
-        // What a table is about stands above it, not in it: models introduce their tables with a
-        // heading. We remember every heading with its line so that each table can take the last
-        // one before it, and fall back to its own first column heading when there is none.
+        // What a file is about stands above it, not in it: models introduce their tables and code
+        // blocks with a heading. We remember every heading with its position so that each file can
+        // take the last one before it. A table falls back to its own first column heading when there
+        // is none; a code block has nothing comparable and stays without a caption.
         //
         var headings = document.Descendants<HeadingBlock>()
-            .Select(heading => (heading.Line, Text: ToPlainText(heading)))
+            .Select(heading => (Position: heading.Span.Start, Text: ToPlainText(heading)))
             .Where(heading => !string.IsNullOrWhiteSpace(heading.Text))
-            .OrderBy(heading => heading.Line)
+            .OrderBy(heading => heading.Position)
             .ToList();
 
+        var formulas = plan.Segments.Where(segment => segment.Type is MarkdownRenderSegmentType.MATH_BLOCK).ToList();
         var tables = document.Descendants<Table>()
-            .Select(table => (table.Line, Content: ToContent(table, separator)));
+            .Select(table => (Position: table.Span.Start, File: Read(table, separator)));
 
+        //
+        // Markdig reads a formula between $$ as a MathBlock, which is a fenced code block as well, and
+        // a code block of LaTeX the chat shows as a formula is a fenced code block, too. Each of them
+        // is a formula of the plan instead, which the chat renders with the button to save it:
+        //
         var codeBlocks = document.Descendants<FencedCodeBlock>()
-            .Select(block => (block.Line, Content: ToContent(block)));
+            .Where(block => block is not MathBlock && !formulas.Any(formula => formula.FileStart <= block.Span.Start && block.Span.Start < formula.Start))
+            .Select(block => (Position: block.Span.Start, File: Read(block)));
 
-        return tables.Concat(codeBlocks)
-            .Where(entry => entry.Content is not null)
-            .OrderBy(entry => entry.Line)
-            .Select((entry, index) => new MessageTable(
-                index + 1,
-                Caption: HeadingAbove(entry.Line) is { Length: > 0 } heading ? heading : entry.Content!.Value.Fallback,
-                entry.Content!.Value.Format,
-                entry.Content.Value.Text))
+        var formulaFiles = formulas.Select(formula => (Position: formula.FileStart, File: (FoundFile?)ReadFormula(formula.GetContent(markdown))));
+
+        //
+        // Tables and code blocks are counted apart, formulas among the code blocks. The menu falls
+        // back to that number when a heading cannot tell two files apart, and "Table 2" has to be
+        // the second table of the answer, not the second entry of the menu.
+        //
+        var numberOfTables = 0;
+        var numberOfCodeBlocks = 0;
+        return tables.Concat(codeBlocks).Concat(formulaFiles)
+            .Where(entry => entry.File is not null)
+            .OrderBy(entry => entry.Position)
+            .Select(entry => new MessageFile(
+                entry.File!.Format.IsTabular ? ++numberOfTables : ++numberOfCodeBlocks,
+                entry.Position,
+                Caption: HeadingAbove(entry.Position) is { Length: > 0 } heading ? heading : entry.File!.Fallback,
+                entry.File!.Format,
+                entry.File!.Language,
+                entry.File!.Content))
             .ToList();
 
-        string HeadingAbove(int line) => headings.LastOrDefault(heading => heading.Line < line).Text ?? string.Empty;
+        string HeadingAbove(int position) => headings.LastOrDefault(heading => heading.Position < position).Text ?? string.Empty;
     }
+
+    /// <summary>
+    /// A file read out of a table or a code block, before ExtractFiles knows where it stands in the message.
+    /// </summary>
+    /// <param name="Fallback">What the file is about when no heading stands above it.</param>
+    /// <param name="Format">The format the file is written as.</param>
+    /// <param name="Language">The language of the code, or NONE when the format is not SOURCE_CODE.</param>
+    /// <param name="Content">The finished file content.</param>
+    private sealed record FoundFile(string Fallback, FileExportFormat Format, SourceCodeLanguage Language, string Content);
+
+    /// <summary>
+    /// Turns a formula into a file of LaTeX, between \[ and \] as a formula of its own, so that it can be
+    /// pasted into a document as it is.
+    /// </summary>
+    private static FoundFile ReadFormula(string formula) => new(string.Empty, FileExportFormat.LATEX, SourceCodeLanguage.NONE, $"\\[\n{formula}\n\\]");
 
     /// <summary>
     /// Turns a Markdown table into a file.
     /// </summary>
-    private static (string Fallback, FileExportFormat Format, string Text)? ToContent(Table table, char separator)
+    private static FoundFile? Read(Table table, char separator)
     {
         var rows = table.OfType<TableRow>()
             .Select(row => row.OfType<TableCell>().Select(ToPlainText).ToArray())
@@ -84,28 +130,35 @@ public static class PlainFileExport
 
         var text = new StringBuilder();
         foreach (var fields in rows)
-            text.AppendLine(CsvWriter.ToRow(separator, fields));
+            text.Append(CsvWriter.ToRow(separator, fields)).Append(CsvWriter.ROW_END);
 
-        return (rows[0].FirstOrDefault() ?? string.Empty, FileExportFormat.CSV, text.ToString());
+        return new(rows[0].FirstOrDefault() ?? string.Empty, FileExportFormat.CSV, SourceCodeLanguage.NONE, text.ToString());
     }
 
     /// <summary>
-    /// Turns a fenced code block into a file, when the model marked it as tabular data.
+    /// Turns a fenced code block into a file: in the format the model marked it as, when we write
+    /// that format, and as code in its language otherwise. A block which names no language is saved in
+    /// the one its code is written in, see CodeLanguageDetector, so that it gets the same language as
+    /// its highlighting.
     /// </summary>
-    private static (string Fallback, FileExportFormat Format, string Text)? ToContent(FencedCodeBlock block)
+    /// <remarks>
+    /// A block the model never closed is left out. That happens when an answer broke off, at the
+    /// output limit of the model for example, and the file would end wherever the answer did: half
+    /// a web page, half a table, or half a program is nothing anybody wants to save.
+    /// </remarks>
+    private static FoundFile? Read(FencedCodeBlock block)
     {
-        var format = block.Info?.Trim() switch
-        {
-            "csv" => FileExportFormat.CSV,
-            "tsv" => FileExportFormat.TSV,
-
-            _ => FileExportFormat.NONE,
-        };
-
-        if (format is FileExportFormat.NONE)
+        if (block.ClosingFencedCharCount is 0)
             return null;
 
         var content = block.Lines.ToString();
+        var language = CodeLanguageDetector.FenceLanguageOf(block.Info, content);
+        if (!FileExportFormat.TryFromCodeFenceLanguage(language, out var format))
+            return new(string.Empty, FileExportFormat.SOURCE_CODE, SourceCodeLanguages.FromCodeFenceLanguage(language), content);
+
+        if (!format.IsTabular)
+            return new(string.Empty, format, SourceCodeLanguage.NONE, content);
+
         var blockSeparator = format is FileExportFormat.TSV ? '\t' : ',';
         var firstLine = content.AsSpan();
         var lineEnd = firstLine.IndexOf('\n');
@@ -115,7 +168,7 @@ public static class PlainFileExport
         var separatorPosition = firstLine.IndexOf(blockSeparator);
         var fallback = (separatorPosition >= 0 ? firstLine[..separatorPosition] : firstLine).Trim().Trim('"').ToString();
 
-        return (fallback, format, content);
+        return new(fallback, format, SourceCodeLanguage.NONE, content);
     }
 
     /// <summary>
@@ -167,23 +220,57 @@ public static class PlainFileExport
     }
 
     /// <summary>
-    /// Writes the given text to a plain text file and lets the user save it.
+    /// Writes the given text to a plain text file as it is and lets the user save it.
     /// </summary>
+    /// <remarks>
+    /// Nothing is converted here, which is what sets this apart from PandocExport.ToDocument. A web
+    /// page or a LaTeX document the model wrote is a finished file already and comes through here;
+    /// an entire answer in one of these formats is Markdown and goes to Pandoc instead.
+    /// </remarks>
     /// <param name="rustService">The Rust service, used for the save dialog.</param>
     /// <param name="dialogTitle">The title of the save dialog. The caller knows what the user is
     /// looking at, a chat message or the result of an assistant, so the caller names it.</param>
-    /// <param name="format">The format to write. Must be a format which does not use Pandoc.</param>
-    /// <param name="fileContent">What to write. The caller decides whether that is the entire
-    /// message or one table out of it.</param>
+    /// <param name="format">The format to write. Must be a plain text format, see
+    /// FileExportFormatExtensions.IsPlainText.</param>
+    /// <param name="fileContent">The finished file. The caller decides whether that is the entire
+    /// message or one file out of it.</param>
     /// <param name="fileName">What the file is about, used to suggest a name in the save dialog.
     /// Null falls back to a generic name.</param>
     /// <returns>True, when the file was written.</returns>
     public static async Task<bool> ToFile(RustService rustService, string dialogTitle, FileExportFormat format, string fileContent, string? fileName = null)
     {
-        if (format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (!format.IsPlainText || format.FileTypeFilter is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
 
-        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
+        return await WriteFile(rustService, dialogTitle, format, fileTypeFilter, format.ToSuggestedFileName(fileName), format.FileEncoding, fileContent);
+    }
+
+    /// <summary>
+    /// Writes one file out of a message as it is and lets the user save it.
+    /// </summary>
+    /// <remarks>
+    /// Unlike an entire message, such a file knows more about itself than its format says, so the
+    /// file names its type, the name the save dialog suggests, and its encoding.
+    /// </remarks>
+    /// <param name="rustService">The Rust service, used for the save dialog.</param>
+    /// <param name="dialogTitle">The title of the save dialog.</param>
+    /// <param name="file">The file, as ExtractFiles read it out of the message. Its format must be a
+    /// plain text format, see FileExportFormatExtensions.IsPlainText.</param>
+    /// <param name="fileContent">The finished file, see ContentExtensions.ToExportContent.</param>
+    /// <param name="fileName">What the file is about, used to suggest a name in the save dialog.
+    /// Null falls back to a generic name.</param>
+    /// <returns>True, when the file was written.</returns>
+    public static async Task<bool> ToFile(RustService rustService, string dialogTitle, MessageFile file, string fileContent, string? fileName = null)
+    {
+        if (!file.Format.IsPlainText || file.ToFileTypeFilter() is not { } fileTypeFilter)
+            throw new ArgumentOutOfRangeException(nameof(file), file.Format, "AI Studio cannot write this format itself.");
+
+        return await WriteFile(rustService, dialogTitle, file.Format, fileTypeFilter, file.ToSuggestedFileName(fileName), file.ToFileEncoding(), fileContent);
+    }
+
+    private static async Task<bool> WriteFile(RustService rustService, string dialogTitle, FileExportFormat format, FileTypeFilter fileTypeFilter, string suggestedFileName, Encoding encoding, string fileContent)
+    {
+        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], suggestedFileName);
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");
@@ -192,17 +279,19 @@ public static class PlainFileExport
 
         LOGGER.LogInformation("The user chose the path '{SaveFilePath}' for the {ExportFormat} export.", response.SaveFilePath, format);
 
+        await using var feedback = new FileExportFeedback();
+        feedback.ShowRunning(response.SaveFilePath);
         try
         {
-            await File.WriteAllTextAsync(response.SaveFilePath, fileContent, format.ToFileEncoding());
-            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("The export succeeded.")));
+            await File.WriteAllTextAsync(response.SaveFilePath, fileContent, encoding);
+            await feedback.SucceededAsync(AppIcons.SUCCESS, TB("The export succeeded."), response.SaveFilePath, true);
 
             return true;
         }
         catch (Exception ex)
         {
             LOGGER.LogError(ex, "Error during {ExportFormat} export.", format);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, TB("The export failed.")));
             return false;
         }
     }

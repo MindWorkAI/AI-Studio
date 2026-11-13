@@ -1,3 +1,5 @@
+using AIStudio.Settings;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -58,10 +60,10 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     /// The data sources the chat starts with. An empty selection keeps the normal chat defaults.
     /// </summary>
     [Parameter]
-    public IEnumerable<string> DataSourceIds { get; set; } = [];
+    public IReadOnlyCollection<string> DataSourceIds { get; set; } = [];
 
     [Parameter]
-    public EventCallback<IEnumerable<string>> DataSourceIdsChanged { get; set; }
+    public EventCallback<IReadOnlyCollection<string>> DataSourceIdsChanged { get; set; }
 
     /// <summary>
     /// The tools preselected for the chat. An empty selection keeps the normal chat defaults.
@@ -81,36 +83,18 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     /// </summary>
     private bool OpensTemporaryChat => string.IsNullOrWhiteSpace(this.WorkspaceName);
 
-    private IReadOnlyList<WorkspaceTreeWorkspace> availableWorkspaces = [];
-
-    private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
-
-    #region Overrides of MSGComponentBase
-
-    protected override async Task OnInitializedAsync()
-    {
-        // Configure the spellchecking for the workspace name input:
-        this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
-
-        await base.OnInitializedAsync();
-
-        var workspaceSnapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
-        this.availableWorkspaces = workspaceSnapshot.Workspaces;
-    }
-
-    #endregion
-
-    //
-    // Picking an existing workspace fills the name field. Clearing the select must not wipe a name
-    // the user typed, though, so an empty selection is ignored:
-    //
-    private async Task SelectExistingWorkspace(string workspaceName)
-    {
-        if (string.IsNullOrWhiteSpace(workspaceName))
-            return;
-
-        await this.SetWorkspaceName(workspaceName);
-    }
+    /// <summary>
+    /// The chat template the launcher would open its chat with, as far as it is known here.
+    /// </summary>
+    /// <remarks>
+    /// With "use chat default" chosen, this is whichever template the chat options name right now,
+    /// and that may well be another one by the time somebody opens the launcher. The form therefore
+    /// only says what such a template brings along instead of disabling the fields below it: a field
+    /// which locks itself behind the user's back is worse than a sentence explaining the situation.
+    /// </remarks>
+    private ChatTemplate SelectedChatTemplate => string.IsNullOrWhiteSpace(this.ChatTemplateId)
+        ? this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT)
+        : this.SettingsManager.GetChatTemplateById(this.ChatTemplateId);
 
     private async Task SetWorkspaceName(string workspaceName)
     {
@@ -118,29 +102,29 @@ public partial class DirectChatLauncherForm : MSGComponentBase
         await this.WorkspaceNameChanged.InvokeAsync(workspaceName);
     }
 
-    private async Task SetProviderId(string providerId)
+    private async Task SetProviderId(string? providerId)
     {
-        this.ProviderId = providerId;
-        await this.ProviderIdChanged.InvokeAsync(providerId);
+        this.ProviderId = providerId ?? string.Empty;
+        await this.ProviderIdChanged.InvokeAsync(this.ProviderId);
     }
 
-    private async Task SetProfileId(string profileId)
+    private async Task SetProfileId(string? profileId)
     {
-        this.ProfileId = profileId;
-        await this.ProfileIdChanged.InvokeAsync(profileId);
+        this.ProfileId = profileId ?? string.Empty;
+        await this.ProfileIdChanged.InvokeAsync(this.ProfileId);
     }
 
-    private async Task SetChatTemplateId(string chatTemplateId)
+    private async Task SetChatTemplateId(string? chatTemplateId)
     {
-        this.ChatTemplateId = chatTemplateId;
-        await this.ChatTemplateIdChanged.InvokeAsync(chatTemplateId);
+        this.ChatTemplateId = chatTemplateId ?? string.Empty;
+        await this.ChatTemplateIdChanged.InvokeAsync(this.ChatTemplateId);
     }
 
     //
-    // MudSelect hands out its selection as a lazy sequence of nullable strings. We materialize it
-    // once and drop empty entries, so the host always receives a stable list of usable IDs:
+    // MudSelect hands out its selection as a collection of nullable strings. We copy it and drop
+    // empty entries, so the host always receives a stable list of usable IDs:
     //
-    private async Task SetDataSourceIds(IEnumerable<string?>? dataSourceIds)
+    private async Task SetDataSourceIds(IReadOnlyCollection<string?>? dataSourceIds)
     {
         var selectedDataSourceIds = dataSourceIds is null ? [] : dataSourceIds.Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!).ToArray();
 
@@ -154,7 +138,7 @@ public partial class DirectChatLauncherForm : MSGComponentBase
         await this.ToolIdsChanged.InvokeAsync(toolIds);
     }
 
-    private string GetSelectedDataSourceText(List<string?>? selectedValues)
+    private string GetSelectedDataSourceText(IReadOnlyList<string?>? selectedValues)
     {
         if (selectedValues is null || selectedValues.Count == 0)
             return T("Use the normal chat data source defaults");

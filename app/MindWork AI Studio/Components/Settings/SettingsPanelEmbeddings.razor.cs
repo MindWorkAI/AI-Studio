@@ -55,53 +55,28 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     private async Task AddEmbeddingProvider()
     {
-        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
-        {
-            { x => x.IsEditing, false },
-        };
-        
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Add Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+        if (await EmbeddingProviderSetup.AddAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService) is null)
             return;
 
-        var addedEmbedding = (EmbeddingProvider)dialogResult.Data!;
-        addedEmbedding = addedEmbedding with { Num = this.SettingsManager.ConfigurationData.NextEmbeddingNum++ };
-        
-        this.SettingsManager.ConfigurationData.EmbeddingProviders.Add(addedEmbedding);
         await this.UpdateEmbeddingProviders();
-        
-        await this.SettingsManager.StoreSettings();
-        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
-    
+
+    private async Task ImportEmbeddingProvider()
+    {
+        if (await EmbeddingProviderSetup.ImportAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService) is null)
+            return;
+
+        await this.UpdateEmbeddingProviders();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
     private async Task EditEmbeddingProvider(EmbeddingProvider embeddingProvider)
     {
         if (embeddingProvider.IsEnterpriseConfiguration && !embeddingProvider.AllowUserProvidedAPIKey)
             return;
 
-        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
-        {
-            { x => x.DataNum, embeddingProvider.Num },
-            { x => x.DataId, embeddingProvider.Id },
-            { x => x.DataName, embeddingProvider.Name },
-            { x => x.DataLLMProvider, embeddingProvider.UsedLLMProvider },
-            { x => x.DataCustomIconDataUrl, embeddingProvider.CustomIconDataUrl },
-            { x => x.DataModel, embeddingProvider.Model },
-            { x => x.DataHostname, embeddingProvider.Hostname },
-            { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
-            { x => x.IsEditing, true },
-            { x => x.DataHost, embeddingProvider.Host },
-            { x => x.DataTokenizerPath, embeddingProvider.TokenizerPath },
-            { x => x.DataTokenizerFingerprint, embeddingProvider.TokenizerFingerprint },
-            { x => x.DataTokenLimit, embeddingProvider.EffectiveTokenLimit },
-            { x => x.DataEmbeddingBatchSize, embeddingProvider.EffectiveEmbeddingBatchSize },
-            { x => x.HFInferenceProviderId, embeddingProvider.HFInferenceProvider },
-            { x => x.IsEnterpriseConfiguration, embeddingProvider.IsEnterpriseConfiguration },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), EmbeddingProviderSetup.CreateDialogParameters(embeddingProvider, isEditing: true), DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -133,7 +108,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     private async Task DeleteEmbeddingProvider(EmbeddingProvider provider)
     {
-        var question = string.Format(T("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name);
+        var question = string.Format(TA("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name);
         var affectedDataSources = DataSourceReindexWarning.DescribeDataSourcesLosingTheirProvider(this.SettingsManager, provider);
 
         //
@@ -143,7 +118,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         //
         var dialogParameters = string.IsNullOrEmpty(affectedDataSources)
             ? new DialogParameters<ConfirmDialog> { { x => x.Message, question } }
-            : new DialogParameters<ConfirmDialog> { { x => x.MarkdownBody, $"{affectedDataSources}{Environment.NewLine}{question}" } };
+            : new DialogParameters<ConfirmDialog> { { x => x.MarkdownBody, $"{affectedDataSources}\n{question}" } };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
@@ -167,7 +142,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         {
             var issueDialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, string.Format(T("Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"), provider.Name, deleteSecretResponse.Issue) },
+                { x => x.Message, string.Format(TA("Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"), provider.Name, deleteSecretResponse.Issue) },
             };
 
             var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), issueDialogParameters, DialogOptions.FULLSCREEN);
@@ -235,24 +210,24 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             // sentence below, which used to be the same one for a missing API key, an unreachable
             // provider and a provider which cannot embed anything at all:
             //
-            await this.DialogService.ShowMessageBox(T("Embedding Result"), exception.UserMessage, T("Close"));
+            await this.DialogService.ShowMessageBoxAsync(T("Embedding Result"), exception.UserMessage, T("Close"));
             return;
         }
 
         if (embeddings.Count == 0)
         {
-            await this.DialogService.ShowMessageBox(T("Embedding Result"), T("No embedding was returned."), T("Close"));
+            await this.DialogService.ShowMessageBoxAsync(T("Embedding Result"), T("No embedding was returned."), T("Close"));
             return;
         }
 
         var vector = embeddings.FirstOrDefault();
         if (vector is null || vector.Count == 0)
         {
-            await this.DialogService.ShowMessageBox(T("Embedding Result"), T("No embedding was returned."), T("Close"));
+            await this.DialogService.ShowMessageBoxAsync(T("Embedding Result"), T("No embedding was returned."), T("Close"));
             return;
         }
 
-        var resultText = string.Join(Environment.NewLine, vector.Select(value => value.ToString("G9", CultureInfo.InvariantCulture)));
+        var resultText = string.Join('\n',vector.Select(value => value.ToString("G9", CultureInfo.InvariantCulture)));
         var resultParameters = new DialogParameters<EmbeddingResultDialog>
         {
             { x => x.ResultText, resultText },

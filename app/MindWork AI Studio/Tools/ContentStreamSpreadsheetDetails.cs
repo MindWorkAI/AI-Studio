@@ -7,8 +7,8 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamSpreadsheetDetails
 {
     [JsonPropertyName("sheet_name")] 
-    public string? SheetName { get; init; }
+    public string? SheetName { get; set; }
 
     [JsonPropertyName("row_number")] 
-    public int? RowNumber { get; init; }
+    public int? RowNumber { get; set; }
 }

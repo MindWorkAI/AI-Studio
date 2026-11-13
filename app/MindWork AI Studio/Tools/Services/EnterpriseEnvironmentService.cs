@@ -306,10 +306,23 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
     {
         foreach (var secret in secrets)
         {
-            if (!secret.IsEnterpriseConfiguration || secret.EnterpriseConfigurationPluginId == Guid.Empty)
+            if (!HoldsSecretOfTheOrganization(secret))
                 continue;
 
             secretTargets.Add(new EnterpriseSecretTarget(secret.SecretId, secret.SecretName, storeType));
         }
     }
+
+    /// <summary>
+    /// Whether the secret of a configuration object came with the configuration of the organization, so that it
+    /// goes when the organization changes its encryption secret.
+    /// </summary>
+    /// <remarks>
+    /// A provider which allows the API key of the user holds the key the user entered, not one of the organization.
+    /// The new encryption secret does not concern that key, and the configuration brings none to replace it.
+    /// Hence, the key stays, just as it stays when the organization withdraws the provider.
+    /// </remarks>
+    /// <param name="configObject">The configuration object which holds a secret.</param>
+    /// <returns>True, when the secret has to go along with the old encryption secret.</returns>
+    internal static bool HoldsSecretOfTheOrganization(IConfigurationObject configObject) => configObject.IsEnterpriseConfiguration && configObject.EnterpriseConfigurationPluginId != Guid.Empty && configObject is not IUserProvidedAPIKey { AllowUserProvidedAPIKey: true };
 }

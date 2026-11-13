@@ -10,86 +10,91 @@ public static class AssistantVisibilityExtensions
 {
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(AssistantVisibilityExtensions));
 
-    /// <summary>
-    /// Checks if an assistant should be visible based on configuration and optional preview feature requirements.
-    /// </summary>
     /// <param name="settingsManager">The settings manager to check configuration against.</param>
-    /// <param name="withLogging">Whether to log visibility decisions.</param>
-    /// <param name="assistantName">The name of the assistant to check (for logging purposes).</param>
-    /// <param name="component">The assistant component to check.</param>
-    /// <param name="requiredPreviewFeature">Optional preview feature that must be enabled for the assistant to be visible.</param>
-    /// <returns>True if the assistant should be visible, false otherwise.</returns>
-    public static bool IsAssistantVisible(this SettingsManager settingsManager, Components component, bool withLogging = true, string assistantName = "", PreviewFeatures requiredPreviewFeature = PreviewFeatures.NONE)
+    extension(SettingsManager settingsManager)
     {
-        withLogging = withLogging && !string.IsNullOrWhiteSpace(assistantName);
+        /// <summary>
+        /// Checks if an assistant should be visible based on configuration and optional preview feature requirements.
+        /// </summary>
+        /// <param name="withLogging">Whether to log visibility decisions.</param>
+        /// <param name="assistantName">The name of the assistant to check (for logging purposes).</param>
+        /// <param name="component">The assistant component to check.</param>
+        /// <param name="requiredPreviewFeature">Optional preview feature that must be enabled for the assistant to be visible.</param>
+        /// <returns>True if the assistant should be visible, false otherwise.</returns>
+        public bool IsAssistantVisible(Components component, bool withLogging = true, string assistantName = "", PreviewFeatures requiredPreviewFeature = PreviewFeatures.NONE)
+        {
+            withLogging = withLogging && !string.IsNullOrWhiteSpace(assistantName);
         
-        // Check if a preview feature is required and enabled:
-        if (requiredPreviewFeature != PreviewFeatures.NONE && !requiredPreviewFeature.IsEnabled(settingsManager))
-        {
-            if(withLogging)
-                LOGGER.LogInformation("Assistant '{AssistantName}' is not visible because the required preview feature '{PreviewFeature}' is not enabled.", assistantName, requiredPreviewFeature);
+            // Check if a preview feature is required and enabled:
+            if (requiredPreviewFeature != PreviewFeatures.NONE && !requiredPreviewFeature.IsEnabled(settingsManager))
+            {
+                if(withLogging)
+                    LOGGER.LogInformation("Assistant '{AssistantName}' is not visible because the required preview feature '{PreviewFeature}' is not enabled.", assistantName, requiredPreviewFeature);
             
-            return false;
-        }
+                return false;
+            }
 
-        // If no component is specified, it's always visible:
-        if (component is Components.NONE)
-        {
-            if(withLogging)
-                LOGGER.LogWarning("Assistant '{AssistantName}' is visible because no component is specified.", assistantName);
+            // If no component is specified, it's always visible:
+            if (component is Components.NONE)
+            {
+                if(withLogging)
+                    LOGGER.LogWarning("Assistant '{AssistantName}' is visible because no component is specified.", assistantName);
             
-            return true;
-        }
+                return true;
+            }
 
-        // Dynamic assistants are controlled through plugin activation and their security state.
-        // The Assistant Builder is controlled through its preview feature. Neither belongs to the
-        // built-in assistant visibility list, so both are expected to be visible at this point.
-        if (component is Components.DYNAMIC_ASSISTANT or Components.META_ASSISTANT)
-            return true;
+            // Dynamic assistants are controlled through plugin activation and their security state.
+            // The Assistant Builder is controlled through its preview feature. Neither belongs to the
+            // built-in assistant visibility list, so both are expected to be visible at this point.
+            if (component is Components.DYNAMIC_ASSISTANT or Components.META_ASSISTANT)
+                return true;
 
-        // Map Components enum to ConfigurableAssistant enum:
-        var configurableAssistant = component switch
-        {
-            Components.GRAMMAR_SPELLING_ASSISTANT => ConfigurableAssistant.GRAMMAR_SPELLING_ASSISTANT,
-            Components.ICON_FINDER_ASSISTANT => ConfigurableAssistant.ICON_FINDER_ASSISTANT,
-            Components.REWRITE_ASSISTANT => ConfigurableAssistant.REWRITE_ASSISTANT,
-            Components.PROMPT_OPTIMIZER_ASSISTANT => ConfigurableAssistant.PROMPT_OPTIMIZER_ASSISTANT,
-            Components.TRANSLATION_ASSISTANT => ConfigurableAssistant.TRANSLATION_ASSISTANT,
-            Components.AGENDA_ASSISTANT => ConfigurableAssistant.AGENDA_ASSISTANT,
-            Components.CODING_ASSISTANT => ConfigurableAssistant.CODING_ASSISTANT,
-            Components.TEXT_SUMMARIZER_ASSISTANT => ConfigurableAssistant.TEXT_SUMMARIZER_ASSISTANT,
-            Components.EMAIL_ASSISTANT => ConfigurableAssistant.EMAIL_ASSISTANT,
-            Components.LEGAL_CHECK_ASSISTANT => ConfigurableAssistant.LEGAL_CHECK_ASSISTANT,
-            Components.SYNONYMS_ASSISTANT => ConfigurableAssistant.SYNONYMS_ASSISTANT,
-            Components.MY_TASKS_ASSISTANT => ConfigurableAssistant.MY_TASKS_ASSISTANT,
-            Components.JOB_POSTING_ASSISTANT => ConfigurableAssistant.JOB_POSTING_ASSISTANT,
-            Components.BIAS_DAY_ASSISTANT => ConfigurableAssistant.BIAS_DAY_ASSISTANT,
-            Components.ERI_ASSISTANT => ConfigurableAssistant.ERI_ASSISTANT,
-            Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfigurableAssistant.DOCUMENT_ANALYSIS_ASSISTANT,
-            Components.BATCH_PROCESSING_ASSISTANT => ConfigurableAssistant.BATCH_PROCESSING_ASSISTANT,
-            Components.MODEL_COMPARISON_ASSISTANT => ConfigurableAssistant.MODEL_COMPARISON_ASSISTANT,
-            Components.SLIDE_BUILDER_ASSISTANT => ConfigurableAssistant.SLIDE_BUILDER_ASSISTANT,
-            Components.VISUAL_BRIEFING_ASSISTANT => ConfigurableAssistant.VISUAL_BRIEFING_ASSISTANT,
-            Components.I18N_ASSISTANT => ConfigurableAssistant.I18N_ASSISTANT,
-            Components.LOG_VIEWER_ASSISTANT => ConfigurableAssistant.LOG_VIEWER_ASSISTANT,
+            // Map Components enum to ConfigurableAssistant enum:
+            var configurableAssistant = component switch
+            {
+                Components.GRAMMAR_SPELLING_ASSISTANT => ConfigurableAssistant.GRAMMAR_SPELLING_ASSISTANT,
+                Components.ICON_FINDER_ASSISTANT => ConfigurableAssistant.ICON_FINDER_ASSISTANT,
+                Components.REWRITE_ASSISTANT => ConfigurableAssistant.REWRITE_ASSISTANT,
+                Components.PROMPT_OPTIMIZER_ASSISTANT => ConfigurableAssistant.PROMPT_OPTIMIZER_ASSISTANT,
+                Components.TRANSLATION_ASSISTANT => ConfigurableAssistant.TRANSLATION_ASSISTANT,
+                Components.AGENDA_ASSISTANT => ConfigurableAssistant.AGENDA_ASSISTANT,
+                Components.CODING_ASSISTANT => ConfigurableAssistant.CODING_ASSISTANT,
+                Components.TEXT_SUMMARIZER_ASSISTANT => ConfigurableAssistant.TEXT_SUMMARIZER_ASSISTANT,
+                Components.SWOT_ANALYSIS_ASSISTANT => ConfigurableAssistant.SWOT_ANALYSIS_ASSISTANT,
+                Components.EMAIL_ASSISTANT => ConfigurableAssistant.EMAIL_ASSISTANT,
+                Components.LEGAL_CHECK_ASSISTANT => ConfigurableAssistant.LEGAL_CHECK_ASSISTANT,
+                Components.SYNONYMS_ASSISTANT => ConfigurableAssistant.SYNONYMS_ASSISTANT,
+                Components.MY_TASKS_ASSISTANT => ConfigurableAssistant.MY_TASKS_ASSISTANT,
+                Components.JOB_POSTING_ASSISTANT => ConfigurableAssistant.JOB_POSTING_ASSISTANT,
+                Components.BIAS_DAY_ASSISTANT => ConfigurableAssistant.BIAS_DAY_ASSISTANT,
+                Components.ERI_ASSISTANT => ConfigurableAssistant.ERI_ASSISTANT,
+                Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfigurableAssistant.DOCUMENT_ANALYSIS_ASSISTANT,
+                Components.BATCH_PROCESSING_ASSISTANT => ConfigurableAssistant.BATCH_PROCESSING_ASSISTANT,
+                Components.MODEL_COMPARISON_ASSISTANT => ConfigurableAssistant.MODEL_COMPARISON_ASSISTANT,
+                Components.SLIDE_BUILDER_ASSISTANT => ConfigurableAssistant.SLIDE_BUILDER_ASSISTANT,
+                Components.VISUAL_BRIEFING_ASSISTANT => ConfigurableAssistant.VISUAL_BRIEFING_ASSISTANT,
+                Components.BEYOND_FACTS_LAB_ASSISTANT => ConfigurableAssistant.BEYOND_FACTS_LAB_ASSISTANT,
+                Components.I18N_ASSISTANT => ConfigurableAssistant.I18N_ASSISTANT,
+                Components.LOG_VIEWER_ASSISTANT => ConfigurableAssistant.LOG_VIEWER_ASSISTANT,
 
-            _ => ConfigurableAssistant.UNKNOWN,
-        };
+                _ => ConfigurableAssistant.UNKNOWN,
+            };
 
-        // If the component doesn't map to a configurable assistant, it's always visible:
-        if (configurableAssistant is ConfigurableAssistant.UNKNOWN)
-        {
-            if(withLogging)
-                LOGGER.LogWarning("Assistant '{AssistantName}' is visible because its component '{Component}' does not map to a configurable assistant.", assistantName, component);
+            // If the component doesn't map to a configurable assistant, it's always visible:
+            if (configurableAssistant is ConfigurableAssistant.UNKNOWN)
+            {
+                if(withLogging)
+                    LOGGER.LogWarning("Assistant '{AssistantName}' is visible because its component '{Component}' does not map to a configurable assistant.", assistantName, component);
             
-            return true;
+                return true;
+            }
+
+            // Check if the assistant is hidden by any configuration plugin:
+            var isHidden = settingsManager.ConfigurationData.App.HiddenAssistants.Contains(configurableAssistant);
+            if (isHidden && withLogging)
+                LOGGER.LogInformation("Assistant '{AssistantName}' is hidden based on the configuration.", assistantName);
+
+            return !isHidden;
         }
-
-        // Check if the assistant is hidden by any configuration plugin:
-        var isHidden = settingsManager.ConfigurationData.App.HiddenAssistants.Contains(configurableAssistant);
-        if (isHidden && withLogging)
-            LOGGER.LogInformation("Assistant '{AssistantName}' is hidden based on the configuration.", assistantName);
-
-        return !isHidden;
     }
 }

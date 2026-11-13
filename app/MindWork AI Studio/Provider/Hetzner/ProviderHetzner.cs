@@ -6,14 +6,14 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Hetzner;
 
-public sealed class ProviderHetzner() : BaseProvider(LLMProviders.HETZNER, new Uri("https://inference.hetzner.com/api/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
+public sealed class ProviderHetzner() : BaseProvider(LLMProviders.HETZNER, new Uri("https://inference.hetzner.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderHetzner> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHetzner>();
 
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.HETZNER.ToSecretId();
+    public override string Id => LLMProviders.HETZNER.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Hetzner (Experimental)";

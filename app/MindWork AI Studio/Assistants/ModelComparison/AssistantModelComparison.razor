@@ -8,14 +8,14 @@
     <MudPaper Outlined="true" Class="pa-4 mb-4">
         @* Only the icon button toggles, the same as everywhere else in the app a header collapses a section: the rest of the row is decorative, not a second, redundant click target. Save as new preset stays outside the collapse: capturing the form right now should not need opening this box first. *@
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2" Wrap="Wrap.Wrap">
-            <MudIcon Icon="@Icons.Material.Filled.Bookmarks" Color="Color.Primary"/>
+            <MudIcon Icon="@AppIcons.PRESET" Color="Color.Primary"/>
             <MudText Typo="Typo.subtitle1" Class="flex-grow-1">
                 @T("Presets")
             </MudText>
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.AddCircleOutline" OnClick="@this.SaveAsNewPreset">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@AppIcons.SAVE_AS_PRESET" OnClick="@this.SaveAsNewPreset">
                 @T("Save as new preset")
             </MudButton>
-            <MudIconButton Icon="@(this.presetsSectionExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" OnClick="@(() => this.presetsSectionExpanded = !this.presetsSectionExpanded)" title="@(this.presetsSectionExpanded ? T("Collapse") : T("Expand"))"/>
+            <MudIconButton Icon="@(this.presetsSectionExpanded ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)" Size="Size.Small" OnClick="@(() => this.presetsSectionExpanded = !this.presetsSectionExpanded)" title="@(this.presetsSectionExpanded ? T("Collapse") : T("Expand"))"/>
         </MudStack>
 
         <MudCollapse Expanded="@this.presetsSectionExpanded">
@@ -32,10 +32,10 @@
                     <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Wrap="Wrap.Wrap">
                         @if (this.SelectedPreset is not null)
                         {
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="@this.UpdateSelectedPreset">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.SAVE" OnClick="@this.UpdateSelectedPreset">
                                 @T("Update preset")
                             </MudButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@this.DeletePreset" title="@T("Delete this preset")"/>
+                            <MudIconButton Icon="@AppIcons.DELETE" OnClick="@this.DeletePreset" title="@T("Delete this preset")"/>
                         }
                     </MudStack>
                 </MudItem>
@@ -50,7 +50,7 @@
 
     <MudPaper Outlined="true" Class="pa-4 mb-4">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
-            <MudIcon Icon="@Icons.Material.Filled.CompareArrows" Color="Color.Primary"/>
+            <MudIcon Icon="@AppIcons.MODEL" Color="Color.Primary"/>
             <MudText Typo="Typo.subtitle1">
                 @T("Setup")
             </MudText>
@@ -71,7 +71,7 @@
             </MudItem>
         </MudGrid>
 
-        <MudSelect T="int" @bind-Value="@this.runCount" Label="@T("Number of runs")" HelperText="@T("Repeat the same comparison several times to see how consistently the models -- and the judge -- come out the same way. Every run gets its own blind vote.")" Variant="Variant.Outlined">
+        <MudSelect T="int" @bind-Value="@this.runCount" Label="@T("Number of runs")" HelperText="@TA("Repeat the same comparison several times to see how consistently the models -- and the judge -- come out the same way. Every run gets its own blind vote.")" Variant="Variant.Outlined">
             <MudSelectItem Value="1">@T("1 (single comparison)")</MudSelectItem>
             <MudSelectItem Value="3">3</MudSelectItem>
             <MudSelectItem Value="5">5</MudSelectItem>
@@ -83,21 +83,21 @@
 
     <MudPaper Outlined="true" Class="pa-4 mb-4">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
-            <MudIcon Icon="@Icons.Material.Filled.QuestionAnswer" Color="Color.Primary"/>
+            <MudIcon Icon="@AppIcons.PROMPT" Color="Color.Primary"/>
             <MudText Typo="Typo.subtitle1">
-                @T("Your request")
+                @TA("Your request")
             </MudText>
         </MudStack>
 
         <ReadFileContent Text="@T("Load the context from file")" @bind-FileContent="@this.inputContext" EnableDragDrop="true" CatchAllDocuments="true"/>
-        <MudTextField T="string" @bind-Text="@this.inputContext" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Context (optional)")" HelperText="@T("Both models receive this text together with your question, for example the document they are supposed to summarize.")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="24" Class="mb-3 mt-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-        <MudTextField T="string" @bind-Text="@this.inputQuestion" Validation="@this.ValidatingQuestion" AdornmentIcon="@Icons.Material.Filled.QuestionAnswer" Adornment="Adornment.Start" Label="@T("Your question or task")" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField T="string" @bind-Text="@this.inputContext" AdornmentIcon="@AppIcons.INPUT_TEXT" Adornment="Adornment.Start" Label="@T("Context (optional)")" HelperText="@TA("Both models receive this text together with your question, for example the document they are supposed to summarize.")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="24" Class="mb-3 mt-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField T="string" @bind-Text="@this.inputQuestion" Validation="@this.ValidatingQuestion" AdornmentIcon="@AppIcons.QUESTIONS" Adornment="Adornment.Start" Label="@TA("Your question or task")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     </MudPaper>
 
     <MudPaper Outlined="true" Class="pa-4 mb-4">
         <MudSwitch T="bool" @bind-Value="@this.judgeEnabled" Color="Color.Primary">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <MudIcon Icon="@Icons.Material.Filled.Gavel" Color="Color.Primary"/>
+                <MudIcon Icon="@AppIcons.JUDGE" Color="Color.Primary"/>
                 <MudText Typo="Typo.subtitle1">
                     @T("LLM judge (optional)")
                 </MudText>
@@ -111,7 +111,7 @@
             </MudText>
             <ProviderSelection @bind-ProviderSettings="@this.judgeProvider" ValidateProvider="@this.ValidatingJudgeProvider"/>
 
-            <MudTextField T="string" @bind-Text="@this.judgeInstructions" AdornmentIcon="@Icons.Material.Filled.Gavel" Adornment="Adornment.Start" Label="@T("What should the judge pay particular attention to? (Optional)")" HelperText="@T("The judge already sees the request and both answers, and judges by that alone unless you add something more specific here, for example: a good summary keeps every number and names its source. It never learns which model wrote which answer, and its opinion is shown to you only after your own vote.")" Variant="Variant.Outlined" Lines="3" AutoGrow="@true" MaxLines="12" Class="mt-3"/>
+            <MudTextField T="string" @bind-Text="@this.judgeInstructions" AdornmentIcon="@AppIcons.JUDGE" Adornment="Adornment.Start" Label="@T("What should the judge pay particular attention to? (Optional)")" HelperText="@TA("The judge already sees the request and both answers, and judges by that alone unless you add something more specific here, for example: a good summary keeps every number and names its source. It never learns which model wrote which answer, and its opinion is shown to you only after your own vote.")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mt-3"/>
         }
     </MudPaper>
 }
@@ -121,11 +121,11 @@ else
     var request = this.CurrentRequest;
     <MudPaper Outlined="true" Class="pa-3 mb-3">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
-            <MudIcon Icon="@Icons.Material.Filled.QuestionAnswer" Color="Color.Primary"/>
+            <MudIcon Icon="@AppIcons.PROMPT" Color="Color.Primary"/>
             <MudText Typo="Typo.subtitle1" Class="flex-grow-1">
-                @T("Your request")
+                @TA("Your request")
             </MudText>
-            <MudIconButton Icon="@(this.requestSummaryExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" OnClick="@(() => this.requestSummaryExpanded = !this.requestSummaryExpanded)" title="@(this.requestSummaryExpanded ? T("Collapse") : T("Expand"))"/>
+            <MudIconButton Icon="@(this.requestSummaryExpanded ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)" Size="Size.Small" OnClick="@(() => this.requestSummaryExpanded = !this.requestSummaryExpanded)" title="@(this.requestSummaryExpanded ? T("Collapse") : T("Expand"))"/>
         </MudStack>
 
         <MudCollapse Expanded="@this.requestSummaryExpanded">
@@ -152,12 +152,12 @@ else
                     @* A native title attribute, not MudTooltip: while the batch is still running, this row re-renders often enough that MudTooltip's JS-side hover tracking kept losing track of which badge is which, and stopped showing anything at all. A native tooltip lives entirely in the browser, so re-rendering the content underneath it cannot break it. *@
                     @* The current entry gets a ring around its avatar: with several runs done and unvoted, position alone -- second from the left, say -- is too easy to lose track of. *@
                     <MudStack @key="index" Row="false" Spacing="0" AlignItems="AlignItems.Center" title="@this.DescribeRunStatus(index)">
-                        <MudBadge Icon="@Icons.Material.Filled.Gavel" Color="Color.Tertiary" Overlap="true" Visible="@(this.judgeEnabled && this.RunHasJudgeVerdict(index))">
+                        <MudBadge Icon="@AppIcons.JUDGE" Color="Color.Tertiary" Overlap="true" Visible="@(this.judgeEnabled && this.RunHasJudgeVerdict(index))">
                             <MudAvatar Size="Size.Medium" Color="@(this.RunHasArrived(index) ? Color.Primary : Color.Default)" Variant="@(this.RunIsVoted(index) ? Variant.Filled : Variant.Outlined)"
                                        Style="@(index == this.currentEntryIndex ? "outline: 2px solid var(--mud-palette-primary); outline-offset: 2px;" : null)">
                                 @if (this.RunIsVoted(index))
                                 {
-                                    <MudIcon Icon="@Icons.Material.Filled.Check"/>
+                                    <MudIcon Icon="@AppIcons.VOTED"/>
                                 }
                                 else if (this.RunIsActive(index))
                                 {
@@ -166,15 +166,15 @@ else
                                 }
                                 else if (!this.RunHasArrived(index))
                                 {
-                                    <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Style="opacity: 0.5;"/>
+                                    <MudIcon Icon="@AppIcons.PENDING" Style="opacity: 0.5;"/>
                                 }
                                 else if (this.RunNotCompleted(index) || this.RunVoteWasSkipped(index))
                                 {
-                                    <MudIcon Icon="@Icons.Material.Filled.Block"/>
+                                    <MudIcon Icon="@AppIcons.RUN_WITHOUT_VOTE"/>
                                 }
                                 else
                                 {
-                                    <MudIcon Icon="@Icons.Material.Filled.QuestionMark"/>
+                                    <MudIcon Icon="@AppIcons.VOTE_MISSING"/>
                                 }
                             </MudAvatar>
                         </MudBadge>
@@ -226,7 +226,7 @@ else
             </MudText>
             @if (this.JudgePreferredThisColumn(column))
             {
-                <MudChip T="string" Icon="@Icons.Material.Filled.Gavel" Size="Size.Medium" Variant="Variant.Filled" Color="Color.Tertiary" Class="font-weight-bold">
+                <MudChip T="string" Icon="@AppIcons.JUDGE" Size="Size.Medium" Variant="Variant.Filled" Color="Color.Tertiary" Class="font-weight-bold">
                     @T("Judge")
                 </MudChip>
             }
@@ -244,7 +244,7 @@ else
     /// <param name="judge">What the judge said, or that it could not be understood.</param>
     private RenderFragment JudgeVerdictCard(ModelComparisonJudgeVerdict judge) => @<MudPaper Outlined="true" Class="pa-3 mb-3">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
-            <MudIcon Icon="@Icons.Material.Filled.Gavel" Size="Size.Small"/>
+            <MudIcon Icon="@AppIcons.JUDGE" Size="Size.Small"/>
             <MudText Typo="Typo.subtitle1">
                 @string.Format(DisplayCulture, T("LLM judge: {0}"), judge.Label)
             </MudText>
@@ -274,7 +274,7 @@ else
     /// Rendered by the base class below its submit row. This is where the button has to stay above
     /// the vote: content of the body would come before it.
     /// </remarks>
-    private protected override RenderFragment? BelowSubmitContent => @<div>
+    private protected override RenderFragment BelowSubmitContent => @<div>
         @if (this.skippingRemainingVotes && !this.BatchFinished)
         {
             <MudPaper Outlined="true" Class="pa-4 mb-4">
@@ -332,7 +332,7 @@ else
                     @if (this.CurrentVote is null)
                     {
                         <MudText Typo="Typo.body2" Class="mb-3">
-                            @T("You do not know yet which model wrote which answer, and the columns are in random order. Compare them by what they say.")
+                            @TA("You do not know yet which model wrote which answer, and the columns are in random order. Compare them by what they say.")
                         </MudText>
                     }
 
@@ -377,7 +377,7 @@ else
                     else
                     {
                         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" AlignItems="AlignItems.Center">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowForward" OnClick="@this.GoToNextEntry">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.NEXT" OnClick="@this.GoToNextEntry">
                                 @(this.IsLastEntry ? T("Finish") : T("Next run"))
                             </MudButton>
                             @if (this.isComparing)
@@ -402,7 +402,7 @@ else
                         @T("At least one of the models did not answer in this run, so there is nothing to compare.")
                     </MudText>
 
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowForward" OnClick="@this.GoToNextEntry">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.NEXT" OnClick="@this.GoToNextEntry">
                         @(this.IsLastEntry ? T("Finish") : T("Next run"))
                     </MudButton>
                 </MudPaper>
@@ -433,7 +433,7 @@ else
                         </thead>
                         <tbody>
                             <tr>
-                                <td>@T("Your votes")</td>
+                                <td>@TA("Your votes")</td>
                                 <td>@voteSummary.FirstModelWins</td>
                                 <td>@voteSummary.SecondModelWins</td>
                                 <td>@voteSummary.Ties</td>
@@ -468,7 +468,7 @@ else
                 }
             </MudPaper>
 
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.StartNewBatch">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.RESET" OnClick="@this.StartNewBatch">
                 @T("Start a new request")
             </MudButton>
         }

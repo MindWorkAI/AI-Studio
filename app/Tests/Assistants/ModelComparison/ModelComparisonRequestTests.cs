@@ -35,11 +35,11 @@ public sealed class ModelComparisonRequestTests
     {
         var request = new ModelComparisonRequest(context, "Summarize it.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request.Context, Is.Empty);
             Assert.That(request.ToPrompt(), Is.EqualTo("Summarize it."));
-        });
+        }
     }
 
     [Test]
@@ -47,11 +47,11 @@ public sealed class ModelComparisonRequestTests
     {
         var request = new ModelComparisonRequest("\n\nThe document.\n", "  Summarize it.  ");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request.Context, Is.EqualTo("The document."));
             Assert.That(request.Question, Is.EqualTo("Summarize it."));
-        });
+        }
     }
 
     [Test]
@@ -127,11 +127,11 @@ public sealed class ModelComparisonRequestTests
 
         var prompt = request.ToPrompt("a1b2c3");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prompt, Does.StartWith("Summarize it."));
             Assert.That(prompt, Does.Contain("a1b2c3"));
-        });
+        }
     }
 
     [Test]

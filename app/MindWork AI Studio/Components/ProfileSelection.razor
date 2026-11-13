@@ -1,21 +1,21 @@
 @using AIStudio.Settings
 @inherits MSGComponentBase
 <MudTooltip Text="@this.ToolTipText" Placement="Placement.Top">
-    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@Icons.Material.Filled.Person4" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass" Disabled="@this.Disabled">
+    <MudMenu TransformOrigin="@Origin.BottomLeft" AnchorOrigin="Origin.TopLeft" StartIcon="@AppIcons.PROFILE" EndIcon="@AppIcons.DROPDOWN_MENU" Label="@this.CurrentProfile.Name" Variant="Variant.Filled" Color="Color.Default" Class="@this.MarginClass" Disabled="@this.Disabled" MaxHeight="@MenuDefaults.MAX_HEIGHT">
         <ActivatorContent>
             @if (this.CurrentProfile != Profile.NO_PROFILE)
             {
-                <MudButton IconSize="Size.Large" StartIcon="@Icons.Material.Filled.Person4" IconColor="Color.Default">
+                <MudButton IconSize="Size.Large" StartIcon="@AppIcons.PROFILE" IconColor="Color.Default" OnClick="@context.ToggleAsync">
                     @this.CurrentProfile.GetSafeName()
                 </MudButton>
             }
             else
             {
-                <MudIconButton Icon="@Icons.Material.Filled.Person4" Color="Color.Default" />
+                <MudIconButton Icon="@AppIcons.PROFILE" Color="Color.Default" OnClick="@context.ToggleAsync" />
             }
         </ActivatorContent>
         <ChildContent>
-            <MudMenuItem Icon="@Icons.Material.Filled.Settings" Label="@T("Manage your profiles")" OnClick="@(async () => await this.OpenSettingsDialog())" />
+            <MudMenuItem Icon="@AppIcons.SETTINGS" Label="@TA("Manage your profiles")" OnClick="@(async () => await this.OpenSettingsDialog())" />
             <MudDivider/>
             @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
             {

@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -39,17 +40,41 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
 
     #endregion
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
     private async Task AddLLMProvider()
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
             { x => x.IsEditing, false },
         };
-        
+
+        await this.AddLLMProvider(dialogParameters, isImport: false);
+    }
+
+    private async Task ImportProvider()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.LLM_PROVIDER, T("Import Provider"));
+        if (import?.ConfigurationObject is not AIStudio.Settings.Provider provider)
+            return;
+
+        var dialogParameters = CreateDialogParameters(provider, isEditing: false);
+        dialogParameters.Add(x => x.ImportedAPIKey, import.Secret);
+        await this.AddLLMProvider(dialogParameters, isImport: true);
+    }
+
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
+    private async Task AddLLMProvider(DialogParameters<ProviderDialog> dialogParameters, bool isImport)
+    {
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Add LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported provider is stored:
+        //
+        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.LLM_PROVIDER))
             return;
 
         var addedProvider = (AIStudio.Settings.Provider)dialogResult.Data!;
@@ -71,26 +96,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         if (provider.IsEnterpriseConfiguration && !provider.AllowUserProvidedAPIKey)
             return;
 
-        var dialogParameters = new DialogParameters<ProviderDialog>
-        {
-            { x => x.DataNum, provider.Num },
-            { x => x.DataId, provider.Id },
-            { x => x.DataInstanceName, provider.InstanceName },
-            { x => x.DataLLMProvider, provider.UsedLLMProvider },
-            { x => x.DataCustomIconDataUrl, provider.CustomIconDataUrl },
-            { x => x.DataModel, provider.Model },
-            { x => x.DataHostname, provider.Hostname },
-            { x => x.IsSelfHosted, provider.IsSelfHosted },
-            { x => x.IsEditing, true },
-            { x => x.DataHost, provider.Host },
-            { x => x.HFInferenceProviderId, provider.HFInferenceProvider },
-            { x => x.AdditionalJsonApiParameters, provider.AdditionalJsonApiParameters },
-            { x => x.DataTokenizerPath, provider.TokenizerPath },
-            { x => x.DataCapabilityOverrides, provider.CapabilityOverrides },
-            { x => x.IsEnterpriseConfiguration, provider.IsEnterpriseConfiguration },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Edit LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Edit LLM Provider"), CreateDialogParameters(provider, isEditing: true), DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -119,12 +125,31 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
+    private static DialogParameters<ProviderDialog> CreateDialogParameters(AIStudio.Settings.Provider provider, bool isEditing) => new()
+    {
+        { x => x.DataNum, provider.Num },
+        { x => x.DataId, provider.Id },
+        { x => x.DataInstanceName, provider.InstanceName },
+        { x => x.DataLLMProvider, provider.UsedLLMProvider },
+        { x => x.DataCustomIconDataUrl, provider.CustomIconDataUrl },
+        { x => x.DataModel, provider.Model },
+        { x => x.DataHostname, provider.Hostname },
+        { x => x.IsSelfHosted, provider.IsSelfHosted },
+        { x => x.IsEditing, isEditing },
+        { x => x.DataHost, provider.Host },
+        { x => x.HFInferenceProviderId, provider.HFInferenceProvider },
+        { x => x.AdditionalJsonApiParameters, provider.AdditionalJsonApiParameters },
+        { x => x.DataTokenizerPath, provider.TokenizerPath },
+        { x => x.DataCapabilityOverrides, provider.CapabilityOverrides },
+        { x => x.IsEnterpriseConfiguration, provider.IsEnterpriseConfiguration },
+    };
+
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
     private async Task DeleteLLMProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the provider '{0}'?"), provider.InstanceName) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the provider '{0}'?"), provider.InstanceName) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -149,7 +174,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         {
             var issueDialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, string.Format(T("Couldn't delete the provider '{0}'. The issue: {1}. We can ignore this issue and delete the provider anyway. Do you want to ignore it and delete this provider?"), provider.InstanceName, deleteSecretResponse.Issue) },
+                { x => x.Message, string.Format(TA("Couldn't delete the provider '{0}'. The issue: {1}. We can ignore this issue and delete the provider anyway. Do you want to ignore it and delete this provider?"), provider.InstanceName, deleteSecretResponse.Issue) },
             };
         
             var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete LLM Provider"), issueDialogParameters, DialogOptions.FULLSCREEN);

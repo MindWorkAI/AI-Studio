@@ -1,19 +1,20 @@
+@using AIStudio.Tools.PluginSystem
 @inherits SettingsDialogBase
 
-<MudDialog>
+<MudDialog ContentClass="dialog-content-aligned" ActionsClass="dialog-actions-aligned">
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.RateReview" Class="mr-2" />
-            @T("Your Chat Templates")
+            <MudIcon Icon="@AppIcons.CHAT_TEMPLATE" Class="mr-2" />
+            @TA("Your Chat Templates")
         </MudText>
     </TitleContent>
     <DialogContent>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.")
+            @TA("Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.")
         </MudJustifiedText>
 
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts.")
+            @TA("Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts.")
         </MudJustifiedText>
     
         <MudTable Items="@this.SettingsManager.ConfigurationData.ChatTemplates" Hover="@true" Class="border-dashed border rounded-lg">
@@ -34,11 +35,11 @@
                     @if (context.IsEnterpriseConfiguration)
                     {
                         <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
-                            <MudTooltip Text="@T("This template is managed by your organization.")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                            <MudTooltip Text="@TA("This template is managed by your organization.")">
+                                <MudIconButton Color="Color.Info" Icon="@AppIcons.ORGANIZATION" Disabled="true"/>
                             </MudTooltip>
                             <MudTooltip Text="@T("View")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Visibility" OnClick="@(() => this.ViewChatTemplate(context))"/>
+                                <MudIconButton Color="Color.Info" Icon="@AppIcons.PREVIEW" OnClick="@(() => this.ViewChatTemplate(context))"/>
                             </MudTooltip>
                         </MudStack>
                     }
@@ -46,7 +47,7 @@
                     {
                         <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
                             <MudTooltip Text="@T("Edit")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditChatTemplate(context))"/>
+                                <MudIconButton Color="Color.Info" Icon="@AppIcons.EDIT" OnClick="@(() => this.EditChatTemplate(context))"/>
                             </MudTooltip>
                             @if (context.FileAttachments.Count == 0)
                             {
@@ -55,18 +56,18 @@
                             else if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
                             {
                                 <MudTooltip Text="@T("Export configuration")">
-                                    <MudMenu Icon="@Icons.Material.Filled.Dataset" Color="Color.Info" Variant="Variant.Text">
-                                        <MudMenuItem Icon="@Icons.Material.Filled.Link" OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))">
+                                    <MudMenu Icon="@AppIcons.EXPORT_CONFIGURATION" Color="Color.Info" Variant="Variant.Text">
+                                        <MudMenuItem Icon="@AppIcons.LINK" OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))">
                                             @T("Use shared attachment paths")
                                         </MudMenuItem>
-                                        <MudMenuItem Icon="@Icons.Material.Filled.Folder" Disabled="@this.isPluginDirectoryDialogOpen" OnClick="@(() => this.ExportChatTemplateWithPackagedAttachments(context))">
+                                        <MudMenuItem Icon="@AppIcons.FOLDER" Disabled="@this.isPluginDirectoryDialogOpen" OnClick="@(() => this.ExportChatTemplateWithPackagedAttachments(context))">
                                             @T("Copy attachments into plugin")
                                         </MudMenuItem>
                                     </MudMenu>
                                 </MudTooltip>
                             }
                             <MudTooltip Text="@T("Delete")">
-                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteChatTemplate(context))"/>
+                                <MudIconButton Color="Color.Error" Icon="@AppIcons.DELETE" OnClick="@(() => this.DeleteChatTemplate(context))"/>
                             </MudTooltip>
                         </MudStack>
                     }
@@ -80,12 +81,16 @@
                 @T("No chat templates configured yet.")
             </MudText>
         }
-
-        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddChatTemplate">
-            @T("Add Chat Template")
-        </MudButton>
     </DialogContent>
     <DialogActions>
+        @* In the footer, adding and importing stay in reach however long the table grows: *@
+        <MudStack Row="true" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.AddChatTemplate">
+                @T("Add Chat Template")
+            </MudButton>
+            <LockableButton Text="@T("Import Chat Template")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))" Icon="@AppIcons.IMPORT" OnClickAsync="@this.ImportChatTemplate" ButtonVariant="Variant.Outlined" NoMargin="true" />
+        </MudStack>
+        <MudSpacer/>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">
             @T("Close")
         </MudButton>

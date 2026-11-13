@@ -1,11 +1,9 @@
-using System.Text;
-using System.Text.RegularExpressions;
-
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
 
@@ -16,7 +14,7 @@ namespace AIStudio.Assistants.ERI;
 public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 {
     [Inject]
-    private HttpClient HttpClient { get; set; } = null!;
+    private WebRootFiles WebRootFiles { get; set; } = null!;
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -27,277 +25,35 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     protected override string Description => T("The ERI is the External Retrieval Interface for AI Studio and other tools. The ERI acts as a contract between decentralized data sources and, e.g., AI Studio. The ERI is implemented by the data sources, allowing them to be integrated into AI Studio later. This means that the data sources assume the server role and AI Studio (or any other LLM tool) assumes the client role of the API. This approach serves to realize a Retrieval-Augmented Generation (RAG) process with external data.");
     
-    protected override string SystemPrompt
+    // The chat continues the work on the server, which needs the specification and the configuration of this prompt:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
+
+    protected override string SystemPrompt => new ERIServerPrompt
     {
-        get
-        {
-            var sb = new StringBuilder();
-            
-            //
-            // ---------------------------------
-            // Introduction
-            // ---------------------------------
-            //
-            var programmingLanguage = this.selectedProgrammingLanguage is ProgrammingLanguages.OTHER ? this.otherProgrammingLanguage : this.selectedProgrammingLanguage.ToPrompt();
-            sb.Append($"""
-                       # Introduction
-                       You are an experienced {programmingLanguage} developer. Your task is to implement an API server in
-                       the {programmingLanguage} language according to the following OpenAPI Description (OAD):
-                       
-                       ```
-                       {this.eriSpecification}
-                       ```
-                       
-                       The server realizes the data retrieval component for a "Retrieval-Augmentation Generation" (RAG) process.
-                       The server is called "{this.serverName}" and is described as follows:
-                       
-                       ```
-                       {this.serverDescription}
-                       ```
-                       """);
-
-            //
-            // ---------------------------------
-            // Data Source
-            // ---------------------------------
-            //
-            
-            sb.Append("""
-                      
-                      # Data Source
-                      """);
-            
-            switch (this.selectedDataSource)
-            {
-                case DataSources.CUSTOM:
-                    sb.Append($"""
-                               The data source for the retrieval process is described as follows:
-                               
-                               ```
-                               {this.otherDataSource}
-                               ```
-                               """);
-                    
-                    if(!string.IsNullOrWhiteSpace(this.dataSourceHostname))
-                    {
-                        sb.Append($"""
-                                   
-                                   The data source is accessible via the hostname `{this.dataSourceHostname}`.
-                                   """);
-                    }
-                    
-                    if(this.dataSourcePort is not null)
-                    {
-                        sb.Append($"""
-                                   
-                                   The data source is accessible via port `{this.dataSourcePort}`.
-                                   """);
-                    }
-                    
-                    break;
-                
-                case DataSources.FILE_SYSTEM:
-                    sb.Append("""
-
-                              The data source for the retrieval process is the local file system. Use a placeholder for the data source path.
-                              """);
-                    break;
-                
-                default:
-                case DataSources.OBJECT_STORAGE:
-                case DataSources.KEY_VALUE_STORE:
-                case DataSources.DOCUMENT_STORE:
-                case DataSources.RELATIONAL_DATABASE:
-                case DataSources.GRAPH_DATABASE:
-                    sb.Append($"""
-                               The data source for the retrieval process is an "{this.dataSourceProductName}" database running on the
-                               host `{this.dataSourceHostname}` and is accessible via port `{this.dataSourcePort}`.
-                               """);
-                    break;
-            }
-
-            //
-            // ---------------------------------
-            // Authentication and Authorization
-            // ---------------------------------
-            //
-            
-            sb.Append("""
-                      
-                      # Authentication and Authorization
-                      The process for authentication and authorization is two-step. Step 1: Users must authenticate
-                      with the API server using a `POST` call on `/auth` with the chosen method. If this step is
-                      successful, the API server returns a token. Step 2: This token is then required for all
-                      other API calls.
-                      
-                      Important notes:
-                      - Calls to `/auth` and `/auth/methods` are accessible without authentication. All other API
-                      endpoints require a valid step 2 token.
-                      
-                      - It is possible that a token (step 1 token) is desired as `authMethod`. These step 1 tokens
-                      must never be accepted as valid tokens for step 2.
-                      
-                      - The OpenAPI Description (OAD) for `/auth` is not complete. This is because, at the time of
-                      writing the OAD, it is not known what kind of authentication is desired. Therefore, you must
-                      supplement the corresponding fields or data in the implementation. Example: If username/password
-                      is desired, you must expect and read both. If both token and username/password are desired, you
-                      must dynamically read the `authMethod` and expect and evaluate different fields accordingly.
-                      
-                      The following authentications and authorizations should be implemented for the API server:
-                      """);
-            
-            foreach (var auth in this.selectedAuthenticationMethods)
-                sb.Append($"- {auth.ToPrompt()}");
-            
-            if(this.IsUsingKerberos())
-            {
-                sb.Append($"""
-                           
-                           The server will run on {this.selectedOperatingSystem.ToPrompt()} operating systems. Keep
-                           this in mind when implementing the SSO with Kerberos.
-                           """);
-            }
-
-            //
-            // ---------------------------------
-            // Security
-            // ---------------------------------
-            //
-            
-            sb.Append($"""
-                      
-                      # Security
-                      The following security requirement for `allowedProviderType` was chosen: `{this.allowedLLMProviders}`
-                      """);
-            
-            //
-            // ---------------------------------
-            // Retrieval Processes
-            // ---------------------------------
-            //
-            
-            sb.Append($"""
-                       
-                       # Retrieval Processes
-                       You are implementing the following data retrieval processes:
-                       """);
-            
-            var retrievalProcessCounter = 1;
-            foreach (var retrievalProcess in this.retrievalProcesses)
-            {
-                sb.Append($"""
-                           
-                           ## {retrievalProcessCounter++}. Retrieval Process
-                           - Name: {retrievalProcess.Name}
-                           - Description:
-                           
-                           ```
-                           {retrievalProcess.Description}
-                           ```
-                           """);
-                
-                if(retrievalProcess.ParametersDescription?.Count > 0)
-                {
-                    sb.Append("""
-                              
-                              This retrieval process recognizes the following parameters:
-                              """);
-                    
-                    var parameterCounter = 1;
-                    foreach (var (parameter, description) in retrievalProcess.ParametersDescription)
-                    {
-                        sb.Append($"""
-                                   
-                                   - The {parameterCounter++} parameter is named "{parameter}":
-                                   
-                                   ```
-                                   {description}
-                                   ```
-                                   """);
-                    }
-
-                    sb.Append("""
-
-                              Please use sensible default values for the parameters. They are optional
-                              for the user.
-                              """);
-                }
-                
-                if(retrievalProcess.Embeddings?.Count > 0)
-                {
-                    sb.Append("""
-                               
-                               The following embeddings are implemented for this retrieval process:
-                               """);
-                    
-                    var embeddingCounter = 1;
-                    foreach (var embedding in retrievalProcess.Embeddings)
-                    {
-                        sb.Append($"""
-                                   
-                                   - {embeddingCounter++}. Embedding
-                                   - Name: {embedding.EmbeddingName}
-                                   - Type: {embedding.EmbeddingType}
-                                   
-                                   - Description:
-                                   
-                                   ```
-                                   {embedding.Description}
-                                   ```
-                                   
-                                   - When used:
-                                   
-                                   ```
-                                   {embedding.UsedWhen}
-                                   ```
-                                   """);
-                    }
-                }
-            }
-
-            //
-            // ---------------------------------
-            // Additional Libraries
-            // ---------------------------------
-            //
-            
-            if (!string.IsNullOrWhiteSpace(this.additionalLibraries))
-            {
-                sb.Append($"""
-                           
-                           # Additional Libraries
-                           You use the following libraries for your implementation:
-                           
-                           {this.additionalLibraries}
-                           """);
-            }
-
-            //
-            // ---------------------------------
-            // Remarks
-            // ---------------------------------
-            //
-            
-            sb.Append("""
-                      
-                      # Remarks
-                      - You do not ask follow-up questions.
-                      - You consider the security of the implementation by applying the Security by Design principle.
-                      - Your output is formatted as Markdown. Code is formatted as code blocks. For every file, you
-                        create a separate code block with its file path and name as chapter title.
-                      - Important: The JSON objects of the API messages use camel case for the data field names.
-                      """);
-            
-            return sb.ToString();
-        }
-    }
+        ProgrammingLanguage = this.selectedProgrammingLanguage,
+        OtherProgrammingLanguage = this.otherProgrammingLanguage,
+        ERISpecification = this.eriSpecification,
+        ServerName = this.serverName,
+        ServerDescription = this.serverDescription,
+        DataSource = this.selectedDataSource,
+        OtherDataSource = this.otherDataSource,
+        DataSourceProductName = this.dataSourceProductName,
+        DataSourceHostname = this.dataSourceHostname,
+        DataSourcePort = this.dataSourcePort,
+        AuthenticationMethods = this.selectedAuthenticationMethods,
+        AuthDescription = this.authDescription,
+        OperatingSystem = this.selectedOperatingSystem,
+        AllowedLLMProviders = this.allowedLLMProviders,
+        RetrievalProcesses = this.retrievalProcesses,
+        AdditionalLibraries = this.additionalLibraries,
+    }.ToSystemPrompt();
 
     protected override IReadOnlyList<IButtonData> FooterButtons =>
     [
         new ButtonData
         {
             Text = T("Open in chat"),
-            Icon = Icons.Material.Filled.Chat,
+            Icon = AppIcons.CHAT,
             Color = Color.Default,
             AsyncAction = this.OpenInChat,
             DisabledActionParam = () => !this.CanOpenInChat,
@@ -313,11 +69,6 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     protected override Func<Task> SubmitAction => this.GenerateServer;
 
     protected override bool SubmitDisabled => this.IsNoneERIServerSelected;
-
-    protected override ChatThread ConvertToChatThread => (this.ChatThread ?? new()) with
-    {
-        SystemPrompt = this.SystemPrompt,
-    };
 
     /// <summary>
     /// Indicates whether the generated ERI conversation can be opened in the chat view.
@@ -598,7 +349,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the ERI server preset '{0}'?"), this.selectedERIServer.ServerName) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the ERI server preset '{0}'?"), this.selectedERIServer.ServerName) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete ERI server preset"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -611,7 +362,8 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         this.ResetForm();
         
         await this.SettingsManager.StoreSettings();
-        this.Form?.ResetValidation();
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
     }
     
     private bool IsNoneERIServerSelected => this.selectedERIServer is null;
@@ -622,9 +374,43 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private bool IsERIInputDisabled => this.IsNoneERIServerSelected || this.IsProcessing;
 
     /// <summary>
-    /// Gets whether the selected ERI specification cannot be downloaded.
+    /// Gets whether the selected ERI specification cannot be saved.
     /// </summary>
-    private bool IsSpecificationDownloadDisabled => !this.selectedERIVersion.WasSpecificationSelected() || this.IsERIInputDisabled;
+    private bool IsSpecificationSavingDisabled => !this.selectedERIVersion.WasSpecificationSelected || this.IsERIInputDisabled;
+
+    /// <summary>
+    /// Lets the user save the selected ERI specification, a copy of the one the app carries.
+    /// </summary>
+    /// <remarks>
+    /// The app server answers the app window only, so a link to the file would fail in the browser
+    /// of the system. The copy also matches the installed version of AI Studio.
+    /// </remarks>
+    private async Task SaveSpecificationAsync()
+    {
+        var specificationPath = this.selectedERIVersion.SpecificationURL;
+        var response = await this.RustService.SaveFile(T("Save the ERI specification"), [FileTypes.JSON], Path.GetFileName(specificationPath));
+        if (response.UserCancelled)
+            return;
+
+        await using var feedback = new FileExportFeedback();
+        feedback.ShowRunning(response.SaveFilePath);
+        try
+        {
+            if (await this.WebRootFiles.CopyToAsync(specificationPath, response.SaveFilePath))
+            {
+                await feedback.SucceededAsync(AppIcons.SUCCESS, T("The ERI specification was saved."), response.SaveFilePath, true);
+                return;
+            }
+
+            this.Logger.LogError("The app carries no ERI specification at '{SpecificationPath}'.", specificationPath);
+        }
+        catch (Exception exception)
+        {
+            this.Logger.LogError(exception, "Failed to save the ERI specification {ERIVersion}.", this.selectedERIVersion);
+        }
+
+        await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, T("The ERI specification could not be saved.")));
+    }
 
     /// <summary>
     /// Gets whether the generated-code target directory selection should be disabled.
@@ -659,13 +445,13 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string? ValidateServerName(string name)
     {
         if(string.IsNullOrWhiteSpace(name))
-            return T("Please provide a name for your ERI server. This name will be used to identify the server in AI Studio.");
+            return TA("Please provide a name for your ERI server. This name will be used to identify the server in AI Studio.");
         
         if(name.Length is > 60 or < 6)
-            return T("The name of your ERI server must be between 6 and 60 characters long.");
+            return TA("The name of your ERI server must be between 6 and 60 characters long.");
         
         if(this.SettingsManager.ConfigurationData.ERI.ERIServers.Where(n => n != this.selectedERIServer).Any(n => n.ServerName == name))
-            return T("An ERI server preset with this name already exists. Please choose a different name.");
+            return TA("An ERI server preset with this name already exists. Please choose a different name.");
         
         return null;
     }
@@ -673,10 +459,10 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string? ValidateServerDescription(string description)
     {
         if(string.IsNullOrWhiteSpace(description))
-            return T("Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.");
+            return TA("Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.");
         
         if(description.Length is < 32 or > 512)
-            return T("The description of your ERI server must be between 32 and 512 characters long.");
+            return TA("The description of your ERI server must be between 32 and 512 characters long.");
         
         return null;
     }
@@ -684,7 +470,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string? ValidateERIVersion(ERIVersion version)
     {
         if (version == ERIVersion.NONE)
-            return T("Please select an ERI specification version for the ERI server.");
+            return TA("Please select an ERI specification version for the ERI server.");
         
         return null;
     }
@@ -695,7 +481,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if (language == ProgrammingLanguages.NONE)
-            return T("Please select a programming language for the ERI server.");
+            return TA("Please select a programming language for the ERI server.");
         
         return null;
     }
@@ -706,7 +492,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(language))
-            return T("Please specify the custom programming language for the ERI server.");
+            return TA("Please specify the custom programming language for the ERI server.");
         
         return null;
     }
@@ -717,7 +503,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if (dataSource == DataSources.NONE)
-            return T("Please select a data source for the ERI server.");
+            return TA("Please select a data source for the ERI server.");
         
         return null;
     }
@@ -728,7 +514,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(productName))
-            return T("Please specify the product name of the data source, e.g., 'MongoDB', 'Redis', 'PostgreSQL', 'Neo4j', or 'MinIO', etc.");
+            return TA("Please specify the product name of the data source, e.g., 'MongoDB', 'Redis', 'PostgreSQL', 'Neo4j', or 'MinIO', etc.");
         
         return null;
     }
@@ -739,7 +525,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(dataSource))
-            return T("Please describe the data source of your ERI server.");
+            return TA("Please describe the data source of your ERI server.");
         
         return null;
     }
@@ -754,7 +540,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(hostname))
-            return T("Please provide the hostname of the data source. Use 'localhost' if the data source is on the same machine as the ERI server.");
+            return TA("Please provide the hostname of the data source. Use 'localhost' if the data source is on the same machine as the ERI server.");
         
         if(hostname.Length > 255)
             return T("The hostname of the data source must not exceed 255 characters.");
@@ -772,7 +558,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(port is null)
-            return T("Please provide the port of the data source.");
+            return TA("Please provide the port of the data source.");
         
         if(port is < 1 or > 65535)
             return T("The port of the data source must be between 1 and 65535.");
@@ -820,7 +606,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     {
         var authenticationMethods = (this.selectedAuthenticationMethods as HashSet<Auth>)!;
         if(authenticationMethods.Count == 0)
-            return T("Please select at least one authentication method for the ERI server.");
+            return TA("Please select at least one authentication method for the ERI server.");
         
         return null;
     }
@@ -850,7 +636,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(os is OperatingSystem.NONE)
-            return T("Please select the operating system on which the ERI server will run. This is necessary when using SSO with Kerberos.");
+            return TA("Please select the operating system on which the ERI server will run. This is necessary when using SSO with Kerberos.");
         
         return null;
     }
@@ -858,12 +644,12 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string? ValidateAllowedLLMProviders(AllowedLLMProviders provider)
     {
         if(provider == AllowedLLMProviders.NONE)
-            return T("Please select which types of LLMs users are allowed to use with the data from this ERI server.");
+            return TA("Please select which types of LLMs users are allowed to use with the data from this ERI server.");
         
         return null;
     }
     
-    private string AuthDescriptionTitle() => this.IsAuthDescriptionOptional() ? T("(Optional) Describe how you planned the authentication process") : T("Describe how you planned the authentication process");
+    private string AuthDescriptionTitle() => this.IsAuthDescriptionOptional() ? TA("(Optional) Describe how you planned the authentication process") : TA("Describe how you planned the authentication process");
 
     private bool IsAuthDescriptionOptional()
     {
@@ -883,10 +669,10 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     {
         var authenticationMethods = (this.selectedAuthenticationMethods as HashSet<Auth>)!;
         if(authenticationMethods.Any(n => n == Auth.NONE) && authenticationMethods.Count > 1 && string.IsNullOrWhiteSpace(this.authDescription))
-            return T("Please describe how the selected authentication methods should be used. Especially, explain for what data the NONE method (public access) is used.");
+            return TA("Please describe how the selected authentication methods should be used. Especially, explain for what data the NONE method (public access) is used.");
         
         if(authenticationMethods.Count > 1 && string.IsNullOrWhiteSpace(this.authDescription))
-            return T("Please describe how the selected authentication methods should be used.");
+            return TA("Please describe how the selected authentication methods should be used.");
         
         return null;
     }
@@ -897,7 +683,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(path))
-            return T("Please provide a base directory for the ERI server to write files to.");
+            return TA("Please provide a base directory for the ERI server to write files to.");
         
         return null;
     }
@@ -905,12 +691,12 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string GetMultiSelectionAuthText(List<Auth> selectedValues)
     {
         if(selectedValues.Count == 0)
-            return T("Please select at least one authentication method");
+            return TA("Please select at least one authentication method");
         
         if(selectedValues.Count == 1)
-            return T("You have selected 1 authentication method");
+            return TA("You have selected 1 authentication method");
         
-        return string.Format(T("You have selected {0} authentication methods"), selectedValues.Count);
+        return string.Format(TA("You have selected {0} authentication methods"), selectedValues.Count);
     }
 
     private bool NeedHostnamePort()
@@ -981,8 +767,8 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return;
 
         var message = this.retrievalProcesses.Any(n => n.Embeddings?.Contains(embeddingInfo) is true)
-            ? string.Format(T("The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?"), embeddingInfo.EmbeddingName)
-            : string.Format(T("Are you sure you want to delete the embedding '{0}'?"), embeddingInfo.EmbeddingName);
+            ? string.Format(TA("The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?"), embeddingInfo.EmbeddingName)
+            : string.Format(TA("Are you sure you want to delete the embedding '{0}'?"), embeddingInfo.EmbeddingName);
         
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
@@ -1058,7 +844,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the retrieval process '{0}'?"), retrievalInfo.Name) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the retrieval process '{0}'?"), retrievalInfo.Name) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Retrieval Process"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -1070,49 +856,19 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         await this.AutoSave();
     }
 
-    [GeneratedRegex("""
-                    "([\\/._\w-]+)"
-                    """, RegexOptions.NonBacktracking)]
-    private static partial Regex FileExtractRegex();
-
-    private IEnumerable<string> ExtractFiles(string fileListAnswer)
-    {
-        //
-        // We asked the LLM for answering using a specific JSON scheme.
-        // However, the LLM might not follow this scheme. Therefore, we
-        // need to parse the answer and extract the files.
-        // The parsing strategy is to look for all strings.
-        //
-        var matches = FileExtractRegex().Matches(fileListAnswer);
-        foreach (Match match in matches)
-            if(match.Groups[1].Value is {} file && !string.IsNullOrWhiteSpace(file) && !file.Equals("files", StringComparison.OrdinalIgnoreCase))
-                yield return file;
-    }
-    
-    [GeneratedRegex("""
-                    \s*#+\s+[\w\\/.]+\s*```\w*\s+([\s\w\W]+)\s*```\s*
-                    """, RegexOptions.Singleline)]
-    private static partial Regex CodeExtractRegex();
-    
-    private string ExtractCode(string markdown)
-    {
-        var match = CodeExtractRegex().Match(markdown);
-        return match.Success ? match.Groups[1].Value : string.Empty;
-    }
-
     private async Task GenerateServer()
     {
         if(this.IsNoneERIServerSelected)
             return;
         
         await this.AutoSave();
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         
         if(this.retrievalProcesses.Count == 0)
         {
-            this.AddInputIssue(T("Please describe at least one retrieval process."));
+            this.AddInputIssue(TA("Please describe at least one retrieval process."));
             return;
         }
 
@@ -1120,10 +876,10 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         var baseDirectorySnapshot = this.baseDirectory;
         var previouslyGeneratedFilesSnapshot = this.previouslyGeneratedFiles.ToArray();
         
-        this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
+        this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.WebRootFiles);
         if (string.IsNullOrWhiteSpace(this.eriSpecification))
         {
-            this.AddInputIssue(T("The ERI specification could not be loaded. Please try again later."));
+            this.AddInputIssue(TA("The ERI specification could not be loaded. Please try again later."));
             return;
         }
         
@@ -1151,19 +907,36 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                    Use the following JSON schema:
                                    
                                    {
-                                     [
-                                         "path/to/file1",
-                                         "path/to/file2"
+                                     "files": [
+                                       "path/to/file1",
+                                       "path/to/file2"
                                      ]
                                    }
                                    """, true);
         var fileListAnswer = await this.AddAIResponseAsync(time, true);
+        if (!ERIServerFileList.TryParse(fileListAnswer, out var filesToGenerate))
+        {
+            this.Logger.LogWarning("The list of files could not be read from the answer of the model: '{Answer}'", fileListAnswer);
+            await this.MessageBus.SendWarning(new(AppIcons.SAVE_FAILED, TA("The list of files in the answer of the model could not be read, so no files were created. Please try again.")));
+            return;
+        }
 
-        // Is this an update of the ERI server? If so, we need to delete the previously generated files:
-        if (writeToFilesystemSnapshot && previouslyGeneratedFilesSnapshot.Length > 0 && !string.IsNullOrWhiteSpace(fileListAnswer))
+        //
+        // Is this an update of the ERI server? If so, we need to delete the previously generated files.
+        // Only those within the current base directory, though: the list names files by their full path,
+        // and it outlives a change of the base directory, as well as a restore on another computer.
+        // There, the same path may belong to files of somebody else:
+        //
+        if (writeToFilesystemSnapshot && previouslyGeneratedFilesSnapshot.Length > 0)
         {
             foreach (var file in previouslyGeneratedFilesSnapshot)
             {
+                if (!PathTools.IsInsideDirectory(baseDirectorySnapshot, file))
+                {
+                    this.Logger.LogWarning($"The previously created file '{file}' is not inside the base directory '{baseDirectorySnapshot}' and was kept.");
+                    continue;
+                }
+
                 try
                 {
                     if (File.Exists(file))
@@ -1184,7 +957,6 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         }
         
         var generatedFiles = new List<string>();
-        var filesToGenerate = this.ExtractFiles(fileListAnswer).ToArray();
         foreach (var file in filesToGenerate)
         {
             this.Logger.LogInformation($"The LLM want to create the file: '{file}'");
@@ -1203,48 +975,18 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                         ```language
                                         content of the file
                                         ```
+
+                                        When the file itself contains code blocks, enclose its content in a longer
+                                        fence, such as four backticks.
                                         """, true);
             var generatedCodeMarkdown = await this.AddAIResponseAsync(time);
             if (writeToFilesystemSnapshot)
             {
-                var desiredFilePath = Path.Join(baseDirectorySnapshot, file);
-                
-                // Security check: ensure that the desired file path is inside the base directory.
-                // We cannot trust the beginning of the file path because it would be possible
-                // to escape by using `..` in the file path.
-                if (!desiredFilePath.StartsWith(baseDirectorySnapshot, StringComparison.InvariantCultureIgnoreCase) || desiredFilePath.Contains(".."))
-                    this.Logger.LogWarning($"The file path '{desiredFilePath}' is may not inside the base directory '{baseDirectorySnapshot}'.");
-                
+                var outcome = await ERIServerFiles.WriteAsync(baseDirectorySnapshot, file, generatedCodeMarkdown, this.Logger);
+                if (outcome is ERIServerFileOutcome.WRITTEN)
+                    generatedFiles.Add(ERIServerFiles.PathOf(baseDirectorySnapshot, file));
                 else
-                {
-                    var code = this.ExtractCode(generatedCodeMarkdown);
-                    if (string.IsNullOrWhiteSpace(code))
-                        this.Logger.LogWarning($"The file content for '{desiredFilePath}' is empty or was not found.");
-
-                    else
-                    {
-
-                        // Ensure that the directory exists:
-                        var fileDirectory = Path.GetDirectoryName(desiredFilePath);
-                        if (fileDirectory is null)
-                            this.Logger.LogWarning($"The file path '{desiredFilePath}' does not contain a directory.");
-                        
-                        else
-                        {
-                            generatedFiles.Add(desiredFilePath);
-                            var fileDirectoryInfo = new DirectoryInfo(fileDirectory);
-                            if(!fileDirectoryInfo.Exists)
-                            {
-                                fileDirectoryInfo.Create();
-                                this.Logger.LogInformation($"The directory '{fileDirectory}' was created.");
-                            }
-
-                            // Save the file to the file system:
-                            await File.WriteAllTextAsync(desiredFilePath, code, Encoding.UTF8);
-                            this.Logger.LogInformation($"The file '{desiredFilePath}' was created.");
-                        }
-                    }
-                }
+                    await this.MessageBus.SendWarning(new(AppIcons.SAVE_FAILED, outcome.ToUserMessage(file)));
             }
         }
         

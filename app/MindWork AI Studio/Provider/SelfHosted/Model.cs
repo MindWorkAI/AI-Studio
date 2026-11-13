@@ -8,8 +8,8 @@ namespace AIStudio.Provider.SelfHosted;
 /// <remarks>
 /// The context window is vLLM's addition to that route: it reports the window the operator started
 /// the engine with, which is the one number no rule about the weights could ever know. Ollama,
-/// LM Studio, and llama.cpp answer the same route without it, so it stays unknown there instead of
-/// being guessed.
+/// LM Studio, llama.cpp, and llmman answer the same route without it, so it stays unknown there
+/// instead of being guessed.
 ///
 /// vLLM calls that field max_model_len, which reads like a limit on the model rather than on a
 /// conversation. The wire keeps their spelling, and this record says what the number means, so that

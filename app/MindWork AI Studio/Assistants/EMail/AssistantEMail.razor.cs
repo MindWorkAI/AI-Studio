@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.EMail;
@@ -11,13 +12,33 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     
     protected override string Title => T("E-Mail");
     
-    protected override string Description => T("Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.");
+    protected override string Description => TA("Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.");
     
+    // The prompt of this assistant describes an automated system which only writes the email, so the chat gets a prompt of its own, which keeps the settings of the email:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
+
     protected override string SystemPrompt => 
         $"""
         You are an automated system that writes emails. {this.SystemPromptHistory()} The user provides you with bullet points on what
-        he want to address in the response. Regarding the writing style of the email: {this.selectedWritingStyle.Prompt()}
+        he want to address in the response. Regarding the writing style of the email: {this.selectedWritingStyle.Prompt}
         {this.SystemPromptGreeting()} {this.SystemPromptName()} You write the email in the following language: {this.SystemPromptLanguage()}.
+        """;
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues an email, for follow-up questions about it.
+    /// </summary>
+    private string CreateChatSystemPrompt() =>
+        $"""
+        You are an expert in writing emails. The user had an email written: the conversation so far holds the bullet
+        points of the user, the previous conversation when the user gave one, and the email. Now you answer the user's
+        follow-up questions about the email, e.g., why it is worded a certain way, and you revise it when the user asks
+        for it. A revised version is always the complete email.
+
+        The user chose these settings for the email, which a revised version keeps unless the user asks otherwise:
+        Regarding the writing style of the email: {this.selectedWritingStyle.Prompt}
+        {this.SystemPromptGreeting()} {this.SystemPromptName()} You write the email in the following language: {this.SystemPromptLanguage()}.
+
+        Answer questions in the language the user writes in.
         """;
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
@@ -73,7 +94,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string inputGreeting = string.Empty;
     private string inputBulletPoints = string.Empty;
     private readonly List<string> bulletPointsLines = [];
-    private IEnumerable<string> selectedFoci = new HashSet<string>();
+    private IReadOnlyCollection<string> selectedFoci = new HashSet<string>();
     private string inputName = string.Empty;
     private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
     private string customTargetLanguage = string.Empty;
@@ -120,28 +141,21 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
         state.Restore(INPUT_HISTORY_STATE_KEY, value => this.inputHistory = value);
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_EMAIL_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputBulletPoints = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputBulletPoints = payload.Text;
 
     #endregion
     
     private string? ValidateBulletPoints(string content)
     {
         if(string.IsNullOrWhiteSpace(content))
-            return T("Please provide some content for the e-mail.");
+            return TA("Please provide some content for the e-mail.");
 
         var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
             if(!line.TrimStart().StartsWith('-'))
-                return T("Please start each line of your content list with a dash (-) to create a bullet point list.");
+                return TA("Please start each line of your content list with a dash (-) to create a bullet point list.");
         
         return null;
     }
@@ -149,7 +163,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string? ValidateTargetLanguage(CommonLanguages language)
     {
         if(language is CommonLanguages.AS_IS)
-            return T("Please select a target language for the e-mail.");
+            return TA("Please select a target language for the e-mail.");
         
         return null;
     }
@@ -157,7 +171,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }
@@ -165,7 +179,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string? ValidateWritingStyle(WritingStyles style)
     {
         if(style == WritingStyles.NONE)
-            return T("Please select a writing style for the e-mail.");
+            return TA("Please select a writing style for the e-mail.");
         
         return null;
     }
@@ -173,7 +187,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string? ValidateHistory(string history)
     {
         if(this.provideHistory && string.IsNullOrWhiteSpace(history))
-            return T("Please provide some history for the e-mail.");
+            return TA("Please provide some history for the e-mail.");
         
         return null;
     }
@@ -233,7 +247,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
-        return this.selectedTargetLanguage.Name();
+        return this.selectedTargetLanguage.Name;
     }
     
     private string PromptFoci()
@@ -242,9 +256,9 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
             return string.Empty;
         
         var sb = new StringBuilder();
-        sb.AppendLine("I want to amplify the following points:");
+        sb.AppendLineLF("I want to amplify the following points:");
         foreach (var focus in this.selectedFoci)
-            sb.AppendLine($"- {focus}");
+            sb.AppendLineLF($"- {focus}");
         
         return sb.ToString();
     }
@@ -265,7 +279,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
 
     private async Task CreateMail()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

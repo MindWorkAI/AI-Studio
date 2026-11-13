@@ -1,0 +1,21 @@
+From: Alice <alice@example.org>
+To: Bob <bob@example.org>
+Subject: Salary review
+Date: Wed, 30 Sep 2026 15:40:00 +0200
+Message-ID: <microsoft-irm@example.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed"
+
+--mixed
+Content-Type: text/plain; charset=utf-8
+
+This message is protected with Microsoft Information Rights Management. Open it in Outlook.
+
+--mixed
+Content-Type: application/x-microsoft-rpmsg-message; name="message.rpmsg"
+Content-Disposition: attachment; filename="message.rpmsg"
+Content-Transfer-Encoding: base64
+
+zlGMgNELl9LKl3ZqEAZiUb2iQ0gjGWstE4xBJhJRHlmvLDc8a+h2ljICBmaQ6GRh+qSEQeV5fRY8
+
+--mixed--

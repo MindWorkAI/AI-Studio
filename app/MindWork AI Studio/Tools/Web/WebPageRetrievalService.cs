@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using AIStudio.Provider;
+using HtmlAgilityPack;
 
 namespace AIStudio.Tools.Web;
 
@@ -15,6 +16,11 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
     {
         var triedOsSso = false;
         var requiredProviderConfidence = ConfidenceLevel.NONE;
+        var lastAddressIsNonPublic = false;
+
+        // Always overwritten: the media type is validated before the body is read, so no page
+        // arrives without the check having decided what it is.
+        var contentKind = WebContentKind.HTML_PAGE;
         HTMLParserWebPage page;
         try
         {
@@ -24,7 +30,10 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
                 async (candidateUrl, validationToken) =>
                 {
                     var addresses = await ResolveValidatedUrlAddressesAsync(candidateUrl, options, validationToken);
-                    if (addresses.Any(IsNonPublicAddress))
+                    // Overwritten with every request, so it holds what the last one reached, the
+                    // one which returned the page:
+                    lastAddressIsNonPublic = addresses.Any(IsNonPublicAddress);
+                    if (lastAddressIsNonPublic)
                         requiredProviderConfidence = ConfidenceLevel.HIGH;
 
                     return addresses;
@@ -37,6 +46,8 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
                     triedOsSso |= shouldTryOsSso;
                     return shouldTryOsSso;
                 },
+                validateMediaType: mediaType => contentKind = WebContentTypeClassifier.Classify(mediaType) ??
+                    throw new InvalidOperationException($"Unsupported content type '{mediaType}'. Only HTML pages and text formats such as plain text, JSON, XML, or CSV are supported."),
                 token: token);
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
@@ -58,16 +69,26 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
             throw new InvalidOperationException($"Loading the web page failed: {exception.Message}", exception);
         }
 
-        if (!IsSupportedHtmlContentType(page.ContentType))
-            throw new InvalidOperationException($"Unsupported content type '{page.ContentType}'. Only HTML pages are supported.");
-
         return new RetrievedWebPage
         {
             Page = page,
-            ExtractedPage = WebPageContentExtractor.Extract(page.Document, page.FinalUrl),
+            ContentKind = contentKind,
+            ExtractedPage = contentKind switch
+            {
+                WebContentKind.TEXT_DOCUMENT => WebTextContentExtractor.Extract(page.Body, page.ContentType, page.FinalUrl),
+                _ => WebPageContentExtractor.Extract(ParseHtml(page.Body), page.FinalUrl),
+            },
             RetrievedAtUtc = DateTimeOffset.UtcNow,
             RequiredProviderConfidence = requiredProviderConfidence,
+            ReachedNonPublicAddress = lastAddressIsNonPublic,
         };
+    }
+
+    private static HtmlDocument ParseHtml(string html)
+    {
+        var document = new HtmlDocument();
+        document.LoadHtml(html);
+        return document;
     }
 
     private static WebPageAccessBlockedException? FindBlockedException(Exception exception)
@@ -92,12 +113,21 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         if (url is not { Scheme: "http" or "https" })
             throw new WebPageAccessBlockedException("Only HTTP and HTTPS URLs are supported.", WebPageAccessBlockReason.UNSUPPORTED_SCHEME);
 
+        if (options.IsTargetAllowed?.Invoke(url) is false)
+            throw new WebPageAccessBlockedException($"The web page '{url.GetLeftPart(UriPartial.Path)}' is outside the targets this request may reach.", WebPageAccessBlockReason.TARGET_NOT_ALLOWED);
+
         if (!options.TargetChosenByUser && IsBlockedHostName(url.Host))
             throw new WebPageAccessBlockedException("Local web page URLs are not supported.", WebPageAccessBlockReason.LOCAL_HOST_NAME);
 
         var addresses = await ResolveHostAddressesAsync(url, token);
         if (addresses.Count == 0)
             throw new InvalidOperationException($"The host '{url.Host}' did not resolve to an IP address.");
+
+        // Before the exemption for targets the user chose, because it guards what the address may
+        // carry. Every address has to be non-public, since the connection may go to any of them.
+        // The text names no address, so a caller may hand it on without repeating one:
+        if (options.NonPublicTargetsOnly && !addresses.All(IsNonPublicAddress))
+            throw new WebPageAccessBlockedException("The web page or one of its redirects leads to a public address, which this request may not reach.", WebPageAccessBlockReason.PUBLIC_TARGET_NOT_ALLOWED);
 
         //
         // Where the target came from decides which targets are acceptable. A URL a model produced
@@ -121,12 +151,12 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         if (options.PublicTargetsOnly || options.IsPrivateHostAllowed?.Invoke(url.Host) is not true)
             throw new WebPageAccessBlockedException("Private or local-network web page URLs are not supported unless their host is explicitly allowed.", WebPageAccessBlockReason.PRIVATE_HOST_NOT_ALLOWED);
 
-        if (options.ProviderConfidence >= ConfidenceLevel.HIGH || options.ProviderIsTrustedByConfiguration)
+        if (options.ProviderConfidence >= ConfidenceLevel.HIGH)
             return addresses;
 
         if (options.OnPrivateHostProviderBlockAsync is not null)
             await options.OnPrivateHostProviderBlockAsync(url, options.ProviderConfidence);
-        throw new WebPageAccessBlockedException("This private or VPN web page requires a High-confidence provider or a provider trusted by configuration.", WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
+        throw new WebPageAccessBlockedException("This private or VPN web page requires a High-confidence provider.", WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
     }
 
     private static async Task<IReadOnlyList<IPAddress>> ResolveHostAddressesAsync(Uri url, CancellationToken token)
@@ -151,8 +181,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         Uri candidateUrl,
         IReadOnlyList<IPAddress> addresses,
         WebPageRetrievalOptions options) =>
-        options.UseOsSso &&
-        (options.ProviderConfidence >= ConfidenceLevel.HIGH || options.ProviderIsTrustedByConfiguration) &&
+        options is { UseOsSso: true, ProviderConfidence: >= ConfidenceLevel.HIGH } &&
         candidateUrl.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) &&
         originalUrl.Scheme.Equals(candidateUrl.Scheme, StringComparison.OrdinalIgnoreCase) &&
         originalUrl.Host.Equals(candidateUrl.Host, StringComparison.OrdinalIgnoreCase) &&
@@ -268,9 +297,4 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
 
         return null;
     }
-
-    private static bool IsSupportedHtmlContentType(string? contentType) =>
-        string.IsNullOrWhiteSpace(contentType) ||
-        contentType.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) ||
-        contentType.StartsWith("application/xhtml+xml", StringComparison.OrdinalIgnoreCase);
 }

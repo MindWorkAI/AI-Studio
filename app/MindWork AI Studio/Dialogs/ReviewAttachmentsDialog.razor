@@ -9,13 +9,20 @@
                       Disabled="@this.IsZoneDisabled"
                       Context="isDropTarget">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.")
+            @if (this.CanRemove)
+            {
+                @TA("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.")
+            }
+            else
+            {
+                @TA("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name.")
+            }
         </MudJustifiedText>
 
         @if (this.CanAttach)
         {
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("You can drag more files into this window to attach them right away.")
+                @TA("You can drag more files into this window to attach them right away.")
             </MudJustifiedText>
         }
 
@@ -31,14 +38,16 @@
 
             @{
                 var currentFolder = string.Empty;
+                var pathsWithSeveralVersions = this.PathsWithSeveralVersions;
                 foreach (var fileAttachment in this.OrderedAttachments)
                 {
+                    var versionLabel = this.VersionLabel(fileAttachment, pathsWithSeveralVersions);
                     var folderPath = Path.GetDirectoryName(fileAttachment.FilePath);
                     if (folderPath != currentFolder)
                     {
                         currentFolder = folderPath;
                         <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-6 mb-3">
-                            <MudIcon Icon="@Icons.Material.Filled.Folder" Class="mr-2" />
+                            <MudIcon Icon="@AppIcons.FOLDER" Class="mr-2" />
                             <MudText Typo="Typo.h6">
                                 @folderPath:
                             </MudText>
@@ -49,28 +58,37 @@
                     {
                         <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="ms-3 mb-2">
                             <div style="min-width: 0; flex: 1; overflow: hidden;">
-                                <MudTooltip Text="@T("Your attached file.")" Placement="Placement.Bottom">
+                                <MudTooltip Text="@TA("Your attached file.")" Placement="Placement.Bottom">
                                     <span class="d-inline-flex align-items-center" style="overflow: hidden; width: 100%;">
-                                        <MudIcon Icon="@Icons.Material.Filled.AttachFile" Class="mr-2" Style="flex-shrink: 0;"/>
+                                        <MudIcon Icon="@AppIcons.ATTACH_FILE" Class="mr-2" Style="flex-shrink: 0;"/>
                                         <MudText Style="white-space: nowrap;">
                                             @fileAttachment.FileName
                                         </MudText>
+                                        @if (versionLabel is not null)
+                                        {
+                                            <MudText Typo="Typo.body2" Class="ml-2 mud-text-secondary" Style="white-space: nowrap;">
+                                                @versionLabel
+                                            </MudText>
+                                        }
                                     </span>
                                 </MudTooltip>
                             </div>
 
                             <MudToolBar WrapContent="true" Gutters="false" Class="ml-2" Style="flex-shrink: 0; min-height: 1em;">
                                 <MudTooltip Text="@T("Preview what we send to the AI.")" Placement="Placement.Bottom">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Search"
+                                    <MudIconButton Icon="@AppIcons.FILE_CONTENT_PREVIEW"
                                                    Color="Color.Primary"
                                                    OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
                                 </MudTooltip>
                             
-                                <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
-                                </MudTooltip>
+                                @if (this.CanRemove)
+                                {
+                                    <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                        <MudIconButton Icon="@AppIcons.DELETE"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
+                                    </MudTooltip>
+                                }
                             </MudToolBar>
                         </MudStack>
                     }
@@ -80,24 +98,45 @@
                             <div style="min-width: 0; flex: 1; overflow: hidden;">
                                 <MudTooltip Text="@T("The file was deleted, renamed, or moved.")" Placement="Placement.Bottom">
                                     <span class="d-inline-flex align-items-center" style="overflow: hidden; width: 100%;">
-                                        <MudIcon Icon="@Icons.Material.Filled.Report" Color="Color.Error" Class="mr-2" Style="flex-shrink: 0;"/>
+                                        <MudIcon Icon="@AppIcons.FILE_NOT_FOUND" Color="Color.Error" Class="mr-2" Style="flex-shrink: 0;"/>
                                         <MudText Style="white-space: nowrap;">
                                             <s>@fileAttachment.FileName</s>
                                         </MudText>
+                                        @if (versionLabel is not null)
+                                        {
+                                            <MudText Typo="Typo.body2" Class="ml-2 mud-text-secondary" Style="white-space: nowrap;">
+                                                @versionLabel
+                                            </MudText>
+                                        }
                                     </span>
                                 </MudTooltip>
                             </div>
 
                             <MudToolBar WrapContent="true" Gutters="false" Class="ml-2" Style="flex-shrink: 0; min-height: 1em;">
-                                <MudIconButton Icon="@Icons.Material.Filled.Search"
-                                               Color="Color.Primary"
-                                               Disabled="true"/>
-                            
-                                <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
-                                </MudTooltip>
+                                @* A file sent before keeps the text the AI received from it, which outlives the file: *@
+                                @if (fileAttachment.ProvenanceId is not null)
+                                {
+                                    <MudTooltip Text="@T("Show the text the AI received from this file.")" Placement="Placement.Bottom">
+                                        <MudIconButton Icon="@AppIcons.FILE_CONTENT_PREVIEW"
+                                                       Color="Color.Primary"
+                                                       OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudIconButton Icon="@AppIcons.FILE_CONTENT_PREVIEW"
+                                                   Color="Color.Primary"
+                                                   Disabled="true"/>
+                                }
+
+                                @if (this.CanRemove)
+                                {
+                                    <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                        <MudIconButton Icon="@AppIcons.DELETE"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
+                                    </MudTooltip>
+                                }
                             </MudToolBar>
                         </MudStack>
                     }

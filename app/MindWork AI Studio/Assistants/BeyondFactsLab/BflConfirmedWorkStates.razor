@@ -1,0 +1,30 @@
+@inherits MSGComponentBase
+
+<MudPaper Outlined="true" Class="@($"pa-4 {this.Class}")">
+    <MudText Typo="Typo.h6">@TA("Work states confirmed by you")</MudText>
+    @if (this.ConfirmedSteps.Count is 0)
+    {
+        <MudText Typo="Typo.body2">@TA("Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps.")</MudText>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Class="mb-3">@TA("The lab builds on these in the later steps.")</MudText>
+        <MudExpansionPanels MultiExpansion="@true">
+            @foreach (var step in this.ConfirmedSteps)
+            {
+                var confirmed = this.WorkStates[step].Confirmed!;
+                var isOutdated = BflStaleness.Of(step, this.WorkStates, this.Forms) is BflWorkStateStatus.OUTDATED;
+                <ExpansionPanel @key="step"
+                                HeaderIcon="@(isOutdated ? AppIcons.OUTDATED : AppIcons.SUCCESS)"
+                                IconColor="@(isOutdated ? Color.Warning : Color.Success)"
+                                HeaderText="@(isOutdated ? string.Format(T("{0} (outdated)"), step.Title) : step.Title)">
+                    @foreach (var section in BflWorkStateSections.ForStep(step).Where(section => !string.IsNullOrWhiteSpace(confirmed.Sections.GetValueOrDefault(section.Key))))
+                    {
+                        <MudText @key="section.Key" Typo="Typo.body2" Class="mt-2"><strong>@section.Title</strong></MudText>
+                        <MudMarkdown Value="@confirmed.Sections[section.Key]" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                    }
+                </ExpansionPanel>
+            }
+        </MudExpansionPanels>
+    }
+</MudPaper>

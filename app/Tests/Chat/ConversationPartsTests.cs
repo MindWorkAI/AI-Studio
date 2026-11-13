@@ -53,11 +53,12 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(thread, "You are helpful.", "And of Italy?", null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parts.Texts, Is.EqualTo(new[] { "You are helpful.", "What is the capital of France?", "Paris." }));
-            Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "And of Italy?" }));
-        });
+            Assert.That(parts.DraftText, Is.EqualTo("And of Italy?"));
+            Assert.That(parts.GrowingTexts, Is.Empty, "The draft is a part of its own, and it stands nowhere else.");
+        }
     }
 
     [Test]
@@ -74,11 +75,29 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(thread, string.Empty, "a draft", null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parts.Texts, Is.EqualTo(new[] { "A question." }));
-            Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "The answer so far", "a draft" }));
-        });
+            Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "The answer so far" }));
+            Assert.That(parts.DraftText, Is.EqualTo("a draft"));
+        }
+    }
+
+    [Test]
+    public void AnEarlierAnswerCountsWithTheNoteOfTheToolsItUsed()
+    {
+        var answer = new ContentText
+        {
+            Text = "The page describes the travel rules.",
+            ToolInvocations = [new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/travel" }, ArgumentsJson = """{"url":"https://example.org/travel"}""" }],
+        };
+
+        var time = new DateTimeOffset(2026, 11, 5, 14, 32, 0, TimeSpan.Zero);
+        var thread = new ChatThread { Blocks = [new ContentBlock { Role = ChatRole.AI, ContentType = ContentType.TEXT, Content = answer, Time = time }] };
+
+        var parts = ConversationParts.Of(thread, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
+
+        Assert.That(parts.Texts, Is.EqualTo(new[] { $"{ToolCallHistoryNote.Build(answer, time)}\n\n{answer.Text}" }), "The message builder sends the note in front of the answer.");
     }
 
     [Test]
@@ -89,11 +108,11 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(new() { Blocks = [finished] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parts.Texts, Is.EqualTo(new[] { "The whole answer." }));
             Assert.That(parts.GrowingTexts, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -132,11 +151,11 @@ public sealed class ConversationPartsTests
     {
         var parts = ConversationParts.Of(null, string.Empty, "Hello", null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parts.Texts, Is.Empty);
-            Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "Hello" }));
-        });
+            Assert.That(parts.DraftText, Is.EqualTo("Hello"));
+        }
     }
 
     [TestCase("")]
@@ -145,11 +164,12 @@ public sealed class ConversationPartsTests
     {
         var parts = ConversationParts.Of(null, string.Empty, draft, null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parts.Texts, Is.Empty);
             Assert.That(parts.GrowingTexts, Is.Empty);
-        });
+            Assert.That(parts.DraftText, Is.Empty);
+        }
     }
 
     [Test]
@@ -166,11 +186,11 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(new() { Blocks = [empty] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parts.Texts, Is.Empty);
             Assert.That(parts.Documents, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -188,7 +208,11 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(new() { Blocks = [block] }, string.Empty, "And this one.", [FileAttachment.FromPath(draft)], imagesAreSent: true, toolDefinitions: null);
 
-        Assert.That(parts.Documents.Select(document => document.FileName), Is.EqualTo(new[] { "older.txt", "draft.txt" }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(parts.Documents.Select(document => document.FileName), Is.EqualTo(new[] { "older.txt" }));
+            Assert.That(parts.DraftDocuments.Select(document => document.FileName), Is.EqualTo(new[] { "draft.txt" }), "Both count, each in the part it belongs to.");
+        }
     }
 
     [Test]
@@ -201,7 +225,7 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(null, string.Empty, "Here", [attachment], imagesAreSent: true, toolDefinitions: null);
 
-        Assert.That(parts.Documents, Is.Empty);
+        Assert.That(parts.DraftDocuments, Is.Empty);
     }
 
     [Test]
@@ -212,11 +236,32 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(document), FileAttachment.FromPath(image)], imagesAreSent: true, toolDefinitions: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
-            Assert.That(parts.Documents.Select(entry => entry.FileName), Is.EqualTo(new[] { "notes.txt" }));
+            Assert.That(parts.DraftDocuments.Select(entry => entry.FileName), Is.EqualTo(new[] { "notes.txt" }));
+            Assert.That(parts.DraftImages, Is.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public void ImagesOfTheConversationAndOfTheDraftAreKeptApart()
+    {
+        //
+        // A provider which reported the conversation so far counted the pictures in it as well,
+        // but never the ones which are still waiting in the composer.
+        //
+        var sent = this.WriteFile("sent.png", "not really a png");
+        var waiting = this.WriteFile("waiting.png", "not really a png either");
+        var block = Block("Look at this.");
+        ((ContentText)block.Content!).FileAttachments.Add(FileAttachment.FromPath(sent));
+
+        var parts = ConversationParts.Of(new() { Blocks = [block] }, string.Empty, "And at this.", [FileAttachment.FromPath(waiting)], imagesAreSent: true, toolDefinitions: null);
+
+        using (Assert.EnterMultipleScope())
+        {
             Assert.That(parts.Images, Is.EqualTo(1));
-        });
+            Assert.That(parts.DraftImages, Is.EqualTo(1));
+        }
     }
 
     [Test]
@@ -230,7 +275,7 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(image)], imagesAreSent: false, toolDefinitions: null);
 
-        Assert.That(parts.Images, Is.Zero);
+        Assert.That(parts.DraftImages, Is.Zero);
     }
 
     [Test]
@@ -247,11 +292,12 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(new() { Blocks = [running] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parts.Texts, Is.Empty);
-            Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "What the web search found.", "What the page said." }));
-        });
+            Assert.That(parts.ToolConversation, Is.EqualTo(new[] { "What the web search found.", "What the page said." }));
+            Assert.That(parts.GrowingTexts, Is.Empty, "The tool conversation is a part of its own, so that its share can be named.");
+        }
     }
 
     [Test]
@@ -267,7 +313,7 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(new() { Blocks = [running] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "The same page.", "The same page." }));
+        Assert.That(parts.ToolConversation, Is.EqualTo(new[] { "The same page.", "The same page." }));
     }
 
     [Test]
@@ -285,11 +331,11 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(new() { Blocks = [answered] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parts.Texts, Is.EqualTo(new[] { "Here is what I found." }));
-            Assert.That(parts.GrowingTexts, Is.Empty);
-        });
+            Assert.That(parts.ToolConversation, Is.Empty);
+        }
     }
 
     [Test]
@@ -306,7 +352,7 @@ public sealed class ConversationPartsTests
             Tool("read_web_page", "Reads one page.", """{"type":"string"}"""),
         ]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(parts.Texts, Is.EqualTo(new[]
             {
@@ -315,7 +361,7 @@ public sealed class ConversationPartsTests
             }));
 
             Assert.That(parts.GrowingTexts, Is.Empty);
-        });
+        }
     }
 
     [Test]

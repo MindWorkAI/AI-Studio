@@ -1,4 +1,5 @@
-use crate::api_token::APIToken;
+use crate::metadata::RUST_VERSION;
+use axum::http::StatusCode;
 use axum::Json;
 use log::{debug, error, info, warn};
 use serde::Serialize;
@@ -57,7 +58,7 @@ static USER_LANGUAGE: OnceLock<String> = OnceLock::new();
 static INSTALLATION_KIND: OnceLock<InstallationKind> = OnceLock::new();
 
 /// Returns the config directory.
-pub async fn get_config_directory(_token: APIToken) -> String {
+pub async fn get_config_directory() -> String {
     match CONFIG_DIRECTORY.get() {
         Some(config_directory) => config_directory.clone(),
         None => String::from(""),
@@ -65,7 +66,7 @@ pub async fn get_config_directory(_token: APIToken) -> String {
 }
 
 /// Returns the data directory.
-pub async fn get_data_directory(_token: APIToken) -> String {
+pub async fn get_data_directory() -> String {
     match DATA_DIRECTORY.get() {
         Some(data_directory) => data_directory.clone(),
         None => String::from(""),
@@ -73,7 +74,7 @@ pub async fn get_data_directory(_token: APIToken) -> String {
 }
 
 /// Returns the current user's username.
-pub async fn read_user_name(_token: APIToken) -> String {
+pub async fn read_user_name() -> String {
     whoami::username().unwrap_or_else(|e| {
         error!("Failed to read the current OS username: {e}.");
         String::new()
@@ -126,9 +127,12 @@ pub struct RuntimeInfo {
     pub executable_path: String,
     pub linux_package_type: LinuxPackageType,
     pub installation_kind: InstallationKind,
+
+    /// The Rust compiler which built the runtime, see `metadata::RUST_VERSION`.
+    pub rust_version: String,
 }
 
-pub async fn get_runtime_info(_token: APIToken) -> Json<RuntimeInfo> {
+pub async fn get_runtime_info() -> Json<RuntimeInfo> {
     Json(RuntimeInfo {
         working_directory: env::current_dir()
             .map(|path| path.to_string_lossy().into_owned())
@@ -138,6 +142,7 @@ pub async fn get_runtime_info(_token: APIToken) -> Json<RuntimeInfo> {
             .unwrap_or_default(),
         linux_package_type: detect_linux_package_type(),
         installation_kind: installation_kind(),
+        rust_version: RUST_VERSION.to_string(),
     })
 }
 
@@ -254,11 +259,11 @@ fn detect_installation_kind() -> InstallationKind {
 
     // The updater replaces the entire app bundle, so it needs to write into the directory that
     // contains the bundle. On a device managed through an MDM solution like Jamf, the bundle sits
-    // in a location the user cannot write to. We deliberately do not look for a marker file here:
-    // any additional file inside the bundle would break its code signature. As a consequence, a
-    // macOS installation is never reported as managed, only as an unsupported location. An
-    // organization that wants AI Studio to name it explicitly sets DataApp.UpdateInterval to
-    // DISABLE_UPDATES in its enterprise configuration, which takes precedence anyway.
+    // in a location the user cannot write to, and update_target_installation_kind reports such an
+    // installation as managed. We deliberately do not look for a marker file here: any additional
+    // file inside the bundle would break its code signature. An organization that wants AI Studio to
+    // name it explicitly sets DataApp.UpdateInterval to DISABLE_UPDATES in its enterprise
+    // configuration, which takes precedence anyway.
     match macos_app_bundle_directory(&executable_path) {
         Some(bundle_directory) => update_target_installation_kind(&bundle_directory),
         None => InstallationKind::User,
@@ -544,7 +549,7 @@ fn detect_user_language() -> (String, LanguageDetectionSource) {
     )
 }
 
-pub async fn read_user_language(_token: APIToken) -> String {
+pub async fn read_user_language() -> String {
     USER_LANGUAGE
         .get_or_init(|| {
             let (user_language, source) = detect_user_language();
@@ -641,35 +646,35 @@ struct EnterpriseSourceData {
     encryption_secret: String,
 }
 
-pub async fn read_enterprise_env_config_id(_token: APIToken) -> String {
-    debug!("Trying to read the effective enterprise configuration ID.");
-    resolve_effective_enterprise_config_source()
-        .configs
-        .into_iter()
-        .next()
-        .map(|config| config.id)
-        .unwrap_or_default()
-}
-
-pub async fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
-    debug!("Trying to read the effective enterprise configuration server URL.");
-    resolve_effective_enterprise_config_source()
-        .configs
-        .into_iter()
-        .next()
-        .map(|config| config.server_url)
-        .unwrap_or_default()
-}
-
-pub async fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_encryption_secret() -> Result<String, (StatusCode, String)> {
     debug!("Trying to read the effective enterprise configuration encryption secret.");
-    resolve_effective_enterprise_secret_source().encryption_secret
+    read_enterprise_sources(|| resolve_effective_enterprise_secret_source().encryption_secret).await
 }
 
 /// Returns all enterprise configurations from the effective source.
-pub async fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
+pub async fn read_enterprise_configs() -> Result<Json<Vec<EnterpriseConfig>>, (StatusCode, String)> {
     info!("Trying to read the effective enterprise configurations.");
-    Json(resolve_effective_enterprise_config_source().configs)
+    read_enterprise_sources(|| Json(resolve_effective_enterprise_config_source().configs)).await
+}
+
+/// Reads the enterprise sources on the blocking pool.
+///
+/// Every call reads the policy files and, on Windows, the registry again. That is quick most of
+/// the time, but a slow disk must not hold up every other call of the app, because they all share
+/// one HTTP/2 connection.
+///
+/// A failure is answered as an error, never as an empty value: the app would read an empty value
+/// as "no configuration of your organization" and act on it.
+async fn read_enterprise_sources<T, F>(read: F) -> Result<T, (StatusCode, String)>
+where
+    T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
+{
+    tokio::task::spawn_blocking(read).await.map_err(|error| {
+        let issue = format!("The enterprise configuration worker failed: {error}");
+        error!("{issue}");
+        (StatusCode::INTERNAL_SERVER_ERROR, issue)
+    })
 }
 
 pub fn resolve_external_http_custom_root_certificate_policy() -> ExternalHttpCustomRootCertificatePolicy {
@@ -859,11 +864,18 @@ fn enterprise_env_key_equals(env_name: &str, expected: &str) -> bool {
 
 #[cfg(target_os = "windows")]
 fn enterprise_env_key_suffix<'a>(env_name: &'a str, prefix: &str) -> Option<&'a str> {
-    if env_name.len() < prefix.len() {
-        return None;
-    }
+    enterprise_env_key_suffix_ignoring_case(env_name, prefix)
+}
 
-    let (raw_prefix, suffix) = env_name.split_at(prefix.len());
+/// Returns the slot suffix of an environment variable name, comparing the prefix without
+/// regard to case, the way Windows compares the names of environment variables.
+///
+/// Every environment variable passes through here, whatever characters its name contains.
+/// Where the length of the prefix ends inside one of them, the name cannot start with the
+/// prefix, and splitting it there would panic.
+#[cfg(any(target_os = "windows", test))]
+fn enterprise_env_key_suffix_ignoring_case<'a>(env_name: &'a str, prefix: &str) -> Option<&'a str> {
+    let (raw_prefix, suffix) = env_name.split_at_checked(prefix.len())?;
     if raw_prefix.eq_ignore_ascii_case(prefix) {
         normalize_enterprise_slot_suffix(suffix)
     } else {
@@ -1296,11 +1308,18 @@ fn add_enterprise_config_pair(
     configs: &mut Vec<EnterpriseConfig>,
     seen_ids: &mut HashSet<String>,
 ) {
-    let id = raw_id.and_then(|value| normalize_enterprise_config_id(value.value()));
+    let id = raw_id.and_then(|value| normalize_enterprise_value(value.value()));
     let server_url = raw_server_url.and_then(|value| normalize_enterprise_value(value.value()));
 
     match (id, server_url) {
         (Some(id), Some(server_url)) => {
+            // The app drops an ID which is no GUID. Taking the pair anyway would make this source the
+            // one we use, hide every source after it, and leave the device without any configuration:
+            let Some(id) = canonical_enterprise_config_id(&id) else {
+                warn!("Ignoring enterprise configuration from {} in '{}', because its ID '{}' is no valid GUID.", source_name, slot, id);
+                return;
+            };
+
             if seen_ids.insert(id.clone()) {
                 configs.push(EnterpriseConfig {
                     id,
@@ -1361,15 +1380,52 @@ fn normalize_enterprise_value(value: &str) -> Option<String> {
     }
 }
 
-fn normalize_enterprise_config_id(value: &str) -> Option<String> {
-    normalize_enterprise_value(value).map(|value| value.to_lowercase())
+/// Returns the configuration ID in the form the app works with, lower case and with hyphens, or
+/// `None` when it is no GUID.
+///
+/// The app reads the ID with `Guid.TryParse`. We accept the forms of it that IDs come in: with
+/// hyphens, the same in braces or in parentheses, and 32 digits without hyphens. Writing every ID in
+/// one form also lets the check for duplicates see the same ID in two forms.
+fn canonical_enterprise_config_id(value: &str) -> Option<String> {
+    let enclosed = value
+        .strip_prefix('{')
+        .and_then(|inner| inner.strip_suffix('}'))
+        .or_else(|| value.strip_prefix('(').and_then(|inner| inner.strip_suffix(')')));
+
+    // Only the form with hyphens may be enclosed, as with Guid.TryParse:
+    let digits = match enclosed {
+        Some(inner) => digits_of_hyphenated_guid(inner)?,
+        None if value.len() == 32 => String::from(value),
+        None => digits_of_hyphenated_guid(value)?,
+    };
+
+    // Checking for hex digits also ensures that every character is a single byte, so that the slicing
+    // below cannot cut a character apart:
+    if digits.len() != 32 || !digits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
+    }
+
+    let digits = digits.to_ascii_lowercase();
+    Some(format!("{}-{}-{}-{}-{}", &digits[0..8], &digits[8..12], &digits[12..16], &digits[16..20], &digits[20..32]))
+}
+
+/// Returns the digits of a GUID written with hyphens, e.g., `9072b77d-ca81-40da-be6a-861da525ef7b`,
+/// or `None` when its groups do not have the lengths of such a GUID. Whether the digits are hex
+/// digits is left to the caller.
+fn digits_of_hyphenated_guid(value: &str) -> Option<String> {
+    let groups: Vec<&str> = value.split('-').collect();
+    let has_guid_groups = groups.len() == 5
+        && groups.iter().zip([8, 4, 4, 4, 12]).all(|(group, length)| group.len() == length);
+
+    has_guid_groups.then(|| groups.concat())
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        directory_is_writable, enterprise_environment_key_name,
-        enterprise_policy_file_slot_suffix, has_managed_installation_marker,
+        canonical_enterprise_config_id, directory_is_writable, enterprise_env_key_suffix_ignoring_case,
+        enterprise_environment_key_name, enterprise_policy_file_slot_suffix, get_runtime_info,
+        has_managed_installation_marker,
         is_windows_machine_wide_installation, is_windows_per_user_installation,
         load_external_http_custom_root_certificate_policy_from_directories,
         linux_policy_directories_from_xdg, load_policy_values_from_directories,
@@ -1378,7 +1434,8 @@ mod tests {
         select_effective_enterprise_secret_source, update_target_installation_kind,
         EnterpriseConfig, EnterpriseSourceData, EnterpriseSourceValue, EnterpriseSourceValues,
         ExternalHttpCustomRootCertificatePolicy, InstallationKind, LinuxPackageType,
-        MANAGED_INSTALLATION_MARKER_FILE_NAME,
+        ENTERPRISE_ENV_CONFIG_ID_PREFIX, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX,
+        MANAGED_INSTALLATION_MARKER_FILE_NAME, RUST_VERSION,
     };
     use std::collections::HashMap;
     use std::fs;
@@ -1419,6 +1476,23 @@ mod tests {
         ] {
             assert_eq!(serde_json::to_string(&kind).unwrap(), expected);
         }
+    }
+
+    /// The information page of the app shows the Rust compiler which built the runtime. The
+    /// app reads it as `rust_version`, in the form of metadata.txt, which the build script
+    /// keeps: the version as the compiler names it, and the short hash of its commit.
+    #[tokio::test]
+    async fn runtime_info_names_the_rust_compiler_which_built_the_runtime() {
+        let runtime_info = get_runtime_info().await.0;
+        assert_eq!(serde_json::to_value(&runtime_info).unwrap()["rust_version"], RUST_VERSION);
+
+        let (version, commit) = RUST_VERSION
+            .strip_suffix(')')
+            .and_then(|rest| rest.split_once(" (commit "))
+            .unwrap_or_else(|| panic!("'{RUST_VERSION}' does not read '<version> (commit <hash>)'"));
+
+        assert!(version.starts_with(|character: char| character.is_ascii_digit()), "'{version}' is no version of the compiler");
+        assert!(!commit.is_empty() && commit.chars().all(|character| character.is_ascii_hexdigit()), "'{commit}' is no commit hash");
     }
 
     fn enterprise_config(
@@ -1627,6 +1701,33 @@ mod tests {
     }
 
     #[test]
+    fn enterprise_env_key_suffix_ignoring_case_accepts_any_case() {
+        assert_eq!(
+            enterprise_env_key_suffix_ignoring_case("mindwork_ai_studio_enterprise_config_id_10503", ENTERPRISE_ENV_CONFIG_ID_PREFIX),
+            Some("10503")
+        );
+        assert_eq!(
+            enterprise_env_key_suffix_ignoring_case("Mindwork_AI_Studio_Enterprise_Config_Server_URL_00000", ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX),
+            Some("00000")
+        );
+        assert_eq!(
+            enterprise_env_key_suffix_ignoring_case("MINDWORK_AI_STUDIO", ENTERPRISE_ENV_CONFIG_ID_PREFIX),
+            None
+        );
+    }
+
+    #[test]
+    fn enterprise_env_key_suffix_ignoring_case_skips_names_where_the_prefix_ends_inside_a_character() {
+        for prefix in [ENTERPRISE_ENV_CONFIG_ID_PREFIX, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX] {
+            // Every "Ä" takes two bytes, and both prefixes are an odd number of bytes long:
+            let name = "Ä".repeat(prefix.len());
+            assert!(!name.is_char_boundary(prefix.len()));
+
+            assert_eq!(enterprise_env_key_suffix_ignoring_case(&name, prefix), None);
+        }
+    }
+
+    #[test]
     fn parse_enterprise_source_values_keeps_environment_id_variable_as_source_detail() {
         let mut values = EnterpriseSourceValues::new();
         values.insert(
@@ -1688,6 +1789,115 @@ mod tests {
         assert_eq!(selected.source_name, "registry");
         assert_eq!(selected.encryption_secret, "");
         assert_eq!(selected.configs.len(), 1);
+    }
+
+    /// A pair whose ID is no GUID must not make its source the one we use: the app drops the ID, and
+    /// the device would run without any configuration, although the next source has a valid one.
+    #[test]
+    fn select_effective_enterprise_config_source_skips_a_source_with_only_invalid_ids() {
+        let mut registry_values = HashMap::new();
+        registry_values.insert(String::from("config_id_00000"), String::from("not-a-guid"));
+        registry_values.insert(
+            String::from("config_server_url_00000"),
+            String::from("https://registry.example.org"),
+        );
+
+        let mut policy_values = HashMap::new();
+        policy_values.insert(String::from("config_id_00000"), String::from(TEST_ID_B));
+        policy_values.insert(
+            String::from("config_server_url_00000"),
+            String::from("https://policy.example.org"),
+        );
+
+        let selected = select_effective_enterprise_config_source(vec![
+            parse_enterprise_source_values("Windows registry", &registry_values),
+            parse_enterprise_source_values("policy files", &policy_values),
+        ]);
+
+        assert_eq!(selected.source_name, "policy files");
+        assert_eq!(
+            selected.configs,
+            vec![enterprise_config(TEST_ID_B, "https://policy.example.org", "policy files", "", "indexed slot 00000")]
+        );
+    }
+
+    #[test]
+    fn parse_enterprise_source_values_skips_configs_with_invalid_ids() {
+        let mut values = HashMap::new();
+        values.insert(String::from("config_id0"), String::from("not-a-guid"));
+        values.insert(
+            String::from("config_server_url0"),
+            String::from("https://invalid.example.org"),
+        );
+        values.insert(String::from("config_id1"), String::from(TEST_ID_B));
+        values.insert(
+            String::from("config_server_url1"),
+            String::from("https://valid.example.org"),
+        );
+        values.insert(
+            String::from("configs"),
+            format!("not-a-guid@https://combined-invalid.example.org;{TEST_ID_C}@https://combined.example.org"),
+        );
+
+        let source = parse_enterprise_source_values("test", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![
+                enterprise_config(TEST_ID_B, "https://valid.example.org", "test", "", "indexed slot 1"),
+                enterprise_config(TEST_ID_C, "https://combined.example.org", "test", "", "combined legacy entry 2"),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_enterprise_source_values_detects_duplicates_across_id_forms() {
+        let mut values = HashMap::new();
+        values.insert(String::from("config_id0"), format!("{{{TEST_ID_A}}}"));
+        values.insert(
+            String::from("config_server_url0"),
+            String::from("https://braces.example.org"),
+        );
+        values.insert(String::from("config_id1"), TEST_ID_A.replace('-', ""));
+        values.insert(
+            String::from("config_server_url1"),
+            String::from("https://digits.example.org"),
+        );
+
+        let source = parse_enterprise_source_values("test", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![enterprise_config("9072b77d-ca81-40da-be6a-861da525ef7b", "https://braces.example.org", "test", "", "indexed slot 0")]
+        );
+    }
+
+    #[test]
+    fn canonical_enterprise_config_id_accepts_the_forms_the_app_reads() {
+        let canonical = Some(String::from("9072b77d-ca81-40da-be6a-861da525ef7b"));
+
+        assert_eq!(canonical_enterprise_config_id("9072B77D-CA81-40DA-BE6A-861DA525EF7B"), canonical);
+        assert_eq!(canonical_enterprise_config_id("{9072b77d-ca81-40da-be6a-861da525ef7b}"), canonical);
+        assert_eq!(canonical_enterprise_config_id("(9072b77d-ca81-40da-be6a-861da525ef7b)"), canonical);
+        assert_eq!(canonical_enterprise_config_id("9072b77dca8140dabe6a861da525ef7b"), canonical);
+    }
+
+    #[test]
+    fn canonical_enterprise_config_id_rejects_other_forms() {
+        for id in [
+            "not-a-guid",
+            "9072b77d-ca81-40da-be6a-861da525ef7",
+            "9072b77d-ca81-40da-be6a-861da525ef7bb",
+            "9072b77g-ca81-40da-be6a-861da525ef7b",
+            "9072b77d-ca81-40da-be6a-861da525efä",
+            "9072b77dca8140dabe6a861da525ef7",
+            "{9072b77d-ca81-40da-be6a-861da525ef7b)",
+            "{9072b77dca8140dabe6a861da525ef7b}",
+            "urn:uuid:9072b77d-ca81-40da-be6a-861da525ef7b",
+            "{0x9072b77d,0xca81,0x40da,{0xbe,0x6a,0x86,0x1d,0xa5,0x25,0xef,0x7b}}",
+        ] {
+            assert_eq!(canonical_enterprise_config_id(id), None, "'{id}' must not count as a configuration ID.");
+        }
     }
 
     #[test]

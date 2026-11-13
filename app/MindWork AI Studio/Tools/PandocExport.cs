@@ -20,6 +20,8 @@ public static class PandocExport
     /// This says nothing to the user: it reports what happened and lets the caller decide. A batch
     /// run over hundreds of documents would otherwise bury the user under notifications. Pandoc
     /// must be available, which PandocAvailabilityService.EnsureAvailabilityAsync takes care of.
+    /// The text is converted as it is: whether it ends with the notice that AI generated it is up
+    /// to the caller, which knows what the text is.
     /// </remarks>
     /// <param name="rustService">The Rust service, used to build the Pandoc call.</param>
     /// <param name="markdownText">The Markdown text to convert.</param>
@@ -29,7 +31,7 @@ public static class PandocExport
     /// <returns>True, when the document was written.</returns>
     public static async Task<bool> ConvertAsync(RustService rustService, string markdownText, string targetFilePath, FileExportFormat format, CancellationToken token = default)
     {
-        if (!format.UsesPandoc())
+        if (!format.UsesPandoc)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
 
         var tempMarkdownFilePath = string.Empty;
@@ -43,14 +45,23 @@ public static class PandocExport
             await File.WriteAllTextAsync(tempMarkdownFilePath, markdownText, new UTF8Encoding(false), token);
 
             // Call Pandoc to create the document:
-            var pandoc = await PandocProcessBuilder
+            var pandocBuilder = PandocProcessBuilder
                 .Create()
                 .UseStandaloneMode()
                 .WithInputFormat("gfm+emoji+tex_math_dollars")
-                .WithOutputFormat(format.ToPandocOutputFormat())
+                .WithOutputFormat(format.PandocOutputFormat)
                 .WithOutputFile(targetFilePath)
-                .WithInputFile(tempMarkdownFilePath)
-                .BuildAsync(rustService);
+                .WithInputFile(tempMarkdownFilePath);
+
+            //
+            // The document is named after the file it is written to. Set as metadata, the name
+            // reaches the page as a string which Pandoc escapes; only a file named true or false
+            // is read as a switch and keeps the temporary name.
+            //
+            if (format.NeedsPageTitle)
+                pandocBuilder.AddArgument("-M").AddArgument($"pagetitle={Path.GetFileNameWithoutExtension(targetFilePath)}");
+
+            var pandoc = await pandocBuilder.BuildAsync(rustService);
 
             using var process = Process.Start(pandoc.StartInfo);
             if (process is null)
@@ -104,28 +115,35 @@ public static class PandocExport
     /// </summary>
     /// <param name="rustService">The Rust service, used for the save dialog and for Pandoc.</param>
     /// <param name="pandocAvailability">Makes sure Pandoc is there and offers its installation.</param>
+    /// <param name="disclosureService">Ends the text with the notice that AI generated it, when that is
+    /// switched on. Null for content which never gets the notice, such as the answer of the prompt
+    /// optimizer, which is meant for another model.</param>
     /// <param name="dialogTitle">The title of the save dialog. The caller knows what the user is
     /// looking at, a chat message or the result of an assistant, so the caller names it.</param>
     /// <param name="format">The format to write. Must be a format which uses Pandoc.</param>
     /// <param name="markdownContent">The content to export.</param>
+    /// <param name="fileName">What the document is about, used to suggest a name in the save dialog.
+    /// Null falls back to a generic name.</param>
     /// <returns>True, when the document was written.</returns>
-    public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, string dialogTitle, FileExportFormat format, IContent markdownContent)
+    public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, AIGeneratedContentDisclosureService? disclosureService, string dialogTitle, FileExportFormat format, IContent markdownContent, string? fileName = null)
     {
-        if (!format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (!format.UsesPandoc || format.FileTypeFilter is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
 
         //
         // We read the text before we ask for a path: when there is nothing to convert, the user
         // should learn that right away instead of picking a file first and getting an error afterwards.
         //
-        if (!markdownContent.TryGetExportMarkdown(out var markdownText, format.FollowsPageAnchors()))
+        if (!markdownContent.TryGetExportMarkdown(out var markdownText, format.FollowsPageAnchors))
         {
             LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it carries no text.", format);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Only text messages can be exported.")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.WARNING, TB("Only text messages can be exported.")));
             return false;
         }
 
-        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName());
+        markdownText = disclosureService?.AddDisclosureToMarkdown(markdownText) ?? markdownText;
+
+        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");
@@ -139,13 +157,19 @@ public static class PandocExport
         if (!pandocState.IsAvailable)
             return false;
 
+        //
+        // The export runs from here on. Before, the user may still be looking at the dialog which
+        // offers to install Pandoc, and a notification that we save would be wrong there:
+        //
+        await using var feedback = new FileExportFeedback();
+        feedback.ShowRunning(response.SaveFilePath);
         if (!await ConvertAsync(rustService, markdownText, response.SaveFilePath, format))
         {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ERROR, TB("The export failed.")));
             return false;
         }
 
-        await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("The export succeeded.")));
+        await feedback.SucceededAsync(AppIcons.SUCCESS, TB("The export succeeded."), response.SaveFilePath, true);
         return true;
     }
 }

@@ -20,7 +20,7 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.IONOS.ToSecretId();
+    public override string Id => LLMProviders.IONOS.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "IONOS";
@@ -74,7 +74,7 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
         return Task.FromResult(TranscriptionResult.Failure());
     }
 
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);

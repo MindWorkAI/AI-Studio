@@ -35,11 +35,11 @@ public sealed class ModelComparisonRunnerTests
 
         await CreateRunner().RunAsync(CreateParticipant("1", Ask), CreateParticipant("2", Ask), REQUEST, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prompts, Has.Count.EqualTo(2));
             Assert.That(prompts.Distinct().Count(), Is.EqualTo(1), "Both models must receive the exact same prompt as each other.");
-        });
+        }
     }
 
     [Test]
@@ -108,13 +108,13 @@ public sealed class ModelComparisonRunnerTests
 
         var result = await CreateRunner().RunAsync(CreateParticipant("1", AskFirst), CreateParticipant("2", AskSecond), REQUEST, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.First.Text, Is.EqualTo("from the first"));
             Assert.That(result.First.Label, Is.EqualTo("Model 1"));
             Assert.That(result.Second.Text, Is.EqualTo("from the second"));
             Assert.That(result.Second.Label, Is.EqualTo("Model 2"));
-        });
+        }
     }
 
     [Test]
@@ -126,11 +126,11 @@ public sealed class ModelComparisonRunnerTests
             REQUEST,
             CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.First.Text, Is.EqualTo("Hello world"));
             Assert.That(result.First.Completed, Is.True);
-        });
+        }
     }
 
     [Test]
@@ -155,11 +155,11 @@ public sealed class ModelComparisonRunnerTests
             REQUEST,
             CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.First.FirstTokenTime, Is.EqualTo(TimeSpan.FromMilliseconds(200)));
             Assert.That(result.First.TotalTime, Is.EqualTo(TimeSpan.FromMilliseconds(500)));
-        });
+        }
     }
 
     [Test]
@@ -171,14 +171,14 @@ public sealed class ModelComparisonRunnerTests
             REQUEST,
             CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.First.Completed, Is.True);
             Assert.That(result.First.Text, Is.EqualTo("An answer."));
             Assert.That(result.Second.Completed, Is.False);
             Assert.That(result.Second.TotalTime, Is.Null, "A failed request has no total time.");
             Assert.That(result.BothCompleted, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -190,12 +190,12 @@ public sealed class ModelComparisonRunnerTests
             REQUEST,
             CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.First.Completed, Is.False);
             Assert.That(result.Second.Completed, Is.False);
             Assert.That(result.BothCompleted, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -207,12 +207,12 @@ public sealed class ModelComparisonRunnerTests
             REQUEST,
             CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.First.Completed, Is.False);
             Assert.That(result.First.Text, Is.Empty);
             Assert.That(result.Second.Completed, Is.True);
-        });
+        }
     }
 
     [Test]
@@ -229,13 +229,13 @@ public sealed class ModelComparisonRunnerTests
         cancellation.CancelAfter(TimeSpan.FromMilliseconds(50));
         var result = await CreateRunner().RunAsync(CreateParticipant("1", Ask), CreateParticipant("2", Ask), REQUEST, cancellation.Token);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.First.Completed, Is.False);
             Assert.That(result.Second.Completed, Is.False);
             Assert.That(result.First.TotalTime, Is.Null);
             Assert.That(result.BothCompleted, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -257,7 +257,7 @@ public sealed class ModelComparisonRunnerTests
             judge: CreateParticipant("judge", AskJudge),
             judgeInstructions: "Prefer the more complete answer.");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(judgePrompt, Does.Contain("Answer from the first model."));
             Assert.That(judgePrompt, Does.Contain("Answer from the second model."));
@@ -266,7 +266,7 @@ public sealed class ModelComparisonRunnerTests
             Assert.That(result.Judge!.Completed, Is.True);
             Assert.That(result.Judge.Preferred, Is.EqualTo(ModelComparisonVote.COLUMN_A));
             Assert.That(result.Judge.Label, Is.EqualTo("Model judge"));
-        });
+        }
     }
 
     [Test]
@@ -289,11 +289,11 @@ public sealed class ModelComparisonRunnerTests
             ModelComparisonPresentationOrder.SECOND_MODEL_FIRST,
             CreateParticipant("judge", AskJudge));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(judgePrompt, Does.Match(@"# Answer A\r?\nAnswer from the second model\."));
             Assert.That(judgePrompt, Does.Match(@"# Answer B\r?\nAnswer from the first model\."));
-        });
+        }
     }
 
     [Test]
@@ -314,11 +314,11 @@ public sealed class ModelComparisonRunnerTests
             CancellationToken.None,
             judge: CreateParticipant("judge", AskJudge));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(judgeWasAsked, Is.False, "A judge would only ever see one complete answer, which is nothing to judge.");
             Assert.That(result.Judge, Is.Null);
-        });
+        }
     }
 
     [Test]
@@ -343,11 +343,11 @@ public sealed class ModelComparisonRunnerTests
             CancellationToken.None,
             judge: CreateParticipant("judge", (_, _) => Failing()));
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.Judge, Is.Not.Null);
             Assert.That(result.Judge!.Completed, Is.False);
-        });
+        }
     }
 
     private static ModelComparisonRunner CreateRunner(TimeProvider? clock = null) => new(NullLogger.Instance, clock);
@@ -373,6 +373,7 @@ public sealed class ModelComparisonRunnerTests
         throw new InvalidOperationException("The model is not reachable.");
 
         #pragma warning disable CS0162 // Unreachable code: the yield is what makes this an iterator
+        // ReSharper disable once HeuristicUnreachableCode
         yield break;
         #pragma warning restore CS0162
     }

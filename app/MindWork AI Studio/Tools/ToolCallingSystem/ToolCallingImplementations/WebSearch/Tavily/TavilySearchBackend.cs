@@ -15,6 +15,8 @@ public sealed class TavilySearchBackend : IWebSearchBackend
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(TavilySearchBackend).Namespace, nameof(TavilySearchBackend));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(TavilySearchBackend).Namespace, nameof(TavilySearchBackend));
+
     private const string SETTINGS_GROUP = "tavily";
 
     private const string API_KEY_SETTING = $"{SETTINGS_GROUP}.apiKey";
@@ -78,8 +80,8 @@ public sealed class TavilySearchBackend : IWebSearchBackend
 
     public string GetSettingsFieldDescription(string fieldName) => fieldName switch
     {
-        API_KEY_SETTING => TB("Your Tavily API key. It is kept in your operating system's keyring, not in a settings file. Tavily grants 1,000 requests per month without a credit card, which is enough for everyday use."),
-        SEARCH_DEPTH_SETTING => TB("How thoroughly Tavily searches. A basic search costs one of your monthly requests, an advanced search costs two and looks at more of each page before deciding how well it matches. Basic is the sensible choice unless you notice that results are missing the point."),
+        API_KEY_SETTING => TA("Your Tavily API key. It is kept in your operating system's keyring, not in a settings file. Tavily grants 1,000 requests per month without a credit card, which is enough for everyday use."),
+        SEARCH_DEPTH_SETTING => TA("How thoroughly Tavily searches. A basic search costs one of your monthly requests, an advanced search costs two and looks at more of each page before deciding how well it matches. Basic is the sensible choice unless you notice that results are missing the point."),
 
         _ => string.Empty,
     };
@@ -106,7 +108,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
         if (string.IsNullOrWhiteSpace(searchDepth) || IsSupportedSearchDepth(searchDepth))
             return true;
 
-        error = string.Format(TB("The configured Tavily search depth '{0}' is not one this app supports. Please choose one of these: {1}."), searchDepth, string.Join(", ", SUPPORTED_SEARCH_DEPTHS));
+        error = string.Format(TA("The configured Tavily search depth '{0}' is not one this app supports. Please choose one of these: {1}."), searchDepth, string.Join(", ", SUPPORTED_SEARCH_DEPTHS));
         return false;
     }
 
@@ -133,7 +135,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
             // would rather have more hits than one language can choose any language instead.
             //
             FilterByLanguage = language is null ? null : true,
-            SafeSearch = query.SafeSearch?.ToTavilyValue(),
+            SafeSearch = query.SafeSearch?.TavilyValue,
         };
 
         var response = await this.searchClient.SearchAsync(apiKey.Trim(), searchRequest, query.TimeoutSeconds, token);

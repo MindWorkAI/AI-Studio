@@ -13,15 +13,18 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
     
     protected override string Title => T("Bias of the Day");
     
-    protected override string Description => T("""Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind  "Bias of the Day" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia versions, updated them, and added source references. The idea of learning about one bias each day based on John's poster comes from Drew Nelson.""");
+    protected override string Description => TA("""Learn about a different cognitive bias every day. You can also ask the LLM your questions. The idea behind  "Bias of the Day" is based on work by Buster Benson, John Manoogian III, and Brian Rene Morrissette. Buster Benson grouped the biases, and the original texts come from Wikipedia. Brian Rene Morrissette condensed them into a shorter version. Finally, John Manoogian III created the original poster based on Benson's work and Morrissette's texts. Thorsten Sommer compared all texts for integration into AI Studio with the current Wikipedia versions, updated them, and added source references. The idea of learning about one bias each day based on John's poster comes from Drew Nelson.""");
+
+    // The chat continues the talk about today's bias, which only this prompt describes, together with its sources and language:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
 
     protected override string SystemPrompt => $"""
                                               You are a friendly, helpful expert on cognitive bias. You studied psychology and
                                               have a lot of experience. You explain a bias every day. Today's bias belongs to
-                                              the category: "{this.biasOfTheDay.Category.ToName()}". We have the following
+                                              the category: "{this.biasOfTheDay.Category.Name}". We have the following
                                               thoughts on this category:
                                               
-                                              {this.biasOfTheDay.Category.GetThoughts()}
+                                              {this.biasOfTheDay.Category.Thoughts}
                                               
                                               Today's bias is:  
                                               {this.biasOfTheDay.Description}
@@ -90,7 +93,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
     private string? ValidateTargetLanguage(CommonLanguages language)
     {
         if(language is CommonLanguages.AS_IS)
-            return T("Please select a target language for the bias.");
+            return TA("Please select a target language for the bias.");
         
         return null;
     }
@@ -98,7 +101,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }
@@ -108,12 +111,12 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
         var sb = new StringBuilder();
         if (this.biasOfTheDay.Links.Count > 0)
         {
-            sb.AppendLine();
-            sb.AppendLine("Please share the following sources with the user as a Markdown list:");
+            sb.AppendLineLF();
+            sb.AppendLineLF("Please share the following sources with the user as a Markdown list:");
             foreach (var link in this.biasOfTheDay.Links)
-                sb.AppendLine($"- {link}");
+                sb.AppendLineLF($"- {link}");
             
-            sb.AppendLine();
+            sb.AppendLineLF();
         }
         
         return sb.ToString();
@@ -124,7 +127,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
-        return this.selectedTargetLanguage.Name();
+        return this.selectedTargetLanguage.Name;
     }
     
     private async Task TellBias()
@@ -151,7 +154,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
             }
         }
         
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 

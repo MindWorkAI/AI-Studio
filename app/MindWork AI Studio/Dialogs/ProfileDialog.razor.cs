@@ -102,7 +102,7 @@ public partial class ProfileDialog : MSGComponentBase
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
 
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -114,7 +114,7 @@ public partial class ProfileDialog : MSGComponentBase
         if (this.IsReadOnly)
             return;
 
-        await this.form.Validate();
+        await this.form.ValidateAsync();
 
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
@@ -135,7 +135,7 @@ public partial class ProfileDialog : MSGComponentBase
     private string? ValidateNeedToKnow(string text)
     {
         if (string.IsNullOrWhiteSpace(this.DataNeedToKnow) && string.IsNullOrWhiteSpace(this.DataActions))
-            return T("Please enter what the LLM should know about you and/or what actions it should take.");
+            return TA("Please enter what the LLM should know about you and/or what actions it should take.");
 
         return null;
     }
@@ -143,7 +143,7 @@ public partial class ProfileDialog : MSGComponentBase
     private string? ValidateActions(string text)
     {
         if (string.IsNullOrWhiteSpace(this.DataNeedToKnow) && string.IsNullOrWhiteSpace(this.DataActions))
-            return T("Please enter what the LLM should know about you and/or what actions it should take.");
+            return TA("Please enter what the LLM should know about you and/or what actions it should take.");
 
         return null;
     }
@@ -151,7 +151,7 @@ public partial class ProfileDialog : MSGComponentBase
     private string? ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return T("Please enter a profile name.");
+            return TA("Please enter a profile name.");
 
         if (name.Length > 40)
             return T("The profile name must not exceed 40 characters.");

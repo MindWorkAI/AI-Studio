@@ -1,8 +1,10 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
@@ -30,6 +32,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected RustService RustService { get; init; } = null!;
 
     [Inject]
+    protected AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
+
+    [Inject]
     protected ToolRegistry ToolRegistry { get; init; } = null!;
     
     [Inject]
@@ -43,6 +48,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     [Inject]
     protected AssistantSessionService AssistantSessionService { get; init; } = null!;
+
+    [Inject]
+    private AssistantLaunchService AssistantLaunchService { get; init; } = null!;
 
     /// <summary>
     /// Gets the job service used to run assistant-created chats independently from the assistant UI.
@@ -60,12 +68,23 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected abstract string SystemPrompt { get; }
 
     protected abstract Tools.Components Component { get; }
+
+    /// <summary>
+    /// The name of the assistant plugin, which is only set by plugin-provided assistants.
+    /// </summary>
+    protected virtual string RuntimeAssistantName => string.Empty;
     
     protected virtual Func<string> Result2Copy => () => this.ResultingContentBlock is null ? string.Empty : this.ResultingContentBlock.Content switch
     {
         ContentText textBlock => textBlock.Text,
         _ => string.Empty,
     };
+
+    /// <summary>
+    /// What an export of the result is named after, which the save dialog suggests as file name.
+    /// An assistant whose result is about something more specific than the assistant itself names that.
+    /// </summary>
+    protected virtual string ExportFileName => this.Title;
 
     protected abstract void ResetForm();
 
@@ -92,12 +111,36 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual bool ShowProfileSelection => true;
     
     protected virtual bool ShowDedicatedProgress => false;
+
+    /// <summary>
+    /// What the assistant is doing right now, shown below the dedicated progress bar; empty for no text.
+    /// </summary>
+    protected virtual string ProgressText => string.Empty;
     
     protected virtual bool ShowSendTo => true;
     
     protected virtual bool ShowCopyResult => true;
-    
+
+    /// <summary>
+    /// Whether "Copy result", and copying or exporting the answers this assistant shows, end them with the
+    /// notice that AI generated them, when that is switched on.
+    /// </summary>
+    /// <remarks>
+    /// An assistant whose result is meant for a program or another model rather than for a reader turns
+    /// this off, because one sentence more would change what the result does.
+    /// </remarks>
+    protected virtual bool AddsAIGeneratedContentDisclosure => true;
+
     protected virtual bool ShowReset => true;
+
+    /// <summary>
+    /// Whether the system prompt starts with the current date and time.
+    /// </summary>
+    /// <remarks>
+    /// Off for most assistants, whose results do not depend on the date. An assistant which writes
+    /// the date into its result, or plans around it, turns this on rather than guessing the date.
+    /// </remarks>
+    protected virtual bool IncludeDateTime => false;
 
     protected virtual string? SendToChatVisibleUserPromptPrefix => null;
 
@@ -121,7 +164,76 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
     }
 
+    /// <summary>
+    /// The thread with which a chat continues the conversation of this assistant.
+    /// </summary>
+    /// <remarks>
+    /// It decides what the chat holds, not its system prompt: SendToAssistant sets that afterward from
+    /// ChatSystemPrompt, whichever thread an assistant builds here.
+    /// </remarks>
     protected virtual ChatThread ConvertToChatThread => this.CreateSendToChatThread();
+
+    /// <summary>
+    /// Which system prompt a chat gets which continues the conversation of this assistant: the default prompt
+    /// of AI Studio, the prompt of this assistant, or a prompt this assistant writes for the chat.
+    /// </summary>
+    /// <remarks>
+    /// There is no default on purpose, so that every assistant decides this itself. Its own prompt may
+    /// forbid follow-up questions or demand JSON, and the default prompt of AI Studio knows nothing about its
+    /// role and its settings. An assistant which starts no chat from its conversation chooses the default
+    /// prompt of AI Studio.
+    /// </remarks>
+    protected abstract ChatSystemPromptChoice ChatSystemPrompt { get; }
+
+    /// <summary>
+    /// Takes over a text which another assistant or a chat sent to this assistant.
+    /// </summary>
+    /// <remarks>
+    /// Every assistant which content may be sent to puts the text into its main field, see
+    /// ComponentsExtensions.AllowSendTo. It comes before the preselected values, so a field which those only fill
+    /// when empty keeps the text. An assistant which allows sending to it but takes nothing would leave the text
+    /// lost without a word, which is why a test checks that each one overrides this.
+    /// </remarks>
+    /// <param name="payload">The text sent.</param>
+    protected virtual void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.Logger.LogError("The assistant '{Component}' allows sending text to it, but it does not take the text.", this.Component);
+
+    /// <summary>
+    /// What the text sent to this assistant demands, because of where it came from.
+    /// </summary>
+    /// <remarks>
+    /// An answer written from mails demands here what it demanded in its chat. The thread of the
+    /// assistant is created anew with every run, so the restrictions live here and go onto every thread
+    /// this assistant runs, see AssignRuntimeIdentity, and onto every tool list, see GetRunnableToolIds.
+    /// They stay until the form is reset, which removes the text as well.
+    /// </remarks>
+    private ChatRestrictions transferredRestrictions = ChatRestrictions.NONE;
+
+    /// <summary>
+    /// The prompt this assistant wrote for a chat which continues its conversation, built when that
+    /// conversation started; null when the assistant chose no prompt of its own or ran no conversation yet.
+    /// </summary>
+    /// <remarks>
+    /// It follows the settings of the run, not the form as it is when the user sends the result on: the
+    /// user may have changed the form since, e.g., the target language, without running the assistant
+    /// again. The prompt of the assistant itself comes from its thread for the same reason, see
+    /// WithChatSystemPrompt.
+    /// </remarks>
+    private string? customChatSystemPromptOfRun;
+
+    /// <summary>
+    /// What everything this assistant holds demands: the text sent to it and what its current thread read.
+    /// </summary>
+    private ChatRestrictions CurrentRestrictions => this.ChatThread?.CaptureRestrictions().StricterOf(this.transferredRestrictions) ?? this.transferredRestrictions;
+
+    /// <summary>
+    /// Keeps what the current result demands, before the assistant puts that result into its own input.
+    /// </summary>
+    /// <remarks>
+    /// Call this before clearing the thread: the result was written from what this thread read, and the
+    /// web addresses in it were written by a model. Both stay with the input until the form is reset.
+    /// </remarks>
+    /// <param name="resultText">The result which becomes the new input.</param>
+    protected void TakeOverRestrictionsOfResult(string resultText) => this.transferredRestrictions = this.CurrentRestrictions.WithWebAddressesWrittenByModelIn(resultText);
 
     private protected virtual RenderFragment? HeaderActions => null;
 
@@ -141,7 +253,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private AssistantSessionKey assistantSessionKey;
     private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(this.assistantSessionKey);
     private Guid? assistantSessionId;
+
+    /// <summary>
+    /// When the running session started, which the time below the progress bar counts from; null while
+    /// no session runs. It comes from the session, so an instance which returns to a running session
+    /// goes on counting where the first one was.
+    /// </summary>
+    private DateTimeOffset? processingStartedAt;
+
     private AssistantSessionSnapshot? pendingRenderedAssistantSessionSnapshot;
+    private AssistantSessionSnapshot? lastAttachedAssistantSessionSnapshot;
 
     /// <summary>
     /// Gets whether the Blazor component instance has already been disposed.
@@ -165,6 +286,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override async Task OnInitializedAsync()
     {
+        // A text sent here comes first, so that the preselected values below only fill what it left empty:
+        if (AssistantLaunchService.TakeTextPayload(this.Component) is { } textLaunchPayload)
+        {
+            this.transferredRestrictions = textLaunchPayload.Restrictions;
+            this.ApplyTextLaunchPayload(textLaunchPayload);
+        }
+
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await base.OnInitializedAsync();
 
@@ -184,14 +312,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.formChangeTimer.Elapsed += (_, _) =>
         {
             this.formChangeTimer.Stop();
-            this.InvokeAsync(this.OnFormChange).Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
+            this.InvokeAsync(this.OnFormChange).Observe($"{nameof(AssistantBase<>)}: handling a form change");
         };
         
         this.MightPreselectValues();
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
-        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+        this.SelectedToolIds = this.ToolRegistry.GetDefaultToolIds(this.Component);
         await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
@@ -210,8 +338,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
-        if(firstRender)
-            this.Form?.ResetValidation();
+        if(firstRender && this.Form is not null)
+            await this.Form.ResetValidationAsync();
 
         if (this.pendingRenderedAssistantSessionSnapshot is { } snapshot)
         {
@@ -224,28 +352,42 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     #endregion
 
-    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<TSettings>).Namespace, nameof(AssistantBase<TSettings>));
+    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
+
+    /// <summary>
+    /// Gets a text of this base class which addresses the reader; the collector files it under AssistantBase, not
+    /// under the assistant which derives from it.
+    /// </summary>
+    private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
 
     private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
 
-    private IReadOnlyList<Tools.Components> VisibleSendToAssistants => Enum.GetValues<AIStudio.Tools.Components>()
-        .Where(this.CanSendToAssistant)
-        .OrderBy(component => component.Name().Length)
-        .ToArray();
+    private IReadOnlyList<Tools.Components> VisibleSendToAssistants => this.AssistantLaunchService.GetDestinationsFor(this.Component);
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
         if(provider.UsedLLMProvider == LLMProviders.NONE)
-            return this.TB("Please select a provider.");
-        
+            return this.TA("Please select a provider.");
+
+        // A provider which nothing else rules out may still be kept from the text sent here, because of where it came from:
+        if (!this.transferredRestrictions.IsLLMProviderAllowed(provider) && ChatRestrictions.NONE.IsLLMProviderAllowed(provider))
+            return this.TA("This provider may not see the text sent to this assistant, because of where the text came from. Please select another provider.");
+
         return null;
     }
 
     private async Task Start()
     {
+        //
+        // A provider which may not see the text sent here would fail the run without a word, see
+        // ContentText.CreateFromProviderAsync, so the user hears about it before the run starts:
+        //
         await this.RefreshProviderSelectionFromConfigurationAsync();
-        if (this.ProviderSettings == Settings.Provider.NONE)
+        if (this.ProviderSettings == Settings.Provider.NONE || this.ValidatingProvider(this.ProviderSettings) is not null)
+        {
+            await this.ReportProviderIssueAsync();
             return;
+        }
 
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
@@ -268,6 +410,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
 
         this.assistantSessionId = startedSession.SessionId;
+        this.processingStartedAt = startedSession.StartedAt;
         await this.RefreshAssistantUIAsync();
 
         var sessionStatus = AssistantSessionStatus.COMPLETED;
@@ -288,18 +431,19 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             sessionStatus = AssistantSessionStatus.FAILED;
             errorMessage = e.UserMessage;
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, e.UserMessage));
         }
         catch (Exception e)
         {
             sessionStatus = AssistantSessionStatus.FAILED;
             errorMessage = e.Message;
             this.Logger.LogError(e, "The assistant session '{AssistantTitle}' failed.", this.Title);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(this.TB("The assistant failed. The message is: '{0}'"), e.Message)));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ANSWER_STREAM, string.Format(this.TB("The assistant failed. The message is: '{0}'"), e.Message)));
         }
         finally
         {
             this.IsProcessing = false;
+            this.processingStartedAt = null;
             var sessionCancellationTokenSource = this.CancellationTokenSource;
             this.CancellationTokenSource = null;
             if (this.assistantSessionId is { } sessionId)
@@ -311,6 +455,26 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             sessionCancellationTokenSource?.Dispose();
             await this.RefreshAssistantUIAsync();
         }
+    }
+
+    /// <summary>
+    /// Tells the user that the assistant cannot start with the selected provider, together with whatever else is missing.
+    /// </summary>
+    /// <remarks>
+    /// Either no provider is selected, or the selected one may not see the text sent to this assistant,
+    /// see ValidatingProvider. Most assistants validate their form only in their submit action, which
+    /// never runs without a usable provider. Validating here marks the provider selection and lists the
+    /// other issues as well. The form does not report the issue when it holds no provider selection, as
+    /// with an assistant plugin without one, or when its selection still shows the provider which the
+    /// refresh at the start has just dropped. Then the issue is added on its own.
+    /// </remarks>
+    private async Task ReportProviderIssueAsync()
+    {
+        if (this.Form is not null)
+            await this.Form.ValidateAsync();
+
+        if (this.ValidatingProvider(this.ProviderSettings) is { } issue && !this.InputIssues.Contains(issue))
+            this.AddInputIssue(issue);
     }
 
     private void TriggerFormChange(FormFieldChangedEventArgs _)
@@ -343,7 +507,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         Array.Resize(ref this.InputIssues, this.InputIssues.Length + 1);
         this.InputIssues[^1] = issue;
         this.InputIsValid = false;
-        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering an added input issue");
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<>)}: rendering an added input issue");
     }
     
     /// <summary>
@@ -353,14 +517,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         this.InputIssues = [];
         this.InputIsValid = true;
-        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering cleared input issues");
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<>)}: rendering cleared input issues");
     }
 
     protected void CreateChatThread()
     {
         this.ChatThread = new()
         {
-            IncludeDateTime = false,
+            IncludeDateTime = this.IncludeDateTime,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
@@ -368,8 +532,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = Guid.NewGuid(),
             Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Blocks = [],
-            RuntimeComponent = this.Component,
         };
+
+        this.AssignRuntimeIdentity(this.ChatThread);
+        this.RememberCustomChatSystemPrompt();
     }
 
     protected Guid CreateChatThread(Guid workspaceId, string name)
@@ -377,7 +543,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         var chatId = Guid.NewGuid();
         this.ChatThread = new()
         {
-            IncludeDateTime = false,
+            IncludeDateTime = this.IncludeDateTime,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
@@ -385,10 +551,35 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = chatId,
             Name = name,
             Blocks = [],
-            RuntimeComponent = this.Component,
         };
         
+        this.AssignRuntimeIdentity(this.ChatThread);
+        this.RememberCustomChatSystemPrompt();
         return chatId;
+    }
+
+    /// <summary>
+    /// Builds the prompt this assistant writes for a chat which continues its conversation, when it chose
+    /// one, from the settings of the run which starts now.
+    /// </summary>
+    private void RememberCustomChatSystemPrompt() => this.customChatSystemPromptOfRun = this.ChatSystemPrompt is { Source: ChatSystemPromptSource.CUSTOM } choice ? choice.BuildCustomPrompt() : null;
+
+    /// <summary>
+    /// Sets who runs the given thread: this assistant's component and, for an assistant plugin, its name.
+    /// It also puts the restrictions of a text sent to this assistant on the thread.
+    /// </summary>
+    /// <remarks>
+    /// Both decide which tools the thread may use and what its requests to self-hosted servers name. Every
+    /// way an assistant creates or sends a thread goes through here, so that none of them can forget one.
+    /// That is why the restrictions of a text sent here go onto the thread here, too: every thread of this
+    /// assistant may hold that text, its private threads for research included.
+    /// </remarks>
+    /// <param name="chatThread">The thread this assistant runs.</param>
+    protected void AssignRuntimeIdentity(ChatThread chatThread)
+    {
+        chatThread.RuntimeComponent = this.Component;
+        chatThread.RuntimeAssistantName = this.RuntimeAssistantName;
+        chatThread.RequireRestrictions(this.transferredRestrictions);
     }
 
     private Task RefreshProviderSelectionFromConfigurationAsync()
@@ -402,7 +593,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
-        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+        this.SelectedToolIds = this.ToolRegistry.GetDefaultToolIds(this.Component);
     }
 
     /// <summary>
@@ -425,18 +616,23 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// always has the last word: a tool asking for more confidence than the selected provider has
     /// never reaches the model, no matter who put it on the list. That filter belongs here rather
     /// than into the stored selection, because a provider with too little confidence must not cost
-    /// the user a tool for good.
+    /// the user a tool for good. The same goes for a tool which a mailbox the thread read from
+    /// keeps back.
     /// </remarks>
-    protected HashSet<string> GetRunnableToolIds()
+    /// <param name="outboundDataRestriction">Where the thread the tools run in may still send data, see ChatThread.RequiredOutboundDataRestriction. A text sent to this assistant may demand more, and then that counts.</param>
+    protected HashSet<string> GetRunnableToolIds(OutboundDataRestriction outboundDataRestriction)
     {
+        // Every thread of this assistant may hold the text sent to it, so what that text demands holds whoever asks:
+        outboundDataRestriction = outboundDataRestriction.StricterOf(this.transferredRestrictions.OutboundData.Restriction);
+
         if (this.AssistantManagedToolIds is not null)
-            return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.AssistantManagedToolIds);
+            return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.AssistantManagedToolIds, outboundDataRestriction);
 
         // What the user cannot see, the assistant does not use:
         if (!this.SettingsManager.IsToolSelectionVisible(this.Component))
             return [];
 
-        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.SelectedToolIds);
+        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.SelectedToolIds, outboundDataRestriction);
     }
 
     /// <summary>
@@ -448,7 +644,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </remarks>
     protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
-        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(updatedToolIds);
         return Task.CompletedTask;
     }
     
@@ -473,7 +669,17 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         return time;
     }
 
-    protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false)
+    /// <summary>
+    /// Asks the model for an answer to the conversation so far, and adds it as the result of this assistant.
+    /// </summary>
+    /// <param name="time">When the answer was asked for.</param>
+    /// <param name="hideContentFromUser">Whether the answer is hidden from the user, e.g., because it is JSON; while
+    /// it streams, only a changed progress text renders the form anew.</param>
+    /// <param name="useSelectedTools">Whether the model may use the tools the user selected. False for a request
+    /// which must rely on what the conversation holds already, e.g., one which reconciles results the tools
+    /// gathered before.</param>
+    /// <returns>The answer, or an empty string when the provider failed.</returns>
+    protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false, bool useSelectedTools = true)
     {
         var manageCancellationLocally = this.CancellationTokenSource is null;
         this.CancellationTokenSource ??= new CancellationTokenSource();
@@ -485,10 +691,46 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             InitialRemoteWait = true,
         };
 
+        //
+        // The stream calls this for every chunk and waits for it. A checkpoint captures the whole
+        // state of the assistant and makes the main layout render as well, so both happen only now
+        // and then. When the stream is done, both happen in any case:
+        //
+        var lastRendering = DateTimeOffset.MinValue;
+        var lastCheckpoint = DateTimeOffset.MinValue;
+        string? lastProgressText = null;
         aiText.StreamingEvent = async () =>
         {
-            await this.CheckpointAssistantSession();
-            await this.RefreshAssistantUIAsync();
+            var now = DateTimeOffset.Now;
+            if (now - lastCheckpoint >= STREAMING_CHECKPOINT_MIN_TIME)
+            {
+                lastCheckpoint = now;
+                await this.CheckpointAssistantSession();
+            }
+
+            if (now - lastRendering < STREAMING_RENDER_MIN_TIME)
+                return;
+
+            lastRendering = now;
+            if (!hideContentFromUser)
+            {
+                await this.RefreshAssistantUIAsync();
+                return;
+            }
+
+            //
+            // A hidden answer shows nothing but the progress text, so the whole form renders only
+            // when that text changed. Thinking models stream for minutes before they write a word:
+            //
+            await this.RefreshAssistantUIAsync(() =>
+            {
+                var progressText = this.ProgressText;
+                if (progressText == lastProgressText)
+                    return false;
+
+                lastProgressText = progressText;
+                return true;
+            });
         };
 
         aiText.StreamingDone = async () =>
@@ -510,9 +752,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             this.ChatThread.Blocks.Add(this.ResultingContentBlock);
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
-            this.ChatThread.RuntimeComponent = this.Component;
+            this.AssignRuntimeIdentity(this.ChatThread);
             this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
-            this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds();
+            this.ChatThread.RuntimeSelectedToolIds = useSelectedTools ? this.GetRunnableToolIds(this.ChatThread.RequiredOutboundDataRestriction.Restriction) : [];
             this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;
         }
 
@@ -533,7 +775,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         catch (ProviderRequestException e)
         {
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, e.UserMessage));
 
             if (this.ResultingContentBlock is not null && string.IsNullOrWhiteSpace(aiText.Text))
             {
@@ -595,6 +837,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         this.ChatThread.Blocks.Add(this.ResultingContentBlock);
         this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
+        this.AssignRuntimeIdentity(this.ChatThread);
 
         await this.CheckpointAssistantSession();
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
@@ -622,24 +865,18 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task CopyToClipboard()
     {
-        await this.RustService.CopyText2Clipboard(this.Result2Copy());
+        var result = this.Result2Copy();
+        if (this.AddsAIGeneratedContentDisclosure)
+            result = this.DisclosureService.AddDisclosureToMarkdown(result);
+
+        await this.RustService.CopyText2Clipboard(result);
     }
 
     private ChatThread CreateSendToChatThread()
     {
         var originalChatThread = this.ChatThread ?? new ChatThread();
         if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
-            return originalChatThread with
-            {
-                SystemPrompt = SystemPrompts.DEFAULT,
-            };
-
-        var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
-        var visiblePromptTime = earliestBlock is null
-            ? DateTimeOffset.Now
-            : earliestBlock.Time == DateTimeOffset.MinValue
-                ? earliestBlock.Time
-                : earliestBlock.Time.AddTicks(-1);
+            return originalChatThread;
 
         var transferredBlocks = originalChatThread.Blocks
             .Select(block => block.Role is ChatRole.USER
@@ -647,7 +884,62 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 : block.DeepClone())
             .ToList();
 
-        transferredBlocks.Insert(0, new ContentBlock
+        transferredBlocks.Insert(0, this.CreateSendToChatPrompt(originalChatThread.Blocks));
+        return originalChatThread with
+        {
+            Blocks = transferredBlocks,
+        };
+    }
+
+    /// <summary>
+    /// Gives a chat which continues the conversation of this assistant the system prompt this assistant
+    /// chose in ChatSystemPrompt, together with where it comes from.
+    /// </summary>
+    /// <remarks>
+    /// The prompt of this assistant is the one its conversation ran with, and a prompt it wrote for the
+    /// chat is the one built when that conversation started: the form may have changed since. Only a
+    /// conversation restored without that prompt gets one built now. A prompt which turns out empty is a mistake of the assistant; the chat then gets the default prompt
+    /// of AI Studio rather than none at all.
+    /// </remarks>
+    /// <param name="chatThread">The thread of the chat, which this assistant built in ConvertToChatThread.</param>
+    /// <returns>A copy of the thread with the system prompt of the chat.</returns>
+    private ChatThread WithChatSystemPrompt(ChatThread chatThread)
+    {
+        var choice = this.ChatSystemPrompt;
+        var promptOfAssistant = this.ChatThread?.SystemPrompt is { } threadPrompt && !string.IsNullOrWhiteSpace(threadPrompt) ? threadPrompt : this.SystemPrompt;
+        var prompt = choice.Source is ChatSystemPromptSource.CUSTOM && this.customChatSystemPromptOfRun is { } promptOfRun ? promptOfRun : choice.CreatePrompt(promptOfAssistant);
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            this.Logger.LogError("The system prompt which the assistant '{Component}' chose for the chat ({Source}) is empty. The chat gets the default prompt of AI Studio instead.", this.Component, choice.Source);
+            return chatThread with { SystemPrompt = SystemPrompts.DEFAULT, SystemPromptOrigin = null };
+        }
+
+        return chatThread with
+        {
+            SystemPrompt = prompt,
+            SystemPromptOrigin = choice.Source is ChatSystemPromptSource.AI_STUDIO_DEFAULT ? null : new ChatSystemPromptOrigin
+            {
+                Source = choice.Source,
+                AssistantName = this.Title,
+            },
+        };
+    }
+
+    /// <summary>
+    /// Creates the visible message of the user which opens a chat started from this assistant.
+    /// </summary>
+    /// <param name="blocks">The blocks which follow the message in the chat; it comes right before the earliest of them.</param>
+    /// <returns>The message, with SendToChatVisibleUserPromptText as its text.</returns>
+    private protected ContentBlock CreateSendToChatPrompt(IReadOnlyCollection<ContentBlock> blocks)
+    {
+        var earliestBlock = blocks.MinBy(x => x.Time);
+        var visiblePromptTime = earliestBlock is null
+            ? DateTimeOffset.Now
+            : earliestBlock.Time == DateTimeOffset.MinValue
+                ? earliestBlock.Time
+                : earliestBlock.Time.AddTicks(-1);
+
+        return new ContentBlock
         {
             Time = visiblePromptTime,
             ContentType = ContentType.TEXT,
@@ -655,14 +947,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             Role = ChatRole.USER,
             Content = new ContentText
             {
-                Text = this.SendToChatVisibleUserPromptText,
+                Text = this.SendToChatVisibleUserPromptText ?? string.Empty,
             },
-        });
-
-        return originalChatThread with
-        {
-            SystemPrompt = SystemPrompts.DEFAULT,
-            Blocks = transferredBlocks,
         };
     }
     
@@ -685,7 +971,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task SendToAssistant(Tools.Components destination, SendToButton sendToButton)
     {
-        if (!this.CanSendToAssistant(destination))
+        if (!this.VisibleSendToAssistants.Contains(destination))
             return;
         
         var contentToSend = sendToButton == default ? string.Empty : sendToButton.UseResultingContentBlockData switch
@@ -698,52 +984,32 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             },
         };
 
-        var sendToData = destination.GetData();
-        if (destination.HasSingleSessionSlot() && this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
+        // The chat starts from the conversation of this assistant, unless it only takes the text for the next message:
+        if (destination is Tools.Components.CHAT && !sendToButton.SendToChatAsInput)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Apps, this.TB("This assistant is already running. AI Studio opens the running session instead.")));
-            this.NavigationManager.NavigateTo(sendToData.Route);
+            var convertedChatThread = this.WithChatSystemPrompt(this.ConvertToChatThread with { SelectedProvider = this.ProviderSettings.Id });
+
+            //
+            // The chat holds what this assistant held, whichever thread the assistant builds it from: some
+            // assistants start it from a new thread, which has read nothing, or from none at all. The copy
+            // above is the chat's own, so tightening it leaves the thread of this assistant as it is:
+            //
+            convertedChatThread.RequireRestrictions(this.CurrentRestrictions);
+
+            // Some assistants start the chat under an id of its own, so what their answers received goes along. A chat without an id received nothing:
+            if (this.ChatThread is { } assistantChat && convertedChatThread.ChatId != Guid.Empty && assistantChat.ChatId != convertedChatThread.ChatId)
+                await ChatProvenance.CopyChatAsync(assistantChat.ChatId, convertedChatThread.ChatId);
+
+            MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT, new ChatStartRequest(convertedChatThread));
+            this.NavigationManager.NavigateTo(Routes.CHAT);
             return;
         }
 
-        // Only components with a single session slot may be cleared as a group. The visual briefing
-        // assistant keys its sessions per briefing, so clearing by component would discard the
-        // status of every stored briefing instead of the one we are about to open.
-        if (destination.HasSingleSessionSlot())
-            await this.AssistantSessionService.ClearInactiveSessionsForComponentAsync(destination);
-
-        switch (destination)
-        {
-            case Tools.Components.CHAT:
-                if (sendToButton.SendToChatAsInput)
-                    MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT_INPUT, contentToSend);
-                else
-                {
-                    var convertedChatThread = this.ConvertToChatThread;
-                    convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
-                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, new ChatStartRequest(convertedChatThread));
-                }
-                break;
-            
-            default:
-                MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, contentToSend);
-                break;
-        }
-
-        this.NavigationManager.NavigateTo(sendToData.Route);
+        // A model wrote what an assistant sends, even when it falls back to the input, so it gets filtered, and none of its addresses counts as given:
+        var payload = await this.AssistantLaunchService.CreateTextPayloadAsync(contentToSend, writtenByModel: true, this.CurrentRestrictions, this.Title);
+        await this.AssistantLaunchService.LaunchAsync(destination, payload);
     }
 
-    private bool CanSendToAssistant(Tools.Components component)
-    {
-        if (!component.AllowSendTo())
-            return false;
-
-        return this.SettingsManager.IsAssistantVisible(
-            component,
-            withLogging: false,
-            requiredPreviewFeature: component.RequiredPreviewFeature());
-    }
-    
     private async Task InnerResetForm()
     {
         if ((this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
@@ -753,9 +1019,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
         this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
         this.assistantSessionId = null;
-        this.ChatThread = null;
-        this.LastUserPrompt = null;
-        this.ResultingContentBlock = null;
+        this.ClearConversationState();
+
+        // The text sent here is gone with the form, and what it demanded goes with it:
+        this.transferredRestrictions = ChatRestrictions.NONE;
+        this.customChatSystemPromptOfRun = null;
         this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);
@@ -769,9 +1037,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.InputIsValid = false;
         this.InputIssues = [];
         
-        this.Form?.ResetValidation();
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
+
         await this.RefreshAssistantUIAsync();
-        this.Form?.ResetValidation();
+        if (this.Form is not null)
+            await this.Form.ResetValidationAsync();
     }
 
     private string GetResetColor() => this.SettingsManager.IsDarkMode switch
@@ -813,7 +1084,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             {
                 await this.ConsumeMediaOutcomeAsync();
                 this.StateHasChanged();
-            }).Observe($"{nameof(AssistantBase<TSettings>)}: consuming a media import outcome");
+            }).Observe($"{nameof(AssistantBase<>)}: consuming a media import outcome");
     }
 
     /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
@@ -825,23 +1096,23 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         if (outcome.Failures.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
         else if (outcome.Status is MediaImportStatus.FAILED)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.TB("The media file could not be transcribed.")));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, this.TB("The media file could not be transcribed.")));
         }
 
         if (outcome.Warnings.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
 
         if (outcome.Status is MediaImportStatus.CANCELLED)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.TB("The media transcription was canceled.")));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, this.TB("The media transcription was canceled.")));
         }
     }
 
@@ -925,15 +1196,24 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <summary>
     /// Applies an assistant session snapshot to this component instance.
     /// </summary>
+    /// <remarks>
+    /// When the user leaves an assistant while it runs and comes back, this component only shows the run.
+    /// The component which started it keeps working out of sight and reports every few seconds, yet its
+    /// form stays as it was when the user left. So once this component has taken over a run, it takes over
+    /// only what the running assistant changed since, such as the progress and the result. What the user
+    /// changes here stays, just as it would in the component which started the run.
+    /// </remarks>
     /// <param name="snapshot">The snapshot to attach.</param>
     /// <param name="restoreClientOnlyContent">Whether derived assistants should restore client-only UI state.</param>
     /// <returns>A task that completes after the component was refreshed.</returns>
     private async Task AttachAssistantSession(AssistantSessionSnapshot snapshot, bool restoreClientOnlyContent)
     {
         this.assistantSessionId = snapshot.SessionId;
-        this.ImportAssistantSessionState(snapshot.State);
+        this.ImportAssistantSessionState(snapshot.StateChangedSince(this.lastAttachedAssistantSessionSnapshot));
+        this.lastAttachedAssistantSessionSnapshot = snapshot;
         this.ChatThread = snapshot.ChatThread ?? this.ChatThread;
         this.IsProcessing = snapshot.IsActive;
+        this.processingStartedAt = snapshot.IsActive ? snapshot.StartedAt : null;
 
         if (!snapshot.IsActive)
             this.CancellationTokenSource = null;
@@ -950,15 +1230,20 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <summary>
     /// Refreshes the component when it is still mounted.
     /// </summary>
+    /// <param name="hasChanged">Decides whether anything visible changed, asked on the thread of the renderer, so it may read what the rendering reads; null to render in any case.</param>
     /// <returns>A task that completes after the renderer was notified.</returns>
-    protected async Task RefreshAssistantUIAsync()
+    protected async Task RefreshAssistantUIAsync(Func<bool>? hasChanged = null)
     {
         if (this.isDisposed)
             return;
 
         try
         {
-            await this.InvokeAsync(this.StateHasChanged);
+            await this.InvokeAsync(() =>
+            {
+                if (hasChanged is null || hasChanged())
+                    this.StateHasChanged();
+            });
         }
         catch (InvalidOperationException)
         {
@@ -983,6 +1268,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         state.Set(INPUT_ISSUES_STATE_KEY, this.InputIssues);
         state.Set(IS_PROCESSING_STATE_KEY, this.IsProcessing);
         state.Set(SELECTED_TOOL_IDS_STATE_KEY, this.SelectedToolIds);
+        state.Set(TRANSFERRED_RESTRICTIONS_STATE_KEY, this.transferredRestrictions);
+        state.Set(CUSTOM_CHAT_SYSTEM_PROMPT_STATE_KEY, this.customChatSystemPromptOfRun);
         this.CaptureCustomAssistantSessionState(state);
 
         return state.ToDictionary();
@@ -1010,7 +1297,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(RESULTING_CONTENT_BLOCK_STATE_KEY, value => this.ResultingContentBlock = value);
         reader.Restore(INPUT_ISSUES_STATE_KEY, value => this.InputIssues = value);
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
-        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(value));
+        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(value));
+        reader.Restore(TRANSFERRED_RESTRICTIONS_STATE_KEY, value => this.transferredRestrictions = value);
+        reader.Restore(CUSTOM_CHAT_SYSTEM_PROMPT_STATE_KEY, value => this.customChatSystemPromptOfRun = value);
         this.RestoreCustomAssistantSessionState(reader);
     }
 

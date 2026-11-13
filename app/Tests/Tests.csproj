@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -10,42 +10,56 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="10.0.1" />
+        <PackageReference Include="coverlet.collector" Version="10.1.0" />
         <!--
             Held at the version the two analyzer projects build against, so that a test compiling a
             snippet uses the same Roslyn the analyzers themselves were written for. Raise all three
-            together.
+            together, and never above the Roslyn of the oldest .NET SDK which may build AI Studio (5.0 for
+            10.0.1xx), even though the SDK in metadata.txt ships a newer one; SourceCodeRules explains why.
         -->
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
         <!--
-            Pinned below 4.6.0 on purpose, verified by bisecting 4.4.0, 4.5.0, 4.5.1, 4.6.0 and 4.6.1
-            against the .NET 9 SDK (9.0.120, C# 13): from 4.6.0 on, the compiler no longer picks
-            Assert.That<TActual>(TActual, IResolveConstraint, ...) for a plain value. 4.6.0 added
-            Assert.That(Action, ...) and Assert.That<T>(Func<T>, ...) alongside it, and the value
-            overload drops out of the candidate set, so even Assert.That(1, Is.EqualTo(1)) fails with
-            "argument 1: cannot convert int to System.Action", a message that points nowhere near the
-            real cause. Re-test the newest version whenever the .NET SDK is raised.
+            NUnit 4.6 broke Assert.That for plain values under C# 13: with Assert.That(Action, ...) added,
+            even Assert.That(1, Is.EqualTo(1)) failed with "argument 1: cannot convert int to System.Action".
+            NUnit 5 with C# 14 picks the value overload again. Should that message come back after an update,
+            this is where it comes from.
         -->
-        <PackageReference Include="NUnit" Version="4.5.1" />
-        <PackageReference Include="NUnit.Analyzers" Version="4.14.0">
+        <PackageReference Include="NUnit" Version="5.0.0" />
+        <PackageReference Include="NUnit.Analyzers" Version="4.15.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="NUnit3TestAdapter" Version="6.3.0" />
+        <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\MindWork AI Studio\MindWork AI Studio.csproj" />
 
         <!--
-            Referenced as plain libraries, not as analyzers: the tests run the generator and the
-            analyzer themselves, against a snippet they compile in memory. Building them into this
-            project as analyzers would have them judge the test code instead, which is not what is
-            being checked here.
+            Referenced as libraries: the tests run the generator and the analyzers themselves, against
+            a snippet they compile in memory. SourceCodeRules is an analyzer of this project as well,
+            but only for MWAIS0018, see below: a test which expects the line break of the system fails
+            on Windows only, where no pipeline runs the tests. The other rules are written for the code
+            of the app and would judge test code which has its reasons, such as new Random() with a seed.
         -->
-        <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" />
+        <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" OutputItemType="Analyzer" />
         <ProjectReference Include="..\SourceGeneratedMappings\SourceGeneratedMappings.csproj" />
+    </ItemGroup>
+
+    <!--
+        Every rule of SourceCodeRules except MWAIS0018, the line break of the system. A new rule judges
+        the tests, too, until it is listed here.
+    -->
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);MWAIS0001;MWAIS0002;MWAIS0003;MWAIS0004;MWAIS0005;MWAIS0006;MWAIS0007;MWAIS0008;MWAIS0009;MWAIS0010;MWAIS0011;MWAIS0012;MWAIS0013;MWAIS0014;MWAIS0015;MWAIS0016;MWAIS0017</NoWarn>
+    </PropertyGroup>
+
+    <!--
+        Compiled here as well, so that the tests check the same options of the app which the trim smoke test finds.
+    -->
+    <ItemGroup>
+        <Compile Include="..\TrimSmokeTest\AppJsonOptions.cs" Link="Serialization\AppJsonOptions.cs" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using AIStudio.Models.Registry;
 using AIStudio.Settings;
@@ -10,6 +11,18 @@ public static partial class PluginFactory
 {
     private static readonly List<PluginBase> RUNNING_PLUGINS = [];
     
+    /// <summary>
+    /// From this duration on, the start of a single plugin is reported as slow.
+    /// </summary>
+    /// <remarks>
+    /// The plugins start one after another, so every plugin after a slow one has to wait. A plugin
+    /// usually starts within milliseconds. A configuration plugin takes longer, because it applies its
+    /// configuration, stores its secrets in the OS keyring, and loads tokenizers, but seconds are
+    /// still far beyond that. The time limit per plugin covers only running its Lua code, so this
+    /// warning is the only sign of a plugin which spends its time elsewhere.
+    /// </remarks>
+    private static readonly TimeSpan SLOW_PLUGIN_START_THRESHOLD = TimeSpan.FromSeconds(2);
+
     /// <summary>
     /// A list of all running plugins.
     /// </summary>
@@ -41,7 +54,7 @@ public static partial class PluginFactory
         {
             try
             {
-                var startedBasePlugin = await Start(baseLanguagePluginMetaData, cancellationToken);
+                var startedBasePlugin = await StartWithTimeout(baseLanguagePluginMetaData, cancellationToken);
                 if (startedBasePlugin is NoPlugin noPlugin)
                     LOG.LogError($"Was not able to start the base language plugin: Id='{baseLanguagePluginId}'. Reason: {noPlugin.Issues.First()}");
         
@@ -84,7 +97,7 @@ public static partial class PluginFactory
         {
             if(cancellationToken.IsCancellationRequested)
             {
-                LOG.LogWarning("Cancellation requested while starting plugins. Stopping the plugin startup process. Probably due to a timeout.");
+                LOG.LogWarning("Cancellation requested while starting plugins. Stopping the plugin startup process.");
                 break;
             }
 
@@ -100,7 +113,7 @@ public static partial class PluginFactory
                 // differently from the other half for no reason anyone could see.
                 //
                 if (availablePlugin.IsInternal || SettingsManagerAccess.IsPluginEnabled(availablePlugin) || availablePlugin.Type is PluginType.CONFIGURATION or PluginType.ASSISTANT or PluginType.MODEL)
-                    if(await Start(availablePlugin, cancellationToken) is { IsValid: true } plugin)
+                    if(await StartWithTimeout(availablePlugin, cancellationToken) is { IsValid: true } plugin)
                     {
                         if (plugin is PluginConfiguration configPlugin)
                             configObjects.AddRange(configPlugin.ConfigObjects);
@@ -184,6 +197,37 @@ public static partial class PluginFactory
         }
     }
     
+    /// <summary>
+    /// Starts a plugin within the time limit each plugin gets on its own.
+    /// </summary>
+    /// <remarks>
+    /// A plugin which runs out of time is not started, and the next plugin gets the full limit
+    /// again. Only the caller's token stops the start of all plugins.
+    /// </remarks>
+    /// <param name="meta">The plugin to start.</param>
+    /// <param name="cancellationToken">The token of the whole start.</param>
+    /// <returns>The started plugin, or a NoPlugin when it could not be started in time.</returns>
+    private static async Task<PluginBase> StartWithTimeout(IAvailablePlugin meta, CancellationToken cancellationToken)
+    {
+        using var pluginTimeout = CreatePluginTimeout(cancellationToken);
+        var startingStartedAt = Stopwatch.GetTimestamp();
+        try
+        {
+            var plugin = await Start(meta, pluginTimeout.Token);
+            var startingDuration = Stopwatch.GetElapsedTime(startingStartedAt);
+            if (startingDuration >= SLOW_PLUGIN_START_THRESHOLD)
+                LOG.LogWarning($"Starting the plugin took {startingDuration.TotalMilliseconds:F0} ms, which is unusually long: Id='{meta.Id}', Type='{meta.Type}', Name='{meta.Name}', Version='{meta.Version}'. All plugins after it had to wait for it.");
+
+            return plugin;
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            var reason = $"It did not finish within the limit of {PLUGIN_TIMEOUT.TotalSeconds:0} seconds and was stopped after {Stopwatch.GetElapsedTime(startingStartedAt).TotalSeconds:0.0} seconds.";
+            LOG.LogError($"Was not able to start plugin: Id='{meta.Id}', Type='{meta.Type}', Name='{meta.Name}', Version='{meta.Version}'. Reason: {reason} The remaining plugins start regardless.");
+            return new NoPlugin(reason);
+        }
+    }
+
     private static async Task<PluginBase> Start(IAvailablePlugin meta, CancellationToken cancellationToken = default)
     {
         var pluginMainFile = Path.Join(meta.LocalPath, "plugin.lua");

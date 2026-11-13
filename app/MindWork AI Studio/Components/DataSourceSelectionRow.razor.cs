@@ -40,14 +40,14 @@ public partial class DataSourceSelectionRow : MSGComponentBase
     private string GetBlockedTooltip() => this.BlockReason switch
     {
         DataSourceBlockReason.AWAITING_REINDEX => T("This data source is waiting to be indexed again. Until that is finished, it cannot be searched."),
-        DataSourceBlockReason.NEEDS_REPAIR => T("The index of this data source cannot be read anymore. Open your data source settings with the gear icon above, then use the repair action there."),
+        DataSourceBlockReason.NEEDS_REPAIR => TA("The index of this data source cannot be read anymore. Open your data source settings with the gear icon above, then use the repair action there."),
         _ => string.Empty,
     };
 
     private string GetBlockedIcon() => this.BlockReason switch
     {
-        DataSourceBlockReason.NEEDS_REPAIR => Icons.Material.Filled.ReportProblem,
-        _ => Icons.Material.Filled.HourglassTop,
+        DataSourceBlockReason.NEEDS_REPAIR => AppIcons.WARNING,
+        _ => AppIcons.PENDING,
     };
 
     private Color GetBlockedIconColor() => this.BlockReason switch

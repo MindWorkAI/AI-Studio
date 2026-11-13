@@ -38,6 +38,11 @@ public interface IPluginMetadata
     public PluginVersion Version { get; }
 
     /// <summary>
+    /// When this plugin was last changed, in UTC, when the plugin states it.
+    /// </summary>
+    public DateTimeOffset? LastChanged { get; }
+
+    /// <summary>
     /// The authors of this plugin.
     /// </summary>
     public string[] Authors { get; }

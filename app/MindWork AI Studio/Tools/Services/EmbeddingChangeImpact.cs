@@ -19,7 +19,7 @@ internal static class EmbeddingChangeImpact
     /// <param name="before">The embedding provider as it is stored.</param>
     /// <param name="after">The embedding provider as it would be stored.</param>
     /// <returns>True when the stored index would be discarded.</returns>
-    public static bool AffectsStoredIndex(IDataSource dataSource, EmbeddingProvider before, EmbeddingProvider after) =>
+    public static bool AffectsStoredIndex(IDataSourceBase dataSource, EmbeddingProvider before, EmbeddingProvider after) =>
         !string.Equals(
             DataSourceEmbeddingService.BuildEmbeddingSignature(dataSource, before),
             DataSourceEmbeddingService.BuildEmbeddingSignature(dataSource, after),
@@ -39,7 +39,7 @@ internal static class EmbeddingChangeImpact
     /// <param name="after">The data source as it would be stored.</param>
     /// <param name="afterProvider">The embedding provider it would point at.</param>
     /// <returns>True when the stored index would be discarded.</returns>
-    public static bool AffectsStoredIndex(IDataSource before, EmbeddingProvider beforeProvider, IDataSource after, EmbeddingProvider afterProvider) =>
+    public static bool AffectsStoredIndex(IDataSourceBase before, EmbeddingProvider beforeProvider, IDataSourceBase after, EmbeddingProvider afterProvider) =>
         !string.Equals(
             DataSourceEmbeddingService.BuildEmbeddingSignature(before, beforeProvider),
             DataSourceEmbeddingService.BuildEmbeddingSignature(after, afterProvider),

@@ -37,6 +37,10 @@
 
             <SettingsPanelAgentContentCleaner AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
             <SettingsPanelAgentAssistantAudit AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
+
+            <ExpansionPanel HeaderIcon="@AppIcons.DATA_BACKUP" HeaderText="@T("Data Backup & Restore")">
+                <DataBackupPanel/>
+            </ExpansionPanel>
         </MudExpansionPanels>
     </InnerScrolling>
 </div>

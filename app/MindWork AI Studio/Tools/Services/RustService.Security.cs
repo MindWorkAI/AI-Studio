@@ -27,7 +27,8 @@ public sealed partial class RustService
     /// </summary>
     /// <remarks>
     /// File content does not go through here: the runtime filters it while it streams the file.
-    /// This is the path for content the app fetched itself, i.e. web pages and retrieval contexts.
+    /// This is the path for content the app holds itself, e.g. web pages, retrieval contexts, and
+    /// the transcript of a recording loaded into the field of an assistant.
     /// </remarks>
     /// <param name="text">The content to filter.</param>
     /// <returns>The filtered content and what was found or null when the runtime could not be reached.</returns>
@@ -39,7 +40,8 @@ public sealed partial class RustService
             using var response = await this.http.PostAsJsonAsync(
                 "/security/prompt-injection/sanitize",
                 new SanitizePromptInjectionsRequest(text),
-                cancellationToken: timeoutTokenSource.Token);
+                PROMPT_INJECTION_JSON_OPTIONS,
+                timeoutTokenSource.Token);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -47,7 +49,7 @@ public sealed partial class RustService
                 return null;
             }
 
-            return await response.Content.ReadFromJsonAsync<SanitizePromptInjectionsResponse>(timeoutTokenSource.Token);
+            return await response.Content.ReadFromJsonAsync<SanitizePromptInjectionsResponse>(PROMPT_INJECTION_JSON_OPTIONS, timeoutTokenSource.Token);
         }
         catch (Exception exception)
         {
@@ -81,7 +83,8 @@ public sealed partial class RustService
             using var response = await this.http.PostAsJsonAsync(
                 "/security/prompt-injection/sanitize-batch",
                 new SanitizePromptInjectionsBatchRequest(texts),
-                cancellationToken: timeoutTokenSource.Token);
+                PROMPT_INJECTION_JSON_OPTIONS,
+                timeoutTokenSource.Token);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -89,7 +92,7 @@ public sealed partial class RustService
                 return null;
             }
 
-            var batchResponse = await response.Content.ReadFromJsonAsync<SanitizePromptInjectionsBatchResponse>(timeoutTokenSource.Token);
+            var batchResponse = await response.Content.ReadFromJsonAsync<SanitizePromptInjectionsBatchResponse>(PROMPT_INJECTION_JSON_OPTIONS, timeoutTokenSource.Token);
             if (batchResponse.Results is null || batchResponse.Results.Count != texts.Count)
             {
                 this.logger?.LogError("The prompt injection filter answered with {ResultCount} result(s) for {TextCount} text(s).", batchResponse.Results?.Count ?? 0, texts.Count);

@@ -4,11 +4,15 @@ using AIStudio.Provider;
 namespace AIStudio.Models.Hosting.Hosts;
 
 /// <summary>
-/// Somebody's own engine: Ollama, LM Studio, vLLM, llama.cpp, or a proxy in front of them.
+/// Somebody's own engine: Ollama, LM Studio, vLLM, llama.cpp, llmman, or a proxy in front of them.
 /// </summary>
 /// <remarks>
 /// vLLM serves whatever it was pointed at, and what it was pointed at is usually a hub repository:
 /// "meta-llama/Llama-3.3-70B-Instruct", "01-ai/yi-large". So the organization comes off here too.
+///
+/// llmman goes one further and names the registry it pulled the model from:
+/// "hf.co/unsloth/Qwen3.5-0.8B-GGUF:latest", "docker.io/ai/qwen3.5:0.8b". The registry is one more
+/// path segment and comes off the same way, one segment at a time.
 ///
 /// The colon does not. Ollama writes the variant after it -- "qwen3.8:27b-mlx" -- and taking that
 /// off would leave a name which no longer says which build of the model is running. Only the host

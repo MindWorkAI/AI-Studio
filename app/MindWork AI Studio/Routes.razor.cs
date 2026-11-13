@@ -19,6 +19,7 @@ public sealed partial class Routes
     public const string ASSISTANT_ICON_FINDER = "/assistant/icons";
     public const string ASSISTANT_GRAMMAR_SPELLING = "/assistant/grammar-spelling";
     public const string ASSISTANT_SUMMARIZER = "/assistant/summarizer";
+    public const string ASSISTANT_SWOT_ANALYSIS = "/assistant/swot-analysis";
     public const string ASSISTANT_CODING = "/assistant/coding";
     public const string ASSISTANT_AGENDA = "/assistant/agenda";
     public const string ASSISTANT_EMAIL = "/assistant/email";
@@ -26,6 +27,7 @@ public sealed partial class Routes
     public const string ASSISTANT_SYNONYMS = "/assistant/synonyms";
     public const string ASSISTANT_SLIDE_BUILDER = "/assistant/slide-builder";
     public const string ASSISTANT_VISUAL_BRIEFING = "/assistant/visual-briefing";
+    public const string ASSISTANT_BEYOND_FACTS_LAB = "/assistant/beyondfacts-lab";
     public const string ASSISTANT_MY_TASKS = "/assistant/my-tasks";
     public const string ASSISTANT_JOB_POSTING = "/assistant/job-posting";
     public const string ASSISTANT_BIAS = "/assistant/bias-of-the-day";

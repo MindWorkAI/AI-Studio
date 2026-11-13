@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 using AIStudio.Provider;
+using AIStudio.Tools.RAG;
 
 namespace AIStudio.Tools.ToolCallingSystem.Harness;
 
@@ -18,7 +19,17 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
 {
     private const string NO_ANSWER_AFTER_TOOL_CALL = "The model completed the tool call but did not return a final answer.";
     private const string NO_ANSWER_AFTER_LIMIT = "The model did not return a final answer after completing the available tool calls.";
-
+    
+    /// <summary>
+    /// What separates the text of one round from the text of the next one.
+    /// </summary>
+    /// <remarks>
+    /// A model may write before it calls a tool and again after the result came back. Without a
+    /// separator, the last word of one round and the first of the next would run into each other,
+    /// since each round is a text of its own rather than a continuation.
+    /// </remarks>
+    private const string ROUND_TEXT_SEPARATOR = "\n\n";
+    
     /// <inheritdoc />
     public async IAsyncEnumerable<ContentStreamChunk> RunAsync(
         IToolCallingProviderAdapter adapter,
@@ -28,6 +39,9 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
         var toolCallCount = 0;
         var toolResultCharacterCount = 0L;
         var toolSources = new List<Source>();
+        var toolPassages = new List<SourcePassage>();
+        var hasStreamedTextBefore = false;
+        var isFirstRound = true;
 
         while (true)
         {
@@ -38,13 +52,80 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             var finalResponseInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
             var finalResponseRequired = finalResponseInstruction is not null;
 
-            var round = await adapter.ExecuteRoundAsync(finalResponseInstruction, !finalResponseRequired, token);
+            ToolCallingRound? round = null;
+            var roundStreamedText = false;
+
+            //
+            // Only the first round passes on what its request cost. Its prompt is the conversation up
+            // to the question, which is exactly what the next question will be sent after. Every later
+            // round carries the tool calls and their results on top, and none of that is sent again
+            // once the answer stands -- a report of such a round would count a chat far larger than
+            // the one the next request carries. What the answer adds, all rounds of text together, is
+            // counted from its text afterwards, cf. ReportedHistory.
+            //
+            // Decided here rather than in the adapters, because every wire format reports its usage
+            // per request, and which request this is only the loop knows for all of them alike.
+            //
+            var passesOnUsage = isFirstRound;
+            isFirstRound = false;
+
+            //
+            // The model's words go out while the round is still running. That includes what it
+            // writes before a tool call -- "let me look that up" -- which used to be dropped on
+            // the floor because only the round's outcome was ever shown.
+            //
+            await foreach (var streamEvent in adapter.ExecuteRoundAsync(finalResponseInstruction, !finalResponseRequired, token))
+            {
+                if (streamEvent.Kind is ToolCallingStreamEventKind.ROUND_COMPLETED)
+                {
+                    round = streamEvent.Round;
+                    continue;
+                }
+                
+                if (streamEvent.Delta is null)
+                    continue;
+
+                var delta = streamEvent.Delta;
+                if (!passesOnUsage && delta.Usage.IsKnown)
+                {
+                    // A delta which carried nothing but the usage has nothing left to hand over:
+                    if (delta.Content.Length is 0 && delta.Sources.Count is 0)
+                        continue;
+
+                    delta = delta with { Usage = TokenUsage.UNKNOWN };
+                }
+
+                if (!string.IsNullOrWhiteSpace(delta.Content))
+                {
+                    //
+                    // The separator goes out once the new round actually has something to say:
+                    // otherwise it would trail a round which only called a tool.
+                    //
+                    if (!roundStreamedText && hasStreamedTextBefore)
+                        yield return new ContentStreamChunk(ROUND_TEXT_SEPARATOR, []);
+
+                    roundStreamedText = true;
+                    hasStreamedTextBefore = true;
+                }
+
+                yield return delta;
+            }
+            
+            //
+            // No outcome means the round failed: the request errored out, or the stream ended
+            // mid-sentence. Either way the adapter has already reported it. The answer keeps what
+            // was written so far, and with it what the tools of the earlier rounds contributed:
+            //
             if (round is null)
             {
                 await context.ResetToolRuntimeStatusAsync();
+                if (toolSources.Count > 0 || toolPassages.Count > 0)
+                    yield return WithWhatTheToolsContributed(string.Empty);
+
                 yield break;
             }
-
+            
+            var roundAnswered = roundStreamedText || !string.IsNullOrWhiteSpace(round.TextOutput);
             toolSources.MergeSources(round.Sources);
 
             //
@@ -55,35 +136,38 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             if (round.Calls.Any(call => string.IsNullOrWhiteSpace(call.CallId)))
             {
                 toolCallCount++;
-                var (unanswerableContent, unanswerableTrace, _, _) = context.ToolExecutor.CreateInvalidToolCallResult(string.Empty, toolCallCount);
-                await context.AddToolInvocationAsync(unanswerableTrace);
+                var unanswerable = context.ToolExecutor.CreateInvalidToolCallResult(string.Empty, toolCallCount);
+                await context.AddToolInvocationAsync(unanswerable.Trace);
                 await context.ResetToolRuntimeStatusAsync();
-                yield return new ContentStreamChunk(unanswerableContent, [..toolSources]);
+                yield return WithWhatTheToolsContributed(unanswerable.Content);
                 yield break;
             }
 
             if (finalResponseRequired)
             {
                 await context.ResetToolRuntimeStatusAsync();
-                yield return new ContentStreamChunk(
-                    string.IsNullOrWhiteSpace(round.TextOutput) ? NO_ANSWER_AFTER_LIMIT : round.TextOutput,
-                    [..toolSources]);
-
+                
+                //
+                // The answer itself is out already, so what is left to hand over are the sources
+                // the tools contributed. An empty chunk is how sources travel on their own; the
+                // streaming paths of the providers attach their annotations the same way.
+                //
+                yield return WithWhatTheToolsContributed(roundAnswered ? string.Empty : NO_ANSWER_AFTER_LIMIT);
                 yield break;
             }
 
             if (round.Calls.Count is 0)
             {
                 await context.ResetToolRuntimeStatusAsync();
-                if (!string.IsNullOrWhiteSpace(round.TextOutput))
+                if (roundAnswered)
                 {
-                    yield return new ContentStreamChunk(round.TextOutput, [..toolSources]);
+                    yield return WithWhatTheToolsContributed(string.Empty);
                     yield break;
                 }
 
                 if (toolCallCount > 0)
                 {
-                    yield return new ContentStreamChunk(NO_ANSWER_AFTER_TOOL_CALL, [..toolSources]);
+                    yield return WithWhatTheToolsContributed(NO_ANSWER_AFTER_TOOL_CALL);
                     yield break;
                 }
 
@@ -121,10 +205,10 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     if (!call.IsValid)
                     {
                         toolCallCount++;
-                        var (invalidContent, invalidTrace, _, _) = context.ToolExecutor.CreateInvalidToolCallResult(call.CallId, toolCallCount);
-                        toolResultCharacterCount += invalidContent.Length;
-                        await context.AddToolInvocationAsync(invalidTrace);
-                        adapter.RecordToolResult(call.CallId, invalidContent, isError: true);
+                        var invalid = context.ToolExecutor.CreateInvalidToolCallResult(call.CallId, toolCallCount);
+                        toolResultCharacterCount += invalid.Content.Length;
+                        await context.AddToolInvocationAsync(invalid.Trace);
+                        adapter.RecordToolResult(call.CallId, invalid.Content, isError: true);
                         await context.PublishPendingToolConversationAsync(adapter);
                         continue;
                     }
@@ -142,23 +226,29 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     }
 
                     toolCallCount++;
-                    var (toolContent, trace, requiredProviderConfidence, sources) = await context.ToolExecutor.ExecuteAsync(
+                    var outcome = await context.ToolExecutor.ExecuteAsync(
                         call.CallId,
                         call.ToolName,
                         call.ArgumentsJson,
                         context.RunnableTools,
                         context.Provider,
+                        context.ChatThread,
                         toolCallCount,
                         token);
 
-                    toolResultCharacterCount += toolContent.Length;
-                    context.ChatThread.RequireProviderConfidence(requiredProviderConfidence);
-                    toolSources.MergeSources(sources);
-                    await context.AddToolInvocationAsync(trace);
+                    toolResultCharacterCount += outcome.Content.Length;
+                    context.ChatThread.RequireProviderConfidence(outcome.RequiredProviderConfidence);
+                    context.ChatThread.RequireDataSecurity(outcome.RequiredDataSecurity);
+                    context.ChatThread.RequireOutboundDataRestriction(outcome.RequiredOutboundDataRestriction);
+                    context.ChatThread.RuntimeWebAddressesFromTools.UnionWith(outcome.ReturnedWebAddresses);
+                    context.CurrentAssistantContent?.KeepWebAddressesFromTools(outcome.ReturnedWebAddresses);
+                    toolSources.MergeSources(outcome.Sources);
+                    toolPassages.MergePassages(outcome.Passages);
+                    await context.AddToolInvocationAsync(outcome.Trace);
 
                     // A blocked call counts as a failure towards the model as much as an errored
                     // one does: in both cases it did not get the data it asked for.
-                    adapter.RecordToolResult(call.CallId, toolContent, trace.Status is not ToolInvocationTraceStatus.SUCCESS);
+                    adapter.RecordToolResult(call.CallId, outcome.Content, outcome.Trace.Status is not ToolInvocationTraceStatus.SUCCESS);
                     await context.PublishPendingToolConversationAsync(adapter);
                 }
             }
@@ -167,6 +257,13 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                 await context.ResetToolRuntimeStatusAsync();
             }
         }
+
+        //
+        // What the tools contributed goes out with the last chunk of the conversation: the sources,
+        // and the passages the model received from them. One way out for every way the conversation
+        // ends, so none of them hands over the sources and forgets the passages.
+        //
+        ContentStreamChunk WithWhatTheToolsContributed(string content) => new(content, [..toolSources]) { Passages = [..toolPassages] };
     }
 
     private static string GetDisplayName(ToolCallingLoopContext context, string toolName) => context.RunnableTools

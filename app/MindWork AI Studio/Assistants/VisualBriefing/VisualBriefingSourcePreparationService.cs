@@ -41,7 +41,7 @@ internal sealed class VisualBriefingSourcePreparationService(VisualBriefingStore
                 var info = new FileInfo(source.Path);
                 totalBytes += info.Length;
                 
-                var sourceHash = await VisualBriefingHashing.ComputeFileAsync(source.Path, token);
+                var sourceHash = await FileContentHash.ComputeAsync(source.Path, token);
                 var transcriptHash = string.Empty;
                 
                 if (source.IsMedia)

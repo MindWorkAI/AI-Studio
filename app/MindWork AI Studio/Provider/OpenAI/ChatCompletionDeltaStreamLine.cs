@@ -11,15 +11,43 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Choices">The choices made by the AI.</param>
 public record ChatCompletionDeltaStreamLine(string Id, string Object, uint Created, string Model, string SystemFingerprint, IList<ChatCompletionChoice> Choices) : IResponseStreamLine
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost, e.g., the empty list of choices of the line which carries the
+    // usage. Keep them first and in the order of the parameters:
+    //
+    public string Id { get; set; } = Id;
+    public string Object { get; set; } = Object;
+    public uint Created { get; set; } = Created;
+    public string Model { get; set; } = Model;
+    public string SystemFingerprint { get; set; } = SystemFingerprint;
+    public IList<ChatCompletionChoice> Choices { get; set; } = Choices;
+
     public ChatCompletionDeltaStreamLine() : this(string.Empty, string.Empty, 0, string.Empty, string.Empty, [])
     {
     }
     
+    /// <summary>
+    /// What the provider says the request cost, on the one line which carries it.
+    /// </summary>
+    /// <remarks>
+    /// Not a positional parameter: every provider builds an empty line through the constructor
+    /// above, and a further parameter would change all of those call sites for a value none of
+    /// them has. Providers send this block only when the request asked for it, and then on a final
+    /// line of its own which carries no choices -- which is why the usage is read apart from the
+    /// content rather than next to it.
+    /// </remarks>
+    public ChatCompletionUsage? Usage { get; set; }
+
     /// <inheritdoc />
     public bool ContainsContent() => this.Choices.Count > 0;
 
     /// <inheritdoc />
     public ContentStreamChunk GetContent() => new(this.Choices[0].Delta.Content, []);
+
+    /// <inheritdoc />
+    public TokenUsage GetUsage() => this.Usage?.ToTokenUsage() ?? TokenUsage.UNKNOWN;
 
     #region Implementation of IAnnotationStreamLine
 

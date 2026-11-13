@@ -6,12 +6,18 @@ public static class PromptInjectionSourceKindExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PromptInjectionSourceKindExtensions).Namespace, nameof(PromptInjectionSourceKindExtensions));
 
-    public static string GetDisplayName(this PromptInjectionSourceKind kind) => kind switch
+    extension(PromptInjectionSourceKind kind)
     {
-        PromptInjectionSourceKind.WEB_CONTENT => TB("Web content"),
-        PromptInjectionSourceKind.FILE_CONTENT => TB("File content"),
-        PromptInjectionSourceKind.CHAT_ATTACHMENT => TB("Chat attachment"),
-        PromptInjectionSourceKind.RETRIEVAL_CONTEXT => TB("Retrieved context"),
-        _ => TB("Unknown"),
-    };
+        public string DisplayName => kind switch
+        {
+            PromptInjectionSourceKind.WEB_CONTENT => TB("Web content"),
+            PromptInjectionSourceKind.FILE_CONTENT => TB("File content"),
+            PromptInjectionSourceKind.CHAT_ATTACHMENT => TB("Chat attachment"),
+            PromptInjectionSourceKind.RETRIEVAL_CONTEXT => TB("Retrieved context"),
+            PromptInjectionSourceKind.DATA_SOURCE_DESCRIPTION => TB("Data source description"),
+            PromptInjectionSourceKind.MAIL_CONTENT => TB("Mail content"),
+            PromptInjectionSourceKind.MODEL_ANSWER => TB("AI answer"),
+            _ => TB("Unknown"),
+        };
+    }
 }

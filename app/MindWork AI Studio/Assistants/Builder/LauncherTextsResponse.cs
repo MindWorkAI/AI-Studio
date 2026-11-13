@@ -14,30 +14,39 @@ internal sealed class LauncherTextsResponse
 {
     public const string SCHEMA_VERSION_VALUE = "assistant_builder_launcher_texts_v1";
 
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    /// <summary>
+    /// How the answer of the model is read.
+    /// </summary>
+    /// <remarks>
+    /// An answer which names a field twice leaves open which of the values the model meant, so it is
+    /// refused like any other invalid JSON.
+    /// </remarks>
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         AllowTrailingCommas = false,
         ReadCommentHandling = JsonCommentHandling.Disallow,
         MaxDepth = 8,
-    };
+        AllowDuplicateProperties = false,
+        TypeInfoResolver = LauncherTextsResponseJsonContext.Default,
+    }.AsReadOnly();
 
-    public string SchemaVersion { get; init; } = string.Empty;
+    public string SchemaVersion { get; set; } = string.Empty;
 
     /// <summary>
     /// The plugin name, shown on the plugins page.
     /// </summary>
-    public string PluginName { get; init; } = string.Empty;
+    public string PluginName { get; set; } = string.Empty;
 
     /// <summary>
     /// The title on the tile.
     /// </summary>
-    public string Title { get; init; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     /// The short description, used for both the plugin and the tile.
     /// </summary>
-    public string Description { get; init; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
 
     public static bool TryParse(string modelResponse, out LauncherTextsResponse response, out LuaResponseParseError error, out string technicalDetails)
     {
@@ -45,8 +54,8 @@ internal sealed class LauncherTextsResponse
         error = LuaResponseParseError.NONE;
         technicalDetails = string.Empty;
 
-        var json = LuaResponse.ExtractJson(modelResponse);
-        if (string.IsNullOrWhiteSpace(json))
+        var json = ModelAnswerJson.ExtractObject(modelResponse);
+        if (json.IsWhiteSpace())
         {
             error = LuaResponseParseError.MISSING_JSON_OBJECT;
             return false;

@@ -68,7 +68,7 @@ public sealed class ModelComparisonBatchRunnerTests
         var peakConcurrentCalls = 0;
         var peakLock = new object();
 
-        async IAsyncEnumerable<string> Ask(string _, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+        async IAsyncEnumerable<string> Ask(string _, [EnumeratorCancellation] CancellationToken token)
         {
             var current = Interlocked.Increment(ref concurrentCalls);
             lock (peakLock)
@@ -119,11 +119,11 @@ public sealed class ModelComparisonBatchRunnerTests
 
         await Task.WhenAll(tasks);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(firstAskedCount, Is.EqualTo(4));
             Assert.That(secondAskedCount, Is.EqualTo(4));
-        });
+        }
     }
 
     [Test]
@@ -147,12 +147,12 @@ public sealed class ModelComparisonBatchRunnerTests
 
         var entries = await Task.WhenAll(tasks);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(entries, Has.Length.EqualTo(6));
             Assert.That(entries.Count(entry => entry.Result.BothCompleted), Is.EqualTo(4));
             Assert.That(entries.Count(entry => !entry.Result.BothCompleted), Is.EqualTo(2));
-        });
+        }
     }
 
     [Test]
@@ -206,11 +206,11 @@ public sealed class ModelComparisonBatchRunnerTests
 
         var entries = await Task.WhenAll(tasks);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(judgeAskedCount, Is.EqualTo(3));
             Assert.That(entries.All(entry => entry.Result.Judge is { Completed: true }), Is.True);
-        });
+        }
     }
 
     private static ModelComparisonBatchRunner CreateBatchRunner() => new(new ModelComparisonRunner(NullLogger.Instance));
@@ -252,6 +252,7 @@ public sealed class ModelComparisonBatchRunnerTests
         throw new InvalidOperationException("The model is not reachable.");
 
         #pragma warning disable CS0162 // Unreachable code: the yield is what makes this an iterator
+        // ReSharper disable once HeuristicUnreachableCode
         yield break;
         #pragma warning restore CS0162
     }

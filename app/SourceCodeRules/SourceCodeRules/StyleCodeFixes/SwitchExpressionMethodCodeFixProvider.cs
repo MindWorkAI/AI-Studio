@@ -28,100 +28,97 @@ public class SwitchExpressionMethodCodeFixProvider : CodeFixProvider
         
         var diagnostic = context.Diagnostics.First();
         var diagnosticSpan = diagnostic.Location.SourceSpan;
-        var methodDeclaration = root.FindToken(diagnosticSpan.Start)
+        var memberDeclaration = root.FindToken(diagnosticSpan.Start)
             .Parent?.AncestorsAndSelf()
-            .OfType<MethodDeclarationSyntax>()
-            .First();
+            .OfType<MemberDeclarationSyntax>()
+            .FirstOrDefault(member => member is MethodDeclarationSyntax or PropertyDeclarationSyntax);
         
-        if(methodDeclaration == null)
+        if(memberDeclaration == null)
             return;
         
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: "Use inline expression body for switch expression",
-                createChangedDocument: c => UseInlineExpressionBodyAsync(context.Document, methodDeclaration, c),
+                createChangedDocument: c => UseInlineExpressionBodyAsync(context.Document, memberDeclaration, c),
                 equivalenceKey: nameof(SwitchExpressionMethodCodeFixProvider)),
             diagnostic);
     }
     
-    private static async Task<Document> UseInlineExpressionBodyAsync(Document document, MethodDeclarationSyntax methodDecl, CancellationToken cancellationToken)
+    private static async Task<Document> UseInlineExpressionBodyAsync(Document document, MemberDeclarationSyntax memberDecl, CancellationToken cancellationToken)
     {
-        var sourceText = await document.GetTextAsync(cancellationToken);
-        var parameterText = methodDecl.ParameterList.ToString();
-        var methodStartLine = sourceText.Lines.GetLineFromPosition(methodDecl.SpanStart);
-        
-        SwitchExpressionSyntax? switchExpr = null;
-        ExpressionSyntax? governingExpression = null;
-        var switchBodyText = string.Empty;
-        
-        if (methodDecl.Body != null)
-        {
-            // Case: Block-Body with a Return-Statement that contains a Switch-Expression
-            var returnStmt = (ReturnStatementSyntax)methodDecl.Body.Statements[0];
-            if (returnStmt.Expression is not SwitchExpressionSyntax matchingSwitchExpr)
-                return document;
-            
-            switchExpr = matchingSwitchExpr;
-            governingExpression = switchExpr.GoverningExpression;
-            
-            // Extract the switch body text:
-            var switchStart = switchExpr.SwitchKeyword.SpanStart;
-            var switchEnd = switchExpr.CloseBraceToken.Span.End;
-            switchBodyText = sourceText.ToString(TextSpan.FromBounds(switchStart, switchEnd));
-        }
-        else if (methodDecl.ExpressionBody != null)
-        {
-            // Case 2: Expression-Body with a poorly formatted Switch-Expression
-            switchExpr = (SwitchExpressionSyntax)methodDecl.ExpressionBody.Expression;
-            governingExpression = switchExpr.GoverningExpression;
-            
-            // Extract the switch body text:
-            var switchStart = switchExpr.SwitchKeyword.SpanStart;
-            var switchEnd = switchExpr.CloseBraceToken.Span.End;
-            switchBodyText = sourceText.ToString(TextSpan.FromBounds(switchStart, switchEnd));
-        }
-        
-        if (switchExpr is null || governingExpression is null)
+        var switchExpr = SwitchExpressionOf(memberDecl);
+        var headerEnd = HeaderEndOf(memberDecl);
+        if (switchExpr is null || headerEnd is null)
             return document;
         
+        var sourceText = await document.GetTextAsync(cancellationToken);
+        var memberStartLine = sourceText.Lines.GetLineFromPosition(memberDecl.SpanStart);
+        
+        //
+        // Everything in front of the body stays as it was written: the attributes, the modifiers, the type,
+        // the name, and of a method its type parameters, parameters, and constraints. Building it anew from
+        // some of these parts loses the others.
+        //
+        var headerText = sourceText.ToString(TextSpan.FromBounds(memberDecl.SpanStart, headerEnd.Value)).TrimEnd();
+        
         // Extract the governing expression and the switch body:
-        var govExprText = sourceText.ToString(governingExpression.Span);
+        var govExprText = sourceText.ToString(switchExpr.GoverningExpression.Span);
+        var switchBodyText = sourceText.ToString(TextSpan.FromBounds(switchExpr.OpenBraceToken.SpanStart, switchExpr.CloseBraceToken.Span.End));
         
-        // Create the new method with inline expression body and correct formatting:
-        var returnTypeText = methodDecl.ReturnType.ToString();
-        var modifiersText = string.Join(" ", methodDecl.Modifiers);
-        var methodNameText = methodDecl.Identifier.Text;
-        
-        // Determine the indentation of the method:
-        var methodIndentation = "";
-        for (var i = methodStartLine.Start; i < methodDecl.SpanStart; i++)
+        // Determine the indentation of the member:
+        var memberIndentation = "";
+        for (var i = memberStartLine.Start; i < memberDecl.SpanStart; i++)
         {
             if (char.IsWhiteSpace(sourceText[i]))
-                methodIndentation += sourceText[i];
+                memberIndentation += sourceText[i];
             else
                 break;
         }
         
-        // Erstelle die neue Methode mit Expression-Body und korrekter Formatierung
-        var newMethodText = new StringBuilder();
-        newMethodText.Append($"{modifiersText} {returnTypeText} {methodNameText}{parameterText} => {govExprText} switch");
+        // Create the new member with an expression body and the switch keyword on the same line:
+        var newMemberText = new StringBuilder();
+        newMemberText.Append($"{headerText} => {govExprText} switch");
         
-        // Formatiere die geschweiften Klammern und den Switch-Body
-        var switchBody = switchBodyText.Substring("switch".Length).Trim();
+        // The switch cases are indented by four spaces more than the member:
+        var caseIndentation = memberIndentation + "    ";
+        newMemberText.Append(FormatSwitchBody(switchBodyText, memberIndentation, caseIndentation));
         
-        // Bestimme die Einrückung für die Switch-Cases (4 Spaces oder 1 Tab mehr als die Methode)
-        var caseIndentation = methodIndentation + "    "; // 4 Spaces Einrückung
-        
-        // Verarbeite die Klammern und formatiere den Body
-        var formattedSwitchBody = FormatSwitchBody(switchBody, methodIndentation, caseIndentation);
-        newMethodText.Append(formattedSwitchBody);
-        
-        // Ersetze die alte Methoden-Deklaration mit dem neuen Text
-        var newText = sourceText.Replace(methodDecl.Span, newMethodText.ToString());
+        // Replace the old declaration with the new text:
+        var newText = sourceText.Replace(memberDecl.Span, newMemberText.ToString());
         return document.WithText(newText);
     }
     
-    private static string FormatSwitchBody(string switchBody, string methodIndentation, string caseIndentation)
+    private static SwitchExpressionSyntax? SwitchExpressionOf(MemberDeclarationSyntax memberDecl) => memberDecl switch
+    {
+        MethodDeclarationSyntax methodDecl => SwitchExpressionOf(methodDecl.Body, methodDecl.ExpressionBody),
+        PropertyDeclarationSyntax { ExpressionBody: not null } propertyDecl => SwitchExpressionOf(null, propertyDecl.ExpressionBody),
+        PropertyDeclarationSyntax { AccessorList.Accessors.Count: 1 } propertyDecl => SwitchExpressionOf(propertyDecl.AccessorList.Accessors[0].Body, propertyDecl.AccessorList.Accessors[0].ExpressionBody),
+        
+        _ => null,
+    };
+    
+    private static SwitchExpressionSyntax? SwitchExpressionOf(BlockSyntax? body, ArrowExpressionClauseSyntax? expressionBody)
+    {
+        if (expressionBody?.Expression is SwitchExpressionSyntax inlineSwitchExpr)
+            return inlineSwitchExpr;
+        
+        // A block body with a return statement that contains a switch expression:
+        if (body is { Statements.Count: 1 } && body.Statements[0] is ReturnStatementSyntax { Expression: SwitchExpressionSyntax returnedSwitchExpr })
+            return returnedSwitchExpr;
+        
+        return null;
+    }
+    
+    private static int? HeaderEndOf(MemberDeclarationSyntax memberDecl) => memberDecl switch
+    {
+        MethodDeclarationSyntax { ConstraintClauses.Count: > 0 } methodDecl => methodDecl.ConstraintClauses.Last().Span.End,
+        MethodDeclarationSyntax methodDecl => methodDecl.ParameterList.Span.End,
+        PropertyDeclarationSyntax propertyDecl => propertyDecl.Identifier.Span.End,
+        
+        _ => null,
+    };
+    
+    private static string FormatSwitchBody(string switchBody, string memberIndentation, string caseIndentation)
     {
         var result = new StringBuilder();
         
@@ -136,7 +133,7 @@ public class SwitchExpressionMethodCodeFixProvider : CodeFixProvider
         
         // Add braces with correct indentation:
         result.AppendLine();
-        result.Append($"{methodIndentation}{{");
+        result.Append($"{memberIndentation}{{");
         
         // Process each line of the switch body:
         var lines = bodyWithoutBraces.Split(["\r\n", "\n"], System.StringSplitOptions.None);
@@ -155,7 +152,7 @@ public class SwitchExpressionMethodCodeFixProvider : CodeFixProvider
         
         // Add the closing brace with correct indentation:
         result.AppendLine();
-        result.Append($"{methodIndentation}}};");
+        result.Append($"{memberIndentation}}};");
         
         return result.ToString();
     }

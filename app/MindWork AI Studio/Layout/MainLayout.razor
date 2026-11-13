@@ -32,7 +32,7 @@
                                 <MudNavMenu>
                                     <MudTooltip Text="@this.EmbeddingNavigationTooltip" Placement="Placement.Right">
                                         <MudNavLink Href="@this.embeddingItem.Path" Match="@(this.embeddingItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@this.embeddingItem.Icon" Style="@this.embeddingItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">
-                                            @T("Data sync")
+                                            @this.embeddingItem.Name
                                         </MudNavLink>
                                     </MudTooltip>
                                 </MudNavMenu>
@@ -94,7 +94,7 @@
                 }
                 
                 <MudOverlay Visible="@this.performingUpdate" DarkBackground="@true" LockScroll="@true">
-                    <MudText Typo="Typo.h3">@T("Please wait for the update to complete...")</MudText>
+                    <MudText Typo="Typo.h3">@TA("Please wait for the update to complete...")</MudText>
                     <MudProgressLinear Color="Color.Primary" Indeterminate="@true" Size="Size.Large" Rounded="@true"/>
                 </MudOverlay>
             </MudContainer>
@@ -102,4 +102,16 @@
     </MudLayout>
 </MudPaper>
 
-<MudThemeProvider @ref="@this.themeProvider" Theme="@this.ColorTheme" IsDarkMode="@this.useDarkMode" />
+<MudMarkdownThemeProvider @ref="@this.themeProvider" Theme="@this.ColorTheme" IsDarkMode="@this.useDarkMode" ObserveSystemDarkModeChange="@this.FollowSystemTheme" />
+
+@if (this.useDarkMode)
+{
+    @*
+        Lucide draws its icons with thin strokes, and on a dark background they almost vanish in the red of errors,
+        such as the trash icons. In dark mode, these icons take the lighter red of the palette, as the heart of the
+        supporters does:
+    *@
+    <style>
+        .mud-error-text .lucide, .lucide.mud-error-text { color: var(--mud-palette-error-lighten) !important; }
+    </style>
+}

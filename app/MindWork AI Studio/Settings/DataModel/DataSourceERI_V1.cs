@@ -20,61 +20,119 @@ namespace AIStudio.Settings.DataModel;
 /// <summary>
 /// An external data source, accessed via an ERI server, cf. https://github.com/MindWorkAI/ERI.
 /// </summary>
-public readonly record struct DataSourceERI_V1 : IERIDataSource
+public record struct DataSourceERI_V1: IERIDataSource
 {
     private static readonly ILogger<DataSourceERI_V1> LOGGER = Program.LOGGER_FACTORY.CreateLogger<DataSourceERI_V1>();
+
+    /// <summary>
+    /// What an export writes as the shared username when the data source has none to export.
+    /// </summary>
+    public const string SHARED_USERNAME_PLACEHOLDER = "<shared username>";
 
     public DataSourceERI_V1()
     {
     }
     
     /// <inheritdoc />
-    public uint Num { get; init; }
+    public uint Num { get; set; }
 
     /// <inheritdoc />
-    public string Id { get; init; } = Guid.Empty.ToString();
+    public string Id { get; set; } = Guid.Empty.ToString();
     
     /// <inheritdoc />
-    public string Name { get; init; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     
     /// <inheritdoc />
-    public DataSourceType Type { get; init; } = DataSourceType.NONE;
+    public DataSourceType Type { get; set; } = DataSourceType.NONE;
     
     /// <inheritdoc />
-    public string Hostname { get; init; } = string.Empty;
+    public string Hostname { get; set; } = string.Empty;
     
     /// <inheritdoc />
-    public int Port { get; init; }
+    public int Port { get; set; }
 
     /// <inheritdoc />
-    public AuthMethod AuthMethod { get; init; } = AuthMethod.NONE;
+    public AuthMethod AuthMethod { get; set; } = AuthMethod.NONE;
 
     /// <inheritdoc />
-    public string Username { get; init; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public DataSourceERIUsernamePasswordMode UsernamePasswordMode { get; init; } = DataSourceERIUsernamePasswordMode.USER_MANAGED;
+    public DataSourceERIUsernamePasswordMode UsernamePasswordMode { get; set; } = DataSourceERIUsernamePasswordMode.USER_MANAGED;
 
     /// <inheritdoc />
-    public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+    public DataSourceSecurity SecurityPolicy { get; set; } = DataSourceSecurity.NOT_SPECIFIED;
 
     /// <inheritdoc />
-    public bool IsEnterpriseConfiguration { get; init; }
+    public OutboundDataRestriction OutboundDataRestriction { get; set; } = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
 
     /// <inheritdoc />
-    public Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
+    public bool IsEnterpriseConfiguration { get; set; }
+
+    /// <inheritdoc />
+    public Guid EnterpriseConfigurationPluginId { get; set; } = Guid.Empty;
     
     /// <inheritdoc />
-    public ERIVersion Version { get; init; } = ERIVersion.V1;
+    public ERIVersion Version { get; set; } = ERIVersion.V1;
     
     /// <inheritdoc />
-    public string SelectedRetrievalId { get; init; } = string.Empty;
+    public string SelectedRetrievalId { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public ushort MaxMatches { get; init; } = 10;
+    public ushort MaxMatches { get; set; } = 10;
     
     /// <inheritdoc />
     public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)
+    {
+        var latestUserPrompt = lastUserPrompt switch
+        {
+            ContentText text => text.Text,
+            ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
+                ? base64Image
+                : string.Empty,
+            _ => string.Empty
+        };
+
+        return await this.RetrieveDataAsync(latestUserPrompt, lastUserPrompt.ToERIContentType, thread, this.MaxMatches, token) ?? [];
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// An ERI data source has a single page of matches. ERI v1 knows no offset, so a further page
+    /// would have to ask the server for all pages before it as well. A server may refuse more
+    /// matches than its retrieval process allows, which often is the very number configured here:
+    /// it would refuse every further page, and the model would hear that the data source could not
+    /// be searched rather than that there is nothing more.<br/><br/>
+    /// Semantic Search still turns pages within these matches, when they are too long for a single
+    /// search: it cuts them into pages by their length, and asks the server again for each of them.
+    /// </remarks>
+    public int GetLastPage() => 1;
+
+    /// <inheritdoc />
+    public async Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default)
+    {
+        var lastPage = this.GetLastPage();
+        if (page < 1 || page > lastPage)
+            throw new ArgumentOutOfRangeException(nameof(page), page, $"An ERI data source has pages from 1 to {lastPage}.");
+
+        if (this.MaxMatches == 0)
+            return RetrievalPage.EMPTY;
+
+        //
+        // ERI v1 knows no query apart from the latest user prompt, so the query takes its place; the
+        // thread still tells the server what the conversation is about. Nor does it know an offset,
+        // so the data source has a single page, asking for exactly what the classic RAG process asks
+        // for, see GetLastPage:
+        //
+        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, this.MaxMatches, token);
+        if (contexts is null)
+            return RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] };
+
+        return new RetrievalPage(contexts.Take(this.MaxMatches).ToList(), false);
+    }
+
+    /// <returns>What the ERI server found, or null when it could not be searched.</returns>
+    private async Task<IReadOnlyList<IRetrievalContext>?> RetrieveDataAsync(string latestUserPrompt, ContentType latestUserPromptType, ChatThread thread, int maxMatches, CancellationToken token)
     {
         // Important: Do not dispose the RustService here, as it is a singleton.
         var rustService = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
@@ -86,18 +144,11 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         {
             var retrievalRequest = new RetrievalRequest
             {
-                LatestUserPromptType = lastUserPrompt.ToERIContentType,
-                LatestUserPrompt = lastUserPrompt switch
-                {
-                    ContentText text => text.Text,
-                    ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
-                        ? base64Image 
-                        : string.Empty,
-                    _ => string.Empty
-                },
+                LatestUserPromptType = latestUserPromptType,
+                LatestUserPrompt = latestUserPrompt,
                 
                 Thread = await thread.ToERIChatThread(token),
-                MaxMatches = this.MaxMatches,
+                MaxMatches = maxMatches,
                 RetrievalProcessId = this.SelectedRetrievalId,
                 Parameters = null, // The ERI server selects useful default parameters
             };
@@ -106,7 +157,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             if(retrievalResponse is { Successful: true, Data: not null })
             {
                 //
-                // Next, we have to transform the ERI context back to our generic retrieval context:
+                // Next, we have to transform the ERI context back to our generic retrieval context.
+                // The server writes the JSON, and a field it leaves out arrives as null, whatever the
+                // contract says. Everything after this point counts on texts and lists:
                 //
                 var genericRetrievalContexts = new List<IRetrievalContext>(retrievalResponse.Data.Count);
                 foreach (var eriContext in retrievalResponse.Data)
@@ -118,24 +171,26 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                             {
                                 Path = eriContext.Path ?? string.Empty,
                                 Type = eriContext.ToRetrievalContentType(),
-                                Links = eriContext.Links,
-                                Category = eriContext.Type.ToRetrievalContentCategory(),
-                                MatchedText = eriContext.MatchedContent,
-                                DataSourceName = eriContext.Name,
-                                SurroundingContent = eriContext.SurroundingContent,
+                                Links = eriContext.Links ?? [],
+                                Category = eriContext.Type.RetrievalContentCategory,
+                                SourceCategory = eriContext.Category ?? string.Empty,
+                                MatchedText = eriContext.MatchedContent ?? string.Empty,
+                                DataSourceName = eriContext.Name ?? string.Empty,
+                                SurroundingContent = eriContext.SurroundingContent ?? [],
                             });
                             break;
-                        
+
                         case ContentType.IMAGE:
                             genericRetrievalContexts.Add(new RetrievalImageContext
                             {
                                 Path = eriContext.Path ?? string.Empty,
                                 Type = eriContext.ToRetrievalContentType(),
-                                Links = eriContext.Links,
-                                Source = eriContext.MatchedContent,
-                                Category = eriContext.Type.ToRetrievalContentCategory(),
+                                Links = eriContext.Links ?? [],
+                                Source = eriContext.MatchedContent ?? string.Empty,
+                                Category = eriContext.Type.RetrievalContentCategory,
+                                SourceCategory = eriContext.Category ?? string.Empty,
                                 SourceType = ContentImageSource.BASE64,
-                                DataSourceName = eriContext.Name,
+                                DataSourceName = eriContext.Name ?? string.Empty,
                             });
                             break;
                         
@@ -148,15 +203,22 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 return genericRetrievalContexts;
             }
 
+            //
+            // The ERI client answers a cancellation like any other failure, since other callers
+            // pass their own timeout and expect an answer. Whoever cancelled the search, though,
+            // waits for it to stop; reporting the data source as not searched would carry on:
+            //
+            token.ThrowIfCancellationRequested();
             logger.LogWarning($"Was not able to retrieve data from the ERI data source '{this.Name}'. Message: {retrievalResponse.Message}");
-            return [];
+            return null;
         }
 
+        token.ThrowIfCancellationRequested();
         logger.LogWarning($"Was not able to authenticate with the ERI data source '{this.Name}'. Message: {authResponse.Message}");
-        return [];
+        return null;
     }
 
-    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, out DataSourceERI_V1 dataSource)
+    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, bool dryRun, out DataSourceERI_V1 dataSource)
     {
         dataSource = default;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -205,6 +267,20 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         {
             LOGGER.LogWarning($"The configured data source {idx} must specify a security policy. (Plugin ID: {configPluginId})");
             return false;
+        }
+
+        //
+        // Optional, so that configurations written before the setting existed stay valid; their data
+        // sources get the level of a new one. A value this version cannot read counts as the
+        // strictest level, as in the settings file. Only a name counts, never a number, see EnumNames.
+        // A data source for self-hosted providers only is not clamped here: the level applies when
+        // its passages reach a chat, see DataSourceOutboundDataExtensions.GetEffectiveOutboundDataRestriction.
+        //
+        var outboundDataRestriction = DataSourceOutboundDataExtensions.DEFAULT_OUTBOUND_DATA_RESTRICTION;
+        if (table.TryGetValue("OutboundDataRestriction", out var outboundDataRestrictionValue) && !(outboundDataRestrictionValue.TryRead<string>(out var outboundDataRestrictionText) && OutboundDataRestriction.TryParseName(outboundDataRestrictionText, out outboundDataRestriction)))
+        {
+            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid outbound data restriction, so the strictest one applies. (Plugin ID: {configPluginId})");
+            outboundDataRestriction = OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
         }
 
         if (!table.TryGetValue("SelectedRetrievalId", out var selectedRetrievalIdValue) || !selectedRetrievalIdValue.TryRead<string>(out var selectedRetrievalId) || string.IsNullOrWhiteSpace(selectedRetrievalId))
@@ -264,6 +340,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             Username = username,
             UsernamePasswordMode = usernamePasswordMode,
             SecurityPolicy = securityPolicy,
+            OutboundDataRestriction = outboundDataRestriction,
             Version = ERIVersion.V1,
             SelectedRetrievalId = selectedRetrievalId,
             MaxMatches = (ushort)maxMatches,
@@ -271,7 +348,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             EnterpriseConfigurationPluginId = configPluginId,
         };
 
-        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource);
+        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource, dryRun);
     }
 
     /// <summary>
@@ -289,7 +366,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         switch (this.AuthMethod)
         {
             case AuthMethod.TOKEN:
-                secretLine = CreateSecretLine("Token", encryptedSecret);
+                secretLine = CreateSecretLine(GetSecretFieldName(AuthMethod.TOKEN), encryptedSecret);
                 break;
 
             case AuthMethod.USERNAME_PASSWORD:
@@ -302,13 +379,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
                 if (usernamePasswordMode is DataSourceERIUsernamePasswordMode.SHARED_USERNAME_AND_PASSWORD)
                 {
-                    var username = string.IsNullOrWhiteSpace(this.Username) ? "<shared username>" : this.Username;
+                    var username = string.IsNullOrWhiteSpace(this.Username) ? SHARED_USERNAME_PLACEHOLDER : this.Username;
                     usernameLine = $"""
                                    ["Username"] = "{LuaTools.EscapeLuaString(username)}",
                                    """;
                 }
 
-                secretLine = CreateSecretLine("Password", encryptedSecret);
+                secretLine = CreateSecretLine(GetSecretFieldName(AuthMethod.USERNAME_PASSWORD), encryptedSecret);
                 break;
         }
 
@@ -324,21 +401,28 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                     {{usernameLine}}
                     {{secretLine}}
                     ["SecurityPolicy"] = "{{this.SecurityPolicy}}",
+                    ["OutboundDataRestriction"] = "{{this.OutboundDataRestriction}}",
                     ["SelectedRetrievalId"] = "{{LuaTools.EscapeLuaString(this.SelectedRetrievalId)}}",
                     ["MaxMatches"] = {{this.MaxMatches}},
                 }
                 """;
     }
 
-    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource)
+    /// <summary>
+    /// The field of a configuration which holds the encrypted secret of an auth method.
+    /// </summary>
+    /// <param name="authMethod">How the data source signs in.</param>
+    /// <returns>The name of the field, or an empty string for an auth method without a secret.</returns>
+    public static string GetSecretFieldName(AuthMethod authMethod) => authMethod switch
     {
-        var secretFieldName = dataSource.AuthMethod switch
-        {
-            AuthMethod.TOKEN => "Token",
-            AuthMethod.USERNAME_PASSWORD => "Password",
-            _ => string.Empty,
-        };
+        AuthMethod.TOKEN => "Token",
+        AuthMethod.USERNAME_PASSWORD => "Password",
+        _ => string.Empty,
+    };
 
+    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource, bool dryRun)
+    {
+        var secretFieldName = GetSecretFieldName(dataSource.AuthMethod);
         if (string.IsNullOrWhiteSpace(secretFieldName))
             return true;
 
@@ -350,7 +434,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
         if (!EnterpriseEncryption.IsEncrypted(encryptedSecret))
         {
-            LOGGER.LogWarning($"The configured data source {idx} contains a plaintext {secretFieldName}. Only encrypted secrets (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+            LOGGER.LogWarning($"The configured data source {idx} contains a plaintext {secretFieldName}. Only encrypted secrets (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             return false;
         }
 
@@ -366,6 +450,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             LOGGER.LogWarning($"Failed to decrypt the {secretFieldName} for data source {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
             return false;
         }
+
+        //
+        // A dry run only checks the configuration, so it queues nothing: the start which follows it
+        // would otherwise store the secret once more for every dry run before it:
+        //
+        if (dryRun)
+            return true;
 
         PendingEnterpriseSecrets.Add(new(
             $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{dataSource.Id}",

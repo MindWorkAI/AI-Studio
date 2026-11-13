@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace AIStudio.Tools.ToolCallingSystem;
 
 internal static class ToolSettingsValueParser
@@ -7,7 +9,7 @@ internal static class ToolSettingsValueParser
         if (!settingsValues.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
             return null;
 
-        return int.TryParse(value, out var parsedValue) && parsedValue > 0 ? parsedValue : null;
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue) && parsedValue > 0 ? parsedValue : null;
     }
 
     public static bool TryReadOptionalPositiveInt(
@@ -23,7 +25,7 @@ internal static class ToolSettingsValueParser
         if (!settingsValues.TryGetValue(key, out var rawValue) || string.IsNullOrWhiteSpace(rawValue))
             return true;
 
-        if (int.TryParse(rawValue, out var parsedValue) && parsedValue > 0)
+        if (int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue) && parsedValue > 0)
         {
             value = parsedValue;
             return true;
@@ -49,6 +51,26 @@ internal static class ToolSettingsValueParser
             return true;
 
         error = string.Format(maximumErrorFormat, key, maximum);
+        return false;
+    }
+
+    /// <summary>
+    /// Checks that a stored value is one the option source still offers.
+    /// </summary>
+    /// <remarks>
+    /// An empty value passes: whether the field may be empty is decided by the settings schema's
+    /// required list, which the tool settings service checks before this method runs.<br/><br/>
+    /// The error text comes from the caller, like the other checks here, so that it is translated
+    /// in the tool which reports it. It receives the key as {0} and the stored value as {1}.
+    /// </remarks>
+    public static bool TryValidateOptionValue(IReadOnlyDictionary<string, string> settingsValues, string key, string optionSource, string invalidValueErrorFormat, out string error)
+    {
+        error = string.Empty;
+        var value = settingsValues.GetValueOrDefault(key);
+        if (string.IsNullOrWhiteSpace(value) || ToolSettingsOptionSources.GetValues(optionSource).Contains(value))
+            return true;
+
+        error = string.Format(invalidValueErrorFormat, key, value);
         return false;
     }
 }

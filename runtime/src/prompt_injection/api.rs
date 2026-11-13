@@ -9,7 +9,6 @@
 //! pages, each with its own content, title, description, and authors. Those go through the
 //! batch endpoint, which filters them in one request instead of one round trip per field.
 
-use crate::api_token::APIToken;
 use axum::http::StatusCode;
 use axum::Json;
 use serde::{Deserialize, Serialize};
@@ -45,18 +44,33 @@ pub struct SanitizeBatchResponse {
     pub results: Vec<SanitizeResponse>,
 }
 
-pub async fn sanitize(_token: APIToken, Json(request): Json<SanitizeRequest>) -> Json<SanitizeResponse> {
-    let (sanitized_text, report) = sanitize_text(&request.text);
+pub async fn sanitize(
+    Json(request): Json<SanitizeRequest>,
+) -> Result<Json<SanitizeResponse>, (StatusCode, String)> {
+    //
+    // A single web page or retrieval context can still be large, and scanning it is CPU-bound. Like
+    // a batch, it goes to the blocking pool, so it does not stall every other call the app makes
+    // meanwhile.
+    //
+    tokio::task::spawn_blocking(move || {
+        let (sanitized_text, report) = sanitize_text(&request.text);
 
-    Json(SanitizeResponse {
-        sanitized_text,
-        findings: report.findings,
-        redacted_count: report.redacted_count,
+        Json(SanitizeResponse {
+            sanitized_text,
+            findings: report.findings,
+            redacted_count: report.redacted_count,
+        })
+    })
+    .await
+    .map_err(|error| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("The prompt injection filter failed: {error}"),
+        )
     })
 }
 
 pub async fn sanitize_batch(
-    _token: APIToken,
     Json(request): Json<SanitizeBatchRequest>,
 ) -> Result<Json<SanitizeBatchResponse>, (StatusCode, String)> {
     //

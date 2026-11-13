@@ -61,6 +61,22 @@
     src: url('fonts/JetBrainsMono-Regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
+/*
+   Lucide, the icon font of the app; see app/SourceGeneratedMappings/Lucide/README.md. An icon must never
+   show a fallback character while the font loads, hence "block". Every glyph fills the em box of the font,
+   from the baseline up. The overrides pin these metrics, so that no webview takes the larger Windows
+   ascent of the font, which would push the glyphs off the center of their box.
+*/
+@font-face {
+    font-display: block;
+    font-family: 'Lucide';
+    font-style: normal;
+    font-weight: 400;
+    ascent-override: 100%;
+    descent-override: 0%;
+    line-gap-override: 0%;
+    src: url('fonts/lucide.woff2') format('woff2');
+}
 
 .mud-text-list .mud-list-item-icon {
     margin-top: 4px;
@@ -118,8 +134,68 @@
     --custom-icon-color: #000000;
 }
 
-.custom-icon-color > a > svg {
+/* The icon of a link in the navigation bar: an SVG of MudBlazor or a span with a glyph of the Lucide font. */
+.custom-icon-color > a > .mud-icon-root {
     color: var(--custom-icon-color) !important;
+}
+
+/*
+   WebKitGTK, the webview on Linux, leaves the zoom of the page out of the font size of an SVG
+   element. MudBlazor sizes its icons with 1em of that font size, so they would keep their size while
+   everything around them grows or shrinks with the interface size. The runtime therefore sets
+   --svg-icon-zoom to its zoom on Linux, see interface_zoom.rs. The webviews of Windows and macOS zoom
+   SVG elements like everything else, and the variable stays unset there. The :where keeps this as
+   weak as MudBlazor's own rule, so that every more specific size still wins.
+*/
+.mud-icon-root:where(svg) {
+    width: calc(1em * var(--svg-icon-zoom, 1));
+    height: calc(1em * var(--svg-icon-zoom, 1));
+}
+
+/*
+   MudIcon renders an icon of the form "lucide/<glyph>" as a span with the class lucide and the glyph as
+   its only text. MudBlazor already sizes that span to 1em by 1em and colors it through color, just like
+   its SVG icons, so the font only has to fill that box: one line of exactly 1em, centered.
+*/
+.mud-icon-root.lucide {
+    font-family: 'Lucide';
+    font-style: normal;
+    font-weight: 400;
+    font-variant: normal;
+    letter-spacing: normal;
+    line-height: 1;
+    text-align: center;
+    text-transform: none;
+    white-space: nowrap;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+   MudBlazor draws the thumb of a slider as a dot of 4px, scaled up five times. Zoomed to an interface
+   size, the dot covers a fraction of a pixel, which the webview rounds to whole pixels before the
+   scaling magnifies the error: the thumb turns into an uneven shape. These rules draw the thumb in its
+   final size instead, with the shadows MudBlazor's scaling gave it. All sliders of the app have the
+   medium size and the primary color.
+*/
+.mud-slider.mud-slider-medium .mud-slider-input::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: -8px;
+    transform: none;
+}
+
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input::-webkit-slider-thumb {
+    box-shadow: 0 5px 10px -5px rgba(var(--mud-palette-primary-rgb), 0.3);
+}
+
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input::-webkit-slider-thumb:hover {
+    box-shadow: 0 5px 10px -5px rgba(var(--mud-palette-primary-rgb), 0.3), 0 0 0 5px rgba(var(--mud-palette-primary-rgb), 0.24);
+}
+
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input:focus-visible::-webkit-slider-thumb,
+.mud-slider.mud-slider-medium.mud-slider-primary .mud-slider-input:active::-webkit-slider-thumb {
+    box-shadow: 0 5px 10px -5px rgba(var(--mud-palette-primary-rgb), 0.3), 0 0 0 10px rgba(var(--mud-palette-primary-rgb), 0.24);
 }
 
 .improvedDiff .wikEdDiffFragment {
@@ -169,6 +245,24 @@
 /* Fixed the margin for the Markdown code blocks */
 .mud-card-content .mud-markdown-body .hljs.mud-markdown-code-highlight {
     margin-bottom:2em;
+}
+
+/* The actions of a code block, such as saving it, appear left of its copy button, which is 36px wide plus a margin of 8px */
+.mud-markdown-body .code-block-with-actions {
+    position: relative;
+}
+
+.mud-markdown-body .code-block-actions {
+    position: absolute;
+    display: none;
+    top: 0;
+    right: 44px;
+}
+
+/* Both appear while the pointer is on the code block, and the copy button stays while it is on the actions, which are no part of the block */
+.mud-markdown-body .code-block-with-actions:hover > .code-block-actions,
+.mud-markdown-body .code-block-with-actions:hover .mud-markdown-code-highlight-copybtn {
+    display: block;
 }
 
 .justified-markdown .mud-markdown-body p,
@@ -246,6 +340,28 @@
 .chat-mathjax-block mjx-container[display="true"] mjx-math {
     margin-left: 0 !important;
     margin-right: 0 !important;
+}
+
+/* The buttons of a formula, such as copying and saving it, appear while the pointer is on it, as they do at a code block */
+.formula-block {
+    position: relative;
+}
+
+.formula-block > .formula-block-actions {
+    position: absolute;
+    display: none;
+    top: 0;
+    right: 0;
+}
+
+.formula-block:hover > .formula-block-actions {
+    display: flex;
+}
+
+/* The copy button stands in the row of the other buttons, not in the corner of a code block */
+.formula-block > .formula-block-actions .mud-markdown-code-highlight-copybtn {
+    position: static;
+    display: block;
 }
 
 .log-viewer-shell {
@@ -530,4 +646,187 @@ tr:has(> .provider-group-header) .mud-icon-button {
 .text-switch-dense .mud-input-slot.mud-input-root-outlined {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
+}
+
+/* A field for file patterns with its help button on the right, which keeps its width while the field grows. */
+.pattern-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    column-gap: 8px;
+    align-items: center;
+}
+
+/* The field takes the first column, and so does what follows below it, such as the help, which keeps them equally wide. */
+.pattern-row-main {
+    grid-column: 1;
+    min-width: 0;
+}
+
+/*
+ * Pattern lists wrap and grow with their content, up to a limit beyond which they scroll. MudBlazor
+ * measures the height only on input, after a render with new text, and when the window changes its
+ * size. When the field gets narrower otherwise, e.g., in a dialog, more lines wrap than it is high,
+ * and MudBlazor hides the scrollbar below the limit. Allowing it always keeps every line reachable.
+ */
+.pattern-text-field textarea.mud-input-slot {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-y: auto !important;
+}
+
+/*
+ * Dialogs whose footer carries buttons on the left as well, such as Add and Import next to Close.
+ * MudBlazor pads the content with 24px to the left and right, but the footer with only 8px, so the
+ * buttons stood out of the column of the table above them. The footer takes over the 24px. On the
+ * right, the content also gives up the room of its scrollbar as soon as the table grows long, and
+ * how wide that is depends on the operating system and its settings, down to nothing for scrollbars
+ * which only show while scrolling. So no fixed padding fits: the content reserves that room for good,
+ * and the footer reserves the very same, which scrollbar-gutter only does for an element that clips
+ * its overflow. The popovers of menus and tooltips live elsewhere, so the footer clips no more than
+ * the outermost blur of a button shadow. A web view without scrollbar-gutter keeps the old offset on
+ * the right only. Both rules name the MudBlazor classes to outweigh their specificity.
+ */
+.mud-dialog .mud-dialog-content.dialog-content-aligned {
+    scrollbar-gutter: stable;
+}
+
+.mud-dialog .mud-dialog-actions.dialog-actions-aligned {
+    padding: 8px 24px;
+    overflow: hidden;
+    scrollbar-gutter: stable;
+}
+
+/*
+ * One source below an answer per row. The title takes the free width and wraps, however long the
+ * name of the document is, while the buttons stay at the right edge, one column below the other.
+ * The whole row lights up under the mouse, so a button is clearly part of its row. The Markdown
+ * styles force every list item to stay one with !important, so the row names their classes to
+ * outweigh them.
+ */
+.mud-markdown-body li.source-entry {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--mud-default-borderradius);
+}
+
+.source-entry:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.source-entry-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.source-entry-actions {
+    display: flex;
+    flex: none;
+}
+
+/*
+ * A dialog which fits the window instead of scrolling as a whole. Its content is a column which
+ * gives way when the window is too small, down to the one part which scrolls by itself, e.g., the
+ * text of a ContentViewer. Every element in between is marked dialog-fit, so that it gives way as
+ * well rather than holding on to the height of its content.
+ */
+.mud-dialog .mud-dialog-content.dialog-content-fit {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dialog-fit {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/*
+ * A piece of content for the user to check, see ContentViewer: a slim bar saying what it is and
+ * how to see it, above the content, which scrolls inside its frame. Both the viewer and its frame
+ * give way like a dialog-fit, so that only the content scrolls.
+ */
+.content-viewer,
+.content-viewer-frame {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.content-viewer-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem 0.25rem 1rem;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.content-viewer-toolbar-start {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.content-viewer-body {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.75rem 1rem;
+}
+
+.content-viewer-plain {
+    margin: 0;
+    font: inherit;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/*
+ * The passages the AI received from a file, see SourcePassagesDialog: the numbers of the passages
+ * at the side, as high as the passage next to them, and the passage, which gives way like a
+ * dialog-fit.
+ */
+.source-passages {
+    display: flex;
+    gap: 1rem;
+    min-height: 0;
+}
+
+.source-passages-menu {
+    flex: none;
+    width: 3.5rem;
+    overflow-y: auto;
+}
+
+.source-passages-menu .mud-list-item-text {
+    text-align: center;
+}
+
+.source-passages-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* The title of a dialog about one file, see FileDialogTitle. */
+.file-dialog-title {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    overflow-wrap: anywhere;
+}
+
+/* An icon button next to text, whose icon should not outgrow the text around it. */
+.mud-icon-button.icon-button-compact .mud-icon-root {
+    font-size: 1rem;
+}
+
+/* The warning of a file which is gone, sized and spaced like the compact buttons it stands in for. */
+.mud-icon-root.file-action-warning {
+    font-size: 1rem;
+    margin: 5px;
+    vertical-align: middle;
 }

@@ -5,11 +5,11 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use log::{error, info, warn};
 use once_cell::sync::Lazy;
-use tauri::Url;
-use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri::{Manager, Url};
+use tauri_plugin_shell::process::{CommandChild, CommandEvent, TerminatedPayload};
 use tauri_plugin_shell::ShellExt;
-use crate::api_token::APIToken;
 use crate::runtime_api_token::API_TOKEN;
+use crate::app_access::{APP_HOST, DOTNET_ENV_UI_TOKEN, UI_ACCESS_TOKEN};
 use crate::app_window::change_location_to;
 use crate::runtime_certificate::CERTIFICATE_FINGERPRINT;
 use crate::encryption::ENCRYPTION;
@@ -39,8 +39,14 @@ static DOTNET_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 pub const PID_FILE_NAME: &str = "mindwork_ai_studio.pid";
 const SIDECAR_TYPE:SidecarType = SidecarType::Dotnet;
 
-/// Removes ANSI escape sequences and non-printable control chars from stdout lines.
-fn sanitize_stdout_line(line: &str) -> String {
+/// Tells the .NET host where to extract the native libraries bundled into the server.
+const DOTNET_ENV_BUNDLE_EXTRACT_BASE_DIR: &str = "DOTNET_BUNDLE_EXTRACT_BASE_DIR";
+
+/// The directory below the app's cache directory where the .NET host extracts them.
+const DOTNET_BUNDLE_EXTRACTION_DIRECTORY_NAME: &str = "dotnet";
+
+/// Removes ANSI escape sequences and non-printable control chars from stdout and stderr lines.
+fn sanitize_output_line(line: &str) -> String {
     let mut sanitized = String::with_capacity(line.len());
     let mut chars = line.chars().peekable();
 
@@ -92,9 +98,18 @@ fn sanitize_stdout_line(line: &str) -> String {
     sanitized
 }
 
+/// Describes how a process ended, for the log.
+fn describe_termination(payload: &TerminatedPayload) -> String {
+    match (payload.code, payload.signal) {
+        (Some(code), _) => format!("exit code {code}"),
+        (None, Some(signal)) => format!("signal {signal}"),
+        (None, None) => String::from("neither an exit code nor a signal"),
+    }
+}
+
 /// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
 /// the port where the .NET server should listen to.
-pub async fn dotnet_port(_token: APIToken) -> String {
+pub async fn dotnet_port() -> String {
     let dotnet_server_port = *DOTNET_SERVER_PORT;
     format!("{dotnet_server_port}")
 }
@@ -113,6 +128,45 @@ fn external_http_custom_root_certificate_policy_environment() -> Vec<(String, St
     ]
 }
 
+/// Returns the directory where the .NET host extracts the native libraries of the server.
+///
+/// The server is a single-file bundle, and the native libraries inside it -- SQLite above all --
+/// have to be written to disk before the .NET host can load them. That happens before any of our
+/// own .NET code runs. Left to itself, the host picks `$HOME/.net` or `%TEMP%\.net` and exits at
+/// once when that location is not writable. The Flatpak sandbox mounts the home directory
+/// read-only, so the server never started there. Our own cache directory is writable wherever
+/// the app runs, which is why we choose the location on every platform instead of trusting the
+/// default.
+///
+/// Returns `None` when the directory is not available. The host then falls back to its default,
+/// and should that fail as well, its message shows up in our log as stderr of the .NET server.
+fn dotnet_bundle_extraction_directory<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>) -> Option<String> {
+    let cache_directory = match app_handle.path().app_cache_dir() {
+        Ok(path) => path,
+        Err(e) => {
+            error!(Source = "Bootloader .NET"; "Failed to resolve the app cache directory for extracting the native libraries of the .NET server: {e}");
+            return None;
+        }
+    };
+
+    let extraction_directory = cache_directory.join(DOTNET_BUNDLE_EXTRACTION_DIRECTORY_NAME);
+    if let Err(e) = std::fs::create_dir_all(&extraction_directory) {
+        error!(Source = "Bootloader .NET"; "Failed to create the directory '{}' for extracting the native libraries of the .NET server: {e}", extraction_directory.display());
+        return None;
+    }
+
+    match extraction_directory.to_str() {
+        Some(path) => {
+            info!(Source = "Bootloader .NET"; "The .NET server extracts its native libraries to '{path}'.");
+            Some(path.to_string())
+        }
+        None => {
+            error!(Source = "Bootloader .NET"; "The directory '{}' for extracting the native libraries of the .NET server is not valid UTF-8.", extraction_directory.display());
+            None
+        }
+    }
+}
+
 /// Creates the startup environment file for the .NET server in the development
 /// environment. The file is created in the root directory of the repository.
 /// Creating that env file on a production environment would be a security
@@ -124,46 +178,46 @@ fn external_http_custom_root_certificate_policy_environment() -> Vec<(String, St
 /// but also remove that code from any production build.
 #[cfg(debug_assertions)]
 pub fn create_startup_env_file() {
-
-    // Get the secret password & salt and convert it to a base64 string:
-    let secret_password = BASE64_STANDARD.encode(ENCRYPTION.secret_password);
-    let secret_key_salt = BASE64_STANDARD.encode(ENCRYPTION.secret_key_salt);
-    let api_port = *API_SERVER_PORT;
-
     warn!(Source = "Bootloader .NET"; "Development environment detected; create the startup env file at '../startup.env'.");
     let env_file_path = std::path::PathBuf::from("..").join("startup.env");
     let mut env_file = std::fs::File::create(env_file_path).unwrap();
-    let mut env_file_lines = vec![
-        format!("AI_STUDIO_SECRET_PASSWORD={secret_password}"),
-        format!("AI_STUDIO_SECRET_KEY_SALT={secret_key_salt}"),
-        format!("AI_STUDIO_CERTIFICATE_FINGERPRINT={}", CERTIFICATE_FINGERPRINT.get().unwrap()),
-        format!("AI_STUDIO_API_PORT={api_port}"),
-        format!("AI_STUDIO_API_TOKEN={}", API_TOKEN.to_hex_text()),
-    ];
-    for (key, value) in external_http_custom_root_certificate_policy_environment() {
-        env_file_lines.push(format!("{key}={value}"));
-    }
+    let env_file_lines: Vec<String> = ipc_environment()
+        .into_iter()
+        .map(|(key, value)| format!("{key}={value}"))
+        .collect();
 
     std::io::Write::write_all(&mut env_file, env_file_lines.join("\n").as_bytes()).unwrap();
     info!(Source = "Bootloader .NET"; "The startup env file was created successfully.");
 }
 
-/// Starts the .NET server in a separate process.
-pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
+/// Returns the environment which the .NET server needs to talk to this runtime and to let only
+/// the app window in. The sidecar gets it, and so does the startup env file in the development
+/// environment, so neither of them can miss a variable.
+fn ipc_environment() -> Vec<(String, String)> {
 
     // Get the secret password & salt and convert it to a base64 string:
     let secret_password = BASE64_STANDARD.encode(ENCRYPTION.secret_password);
     let secret_key_salt = BASE64_STANDARD.encode(ENCRYPTION.secret_key_salt);
     let api_port = *API_SERVER_PORT;
 
-    let mut dotnet_server_environment: HashMap<String, String> = HashMap::from_iter([
+    let mut environment = vec![
         (String::from("AI_STUDIO_SECRET_PASSWORD"), secret_password),
         (String::from("AI_STUDIO_SECRET_KEY_SALT"), secret_key_salt),
         (String::from("AI_STUDIO_CERTIFICATE_FINGERPRINT"), CERTIFICATE_FINGERPRINT.get().unwrap().to_string()),
         (String::from("AI_STUDIO_API_PORT"), format!("{api_port}")),
         (String::from("AI_STUDIO_API_TOKEN"), API_TOKEN.to_hex_text().to_string()),
-    ]);
-    dotnet_server_environment.extend(external_http_custom_root_certificate_policy_environment());
+        (String::from(DOTNET_ENV_UI_TOKEN), UI_ACCESS_TOKEN.to_hex_text().to_string()),
+    ];
+    environment.extend(external_http_custom_root_certificate_policy_environment());
+    environment
+}
+
+/// Starts the .NET server in a separate process.
+pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
+    let mut dotnet_server_environment: HashMap<String, String> = HashMap::from_iter(ipc_environment());
+    if let Some(extraction_directory) = dotnet_bundle_extraction_directory(&app_handle) {
+        dotnet_server_environment.insert(String::from(DOTNET_ENV_BUNDLE_EXTRACT_BASE_DIR), extraction_directory);
+    }
 
     info!("Try to start the .NET server...");
     let server_spawn_clone = DOTNET_SERVER.clone();
@@ -185,20 +239,52 @@ pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
         // Log the output of the .NET server:
         // NOTE: Log events are sent via structured HTTP API calls.
         // This loop serves for fundamental output (e.g., startup errors).
+        //
+        // The .NET host writes its own failures to stderr, before any of our .NET code runs.
+        // Without stderr and the termination, a server that cannot even start leaves no trace.
         while let Some(event) = rx.recv().await {
-            if let CommandEvent::Stdout(line) = event {
-                let line_utf8 = String::from_utf8_lossy(&line).to_string();
-                let line = sanitize_stdout_line(line_utf8.trim_end());
-                if !line.trim().is_empty() {
-                    info!(Source = ".NET Server (stdout)"; "{line}");
+            match event {
+                CommandEvent::Stdout(line) => {
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    let line = sanitize_output_line(line_utf8.trim_end());
+                    if !line.trim().is_empty() {
+                        info!(Source = ".NET Server (stdout)"; "{line}");
+                    }
                 }
+
+                CommandEvent::Stderr(line) => {
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    let line = sanitize_output_line(line_utf8.trim_end());
+                    if !line.trim().is_empty() {
+                        error!(Source = ".NET Server (stderr)"; "{line}");
+                    }
+                }
+
+                CommandEvent::Error(e) => {
+                    error!(Source = "Bootloader .NET"; "Failed to read the output of the .NET server: {e}");
+                }
+
+                CommandEvent::Terminated(payload) => {
+                    //
+                    // stop_dotnet_server() takes the child out before killing it. When the child is
+                    // still here, nobody asked the server to stop.
+                    //
+                    let termination = describe_termination(&payload);
+                    if server_spawn_clone.lock().unwrap().is_some() {
+                        error!(Source = "Bootloader .NET"; "The .NET server process terminated unexpectedly with {termination}.");
+                    } else {
+                        info!(Source = "Bootloader .NET"; "The .NET server process terminated with {termination}.");
+                    }
+                }
+
+                _ => (),
             }
         }
     });
 }
 
 /// This endpoint is called by the .NET server to signal that the server is ready.
-pub async fn dotnet_ready(_token: APIToken) {
+pub async fn dotnet_ready() {
 
     // We create a manual scope for the lock to be released as soon as possible.
     // This is necessary because we cannot await any function while the lock is
@@ -215,7 +301,12 @@ pub async fn dotnet_ready(_token: APIToken) {
     }
 
     let dotnet_server_port = *DOTNET_SERVER_PORT;
-    let url = match Url::parse(format!("http://localhost:{dotnet_server_port}").as_str())
+
+    // A development build lets other browsers in, too, such as the one of an agent:
+    #[cfg(debug_assertions)]
+    tokio::task::spawn_blocking(move || crate::app_access::write_dev_boot_link(dotnet_server_port));
+
+    let url = match Url::parse(app_address(dotnet_server_port).as_str())
     {
         Ok(url) => url,
         Err(msg) => {
@@ -224,7 +315,14 @@ pub async fn dotnet_ready(_token: APIToken) {
         }
     };
 
-    change_location_to(url.as_str()).await;
+    change_location_to(url).await;
+}
+
+/// Returns the address of the app on the .NET server. The server listens on the IPv4 loopback
+/// address only, so the window goes there directly instead of resolving `localhost`, which may
+/// answer with the IPv6 loopback address first.
+fn app_address(port: u16) -> String {
+    format!("http://{APP_HOST}:{port}/")
 }
 
 /// Stops the .NET server process.
@@ -247,5 +345,48 @@ pub fn cleanup_dotnet_server() {
     let pid_path = Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME);
     if let Err(e) = kill_stale_process(pid_path, SIDECAR_TYPE) {
         warn!(Source = ".NET"; "Error during the cleanup of .NET: {}", e);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app_window::is_local_http_url;
+
+    #[test]
+    fn the_app_address_is_the_ipv4_loopback_address() {
+        let url = Url::parse(app_address(61153).as_str()).unwrap();
+
+        assert_eq!(url.host_str(), Some("127.0.0.1"));
+        assert_eq!(url.port(), Some(61153));
+        assert_eq!(url.path(), "/");
+    }
+
+    #[test]
+    fn the_app_address_counts_as_local() {
+        let url = Url::parse(app_address(61153).as_str()).unwrap();
+        assert!(is_local_http_url(&url));
+    }
+
+    #[test]
+    fn the_ipc_environment_carries_every_variable_the_dotnet_server_needs() {
+        // Only the start of the app generates the certificate this fingerprint belongs to:
+        let _ = CERTIFICATE_FINGERPRINT.set(String::from("test-fingerprint"));
+
+        let environment = ipc_environment();
+        let keys: Vec<&str> = environment.iter().map(|(key, _)| key.as_str()).collect();
+        for expected in [
+            "AI_STUDIO_SECRET_PASSWORD",
+            "AI_STUDIO_SECRET_KEY_SALT",
+            "AI_STUDIO_CERTIFICATE_FINGERPRINT",
+            "AI_STUDIO_API_PORT",
+            "AI_STUDIO_API_TOKEN",
+            DOTNET_ENV_UI_TOKEN,
+        ] {
+            assert!(keys.contains(&expected), "The environment lacks {expected}.");
+        }
+
+        let ui_token = environment.iter().find(|(key, _)| key == DOTNET_ENV_UI_TOKEN).map(|(_, value)| value.as_str());
+        assert_eq!(ui_token, Some(UI_ACCESS_TOKEN.to_hex_text()));
     }
 }

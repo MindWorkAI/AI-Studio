@@ -5,12 +5,11 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Agents;
 
-public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> logger, ILogger<AgentBase> baseLogger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : AgentBase(baseLogger, settingsManager, dataSourceService, rng)
+public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> logger, ILogger<AgentBase> baseLogger, SettingsManager settingsManager, DataSourceService dataSourceService, DataSourceDescriptionService descriptionService, ThreadSafeRandom rng) : AgentBase(baseLogger, settingsManager, dataSourceService, rng)
 {
     private readonly List<ContentBlock> answers = new();
     
@@ -19,6 +18,9 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
     /// <inheritdoc />
     protected override Type Type => Type.SYSTEM;
     
+    /// <inheritdoc />
+    protected override Tools.Components Component => Tools.Components.AGENT_DATA_SOURCE_SELECTION;
+
     /// <inheritdoc />
     public override string Id => "Data Source Selection";
 
@@ -111,7 +113,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
             return EMPTY_BLOCK;
         
         var thread = this.CreateChatThread(this.SystemPrompt(availableDataSources));
-        var userRequest = this.AddUserRequest(thread, text.Text);
+        var userRequest = AddUserRequest(thread, text.Text);
         await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         
         var answer = thread.Blocks[^1];
@@ -151,12 +153,12 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
 
         if (!agentProvider.AllowsDataSourceAccess(this.SettingsManager, requiredDataSecurity, requiredConfidenceLevel))
         {
-            logger.LogWarning($"The agent for data source selection uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).GetName()}', but the available data sources require data security '{requiredDataSecurity}' and provider confidence '{requiredConfidenceLevel.GetName()}'. The agent cannot select data sources.");
+            logger.LogWarning($"The agent for data source selection uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).Name}', but the available data sources require data security '{requiredDataSecurity}' and provider confidence '{requiredConfidenceLevel.Name}'. The agent cannot select data sources.");
             return [];
         }
 
         // Assign the provider settings to the agent:
-        logger.LogInformation($"The agent for the data source selection uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.ToName()}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
+        logger.LogInformation($"The agent for the data source selection uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.Name}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.Name}).");
         this.ProviderSettings = agentProvider;
 
         //
@@ -187,75 +189,24 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
         var additionalData = new Dictionary<string, string>();
         logger.LogInformation("Preparing the list of allowed data sources for the agent to choose from.");
         
-        // Notice: We do not dispose the Rust service here. The Rust service is a singleton
-        // and will be disposed when the application shuts down:
-        var rustService = Program.SERVICE_PROVIDER.GetService<RustService>()!;
-        
         var sb = new StringBuilder();
-        sb.AppendLine("The following data sources are available for selection:");
+        sb.AppendLineLF("The following data sources are available for selection:");
         foreach (var ds in dataSources.AllowedDataSources)
         {
+            var description = await descriptionService.GetDescriptionAsync(ds, token);
+            var descriptionPart = string.IsNullOrWhiteSpace(description) ? string.Empty : $", description='{description}'";
             switch (ds)
             {
                 case DataSourceLocalDirectory localDirectory:
-                    if (string.IsNullOrWhiteSpace(localDirectory.Description))
-                        sb.AppendLine($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}'");
-                    else
-                    {
-                        var description = localDirectory.Description.Replace("\n", " ").Replace("\r", " ");
-                        sb.AppendLine($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}', description='{description}'");
-                    }
+                    sb.AppendLineLF($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}'{descriptionPart}");
                     break;
 
                 case DataSourceLocalFile localFile:
-                    if (string.IsNullOrWhiteSpace(localFile.Description))
-                        sb.AppendLine($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}'");
-                    else
-                    {
-                        var description = localFile.Description.Replace("\n", " ").Replace("\r", " ");
-                        sb.AppendLine($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}', description='{description}'");
-                    }
+                    sb.AppendLineLF($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}'{descriptionPart}");
                     break;
 
                 case IERIDataSource eriDataSource:
-                    var eriServerDescription = string.Empty;
-
-                    try
-                    {
-                        //
-                        // Call the ERI server to get the server description:
-                        //
-                        using var eriClient = ERIClientFactory.Get(eriDataSource.Version, eriDataSource)!;
-                        var authResponse = await eriClient.AuthenticateAsync(rustService, cancellationToken: token);
-                        if (authResponse.Successful)
-                        {
-                            var serverDescriptionResponse = await eriClient.GetDataSourceInfoAsync(token);
-                            if (serverDescriptionResponse.Successful)
-                            {
-                                eriServerDescription = serverDescriptionResponse.Data.Description;
-
-                                // Remove all line breaks from the description:
-                                eriServerDescription = eriServerDescription.Replace("\n", " ").Replace("\r", " ");
-                            }
-                            else
-                                logger.LogWarning($"Was not able to retrieve the server description from the ERI data source '{eriDataSource.Name}'. Message: {serverDescriptionResponse.Message}");
-                        }
-                        else
-                            logger.LogWarning($"Was not able to authenticate with the ERI data source '{eriDataSource.Name}'. Message: {authResponse.Message}");
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogWarning($"The ERI data source '{eriDataSource.Name}' is not available. Thus, we cannot retrieve the server description. Error: {e.Message}");
-                    }
-
-                    //
-                    // Append the ERI data source to the list. Use the server description if available:
-                    //
-                    if (string.IsNullOrWhiteSpace(eriServerDescription))
-                        sb.AppendLine($"- Id={ds.Id}, name='{eriDataSource.Name}', type=external data source");
-                    else
-                        sb.AppendLine($"- Id={ds.Id}, name='{eriDataSource.Name}', type=external data source, description='{eriServerDescription}'");
-
+                    sb.AppendLineLF($"- Id={ds.Id}, name='{eriDataSource.Name}', type=external data source{descriptionPart}");
                     break;
             }
         }
@@ -315,7 +266,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                 // We know how bad LLM may be in generating JSON without surrounding text.
                 // Thus, we expect the worst and try to extract the JSON list from the text:
                 //
-                var json = ExtractJson(selectedDataSourcesJson);
+                var json = ModelAnswerJson.ExtractObjectList(selectedDataSourcesJson);
                 
                 try
                 {
@@ -341,65 +292,5 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
                 logger.LogWarning($"The agent answered with an unexpected content type '{aiResponse.ContentType}'.");
                 return [];
         }
-    }
-
-    /// <summary>
-    /// Extracts the JSON list from the given text. The text may contain additional
-    /// information around the JSON list. The method tries to extract the JSON list
-    /// from the text.
-    /// </summary>
-    /// <remarks>
-    /// Algorithm: The method searches for the first line that contains only a '[' character.
-    /// Then, it searches for the first line that contains only a ']' character. The method
-    /// returns the text between these two lines (including the brackets). When the method
-    /// cannot find the JSON list, it returns an empty string.
-    /// </remarks>
-    /// <param name="text">The text that may contain the JSON list.</param>
-    /// <returns>The extracted JSON list.</returns>
-    private static ReadOnlySpan<char> ExtractJson(ReadOnlySpan<char> text)
-    {
-        var startIndex = -1;
-        var endIndex = -1;
-        var foundStart = false;
-        var foundEnd = false;
-        var lineStart = 0;
-        
-        for (var i = 0; i <= text.Length; i++)
-        {
-            // Handle the end of the line or the end of the text:
-            if (i == text.Length || text[i] == '\n')
-            {
-                if (IsCharacterAloneInLine(text, lineStart, i, '[') && !foundStart)
-                {
-                    startIndex = lineStart;
-                    foundStart = true;
-                }
-                else if (IsCharacterAloneInLine(text, lineStart, i, ']') && foundStart && !foundEnd)
-                {
-                    endIndex = i;
-                    foundEnd = true;
-                    break;
-                }
-                
-                lineStart = i + 1;
-            }
-        }
-        
-        if (foundStart && foundEnd)
-        {
-            // Adjust endIndex for slicing, ensuring it's within bounds:
-            return text.Slice(startIndex, Math.Min(text.Length, endIndex + 1) - startIndex);
-        }
-        
-        return ReadOnlySpan<char>.Empty;
-    }
-    
-    private static bool IsCharacterAloneInLine(ReadOnlySpan<char> text, int lineStart, int lineEnd, char character)
-    {
-        for (var i = lineStart; i < lineEnd; i++)
-            if (!char.IsWhiteSpace(text[i]) && text[i] != character)
-                return false;
-
-        return true;
     }
 }

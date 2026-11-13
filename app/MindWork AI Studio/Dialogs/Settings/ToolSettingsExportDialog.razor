@@ -5,7 +5,7 @@
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.Dataset" Class="mr-2" />
+            <MudIcon Icon="@AppIcons.EXPORT_CONFIGURATION" Class="mr-2" />
             @T("Export tool configuration")
         </MudText>
     </TitleContent>
@@ -22,7 +22,7 @@
                 <MudProgressCircular Indeterminate="@true" Size="Size.Small" />
                 <MudText>@T("Loading tool configuration...")</MudText>
             }
-            else if (this.toolDefinition is null || this.implementation is null)
+            else if (this.item is null)
             {
                 @if (string.IsNullOrWhiteSpace(this.message))
                 {
@@ -31,9 +31,9 @@
             }
             else
             {
-                <MudText Typo="Typo.subtitle1" Class="mb-2">@this.implementation.GetDisplayName()</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mb-2">@this.item.DisplayName</MudText>
                 <MudText Typo="Typo.body2" Class="mb-4">
-                    @T("Export saved settings as Lua code for your configuration plugin. You can combine exports and adapt the code before deploying it.")
+                    @TA("Export saved settings as Lua code for your configuration plugin. You can combine exports and adapt the code before deploying it.")
                 </MudText>
 
                 @if (this.areas.Count > 0)
@@ -48,7 +48,7 @@
                         {
                             <MudCheckBox @key="area.Id" T="bool" Label="@area.Label" Value="@this.selectedAreaIds.Contains(area.Id)" ValueChanged="@(selected => this.SelectArea(area.Id, selected))" Disabled="@this.isExporting" />
                         }
-                        <MudText Typo="Typo.caption">@T("Each area is independent. Select general settings separately if you want to include them.")</MudText>
+                        <MudText Typo="Typo.caption">@TA("Each area is independent. Select general settings separately if you want to include them.")</MudText>
                     </MudPaper>
                 }
 
@@ -60,7 +60,7 @@
                 @if (this.WarnAboutEmptyLockedSettings)
                 {
                     <MudAlert Severity="Severity.Warning" Class="mb-4">
-                        @string.Format(T("{0} of the selected settings are empty and are exported as empty locked values. Users cannot change a locked setting, so an empty required one leaves the tool unusable. Deselect the areas you have not configured, or export them as editable defaults."), this.EmptySelectedFieldCount)
+                        @string.Format(TA("{0} of the selected settings are empty and are exported as empty locked values. Users cannot change a locked setting, so an empty required one leaves the tool unusable. Deselect the areas you have not configured, or export them as editable defaults."), this.EmptySelectedFieldCount)
                     </MudAlert>
                 }
 
@@ -90,7 +90,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Text">@T("Cancel")</MudButton>
-        <MudButton OnClick="@this.Export" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(!this.CanExport)">
+        <MudButton OnClick="@this.Export" Variant="Variant.Filled" StartIcon="@AppIcons.COPY" Disabled="@(!this.CanExport)">
             @T("Export to clipboard")
         </MudButton>
     </DialogActions>

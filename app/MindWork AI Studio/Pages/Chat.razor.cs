@@ -22,10 +22,22 @@ public partial class Chat : MSGComponentBase
     
     private ChatThread? chatThread;
     private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
+
+    /// <summary>
+    /// Whether an answer is being written for the open chat, as the chat component last told.
+    /// </summary>
+    /// <remarks>
+    /// The provider selection is locked meanwhile. Another provider would not reach the answer, which
+    /// keeps the one it started with, but the chat would show the other one while the answer is still
+    /// being written.
+    /// </remarks>
+    private bool isAnswerBeingWritten;
+
     private bool workspaceOverlayVisible;
     private bool workspaceSearchVisible;
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
+    private ChatComponent? chatComponent;
     private double splitterPosition = 30;
     private bool skipRenderAfterSplitterChange;
     private readonly ChatComposerState composerState = new();
@@ -85,11 +97,11 @@ public partial class Chat : MSGComponentBase
 
     #endregion
     
-    private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? Icons.Material.Filled.ArrowCircleLeft : Icons.Material.Filled.ArrowCircleRight;
+    private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? AppIcons.HIDE_SIDEBAR : AppIcons.SHOW_SIDEBAR;
 
-    private string WorkspaceSearchIcon => this.workspaceSearchVisible ? Icons.Material.Filled.SearchOff : Icons.Material.Filled.Search;
+    private string WorkspaceSearchIcon => this.workspaceSearchVisible ? AppIcons.HIDE_SEARCH : AppIcons.SEARCH;
 
-    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Hide search") : T("Search your workspaces");
+    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Hide search") : TA("Search your workspaces");
 
     private bool AreWorkspacesVisible => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
                                          && ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
@@ -154,6 +166,23 @@ public partial class Chat : MSGComponentBase
             return;
 
         await this.workspaces.ToggleSearchAsync();
+    }
+
+    /// <summary>
+    /// Starts a new chat in a workspace, when the workspace tree asks for one.
+    /// </summary>
+    /// <remarks>
+    /// The page reads its reference to the chat component only now, when the user clicked. The chat
+    /// component is created anew whenever the workspace sidebar is shown or hidden, so a reference
+    /// taken earlier could point to one which is gone.
+    /// </remarks>
+    /// <param name="workspaceId">The ID of the workspace.</param>
+    private async Task StartNewChatInWorkspace(Guid workspaceId)
+    {
+        if (this.chatComponent is null)
+            return;
+
+        await this.chatComponent.StartNewChatInWorkspaceAsync(workspaceId);
     }
 
     #region Overrides of MSGComponentBase

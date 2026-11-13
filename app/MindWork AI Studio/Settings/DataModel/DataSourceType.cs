@@ -24,4 +24,9 @@ public enum DataSourceType
     /// External data source accessed via an ERI server, cf. https://github.com/MindWorkAI/ERI.
     /// </summary>
     ERI_V1,
+
+    /// <summary>
+    /// An e-mail mailbox on an IMAP server, kept in a list of its own, cf. DataSourceMailbox.
+    /// </summary>
+    MAILBOX,
 }

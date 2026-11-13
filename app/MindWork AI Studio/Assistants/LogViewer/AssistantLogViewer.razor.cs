@@ -212,7 +212,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         var path = this.CurrentLogPath;
         if (string.IsNullOrWhiteSpace(path))
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The log file path is not available yet.")));
+            await this.MessageBus.SendWarning(new(AppIcons.FOLDER_OPEN, T("The log file path is not available yet.")));
             return;
         }
 
@@ -224,18 +224,18 @@ public partial class AssistantLogViewer : MSGComponentBase
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Could not open the log file location in the file manager.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the log file location.")));
+            await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, T("Could not open the log file location.")));
             return;
         }
 
         if (response.Success)
         {
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FolderOpen, T("Opened the log file location.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.FOLDER_OPEN, T("Opened the log file location.")));
             return;
         }
 
         var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the log file location: {0}"), issue)));
+        await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, string.Format(T("Could not open the log file location: {0}"), issue)));
     }
 
     private void ClearFilters()
@@ -443,7 +443,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         return value == OTHER_OPTION_VALUE ? T("Other") : value;
     }
 
-    private string GetMultiSelectionText(List<string?>? selectedValues)
+    private string GetMultiSelectionText(IReadOnlyList<string?>? selectedValues)
     {
         if (selectedValues is null || selectedValues.Count == 0)
             return T("All");

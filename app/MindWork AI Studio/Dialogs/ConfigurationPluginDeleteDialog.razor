@@ -2,7 +2,7 @@
 <MudDialog>
     <DialogContent>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @(string.Format(T("Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files."), this.PluginName))
+            @(string.Format(TA("Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files."), this.PluginName))
         </MudJustifiedText>
 
         @if (this.Consequences.Count > 0)
@@ -14,7 +14,7 @@
             <MudList T="string" Class="mb-3">
                 @foreach (var consequence in this.Consequences)
                 {
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.RemoveCircleOutline" IconColor="Color.Error">
+                    <MudListItem T="string" Icon="@AppIcons.REMOVE" IconColor="Color.Error">
                         @consequence
                     </MudListItem>
                 }
@@ -28,7 +28,7 @@
         }
 
         <MudJustifiedText Typo="Typo.body2">
-            @T("You can install the plugin again later, but any changes you made to its settings are lost.")
+            @TA("You can install the plugin again later, but any changes you made to its settings are lost.")
         </MudJustifiedText>
     </DialogContent>
     <DialogActions>

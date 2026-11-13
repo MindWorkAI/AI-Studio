@@ -13,6 +13,9 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
     /// </summary>
     public Dictionary<string, Dictionary<string, string>> Settings { get; set; } = [];
 
+    /// <summary>
+    /// The tool collections preselected per component, see DisabledToolIds for the IDs.
+    /// </summary>
     public Dictionary<string, HashSet<string>> DefaultToolIdsByComponent { get; set; } = [];
 
     public HashSet<string> VisibleToolSelectionComponents { get; set; } = [];
@@ -22,11 +25,40 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
         x => x.EnableTools,
         true);
 
+    /// <summary>
+    /// The tool collections an organization switched off.
+    /// </summary>
+    /// <remarks>
+    /// The IDs are those of tool collections. A tool outside of a declared collection forms one of
+    /// its own under its own ID, which is why the names of this and the other settings still speak
+    /// of tools. The ID of a tool inside a declared collection stands for its whole collection, see
+    /// ToolRegistry.GetCollectionId.
+    /// </remarks>
     public HashSet<string> DisabledToolIds { get; set; } = ManagedConfiguration.Register(
         configSelection,
         x => x.DisabledToolIds,
         []);
 
+    /// <summary>
+    /// The tool collections the user switched off, because they never need them.
+    /// </summary>
+    /// <remarks>
+    /// The counterpart to DisabledToolIds for the user, and deliberately not managed: switching off
+    /// a tool only takes something away, which every user may do for themselves, while a tool the
+    /// organization switched off stays off whatever this holds. A collection named here appears in
+    /// no tool selection, and no model gets it. Selections which name it keep it, so switching the
+    /// collection on again brings it back wherever it was selected. The IDs are those of tool
+    /// collections, like those of DisabledToolIds.
+    /// </remarks>
+    public HashSet<string> UserDisabledToolIds { get; set; } = [];
+
+    /// <summary>
+    /// The minimum provider confidence per tool collection, see DisabledToolIds for the IDs.
+    /// </summary>
+    /// <remarks>
+    /// When the ID of a collection and those of its tools carry different levels, the highest one
+    /// applies, see SettingsManager.GetMinimumProviderConfidenceResolution.
+    /// </remarks>
     public Dictionary<string, string> MinimumProviderConfidenceByToolId { get; set; } = ManagedConfiguration.Register(
         configSelection,
         x => x.MinimumProviderConfidenceByToolId,
@@ -42,10 +74,10 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
     /// known at compile time, yet an organization has to be able to configure them the same way.
     /// <br/><br/>
     /// A secret field travels here too, but only encrypted with the enterprise secret, in the
-    /// same "ENC:v1:" form the providers use for their API keys. What is stored is therefore
-    /// ciphertext, worthless without a secret that lives outside every deployed file. A plaintext
-    /// secret is refused rather than used, and a secret is never accepted as a pre-filled default
-    /// — see the tool settings service for both rules.
+    /// same "ENC:v2:" or "ENC:v1:" form the providers use for their API keys. What is stored is
+    /// therefore ciphertext, worthless without a secret that lives outside every deployed file. A
+    /// plaintext secret is refused rather than used, and a secret is never accepted as a
+    /// pre-filled default — see the tool settings service for both rules.
     /// </remarks>
     public Dictionary<string, string> LockedToolSettings { get; set; } = ManagedConfiguration.Register(
         configSelection,

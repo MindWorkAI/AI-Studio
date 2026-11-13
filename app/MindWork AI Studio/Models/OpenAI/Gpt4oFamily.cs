@@ -33,7 +33,8 @@ public sealed class Gpt4oFamily : ModelFamily
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
             .Apis(RESPONSES_API)
             .ContextWindow(128_000)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base")
+            .SystemPromptRole(SystemPromptRole.DEVELOPER);
 
         //
         // The search previews are the same generation and almost nothing like it: they search the
@@ -45,12 +46,14 @@ public sealed class Gpt4oFamily : ModelFamily
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | WEB_SEARCH)
             .Apis(CHAT_COMPLETION_API)
             .ContextWindow(128_000)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base")
+            .SystemPromptRole(SystemPromptRole.DEVELOPER);
 
         builder.Rule("gpt-4o-mini-search-preview").AsExact()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | WEB_SEARCH)
             .Apis(CHAT_COMPLETION_API)
             .ContextWindow(128_000)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base")
+            .SystemPromptRole(SystemPromptRole.DEVELOPER);
     }
 }

@@ -2,23 +2,23 @@
 @inherits MSGComponentBase
 
 <MudTooltip Placement="Placement.Top" Text="@T("Start a new chat with a chat template")">
-    <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="@Origin.BottomLeft" Class="@this.MarginClass">
+    <MudMenu AnchorOrigin="Origin.TopLeft" TransformOrigin="@Origin.BottomLeft" Class="@this.MarginClass" MaxHeight="@MenuDefaults.MAX_HEIGHT">
         <ActivatorContent>
             @if (this.CurrentChatTemplate != ChatTemplate.NO_CHAT_TEMPLATE)
             {
-                <MudButton IconSize="Size.Large" StartIcon="@this.ChatTemplateIcon(this.CurrentChatTemplate)" IconColor="Color.Default">
+                <MudButton IconSize="Size.Large" StartIcon="@this.ChatTemplateIcon(this.CurrentChatTemplate)" IconColor="Color.Default" OnClick="@context.ToggleAsync">
                     @this.CurrentChatTemplate.GetSafeName()
                 </MudButton>
             }
             else
             {
-                <MudIconButton Icon="@Icons.Material.Filled.RateReview" />
+                <MudIconButton Icon="@AppIcons.CHAT_TEMPLATE" OnClick="@context.ToggleAsync" />
             }
         </ActivatorContent>
         <ChildContent>
-            <MudMenuItem Icon="@Icons.Material.Filled.Settings" Label="@T("Manage your templates")" OnClick="@(async () => await this.OpenSettingsDialog())" />
+            <MudMenuItem Icon="@AppIcons.SETTINGS" Label="@TA("Manage your templates")" OnClick="@(async () => await this.OpenSettingsDialog())" />
             <MudDivider/>
-            <MudMenuItem Icon="@Icons.Material.Filled.AddComment" Label="@T("Create template from current chat")" OnClick="@(async () => await this.CreateNewChatTemplateFromChat())" Disabled="@(!this.CanChatThreadBeUsedForTemplate)"/>
+            <MudMenuItem Icon="@AppIcons.CREATE_CHAT_TEMPLATE" Label="@T("Create template from current chat")" OnClick="@(async () => await this.CreateNewChatTemplateFromChat())" Disabled="@(!this.CanChatThreadBeUsedForTemplate)"/>
             <MudDivider/>
             @foreach (var chatTemplate in this.SettingsManager.ConfigurationData.ChatTemplates.GetAllChatTemplates())
             {

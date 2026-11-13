@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.MyTasks;
@@ -11,9 +12,12 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     
     protected override string Title => T("My Tasks");
     
-    protected override string Description => T("You received a cryptic email or document that was sent to many recipients and you are now wondering if you need to do something? Copy the text into the input field, attach one or more documents, or use both. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.");
+    protected override string Description => TA("You received a cryptic email or document that was sent to many recipients and you are now wondering if you need to do something? Copy the text into the input field, attach one or more documents, or use both. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.");
     
-    protected override string SystemPrompt => 
+    // This prompt gives advice in the chosen language, which suits the follow-up questions of the chat:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
+
+    protected override string SystemPrompt =>
         $"""
         You are a friendly and professional business expert. You receive business emails, protocols,
         reports, etc. as text input and/or attached documents. Additionally, you know the user's role
@@ -43,12 +47,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
         {
             var originalChatThread = this.ChatThread ?? new ChatThread();
             if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
-            {
-                return originalChatThread with
-                {
-                    SystemPrompt = SystemPrompts.DEFAULT,
-                };
-            }
+                return originalChatThread;
 
             var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
             var visiblePromptTime = earliestBlock is null
@@ -79,7 +78,6 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
             return originalChatThread with
             {
                 ChatId = Guid.NewGuid(),
-                SystemPrompt = SystemPrompts.DEFAULT,
                 Blocks = transferredBlocks,
             };
         }
@@ -135,23 +133,16 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
         state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_MY_TASKS_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputText = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputText = payload.Text;
 
     #endregion
     
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text) && !this.HasValidInputDocuments())
-            return T("Please provide some text or at least one valid document as input. For example, an email.");
+            return TA("Please provide some text or at least one valid document as input. For example, an email.");
         
         return null;
     }
@@ -161,13 +152,13 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private async Task OnDocumentsChanged(HashSet<FileAttachment> _)
     {
         if(this.Form is not null)
-            await this.Form.Validate();
+            await this.Form.ValidateAsync();
     }
 
     private string? ValidateProfile(Profile profile)
     {
         if(profile == Profile.NO_PROFILE)
-            return T("Please select one of your profiles.");
+            return TA("Please select one of your profiles.");
         
         return null;
     }
@@ -175,7 +166,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }
@@ -188,7 +179,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
         if(this.selectedTargetLanguage is CommonLanguages.OTHER)
             return this.customTargetLanguage;
         
-        return this.selectedTargetLanguage.Name();
+        return this.selectedTargetLanguage.Name;
     }
 
     private ContentBlock CloneHiddenUserBlockWithoutAttachments(ContentBlock block)
@@ -210,7 +201,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     
     private async Task AnalyzeText()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

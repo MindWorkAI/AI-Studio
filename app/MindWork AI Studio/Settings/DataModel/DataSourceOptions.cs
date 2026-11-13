@@ -31,6 +31,19 @@ public sealed class DataSourceOptions
     public bool AutomaticValidation { get; set; }
 
     /// <summary>
+    /// How the data sources should be searched.
+    /// </summary>
+    /// <remarks>
+    /// This is a preference. The model can search the data sources itself only when the tool
+    /// semantic_search can be offered to it: the model has to be able to call tools, and neither
+    /// the tools nor this one may be switched off. Otherwise, AI Studio searches them with every
+    /// message.<br/><br/>
+    /// Chats and settings saved before this choice existed get semantic search, since it is the
+    /// new default.
+    /// </remarks>
+    public DataSourceRetrievalMode RetrievalMode { get; set; } = DataSourceRetrievalMode.SEMANTIC_SEARCH;
+
+    /// <summary>
     /// The preselected data source IDs. When these data sources are available
     /// for the selected provider, they are pre-selected.
     /// </summary>
@@ -60,6 +73,7 @@ public sealed class DataSourceOptions
         DisableDataSources = this.DisableDataSources,
         AutomaticDataSourceSelection = this.AutomaticDataSourceSelection,
         AutomaticValidation = this.AutomaticValidation,
+        RetrievalMode = this.RetrievalMode,
         PreselectedDataSourceIds = [..this.PreselectedDataSourceIds],
     };
 }

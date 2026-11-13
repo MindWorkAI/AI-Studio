@@ -25,7 +25,8 @@ public sealed class Gpt35Family : ModelFamily
         builder.Rule("gpt-3.5").AsPrefix()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT)
             .Apis(CHAT_COMPLETION_API)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "cl100k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "cl100k_base")
+            .SystemPromptRole(SystemPromptRole.SYSTEM);
 
         //
         // The odd one out, and kept odd on purpose: the previous rules put this one model on the
@@ -36,6 +37,7 @@ public sealed class Gpt35Family : ModelFamily
         builder.Rule("gpt-3.5-turbo").AsExact()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT)
             .Apis(RESPONSES_API)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "cl100k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "cl100k_base")
+            .SystemPromptRole(SystemPromptRole.SYSTEM);
     }
 }

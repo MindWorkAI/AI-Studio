@@ -46,9 +46,27 @@ public sealed class ReasoningDispatcherTests
     [TestCase(Host.LLAMA_CPP, """ "reasoning_budget": 0 """, ReasoningConfigurationState.EXPLICITLY_DISABLED)]
     [TestCase(Host.VLLM, """ "thinking_token_budget": 2048 """, ReasoningConfigurationState.EXPLICITLY_ENABLED)]
     [TestCase(Host.VLLM, """ "chat_template_kwargs": { "thinking": true } """, ReasoningConfigurationState.EXPLICITLY_ENABLED)]
+    [TestCase(Host.LLMMAN, """ "reasoning_budget": 0 """, ReasoningConfigurationState.EXPLICITLY_DISABLED, Description = "llmman serves GGUF models with llama.cpp and hands the budget to it.")]
+    [TestCase(Host.LLMMAN, """ "thinking_token_budget": 2048 """, ReasoningConfigurationState.EXPLICITLY_ENABLED, Description = "llmman serves other models with vLLM and hands the budget to it.")]
     public void EachSelfHostedEngineIsReadInItsOwn(Host host, string parameters, ReasoningConfigurationState wanted)
     {
         Assert.That(ReasoningDispatcher.WhatTheParametersSay(LLMProviders.SELF_HOSTED, host, parameters), Is.EqualTo(wanted));
+    }
+
+    [Test]
+    public void LlmmanIsReadInEverythingItsEnginesAreReadIn()
+    {
+        //
+        // llmman decides by itself whether llama.cpp or vLLM serves a model. A dialect either of
+        // them learns later has to reach llmman as well, or a switch set for llmman goes unseen:
+        //
+        var llmman = ReasoningDispatcher.DialectsOf(LLMProviders.SELF_HOSTED, Host.LLMMAN);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(llmman, Is.SupersetOf(ReasoningDispatcher.DialectsOf(LLMProviders.SELF_HOSTED, Host.LLAMA_CPP)));
+            Assert.That(llmman, Is.SupersetOf(ReasoningDispatcher.DialectsOf(LLMProviders.SELF_HOSTED, Host.VLLM)));
+        }
     }
 
     [Test]
@@ -59,12 +77,12 @@ public sealed class ReasoningDispatcherTests
         // switch into a Mistral provider says nothing -- and claiming it did would light an indicator
         // for a request which will never carry that parameter anywhere.
         //
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(ReasoningDispatcher.WhatTheParametersSay(LLMProviders.MISTRAL, Host.NONE, """ "enable_thinking": true """), Is.EqualTo(ReasoningConfigurationState.NOT_CONFIGURED));
             Assert.That(ReasoningDispatcher.WhatTheParametersSay(LLMProviders.ANTHROPIC, Host.NONE, """ "reasoning_effort": "high" """), Is.EqualTo(ReasoningConfigurationState.NOT_CONFIGURED));
             Assert.That(ReasoningDispatcher.WhatTheParametersSay(LLMProviders.MISTRAL, Host.NONE, """ "reasoning_effort": "high" """), Is.EqualTo(ReasoningConfigurationState.EXPLICITLY_ENABLED), "And the one it does speak still counts.");
-        });
+        }
     }
 
     [Test]
@@ -113,7 +131,7 @@ public sealed class ReasoningDispatcherTests
     {
         var known = ReasoningDispatcher.Dialects.Select(dialect => dialect.Dialect).ToHashSet();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             foreach (var provider in Enum.GetValues<LLMProviders>())
             foreach (var host in Enum.GetValues<Host>())
@@ -123,6 +141,6 @@ public sealed class ReasoningDispatcherTests
                 Assert.That(named, Is.SubsetOf(known), $"{provider} on {host} names a dialect nothing answers to.");
                 Assert.That(named, Is.Unique, $"{provider} on {host} names a dialect twice.");
             }
-        });
+        }
     }
 }

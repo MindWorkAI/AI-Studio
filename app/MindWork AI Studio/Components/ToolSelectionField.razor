@@ -6,7 +6,7 @@
                               OptionDescription="@this.Label"
                               OptionHelp="@this.Help"
                               Data="@this.availableTools"
-                              SelectedValues="@(() => this.SelectedToolIds)"
+                              SelectedValues="@this.GetShownToolIds"
                               SelectionUpdateAsync="@this.OptionChangedAsync"
                               Disabled="@(() => this.ReadOnly || this.Disabled)"
                               IsItemLocked="@this.IsToolLocked"

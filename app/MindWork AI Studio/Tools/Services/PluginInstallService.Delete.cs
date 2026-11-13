@@ -55,7 +55,8 @@ public sealed partial class PluginInstallService
             DocumentAnalysisPolicies: CountObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY),
             LockedSettings: lockedSettings,
             MandatoryInfos: configurationPlugin.MandatoryInfos.Count,
-            Introductions: configurationPlugin.Introductions.Count);
+            Introductions: configurationPlugin.Introductions.Count,
+            MailboxProviders: configurationPlugin.MailboxProviders.Count);
 
         int CountObjects(PluginConfigurationObjectType type) => configObjects.Count(configObject => configObject.Type == type);
     }
@@ -182,7 +183,7 @@ public sealed partial class PluginInstallService
         // alongside them in a subdirectory.
         //
         if (PluginFactory.IsOrganizationConfigurationPath(plugin.LocalPath))
-            return TB("Plugins deployed by your organization cannot be deleted.");
+            return TA("Plugins deployed by your organization cannot be deleted.");
 
         //
         // Organizations also roll plugins out past these directories, e.g. through their MDM
@@ -192,7 +193,7 @@ public sealed partial class PluginInstallService
         // manual placement as the only way in, and the file system as the way back out.
         //
         if (plugin.IsManagedByConfigServer)
-            return TB("Plugins deployed by your organization cannot be deleted.");
+            return TA("Plugins deployed by your organization cannot be deleted.");
 
         if (!PluginFactory.IsInsidePluginsRoot(plugin.LocalPath) || PluginFactory.IsPluginsRoot(plugin.LocalPath))
             return TB("This individual plugin’s directory is outside the expected plugins directory.");
@@ -246,7 +247,7 @@ public sealed partial class PluginInstallService
     private static string CreateDeleteBackupDirectory(IAvailablePlugin plugin)
     {
         var backupRoot = Path.Join(SettingsManager.DataDirectory, DELETE_BACKUP_DIRECTORY);
-        return Path.Join(backupRoot, $"{plugin.Type.GetDirectory()}-{plugin.Id:N}-{Guid.NewGuid():N}");
+        return Path.Join(backupRoot, $"{plugin.Type.Directory}-{plugin.Id:N}-{Guid.NewGuid():N}");
     }
 
     private async Task TryRestoreDeletedPluginAsync(IAvailablePlugin plugin, string pluginDirectory, string backupDirectory, PluginDeleteSideEffects sideEffects, CancellationToken token)

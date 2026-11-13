@@ -66,6 +66,14 @@ public static class ModelKindCorpus
         new(SELF_HOSTED, "LaBSE", EMBEDDING),
         new(SELF_HOSTED, "instructor-xl", EMBEDDING),
         new(SELF_HOSTED, "gtr-t5-large", EMBEDDING),
+
+        //
+        // llmman lists every model by the full reference it pulled it from: a registry, a namespace,
+        // the repository, and a tag. Whatever is in front of the model has to come off before the
+        // word which says what it is for can be found:
+        //
+        new(SELF_HOSTED, "docker.io/ai/embeddinggemma:latest", EMBEDDING),
+        new(SELF_HOSTED, "docker.io/ai/nomic-embed-text-v1.5:latest", EMBEDDING),
     ];
 
     /// <summary>
@@ -144,6 +152,9 @@ public static class ModelKindCorpus
         new(ALIBABA_CLOUD, "qwen3-asr-flash", TRANSCRIPTION),
         new(ALIBABA_CLOUD, "qwen3-asr-1.7b", TRANSCRIPTION),
         new(ALIBABA_CLOUD, "qwen-audio-3.0-asr-flash-streaming", TRANSCRIPTION),
+
+        // Voxtral as llmman lists it, from the GGUF build on Hugging Face which llama.cpp serves:
+        new(SELF_HOSTED, "hf.co/ggml-org/Voxtral-Mini-3B-2507-GGUF:latest", TRANSCRIPTION),
     ];
 
     /// <summary>
@@ -395,6 +406,14 @@ public static class ModelKindCorpus
         new(GROQ, "groq/compound", CHAT),
         new(GROQ, "groq/compound-mini", CHAT),
         new(GOOGLE, "gemini-robotics-er-1.5-preview", CHAT),
+
+        //
+        // Chat models as llmman lists them, with the registry, the namespace, and the tag still in
+        // front of and behind the model. None of these parts may turn one into something else:
+        //
+        new(SELF_HOSTED, "hf.co/unsloth/Qwen3.5-0.8B-GGUF:latest", CHAT),
+        new(SELF_HOSTED, "docker.io/ai/qwen3.5:0.8b", CHAT),
+        new(SELF_HOSTED, "hf.co/HuggingFaceTB/SmolLM2-135M-Instruct:latest", CHAT),
     ];
 
     /// <summary>

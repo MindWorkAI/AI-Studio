@@ -80,9 +80,9 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
             return this.EmptySelectionText ?? T("No items selected.");
         
         if(selectedValues.Count == 1)
-            return this.SingleSelectionText ?? T("You have selected 1 item.");
+            return this.SingleSelectionText ?? TA("You have selected 1 item.");
         
-        return string.Format(this.MultipleSelectionText ?? T("You have selected {0} items."), selectedValues.Count);
+        return string.Format(this.MultipleSelectionText ?? TA("You have selected {0} items."), selectedValues.Count);
     }
 
     private bool IsLockedValue(TData value) => this.IsItemLocked(value);

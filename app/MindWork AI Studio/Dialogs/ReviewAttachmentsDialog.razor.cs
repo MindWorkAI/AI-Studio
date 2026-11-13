@@ -8,7 +8,7 @@ namespace AIStudio.Dialogs;
 
 public partial class ReviewAttachmentsDialog : MSGComponentBase
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ReviewAttachmentsDialog).Namespace, nameof(ReviewAttachmentsDialog));
+    private new static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ReviewAttachmentsDialog).Namespace, nameof(ReviewAttachmentsDialog));
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -37,6 +37,25 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     /// </remarks>
     [Parameter]
     public Func<bool>? IsAttachingUnavailable { get; set; }
+
+    /// <summary>
+    /// Keeps what the preview reads of an attachment, so that sending it does not read the file again, cf. DocumentCheckDialog.KeepReadText.
+    /// </summary>
+    /// <remarks>
+    /// Null for a message which was already sent, and wherever nothing is sent later.
+    /// </remarks>
+    [Parameter]
+    public Func<FileAttachment, string, FileVersion, Task>? KeepReadText { get; set; }
+
+    /// <summary>
+    /// Whether the user may remove attachments here.
+    /// </summary>
+    /// <remarks>
+    /// False when this dialog gathers the attachments of several messages at once: a removal would
+    /// reach into a message that was already sent, and nothing here could tell which one.
+    /// </remarks>
+    [Parameter]
+    public bool CanRemove { get; set; } = true;
 
     [Inject]
     private IDialogService DialogService { get; set; } = null!;
@@ -74,7 +93,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     }
 
     /// <summary>
-    /// The attachments, sorted by their folder and, within it, by their file name.
+    /// The attachments, sorted by their folder and, within it, by their file name, the latest version of a file first.
     /// </summary>
     /// <remarks>
     /// The list below starts a new heading whenever the folder changes from one attachment to the
@@ -86,7 +105,37 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     /// </remarks>
     private IEnumerable<FileAttachment> OrderedAttachments => this.DocumentPaths
         .OrderBy(attachment => Path.GetDirectoryName(attachment.FilePath) ?? string.Empty, StringComparer.OrdinalIgnoreCase)
-        .ThenBy(attachment => attachment.FileName, StringComparer.OrdinalIgnoreCase);
+        .ThenBy(attachment => attachment.FileName, StringComparer.OrdinalIgnoreCase)
+        .ThenByDescending(attachment => attachment.Version?.LastWriteUtc);
+
+    /// <summary>
+    /// The paths which the list holds more than once, i.e., the files which were sent in several versions.
+    /// </summary>
+    /// <remarks>
+    /// Only the overview of all files of a chat holds a file more than once, see
+    /// ChatThread.CollectSentFileAttachments: the draft and a single message hold each file once, see
+    /// SetFileAttachmentExtensions.AttachInPlaceOfSameFile. The other uses of this dialog therefore
+    /// stay as they were. Asked once for each rendering, not once for each attachment.
+    /// </remarks>
+    private IReadOnlySet<string> PathsWithSeveralVersions => this.DocumentPaths
+        .GroupBy(attachment => attachment.FilePath)
+        .Where(group => group.Count() > 1)
+        .Select(group => group.Key)
+        .ToHashSet();
+
+    /// <summary>
+    /// Tells apart the versions of a file which the list holds more than once, by the time their file was saved.
+    /// </summary>
+    /// <param name="attachment">The attachment.</param>
+    /// <param name="pathsWithSeveralVersions">The paths which the list holds more than once, see PathsWithSeveralVersions.</param>
+    /// <returns>The label, or null for a file listed once, and for a version whose state AI Studio did not note.</returns>
+    private string? VersionLabel(FileAttachment attachment, IReadOnlySet<string> pathsWithSeveralVersions)
+    {
+        if (attachment.Version is not { } version || !pathsWithSeveralVersions.Contains(attachment.FilePath))
+            return null;
+
+        return string.Format(T("Version from {0}"), CommonTools.FormatTimestampToGeneral(version.LastWriteUtc.ToLocalTime(), I18N.I.Culture));
+    }
 
     /// <summary>
     /// Attaches what the user dropped onto this dialog and answers which files that became.
@@ -111,7 +160,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
         // so it never gets in the way of the next drop.
         //
         if (attached.Count > 0)
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AttachFile, attached.Count is 1
+            await this.MessageBus.SendSuccess(new(AppIcons.ATTACH_FILE, attached.Count is 1
                 ? string.Format(T("Attached {0}."), attached[0].FileName)
                 : string.Format(T("Attached {0} files."), attached.Count)));
 
@@ -120,11 +169,12 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
 
     private async Task PathsDropped(List<string> paths) => await this.AttachPathsAsync(paths);
 
-    public static async Task<HashSet<FileAttachment>> OpenDialogAsync(IDialogService dialogService, HashSet<FileAttachment> documentPaths, Func<List<string>, Task<IReadOnlyList<FileAttachment>>>? attachPaths = null, Func<bool>? isAttachingUnavailable = null)
+    public static async Task<HashSet<FileAttachment>> OpenDialogAsync(IDialogService dialogService, HashSet<FileAttachment> documentPaths, Func<List<string>, Task<IReadOnlyList<FileAttachment>>>? attachPaths = null, Func<bool>? isAttachingUnavailable = null, Func<FileAttachment, string, FileVersion, Task>? keepReadText = null, bool canRemove = true)
     {
         var dialogParameters = new DialogParameters<ReviewAttachmentsDialog>
         {
-            { x => x.DocumentPaths, documentPaths }
+            { x => x.DocumentPaths, documentPaths },
+            { x => x.CanRemove, canRemove },
         };
 
         if (attachPaths is not null)
@@ -133,7 +183,10 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
         if (isAttachingUnavailable is not null)
             dialogParameters.Add(x => x.IsAttachingUnavailable, isAttachingUnavailable);
 
-        var dialogReference = await dialogService.ShowAsync<ReviewAttachmentsDialog>(TB("Your attached files"), dialogParameters, DialogOptions.FULLSCREEN);
+        if (keepReadText is not null)
+            dialogParameters.Add(x => x.KeepReadText, keepReadText);
+
+        var dialogReference = await dialogService.ShowAsync<ReviewAttachmentsDialog>(TA("Your attached files"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return documentPaths;
@@ -161,6 +214,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
         var dialogParameters = new DialogParameters<DocumentCheckDialog>
         {
             { x => x.Document, fileAttachment },
+            { x => x.KeepReadText, this.KeepReadText },
         };
 
         //

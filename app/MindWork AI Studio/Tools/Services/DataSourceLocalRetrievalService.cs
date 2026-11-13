@@ -1,29 +1,16 @@
 using AIStudio.Chat;
-using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
-public sealed class DataSourceLocalRetrievalService(
-    SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
-    DataSourceEmbeddingService embeddingService, ILogger<DataSourceLocalRetrievalService> logger)
+public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService indexSearch, ILogger<DataSourceLocalRetrievalService> logger)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceLocalRetrievalService).Namespace, nameof(DataSourceLocalRetrievalService));
-
-    //
-    // Which gaps the user was already told about in this session. Retrieval runs for every single
-    // message, so without this one broken embedding provider would put a warning on every prompt.
-    //
-    private readonly HashSet<string> reportedRetrievalGaps = new(StringComparer.Ordinal);
-    private readonly Lock retrievalGapLock = new();
-
     private enum RetrievalChannel
     {
         VECTOR,
@@ -47,7 +34,7 @@ public sealed class DataSourceLocalRetrievalService(
         string FileName,
         string RelativePath,
         string FileType,
-        int? PageNumber,
+        ChunkLocation Location,
         int ChunkIndex,
         string Text,
         double Score,
@@ -60,18 +47,31 @@ public sealed class DataSourceLocalRetrievalService(
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(DataSourceLocalDirectory dataSource, IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
         this.RetrieveDataAsync(dataSource, lastUserPrompt, token);
 
+    public Task<RetrievalPage> RetrieveDataAsync(DataSourceLocalFile dataSource, string query, int page, ChatThread thread, CancellationToken token = default) =>
+        this.RetrievePageAsync(dataSource, query, page, new RetrievalRun(queryWrittenByUser: false), token);
+
+    public Task<RetrievalPage> RetrieveDataAsync(DataSourceLocalDirectory dataSource, string query, int page, ChatThread thread, CancellationToken token = default) =>
+        this.RetrievePageAsync(dataSource, query, page, new RetrievalRun(queryWrittenByUser: false), token);
+
     private async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IInternalDataSource dataSource, IContent lastUserPrompt, CancellationToken token)
     {
-        var query = GetQueryText(lastUserPrompt);
+        // The first page is what this retrieval has always returned:
+        var firstPage = await this.RetrievePageAsync(dataSource, GetQueryText(lastUserPrompt), 1, new RetrievalRun(queryWrittenByUser: true), token);
+        return firstPage.Contexts;
+    }
+
+    private async Task<RetrievalPage> RetrievePageAsync(IInternalDataSource dataSource, string query, int page, RetrievalRun run, CancellationToken token)
+    {
+        var pageSize = (int)dataSource.MaxMatches;
+        var window = RetrievalPaging.GetWindowSize(page, pageSize);
         if (string.IsNullOrWhiteSpace(query))
         {
-            logger.LogDebug("Skipping local retrieval for data source '{DataSourceName}' ({DataSourceId}) because the latest prompt does not contain text.", dataSource.Name, dataSource.Id);
-            return [];
+            logger.LogDebug("Skipping local retrieval for data source '{DataSourceName}' ({DataSourceId}) because there is no text to search for.", dataSource.Name, dataSource.Id);
+            return RetrievalPage.EMPTY;
         }
 
-        var maxMatches = (int)dataSource.MaxMatches;
-        if (maxMatches == 0)
-            return [];
+        if (pageSize == 0)
+            return RetrievalPage.EMPTY;
 
         //
         // A data source waiting for its index is kept out of the selection before the RAG process
@@ -83,284 +83,44 @@ public sealed class DataSourceLocalRetrievalService(
         // chunks are still in place and the keyword search would happily answer from them while
         // the vector search finds nothing.
         //
-        if (await embeddingService.IsAwaitingReindexAsync(dataSource, token))
-        {
-            logger.LogWarning("Skipping local retrieval for data source '{DataSourceName}' ({DataSourceId}) because its index has to be built anew.", dataSource.Name, dataSource.Id);
-            await this.ReportRetrievalGapAsync(dataSource, "index-rebuilding", string.Format(TB("The data source '{0}' was left out of the answer: it is being indexed again and cannot be searched until that is finished."), dataSource.Name));
-            return [];
-        }
+        if (await indexSearch.IsAwaitingReindexAsync(dataSource, run, token))
+            return RetrievalPage.EMPTY with { Gaps = run.GetGaps() };
 
-        var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
-        var vectorTask = this.SearchVectorAsync(dataSource, query, maxMatches, collectionName, token);
-        var bm25Task = this.SearchBm25Async(dataSource, query, maxMatches, token);
+        var vectorTask = indexSearch.SearchVectorsAsync(dataSource, query, window, filter: null, run, token);
+        var bm25Task = indexSearch.SearchKeywordsAsync(dataSource, window, indexStore => indexStore.SearchChunksAsync(dataSource.Id, query, window, token), run, token);
 
         await Task.WhenAll(vectorTask, bm25Task);
         token.ThrowIfCancellationRequested();
 
-        var hits = MergeResults(vectorTask.Result, bm25Task.Result, maxMatches);
+        this.LogVectorResults(dataSource, vectorTask.Result);
+        this.LogBm25Results(dataSource, bm25Task.Result);
+
+        var (hits, hasMore) = RetrievalPaging.Merge(
+            vectorTask.Result.Select((result, index) => FromVectorResult(result, index + 1)).ToList(),
+            bm25Task.Result.Select((result, index) => FromBm25Result(result, index + 1)).ToList(),
+            hit => hit.ChunkId,
+            page,
+            pageSize);
+
+        var gaps = run.GetGaps();
         logger.LogInformation(
-            "Retrieved {MergedHits} local RAG hits for data source '{DataSourceName}' ({DataSourceId}). VectorCandidates={VectorHits}, BM25Candidates={BM25Hits}, RequestedPerChannel={RequestedPerChannel}.",
+            "Retrieved {MergedHits} local RAG hits on page {Page} for data source '{DataSourceName}' ({DataSourceId}). VectorCandidates={VectorHits}, BM25Candidates={BM25Hits}, RequestedPerChannel={RequestedPerChannel}, HasMore={HasMore}, Gaps=[{Gaps}].",
             hits.Count,
+            page,
             dataSource.Name,
             dataSource.Id,
             vectorTask.Result.Count,
             bm25Task.Result.Count,
-            maxMatches);
+            window,
+            hasMore,
+            string.Join(", ", gaps));
 
-        return hits
+        var contexts = hits
             .Where(hit => !string.IsNullOrWhiteSpace(hit.Text))
             .Select(hit => ToRetrievalContext(hit, dataSource))
             .ToList();
-    }
 
-    private async Task<IReadOnlyList<VectorSearchResult>> SearchVectorAsync(
-        IInternalDataSource dataSource,
-        string query,
-        int maxMatches,
-        string collectionName,
-        CancellationToken token)
-    {
-        try
-        {
-            var vectorStore = await databaseClientProvider.GetVectorStoreAsync(token);
-            if (!vectorStore.IsAvailable)
-            {
-                logger.LogWarning(
-                    "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because vector store '{VectorStoreName}' is unavailable.",
-                    dataSource.Name,
-                    dataSource.Id,
-                    vectorStore.Name);
-                await this.ReportRetrievalGapAsync(dataSource, "no-vector-store", string.Format(TB("The data source '{0}' was left out of the answer: its local index is not available."), dataSource.Name));
-                return [];
-            }
-
-            if (!DataSourceEmbeddingProviders.TryResolve(settingsManager, dataSource, out var embeddingProvider))
-            {
-                logger.LogWarning("Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the selected embedding provider is not available.", dataSource.Name, dataSource.Id);
-                await this.ReportRetrievalGapAsync(dataSource, "no-embedding-provider", string.Format(TB("The data source '{0}' was left out of the answer: its embedding provider is not available. Please check it in the settings."), dataSource.Name));
-                return [];
-            }
-
-            if (!await this.QueryFitsEmbeddingProviderAsync(dataSource, embeddingProvider, query, token))
-                return [];
-
-            var provider = embeddingProvider.CreateProvider();
-            var vectors = await provider.EmbedTextAsync(embeddingProvider.Model, settingsManager, token, [query]);
-            token.ThrowIfCancellationRequested();
-            var vector = vectors.FirstOrDefault();
-            if (vector is null || vector.Count == 0)
-            {
-                logger.LogWarning("Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because query embedding returned no vector.", dataSource.Name, dataSource.Id);
-                await this.ReportRetrievalGapAsync(dataSource, "no-query-vector", string.Format(TB("The data source '{0}' was left out of the answer: its embedding provider '{1}' did not return a vector for your message."), dataSource.Name, embeddingProvider.Name));
-                return [];
-            }
-
-            var results = this.LimitSearchResults(
-                dataSource,
-                "vector",
-                await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, token),
-                maxMatches);
-            this.LogVectorResults(dataSource, results);
-            return results;
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (ProviderRequestException exception)
-        {
-            //
-            // The embedding provider named the cause and what to do about it. That sentence is
-            // worth far more to the user than the fact that a search came back empty:
-            //
-            logger.LogWarning(
-                exception,
-                "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}) because the embedding provider failed. FailureReason={FailureReason}, StatusCode={StatusCode}.",
-                dataSource.Name, dataSource.Id, exception.FailureReason, exception.StatusCode);
-            await this.ReportRetrievalGapAsync(dataSource, $"provider-{exception.FailureReason}", string.Format(TB("The data source '{0}' was left out of the answer. {1}"), dataSource.Name, exception.UserMessage));
-            return [];
-        }
-        catch (VectorStoreUnreadableException exception)
-        {
-            //
-            // Its own gap key, because this is not a search which went wrong but an index which has
-            // to be built anew. Saying that once per session is what turns a silently shortened
-            // answer into one the user can do something about.
-            //
-            logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}) because its vector store cannot be read.", dataSource.Name, dataSource.Id);
-            await this.ReportRetrievalGapAsync(dataSource, "vector-store-unreadable", string.Format(TB("The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it in your data source settings."), dataSource.Name));
-            return [];
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-            await this.ReportRetrievalGapAsync(dataSource, "vector-search-failed", string.Format(TB("The data source '{0}' was left out of the answer because searching it failed."), dataSource.Name));
-            return [];
-        }
-    }
-
-    /// <summary>
-    /// Tells the user once that a data source cannot take part in answering.
-    /// </summary>
-    /// <remarks>
-    /// A failed search is not an error of the chat: the model still answers, only without what
-    /// this data source knows. Saying so once is what keeps somebody from trusting an answer
-    /// which was put together without half of its sources. Saying it with every prompt would be
-    /// worse than saying nothing, which is why every gap is reported once per session.
-    /// </remarks>
-    /// <param name="dataSource">The data source which could not be searched.</param>
-    /// <param name="gapKey">What kind of gap this is, so a different problem is reported again.</param>
-    /// <param name="userMessage">What to tell the user.</param>
-    private async Task ReportRetrievalGapAsync(IInternalDataSource dataSource, string gapKey, string userMessage)
-    {
-        lock (this.retrievalGapLock)
-        {
-            if (!this.reportedRetrievalGaps.Add($"{dataSource.Id}::{gapKey}"))
-                return;
-        }
-
-        await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.SearchOff, userMessage));
-    }
-
-    private async Task<bool> QueryFitsEmbeddingProviderAsync(
-        IInternalDataSource dataSource,
-        EmbeddingProvider embeddingProvider,
-        string query,
-        CancellationToken token)
-    {
-        var providerTokenLimit = Math.Max(1, embeddingProvider.EffectiveTokenLimit);
-        if (query.Length > RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH)
-        {
-            logger.LogWarning(
-                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the latest prompt has {CharacterCount} characters and exceeds the safe tokenizer request length of {MaxCharacterCount}. ProviderTokenLimit={ProviderTokenLimit}.",
-                dataSource.Name,
-                dataSource.Id,
-                query.Length,
-                RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH,
-                providerTokenLimit);
-            await this.ReportRetrievalGapAsync(dataSource, "query-too-long", string.Format(TB("The data source '{0}' was left out of the answer because your message is too long to search with."), dataSource.Name));
-            return false;
-        }
-
-        var tokenCountResponse = await rustService.GetTokenCount(embeddingProvider, query, token);
-        if (tokenCountResponse is not { Success: true })
-        {
-            logger.LogWarning(
-                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the token count for embedding provider '{EmbeddingProviderName}' could not be determined. Reason='{Reason}'.",
-                dataSource.Name,
-                dataSource.Id,
-                embeddingProvider.Name,
-                tokenCountResponse?.Message ?? "No response was returned by the tokenizer service.");
-            await this.ReportRetrievalGapAsync(dataSource, "no-token-count", string.Format(TB("The data source '{0}' was left out of the answer: the tokenizer of its embedding provider '{1}' is not available."), dataSource.Name, embeddingProvider.Name));
-            return false;
-        }
-
-        var queryTokenCount = tokenCountResponse.Value.TokenCount;
-        if (queryTokenCount > providerTokenLimit)
-        {
-            logger.LogWarning(
-                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the latest prompt has {QueryTokenCount} tokens, exceeding embedding provider '{EmbeddingProviderName}' limit of {ProviderTokenLimit} tokens.",
-                dataSource.Name,
-                dataSource.Id,
-                queryTokenCount,
-                embeddingProvider.Name,
-                providerTokenLimit);
-            await this.ReportRetrievalGapAsync(dataSource, "query-over-token-limit", string.Format(TB("The data source '{0}' was left out of the answer because your message is longer than its embedding provider '{1}' accepts."), dataSource.Name, embeddingProvider.Name));
-            return false;
-        }
-
-        return true;
-    }
-
-    private async Task<IReadOnlyList<IndexStoreSearchResult>> SearchBm25Async(IInternalDataSource dataSource, string query, int maxMatches, CancellationToken token)
-    {
-        try
-        {
-            var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
-            if (!indexStore.IsAvailable)
-            {
-                logger.LogWarning(
-                    "Skipping BM25 retrieval for data source '{DataSourceName}' ({DataSourceId}) because local RAG index '{DatabaseName}' is unavailable.",
-                    dataSource.Name,
-                    dataSource.Id,
-                    indexStore.Name);
-                return [];
-            }
-
-            var results = this.LimitSearchResults(
-                dataSource,
-                "BM25",
-                await indexStore.SearchChunksAsync(dataSource.Id, query, maxMatches, token),
-                maxMatches);
-            this.LogBm25Results(dataSource, results);
-            return results;
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "BM25 retrieval failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-            return [];
-        }
-    }
-
-    private IReadOnlyList<T> LimitSearchResults<T>(IInternalDataSource dataSource, string searchName, IReadOnlyList<T> results, int maxMatches)
-    {
-        if (results.Count <= maxMatches)
-            return results;
-
-        logger.LogWarning(
-            "Local RAG {SearchName} search returned {ReturnedHits} chunks for data source '{DataSourceName}' ({DataSourceId}), which exceeds the configured maximum {MaxMatches}. Truncating to the datasource limit.",
-            searchName,
-            results.Count,
-            dataSource.Name,
-            dataSource.Id,
-            maxMatches);
-
-        return results.Take(maxMatches).ToList();
-    }
-
-    private static IReadOnlyList<LocalRetrievalHit> MergeResults(
-        IReadOnlyList<VectorSearchResult> vectorResults,
-        IReadOnlyList<IndexStoreSearchResult> bm25Results,
-        int maxMatches)
-    {
-        // Future reranking should replace this deterministic channel merge.
-        var merged = new List<LocalRetrievalHit>(maxMatches * 2);
-        var seenChunkIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        AppendHits(
-            merged,
-            seenChunkIds,
-            vectorResults
-                .Select((result, index) => FromVectorResult(result, index + 1)),
-            maxMatches);
-
-        AppendHits(
-            merged,
-            seenChunkIds,
-            bm25Results
-                .Select((result, index) => FromBm25Result(result, index + 1)),
-            maxMatches);
-
-        return merged;
-    }
-
-    private static void AppendHits(List<LocalRetrievalHit> merged, HashSet<string> seenChunkIds, IEnumerable<LocalRetrievalHit> hits, int maxNewHits)
-    {
-        var added = 0;
-        foreach (var hit in hits)
-        {
-            if (!string.IsNullOrWhiteSpace(hit.ChunkId) && !seenChunkIds.Add(hit.ChunkId))
-                continue;
-
-            merged.Add(hit);
-            added++;
-            if (added >= maxNewHits)
-                return;
-        }
+        return new RetrievalPage(contexts, hasMore) { Gaps = gaps };
     }
 
     private static LocalRetrievalHit FromVectorResult(VectorSearchResult result, int rank) =>
@@ -374,7 +134,7 @@ public sealed class DataSourceLocalRetrievalService(
             result.FileName,
             result.RelativePath,
             result.FileType,
-            result.PageNumber,
+            result.Location,
             result.ChunkIndex,
             result.Text,
             result.Score,
@@ -391,7 +151,7 @@ public sealed class DataSourceLocalRetrievalService(
             result.FileName,
             result.RelativePath,
             result.FileType,
-            result.PageNumber,
+            result.Location,
             result.ChunkIndex,
             result.ChunkText,
             result.Score,
@@ -402,36 +162,76 @@ public sealed class DataSourceLocalRetrievalService(
         var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
         var path = FirstNonEmpty(hit.AbsolutePath, hit.RelativePath);
         var referenceLink = string.IsNullOrWhiteSpace(path) ? string.Empty : BuildReferenceLink(path, hit);
+        var type = GetRetrievalContentType(hit.FileType);
+        var located = LocatePassage(hit.Location, type, hit.ChunkIndex + 1);
 
         return new RetrievalTextContext
         {
             DataSourceName = sourceName,
             Category = RetrievalContentCategory.TEXT,
-            Type = GetRetrievalContentType(hit.FileType),
+            Type = type,
             Path = path,
             Links = [],
             MatchedText = hit.Text,
             SurroundingContent = [],
-            ReferenceTitle = BuildReferenceTitle(hit, dataSource),
+            ReferenceTitle = BuildReferenceTitle(sourceName, located),
             ReferenceLink = referenceLink,
-            PageNumber = hit.PageNumber is > 0 ? hit.PageNumber : null,
+            PageNumber = located.PageNumber,
+            EndPageNumber = located.EndPageNumber,
+            SheetName = located.SheetName,
+            StartRow = located.StartRow,
+            EndRow = located.EndRow,
+            StartLine = located.StartLine,
+            EndLine = located.EndLine,
+            ChunkNumber = located.ChunkNumber,
         };
     }
 
-    private static string BuildReferenceTitle(LocalRetrievalHit hit, IInternalDataSource dataSource)
+    /// <summary>
+    /// Where a hit is in its document, as its passage names it.
+    /// </summary>
+    /// <remarks>
+    /// An end only names a range when the passage goes on beyond where it starts. A chunk indexed
+    /// before an end, a row or a line was kept has none, and names what it has. The lines of a
+    /// table, such as a CSV file, are its rows. A transcript names no lines: it is a file the user
+    /// never sees, so its lines would point nowhere.
+    /// </remarks>
+    /// <param name="location">Where the chunk of the hit is.</param>
+    /// <param name="type">What kind of content the hit is.</param>
+    /// <param name="chunkNumber">Which part of its document the hit is, counted from one.</param>
+    /// <returns>A passage holding nothing but where the hit is.</returns>
+    internal static SourcePassage LocatePassage(ChunkLocation location, RetrievalContentType type, int chunkNumber)
     {
-        var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
-        return BuildLocatedReferenceTitle(sourceName, hit.ChunkIndex, hit.PageNumber);
+        var pageNumber = location.PageNumber is > 0 ? location.PageNumber : null;
+        var rows = RangeOf(location.StartRow, location.EndRow);
+        var lines = type is RetrievalContentType.TEXT_TRANSCRIPT ? PassageRange.NONE : RangeOf(location.StartLine, location.EndLine);
+        if (type is RetrievalContentType.TEXT_SPREADSHEET && rows.Start is null)
+        {
+            rows = lines;
+            lines = PassageRange.NONE;
+        }
+
+        return new SourcePassage
+        {
+            Type = type,
+            PageNumber = pageNumber,
+            EndPageNumber = pageNumber is not null && location.EndPageNumber > pageNumber ? location.EndPageNumber : null,
+            SheetName = rows.Start is null ? null : location.SheetName,
+            StartRow = rows.Start,
+            EndRow = rows.End,
+            StartLine = lines.Start,
+            EndLine = lines.End,
+            ChunkNumber = chunkNumber,
+        };
     }
 
-    private static string BuildLocatedReferenceTitle(string sourceName, int chunkIndex, int? pageNumber)
-    {
-        var location = pageNumber is > 0
-            ? string.Format(TB("Page {0}"), pageNumber)
-            : string.Format(TB("Chunk {0}"), chunkIndex + 1);
+    private static PassageRange RangeOf(int? start, int? end) => start is > 0 ? new(start, end > start ? end : null) : PassageRange.NONE;
 
-        return $"{sourceName} ({location})";
-    }
+    //
+    // Worded like the location of every passage, so that the title reads the same before and after
+    // the passages of an answer rename it, cf. SourcePassageExtensions.NamePassagesInTitles:
+    //
+    private static string BuildReferenceTitle(string sourceName, SourcePassage located) => $"{sourceName} ({located.GetLocationLabel()})";
 
     /// <remarks>
     /// A known page is written as the fragment `#page=N`, which is what the PDF open parameters
@@ -443,8 +243,8 @@ public sealed class DataSourceLocalRetrievalService(
     {
         var link = NormalizeLocalReferencePath(path);
         var separator = link.Contains('#', StringComparison.Ordinal) ? "&" : "#";
-        return hit.PageNumber is > 0
-            ? $"{link}{separator}page={hit.PageNumber}"
+        return hit.Location.PageNumber is > 0
+            ? $"{link}{separator}page={hit.Location.PageNumber}"
             : $"{link}{separator}chunk={hit.ChunkIndex}";
     }
 
@@ -462,8 +262,12 @@ public sealed class DataSourceLocalRetrievalService(
         }
     }
 
-    private static RetrievalContentType GetRetrievalContentType(string fileType)
+    internal static RetrievalContentType GetRetrievalContentType(string fileType)
     {
+        // An audio or a video file is indexed by its transcript, so that is what its passages are:
+        if (FileTypes.IsAllowedExtension(fileType, FileTypes.AUDIO, FileTypes.VIDEO))
+            return RetrievalContentType.TEXT_TRANSCRIPT;
+
         if (FileTypes.IsAllowedExtension(fileType, FileTypes.TABULAR, FileTypes.SPREADSHEET))
             return RetrievalContentType.TEXT_SPREADSHEET;
 
@@ -504,7 +308,7 @@ public sealed class DataSourceLocalRetrievalService(
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 FirstNonEmpty(result.Result.AbsolutePath, result.Result.FilePath),
-                BuildLocatedReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), LocatePassage(result.Result.Location, GetRetrievalContentType(result.Result.FileType), result.Result.ChunkIndex + 1)));
         }
     }
 
@@ -528,7 +332,7 @@ public sealed class DataSourceLocalRetrievalService(
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 result.Result.AbsolutePath,
-                BuildLocatedReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+                BuildReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), LocatePassage(result.Result.Location, GetRetrievalContentType(result.Result.FileType), result.Result.ChunkIndex + 1)));
         }
     }
 }

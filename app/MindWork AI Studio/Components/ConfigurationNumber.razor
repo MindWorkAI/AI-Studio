@@ -1,0 +1,4 @@
+@typeparam T
+@inherits ConfigurationBaseCore
+
+<MudNumericField T="@T" Value="@this.Value()" ValueChanged="@this.OptionChanged" Min="@this.Min" Max="@this.Max" Adornment="Adornment.End" AdornmentText="@this.Unit" Disabled="@this.IsDisabled" Variant="Variant.Text" Margin="Margin.Dense" Class="mb-1"/>

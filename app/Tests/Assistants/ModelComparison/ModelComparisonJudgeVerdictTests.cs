@@ -19,13 +19,13 @@ public sealed class ModelComparisonJudgeVerdictTests
     {
         var verdict = ModelComparisonJudgeVerdict.Parse("Judge", true, """{"preferred": "A", "reasoning": "It kept every number from the document."}""");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(verdict.Completed, Is.True);
             Assert.That(verdict.Label, Is.EqualTo("Judge"));
             Assert.That(verdict.Preferred, Is.EqualTo(ModelComparisonVote.COLUMN_A));
             Assert.That(verdict.Reasoning, Is.EqualTo("It kept every number from the document."));
-        });
+        }
     }
 
     [Test]
@@ -46,11 +46,11 @@ public sealed class ModelComparisonJudgeVerdictTests
             ```
             """);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(verdict.Completed, Is.True);
             Assert.That(verdict.Preferred, Is.EqualTo(ModelComparisonVote.COLUMN_B));
-        });
+        }
     }
 
     [Test]
@@ -58,12 +58,12 @@ public sealed class ModelComparisonJudgeVerdictTests
     {
         var verdict = ModelComparisonJudgeVerdict.Parse("Judge", false, string.Empty);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(verdict.Completed, Is.False);
             Assert.That(verdict.Preferred, Is.Null);
             Assert.That(verdict.Reasoning, Is.Empty);
-        });
+        }
     }
 
     [TestCase("Sorry, I cannot help with that.")]

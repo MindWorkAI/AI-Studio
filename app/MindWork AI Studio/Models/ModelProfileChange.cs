@@ -56,6 +56,11 @@ public sealed record ModelProfileChange
     public ImageLimits? Images { get; init; }
 
     /// <summary>
+    /// The role the system prompt is sent in, or null to leave it as it was.
+    /// </summary>
+    public SystemPromptRole? SystemPromptRole { get; init; }
+
+    /// <summary>
     /// Applies this change to a profile.
     /// </summary>
     /// <remarks>
@@ -80,5 +85,6 @@ public sealed record ModelProfileChange
         Context = this.Context ?? profile.Context,
         Tokenizer = this.Tokenizer ?? profile.Tokenizer,
         Images = this.Images ?? profile.Images,
+        SystemPromptRole = this.SystemPromptRole ?? profile.SystemPromptRole,
     };
 }

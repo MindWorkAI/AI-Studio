@@ -49,19 +49,9 @@ internal sealed class VisualBriefingLayoutCompiler
         
         var interactions = VisualBriefingInteractionCompiler.Compile(content.Controls, content.Formulas);
         
-        var data = JsonSerializer.SerializeToElement(new
-        {
-            slots,
-            charts = chartOptions,
-            interactions,
-            accessibility = content.AccessibilityTexts,
-            sourceReferences = content.SourceReferences,
-            labels = new
-            {
-                reset = content.ResetLabel,
-                brand = "MindWork AI Studio",
-            },
-        }, VisualBriefingJson.Canonical);
+        var data = JsonSerializer.SerializeToElement(
+            new VisualBriefingCompiledData(slots, chartOptions, interactions, content.AccessibilityTexts, content.SourceReferences, VisualBriefingLabels.Of(content.ResetLabel)),
+            VisualBriefingJson.Canonical);
         
         var html = CompileNode(layout, sections, components, content, true);
         var css = CompileCss(profile, layout);

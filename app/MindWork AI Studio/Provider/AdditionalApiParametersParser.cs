@@ -14,6 +14,19 @@ namespace AIStudio.Provider;
 public static class AdditionalApiParametersParser
 {
     /// <summary>
+    /// Every name only once per object.
+    /// </summary>
+    /// <remarks>
+    /// The dialog for providers refuses a name written twice, but a configuration plugin brings its
+    /// providers past the dialog. With both values read, it would be open which of them reaches the
+    /// provider, and the dictionary below would refuse the second one with an exception.
+    /// </remarks>
+    private static readonly JsonDocumentOptions DOCUMENT_OPTIONS = new()
+    {
+        AllowDuplicateProperties = false,
+    };
+
+    /// <summary>
     /// Try to parse an additional-API-parameters JSON fragment into a dictionary.
     /// </summary>
     /// <param name="additionalJsonApiParameters">The JSON object body without the surrounding curly braces.</param>
@@ -30,7 +43,7 @@ public static class AdditionalApiParametersParser
         try
         {
             // The UI stores only the object body, so wrap it before parsing.
-            using var jsonDoc = JsonDocument.Parse($"{{{additionalJsonApiParameters}}}");
+            using var jsonDoc = JsonDocument.Parse($"{{{additionalJsonApiParameters}}}", DOCUMENT_OPTIONS);
             parameters = ConvertToDictionary(jsonDoc.RootElement);
             return true;
         }

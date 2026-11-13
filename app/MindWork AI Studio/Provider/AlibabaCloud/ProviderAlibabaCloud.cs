@@ -13,7 +13,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.ALIBABA_CLOUD.ToSecretId();
+    public override string Id => LLMProviders.ALIBABA_CLOUD.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "AlibabaCloud";
@@ -66,7 +66,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
         return Task.FromResult(TranscriptionResult.Failure());
     }
     
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
@@ -77,7 +77,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
     public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
-        return result with { Models = [..result.Models.Where(model => model.IsChatModel(this.Provider)).OrderBy(x => x.Id)] };
+        return result with { Models = [..result.Models.Where(model => model.IsChatModel(this.Provider)).OrderBy(x => x.Id, Model.ID_ORDER)] };
     }
 
     /// <inheritdoc />
@@ -90,7 +90,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
     public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
-        return result with { Models = [..result.Models.Where(model => model.IsEmbeddingModel(this.Provider)).OrderBy(x => x.Id)] };
+        return result with { Models = [..result.Models.Where(model => model.IsEmbeddingModel(this.Provider)).OrderBy(x => x.Id, Model.ID_ORDER)] };
     }
 
     #region Overrides of BaseProvider

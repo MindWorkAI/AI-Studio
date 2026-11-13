@@ -37,7 +37,7 @@ public partial class EnumSelection<T> : EnumSelectionBase where T : struct, Enum
     public Func<string, string?> ValidateOther { get; set; } = _ => null;
     
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.ArrowDropDown;
+    public string Icon { get; set; } = AppIcons.EXPAND_MORE;
 
     /// <summary>
     /// Gets or sets whether the selection controls are disabled.
@@ -80,9 +80,9 @@ public partial class EnumSelection<T> : EnumSelectionBase where T : struct, Enum
         await this.SelectionUpdated(value);
     }
     
-    private async Task OtherValueChanged(string value)
+    private async Task OtherValueChanged(string? value)
     {
-        await this.OtherInputChanged.InvokeAsync(value);
+        await this.OtherInputChanged.InvokeAsync(value ?? string.Empty);
         await this.SelectionUpdated(this.Value);
     }
 }

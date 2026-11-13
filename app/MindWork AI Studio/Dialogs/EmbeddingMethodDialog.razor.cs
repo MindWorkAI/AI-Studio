@@ -77,7 +77,7 @@ public partial class EmbeddingMethodDialog : MSGComponentBase
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -87,13 +87,13 @@ public partial class EmbeddingMethodDialog : MSGComponentBase
     private string? ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return T("The embedding name must not be empty. Please name the embedding.");
+            return TA("The embedding name must not be empty. Please name the embedding.");
         
         if (name.Length > 26)
             return T("The embedding name must not be longer than 26 characters.");
         
         if (this.UsedEmbeddingMethodNames.Contains(name))
-            return string.Format(T("The embedding method name '{0}' is already used. Please choose a unique name."), name);
+            return string.Format(TA("The embedding method name '{0}' is already used. Please choose a unique name."), name);
         
         return null;
     }
@@ -101,7 +101,7 @@ public partial class EmbeddingMethodDialog : MSGComponentBase
     private string? ValidateType(string type)
     {
         if (string.IsNullOrWhiteSpace(type))
-            return T("The embedding type must not be empty. Please specify the embedding type.");
+            return TA("The embedding type must not be empty. Please specify the embedding type.");
         
         if (type.Length > 56)
             return T("The embedding type must not be longer than 56 characters.");
@@ -112,7 +112,7 @@ public partial class EmbeddingMethodDialog : MSGComponentBase
     private string? ValidateDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return T("The description must not be empty. Please describe the embedding method.");
+            return TA("The description must not be empty. Please describe the embedding method.");
         
         return null;
     }
@@ -120,14 +120,14 @@ public partial class EmbeddingMethodDialog : MSGComponentBase
     private string? ValidateUsedWhen(string usedWhen)
     {
         if (string.IsNullOrWhiteSpace(usedWhen))
-            return T("Please describe when the embedding is used. Might be anytime or when certain keywords are present, etc.");
+            return TA("Please describe when the embedding is used. Might be anytime or when certain keywords are present, etc.");
         
         return null;
     }
     
     private async Task Store()
     {
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)

@@ -18,7 +18,7 @@ public enum CorpusOrigin
 
     /// <summary>
     /// The app carries this model in a built-in list, such as the aliases Anthropic answers to but
-    /// does not list, or the transcription model GWDG serves without naming it.
+    /// does not list, or the transcription models GWDG serves without naming them.
     /// </summary>
     BUILT_INTO_THE_APP,
 

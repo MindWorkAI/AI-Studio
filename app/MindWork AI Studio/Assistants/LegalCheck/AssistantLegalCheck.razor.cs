@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.LegalCheck;
@@ -9,8 +10,11 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     protected override string Title => T("Legal Check");
     
-    protected override string Description => T("Provide a legal document and ask a question about it. This assistant does not replace legal advice. Consult a lawyer to get professional advice. Remember that LLMs can invent answers and facts. Please do not rely on this answers.");
+    protected override string Description => TA("Provide a legal document and ask a question about it. This assistant does not replace legal advice. Consult a lawyer to get professional advice. Remember that LLMs can invent answers and facts. Please do not rely on this answers.");
     
+    // This prompt answers questions about the legal document, which is what the chat continues:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
+
     protected override string SystemPrompt => 
         """
         You are an expert in legal matters. You have studied international law and are familiar with the law in
@@ -22,7 +26,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => T("Ask your questions");
+    protected override string SubmitText => TA("Ask your questions");
 
     protected override Func<Task> SubmitAction => this.AskQuestions;
 
@@ -91,23 +95,16 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
         state.Restore(INPUT_QUESTIONS_STATE_KEY, value => this.inputQuestions = value);
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_LEGAL_CHECK_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputQuestions = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputQuestions = payload.Text;
 
     #endregion
     
     private string? ValidatingLegalDocument(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a legal document as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a legal document as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -115,14 +112,14 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     private string? ValidatingQuestions(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide your questions as input.");
+            return TA("Please provide your questions as input.");
         
         return null;
     }
     
     private async Task AskQuestions()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

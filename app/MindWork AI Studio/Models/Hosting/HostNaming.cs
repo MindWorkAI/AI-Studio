@@ -9,8 +9,8 @@ namespace AIStudio.Models.Hosting;
 /// A wrapping is worked on the name as the provider reported it, never on the normalized one. That
 /// is not a detail: normalizing writes every separator as a hyphen, so "meta-llama/Llama-3.3-70B"
 /// and "meta-llama-llama-3.3-70b" are the same text afterwards and nobody can say where the
-/// organization ended. The slash, the colon, and the spaces are the whole evidence, and they only
-/// exist in the original.
+/// organization ended. The slash, the colon, the at sign, and the spaces are the whole evidence, and
+/// they only exist in the original.
 /// </remarks>
 public static class HostNaming
 {
@@ -20,9 +20,14 @@ public static class HostNaming
     private const char ORGANIZATION_SEPARATOR = '/';
 
     /// <summary>
-    /// What separates the model from the inference provider it should be routed to.
+    /// What separates the model from how a request for it should be routed.
     /// </summary>
     private const char ROUTING_SEPARATOR = ':';
+
+    /// <summary>
+    /// What separates the model from the region it should run in.
+    /// </summary>
+    private const char REGION_SEPARATOR = '@';
 
     /// <summary>
     /// Takes the organization off a hub style name.
@@ -66,20 +71,46 @@ public static class HostNaming
     /// Takes the routing suffix off a name.
     /// </summary>
     /// <remarks>
-    /// The suffix says where a request goes, not what the model is: "google/gemma-4-31B-it:novita"
-    /// is the same model as "google/gemma-4-31B-it". Names on the hub carry no colon of their own,
-    /// so the last one always starts the suffix. This is not true everywhere -- Ollama writes the
-    /// variant after a colon, as in "qwen3.8:27b-mlx", and taking that off would throw away which
-    /// model it is. That is why only the host which has a router asks for this.
+    /// The suffix says how a request is served, not what the model is: "google/gemma-4-31B-it:novita"
+    /// is the same model as "google/gemma-4-31B-it". On the Hugging Face router it names the
+    /// inference provider; Requesty writes the service tier there, as in "openai/gpt-6-sol:flex", or
+    /// a preset reasoning effort, as in "openai/o4-mini:high". Names at both hosts carry no colon of
+    /// their own, so the last one always starts the suffix. This is not true everywhere -- Ollama
+    /// writes the variant after a colon, as in "qwen3.8:27b-mlx", and taking that off would throw
+    /// away which model it is. That is why only the hosts which put a suffix there ask for this.
     /// </remarks>
     /// <param name="id">The name as it arrived.</param>
     /// <param name="inner">The name without its routing suffix.</param>
     /// <returns>True, when there was a suffix to take off.</returns>
-    public static bool TryStripRoutingSuffix(in ModelId id, out ModelId inner)
+    public static bool TryStripRoutingSuffix(in ModelId id, out ModelId inner) => TryStripSuffix(id, ROUTING_SEPARATOR, out inner);
+
+    /// <summary>
+    /// Takes the region suffix off a name.
+    /// </summary>
+    /// <remarks>
+    /// The suffix says where a request runs, not what the model is:
+    /// "bedrock/claude-opus-5@eu-central-1" is the same model as "bedrock/claude-opus-5", served from
+    /// Frankfurt. Requesty writes names this way, and every suffix it used on the day we checked was a
+    /// region: "eu", "us", or a data center of AWS, Azure, or Google. No model name carries an at sign
+    /// of its own, so the last one always starts the suffix.
+    /// </remarks>
+    /// <param name="id">The name as it arrived.</param>
+    /// <param name="inner">The name without its region suffix.</param>
+    /// <returns>True, when there was a suffix to take off.</returns>
+    public static bool TryStripRegionSuffix(in ModelId id, out ModelId inner) => TryStripSuffix(id, REGION_SEPARATOR, out inner);
+
+    /// <summary>
+    /// Takes off everything from the last separator on.
+    /// </summary>
+    /// <param name="id">The name as it arrived.</param>
+    /// <param name="separator">The character which starts the suffix.</param>
+    /// <param name="inner">The name without its suffix.</param>
+    /// <returns>True, when there was a suffix to take off.</returns>
+    private static bool TryStripSuffix(in ModelId id, char separator, out ModelId inner)
     {
         inner = id;
 
-        var separatorIndex = id.Original.LastIndexOf(ROUTING_SEPARATOR);
+        var separatorIndex = id.Original.LastIndexOf(separator);
         if (separatorIndex is -1)
             return false;
 
@@ -166,8 +197,8 @@ public static class HostNaming
         "cohere" or "coherelabs" or "cohereforai" => ModelVendor.COHERE,
         "moonshot" or "moonshotai" => ModelVendor.MOONSHOT_AI,
         "tencent" or "tencent-hunyuan" => ModelVendor.TENCENT,
-        "z-ai" or "zai-org" => ModelVendor.Z_AI,
-        "minimax" or "minimaxai" => ModelVendor.MINIMAX,
+        "z-ai" or "zai" or "zai-org" => ModelVendor.Z_AI,
+        "minimax" or "minimaxai" or "minimaxi" => ModelVendor.MINIMAX,
         "ai2" or "allenai" => ModelVendor.AI2,
         "bytedance" or "bytedance-seed" => ModelVendor.BYTE_DANCE,
         "tii" or "tiiuae" => ModelVendor.TII,

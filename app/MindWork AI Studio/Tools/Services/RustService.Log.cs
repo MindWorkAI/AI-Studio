@@ -10,13 +10,13 @@ public sealed partial class RustService
     /// <returns>The paths of the log files.</returns>
     public async Task<GetLogPathsResponse> GetLogPaths()
     {
-        return await this.http.GetFromJsonAsync<GetLogPathsResponse>("/log/paths", this.jsonRustSerializerOptions);
+        return await this.http.GetFromJsonAsync<GetLogPathsResponse>("/log/paths", JSON_OPTIONS);
     }
 
     /// <summary>
     /// Sends a log event to the Rust runtime.
     /// </summary>
-    /// <param name="timestamp">The timestamp of the log event.</param>
+    /// <param name="timestamp">When the log event happened, formatted by TerminalLogger.FormatTransportTimestamp.</param>
     /// <param name="level">The log level.</param>
     /// <param name="category">The category of the log event.</param>
     /// <param name="message">The log message.</param>
@@ -33,7 +33,7 @@ public sealed partial class RustService
             // feed itself. The unobserved task exception handler in Program.cs remains the safety net here.
             //
             var request = new LogEventRequest(timestamp, level, category, message, exception, stackTrace);
-            _ = this.http.PostAsJsonAsync("/log/event", request, this.jsonRustSerializerOptions);
+            _ = this.http.PostAsJsonAsync("/log/event", request, JSON_OPTIONS);
         }
         catch
         {

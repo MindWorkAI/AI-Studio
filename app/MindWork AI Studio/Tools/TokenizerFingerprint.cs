@@ -43,4 +43,28 @@ public static class TokenizerFingerprint
             return string.Empty;
         }
     }
+
+    /// <summary>
+    /// Returns the fingerprint a provider is stored with: the one already known, or else the one of its tokenizer file.
+    /// </summary>
+    /// <remarks>
+    /// A known fingerprint is kept without reading the file. Reading it again would cost time for
+    /// nothing, and an unreadable file would look like another tokenizer. A tokenizer without a
+    /// fingerprint, such as the one an imported provider brings along, gets one from its file, so
+    /// the embedding signature tells it apart from no tokenizer at all.
+    /// </remarks>
+    /// <param name="tokenizerPath">The tokenizer file about to be stored. May be empty when no tokenizer is set.</param>
+    /// <param name="knownFingerprint">The fingerprint known for that file so far, or an empty string.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The fingerprint, or an empty string when no tokenizer is set or its file cannot be read.</returns>
+    public static async Task<string> KeepOrReadAsync(string tokenizerPath, string knownFingerprint, CancellationToken token = default)
+    {
+        if (string.IsNullOrWhiteSpace(tokenizerPath))
+            return string.Empty;
+
+        if (!string.IsNullOrEmpty(knownFingerprint))
+            return knownFingerprint;
+
+        return await ForFileAsync(tokenizerPath, token);
+    }
 }

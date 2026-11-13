@@ -35,11 +35,11 @@ public sealed class ListedModelsTests
     {
         var listed = new ListedModels();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(listed.Of(ONE_MACHINE, MODEL), Is.EqualTo(ModelListing.NOTHING));
             Assert.That(listed.Of(ONE_MACHINE, MODEL).IsKnown, Is.False);
-        });
+        }
     }
 
     [Test]
@@ -53,11 +53,11 @@ public sealed class ListedModelsTests
         listed.Report(ONE_MACHINE, [new(MODEL, ContextWindow.Of(32_768))]);
         listed.Report(ANOTHER_MACHINE, [new(MODEL, ContextWindow.Of(8_192))]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(listed.Of(ONE_MACHINE, MODEL).Context.DefaultTokens, Is.EqualTo(32_768));
             Assert.That(listed.Of(ANOTHER_MACHINE, MODEL).Context.DefaultTokens, Is.EqualTo(8_192));
-        });
+        }
     }
 
     [Test]
@@ -67,11 +67,11 @@ public sealed class ListedModelsTests
         listed.Report(ONE_MACHINE, [new(MODEL, ContextWindow.Of(32_768)), new("gemma3-27b", ContextWindow.Of(16_384))]);
         listed.Report(ONE_MACHINE, [new("gemma3-27b", ContextWindow.Of(16_384))]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(listed.Of(ONE_MACHINE, MODEL), Is.EqualTo(ModelListing.NOTHING), "The engine was restarted without it, so nothing is known about it any more.");
             Assert.That(listed.Of(ONE_MACHINE, "gemma3-27b").Context.DefaultTokens, Is.EqualTo(16_384));
-        });
+        }
     }
 
     [Test]
@@ -105,11 +105,11 @@ public sealed class ListedModelsTests
         var listed = new ListedModels();
         listed.Report(string.Empty, [new(MODEL, ContextWindow.Of(32_768))]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(listed.Of(string.Empty, MODEL), Is.EqualTo(ModelListing.NOTHING));
             Assert.That(listed.Of(ONE_MACHINE, MODEL), Is.EqualTo(ModelListing.NOTHING), "One nameless report does not become every machine's answer.");
-        });
+        }
     }
 
     [Test]
@@ -126,11 +126,11 @@ public sealed class ListedModelsTests
     {
         var after = new ModelListing(MODEL, ContextWindow.Of(32_768)).ApplyTo(WHAT_THE_RULES_SAY);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(after.Context.DefaultTokens, Is.EqualTo(32_768));
             Assert.That(after.Context.RaisableToTokens, Is.Null, "What the weights could be raised to is not a number anybody reaches without restarting this engine.");
-        });
+        }
     }
 
     [Test]
@@ -138,12 +138,12 @@ public sealed class ListedModelsTests
     {
         var after = new ModelListing(MODEL, ContextWindow.Of(32_768)).ApplyTo(WHAT_THE_RULES_SAY);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(after.Capabilities, Is.EqualTo(WHAT_THE_RULES_SAY.Capabilities));
             Assert.That(after.Images, Is.EqualTo(WHAT_THE_RULES_SAY.Images));
             Assert.That(after.Kind, Is.EqualTo(WHAT_THE_RULES_SAY.Kind));
-        });
+        }
     }
 
     [Test]

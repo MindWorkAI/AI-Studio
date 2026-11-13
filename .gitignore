@@ -1,10 +1,14 @@
 # Ignore any startup.env file:
 startup.env
 
+# Ignore the boot link of development builds:
+dev-boot-link.txt
+
 # Ignore pdfium library:
 libpdfium.dylib
 libpdfium.so
 libpdfium.dll
+pdfium.dll
 
 # Ignore qdrant database:
 qdrant-aarch64-apple-darwin

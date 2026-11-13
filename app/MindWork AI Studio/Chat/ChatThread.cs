@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
@@ -5,8 +6,10 @@ using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Chat;
 
@@ -20,7 +23,7 @@ public sealed record ChatThread
     /// <summary>
     /// The unique identifier of the chat thread.
     /// </summary>
-    public Guid ChatId { get; init; }
+    public Guid ChatId { get; set; }
     
     /// <summary>
     /// The unique identifier of the workspace.
@@ -33,10 +36,27 @@ public sealed record ChatThread
     public ulong LastMediaTranscriptNumber { get; set; }
 
     /// <summary>
-    /// Managed transcript attachments prepared for the composer but not sent yet.
-    /// Empty by default so older serialized threads require no migration.
+    /// The message the user is writing in this chat and has not sent yet.
     /// </summary>
-    public List<ManagedTranscriptAttachment> PendingMediaTranscripts { get; set; } = [];
+    /// <remarks>
+    /// Every copy of this thread made with a with expression shares the draft, because such a copy is
+    /// still the same chat. A copy which becomes another chat needs a draft of its own.
+    /// </remarks>
+    public ChatDraft Draft { get; set; } = new();
+
+    // Compatibility shim: until v26.9.1, a chat stored only the transcripts of its draft, in a list of their own. See documentation/compatibility-shims/2026-10-chat-pending-media-transcripts.md; remove after 2027-04-11.
+    [JsonInclude]
+    [JsonPropertyName("pending_media_transcripts")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    internal List<ManagedTranscriptAttachment>? LegacyPendingMediaTranscripts
+    {
+        get => null;
+        set
+        {
+            if (value is not null)
+                this.Draft.AddAttachments(value);
+        }
+    }
 
     /// <summary>
     /// Specifies the provider selected for the chat thread.
@@ -84,6 +104,15 @@ public sealed record ChatThread
     /// <summary>
     /// The augmented data for this chat thread. Will be inserted into the system prompt.
     /// </summary>
+    /// <remarks>
+    /// Not stored: it belongs to one request. The classic RAG process empties and writes it anew for
+    /// every message, a regenerated answer included, and a rollback empties it, so nothing reads it
+    /// once the answer is there. What the AI read of it is kept with the answer instead, as the
+    /// passages of its sources, see ContentText.StoreReceivedContentAsync. Stored, it was often the
+    /// largest part of a chat file. Older chat files still hold it; it is ignored on loading and
+    /// left out on their next save.
+    /// </remarks>
+    [JsonIgnore]
     public string AugmentedData { get; set; } = string.Empty;
 
     /// <summary>
@@ -98,13 +127,109 @@ public sealed record ChatThread
     /// continues it must meet the level.
     /// </summary>
     [JsonInclude]
-    public ConfidenceLevel RequiredProviderConfidence { get; private set; } = ConfidenceLevel.NONE;
+    public ConfidenceLevel RequiredProviderConfidence { get; internal set; } = ConfidenceLevel.NONE;
 
     public void RequireProviderConfidence(ConfidenceLevel minimumProviderConfidence)
     {
         if (minimumProviderConfidence > this.RequiredProviderConfidence)
             this.RequiredProviderConfidence = minimumProviderConfidence;
     }
+
+    /// <summary>
+    /// Tightens the data security of this chat to what the data brought in demands, and never
+    /// loosens it.
+    /// </summary>
+    /// <remarks>
+    /// Data which may only be used with self-hosted providers keeps the chat restricted to them,
+    /// no matter what comes in later: the data was seen by this chat. Data which may be used with
+    /// any provider marks the chat as one which holds data of a data source, while a restriction set
+    /// earlier stays. NOT_SPECIFIED demands nothing and changes nothing.<br/><br/>
+    /// Shared by the RAG process and by tools which search the data sources, so both tighten a chat
+    /// the same way. The rule itself is DataSourceSecurityExtensions.TightenedBy, which
+    /// ChatRestrictions uses as well for content which leaves the chat.
+    /// </remarks>
+    /// <param name="dataSecurity">What the data brought in demands.</param>
+    public void RequireDataSecurity(DataSourceSecurity dataSecurity) => this.DataSecurity = this.DataSecurity.TightenedBy(dataSecurity);
+
+    /// <summary>
+    /// Where this chat may still send data, because of the internal content it holds: mails, a
+    /// search of the wiki, an internal web page, or passages of a data source.
+    /// </summary>
+    /// <remarks>
+    /// The third thing the thread ratchets, next to the data security and the required provider
+    /// confidence: once internal content is in the thread, every tool which runs afterwards could
+    /// carry it out, in a search query or in the address of a web page. It only ever gets stricter,
+    /// and a later change of the settings of a mailbox, a data source, or Read Web Page does not
+    /// loosen it either, because the content was read under the old one. A chat which holds no
+    /// internal content demands nothing.
+    /// </remarks>
+    [JsonInclude]
+    public OutboundDataRequirement RequiredOutboundDataRestriction { get; internal set; } = OutboundDataRequirement.NONE;
+
+    /// <summary>
+    /// Tightens where this chat may still send data to what the data brought in demands, and
+    /// never loosens it.
+    /// </summary>
+    /// <param name="requirement">What the data brought in demands.</param>
+    public void RequireOutboundDataRestriction(OutboundDataRequirement requirement) => this.RequiredOutboundDataRestriction = this.RequiredOutboundDataRestriction.StricterOf(requirement);
+
+    /// <summary>
+    /// Tightens this chat to everything another thread demands, because what that thread read comes
+    /// along with its result.
+    /// </summary>
+    /// <remarks>
+    /// For an assistant which lets tools work in a thread of its own and carries the result over into
+    /// the thread it shows: without this, the result would arrive without the restrictions its data
+    /// demands, and a chat started from it could hand that data to any provider or tool. All three
+    /// ratchets go along, and so do the web addresses its models wrote; each part only tightens.
+    /// </remarks>
+    /// <param name="otherThread">The thread whose result this chat takes over.</param>
+    public void RequireRestrictionsOf(ChatThread otherThread) => this.RequireRestrictions(otherThread.CaptureRestrictions());
+
+    /// <summary>
+    /// What this chat demands of everybody who continues with its content, as it stands right now.
+    /// </summary>
+    /// <remarks>
+    /// A snapshot for content which leaves this chat, such as a message sent to an assistant: the chat
+    /// may tighten later on, while an answer is still being written, but the content which left does
+    /// not hold what arrives afterward. A method rather than a property, so that the snapshot is not
+    /// stored along with the chat.
+    /// </remarks>
+    /// <returns>The restrictions of this chat.</returns>
+    public ChatRestrictions CaptureRestrictions() => new(this.RequiredProviderConfidence, this.DataSecurity, this.RequiredOutboundDataRestriction, this.WebAddressesWrittenByModels);
+
+    /// <summary>
+    /// Tightens this chat to everything the given restrictions demand, and never loosens it.
+    /// </summary>
+    /// <remarks>
+    /// For content which arrives with the restrictions of where it was written, see CaptureRestrictions.
+    /// Each part tightens on its own, by the same rules as when this chat reads something itself.
+    /// </remarks>
+    /// <param name="restrictions">What the content arriving demands.</param>
+    public void RequireRestrictions(ChatRestrictions restrictions)
+    {
+        this.RequireProviderConfidence(restrictions.ProviderConfidence);
+        this.RequireDataSecurity(restrictions.DataSecurity);
+        this.RequireOutboundDataRestriction(restrictions.OutboundData);
+        this.WebAddressesWrittenByModels = this.WebAddressesWrittenByModels.Union(restrictions.WebAddressesWrittenByModels);
+    }
+
+    /// <summary>
+    /// The web addresses a model wrote which reached this chat inside a message of the user, as request
+    /// keys, see WebAddresses.CreateRequestKey.
+    /// </summary>
+    /// <remarks>
+    /// An answer of a model which is sent on, to an assistant or into a new chat, becomes a message of the
+    /// user there. Its addresses would then pass for ones the user gave, see IsWebAddressGivenToTheModel,
+    /// although a model chose them and could have put anything of the chat it came from into them. This
+    /// set keeps them apart, see ChatRestrictions.WithWebAddressesWrittenByModelIn.<br/><br/>
+    ///
+    /// Stored with the chat, unlike the other sets of addresses: forgetting it after a restart would let
+    /// the chat know more addresses, not fewer. It only ever grows, like the other restrictions, and it is
+    /// immutable, so that a copy of the thread never shares a set which grows later.
+    /// </remarks>
+    [JsonInclude]
+    public ImmutableHashSet<string> WebAddressesWrittenByModels { get; internal set; } = [];
 
     /// <summary>
     /// The name of the chat thread. Usually generated by an AI model or manually edited by the user.
@@ -117,15 +242,109 @@ public sealed record ChatThread
     public string SystemPrompt { get; set; } = string.Empty;
 
     /// <summary>
+    /// Which assistant chose the system prompt of this chat, and how; null when the chat got its prompt elsewhere.
+    /// </summary>
+    /// <remarks>
+    /// Set when a chat continues the conversation of an assistant, see AssistantBase.ChatSystemPrompt, so that
+    /// the dialog showing the system prompt names the assistant rather than calling it the prompt of this chat.
+    /// </remarks>
+    public ChatSystemPromptOrigin? SystemPromptOrigin { get; set; }
+
+    /// <summary>
     /// The content blocks of the chat thread.
     /// </summary>
-    public List<ContentBlock> Blocks { get; init; } = [];
+    public List<ContentBlock> Blocks { get; set; } = [];
 
+    /// <summary>
+    /// The component running this thread, which decides the tools it may use and what its requests name.
+    /// </summary>
+    /// <remarks>
+    /// None until somebody sets it: whoever sends a thread states which component they are. A place
+    /// which forgets that shows up as a request without a component, instead of silently counting as chat.
+    /// </remarks>
     [JsonIgnore]
-    public AIStudio.Tools.Components RuntimeComponent { get; set; } = AIStudio.Tools.Components.CHAT;
+    public AIStudio.Tools.Components RuntimeComponent { get; set; } = AIStudio.Tools.Components.NONE;
+
+    /// <summary>
+    /// The name of the assistant plugin running this thread, or empty for any other component.
+    /// </summary>
+    [JsonIgnore]
+    public string RuntimeAssistantName { get; set; } = string.Empty;
 
     [JsonIgnore]
     public HashSet<string> RuntimeSelectedToolIds { get; set; } = [];
+
+    /// <summary>
+    /// The web addresses tools returned in this chat since it was opened, as request keys, see
+    /// WebAddresses.CreateRequestKey.
+    /// </summary>
+    /// <remarks>
+    /// Addresses the model wrote into the call itself are left out, see ToolCallOutcome.ReturnedWebAddresses.
+    /// Not stored: each answer stores those addresses its own tools returned which a later message
+    /// still shows the model, see ContentText.WebAddressesFromTools, so they outlast a restart. This
+    /// set covers the runs without an answer in the chat, such as those of the assistants, and the
+    /// addresses no later message shows, such as the links of a page read. It is never emptied, so
+    /// the addresses of an answer which was deleted or generated anew count until the chat is closed.
+    /// </remarks>
+    [JsonIgnore]
+    public HashSet<string> RuntimeWebAddressesFromTools { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The web addresses in the system prompt the last request was sent with, as request keys.
+    /// </summary>
+    /// <remarks>
+    /// Collected by PrepareSystemPrompt, because the system prompt is put together only then: from
+    /// the chat template, the content of the data sources the RAG process found, the profile and
+    /// the tool policy. Not stored, since every request puts it together anew.
+    /// </remarks>
+    [JsonIgnore]
+    public IReadOnlySet<string> RuntimeSystemPromptWebAddresses { get; internal set; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Whether a web address was given to the model rather than chosen by it.
+    /// </summary>
+    /// <remarks>
+    /// Given means: it stands in the system prompt, see RuntimeSystemPromptWebAddresses, in a
+    /// message of the user or a document attached to one, see ContentText.RuntimeAttachmentWebAddresses,
+    /// or a tool returned it, see RuntimeWebAddressesFromTools and ContentText.WebAddressesFromTools
+    /// of the answers in this chat. What the model wrote itself never
+    /// counts, its answers included, because the model could have put anything of the chat into it.
+    /// Neither does what any model wrote and what reached this chat as a message of the user, such
+    /// as an answer sent here from another chat, see WebAddressesWrittenByModels. The comparison is
+    /// the one of WebAddresses.CreateRequestKey, so an address counts when it asks the server for
+    /// the same.<br/><br/>
+    /// Shared by both rules of Read Web Page which depend on it: a free address choice switched
+    /// off, and a mailbox which allows the addresses from the chat only.
+    /// </remarks>
+    /// <param name="url">The address the model wants to read.</param>
+    /// <returns>True when the address was given to the model.</returns>
+    public bool IsWebAddressGivenToTheModel(Uri url)
+    {
+        var requestKey = WebAddresses.CreateRequestKey(url);
+        if (this.RuntimeWebAddressesFromTools.Contains(requestKey) || this.RuntimeSystemPromptWebAddresses.Contains(requestKey))
+            return true;
+
+        // A tool returned it for one of the answers, possibly before a restart:
+        if (this.Blocks.Any(block => block.Role is ChatRole.AI && block.Content is ContentText answer && answer.WebAddressesFromTools.Contains(requestKey)))
+            return true;
+
+        var messagesOfTheUser = this.Blocks
+            .Where(block => block.Role is ChatRole.USER)
+            .Select(block => block.Content)
+            .OfType<ContentText>()
+            .ToList();
+
+        if (messagesOfTheUser.Any(content => content.RuntimeAttachmentWebAddresses.Contains(requestKey)))
+            return true;
+
+        // A model wrote it, even though it stands in a message of the user:
+        if (this.WebAddressesWrittenByModels.Contains(requestKey))
+            return false;
+
+        return messagesOfTheUser
+            .SelectMany(content => WebAddresses.Find(content.Text))
+            .Any(address => WebAddresses.TryCreateRequestKey(address, out var key) && string.Equals(key, requestKey, StringComparison.Ordinal));
+    }
 
     /// <summary>
     /// Whether the tools of this run were named by the assistant's own rules instead of chosen by
@@ -167,6 +386,13 @@ public sealed record ChatThread
         this.SystemPrompt = prepared.BasePrompt;
         LOGGER.LogInformation(prepared.Explanation);
 
+        var systemPromptWebAddresses = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var address in WebAddresses.Find(prepared.Text))
+            if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                systemPromptWebAddresses.Add(requestKey);
+
+        this.RuntimeSystemPromptWebAddresses = systemPromptWebAddresses;
+
         return prepared.Text;
     }
 
@@ -181,43 +407,31 @@ public sealed record ChatThread
     /// request which is never sent.
     ///
     /// Nothing here writes to the thread and nothing logs, because this runs while somebody types.
+    ///
+    /// Each part is recorded as it is added, in the order of the text, so that the dialog showing
+    /// the prompt names the parts from the decisions made here rather than repeating them.
     /// </remarks>
     /// <param name="settingsManager">The settings manager instance to use.</param>
     /// <param name="runnableToolDefinitions">The tools which may run in this thread. Null when the thread runs without tools.</param>
     /// <returns>The system prompt and what building it decided.</returns>
     public PreparedSystemPrompt BuildSystemPrompt(SettingsManager settingsManager, IEnumerable<ToolDefinition>? runnableToolDefinitions = null)
     {
-        var allowProfile = true;
+        var parts = new List<SystemPromptPart>();
 
         //
         // Use the information from the chat template, if provided. Otherwise, use the default system prompt
         //
-        string systemPromptTextWithChatTemplate;
-        var logMessage = $"Using no chat template for chat thread '{this.Name}'.";
-        if (string.IsNullOrWhiteSpace(this.SelectedChatTemplate))
-            systemPromptTextWithChatTemplate = this.SystemPrompt;
-        else
-        {
-            if(!Guid.TryParse(this.SelectedChatTemplate, out var chatTemplateId))
-                systemPromptTextWithChatTemplate = this.SystemPrompt;
-            else
-            {
-                if(this.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTemplateId == Guid.Empty)
-                    systemPromptTextWithChatTemplate = this.SystemPrompt;
-                else
-                {
-                    var chatTemplate = settingsManager.GetChatTemplateById(this.SelectedChatTemplate);
-                    if(chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE)
-                        systemPromptTextWithChatTemplate = this.SystemPrompt;
-                    else
-                    {
-                        logMessage = $"Using chat template '{chatTemplate.Name}' for chat thread '{this.Name}'.";
-                        allowProfile = chatTemplate.AllowProfileUsage;
-                        systemPromptTextWithChatTemplate = chatTemplate.ToSystemPrompt();
-                    }
-                }
-            }
-        }
+        var chatTemplate = this.GetSelectedChatTemplate(settingsManager);
+        var usesChatTemplate = chatTemplate != ChatTemplate.NO_CHAT_TEMPLATE;
+        var allowProfile = !usesChatTemplate || chatTemplate.AllowProfileUsage;
+        var systemPromptTextWithChatTemplate = usesChatTemplate ? chatTemplate.ToSystemPrompt() : this.SystemPrompt;
+        var logMessage = usesChatTemplate
+            ? $"Using chat template '{chatTemplate.Name}' for chat thread '{this.Name}'."
+            : $"Using no chat template for chat thread '{this.Name}'.";
+
+        parts.Add(usesChatTemplate
+            ? new(SystemPromptPartKind.CHAT_TEMPLATE, systemPromptTextWithChatTemplate) { SourceName = chatTemplate.Name }
+            : new(SystemPromptPartKind.BASE_PROMPT, systemPromptTextWithChatTemplate) { Origin = this.SystemPromptOrigin });
 
         //
         // Add augmented data, if available:
@@ -227,51 +441,50 @@ public sealed record ChatThread
         {
             true => $"""
                      {systemPromptTextWithChatTemplate}
-                     
+
                      {this.AugmentedData}
                      """,
 
             false => systemPromptTextWithChatTemplate,
         };
-        
+
+        if (isAugmentedDataAvailable)
+            parts.Add(new(SystemPromptPartKind.RETRIEVED_DATA, this.AugmentedData));
+
         logMessage = isAugmentedDataAvailable
             ? $"{logMessage} Augmented data is available for the chat thread."
             : $"{logMessage} No augmented data is available for the chat thread.";
 
         //
-        // Add information from the profile if available and allowed:
+        // Add information from the profile if available and allowed. A selected profile which the
+        // chat template does not allow is reported, so that nobody wonders where it went:
         //
         string systemPromptText;
         var profileNote = $"Using no profile for chat thread '{this.Name}'.";
-        if (string.IsNullOrWhiteSpace(this.SelectedProfile) || !allowProfile)
+        var profile = this.GetSelectedProfile(settingsManager);
+        var switchedOffProfile = Profile.NO_PROFILE;
+        if (profile == Profile.NO_PROFILE)
             systemPromptText = systemPromptWithAugmentedData;
+        else if (!allowProfile)
+        {
+            systemPromptText = systemPromptWithAugmentedData;
+            switchedOffProfile = profile;
+        }
         else
         {
-            if(!Guid.TryParse(this.SelectedProfile, out var profileId))
-                systemPromptText = systemPromptWithAugmentedData;
-            else
-            {
-                if(this.SelectedProfile == Profile.NO_PROFILE.Id || profileId == Guid.Empty)
-                    systemPromptText = systemPromptWithAugmentedData;
-                else
-                {
-                    var profile = settingsManager.GetProfileById(this.SelectedProfile);
-                    if(profile == Profile.NO_PROFILE)
-                        systemPromptText = systemPromptWithAugmentedData;
-                    else
-                    {
-                        profileNote = $"Using profile '{profile.Name}' for chat thread '{this.Name}'.";
-                        systemPromptText = $"""
-                                            {systemPromptWithAugmentedData}
+            var profilePrompt = profile.ToSystemPrompt();
+            profileNote = $"Using profile '{profile.Name}' for chat thread '{this.Name}'.";
+            systemPromptText = $"""
+                                {systemPromptWithAugmentedData}
 
-                                            {profile.ToSystemPrompt()}
-                                            """;
-                    }
-                }
-            }
+                                {profilePrompt}
+                                """;
+
+            parts.Add(new(SystemPromptPartKind.PROFILE, profilePrompt) { SourceName = profile.Name });
         }
 
-        var toolPolicy = ToolSelectionRules.BuildToolPolicyPrompt(runnableToolDefinitions ?? []);
+        var instructedTools = ToolSelectionRules.GetInstructedTools(runnableToolDefinitions ?? []);
+        var toolPolicy = ToolSelectionRules.BuildToolPolicyPrompt(instructedTools);
         if (!string.IsNullOrWhiteSpace(toolPolicy))
         {
             systemPromptText = $"""
@@ -279,11 +492,29 @@ public sealed record ChatThread
 
                                 {toolPolicy}
                                 """;
+
+            parts.Add(new(SystemPromptPartKind.TOOL_INSTRUCTIONS, toolPolicy) { Tools = instructedTools });
+        }
+
+        //
+        // Explain the notes in front of the earlier answers, see ToolCallHistoryNote. Also without
+        // tools: the note then tells the model what it read, and this tells it that it no longer
+        // has the content.
+        //
+        if (ToolCallHistoryNote.IsInAnyOf(this.Blocks))
+        {
+            systemPromptText = $"""
+                                {systemPromptText}
+
+                                {ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION}
+                                """;
+
+            parts.Add(new(SystemPromptPartKind.HISTORY_NOTES, ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION));
         }
 
         var explanation = $"{logMessage} {profileNote}";
         if(!this.IncludeDateTime)
-            return new(systemPromptText, systemPromptTextWithChatTemplate, allowProfile, explanation);
+            return new(systemPromptText, systemPromptTextWithChatTemplate, explanation, parts, switchedOffProfile);
 
         //
         // Prepend the current date and time to the system prompt:
@@ -301,7 +532,49 @@ public sealed record ChatThread
                             {systemPromptText}
                             """;
 
-        return new(withDateTime, systemPromptTextWithChatTemplate, allowProfile, explanation);
+        parts.Insert(0, new(SystemPromptPartKind.DATE_TIME, currentDateTime));
+        return new(withDateTime, systemPromptTextWithChatTemplate, explanation, parts, switchedOffProfile);
+    }
+
+    /// <summary>
+    /// The chat template selected for this thread, or ChatTemplate.NO_CHAT_TEMPLATE when there is none.
+    /// </summary>
+    /// <remarks>
+    /// A selection which is no ID, the ID of no chat template, or that of a chat template which no
+    /// longer exists counts as none, so the thread falls back to its own system prompt.
+    /// </remarks>
+    /// <param name="settingsManager">The settings manager instance to use.</param>
+    /// <returns>The selected chat template, or ChatTemplate.NO_CHAT_TEMPLATE.</returns>
+    private ChatTemplate GetSelectedChatTemplate(SettingsManager settingsManager)
+    {
+        if (string.IsNullOrWhiteSpace(this.SelectedChatTemplate) || !Guid.TryParse(this.SelectedChatTemplate, out var chatTemplateId))
+            return ChatTemplate.NO_CHAT_TEMPLATE;
+
+        if (this.SelectedChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE.Id || chatTemplateId == Guid.Empty)
+            return ChatTemplate.NO_CHAT_TEMPLATE;
+
+        return settingsManager.GetChatTemplateById(this.SelectedChatTemplate);
+    }
+
+    /// <summary>
+    /// The profile selected for this thread, or Profile.NO_PROFILE when there is none.
+    /// </summary>
+    /// <remarks>
+    /// The same rules as for the chat template: a selection which is no ID, the ID of no profile, or
+    /// that of a profile which no longer exists counts as none. Whether the chat template lets the
+    /// profile take part is decided by BuildSystemPrompt.
+    /// </remarks>
+    /// <param name="settingsManager">The settings manager instance to use.</param>
+    /// <returns>The selected profile, or Profile.NO_PROFILE.</returns>
+    private Profile GetSelectedProfile(SettingsManager settingsManager)
+    {
+        if (string.IsNullOrWhiteSpace(this.SelectedProfile) || !Guid.TryParse(this.SelectedProfile, out var profileId))
+            return Profile.NO_PROFILE;
+
+        if (this.SelectedProfile == Profile.NO_PROFILE.Id || profileId == Guid.Empty)
+            return Profile.NO_PROFILE;
+
+        return settingsManager.GetProfileById(this.SelectedProfile);
     }
 
     /// <summary>
@@ -348,6 +621,238 @@ public sealed record ChatThread
 
         // Remove the block from the chat thread:
         this.Blocks.Remove(block);
+    }
+
+    /// <summary>
+    /// Removes a user message whose text and attachments went back into the composer for editing.
+    /// </summary>
+    /// <remarks>
+    /// Unlike Remove, this keeps the files of the managed transcripts. The composer still carries
+    /// them, so deleting the files would leave the edited message pointing at nothing, and the user
+    /// would have to transcribe the media all over again.<br/><br/>
+    ///
+    /// A transcript always belongs to exactly one owner: to a sent message, or to the draft in the
+    /// composer, which this thread keeps in Draft. Sending hands the attachments of the draft to the
+    /// new message; editing is the way back, so the message becomes the draft again. From then on, the
+    /// rules of the draft apply: removing the attachment from the composer deletes its file, and
+    /// opening the chat again brings it back into the composer.
+    /// </remarks>
+    /// <param name="content">The content of the user message to edit.</param>
+    public void RemoveForEditing(IContent content)
+    {
+        var block = this.Blocks.FirstOrDefault(x => x.Content == content);
+        if (block is null)
+            return;
+
+        if (block.Content is ContentText textContent)
+            this.Draft.RestoreFromMessage(textContent);
+
+        this.Blocks.Remove(block);
+    }
+
+    /// <summary>
+    /// Stores the documents attached to the messages of this chat which were never sent, so that each
+    /// one is read from the disk once.
+    /// </summary>
+    /// <remarks>
+    /// Called before every request of the chat, see AIJobService. The request then sends the stored
+    /// texts, see ContentText.PrepareTextContentForAI, and so does every later one. Assistants do not
+    /// call this: their messages are made anew with every run, so every run would store its documents
+    /// once more.<br/><br/>
+    ///
+    /// Nothing here may stop the request. A document which is not stored, e.g., since the store is not
+    /// available, is read when the message is built, as every request did before.
+    /// </remarks>
+    /// <param name="readChangedAgain">Whether documents whose files changed since they were stored are read again, see DataChat.ReadChangedAttachmentsAgain.</param>
+    public async Task StoreAttachedDocumentsAsync(bool readChangedAgain)
+    {
+        var messages = this.Blocks.Select(block => block.Content).OfType<ContentText>().Where(text => text.HasDocumentsToStore(readChangedAgain)).ToList();
+        if (messages.Count is 0)
+            return;
+
+        try
+        {
+            if (await ChatProvenance.GetStoreAsync() is not { } store)
+                return;
+
+            // One report for everything filtered out of the documents, as for the request itself:
+            await using var reportingScope = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>().BeginAction();
+            foreach (var message in messages)
+                await message.StoreAttachedDocumentsAsync(store, this.ChatId, Program.RUST_SERVICE, reportingScope, readChangedAgain);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.LogError(exception, "Failed to store the attached documents of the chat '{ChatId}'. They are read from the disk with every request.", this.ChatId);
+        }
+    }
+
+    /// <summary>
+    /// Rolls this chat thread back, so that the given content becomes the last block of the conversation.
+    /// </summary>
+    /// <remarks>
+    /// Every later block is removed in conversation order, which is the order of the time stamps and
+    /// the order in which the chat shows the blocks. That includes the blocks hidden from the user,
+    /// such as the prompts an assistant sends into a chat: the user can neither see nor remove them,
+    /// so leaving them behind would continue the chat with messages nobody knows about. Hidden blocks
+    /// before the content stay, e.g. the example conversation of a chat template. The managed
+    /// transcripts of the removed blocks are deleted with them.<br/><br/>
+    ///
+    /// The augmented data and the AI-selected data sources are reset, too. Both describe the last
+    /// retrieval, not a certain message, so after a rollback nobody knows whether they belong to a
+    /// kept or to a removed one. The next message with active data sources retrieves anew; without
+    /// active data sources, the chat continues without this context. The data source options stay,
+    /// because they are the user's choice rather than the result of a message.<br/><br/>
+    ///
+    /// What stays as well is everything the thread ratchets for security reasons, namely the data
+    /// security, the required provider confidence, and where the chat may still send data. They only
+    /// ever tighten, because the data which raised them was seen by this thread. Removing the message that brought it in does not unsee
+    /// it, so the chat keeps demanding the same of every provider which continues it.
+    /// </remarks>
+    /// <param name="content">The content to keep as the last block.</param>
+    /// <returns>True when one or more later blocks were removed. False when the content is unknown or already the last block; the thread stays unchanged then.</returns>
+    public bool RollBackTo(IContent content)
+    {
+        var sortedBlocks = this.Blocks.OrderBy(x => x.Time).ToList();
+        var blockIndex = sortedBlocks.FindIndex(block => ReferenceEquals(block.Content, content));
+        if (blockIndex < 0 || blockIndex == sortedBlocks.Count - 1)
+            return false;
+
+        foreach (var block in sortedBlocks.Skip(blockIndex + 1))
+        {
+            DeleteManagedAttachments(block);
+            this.Blocks.Remove(block);
+        }
+
+        this.AugmentedData = string.Empty;
+        this.AISelectedDataSources = [];
+        return true;
+    }
+
+    /// <summary>
+    /// Replaces every attachment of the chat, in its messages as well as in its draft, with what the given function makes of it.
+    /// </summary>
+    /// <remarks>
+    /// The one place which knows where a chat keeps attachments. Moving a chat, copying it, and
+    /// writing it into a backup or reading it back from one all go through here, so none of them
+    /// forgets the draft or a kind of message.
+    /// </remarks>
+    /// <param name="replace">Gives the attachment to keep in place of the given one, or the given one itself when nothing changes.</param>
+    public void ReplaceAttachments(Func<FileAttachment, FileAttachment> replace)
+    {
+        foreach (var content in this.Blocks.Select(block => block.Content).OfType<IContent>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+                content.FileAttachments[index] = replace(content.FileAttachments[index]);
+        }
+
+        this.Draft.ReplaceAttachments(replace);
+    }
+
+    /// <summary>
+    /// Whether one of the messages the chat shows went with attached files.
+    /// </summary>
+    /// <remarks>
+    /// Asked with every rendering of the chat, so it stops at the first such message instead of
+    /// collecting them, cf. CollectSentFileAttachments.
+    /// </remarks>
+    public bool HasSentFileAttachments() => this.BlocksShownToTheUser().Any(block => block.Content!.FileAttachments.Count > 0);
+
+    /// <summary>
+    /// Collects the files attached to the messages the chat shows, once for each version of a file that was sent.
+    /// </summary>
+    /// <remarks>
+    /// Every message keeps the text its documents were sent with, see FileAttachment.ProvenanceId, and
+    /// the AI receives all of these texts with every request. A file which changed between two messages
+    /// therefore reached the AI in two versions, and both are collected; the state of the file their
+    /// texts were read from, FileAttachment.Version, tells them apart. A file sent again unchanged is
+    /// collected once, with the entry of its latest message. Attachments without a noted state, such
+    /// as images and documents which every request reads anew, are told apart by their path alone.
+    /// The draft is left out, since the paperclip shows it, and so are the messages the chat hides.
+    /// </remarks>
+    /// <returns>The attachments, each version of a file once.</returns>
+    public HashSet<FileAttachment> CollectSentFileAttachments() => this.BlocksShownToTheUser()
+        .OrderByDescending(block => block.Time)
+        .SelectMany(block => block.Content!.FileAttachments)
+        .DistinctBy(attachment => (attachment.FilePath, attachment.Version))
+        .ToHashSet();
+
+    /// <summary>
+    /// The messages the chat shows: the same ones the chat component renders.
+    /// </summary>
+    private IEnumerable<ContentBlock> BlocksShownToTheUser() => this.Blocks.Where(block => block is { HideFromUser: false, Content: not null });
+
+    /// <summary>
+    /// Replaces every file path the chat stores with what the given function makes of it.
+    /// </summary>
+    /// <remarks>
+    /// Covers the attachments, cf. ReplaceAttachments, and the images of the messages which are held
+    /// by a local path. An attachment whose path the function returns unchanged stays as it is, and
+    /// so does one without a path.
+    /// </remarks>
+    /// <param name="rewrite">Maps a path to its replacement, or returns it unchanged.</param>
+    public void RewriteFilePaths(Func<string, string> rewrite)
+    {
+        this.ReplaceAttachments(attachment =>
+        {
+            if (string.IsNullOrWhiteSpace(attachment.FilePath))
+                return attachment;
+
+            var rewrittenPath = rewrite(attachment.FilePath);
+            return rewrittenPath == attachment.FilePath ? attachment : attachment.WithFilePath(rewrittenPath);
+        });
+
+        foreach (var image in this.Blocks.Select(block => block.Content).OfType<ContentImage>())
+        {
+            if (image.SourceType is ContentImageSource.LOCAL_PATH && !string.IsNullOrWhiteSpace(image.Source))
+                image.Source = rewrite(image.Source);
+        }
+    }
+
+    /// <summary>
+    /// Finds what a provider reported for this conversation, as long as the report still describes it.
+    /// </summary>
+    /// <remarks>
+    /// A report describes one request: the conversation up to the answer which carries it. It is
+    /// worth something only while the thread still is that conversation, so only the last block is
+    /// asked, and no earlier answer ever stands in for it. Whatever came after an older report -- a
+    /// message whose request was turned down, an answer which is still being written, an answer
+    /// without a report of its own -- is missing from that report's number, and the estimate is
+    /// closer to the truth than a figure which leaves it out.<br/><br/>
+    ///
+    /// A report also stops counting when the thread holds a different number of blocks than the
+    /// request did, which means an earlier message was deleted, and when the next request goes to
+    /// another model, which counts the same conversation with another tokenizer. Editing the last
+    /// message or rolling the chat back makes an earlier answer the last block again, with exactly
+    /// the blocks it was reported for, so its report counts once more.<br/><br/>
+    ///
+    /// What goes unnoticed is a change beside the messages: another system prompt, profile, or
+    /// selection of tools. That shows only with the next answer. Noticing it would take a
+    /// fingerprint of the system prompt as it was sent, after the data sources added to it, which
+    /// is a lot of machinery for a number which corrects itself one answer later. The same holds for
+    /// the explanation of the notes on earlier answers, which the system prompt gets once the first
+    /// answer has a note, see ToolCallHistoryNote. The note of the last answer itself is counted: it
+    /// changes with every answer, and the answer goes out with it, see ToolCallHistoryNote.TextForModel.
+    /// </remarks>
+    /// <param name="model">The model the next request would go to.</param>
+    /// <returns>
+    /// What the provider reported, together with the answer which followed it, or
+    /// ReportedHistory.UNKNOWN when no report describes this conversation.
+    /// </returns>
+    public ReportedHistory ReportedHistoryFor(Model model)
+    {
+        if (this.Blocks.Count is 0)
+            return ReportedHistory.UNKNOWN;
+
+        if (this.Blocks[^1].Content is not ContentText { IsStreaming: false, ReportedUsage: { } reported } answer)
+            return ReportedHistory.UNKNOWN;
+
+        if (reported.BlockCount != this.Blocks.Count)
+            return ReportedHistory.UNKNOWN;
+
+        if (!string.Equals(reported.ModelId, model.Id, StringComparison.Ordinal))
+            return ReportedHistory.UNKNOWN;
+
+        return ReportedHistory.Of(reported.ToTokenUsage(), ToolCallHistoryNote.TextForModel(this.Blocks[^1], answer.Text));
     }
 
     private static void DeleteManagedAttachments(ContentBlock block)

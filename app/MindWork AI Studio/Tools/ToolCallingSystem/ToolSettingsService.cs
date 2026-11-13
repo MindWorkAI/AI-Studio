@@ -182,7 +182,7 @@ public sealed partial class ToolSettingsService(SettingsManager settingsManager,
 
         if (!EnterpriseEncryption.IsEncrypted(encryptedSecret))
         {
-            logger.LogWarning("The managed tool setting '{ManagedKey}' holds a plaintext secret. Only encrypted secrets, starting with 'ENC:v1:', are supported.", managedKey);
+            logger.LogWarning("The managed tool setting '{ManagedKey}' holds a plaintext secret. Only encrypted secrets, starting with 'ENC:', are supported.", managedKey);
             return false;
         }
 

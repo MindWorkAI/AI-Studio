@@ -1,4 +1,6 @@
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 
 namespace AIStudio.Tools.ToolCallingSystem;
@@ -56,7 +58,26 @@ public static class ToolSettingsOptionSources
     /// </summary>
     public const string WEB_SEARCH_BACKEND_STRATEGY = "web_search_backend_strategy";
 
-    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH or WEB_SEARCH_BACKENDS or WEB_SEARCH_BACKEND_STRATEGY;
+    /// <summary>
+    /// Whether Read Web Page may also open web addresses the AI chose itself.
+    /// </summary>
+    /// <remarks>
+    /// The names say what each value does instead of a bare "Off" and "On", so the dropdown
+    /// explains itself without its description.
+    /// </remarks>
+    public const string FREE_ADDRESS_CHOICE = "free_address_choice";
+
+    /// <summary>
+    /// Where a chat may still send data once a tool brought internal content into it.
+    /// </summary>
+    /// <remarks>
+    /// The values are the names of the enum members, which is also how an organization's
+    /// configuration addresses a level. The names are the ones the mailbox dialog shows, so the
+    /// user meets one wording for the levels wherever they are set.
+    /// </remarks>
+    public const string OUTBOUND_DATA_RESTRICTION = "outbound_data_restriction";
+
+    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH or WEB_SEARCH_BACKENDS or WEB_SEARCH_BACKEND_STRATEGY or FREE_ADDRESS_CHOICE or OUTBOUND_DATA_RESTRICTION;
 
     /// <summary>
     /// Resolves one option source to its current values and names.
@@ -79,13 +100,21 @@ public static class ToolSettingsOptionSources
         // translation. Adding a search service therefore adds it to this list, and to the
         // dropdown offering it, without a line of code here:
         //
-        WEB_SEARCH_BACKENDS => Enum.GetValues<WebSearchBackend>().Select(backend => new ToolSettingsOption(backend.ToString(), backend.ToName())).ToList(),
+        WEB_SEARCH_BACKENDS => Enum.GetValues<WebSearchBackend>().Select(backend => new ToolSettingsOption(backend.ToString(), backend.Name)).ToList(),
         WEB_SEARCH_BACKEND_STRATEGY =>
         [
             new(nameof(WebSearchBackendStrategy.FAILOVER), TB("One after another, until one answers")),
             new(nameof(WebSearchBackendStrategy.PARALLEL), TB("All of them at once, results combined")),
             new(nameof(WebSearchBackendStrategy.SPECIFIC), TB("Only the preferred one")),
         ],
+
+        FREE_ADDRESS_CHOICE =>
+        [
+            new(nameof(FreeAddressChoice.OFF), TB("Off: only web addresses from the chat or tools")),
+            new(nameof(FreeAddressChoice.ON), TB("On: the AI may also choose web addresses itself")),
+        ],
+
+        OUTBOUND_DATA_RESTRICTION => Enum.GetValues<OutboundDataRestriction>().Select(restriction => new ToolSettingsOption(restriction.ToString(), restriction.Name)).ToList(),
 
         _ => [],
     };
@@ -107,9 +136,9 @@ public static class ToolSettingsOptionSources
             // user may keep a text as it is or type a language of their own. A search engine needs
             // a concrete tag, and ANY_LANGUAGE above already covers "no preference".
             //
-            var tag = language.ToIETFTag();
+            var tag = language.IETFTag;
             if (!string.IsNullOrWhiteSpace(tag))
-                options.Add(new(tag, language.Name()));
+                options.Add(new(tag, language.Name));
         }
 
         return options;

@@ -33,10 +33,10 @@ namespace AIStudio.Components
         public Func<string, string?> ValidateSelection { get; set; } = _ => null;
 
         [Parameter]
-        public string OpenIcon { get; set; } = Icons.Material.Filled.ArrowDropDown;
+        public string OpenIcon { get; set; } = AppIcons.EXPAND_MORE;
         
         [Parameter]
-        public string CloseIcon { get; set; } = Icons.Material.Filled.ArrowDropUp;
+        public string CloseIcon { get; set; } = AppIcons.EXPAND_LESS;
         
         [Parameter]
         public Color IconColor { get; set; } = Color.Default;
@@ -62,8 +62,9 @@ namespace AIStudio.Components
         [Parameter]
         public string Style { get; set; } = string.Empty;
 
-        private async Task OnValueChanged(string newValue)
+        private async Task OnValueChanged(string? changedValue)
         {
+            var newValue = changedValue ?? string.Empty;
             if (this.Value != newValue)
             {
                 this.Value = newValue;
@@ -97,7 +98,7 @@ namespace AIStudio.Components
             return [this.Default, .. items];
         }
 
-        private string GetMultiSelectionText(List<string?>? selectedValues)
+        private string GetMultiSelectionText(IReadOnlyList<string?>? selectedValues)
         {
             if (selectedValues is null || selectedValues.Count == 0)
                 return this.Default.Display;

@@ -17,13 +17,13 @@ public sealed class ModelComparisonJudgeRequestTests
 
         var prompt = judgeRequest.ToPrompt();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prompt, Does.Contain("A good summary keeps every number."));
             Assert.That(prompt, Does.Contain("Answer from the first model."));
             Assert.That(prompt, Does.Contain("Answer from the second model."));
             Assert.That(prompt, Does.Contain(REQUEST.ToPrompt()));
-        });
+        }
     }
 
     [Test]
@@ -42,13 +42,13 @@ public sealed class ModelComparisonJudgeRequestTests
 
         var prompt = judgeRequest.ToPrompt();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prompt, Does.Contain("better answers the question or better completes the task"));
             Assert.That(prompt, Does.Contain("Answer from the first model."));
             Assert.That(prompt, Does.Contain("Answer from the second model."));
             Assert.That(prompt, Does.Not.Contain("Pay particular attention to this:"));
-        });
+        }
     }
 
     [Test]
@@ -74,13 +74,13 @@ public sealed class ModelComparisonJudgeRequestTests
 
         var prompt = judgeRequest.ToPrompt();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(prompt, Does.Contain("# Answer A"));
             Assert.That(prompt, Does.Contain("# Answer B"));
             Assert.That(prompt, Does.Not.Contain("# Answer 1"));
             Assert.That(prompt, Does.Not.Contain("# Answer 2"));
-        });
+        }
     }
 
     [Test]

@@ -30,11 +30,11 @@ public sealed class ModelIdTests
     {
         var id = new ModelId(reported);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(id.IsEmpty, Is.True);
             Assert.That(id.Normalized, Is.Empty);
-        });
+        }
     }
 
     [Test]
@@ -42,11 +42,11 @@ public sealed class ModelIdTests
     {
         var id = new ModelId("Qwen3.8:27B-MLX");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(id.Original, Is.EqualTo("Qwen3.8:27B-MLX"));
             Assert.That(id.ToString(), Is.EqualTo("Qwen3.8:27B-MLX"));
-        });
+        }
     }
 
     [Test]
@@ -54,13 +54,13 @@ public sealed class ModelIdTests
     {
         ModelId untouched = default;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(untouched.IsEmpty, Is.True);
             Assert.That(untouched.Original, Is.Empty);
             Assert.That(untouched.Normalized, Is.Empty);
             Assert.That(untouched.Segments.GetEnumerator().MoveNext(), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -69,11 +69,11 @@ public sealed class ModelIdTests
         var fromOllama = new ModelId("Qwen3.8:27b");
         var fromHub = new ModelId("qwen3.8-27b");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(fromOllama, Is.EqualTo(fromHub));
             Assert.That(fromOllama.GetHashCode(), Is.EqualTo(fromHub.GetHashCode()));
-        });
+        }
     }
 
     [Test]

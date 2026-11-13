@@ -170,7 +170,7 @@ public partial class VoiceRecorder : MSGComponentBase
             ? T("Transcription in progress...")
             : this.isRecording
                 ? T("Stop recording and start transcription")
-                : T("Start recording your voice for a transcription");
+                : TA("Start recording your voice for a transcription");
     
     private async Task OnRecordingToggled(bool toggled)
     {
@@ -210,7 +210,7 @@ public partial class VoiceRecorder : MSGComponentBase
             catch (Exception e)
             {
                 this.Logger.LogError(e, "Failed to start audio recording.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.MicOff, this.T("Failed to start audio recording.")));
+                await this.MessageBus.SendError(new(AppIcons.MICROPHONE_OFF, this.T("Failed to start audio recording.")));
 
                 // Clean up the recording stream if starting failed:
                 await this.FinalizeRecordingStream();
@@ -232,7 +232,7 @@ public partial class VoiceRecorder : MSGComponentBase
             catch (Exception e)
             {
                 this.Logger.LogError(e, "Failed to stop audio recording.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.MicOff, this.T("Failed to stop audio recording.")));
+                await this.MessageBus.SendError(new(AppIcons.MICROPHONE_OFF, this.T("Failed to stop audio recording.")));
             }
 
             // Close and finalize the recording stream:
@@ -246,7 +246,7 @@ public partial class VoiceRecorder : MSGComponentBase
                 if (recordingStoppedSuccessfully)
                 {
                     this.Logger.LogWarning("The audio recorder did not produce any data.");
-                    await this.MessageBus.SendError(new(Icons.Material.Filled.MicOff, this.T("Failed to stop audio recording.")));
+                    await this.MessageBus.SendError(new(AppIcons.MICROPHONE_OFF, this.T("Failed to stop audio recording.")));
                 }
 
                 this.DeleteFinalRecording();
@@ -377,7 +377,7 @@ public partial class VoiceRecorder : MSGComponentBase
 
                 if (transcriptionResult.Status is MediaTranscriptionResultStatus.NO_AUDIBLE_SIGNAL)
                 {
-                    await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, transcriptionResult.UserMessage));
+                    await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, transcriptionResult.UserMessage));
                     return;
                 }
 
@@ -385,7 +385,7 @@ public partial class VoiceRecorder : MSGComponentBase
                 var userMessage = string.IsNullOrWhiteSpace(transcriptionResult.UserMessage)
                     ? this.T("Unfortunately, there was an error communicating with the AI system.")
                     : transcriptionResult.UserMessage;
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, userMessage));
+                await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, userMessage));
                 return;
             }
 
@@ -394,7 +394,7 @@ public partial class VoiceRecorder : MSGComponentBase
             if (string.IsNullOrWhiteSpace(transcribedText))
             {
                 this.Logger.LogWarning("The transcription result is empty.");
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The transcription result is empty.")));
+                await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, this.T("The transcription result is empty.")));
                 return;
             }
             
@@ -426,7 +426,7 @@ public partial class VoiceRecorder : MSGComponentBase
         catch (Exception ex)
         {
             this.Logger.LogError(ex, "An error occurred during transcription.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("An error occurred during transcription.")));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, this.T("An error occurred during transcription.")));
         }
         finally
         {
@@ -515,7 +515,7 @@ public partial class VoiceRecorder : MSGComponentBase
             return;
 
         this.Logger.LogWarning("Voice recording was disabled for the current session. Reason: {Reason}", reason);
-        await this.MessageBus.SendWarning(new(Icons.Material.Filled.MicOff, this.T("Voice recording has been disabled for this session because audio playback could not be initialized on the client.")));
+        await this.MessageBus.SendWarning(new(AppIcons.MICROPHONE_OFF, this.T("Voice recording has been disabled for this session because audio playback could not be initialized on the client.")));
         await this.SendMessage(Event.VOICE_RECORDING_AVAILABILITY_CHANGED, reason);
         this.StateHasChanged();
     }

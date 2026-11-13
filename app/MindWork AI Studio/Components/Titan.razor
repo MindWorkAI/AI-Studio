@@ -1,11 +1,11 @@
-<MudListItem T="string" Href="@this.URL" Target="_blank">
+<MudListItem T="string" Href="@this.URL" Target="_blank" Style="text-align: justify; hyphens: auto;">
     <AvatarContent>
         <MudAvatar Variant="Variant.Filled" Size="Size.Large" Style="background-color: white;" Class="mr-6">
             <MudImage Src="@this.ImageSrc"/>
         </MudAvatar>
     </AvatarContent>
     <ChildContent>
-        <MudText Typo="Typo.h6" Inline="@true">
+        <MudText Typo="Typo.h6" Inline="@true" Style="hyphens: none;">
             @this.Name
         </MudText>
     

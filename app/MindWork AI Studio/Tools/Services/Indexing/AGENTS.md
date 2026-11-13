@@ -1,0 +1,116 @@
+# AGENTS.md
+
+These instructions cover the indexing pipeline in `app/MindWork AI Studio/Tools/Services/Indexing/` and
+`DataSourceEmbeddingService`. They add to the `AGENTS.md` in the repository root, which applies here as
+well.
+
+## Indexed data sources
+
+The parts:
+- **`IIndexedDataSource`** (`Settings/`) - what indexing needs to know about a data source: confidence level,
+  embedding provider and chunk settings. `IDataSourceBase` is what every data source has. Implement
+  `IDataSource` on top only when classic RAG, Semantic Search and the agents should see the data source. A data
+  source kept in a list of its own implements `IIndexedDataSource` alone, and the compiler keeps it out of
+  `DataSources`.
+- **`IIndexedSourceIndexer`** - one per kind of data source. `Supports` claims the data sources, `ProcessAsync`
+  finds and reads the documents of one run, and `TrackChanges` / `StopTracking` notice changes on their own.
+  `FileSourceIndexer` is the reference: a file system watcher per data source, fingerprints over path, size and
+  write time, and once a fingerprint changed, the hash of the content (`FileContentHash`), so a file saved again
+  without edits keeps its chunks without being read.
+- **`IndexedRunContext`** - one prepared run: both stores, the embedding provider, the manifest, the
+  collection, and the scope for reporting prompt injections. `IndexDocumentAsync` embeds one document into a
+  new generation, next to the version it had stored; `DocumentRunProgress.RecordDocumentIndexedAsync` completes
+  it (`CompleteDocumentAsync`), and `CleanupFailedDocumentAsync` sorts out a failed attempt. A document indexed
+  before keeps its stored version whatever the failure, so never remove its manifest entry on a failure. Once
+  the embedding provider fails, the attempt asks it nothing more and reads the rest of the document for the
+  chunks with a stored vector; a document with nothing stored stops at the failure, since none of its chunks
+  could take over a vector. Either way, the attempt stays next to the stored version, so the next one reuses
+  its vectors; one which stopped for any other reason goes. Between attempts, a document keeps two generations at
+  most: the one its row names, and an attempt which stays for its vectors. A run of the file indexer removes the
+  others of every file which did not change since (`IndexedRunContext.RemoveLeftoverGenerationsAsync`), since no
+  attempt would ever come for it. A chunk whose text the document had stored before keeps its vector (`ReusableVectors`),
+  found by the hash of exactly the text that goes to the embedding provider (`ChunkTextHash`), so hash whatever
+  is sent, and send whatever is stored. The new chunks belong to the next generation, which is part of their
+  ids (`IndexedDocumentIds.CreateChunkIdSource`), so they never overwrite an old chunk, not even for a mail,
+  whose fingerprint never changes.
+- **`EmbeddingDocument`** - one document: its key, its index row, its display name, and how to read its chunks.
+- **`DocumentRunProgress`** - counts the documents, records indexed and failed ones in the stores, publishes the
+  status, and completes or pauses the run.
+- **`RunShare`** - how much one run may do before the other data sources get their turn: five minutes, and for
+  a mailbox at most 500 mails. A large data source is indexed in steps, one run each. A run which returns
+  `MORE_TO_DO` gets its next step in the back lane of `DataSourceRunQueue`, behind every data source which begins
+  a pass, so a mailbox waits for one step at most.
+- **`PauseBetweenSteps`** - a gap after every step which worked on documents, so that many people can share one
+  embedding server. The next run, of whichever data source, waits for a random pause between the bounds of the
+  settings (`PauseRange`: 0 to 300 seconds, none by default), less the time which passed since the step ended.
+  Not to be confused with the pause of the indexing as a whole (`IndexingPauses`), which a backup takes.
+- **`IndexingPass`** - the steps of one data source, from its first step until one of them is done. It remembers
+  which documents failed during an earlier step, so the next steps do not read them again, and which failures
+  were reported to the user already.
+- **`TextChunker`** - cuts text into chunks the embedding provider accepts. Pick one of its strategies; do not
+  write a chunker of your own. It also says where each chunk starts and ends (`SourceLocation`: page, sheet and
+  row, or line), from the segments the runtime delivered; never read a location back out of the chunk text.
+  Only the pages go into the vector store, everything else about a location into the index store alone.
+
+To add a kind of data source:
+1. Write its indexer in `Tools/Services/Indexing/` and create it in `DataSourceEmbeddingService.CreateIndexers`,
+   which hands every indexer the same `TextChunker`.
+2. Gate it in `IsSupportedIndexedSource`, behind a preview feature of its own while it is new.
+3. When the data source is not kept in `DataSources`, add its list to `GetConfiguredIndexedSources`. Every lookup
+   by id and every pass over all data sources goes through it: the startup hash check,
+   `QueueAllInternalDataSourcesAsync` and `RefreshWatchers`.
+4. Keep whatever the kind has to remember beyond its documents in tables of its own in the index store, added
+   by an EF Core migration (see `app/MindWork AI Studio/Tools/Databases/AGENTS.md`).
+5. Report every status through `DocumentRunProgress`, so all rows of the embedding page behave alike.
+6. Work in steps. Give the indexer its `Share`, and ask `DocumentRunProgress.HasDoneItsShare` before every
+   document. Leave out the documents which failed during an earlier step of the pass: either ask
+   `SkipIfFailedEarlierInPass` per document, or sort them out up front like `FileSourceIndexer.PartitionFiles`
+   and count them with `RecordFailedEarlierInPass`. Once the share is done, return what `PauseRunAsync`
+   returns: it decides whether the data source carries on in another run, or stops because its embedding
+   provider failed for everything. A run which takes more than twice its share without asking once ends up as
+   a warning in the log, while every other data source waits.
+7. Filter everything the indexer reads: files through `ExtractedFileText.ReadAsync`, any other content through
+   `PromptInjectionGuardService.SanitizeAsync`, both with `IndexedRunContext.PromptInjectionScope`. The service
+   opens that scope per run, so the user hears about a run once, when it is over. Begin no action of your own
+   in the indexer, or the user hears about one run several times.
+
+Rules which are easy to break:
+- **A document key is not a path.** Only files use their full path as the key. Never pass a key through the
+  `Path` APIs: on Windows, `Path.GetFullPath` reads a key like `mail:…` as a file with an alternate data stream.
+- **Ids and signature are pinned.** The formats in `IndexedDocumentIds` and the embedding signature
+  (`DataSourceEmbeddingService.BuildEmbeddingSignature`) are fixed by tests, because every stored chunk and every
+  index depends on them. `CHUNK_METADATA_VERSION` and `MAIL_TEXT_VERSION` are frozen: raising one rebuilds every
+  index it is part of, so raise it only when every stored vector is wrong. A change to how documents are read, or
+  to what is stored next to a chunk, raises neither. A new value which old chunks may lack without being wrong,
+  such as the end page of a chunk, reads as unknown, and a chunk gains it once its document is indexed again.
+- **A search finds the generation the row of a document names, and nothing else.** A row whose chunk count is
+  zero names none yet. The keyword search joins on it (`SqliteIndexStoreClientImplementation.MatchChunks`), and
+  the vector search leaves out `IndexStoreClient.GetHiddenChunksAsync`, which the runtime matches against the
+  `generation` of every point. A new way to search the index, or to list chunks for a search, follows the same
+  rule, or it finds failed attempts and documents which are not complete. Write a chunk into the index store
+  before its point into the vector store, and remove the point before the chunk: a point the index store does
+  not know cannot be hidden.
+- **The service decides when, the indexer decides how.** Whether changes are tracked at all depends on the
+  automatic refresh setting and the startup hash check, and only the embedding service decides that.
+- **A pause stores the source hash only when a partial index may be searched.** A stored source hash tells the
+  data source selection that a run got through the whole data source (`IsIndexAwaitingRebuild`). Files pass
+  `null` to `PauseRunAsync`, so a folder stays out of the selection until its first indexing or its rebuild is
+  complete. The mailbox passes its hash, since every mail it indexed can be searched right away.
+- **Every run passes the pause.** A backup pauses the indexing with `PauseIndexingAsync` while it copies the
+  stores. Runs wait for the end of a pause in `ProcessDataSourceRunAsync`, in front of the run gate, so start
+  every run there. A run which starts any other way writes to the stores while they are copied, and the backup
+  holds two stores which do not fit together. Discarding the stored index of a data source, when it is deleted
+  or repaired, waits for the end of a pause as well (`WaitWhilePausedAsync`); the user interface asks
+  `IsIndexingPaused` first and tells the user instead of waiting.
+- **The pause between steps lies behind the run gate.** `ProcessDataSourceRunAsync` waits for it right after
+  `runGate.WaitAsync`, before the run resolves anything: only one run waits, its token ends the wait, and its
+  data source still shows as queued. Never wait for it in an indexer, where the run would hold its signature and
+  its stores, and show as running. Afterward, the run looks up its data source anew, since the user may have
+  changed it meanwhile. A step opens a gap only once it asked `HasDoneItsShare` (`IndexedRunContext.ShareStartedUtc`),
+  so a run which found nothing to read leaves none, and a startup check over unchanged data sources does not
+  slow down.
+- **A pass lives only while the last step left more to do.** The service drops the pass of a data source after
+  every other outcome and every exception, and when the stored index is reset. A retry the user asks for, and a
+  step with other embedding settings or another selection of documents, begin a new pass
+  (`IndexingPass.ContinueOrBegin`). A pass kept beyond that
+  leaves out documents which would work by now, for example once the embedding provider is reachable again.

@@ -141,6 +141,15 @@ public partial class PathDropZone : MSGComponentBase
     [Inject]
     private ILogger<PathDropZone> Logger { get; init; } = null!;
 
+    /// <summary>
+    /// Marks a field in a frameless zone while a path hovers over it, e.g., an option in the settings.
+    /// </summary>
+    /// <remarks>
+    /// Such a field sits in the frame of its option already, so it gets no drop frame of its own. An
+    /// outline takes no room, which keeps the layout still while the cursor moves over the field.
+    /// </remarks>
+    public const string FIELD_HIGHLIGHT_STYLE = "outline: 2px dashed var(--mud-palette-primary); outline-offset: 4px; border-radius: 4px;";
+
     private const string FRAME_CLASSES = "relative rounded-lg border-2 border-dashed mud-width-full";
     private const string DEFAULT_SPACING_CLASSES = "pa-3 mb-3";
 

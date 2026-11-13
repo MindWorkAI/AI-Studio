@@ -47,7 +47,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
     private string providerId = string.Empty;
     private string profileId = string.Empty;
     private string chatTemplateId = string.Empty;
-    private IEnumerable<string> dataSourceIds = [];
+    private IReadOnlyCollection<string> dataSourceIds = [];
     private HashSet<string> toolIds = [];
     private string issue = string.Empty;
     private bool canEdit;
@@ -100,7 +100,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
             var currentLua = await File.ReadAllTextAsync(pluginFile, Encoding.UTF8);
             if (DirectChatLauncherLuaWriter.HasCompanionLuaFiles(this.assistantPlugin) || !DirectChatLauncherLuaWriter.IsCanonicalSource(currentLua))
             {
-                this.issue = T("This launcher contains its own icon or additional Lua code. Please edit it with the plugin code editor, so nothing of it gets lost.");
+                this.issue = TA("This launcher contains its own icon or additional Lua code. Please edit it with the plugin code editor, so nothing of it gets lost.");
                 return;
             }
 
@@ -170,7 +170,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
         if (!this.CanSave || this.assistantPlugin is null || this.availablePlugin is null || this.form is null)
             return;
 
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         if (!this.form.IsValid)
             return;
 
@@ -244,11 +244,11 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
         }
     }
 
-    private string? ValidatePluginName(string value) => string.IsNullOrWhiteSpace(value) ? T("Please provide a name for this plugin.") : null;
+    private string? ValidatePluginName(string value) => string.IsNullOrWhiteSpace(value) ? TA("Please provide a name for this plugin.") : null;
 
-    private string? ValidateTitle(string value) => string.IsNullOrWhiteSpace(value) ? T("Please provide a title for this tile.") : null;
+    private string? ValidateTitle(string value) => string.IsNullOrWhiteSpace(value) ? TA("Please provide a title for this tile.") : null;
 
-    private string? ValidateDescription(string value) => string.IsNullOrWhiteSpace(value) ? T("Please provide a description for this tile.") : null;
+    private string? ValidateDescription(string value) => string.IsNullOrWhiteSpace(value) ? TA("Please provide a description for this tile.") : null;
 
     private void Cancel() => this.MudDialog.Cancel();
 

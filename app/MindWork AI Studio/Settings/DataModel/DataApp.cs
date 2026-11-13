@@ -1,5 +1,8 @@
 using System.Linq.Expressions;
 
+using AIStudio.Provider;
+using AIStudio.Tools.PluginSystem;
+
 namespace AIStudio.Settings.DataModel;
 
 public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = null)
@@ -20,7 +23,13 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// The language plugin ID to use.
     /// </summary>
     public Guid LanguagePluginId { get; set; } = Guid.Empty;
-    
+
+    /// <summary>
+    /// How the texts address the person in languages with a formal and an informal address, such as German; see
+    /// I18N.AddressForm.
+    /// </summary>
+    public AddressForm AddressForm { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AddressForm, AddressForm.FORMAL);
+
     /// <summary>
     /// The preferred theme to use.
     /// </summary>
@@ -36,6 +45,12 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should we enable spellchecking for all input fields?
     /// </summary>
     public bool EnableSpellchecking { get; set; }
+
+    /// <summary>
+    /// Should the message about an exported file close after a few seconds? When false, it stays until
+    /// the user closes it, so that its buttons to the file remain at hand.
+    /// </summary>
+    public bool CloseExportMessagesAutomatically { get; set; }
 
     /// <summary>
     /// If and when we should look for updates.
@@ -56,6 +71,49 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Which page should be opened first when the app starts?
     /// </summary>
     public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
+
+    /// <summary>
+    /// How large AI Studio shows its interface on the screens the user chose a size for, the most
+    /// recently set first.
+    /// </summary>
+    /// <remarks>
+    /// Kept per screen, as the operating systems keep their scaling per monitor: a laptop calls for
+    /// another size than an external monitor, and the same scale looks different on screens of
+    /// different densities. A screen missing here gets InterfaceSize.APP_DEFAULT when it is the
+    /// screen of a laptop, and InterfaceSize.SYSTEM_SCALING otherwise. The
+    /// user's own, like the scaling of the operating system: no configuration plugin manages it.
+    /// </remarks>
+    public List<InterfaceScreenSize> InterfaceScreenSizes { get; set; } = [];
+
+    /// <summary>
+    /// How many screens keep their interface size. Setting the size of one more forgets the screen
+    /// whose size was set the longest time ago, which then gets its default size again.
+    /// </summary>
+    public const int MAX_REMEMBERED_INTERFACE_SCREENS = 20;
+
+    /// <summary>
+    /// What the user chose for the given screen, or null when they chose nothing for it.
+    /// </summary>
+    /// <param name="screenKey">The screen, as the runtime names it.</param>
+    public InterfaceScreenSize? GetInterfaceScreenSize(string screenKey) => this.InterfaceScreenSizes.FirstOrDefault(screen => screen.ScreenKey == screenKey);
+
+    /// <summary>
+    /// Remembers what the user chose for a screen, as the most recently set one.
+    /// </summary>
+    /// <remarks>
+    /// Keeps MAX_REMEMBERED_INTERFACE_SCREENS screens at most and forgets the ones beyond, those whose
+    /// size was set the longest time ago. Replaces the list instead of changing it, since the
+    /// InterfaceSizeService may read it at the same time.
+    /// </remarks>
+    /// <param name="screenSize">What the user chose for the screen.</param>
+    public void RememberInterfaceScreenSize(InterfaceScreenSize screenSize)
+    {
+        this.InterfaceScreenSizes = this.InterfaceScreenSizes
+            .Where(screen => screen.ScreenKey != screenSize.ScreenKey)
+            .Prepend(screenSize)
+            .Take(MAX_REMEMBERED_INTERFACE_SCREENS)
+            .ToList();
+    }
 
     /// <summary>
     /// Whether an alert dialog should be shown when prompt-injection content is blocked.
@@ -147,6 +205,15 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public int HttpClientTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HttpClientTimeoutSeconds, ExternalHttpClientTimeout.DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS);
 
     /// <summary>
+    /// Should requests to self-hosted servers, i.e., self-hosted providers and LiteLLM, name the feature that sent them?
+    /// </summary>
+    /// <remarks>
+    /// Whoever operates such a server learns about it, which usually is an organization. Off by default:
+    /// AI Studio then sends no User-Agent at all. Cloud providers never learn about it either way.
+    /// </remarks>
+    public bool ShareFeatureUsageWithSelfHostedServerOperators { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShareFeatureUsageWithSelfHostedServerOperators, false);
+
+    /// <summary>
     /// Should external HTTP clients trust additional root certificates from a configured PEM bundle?
     /// </summary>
     public bool ExternalHttpCustomRootCertificatesEnabled { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificatesEnabled, false);
@@ -182,6 +249,97 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
 
     /// <summary>
+    /// The providers an organization prohibited, for LLMs, embeddings, and transcriptions alike.
+    /// </summary>
+    /// <remarks>
+    /// A prohibition names the operator of an API, not a family of models: prohibiting the API of a
+    /// model maker leaves its models reachable through a hub or a self-hosted server. Providers the
+    /// user set up before stay in the settings, so they are back once the prohibition ends, but
+    /// AI Studio neither offers nor contacts them, see SettingsManager.IsProviderProhibited.
+    /// </remarks>
+    public HashSet<LLMProviders> ProhibitedProviders { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ProhibitedProviders, []);
+
+    /// <summary>
+    /// Should the user be allowed to add mailboxes?
+    /// </summary>
+    /// <remarks>
+    /// Independent of AllowUserToAddProvider, because a mailbox is a data source, not a provider.
+    /// Mailboxes the user added before stay, and the user may still edit or delete them.
+    /// </remarks>
+    public bool AllowUserToAddMailbox { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddMailbox, true);
+
+    /// <summary>
+    /// Should the user be allowed to import configurations which others exported?
+    /// </summary>
+    /// <remarks>
+    /// The master switch of the import: the switch of each type allows its import only while this
+    /// one does as well. Use CanImportConfigurationSnippet rather than reading the switches one by one.
+    /// </remarks>
+    public bool AllowUserToImportConfigurationSnippets { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportConfigurationSnippets, true);
+
+    /// <summary>
+    /// Should the user be allowed to import profiles?
+    /// </summary>
+    public bool AllowUserToImportProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportProfile, true);
+
+    /// <summary>
+    /// Should the user be allowed to import LLM providers?
+    /// </summary>
+    /// <remarks>
+    /// An import adds a provider, so AllowUserToAddProvider and AllowUserToAddLLMProvider must allow it as well.
+    /// </remarks>
+    public bool AllowUserToImportLLMProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportLLMProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to import embedding providers?
+    /// </summary>
+    /// <remarks>
+    /// An import adds a provider, so AllowUserToAddProvider and AllowUserToAddEmbeddingProvider must allow it as well.
+    /// </remarks>
+    public bool AllowUserToImportEmbeddingProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportEmbeddingProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to import transcription providers?
+    /// </summary>
+    /// <remarks>
+    /// An import adds a provider, so AllowUserToAddProvider and AllowUserToAddTranscriptionProvider must allow it as well.
+    /// </remarks>
+    public bool AllowUserToImportTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportTranscriptionProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to import chat templates?
+    /// </summary>
+    public bool AllowUserToImportChatTemplate { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportChatTemplate, true);
+
+    /// <summary>
+    /// Should the user be allowed to import external data sources (ERI servers)?
+    /// </summary>
+    public bool AllowUserToImportERIDataSource { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportERIDataSource, true);
+
+    /// <summary>
+    /// Should the user be allowed to import document analysis policies?
+    /// </summary>
+    public bool AllowUserToImportDocumentAnalysisPolicy { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportDocumentAnalysisPolicy, true);
+
+    /// <summary>
+    /// May the user import a configuration of this type, which somebody else exported?
+    /// </summary>
+    /// <param name="type">The type of configuration object to import.</param>
+    /// <returns>True when the master switch and the switch of the type allow it, and for providers also the permission to add one.</returns>
+    public bool CanImportConfigurationSnippet(PluginConfigurationObjectType type) => this.AllowUserToImportConfigurationSnippets && type switch
+    {
+        PluginConfigurationObjectType.PROFILE => this.AllowUserToImportProfile,
+        PluginConfigurationObjectType.LLM_PROVIDER => this.AllowUserToImportLLMProvider && this.AllowUserToAddProvider && this.AllowUserToAddLLMProvider,
+        PluginConfigurationObjectType.EMBEDDING_PROVIDER => this.AllowUserToImportEmbeddingProvider && this.AllowUserToAddProvider && this.AllowUserToAddEmbeddingProvider,
+        PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => this.AllowUserToImportTranscriptionProvider && this.AllowUserToAddProvider && this.AllowUserToAddTranscriptionProvider,
+        PluginConfigurationObjectType.CHAT_TEMPLATE => this.AllowUserToImportChatTemplate,
+        PluginConfigurationObjectType.DATA_SOURCE => this.AllowUserToImportERIDataSource,
+        PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => this.AllowUserToImportDocumentAnalysisPolicy,
+
+        _ => false,
+    };
+
+    /// <summary>
     /// Should the user be allowed to import plugin archives from disk?
     /// </summary>
     public bool AllowUserToImportPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportPlugins, true);
@@ -202,14 +360,51 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool AllowUserToSharePlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToSharePlugins, true);
 
     /// <summary>
+    /// Should the user be allowed to back up the data of AI Studio into a file?
+    /// </summary>
+    /// <remarks>
+    /// A backup holds chats and other confidential content in a single file, which can leave the
+    /// computer on any stick or cloud drive. Secrets never go into it.
+    /// </remarks>
+    public bool AllowUserToBackUpData { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToBackUpData, true);
+
+    /// <summary>
+    /// Should the user be allowed to restore the data of AI Studio from a backup file, or to add the chats of one?
+    /// </summary>
+    /// <remarks>
+    /// A backup brings along everything its chats and settings name, including the locations of
+    /// attached documents and of local data sources, which are read again afterward.
+    /// </remarks>
+    public bool AllowUserToRestoreData { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToRestoreData, true);
+
+    /// <summary>
     /// Should administration settings be visible in the UI?
     /// </summary>
     public bool ShowAdminSettings { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowAdminSettings, false);
 
     /// <summary>
+    /// In which format do exports encrypt API keys, tokens, and passwords with the enterprise encryption secret?
+    /// </summary>
+    /// <remarks>
+    /// New installations write the authenticated format v2. Installations which existed before
+    /// v26.10.1 keep writing v1, which older versions read as well: large organizations package
+    /// updates themselves, so their administrators run a new version weeks before everybody else.
+    /// SettingsManager tells the two kinds of installations apart.
+    /// </remarks>
+    public EnterpriseEncryptionFormat EnterpriseEncryptionExportFormat { get; set; } = ManagedConfiguration.Register(configSelection, n => n.EnterpriseEncryptionExportFormat, EnterpriseEncryptionFormat.V2);
+
+    /// <summary>
+    /// Should AI answers which are copied or exported end with a notice that AI generated them?
+    /// </summary>
+    /// <remarks>
+    /// Off by default. AIGeneratedContentDisclosureService explains which content gets the notice and why.
+    /// </remarks>
+    public bool AddAIGeneratedContentDisclosure { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AddAIGeneratedContentDisclosure, false);
+
+    /// <summary>
     /// Settings for indexing local data sources.
     /// </summary>
-    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();
+    public DataDataSourceIndexing DataSourceIndexing { get; set; } = new(x => x.App.DataSourceIndexing);
 
     /// <summary>
     /// List of assistants that should be hidden from the UI.

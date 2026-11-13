@@ -6,5 +6,5 @@ public class SaveFileOptions
     
     public PreviousFile? PreviousFile { get; init; }
 
-    public FileTypeFilter? Filter { get; init; }
+    public FileDialogFilter? Filter { get; init; }
 }

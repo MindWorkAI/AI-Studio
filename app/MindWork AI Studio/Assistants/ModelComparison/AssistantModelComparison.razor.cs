@@ -1,9 +1,12 @@
 using AIStudio.Chat;
+using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
 
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.ModelComparison;
 
@@ -16,9 +19,12 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
 
     protected override string Title => T("Model Comparison");
 
-    protected override string Description => T("Send the same request to two models and compare their answers side by side. You vote blindly for the better answer, and only after your vote you learn which model wrote which answer.");
+    protected override string Description => TA("Send the same request to two models and compare their answers side by side. You vote blindly for the better answer, and only after your vote you learn which model wrote which answer.");
 
     protected override string SystemPrompt => string.Empty;
+
+    // The answers of this assistant are shown and judged on its own page, so no chat continues its conversations:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
 
     protected override bool AllowProfiles => false;
 
@@ -55,9 +61,9 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     {
         this.inputContext = string.Empty;
         this.inputQuestion = string.Empty;
-        this.secondProvider = AIStudio.Settings.Provider.NONE;
+        this.secondProvider = Settings.Provider.NONE;
         this.judgeEnabled = true;
-        this.judgeProvider = AIStudio.Settings.Provider.NONE;
+        this.judgeProvider = Settings.Provider.NONE;
         this.judgeInstructions = string.Empty;
         this.runCount = 1;
         this.hasAttemptedCompare = false;
@@ -201,14 +207,14 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
             return string.Format(DisplayCulture, T("Run {0}: voted on."), runNumber);
 
         if (this.RunVoteWasSkipped(index))
-            return string.Format(DisplayCulture, T("Run {0}: your vote was skipped."), runNumber);
+            return string.Format(DisplayCulture, TA("Run {0}: your vote was skipped."), runNumber);
 
         if (this.judgeEnabled && !this.RunHasJudgeVerdict(index))
             return string.Format(DisplayCulture, T("Run {0}: the models are done, waiting for the judge."), runNumber);
 
         return this.judgeEnabled
-            ? string.Format(DisplayCulture, T("Run {0}: the models and the judge are done, your vote is missing."), runNumber)
-            : string.Format(DisplayCulture, T("Run {0}: the models are done, your vote is missing."), runNumber);
+            ? string.Format(DisplayCulture, TA("Run {0}: the models and the judge are done, your vote is missing."), runNumber)
+            : string.Format(DisplayCulture, TA("Run {0}: the models are done, your vote is missing."), runNumber);
     }
 
     /// <summary>
@@ -233,7 +239,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private Task? pendingBackgroundRefresh;
 
     /// <summary>
-    /// Asks for a UI refresh the same way <see cref="RefreshAssistantUIAsync"/> does, but skips
+    /// Asks for a UI refresh the same way RefreshAssistantUIAsync does, but skips
     /// asking again while one is already queued.
     /// </summary>
     /// <remarks>
@@ -302,7 +308,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// The first model is <see cref="AssistantLowerBase.ProviderSettings"/>, so that everything the
     /// base class does with a provider keeps working for it. This is the second one.
     /// </summary>
-    private AIStudio.Settings.Provider secondProvider = AIStudio.Settings.Provider.NONE;
+    private AIStudio.Settings.Provider secondProvider = Settings.Provider.NONE;
 
     /// <summary>
     /// Whether an optional third model judges the two answers. On by default; the user can still
@@ -313,7 +319,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// <summary>
     /// The judge model, asked only when <see cref="judgeEnabled"/> is set.
     /// </summary>
-    private AIStudio.Settings.Provider judgeProvider = AIStudio.Settings.Provider.NONE;
+    private AIStudio.Settings.Provider judgeProvider = Settings.Provider.NONE;
 
     /// <summary>
     /// What the user wants the judge to pay attention to, in their own words, for example what makes
@@ -475,13 +481,14 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         if (preset is null)
             return;
 
-        var discard = await this.DialogService.ShowMessageBox(
-            T("Delete this preset?"),
-            string.Format(T("The preset '{0}' is deleted right away. This cannot be undone."), preset.Name),
-            T("Yes, delete it"),
-            T("No, keep it"));
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { dialog => dialog.Message, string.Format(DisplayCulture, TA("Are you sure you want to delete the preset '{0}'? This cannot be undone."), preset.Name) },
+        };
 
-        if (discard is not true)
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete preset"), parameters, DialogOptions.FULLSCREEN);
+        var result = await reference.Result;
+        if (result is null || result.Canceled)
             return;
 
         this.SettingsManager.ConfigurationData.ModelComparison.Presets.Remove(preset);
@@ -558,7 +565,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         // checks the fields which are mounted. A form which has been taken away has nothing left to
         // find fault with, and an empty question would go through.
         //
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
 
@@ -770,10 +777,10 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     /// <param name="column">The column the model's answer stood in.</param>
     private string GetVerdictIcon(ModelComparisonVote column) => this.CurrentVote switch
     {
-        ModelComparisonVote.TIE => Icons.Material.Filled.DragHandle,
-        { } vote when vote == column => Icons.Material.Filled.CheckCircle,
+        ModelComparisonVote.TIE => AppIcons.VOTE_TIE,
+        { } vote when vote == column => AppIcons.VOTE_WON,
 
-        _ => Icons.Material.Filled.Cancel,
+        _ => AppIcons.VOTE_LOST,
     };
 
     /// <summary>
@@ -792,16 +799,16 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         var agreesWithVote = this.CurrentVote == preferred;
         if (preferred is ModelComparisonVote.TIE)
             return agreesWithVote
-                ? T("The judge saw both answers as equally good, matching your own vote.")
-                : T("The judge saw both answers as equally good, while you preferred one of them.");
+                ? TA("The judge saw both answers as equally good, matching your own vote.")
+                : TA("The judge saw both answers as equally good, while you preferred one of them.");
 
         var preferredAnswer = preferred is ModelComparisonVote.COLUMN_A
             ? entry.PresentationOrder.InColumnA(entry.Result)
             : entry.PresentationOrder.InColumnB(entry.Result);
 
         return agreesWithVote
-            ? string.Format(DisplayCulture, T("The judge preferred {0}, matching your own vote."), preferredAnswer.Label)
-            : string.Format(DisplayCulture, T("The judge preferred {0}, differing from your own vote."), preferredAnswer.Label);
+            ? string.Format(DisplayCulture, TA("The judge preferred {0}, matching your own vote."), preferredAnswer.Label)
+            : string.Format(DisplayCulture, TA("The judge preferred {0}, differing from your own vote."), preferredAnswer.Label);
     }
 
     /// <summary>
@@ -835,10 +842,10 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         : "-";
 
     /// <summary>
-    /// The culture of the active language. Written out in full because the namespace of the
+    /// The culture of the active language. Qualified with its namespace because the namespace of the
     /// localization assistant, AIStudio.Assistants.I18N, hides the class I18N from every assistant.
     /// </summary>
-    private static System.Globalization.CultureInfo DisplayCulture => AIStudio.Tools.PluginSystem.I18N.I.Culture;
+    private static System.Globalization.CultureInfo DisplayCulture => Tools.PluginSystem.I18N.I.Culture;
 
     /// <summary>
     /// The active language's own English name, without a region ("German", not "German (Germany)"),
@@ -857,7 +864,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     private string? ValidatingQuestion(string question)
     {
         if (string.IsNullOrWhiteSpace(question))
-            return T("Please provide a question or task for both models.");
+            return TA("Please provide a question or task for both models.");
 
         return null;
     }
@@ -879,7 +886,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
             return selectionIssue;
 
         if (!this.SettingsManager.IsProviderConfident(provider, this.Component))
-            return T("This provider does not meet the confidence requirements of this assistant. Please choose another one.");
+            return TA("This provider does not meet the confidence requirements of this assistant. Please choose another one.");
 
         return null;
     }
@@ -905,7 +912,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
             return selectionIssue;
 
         if (!this.SettingsManager.IsProviderConfident(provider, this.Component))
-            return T("This provider does not meet the confidence requirements of this assistant. Please choose another one.");
+            return TA("This provider does not meet the confidence requirements of this assistant. Please choose another one.");
 
         return null;
     }

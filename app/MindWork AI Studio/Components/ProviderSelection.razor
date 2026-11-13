@@ -3,7 +3,7 @@
 @{
     var availableProviderItems = this.GetAvailableProviderSelectionItems().ToList();
 }
-<MudSelect T="Provider" Value="@this.ProviderSettings" ValueChanged="@this.SelectionChanged" Validation="@this.ValidateProvider" Margin="Margin.Dense" Label="@T("Provider")" Class="mb-3 rounded-lg" OuterClass="flex-grow-0" Variant="Variant.Outlined" Disabled="@this.Disabled">
+<MudSelect T="Provider" Value="@this.ProviderSettings" ValueChanged="@this.SelectionChanged" Validation="@this.ValidateProvider" Margin="Margin.Dense" Label="@(this.Label ?? T("Provider"))" Class="mb-3 rounded-lg" OuterClass="flex-grow-0" Variant="Variant.Outlined" Disabled="@this.Disabled">
     @foreach (var providerItem in availableProviderItems)
     {
         <MudSelectItem Value="@providerItem.Provider">

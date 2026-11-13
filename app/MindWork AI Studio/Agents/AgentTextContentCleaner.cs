@@ -15,6 +15,8 @@ public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsM
 
     protected override Type Type => Type.SYSTEM;
 
+    protected override Tools.Components Component => Tools.Components.AGENT_TEXT_CONTENT_CLEANER;
+
     public override string Id => "Text Content Cleaner";
 
     protected override string JobDescription => 
@@ -65,7 +67,7 @@ public sealed class AgentTextContentCleaner(ILogger<AgentBase> logger, SettingsM
             return EMPTY_BLOCK;
         
         var thread = this.CreateChatThread(this.SystemPrompt(sourceURL));
-        var userRequest = this.AddUserRequest(thread, text.Text);
+        var userRequest = AddUserRequest(thread, text.Text);
         await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         
         var answer = thread.Blocks[^1];

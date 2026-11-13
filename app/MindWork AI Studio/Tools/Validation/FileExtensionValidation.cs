@@ -11,6 +11,8 @@ public static class FileExtensionValidation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExtensionValidation).Namespace, nameof(FileExtensionValidation));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(FileExtensionValidation).Namespace, nameof(FileExtensionValidation));
+
     /// <summary>
     /// Defines the use cases for file extension validation.
     /// </summary>
@@ -45,15 +47,15 @@ public static class FileExtensionValidation
         if (string.Equals(Path.GetExtension(filePath), ".doc", StringComparison.OrdinalIgnoreCase))
         {
             await MessageBus.INSTANCE.SendWarning(new(
-                Icons.Material.Filled.Description,
-                TB("This file format is not supported. Please convert the .doc file to .docx (e.g. with Microsoft Word).")));
+                AppIcons.DOCUMENT,
+                TA("This file format is not supported. Please convert the .doc file to .docx (e.g. with Microsoft Word).")));
             return false;
         }
 
         if (FileTypes.IsAllowedPath(filePath, FileTypes.EXECUTABLES))
         {
             await MessageBus.INSTANCE.SendError(new(
-                Icons.Material.Filled.AppBlocking,
+                AppIcons.EXECUTABLE_BLOCKED,
                 TB("Executables are not allowed")));
             return false;
         }
@@ -65,10 +67,21 @@ public static class FileExtensionValidation
                 // In this use case, we cannot guarantee that a provider is selected yet:
                 case UseCase.DIRECTLY_LOADING_CONTENT:
                     await MessageBus.INSTANCE.SendWarning(new(
-                        Icons.Material.Filled.ImageNotSupported,
+                        AppIcons.IMAGE_NOT_SUPPORTED,
                         TB("Images are not supported at this place")));
                     return false;
                 
+                //
+                // Whether AI Studio can prepare an image for a model does not depend on the
+                // provider. This holds for templates as well, therefore: a HEIC image attached
+                // there could never be sent.
+                //
+                case UseCase.ATTACHING_CONTENT when !FileTypes.IsAllowedPath(filePath, FileTypes.MODEL_IMAGE):
+                    await MessageBus.INSTANCE.SendWarning(new(
+                        AppIcons.IMAGE_NOT_SUPPORTED,
+                        string.Format(TA("AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG."), Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant())));
+                    return false;
+
                 // In this use case, we don't validate the provider capabilities:
                 case UseCase.ATTACHING_CONTENT when !validateMediaFileTypes:
                     return true;
@@ -80,13 +93,13 @@ public static class FileExtensionValidation
                 // We know that images are not supported:
                 case UseCase.ATTACHING_CONTENT:
                     await MessageBus.INSTANCE.SendWarning(new(
-                        Icons.Material.Filled.ImageNotSupported,
+                        AppIcons.IMAGE_NOT_SUPPORTED,
                         TB("Images are not supported by the selected provider and model")));
                     return false;
                 
                 default:
                     await MessageBus.INSTANCE.SendWarning(new(
-                        Icons.Material.Filled.ImageNotSupported,
+                        AppIcons.IMAGE_NOT_SUPPORTED,
                         TB("Images are not supported yet")));
                     return false;
             }
@@ -95,7 +108,7 @@ public static class FileExtensionValidation
         if (FileTypes.IsAllowedPath(filePath, FileTypes.VIDEO))
         {
             await MessageBus.INSTANCE.SendWarning(new(
-                Icons.Material.Filled.FeaturedVideo,
+                AppIcons.VIDEO,
                 TB("Videos are not supported yet")));
             return false;
         }
@@ -103,7 +116,7 @@ public static class FileExtensionValidation
         if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO))
         {
             await MessageBus.INSTANCE.SendWarning(new(
-                Icons.Material.Filled.AudioFile,
+                AppIcons.AUDIO_FILE,
                 TB("Audio files are not supported yet")));
             return false;
         }
@@ -112,35 +125,8 @@ public static class FileExtensionValidation
             return true;
 
         await MessageBus.INSTANCE.SendWarning(new(
-            Icons.Material.Filled.InsertDriveFile,
+            AppIcons.UNSUPPORTED_FILE_TYPE,
             TB("Unsupported file type")));
         return false;
-    }
-
-    /// <summary>
-    /// Validates that the file is a supported image format and sends appropriate MessageBus notifications when invalid.
-    /// </summary>
-    /// <param name="filePath">The file path to validate.</param>
-    /// <returns>True if valid image, false if invalid (error already sent via MessageBus).</returns>
-    public static async Task<bool> IsImageExtensionValidWithNotifyAsync(string filePath)
-    {
-        var ext = Path.GetExtension(filePath).TrimStart('.');
-        if (string.IsNullOrWhiteSpace(ext))
-        {
-            await MessageBus.INSTANCE.SendError(new(
-                Icons.Material.Filled.ImageNotSupported,
-                TB("File has no extension")));
-            return false;
-        }
-
-        if (FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE))
-        {
-            await MessageBus.INSTANCE.SendError(new(
-                Icons.Material.Filled.ImageNotSupported,
-                TB("Unsupported image format")));
-            return false;
-        }
-
-        return true;
     }
 }

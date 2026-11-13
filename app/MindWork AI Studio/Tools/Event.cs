@@ -34,6 +34,11 @@ public enum Event
     COLOR_THEME_CHANGED,
 
     /// <summary>
+    /// Notifies receivers that the form of address changed, so that the texts of TA() show in the new form.
+    /// </summary>
+    ADDRESS_FORM_CHANGED,
+
+    /// <summary>
     /// Requests startup initialization of the plugin system.
     /// </summary>
     STARTUP_PLUGIN_SYSTEM,
@@ -77,6 +82,22 @@ public enum Event
     /// Requests display of an informational notification.
     /// </summary>
     SHOW_INFO,
+
+    /// <summary>
+    /// Requests display of the notification that a file is being exported.
+    /// </summary>
+    SHOW_FILE_EXPORT_RUNNING,
+
+    /// <summary>
+    /// Requests display of the notification that a file was exported, with the ways to reach it.
+    /// It replaces the notification that the export runs.
+    /// </summary>
+    SHOW_FILE_EXPORT_SUCCESS,
+
+    /// <summary>
+    /// Requests removal of the notification that a file is being exported.
+    /// </summary>
+    HIDE_FILE_EXPORT_RUNNING,
 
     /// <summary>
     /// Requests display of a prompt-injection alert dialog.
@@ -269,6 +290,11 @@ public enum Event
     /// Sends content to the text summarizer assistant.
     /// </summary>
     SEND_TO_TEXT_SUMMARIZER_ASSISTANT,
+
+    /// <summary>
+    /// Sends content to the SWOT analysis assistant.
+    /// </summary>
+    SEND_TO_SWOT_ANALYSIS_ASSISTANT,
 
     /// <summary>
     /// Sends the result of the current assistant to the chat component.

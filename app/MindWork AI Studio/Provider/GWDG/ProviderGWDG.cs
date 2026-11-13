@@ -10,7 +10,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
 {
     private static readonly ILogger<ProviderGWDG> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGWDG>();
 
-    // Source: https://docs.hpc.gwdg.de/services/saia/index.html#embeddings
+    // Source: https://docs.hpc.gwdg.de/services/ai-services/saia/index.html#embeddings
     private static readonly Model[] KNOWN_EMBEDDING_MODELS =
     [
         new("e5-mistral-7b-instruct", "E5 Mistral 7B Instruct"),
@@ -18,16 +18,17 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
         new("qwen3-embedding-4b", "Qwen3 Embedding 4B"),
     ];
 
-    // Source: https://docs.hpc.gwdg.de/services/saia/index.html#voice-to-text
+    // Source: https://docs.hpc.gwdg.de/services/ai-services/saia/index.html#voice-to-text
     private static readonly Model[] KNOWN_TRANSCRIPTION_MODELS =
     [
         new("whisper-large-v2", "Whisper v2 Large"),
+        new("whisper-large-v3", "Whisper v3 Large"),
     ];
 
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.GWDG.ToSecretId();
+    public override string Id => LLMProviders.GWDG.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "GWDG SAIA";
@@ -81,7 +82,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
     
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);

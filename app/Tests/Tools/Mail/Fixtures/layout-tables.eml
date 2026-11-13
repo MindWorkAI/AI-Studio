@@ -1,0 +1,17 @@
+From: Shop <shop@example.net>
+To: bob@example.org
+Subject: Our autumn offers
+Date: Wed, 30 Sep 2026 12:00:00 +0000
+Message-ID: <layout-tables@example.net>
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+<table role="presentation" width="100%"><tr><td>
+  <table><tr><td>Welcome to our autumn newsletter.</td></tr><tr><td>Everything is on sale.</td></tr></table>
+</td></tr></table>
+<table border="1">
+  <tr><th>Quarter</th><th>Revenue</th></tr>
+  <tr><td>Q3</td><td>1.2M</td></tr>
+</table>
+</body></html>

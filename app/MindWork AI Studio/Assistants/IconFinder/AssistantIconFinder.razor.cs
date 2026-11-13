@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.IconFinder;
@@ -9,8 +10,11 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
 
     protected override string Title => T("Icon Finder");
     
-    protected override string Description => T("""Finding the right icon for a context, such as for a piece of text, is not easy. The first challenge: You need to extract a concept from your context, such as from a text. Let's take an example where your text contains statements about multiple departments. The sought-after concept could be "departments." The next challenge is that we need to anticipate the bias of the icon designers: under the search term "departments," there may be no relevant icons or only unsuitable ones. Depending on the icon source, it might be more effective to search for "buildings," for instance. LLMs assist you with both steps.""");
+    protected override string Description => TA("""Finding the right icon for a context, such as for a piece of text, is not easy. The first challenge: You need to extract a concept from your context, such as from a text. Let's take an example where your text contains statements about multiple departments. The sought-after concept could be "departments." The next challenge is that we need to anticipate the bias of the icon designers: under the search term "departments," there may be no relevant icons or only unsuitable ones. Depending on the icon source, it might be more effective to search for "buildings," for instance. LLMs assist you with both steps.""");
     
+    // The chat continues the search for icons, which this prompt describes:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
+
     protected override string SystemPrompt => 
         """
         I can search for icons using US English keywords. Please help me come up with the right search queries.
@@ -30,7 +34,7 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
 
     protected override string SendToChatVisibleUserPromptText =>
         $"""
-        {string.Format(T("Find icon suggestions on {0} for the following context:"), this.selectedIconSource.Name())}
+        {string.Format(T("Find icon suggestions on {0} for the following context:"), this.selectedIconSource.Name)}
         
         {this.inputContext}
         """;
@@ -74,37 +78,30 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
         state.Restore(SELECTED_ICON_SOURCE_STATE_KEY, value => this.selectedIconSource = value);
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_ICON_FINDER_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputContext = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputContext = payload.Text;
 
     #endregion
 
     private string? ValidatingContext(string context)
     {
         if(string.IsNullOrWhiteSpace(context))
-            return T("Please provide a context. This will help the AI to find the right icon. You might type just a keyword or copy a sentence from your text, e.g., from a slide where you want to use the icon.");
+            return TA("Please provide a context. This will help the AI to find the right icon. You might type just a keyword or copy a sentence from your text, e.g., from a slide where you want to use the icon.");
         
         return null;
     }
 
     private async Task FindIcon()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();
         var time = this.AddUserRequest(
         $"""
-            {this.selectedIconSource.Prompt()} I search for an icon for the following context:
+            {this.selectedIconSource.Prompt} I search for an icon for the following context:
             
             ```
             {this.inputContext}

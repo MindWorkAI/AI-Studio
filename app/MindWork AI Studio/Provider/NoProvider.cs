@@ -25,6 +25,9 @@ public class NoProvider : IProvider
 
     public bool HasModelLoadingCapability => false;
 
+    /// <inheritdoc />
+    public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => AIStudio.Settings.Provider.NONE;
+
     public Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
 
     public Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));

@@ -18,11 +18,11 @@ public sealed class ModelComparisonPresentationOrderTests
     {
         var run = CreateRunResult();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(order.InColumnA(run).Label, Is.EqualTo(expectedInColumnA));
             Assert.That(order.InColumnB(run).Label, Is.EqualTo(expectedInColumnB));
-        });
+        }
     }
 
     [Test]

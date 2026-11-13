@@ -5,6 +5,10 @@
 
 <MudDialog>
     <DialogContent>
+        @if (!string.IsNullOrWhiteSpace(this.importRetrievalIssue))
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-2">@this.importRetrievalIssue</MudAlert>
+        }
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
@@ -17,7 +21,7 @@
                 Immediate="@true"
                 Validation="@this.dataSourceValidation.ValidatingName"
                 Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                AdornmentIcon="@AppIcons.NAME"
                 AdornmentColor="Color.Info"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
@@ -32,7 +36,7 @@
                     Immediate="@true"
                     Validation="@this.dataSourceValidation.ValidatingHostname"
                     Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.NetworkCheck"
+                    AdornmentIcon="@AppIcons.HOSTNAME"
                     AdornmentColor="Color.Info"
                     Variant="Variant.Text"
                     UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
@@ -50,7 +54,7 @@
             @if (!this.IsConnectionEncrypted())
             {
                 <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                    @T("Please note: the connection to the ERI v1 server is not encrypted. This means that all data sent to the server is transmitted in plain text. Please ask the ERI server administrator to enable encryption.")
+                    @TA("Please note: the connection to the ERI v1 server is not encrypted. This means that all data sent to the server is transmitted in plain text. Please ask the ERI server administrator to enable encryption.")
                 </MudJustifiedText>
             }
             
@@ -68,11 +72,11 @@
             
             @if(this.availableAuthMethods.Count > 0 || this.dataAuthMethod != default)
             {
-                <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName()" Label="Authentication Method" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
+                <MudSelect @bind-Value="@this.dataAuthMethod" Text="@this.dataAuthMethod.DisplayName" Label="@T("Authentication Method")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateAuthMethod">
                     @foreach (var authMethod in this.availableAuthMethods)
                     {
                         <MudSelectItem Value="@authMethod">
-                            @authMethod.DisplayName()
+                            @authMethod.DisplayName
                         </MudSelectItem>
                     }
                 </MudSelect>
@@ -91,7 +95,7 @@
                         Immediate="@true"
                         Validation="@this.dataSourceValidation.ValidateUsername"
                         Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.Person2"
+                        AdornmentIcon="@AppIcons.USERNAME"
                         AdornmentColor="Color.Info"
                         Variant="Variant.Text"
                         UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
@@ -102,7 +106,7 @@
             
             @if (this.availableRetrievalProcesses.Count > 0)
             {
-                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
+                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" @bind-Value:after="@this.ClearImportRetrievalIssue" Text="@this.dataSelectedRetrievalProcess.Name" Label="@TA("Select one retrieval process")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
                     @foreach (var retrievalProcess in this.availableRetrievalProcesses)
                     {
                         <MudSelectItem Value="@retrievalProcess">
@@ -112,16 +116,18 @@
                 </MudSelect>
             }
 
-            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
+            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.SelectionText" Label="@TA("Your security policy")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
                 @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
                 {
                     <MudSelectItem Value="@policy">
-                        @policy.ToSelectionText()
+                        @policy.SelectionText
                     </MudSelectItem>
                 }
             </MudSelect>
 
-            <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
+            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@TA("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction" SecurityPolicy="@this.dataSecurityPolicy"/>
+
+            <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@TA("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
             
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>

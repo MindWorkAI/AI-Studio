@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Idea for a new feature
+    url: https://github.com/MindWorkAI/Planning/issues
+    about: Suggest a feature you would like to see in AI Studio.
+  - name: Proposal for a contribution
+    url: https://github.com/MindWorkAI/AI-Studio/discussions/new?category=proposals
+    about: Ask whether a change you want to build fits our plans, before you start working on it.
+  - name: Question
+    url: https://github.com/MindWorkAI/AI-Studio/discussions/categories/q-a
+    about: Ask how to use or set up AI Studio.
+  - name: Security vulnerability
+    url: https://github.com/MindWorkAI/AI-Studio/security/advisories/new
+    about: Report a vulnerability privately. Please never report it in a public issue.

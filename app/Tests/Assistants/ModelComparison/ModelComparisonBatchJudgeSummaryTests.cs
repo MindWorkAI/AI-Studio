@@ -18,14 +18,14 @@ public sealed class ModelComparisonBatchJudgeSummaryTests
     {
         var summary = ModelComparisonBatchJudgeSummary.From([]);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(summary.TotalRunCount, Is.Zero);
             Assert.That(summary.ScoredRunCount, Is.Zero);
             Assert.That(summary.FirstModelWins, Is.Zero);
             Assert.That(summary.SecondModelWins, Is.Zero);
             Assert.That(summary.Ties, Is.Zero);
-        });
+        }
     }
 
     [Test]
@@ -41,14 +41,14 @@ public sealed class ModelComparisonBatchJudgeSummaryTests
 
         var summary = ModelComparisonBatchJudgeSummary.From(entries);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(summary.TotalRunCount, Is.EqualTo(3));
             Assert.That(summary.ScoredRunCount, Is.EqualTo(3));
             Assert.That(summary.FirstModelWins, Is.EqualTo(3));
             Assert.That(summary.SecondModelWins, Is.Zero);
             Assert.That(summary.Ties, Is.Zero);
-        });
+        }
     }
 
     [Test]
@@ -76,12 +76,12 @@ public sealed class ModelComparisonBatchJudgeSummaryTests
 
         var summary = ModelComparisonBatchJudgeSummary.From(entries);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(summary.TotalRunCount, Is.EqualTo(2), "Both runs happened.");
             Assert.That(summary.ScoredRunCount, Is.EqualTo(1), "Only one run had a usable verdict.");
             Assert.That(summary.FirstModelWins, Is.EqualTo(1));
-        });
+        }
     }
 
     private static ModelComparisonBatchEntry Entry(ModelComparisonPresentationOrder order, ModelComparisonVote judgePreferred) => new()

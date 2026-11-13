@@ -10,7 +10,7 @@ namespace AIStudio.Settings.DataModel;
 /// </remarks>
 public sealed record ModelComparisonPreset
 {
-    public required string Id { get; init; }
+    public required string Id { get; set; }
 
     /// <summary>
     /// The name shown in the preset picker. Mutable, unlike the rest of a saved preset: renaming is
@@ -24,25 +24,25 @@ public sealed record ModelComparisonPreset
     /// a provider through <see cref="SettingsManager.GetProviderById"/>, which already answers
     /// <see cref="Provider.NONE"/> for an ID that no longer exists.
     /// </summary>
-    public string FirstProviderId { get; init; } = string.Empty;
+    public string FirstProviderId { get; set; } = string.Empty;
 
     /// <summary>
     /// The second model's provider ID. See <see cref="FirstProviderId"/>.
     /// </summary>
-    public string SecondProviderId { get; init; } = string.Empty;
+    public string SecondProviderId { get; set; } = string.Empty;
 
-    public bool JudgeEnabled { get; init; }
+    public bool JudgeEnabled { get; set; }
 
     /// <summary>
     /// The judge's provider ID. See <see cref="FirstProviderId"/>.
     /// </summary>
-    public string JudgeProviderId { get; init; } = string.Empty;
+    public string JudgeProviderId { get; set; } = string.Empty;
 
-    public string JudgeInstructions { get; init; } = string.Empty;
+    public string JudgeInstructions { get; set; } = string.Empty;
 
-    public string Context { get; init; } = string.Empty;
+    public string Context { get; set; } = string.Empty;
 
-    public string Question { get; init; } = string.Empty;
+    public string Question { get; set; } = string.Empty;
 
-    public int RunCount { get; init; } = 1;
+    public int RunCount { get; set; } = 1;
 }

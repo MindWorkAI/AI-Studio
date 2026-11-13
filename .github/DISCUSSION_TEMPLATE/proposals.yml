@@ -1,0 +1,50 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to ask whether a change you want to build fits our plans, before you start working on it. A few sentences per field are enough; a proposal is not a design document. See [Before you start](https://github.com/MindWorkAI/AI-Studio/blob/main/CONTRIBUTING.md#before-you-start) in our contribution guidelines.
+
+        We answer with one of three replies: **Go**, **Go, but …** with a note on the direction we need, or **Not planned**.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Which problem do the people using AI Studio have? Describe it from their point of view.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Intended solution
+      description: How do you want to solve it? Three to five sentences are enough.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: areas
+    attributes:
+      label: What does your change touch?
+      options:
+        - label: A new feature or a new assistant
+        - label: A new dependency, such as a NuGet package or a Rust crate
+        - label: A new LLM or embedding provider
+        - label: How data or settings are stored
+        - label: The interfaces of the Lua plugins, the configuration plugins, or the enterprise configuration
+        - label: The architecture or the concept of the user interface
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Rough size
+      options:
+        - Small, a few files in one place
+        - Medium, one area of the app
+        - Large, several areas of the app
+
+  - type: input
+    id: related
+    attributes:
+      label: Related issue or roadmap item
+      description: Link it, if there is one.

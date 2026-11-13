@@ -1,0 +1,24 @@
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@inherits MSGComponentBase
+
+<MudSelect T="OutboundDataRestriction" Value="@this.Value" ValueChanged="@this.ValueChanged" Text="@this.Value.Name" Label="@this.Label" Class="mb-1" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.OUTBOUND_DATA_RESTRICTION">
+    @foreach (var restriction in ConfigurationSelectDataFactory.GetOutboundDataRestrictionData(this.Minimum))
+    {
+        <MudSelectItem T="OutboundDataRestriction" Value="@restriction.Value">
+            @restriction.Name
+        </MudSelectItem>
+    }
+</MudSelect>
+<MudJustifiedText Typo="Typo.body2" Class="mb-1">
+    @this.Value.Description
+</MudJustifiedText>
+@if (this.LimitationText is { } limitationText)
+{
+    <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+        @limitationText
+    </MudJustifiedText>
+}
+<MudJustifiedText Typo="Typo.body2" Class="mb-6">
+    @this.Explanation
+</MudJustifiedText>

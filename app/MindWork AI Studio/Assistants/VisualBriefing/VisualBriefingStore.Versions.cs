@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.Json;
 
+using AIStudio.Chat;
+
 namespace AIStudio.Assistants.VisualBriefing;
 
 public sealed partial class VisualBriefingStore
@@ -339,6 +341,10 @@ public sealed partial class VisualBriefingStore
                 export.Name,
                 export.Author,
                 SettingsFromExport(export),
+
+                // An export is a file outside AI Studio, which carries neither the instruction nor any restrictions.
+                // A briefing which exists here already keeps its own:
+                ChatRestrictions.NONE,
                 export.BriefingId,
                 token);
         }
@@ -440,6 +446,9 @@ public sealed partial class VisualBriefingStore
             parts.ExportManifest.Name,
             parts.ExportManifest.Author,
             SettingsFromExport(parts.ExportManifest),
+
+            // An export is a file outside AI Studio, which carries neither the instruction nor any restrictions:
+            ChatRestrictions.NONE,
             copyId,
             token);
         

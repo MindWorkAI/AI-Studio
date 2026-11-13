@@ -21,7 +21,7 @@
                         <MudTextField T="string"
                                       Text="@DROP_FILES_HERE_TEXT"
                                       Adornment="Adornment.Start"
-                                      AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                                      AdornmentIcon="@AppIcons.ATTACH_FILE"
                                       Typo="Typo.body2"
                                       Variant="Variant.Outlined"
                                       ReadOnly="true"
@@ -32,7 +32,7 @@
             }
             else if (this.DocumentPaths.Any())
             {
-                <MudTooltip Text="@T("Click the paperclip to attach files, or click the number to see your attached files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@TA("Click the paperclip to attach files, or click the number to see your attached files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudBadge
                         Content="@this.DocumentPaths.Count"
                         Color="Color.Primary"
@@ -40,7 +40,7 @@
                         Class="cursor-pointer"
                         OnClick="@this.OpenAttachmentsDialog">
                         <MudIconButton
-                            Icon="@Icons.Material.Filled.AttachFile"
+                            Icon="@AppIcons.ATTACH_FILE"
                             Color="Color.Default"
                             Disabled="@this.IsUnavailable"
                             OnClick="@this.AddFilesManually"/>
@@ -49,9 +49,9 @@
             }
             else
             {
-                <MudTooltip Text="@T("Click here to attach files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@TA("Click here to attach files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton
-                        Icon="@Icons.Material.Filled.AttachFile"
+                        Icon="@AppIcons.ATTACH_FILE"
                         Color="Color.Default"
                         Disabled="@this.IsUnavailable"
                         OnClick="@this.AddFilesManually"/>
@@ -70,11 +70,11 @@ else
     {
         <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
             <MudText Typo="Typo.body1" Inline="true">
-                @T("Drag and drop files into the marked area or click here to attach documents: ")
+                @TA("Drag and drop files into the marked area or click here to attach documents: ")
             </MudText>
             <MudButton
                 Variant="Variant.Filled"
-                StartIcon="@Icons.Material.Filled.Add"
+                StartIcon="@AppIcons.ADD"
                 Color="Color.Primary"
                 OnClick="@(() => this.AddFilesManually())"
                 Style="vertical-align: top; margin-top: -2px;"
@@ -98,17 +98,17 @@ else
         {
             @if (this.IsUnavailable)
             {
-                <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
+                <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@AppIcons.FILE_CONTENT_PREVIEW" OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
             }
             else
             {
-                <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))" OnClose="@(() => this.RemoveDocument(fileAttachment))"/>
+                <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@AppIcons.FILE_CONTENT_PREVIEW" OnClick="@(() => this.InvestigateFile(fileAttachment))" OnClose="@(() => this.RemoveDocument(fileAttachment))"/>
             }
         }
     </PathDropZone>
     @if (!this.IsUnavailable)
     {
-        <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
+        <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@AppIcons.DELETE">
             @T("Clear file list")
         </MudButton>
     }

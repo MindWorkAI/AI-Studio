@@ -9,7 +9,7 @@ public sealed partial class RustService
         try
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(45));
-            var response = await this.http.GetFromJsonAsync<UpdateResponse>("/updates/check", this.jsonRustSerializerOptions, cts.Token);
+            var response = await this.http.GetFromJsonAsync<UpdateResponse>("/updates/check", JSON_OPTIONS, cts.Token);
             
             if (response == default)
             {

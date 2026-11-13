@@ -91,7 +91,7 @@ public partial class RetrievalProcessDialog : MSGComponentBase
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
-            this.form.ResetValidation();
+            await this.form.ResetValidationAsync();
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -101,13 +101,13 @@ public partial class RetrievalProcessDialog : MSGComponentBase
     private string? ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return T("The retrieval process name must not be empty. Please name your retrieval process.");
+            return TA("The retrieval process name must not be empty. Please name your retrieval process.");
         
         if (name.Length > 26)
             return T("The retrieval process name must not be longer than 26 characters.");
         
         if (this.UsedRetrievalProcessNames.Contains(name))
-            return string.Format(T("The retrieval process name '{0}' must be unique. Please choose a different name."), name);
+            return string.Format(TA("The retrieval process name '{0}' must be unique. Please choose a different name."), name);
         
         return null;
     }
@@ -115,7 +115,7 @@ public partial class RetrievalProcessDialog : MSGComponentBase
     private string? ValidateDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return T("The description must not be empty. Please describe the retrieval process.");
+            return TA("The description must not be empty. Please describe the retrieval process.");
         
         return null;
     }
@@ -128,13 +128,13 @@ public partial class RetrievalProcessDialog : MSGComponentBase
     private string? ValidateParameterName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return T("The parameter name must not be empty. Please name the parameter.");
+            return TA("The parameter name must not be empty. Please name the parameter.");
         
         if(name.Length > 26)
             return T("The parameter name must not be longer than 26 characters.");
         
         if (this.retrievalParameters.Count(parameter => parameter.Name == name) > 1)
-            return string.Format(T("The parameter name '{0}' must be unique. Please choose a different name."), name);
+            return string.Format(TA("The parameter name '{0}' must be unique. Please choose a different name."), name);
         
         return null;
     }
@@ -142,7 +142,7 @@ public partial class RetrievalProcessDialog : MSGComponentBase
     private string? ValidateParameterDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return string.Format(T("The parameter description must not be empty. Please describe the parameter '{0}'. What data type is it? What is it used for? What are the possible values?"), this.selectedParameter?.Name);
+            return string.Format(TA("The parameter description must not be empty. Please describe the parameter '{0}'. What data type is it? What is it used for? What are the possible values?"), this.selectedParameter?.Name);
         
         return null;
     }
@@ -153,7 +153,7 @@ public partial class RetrievalProcessDialog : MSGComponentBase
             return nameIssue;
         
         if (string.IsNullOrWhiteSpace(parameter.Description))
-            return string.Format(T("The parameter description must not be empty. Please describe the parameter '{0}'. What data type is it? What is it used for? What are the possible values?"), parameter.Name);
+            return string.Format(TA("The parameter description must not be empty. Please describe the parameter '{0}'. What data type is it? What is it used for? What are the possible values?"), parameter.Name);
         
         return null;
     }
@@ -172,9 +172,9 @@ public partial class RetrievalProcessDialog : MSGComponentBase
             return T("No embedding methods selected.");
         
         if(selectedEmbeddings.Count == 1)
-            return T("You have selected 1 embedding method.");
+            return TA("You have selected 1 embedding method.");
         
-        return string.Format(T("You have selected {0} embedding methods."), selectedEmbeddings.Count);
+        return string.Format(TA("You have selected {0} embedding methods."), selectedEmbeddings.Count);
     }
     
     private void EmbeddingsChanged(IEnumerable<EmbeddingInfo>? updatedEmbeddings)
@@ -187,7 +187,7 @@ public partial class RetrievalProcessDialog : MSGComponentBase
     
     private async Task Store()
     {
-        await this.form.Validate();
+        await this.form.ValidateAsync();
         foreach (var parameter in this.retrievalParameters)
         {
             if (this.ValidateParameter(parameter) is { } issue)

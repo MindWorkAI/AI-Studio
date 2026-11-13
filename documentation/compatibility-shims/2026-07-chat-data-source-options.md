@@ -16,11 +16,13 @@ Without this shim, those defaults would be lost after upgrading to a version tha
 
 `DataChat.PreselectedDataSourceOptions` remains available as a compatibility property. Reading it maps the new individual fields into a `DataSourceOptions` object, and setting it copies values from the legacy nested object into the new fields.
 
+`PreselectedDataSourcesRetrievalMode` came later than the other individual fields and is mapped the same way. A legacy-nested object never carried it, so setting the property from one gives semantic search, the default of both fields.
+
 This lets older settings files load without a settings version migration and keeps existing UI bindings working while configuration plugins manage the individual fields.
 
 ## Removal Checklist
 
-- Confirm supported settings files are expected to contain `PreselectedDataSourcesDisabled`, `PreselectedDataSourcesAutomaticSelection`, `PreselectedDataSourcesAutomaticValidation`, and `PreselectedDataSourceIds`.
+- Confirm supported settings files are expected to contain `PreselectedDataSourcesDisabled`, `PreselectedDataSourcesAutomaticSelection`, `PreselectedDataSourcesAutomaticValidation`, `PreselectedDataSourcesRetrievalMode`, and `PreselectedDataSourceIds`.
 - Remove `DataChat.PreselectedDataSourceOptions`.
 - Update any remaining callers to use the individual fields or a dedicated helper.
 - Update this document's status to `Removed`.

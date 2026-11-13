@@ -13,27 +13,11 @@ public partial class ContentBlockComponent : MSGComponentBase
 {
     private const string CHAT_MATH_SYNC_FUNCTION = "chatMath.syncContainer";
     private const string CHAT_MATH_DISPOSE_FUNCTION = "chatMath.disposeContainer";
-    private const string HTML_START_TAG = "<";
-    private const string HTML_END_TAG = "</";
-    private const string HTML_SELF_CLOSING_TAG = "/>";
-    private const string CODE_FENCE_MARKER_BACKTICK = "```";
-    private const string CODE_FENCE_MARKER_TILDE = "~~~";
-    private const string MATH_BLOCK_MARKER_DOLLAR = "$$";
-    private const string MATH_BLOCK_MARKER_BRACKET_OPEN = """\[""";
-    private const string MATH_BLOCK_MARKER_BRACKET_CLOSE = """\]""";
-    private const string HTML_CODE_FENCE_PREFIX = "```html";
 
-    private static readonly string[] HTML_TAG_MARKERS =
-    [
-        "<!doctype",
-        "<html",
-        "<head",
-        "<body",
-        "<style",
-        "<script",
-        "<iframe",
-        "<svg",
-    ];
+    /// <summary>
+    /// How many files of an answer the export menu lists one by one; beyond that, it groups them by kind.
+    /// </summary>
+    private const int MAX_FILES_WITHOUT_SUBMENUS = 5;
 
     /// <summary>
     /// The role of the chat content block.
@@ -76,6 +60,9 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     [Parameter]
     public Func<IContent, Task>? RegenerateFunc { get; set; }
+
+    [Parameter]
+    public Func<IContent, Task>? RollbackFunc { get; set; }
     
     [Parameter]
     public Func<IContent, Task>? EditLastBlockFunc { get; set; }
@@ -87,23 +74,79 @@ public partial class ContentBlockComponent : MSGComponentBase
     public Func<bool> RegenerateEnabled { get; set; } = () => false;
 
     /// <summary>
+    /// Whether the user may change the messages of the chat right now, i.e., remove, edit, regenerate, or roll back.
+    /// </summary>
+    /// <remarks>
+    /// The chat answers false while an answer is being written for it, since every change to a message
+    /// would collide with the answer. Whoever passes none of these actions needs no answer here.
+    /// </remarks>
+    [Parameter]
+    public Func<bool> BlockActionsEnabled { get; set; } = () => false;
+
+    /// <summary>
     /// What the export offers, used both as the label of the export button and as the title of
     /// the save dialog.
     /// </summary>
     /// <remarks>
-    /// Only AI blocks can be exported, so this always names something the AI produced. In the chat
-    /// that is its response, whereas in an assistant it is the result, and there the user sees no
-    /// chat at all. Whoever renders this block knows which of the two it is. Null falls back to
-    /// the chat wording.
+    /// Only AI blocks offer the export menu, so this always names something the AI produced. In the
+    /// chat that is its response, whereas in an assistant it is the result, and there the user sees
+    /// no chat at all. Whoever renders this block knows which of the two it is. Null falls back to
+    /// the chat wording. A code block of a message of the user is saved with the label of its
+    /// button as the title instead.
     /// </remarks>
     [Parameter]
     public string? ExportTitle { get; set; }
-    
+
+    /// <summary>
+    /// What an export of this block is named after, which the save dialog suggests as file name.
+    /// </summary>
+    /// <remarks>
+    /// In the chat that is the name of the chat, in an assistant whatever the assistant says its
+    /// result is about. Whoever renders this block knows which of the two it is. A table or a code
+    /// block with a heading above it is named after that heading instead. Null falls back to a
+    /// generic name.
+    /// </remarks>
+    [Parameter]
+    public string? ExportFileName { get; set; }
+
+    /// <summary>
+    /// Whether copying or exporting an AI answer of this block ends it with the notice that AI
+    /// generated it, when that is switched on.
+    /// </summary>
+    /// <remarks>
+    /// An assistant whose answer is meant for another model rather than for a reader, such as the
+    /// prompt optimizer, turns this off, the same way as for its "Copy result" button.
+    /// </remarks>
+    [Parameter]
+    public bool AddsAIGeneratedContentDisclosure { get; set; } = true;
+
+    /// <summary>
+    /// Sends the text of this block to the given assistant, or into a new chat.
+    /// </summary>
+    /// <remarks>
+    /// Null hides the menu for it. An assistant shows its result with this block as well, and it offers
+    /// sending the result through its own footer instead.
+    /// </remarks>
+    [Parameter]
+    public Func<IContent, Tools.Components, Task>? SendToFunc { get; set; }
+
+    /// <summary>
+    /// The assistants and the chat the menu offers, in its order, see AssistantLaunchService.GetDestinationsFor.
+    /// </summary>
+    /// <remarks>
+    /// Whoever passes SendToFunc passes them as well, so that a chat asks for them once for all of its blocks.
+    /// </remarks>
+    [Parameter]
+    public IReadOnlyList<Tools.Components> SendToDestinations { get; set; } = [];
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
     private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
 
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
@@ -119,8 +162,8 @@ public partial class ContentBlockComponent : MSGComponentBase
     private int lastRenderHash;
     private string cachedMarkdownRenderPlanInput = string.Empty;
     private MarkdownRenderPlan cachedMarkdownRenderPlan = MarkdownRenderPlan.EMPTY;
-    private string cachedMessageTablesInput = string.Empty;
-    private IReadOnlyList<MessageTable> cachedMessageTables = [];
+    private string cachedMessageFilesInput = string.Empty;
+    private IReadOnlyList<MessageFile> cachedMessageFiles = [];
     private char csvSeparator = ',';
     private ElementReference mathContentContainer;
     private SourcesList? sourcesList;
@@ -141,55 +184,145 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
 
     /// <summary>
-    /// The tables this block holds so that the export menu can offer each of them.
+    /// Whether this block offers its answer for export through the export menu: entirely, and file by file.
+    /// </summary>
+    private bool CanExportAnswer => this.Role is ChatRole.AI && this.CanExport;
+
+    /// <summary>
+    /// Whether each code block of this block can be saved on its own, through a button at the block.
     /// </summary>
     /// <remarks>
-    /// Cached the same way the Markdown render plan is: reading the tables means parsing the whole
+    /// Besides an answer, this holds for a message of the user: code the user sent weeks ago can be
+    /// got back that way after many changes to it, without copying it out of the chat.
+    /// </remarks>
+    private bool CanSaveCodeBlocks => this.Role is ChatRole.AI or ChatRole.USER && this.CanExport;
+
+    /// <summary>
+    /// Whether this block offers its text to an assistant or a new chat.
+    /// </summary>
+    private bool CanSendTo => this.SendToFunc is not null && this.SendToDestinations.Count > 0 && this.Role is ChatRole.AI or ChatRole.USER && this.Content is ContentText;
+
+    /// <summary>
+    /// Whether the text of this block can be sent right now.
+    /// </summary>
+    /// <remarks>
+    /// Like the export, the menu waits for the stream to finish: half an answer is nothing anybody wants
+    /// to continue with. Sending changes nothing in this chat, so an answer written meanwhile for another
+    /// block does not stand in the way.
+    /// </remarks>
+    private bool IsSendToEnabled => this.Content is ContentText { InitialRemoteWait: false, IsStreaming: false } text && !string.IsNullOrWhiteSpace(text.Text);
+
+    /// <summary>
+    /// Whether this block leaves AI Studio with the notice that AI generated it, when that is switched on.
+    /// </summary>
+    private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
+
+    /// <summary>
+    /// The files this block holds, tables, code blocks, and formulas, so that the export menu can offer each of them.
+    /// </summary>
+    /// <remarks>
+    /// Cached the same way the Markdown render plan is: reading the files means parsing the whole
     /// message, and a block re-renders for reasons which have nothing to do with its text, such as
     /// switching the theme, which would parse every message of a long chat again.
+    ///
+    /// The files are read from the text the render plan shows, not from the message as stored. A
+    /// code block the chat renders finds its file by where it stands in that text, and an answer of
+    /// raw HTML only becomes a code block there.
     /// </remarks>
-    private IReadOnlyList<MessageTable> MessageTables
+    private IReadOnlyList<MessageFile> MessageFiles
     {
         get
         {
             if (!this.Content.TryGetMarkdownText(out var markdown))
                 return [];
 
-            if (ReferenceEquals(this.cachedMessageTablesInput, markdown) || string.Equals(this.cachedMessageTablesInput, markdown, StringComparison.Ordinal))
-                return this.cachedMessageTables;
+            if (ReferenceEquals(this.cachedMessageFilesInput, markdown) || string.Equals(this.cachedMessageFilesInput, markdown, StringComparison.Ordinal))
+                return this.cachedMessageFiles;
 
-            this.cachedMessageTablesInput = markdown;
-            this.cachedMessageTables = PlainFileExport.ExtractTables(markdown, this.csvSeparator);
-            return this.cachedMessageTables;
+            this.cachedMessageFilesInput = markdown;
+            this.cachedMessageFiles = PlainFileExport.ExtractFiles(this.GetMarkdownRenderPlan(markdown), this.csvSeparator);
+            return this.cachedMessageFiles;
         }
     }
 
     /// <summary>
-    /// Names one table in the export menu.
+    /// The files whose code blocks get a button to save them: all files of this block, as long as its
+    /// code blocks can be saved.
     /// </summary>
     /// <remarks>
-    /// With a single table the format alone says everything. As soon as an answer holds more than
-    /// one, the user has to be able to tell them apart: the heading above a table does that, unless
-    /// it is missing or two tables share one, and then we count them.
+    /// In a long answer, the user would otherwise have to scroll from the code block up to the export
+    /// menu. The button saves the very file the menu offers for the block, under the same name.
     /// </remarks>
-    private string ExportLabel(MessageTable table)
-    {
-        var tables = this.MessageTables;
-        if (tables.Count < 2)
-            return table.Format.ToName();
+    private IReadOnlyList<MessageFile> FilesWithSaveButton => this.CanSaveCodeBlocks ? this.MessageFiles : [];
 
-        var captionIsTelling = !string.IsNullOrWhiteSpace(table.Caption)
-                               && tables.Where(entry => entry.Ordinal != table.Ordinal).All(entry => !string.Equals(entry.Caption, table.Caption, StringComparison.Ordinal));
+    /// <summary>
+    /// Names the button which saves a file at its code block, e.g., "Save as Python (.py)".
+    /// </summary>
+    private string SaveAsLabel(MessageFile file) => string.Format(T("Save as {0}"), file.ToName());
+
+    /// <summary>
+    /// Names one file in the export menu.
+    /// </summary>
+    /// <remarks>
+    /// Tables and code blocks are named apart, just as they are counted apart. With a single file of
+    /// its kind its type alone says everything. As soon as an answer holds more than one, the user
+    /// has to be able to tell them apart: the heading above a file does that, unless it is missing
+    /// or two files of the kind share one. Then the type still does, as long as no other file of
+    /// the kind shares it, such as one block of Python next to one of Rust; otherwise we count them.
+    /// A code block always says that it is one, because the menu offers the entire answer as a web
+    /// page or a LaTeX document right below, and the two entries must not read alike.
+    /// </remarks>
+    private string ExportLabel(MessageFile file)
+    {
+        var isTable = file.Format.IsTabular;
+        var filesOfItsKind = this.MessageFiles.Where(entry => entry.Format.IsTabular == isTable).ToList();
+        var extensionOrName = file.ToFileExtensionOrName();
+        var typeName = file.ToName();
 
         //
         // The caption is the heading the model wrote, so it already carries the language of the
         // answer and needs no translation of ours. Only the fallback, where we have to count the
-        // tables ourselves, is our own wording.
+        // files ourselves, is our own wording.
         //
-        return captionIsTelling
-            ? $"{table.Caption} ({table.Format.ToFileExtension()})"
-            : string.Format(this.T("Table {0} ({1})"), table.Ordinal, table.Format.ToFileExtension());
+        string name;
+        if (filesOfItsKind.Count < 2)
+            name = typeName;
+        else if (!string.IsNullOrWhiteSpace(file.Caption) && filesOfItsKind.Count(entry => string.Equals(entry.Caption, file.Caption, StringComparison.Ordinal)) is 1)
+            name = $"{file.Caption} ({extensionOrName})";
+        else if (filesOfItsKind.Count(entry => string.Equals(entry.ToName(), typeName, StringComparison.Ordinal)) is 1)
+            name = typeName;
+        else
+            return isTable
+                ? string.Format(T("Table {0} ({1})"), file.Ordinal, extensionOrName)
+                : string.Format(T("Code block {0} ({1})"), file.Ordinal, extensionOrName);
+
+        return isTable ? name : string.Format(T("Code block: {0}"), name);
     }
+
+    /// <summary>
+    /// The files this block holds by kind, tables first, for an answer with more files than the
+    /// export menu lists one by one.
+    /// </summary>
+    /// <remarks>
+    /// An answer with many code blocks, a tutorial for example, would otherwise push the formats
+    /// for the entire answer out of sight. Each submenu keeps the order of the answer, so "Code
+    /// block 3" is the third entry of its submenu as well.
+    /// </remarks>
+    private IEnumerable<IGrouping<bool, MessageFile>> MessageFilesByKind => this.MessageFiles.GroupBy(file => file.Format.IsTabular).OrderByDescending(isTable => isTable.Key);
+
+    /// <summary>
+    /// Names the submenu of one kind of files in the export menu, with the number of its files.
+    /// </summary>
+    private string ExportGroupLabel(IGrouping<bool, MessageFile> filesOfAKind)
+    {
+        var count = filesOfAKind.Count().CompactCount();
+        return filesOfAKind.Key ? string.Format(T("Tables ({0})"), count) : string.Format(T("Code blocks ({0})"), count);
+    }
+
+    /// <summary>
+    /// Returns the icon of the submenu of one kind of files in the export menu.
+    /// </summary>
+    private static string ExportGroupIcon(IGrouping<bool, MessageFile> filesOfAKind) => filesOfAKind.Key ? FileExportFormat.CSV.Icon : FileExportFormat.SOURCE_CODE.Icon;
 
     /// <summary>
     /// What the export offers, falling back to the chat wording when nobody named it.
@@ -215,8 +348,8 @@ public partial class ContentBlockComponent : MSGComponentBase
             return;
 
         this.csvSeparator = separator;
-        this.cachedMessageTablesInput = string.Empty;
-        this.cachedMessageTables = [];
+        this.cachedMessageFilesInput = string.Empty;
+        this.cachedMessageFiles = [];
         await this.InvokeAsync(this.StateHasChanged);
     }
 
@@ -295,10 +428,15 @@ public partial class ContentBlockComponent : MSGComponentBase
         hash.Add(this.HideContent);
         hash.Add(this.SettingsManager.IsDarkMode);
         hash.Add(this.RegenerateEnabled());
+        hash.Add(this.BlockActionsEnabled());
         hash.Add(this.Content.InitialRemoteWait);
         hash.Add(this.Content.IsStreaming);
         hash.Add(this.Content.FileAttachments.Count);
         hash.Add(this.Content.Sources.Count);
+        hash.Add(this.SendToFunc is not null);
+        hash.Add(this.SendToDestinations.Count);
+        foreach (var destination in this.SendToDestinations)
+            hash.Add(destination);
 
         switch (this.Content)
         {
@@ -307,7 +445,10 @@ public partial class ContentBlockComponent : MSGComponentBase
                 hash.Add(textValue.Length);
                 hash.Add(textValue.GetHashCode(StringComparison.Ordinal));
                 hash.Add(text.Sources.Count);
+                hash.Add(text.SourcePassages.Count);
                 hash.Add(text.ToolInvocations.Count);
+                hash.Add(text.Presentation?.Kind);
+                hash.Add(text.Presentation?.GetDataHashCode() ?? 0);
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);
                 hash.Add(this.showToolTrace);
@@ -345,8 +486,6 @@ public partial class ContentBlockComponent : MSGComponentBase
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
 
     private bool HasToolTrace => this.Role is ChatRole.AI && this.GetToolInvocations().Count > 0;
-
-    private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
 
     private static Color GetTraceColor(ToolInvocationTraceStatus status) => status switch
     {
@@ -393,18 +532,13 @@ public partial class ContentBlockComponent : MSGComponentBase
         ? this.T("No result")
         : invocation.Result;
 
-    private MudMarkdownStyling MarkdownStyling => new()
-    {
-        CodeBlock = { Theme = this.CodeColorPalette },
-    };
-
     private MarkdownRenderPlan GetMarkdownRenderPlan(string text)
     {
         if (ReferenceEquals(this.cachedMarkdownRenderPlanInput, text) || string.Equals(this.cachedMarkdownRenderPlanInput, text, StringComparison.Ordinal))
             return this.cachedMarkdownRenderPlan;
 
         this.cachedMarkdownRenderPlanInput = text;
-        this.cachedMarkdownRenderPlan = BuildMarkdownRenderPlan(text);
+        this.cachedMarkdownRenderPlan = MarkdownRenderPlanner.Build(text);
         return this.cachedMarkdownRenderPlan;
     }
 
@@ -480,248 +614,31 @@ public partial class ContentBlockComponent : MSGComponentBase
             : $"{mathSegmentCount}:{hash.ToHashCode()}";
     }
 
-    private static MarkdownRenderPlan BuildMarkdownRenderPlan(string text)
-    {
-        var normalized = NormalizeMarkdownForRendering(text);
-        if (string.IsNullOrWhiteSpace(normalized))
-            return MarkdownRenderPlan.EMPTY;
-
-        var normalizedSpan = normalized.AsSpan();
-        var segments = new List<MarkdownRenderSegment>();
-        var activeCodeFenceMarker = '\0';
-        var activeMathBlockFenceType = MathBlockFenceType.NONE;
-        var markdownSegmentStart = 0;
-        var mathContentStart = 0;
-
-        for (var lineStart = 0; lineStart < normalizedSpan.Length;)
-        {
-            var lineEnd = lineStart;
-            while (lineEnd < normalizedSpan.Length && normalizedSpan[lineEnd] is not '\r' and not '\n')
-                lineEnd++;
-
-            var nextLineStart = lineEnd;
-            if (nextLineStart < normalizedSpan.Length)
-            {
-                if (normalizedSpan[nextLineStart] == '\r')
-                    nextLineStart++;
-
-                if (nextLineStart < normalizedSpan.Length && normalizedSpan[nextLineStart] == '\n')
-                    nextLineStart++;
-            }
-
-            var trimmedLine = TrimWhitespace(normalizedSpan[lineStart..lineEnd]);
-            if (activeMathBlockFenceType is MathBlockFenceType.NONE && TryUpdateCodeFenceState(trimmedLine, ref activeCodeFenceMarker))
-            {
-                lineStart = nextLineStart;
-                continue;
-            }
-
-            if (activeCodeFenceMarker != '\0')
-            {
-                lineStart = nextLineStart;
-                continue;
-            }
-
-            if (activeMathBlockFenceType is MathBlockFenceType.NONE)
-            {
-                if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_DOLLAR.AsSpan()))
-                {
-                    AddMarkdownSegment(markdownSegmentStart, lineStart);
-                    mathContentStart = nextLineStart;
-                    activeMathBlockFenceType = MathBlockFenceType.DOLLAR;
-                    lineStart = nextLineStart;
-                    continue;
-                }
-
-                if (trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_BRACKET_OPEN.AsSpan()))
-                {
-                    AddMarkdownSegment(markdownSegmentStart, lineStart);
-                    mathContentStart = nextLineStart;
-                    activeMathBlockFenceType = MathBlockFenceType.BRACKET;
-                }
-            }
-            else if (activeMathBlockFenceType is MathBlockFenceType.DOLLAR && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_DOLLAR.AsSpan()))
-            {
-                var (start, end) = TrimLineBreaks(normalizedSpan, mathContentStart, lineStart);
-                segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start));
-
-                markdownSegmentStart = nextLineStart;
-                activeMathBlockFenceType = MathBlockFenceType.NONE;
-            }
-            else if (activeMathBlockFenceType is MathBlockFenceType.BRACKET && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_BRACKET_CLOSE.AsSpan()))
-            {
-                var (start, end) = TrimLineBreaks(normalizedSpan, mathContentStart, lineStart);
-                segments.Add(new(MarkdownRenderSegmentType.MATH_BLOCK, start, end - start));
-
-                markdownSegmentStart = nextLineStart;
-                activeMathBlockFenceType = MathBlockFenceType.NONE;
-            }
-
-            lineStart = nextLineStart;
-        }
-
-        if (activeMathBlockFenceType is not MathBlockFenceType.NONE)
-            return new(normalized, [new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length)]);
-
-        AddMarkdownSegment(markdownSegmentStart, normalized.Length);
-        if (segments.Count == 0)
-            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, 0, normalized.Length));
-
-        return new(normalized, segments);
-
-        void AddMarkdownSegment(int start, int end)
-        {
-            if (end <= start)
-                return;
-
-            segments.Add(new(MarkdownRenderSegmentType.MARKDOWN, start, end - start));
-        }
-    }
-
-    private static string NormalizeMarkdownForRendering(string text)
-    {
-        var textWithoutThinkTags = text.RemoveThinkTags();
-        var trimmed = TrimWhitespace(textWithoutThinkTags.AsSpan());
-        if (trimmed.IsEmpty)
-            return string.Empty;
-
-        var cleaned = trimmed.Length == textWithoutThinkTags.Length
-            ? textWithoutThinkTags
-            : trimmed.ToString();
-
-        if (cleaned.Contains(CODE_FENCE_MARKER_BACKTICK, StringComparison.Ordinal))
-            return cleaned;
-
-        if (LooksLikeRawHtml(cleaned))
-            return $"{HTML_CODE_FENCE_PREFIX}{Environment.NewLine}{cleaned}{Environment.NewLine}{CODE_FENCE_MARKER_BACKTICK}";
-
-        return cleaned;
-    }
-
-    private static bool LooksLikeRawHtml(string text)
-    {
-        var content = text.AsSpan();
-        var start = 0;
-        while (start < content.Length && char.IsWhiteSpace(content[start]))
-            start++;
-
-        content = content[start..];
-        if (!content.StartsWith(HTML_START_TAG.AsSpan(), StringComparison.Ordinal))
-            return false;
-
-        foreach (var marker in HTML_TAG_MARKERS)
-            if (content.IndexOf(marker.AsSpan(), StringComparison.OrdinalIgnoreCase) >= 0)
-                return true;
-
-        return content.IndexOf(HTML_END_TAG.AsSpan(), StringComparison.Ordinal) >= 0
-               || content.IndexOf(HTML_SELF_CLOSING_TAG.AsSpan(), StringComparison.Ordinal) >= 0;
-    }
-
-    private static bool TryUpdateCodeFenceState(ReadOnlySpan<char> trimmedLine, ref char activeCodeFenceMarker)
-    {
-        var fenceMarker = '\0';
-        if (trimmedLine.StartsWith(CODE_FENCE_MARKER_BACKTICK.AsSpan(), StringComparison.Ordinal))
-            fenceMarker = '`';
-        else if (trimmedLine.StartsWith(CODE_FENCE_MARKER_TILDE.AsSpan(), StringComparison.Ordinal))
-            fenceMarker = '~';
-
-        if (fenceMarker == '\0')
-            return false;
-
-        activeCodeFenceMarker = activeCodeFenceMarker == '\0'
-            ? fenceMarker
-            : activeCodeFenceMarker == fenceMarker
-                ? '\0'
-                : activeCodeFenceMarker;
-
-        return true;
-    }
-
-    private static ReadOnlySpan<char> TrimWhitespace(ReadOnlySpan<char> text)
-    {
-        var start = 0;
-        var end = text.Length - 1;
-
-        while (start < text.Length && char.IsWhiteSpace(text[start]))
-            start++;
-
-        while (end >= start && char.IsWhiteSpace(text[end]))
-            end--;
-
-        return start > end ? ReadOnlySpan<char>.Empty : text[start..(end + 1)];
-    }
-
-    private static (int Start, int End) TrimLineBreaks(ReadOnlySpan<char> text, int start, int end)
-    {
-        while (start < end && text[start] is '\r' or '\n')
-            start++;
-
-        while (end > start && text[end - 1] is '\r' or '\n')
-            end--;
-
-        return (start, end);
-    }
-
-    private enum MarkdownRenderSegmentType
-    {
-        MARKDOWN,
-        MATH_BLOCK,
-    }
-
-    private enum MathBlockFenceType
-    {
-        NONE,
-        DOLLAR,
-        BRACKET,
-    }
-
-    private sealed record MarkdownRenderPlan(string Source, IReadOnlyList<MarkdownRenderSegment> Segments)
-    {
-        public static readonly MarkdownRenderPlan EMPTY = new(string.Empty, []);
-    }
-
-    private sealed class MarkdownRenderSegment(MarkdownRenderSegmentType type, int start, int length)
-    {
-        private string? cachedContent;
-
-        public MarkdownRenderSegmentType Type { get; } = type;
-
-        public int Start { get; } = start;
-
-        public int Length { get; } = length;
-
-        public int RenderKey { get; } = HashCode.Combine(type, start, length);
-
-        public string GetContent(string source)
-        {
-            if (this.cachedContent is not null)
-                return this.cachedContent;
-
-            this.cachedContent = this.Start == 0 && this.Length == source.Length
-                ? source
-                : source.Substring(this.Start, this.Length);
-
-            return this.cachedContent;
-        }
-    }
-    
     private async Task RemoveBlock()
     {
-        if (this.RemoveBlockFunc is null)
+        if (this.RemoveBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
-        var remove = await this.DialogService.ShowMessageBox(
+        var remove = await this.DialogService.ShowMessageBoxAsync(
             T("Remove Message"),
-            T("Do you really want to remove this message?"),
+            TA("Do you really want to remove this message?"),
             T("Yes, remove it"),
             T("No, keep it"));
         
         if (remove.HasValue && remove.Value)
             await this.RemoveBlockFunc(this.Content);
     }
+
+    private async Task SendTo(Tools.Components destination)
+    {
+        if (this.SendToFunc is null || !this.IsSendToEnabled)
+            return;
+
+        await this.SendToFunc(this.Content, destination);
+    }
     
     /// <summary>
-    /// Exports the entire message.
+    /// Exports the entire message, ending with the notice that AI generated it when that is switched on.
     /// </summary>
     private async Task ExportDocument(FileExportFormat format)
     {
@@ -731,10 +648,11 @@ public partial class ContentBlockComponent : MSGComponentBase
             // The format itself knows who writes it, so we do not have to keep a list of formats
             // here which would fall out of sync with the one in FileExportFormatExtensions.
             //
-            if (format.UsesPandoc())
-                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content);
+            var disclosureService = this.GetsAIGeneratedContentDisclosure ? this.DisclosureService : null;
+            if (format.UsesPandoc)
+                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, disclosureService, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
             else if (this.Content.TryGetExportMarkdown(out var markdown))
-                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown);
+                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, disclosureService?.AddDisclosureToMarkdown(markdown) ?? markdown, this.ExportFileName);
         }
         catch (ArgumentOutOfRangeException e)
         {
@@ -743,47 +661,74 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// Exports one table out of the message, exactly as the menu offered it.
+    /// Exports one file out of the message, along with the sources the answer rests on wherever its
+    /// format has room for them.
     /// </summary>
-    private async Task ExportTable(MessageTable table)
+    /// <remarks>
+    /// Unlike the entire message, the file never gets the notice that AI generated it. It is meant for
+    /// a program as often as for a reader, a table or a web page for instance, and one sentence more
+    /// would break most of them.
+    /// </remarks>
+    private async Task ExportFile(MessageFile file)
     {
         try
         {
-            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, table.Format, table.Content, table.Caption);
+            //
+            // A message of the user is no AI response, so the save dialog takes the label of the
+            // button at the code block as its title instead:
+            //
+            var dialogTitle = this.Role is ChatRole.AI ? this.EffectiveExportTitle : this.SaveAsLabel(file);
+            var fileName = string.IsNullOrWhiteSpace(file.Caption) ? this.ExportFileName : file.Caption;
+            await PlainFileExport.ToFile(this.RustService, dialogTitle, file, this.Content.ToExportContent(file), fileName);
         }
         catch (ArgumentOutOfRangeException e)
         {
-            await this.ReportUnknownExportFormat(e, table.Format);
+            await this.ReportUnknownExportFormat(e, file.Format);
         }
     }
 
     private async Task ReportUnknownExportFormat(ArgumentOutOfRangeException exception, FileExportFormat format)
     {
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Error, string.Format(this.T("Failed to export this message, because the file format '{0}' is unknown."), format)));
+        await this.MessageBus.SendError(new(AppIcons.ERROR, string.Format(this.T("Failed to export this message, because the file format '{0}' is unknown."), format)));
         this.Logger.LogError(exception, "Failed to export the content, because no exporter writes the format {ExportFormat}.", format);
     }
     
     private async Task RegenerateBlock()
     {
-        if (this.RegenerateFunc is null)
+        if (this.RegenerateFunc is null || !this.BlockActionsEnabled())
             return;
         
         if(this.Role is not ChatRole.AI)
             return;
         
-        var regenerate = await this.DialogService.ShowMessageBox(
+        var regenerate = await this.DialogService.ShowMessageBoxAsync(
             T("Regenerate Message"),
-            T("Do you really want to regenerate this message?"),
+            TA("Do you really want to regenerate this message?"),
             T("Yes, regenerate it"),
             T("No, keep it"));
         
         if (regenerate.HasValue && regenerate.Value)
             await this.RegenerateFunc(this.Content);
     }
+
+    private async Task RollbackBlock()
+    {
+        if (this.RollbackFunc is null || this.Role is not ChatRole.AI || !this.BlockActionsEnabled())
+            return;
+
+        var rollback = await this.DialogService.ShowMessageBoxAsync(
+            T("Roll Back Chat"),
+            TA("Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed."),
+            T("Yes, roll back the chat"),
+            T("No, keep it"));
+
+        if (rollback.HasValue && rollback.Value)
+            await this.RollbackFunc(this.Content);
+    }
     
     private async Task EditLastBlock()
     {
-        if (this.EditLastBlockFunc is null)
+        if (this.EditLastBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
         if(this.Role is not ChatRole.USER)
@@ -794,15 +739,15 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task EditLastUserBlock()
     {
-        if (this.EditLastUserBlockFunc is null)
+        if (this.EditLastUserBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
         if(this.Role is not ChatRole.USER)
             return;
         
-        var edit = await this.DialogService.ShowMessageBox(
+        var edit = await this.DialogService.ShowMessageBoxAsync(
             T("Edit Message"),
-            T("Do you really want to edit this message? In order to edit this message, the AI response will be deleted."),
+            TA("Do you really want to edit this message? In order to edit this message, the AI response will be deleted."),
             T("Yes, remove the AI response and edit it"),
             T("No, keep it"));
         

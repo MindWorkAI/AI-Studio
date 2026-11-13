@@ -27,6 +27,8 @@ public sealed class ContextWindowRuleTests
     [TestCase(LLMProviders.OPEN_AI, "gpt-5.5", 1_050_000)]
     [TestCase(LLMProviders.OPEN_AI, "gpt-5.6", 1_050_000)]
     [TestCase(LLMProviders.OPEN_AI, "gpt-6-astra", 1_050_000)]
+    [TestCase(LLMProviders.OPEN_AI, "gpt-6-sol", 1_050_000)]
+    [TestCase(LLMProviders.OPEN_AI, "gpt-6-luna", 1_050_000)]
     [TestCase(LLMProviders.OPEN_AI, "o1", 200_000)]
     [TestCase(LLMProviders.OPEN_AI, "o3", 200_000)]
     [TestCase(LLMProviders.OPEN_AI, "o4-mini", 200_000, Description = "The o3 generation under another number, window included.")]
@@ -51,11 +53,11 @@ public sealed class ContextWindowRuleTests
     {
         var window = provider.GetModelProfile(new Model(modelId, null)).Context;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(window.IsKnown, Is.True);
             Assert.That(window.DefaultTokens, Is.EqualTo(tokens));
-        });
+        }
     }
 
     [Test]
@@ -68,11 +70,11 @@ public sealed class ContextWindowRuleTests
         //
         var profile = ModelRegistry.Shared.Profile(LLMProviders.OPEN_AI, "gpt-5.3");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Context.IsKnown, Is.False);
             Assert.That(profile.Has(Capability.FUNCTION_CALLING), Is.True, "Everything else it does inherit.");
-        });
+        }
     }
 
     [Test]
@@ -98,10 +100,10 @@ public sealed class ContextWindowRuleTests
         //
         var profile = ModelRegistry.Shared.Profile(LLMProviders.SELF_HOSTED, "some-model-nobody-wrote-a-rule-for");
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.Context.IsKnown, Is.False);
             Assert.That(profile.Context.DefaultTokens, Is.Zero, "And the number next to it is meaningless, which is why nothing may read it without asking first.");
-        });
+        }
     }
 }

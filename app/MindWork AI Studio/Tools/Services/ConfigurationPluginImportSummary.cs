@@ -15,6 +15,7 @@ namespace AIStudio.Tools.Services;
 /// <param name="DeclaredSettings">How many settings the configuration takes over.</param>
 /// <param name="MandatoryInfos">How many mandatory information texts users must accept.</param>
 /// <param name="Introductions">How many introductions the configuration adds to the welcome page.</param>
+/// <param name="MailboxProviders">How many mail servers the configuration offers for new mailboxes.</param>
 public sealed record ConfigurationPluginImportSummary(
     IReadOnlyList<ConfigurationPluginDestination> Destinations,
     int ChatTemplates,
@@ -22,7 +23,8 @@ public sealed record ConfigurationPluginImportSummary(
     int DocumentAnalysisPolicies,
     int DeclaredSettings,
     int MandatoryInfos,
-    int Introductions)
+    int Introductions,
+    int MailboxProviders)
 {
     /// <summary>
     /// True when the configuration sets up anything at all.
@@ -34,5 +36,6 @@ public sealed record ConfigurationPluginImportSummary(
         this.DocumentAnalysisPolicies > 0 ||
         this.DeclaredSettings > 0 ||
         this.MandatoryInfos > 0 ||
-        this.Introductions > 0;
+        this.Introductions > 0 ||
+        this.MailboxProviders > 0;
 }

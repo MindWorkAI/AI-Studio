@@ -14,7 +14,7 @@ public sealed class ProviderHuggingFace : BaseProvider
 {
     private static readonly ILogger<ProviderHuggingFace> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHuggingFace>();
 
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderHuggingFace).Namespace, nameof(ProviderHuggingFace));
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ProviderHuggingFace).Namespace, nameof(ProviderHuggingFace));
 
     /// <summary>
     /// The OpenAI-compatible endpoint which serves every inference provider.
@@ -64,7 +64,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         if (endpointKind is HFEndpointKind.CHAT)
             return ROUTER_BASE_URL;
 
-        var providerBaseURL = hfProvider.ProviderBaseURL();
+        var providerBaseURL = hfProvider.ProviderBaseURL;
         return string.IsNullOrEmpty(providerBaseURL) ? ROUTER_BASE_URL : providerBaseURL;
     }
 
@@ -83,7 +83,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         if (string.IsNullOrWhiteSpace(modelId) || modelId.Contains(':'))
             return modelId;
 
-        return $"{modelId}{this.hfProvider.ModelSuffix()}";
+        return $"{modelId}{this.hfProvider.ModelSuffix}";
     }
 
     /// <summary>
@@ -139,9 +139,9 @@ public sealed class ProviderHuggingFace : BaseProvider
         // nobody: they never picked it, and no other choice of provider is left to try:
         //
         if (this.hfProvider is HFInferenceProvider.NONE or HFInferenceProvider.AUTOMATIC or HFInferenceProvider.CHEAPEST or HFInferenceProvider.PREFERRED)
-            return TB("No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face.");
+            return TA("No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face.");
 
-        return string.Format(TB("The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you."), this.hfProvider.ToName());
+        return string.Format(TA("The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you."), this.hfProvider.Name);
     }
 
     #endregion
@@ -149,7 +149,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.HUGGINGFACE.ToSecretId();
+    public override string Id => LLMProviders.HUGGINGFACE.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "HuggingFace";
@@ -184,6 +184,15 @@ public sealed class ProviderHuggingFace : BaseProvider
                                    AdditionalApiParameters = apiParameters
                                };
                            },
+
+                           //
+                           // Hugging Face answers parallel_tool_calls=false with a bad request, "feature
+                           // not currently supported", and its specification of the chat completion does
+                           // not list the parameter at all -- read on 2026-09-23 at
+                           // https://huggingface.co/docs/inference-providers/tasks/chat-completion. Asking
+                           // for it would cost every chat which offers tools its answer:
+                           //
+                           mayAskForSequentialToolCalls: false,
                            token: token))
             yield return content;
     }
@@ -208,7 +217,7 @@ public sealed class ProviderHuggingFace : BaseProvider
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
     
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
@@ -238,7 +247,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <returns>One listing per model, which says nothing for the models nobody stated a window for.</returns>
     private IEnumerable<ModelListing> ListingsOf(ModelsResponse response)
     {
-        var providerSlug = this.hfProvider.EndpointsId();
+        var providerSlug = this.hfProvider.EndpointsId;
         return response.Data.Select(hfModel => ModelListing.For(hfModel.Id, hfModel.ContextWindowTokens(providerSlug)));
     }
 
@@ -256,7 +265,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     private IEnumerable<Model> SelectChatModels(ModelsResponse response)
     {
         var chatModels = response.Data.Where(hfModel => new Model(hfModel.Id, null).IsChatModel(this.Provider));
-        var providerSlug = this.hfProvider.EndpointsId();
+        var providerSlug = this.hfProvider.EndpointsId;
         if (string.IsNullOrEmpty(providerSlug))
             return ToModels(chatModels);
 
@@ -284,7 +293,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        if (!this.hfProvider.SupportsEmbeddings())
+        if (!this.hfProvider.SupportsEmbeddings)
             return Task.FromResult(ModelLoadResult.FromModels([]));
 
         return this.LoadHubModels(SecretStoreType.EMBEDDING_PROVIDER, "feature-extraction", apiKeyProvisional, token);
@@ -300,14 +309,14 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <returns>The models of that provider for that task.</returns>
     private Task<ModelLoadResult> LoadHubModels(SecretStoreType storeType, string pipelineTag, string? apiKeyProvisional, CancellationToken token)
     {
-        var requestURL = $"{HUB_MODELS_URL}{this.hfProvider.EndpointsId()}&pipeline_tag={pipelineTag}";
+        var requestURL = $"{HUB_MODELS_URL}{this.hfProvider.EndpointsId}&pipeline_tag={pipelineTag}";
         return this.LoadModelsResponse<IList<HubModel>>(storeType, requestURL, hubModels => hubModels.Select(hubModel => new Model(hubModel.Id, null)), apiKeyProvisional, token: token);
     }
     
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        if (!this.hfProvider.SupportsTranscription())
+        if (!this.hfProvider.SupportsTranscription)
             return Task.FromResult(ModelLoadResult.FromModels([]));
 
         return this.LoadHubModels(SecretStoreType.TRANSCRIPTION_PROVIDER, "automatic-speech-recognition", apiKeyProvisional, token);

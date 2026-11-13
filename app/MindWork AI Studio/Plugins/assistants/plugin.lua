@@ -22,6 +22,9 @@ DESCRIPTION = "This is a pre-defined configuration of <Company Name>"
 -- The version of the plugin:
 VERSION = "1.0.0"
 
+-- When this plugin was last changed, in UTC, formatted as YYYY-MM-DDTHH:MM:SSZ. Optional.
+LAST_CHANGED = "2025-12-31T12:00:00Z"
+
 -- The type of the plugin:
 TYPE = "ASSISTANT"
 
@@ -85,7 +88,16 @@ ASSISTANT = {
     ["ToolIds"] = {
         "web_search",
     },
-    
+
+    -- Optional: the system prompt of a chat which continues the result of your assistant, when users
+    -- choose "Send to ..." -> "New Chat". "AI_STUDIO_DEFAULT" gives the default prompt of AI Studio,
+    -- also when the field is missing; "ASSISTANT" gives your SystemPrompt; "CUSTOM" gives the prompt
+    -- in CustomChatSystemPrompt, which you write for follow-up questions in the chat. AI Studio wraps
+    -- that prompt like your SystemPrompt, and the security audit checks it as well.
+    -- Requires AI Studio v26.11.1 or newer; older versions ignore both fields.
+    ["ChatSystemPrompt"] = "CUSTOM",
+    ["CustomChatSystemPrompt"] = "<role and context of your assistant, and that the model answers follow-up questions about the result>",
+
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {
@@ -95,7 +107,7 @@ ASSISTANT = {
                     ["Name"] = "<unique identifier of this component>", -- required
                     ["Label"] = "<heading of your component>", -- required
                     ["Adornment"] = "<Start|End|None>", --  location of the `AdornmentIcon` OR `AdornmentText`; CASE SENSITIVE
-                    ["AdornmentIcon"] = "Icons.Material.Filled.AppSettingsAlt", -- The Mudblazor icon displayed for the adornment
+                    ["AdornmentIcon"] = "lucide:settings", -- The icon displayed for the adornment: a Lucide icon as "lucide:<name>" with its name on lucide.dev, or a MudBlazor icon such as "Icons.Material.Filled.Home"
                     ["AdornmentText"] = "", -- The text displayed for the adornment
                     ["AdornmentColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- the color of AdornmentText or AdornmentIcon; CASE SENSITIVE
                     ["Counter"] = 0, -- shows a character counter. When 0, the current character count is displayed. When 1 or greater, the character count and this count are displayed. Defaults to `null` 
@@ -121,12 +133,11 @@ ASSISTANT = {
                     ["HasSelectAll"] = false,
                     ["SelectAllText"] = "<label for 'SelectAll'-Button",
                     ["HelperText"] = "<helping text rendered under the component>",
-                    ["OpenIcon"] = "Icons.Material.Filled.ArrowDropDown",
-                    ["OpenClose"] = "Icons.Material.Filled.ArrowDropUp",
+                    ["OpenIcon"] = "lucide:chevron-down",
+                    ["CloseIcon"] = "lucide:chevron-up",
                     ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
                     ["IconPositon"] = "<Start|End>",
                     ["Variant"] = "<Text|Filled|Outlined>",
-                    ["ValueType"] = "<string|int|bool>", -- required
                     ["Default"] = { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" }, -- required
                     ["Items"] = {
                         { ["Value"] = "<internal data>", ["Display"] = "<user readable representation>" },
@@ -148,7 +159,7 @@ ASSISTANT = {
                     ["LabelOn"] = "<text if state is true>",
                     ["LabelOff"] = "<text if state is false>",
                     ["LabelPlacement"] = "<Bottom|End|Left|Right|Start|Top>", -- Defaults to End (right of the switch)
-                    ["Icon"] = "Icons.Material.Filled.Bolt", -- places a thumb icon inside the switch
+                    ["Icon"] = "lucide:zap", -- places a thumb icon inside the switch
                     ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the thumb icon. Defaults to `Inherit`
                     ["CheckedColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the switch if state is true. Defaults to `Inherit`
                     ["UncheckedColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the switch if state is false. Defaults to `Inherit`
@@ -166,8 +177,8 @@ ASSISTANT = {
                     ["Variant"] = "<Filled|Outlined|Text>", -- display variation to use. Defaults to Text
                     ["Color"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of the button. Defaults to Default
                     ["IsFullWidth"] = false, -- ignores sizing and renders a long full width button. Defaults to false
-                    ["StartIcon"] = "Icons.Material.Filled.ArrowRight", -- icon displayed before the text, or the main icon for icon-only buttons. Defaults to null
-                    ["EndIcon"] = "Icons.Material.Filled.ArrowLeft", -- icon displayed after the text. Defaults to null
+                    ["StartIcon"] = "lucide:arrow-right", -- icon displayed before the text, or the main icon for icon-only buttons. Defaults to null
+                    ["EndIcon"] = "lucide:arrow-left", -- icon displayed after the text. Defaults to null
                     ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>", -- color of start and end icons on text buttons. Defaults to Inherit
                     ["IconSize"] = "<Small|Medium|Large>", -- size of icons. Defaults to null. When null, the value of ["Size"] is used
                     ["Action"] = function(input)
@@ -251,12 +262,12 @@ ASSISTANT = {
                     ["IsDense"] = false, -- denser panel layout
                     ["HasInnerPadding"] = true, -- controls padding around the section content
                     ["HideIcon"] = false, -- hides the expand/collapse icon
-                    ["HeaderIcon"] = "Icons.Material.Filled.ExpandMore", -- icon shown before the header text
+                    ["HeaderIcon"] = "lucide:chevron-down", -- icon shown before the header text
                     ["HeaderColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
                     ["HeaderTypo"] = "<body1|subtitle1|h6|...>", -- MudBlazor typo value used for the header
                     ["HeaderAlign"] = "<Start|Center|End|Justify>", -- header text alignment
                     ["MaxHeight"] = 320, -- nullable integer pixel height for the expanded content area
-                    ["ExpandIcon"] = "Icons.Material.Filled.ExpandMore", -- override the expand/collapse icon
+                    ["ExpandIcon"] = "lucide:chevron-down", -- override the expand/collapse icon
                     ["Class"] = "<optional MudBlazor or css classes>",
                     ["Style"] = "<optional css styles>",
                 },
@@ -330,7 +341,7 @@ ASSISTANT = {
                         { 
                             ["Type"] = "TEXT", -- required 
                             ["Text"] = "<user readable text>",
-                            ["Icon"] = "Icons.Material.Filled.HorizontalRule",
+                            ["Icon"] = "lucide:minus",
                             ["IconColor"] = "<Dark|Error|Info|Inherit|Primary|Secondary|Success|Surface|Tertiary|Transparent|Warning>",
                         }
                     },
@@ -454,12 +465,18 @@ ASSISTANT = {
     ["ProviderId"] = "<optional provider GUID; omit to use the chat default>",
     ["ProfileId"] = "<optional profile GUID; use the empty GUID for no profile>",
     ["ChatTemplateId"] = "<optional chat template GUID; use the empty GUID for no template>",
+    -- Optional: the data sources the chat starts with. A chat template chosen above may bring
+    -- data source options of its own. It then decides them alone, the IDs named here are dropped,
+    -- and AI Studio writes a warning into the log. Only a chat template can also say that the AI
+    -- picks the sources for each message, which is why it wins as a whole instead of field by
+    -- field.
     ["DataSourceIds"] = {
         "<optional data source GUID>",
     },
     -- Optional: the tools preselected when the chat opens. Users may change the selection
     -- in the chat afterwards, and every tool has to meet the confidence requirements of the
-    -- provider in use. A tool ID unknown to the installation is ignored.
+    -- provider in use. A tool ID unknown to the installation is ignored. The same rule as for the
+    -- data sources applies here: a chat template which names tools of its own wins over this list.
     -- Tool IDs include: web_search, read_web_page
     ["ToolIds"] = {
         "<optional tool ID>",

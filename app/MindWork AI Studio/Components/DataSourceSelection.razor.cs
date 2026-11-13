@@ -3,6 +3,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -14,9 +15,6 @@ public partial class DataSourceSelection : MSGComponentBase
 {
     [Parameter]
     public DataSourceSelectionMode SelectionMode { get; set; } = DataSourceSelectionMode.SELECTION_MODE;
-    
-    [Parameter]
-    public PopoverTriggerMode PopoverTriggerMode { get; set; } = PopoverTriggerMode.BUTTON;
     
     [Parameter]
     public string PopoverButtonClasses { get; set; } = string.Empty;
@@ -38,10 +36,44 @@ public partial class DataSourceSelection : MSGComponentBase
     
     [Parameter]
     public bool AutoSaveAppSettings { get; set; }
-    
+
+    /// <summary>
+    /// Shows the options without letting the user change them.
+    /// </summary>
+    /// <remarks>
+    /// For options somebody else decided on, such as those of a chat template an organization
+    /// rolled out. Seeing which data such a chat will search is the point; changing it here is not.<br/><br/>
+    ///
+    /// Also for options which must not change right now, such as those of a chat while an answer is
+    /// being written for it: the answer reads them, and they are the very options shown here, so a
+    /// change would reach it halfway. Every change is turned down before it touches the options.
+    /// </remarks>
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    /// <summary>
+    /// Tells why the options cannot be changed, shown at the top of the popover while they are read-only.
+    /// </summary>
+    [Parameter]
+    public string ReadOnlyMessage { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether the options edited here are the data source defaults of the chat.
+    /// </summary>
+    /// <remarks>
+    /// Those defaults can be locked by a configuration plugin, and this component reads the locks
+    /// from the chat settings. Wherever the same options belong to something else — to a chat
+    /// template, say — the locks of the chat defaults have nothing to say about them.
+    /// </remarks>
+    [Parameter]
+    public bool ConfiguresChatDefaults { get; set; } = true;
+
     [Inject]
     private DataSourceService DataSourceService { get; init; } = null!;
-    
+
+    [Inject]
+    private ToolRegistry ToolRegistry { get; init; } = null!;
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -57,6 +89,8 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool aiBasedSourceSelection;
     private bool aiBasedValidation;
     private bool areDataSourcesEnabled;
+    private DataSourceRetrievalMode retrievalMode;
+    private EffectiveRetrievalMode effectiveRetrievalMode;
     private uint loadAndApplyFiltersGeneration;
     
     #region Overrides of ComponentBase
@@ -71,6 +105,7 @@ public partial class DataSourceSelection : MSGComponentBase
         this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
         this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
+        this.retrievalMode = this.DataSourceOptions.RetrievalMode;
         this.waitingForDataSources = this.areDataSourcesEnabled && this.SelectionMode is not DataSourceSelectionMode.CONFIGURATION_MODE;
 
         //
@@ -92,6 +127,7 @@ public partial class DataSourceSelection : MSGComponentBase
             this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
             this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
             this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
+            this.retrievalMode = this.DataSourceOptions.RetrievalMode;
             this.selectedDataSources = this.GetDataSourcesFromConfiguredIds();
         }
 
@@ -157,6 +193,7 @@ public partial class DataSourceSelection : MSGComponentBase
         this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
         this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
+        this.retrievalMode = this.DataSourceOptions.RetrievalMode;
         this.selectedDataSources = this.GetDataSourcesFromConfiguredIds();
         this.waitingForDataSources = false;
 
@@ -225,10 +262,16 @@ public partial class DataSourceSelection : MSGComponentBase
         // that field holds what was usable the last time we looked, so a source filtered out once
         // would never come back, while the RAG process keeps reading it from the preselection.
         //
-        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, this.GetDataSourcesFromConfiguredIds());
+        // How the chat searches decides whether the agents of the RAG process see the data, and
+        // with that which data sources the provider of the chat may use at all. This component
+        // only ever selects for a chat:
+        //
+        var effectiveMode = await this.ToolRegistry.GetEffectiveRetrievalModeAsync(this.DataSourceOptions, this.LLMProvider, Tools.Components.CHAT);
+        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, effectiveMode.Mode, this.GetDataSourcesFromConfiguredIds());
         if (generation != this.loadAndApplyFiltersGeneration)
             return;
 
+        this.effectiveRetrievalMode = effectiveMode;
         this.availableDataSources = sources.AllowedDataSources;
         this.dataSourcesAwaitingReindex = sources.DataSourcesAwaitingReindex;
         this.dataSourceIdsAwaitingReindex = sources.DataSourcesAwaitingReindex.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
@@ -288,6 +331,9 @@ public partial class DataSourceSelection : MSGComponentBase
     
     private async Task EnabledChanged(bool state)
     {
+        if (this.ReadOnly)
+            return;
+
         this.areDataSourcesEnabled = state;
         this.DataSourceOptions.DisableDataSources = !this.areDataSourcesEnabled;
         
@@ -298,6 +344,9 @@ public partial class DataSourceSelection : MSGComponentBase
     
     private async Task AutoModeChanged(bool state)
     {
+        if (this.ReadOnly)
+            return;
+
         this.aiBasedSourceSelection = state;
         this.DataSourceOptions.AutomaticDataSourceSelection = this.aiBasedSourceSelection;
 
@@ -305,8 +354,56 @@ public partial class DataSourceSelection : MSGComponentBase
         await this.OptionsChanged();
     }
     
+    private async Task SemanticSearchChanged(bool state)
+    {
+        if (this.ReadOnly)
+            return;
+
+        this.retrievalMode = state ? DataSourceRetrievalMode.SEMANTIC_SEARCH : DataSourceRetrievalMode.EVERY_MESSAGE;
+        this.DataSourceOptions.RetrievalMode = this.retrievalMode;
+
+        // Which data sources the provider may use depends on it, see LoadAndApplyFilters:
+        await this.LoadAndApplyFilters();
+        await this.OptionsChanged();
+    }
+
+    private bool IsSemanticSearchPreferred => this.retrievalMode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+
+    /// <summary>
+    /// Whether the model of the chat searches the data sources itself.
+    /// </summary>
+    /// <remarks>
+    /// Only the selection mode can tell, since only it knows the provider of a chat. The effective
+    /// mode is found out while loading the data sources; asking the preference as well keeps a
+    /// switch to every message from showing the other way until that loading is done.
+    /// </remarks>
+    private bool IsSemanticSearchEffective => this.IsSemanticSearchPreferred && this.effectiveRetrievalMode.Mode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+
+    /// <summary>
+    /// Whether Semantic Search cannot be used in this chat, whatever the user prefers.
+    /// </summary>
+    /// <remarks>
+    /// Then there is nothing to choose: classic RAG searches the data sources. The choice is left
+    /// out rather than shown as one which changes nothing, and the preference stays as it is, so it
+    /// is back the moment the chat gets a model which can search itself.
+    /// </remarks>
+    private bool IsSemanticSearchUnavailable => this.effectiveRetrievalMode.SemanticSearchBlockReason is not ToolOfferBlockReason.NONE;
+
+    private string GetSemanticSearchUnavailableMessage() => this.effectiveRetrievalMode.SemanticSearchBlockReason switch
+    {
+        ToolOfferBlockReason.TOOLS_SWITCHED_OFF => TA("Your organization has switched tools off, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS => TA("The selected model cannot use tools, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        ToolOfferBlockReason.TOOL_SWITCHED_OFF => TA("Your organization has switched Semantic Search off, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        ToolOfferBlockReason.TOOL_SWITCHED_OFF_BY_USER => TA("You switched Semantic Search off in the tool settings, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW => TA("The selected provider is not trusted enough for Semantic Search, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        _ => TA("Semantic Search cannot be used here, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+    };
+
     private async Task ValidationModeChanged(bool state)
     {
+        if (this.ReadOnly)
+            return;
+
         this.aiBasedValidation = state;
         this.DataSourceOptions.AutomaticValidation = this.aiBasedValidation;
 
@@ -316,6 +413,9 @@ public partial class DataSourceSelection : MSGComponentBase
     
     private async Task SelectionChanged(IReadOnlyCollection<IDataSource>? chosenDataSources)
     {
+        if (this.ReadOnly)
+            return;
+
         this.selectedDataSources = chosenDataSources ?? [];
 
         //
@@ -334,13 +434,23 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourcesDisabledLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesDisabled, out var meta)
+               && meta.IsLocked;
+    }
+
+    private bool IsPreselectedDataSourcesRetrievalModeLocked()
+    {
+        return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
+               && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesRetrievalMode, out var meta)
                && meta.IsLocked;
     }
 
     private bool IsPreselectedDataSourcesAutomaticSelectionLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, out var meta)
                && meta.IsLocked;
     }
@@ -348,6 +458,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourcesAutomaticValidationLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, out var meta)
                && meta.IsLocked;
     }
@@ -355,6 +466,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourceIdsLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourceIds, out var meta)
                && meta.IsLocked;
     }

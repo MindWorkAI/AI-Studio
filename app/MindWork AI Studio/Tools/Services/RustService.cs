@@ -15,6 +15,8 @@ namespace AIStudio.Tools.Services;
 public sealed partial class RustService : BackgroundService
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(RustService).Namespace, nameof(RustService));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(RustService).Namespace, nameof(RustService));
     
     private readonly HttpClient http;
 
@@ -34,15 +36,41 @@ public sealed partial class RustService : BackgroundService
     private readonly SemaphoreSlim userLanguageLock = new(1, 1);
     private readonly SemaphoreSlim userNameLock = new(1, 1);
 
-    private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
+    /// <summary>
+    /// The JSON options of nearly every call to the runtime, which names its fields in snake case.
+    /// </summary>
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         Converters =
         {
             new RustEnumConverter(),
         },
-    };
-    
+        TypeInfoResolver = RustJsonContext.Default,
+    }.AsReadOnly();
+
+    /// <summary>
+    /// The JSON options of the events of a file extraction, which name their fields themselves.
+    /// </summary>
+    /// <remarks>
+    /// The same as the defaults of System.Text.Json, with which these events were read before.
+    /// </remarks>
+    internal static readonly JsonSerializerOptions CONTENT_STREAM_JSON_OPTIONS = new JsonSerializerOptions
+    {
+        TypeInfoResolver = RustContentStreamJsonContext.Default,
+    }.AsReadOnly();
+
+    /// <summary>
+    /// The JSON options of the prompt injection filter, which names its fields in camel case.
+    /// </summary>
+    /// <remarks>
+    /// The same as the defaults of the JSON calls of HttpClient, with which the filter was called before.
+    /// </remarks>
+    internal static readonly JsonSerializerOptions PROMPT_INJECTION_JSON_OPTIONS = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+    {
+        TypeInfoResolver = RustPromptInjectionJsonContext.Default,
+    }.AsReadOnly();
+
     private ILogger<RustService>? logger;
     private Encryption? encryptor;
     private string? cachedUserLanguage;
@@ -60,6 +88,22 @@ public sealed partial class RustService : BackgroundService
         // extraction client below is visible:
         this.http = CreateHttpClient(apiPort, certificateFingerprint, TimeSpan.FromSeconds(100));
         this.extractionHttp = CreateHttpClient(apiPort, certificateFingerprint, Timeout.InfiniteTimeSpan);
+    }
+
+    /// <summary>
+    /// Talks to a runtime which a test plays itself.
+    /// </summary>
+    /// <remarks>
+    /// Only for tests. The runtime filters prompt injections out of every file and text, so without
+    /// it no test could check which file the app asks for, or what it does with the answer.
+    /// </remarks>
+    /// <param name="runtime">Answers every request in place of the runtime.</param>
+    internal RustService(HttpMessageHandler runtime)
+    {
+        this.apiPort = string.Empty;
+        this.certificateFingerprint = string.Empty;
+        this.http = new HttpClient(runtime, disposeHandler: false) { BaseAddress = new Uri("https://127.0.0.1"), Timeout = TimeSpan.FromSeconds(100) };
+        this.extractionHttp = new HttpClient(runtime, disposeHandler: false) { BaseAddress = new Uri("https://127.0.0.1"), Timeout = Timeout.InfiniteTimeSpan };
     }
 
     private static HttpClient CreateHttpClient(string apiPort, string certificateFingerprint, TimeSpan timeout)

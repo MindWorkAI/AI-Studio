@@ -24,25 +24,6 @@ internal static class VisualBriefingHashing
     internal static string ComputeSections(params string?[] values) => Compute(string.Join('\u001e', values.Select(value => value ?? string.Empty)));
 
     /// <summary>
-    /// Computes a lowercase SHA-256 hash for a file without loading it fully into memory.
-    /// </summary>
-    /// <param name="path">The file path.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>The lowercase hexadecimal hash.</returns>
-    internal static async Task<string> ComputeFileAsync(string path, CancellationToken token)
-    {
-        await using var stream = new FileStream(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            65_536,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
-        
-        return Convert.ToHexStringLower(await SHA256.HashDataAsync(stream, token));
-    }
-
-    /// <summary>
     /// Returns canonical JSON for one value, with ordinally sorted object properties.
     /// </summary>
     /// <remarks>

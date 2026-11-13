@@ -56,6 +56,72 @@ window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
 
+// Scrolls back to where a sticky header sits in the flow, so that the content below it starts right under the
+// header. The anchor is an empty element right before the header: once the page is scrolled past it, the anchor
+// lies above the top of its scrolling container, which then moves back by that distance. Otherwise, the content
+// below already starts right under the header, and nothing moves.
+//
+// It sets scrollTop itself: scrollIntoView did not move the page for this anchor without height, and the content
+// which renders right after a switch may stop a smooth scroll.
+window.scrollToStickyHeader = function(anchor) {
+    if (!anchor)
+        return;
+
+    // The nearest ancestor which scrolls its content, or else the document:
+    let container = anchor.parentElement;
+    while (container && !['auto', 'scroll'].includes(getComputedStyle(container).overflowY))
+        container = container.parentElement;
+
+    const containerTop = container ? container.getBoundingClientRect().top + container.clientTop : 0;
+    container ??= document.scrollingElement;
+
+    const distance = anchor.getBoundingClientRect().top - containerTop;
+    if (distance < 0)
+        container.scrollTop += distance;
+}
+
+// Lets content further down stick right below a sticky header, e.g., a column beside the content. The scrolling
+// container of the header gets two CSS variables: --sticky-header-height, the height of the header, and
+// --sticky-space-below-header, the height of the container which the header leaves free. Both follow every change
+// of size, e.g., when a narrower window wraps the header into more lines.
+//
+// A header which left the page stops being observed with the next change of size, so nothing needs to stop it.
+function updateStickyHeaderVariables(header) {
+    const container = header.parentElement;
+    if (!header.isConnected || !container)
+        return false;
+
+    // The exact height, since offsetHeight rounds to whole pixels: a header rounded down covers the topmost line of
+    // the content sticking below it, such as the border of a box.
+    const headerHeight = header.getBoundingClientRect().height;
+    container.style.setProperty('--sticky-header-height', `${headerHeight}px`);
+    container.style.setProperty('--sticky-space-below-header', `${container.clientHeight - headerHeight}px`);
+    return true;
+}
+
+const stickyHeaderObserver = new ResizeObserver(entries => {
+    for (const entry of entries) {
+        // The container carries its header along, since it changes size without the header:
+        const header = entry.target.stickyHeader ?? entry.target;
+        if (!updateStickyHeaderVariables(header))
+            stickyHeaderObserver.unobserve(entry.target);
+    }
+});
+
+window.followStickyHeader = function(header) {
+    const container = header?.parentElement;
+    if (!container)
+        return;
+
+    container.stickyHeader = header;
+    stickyHeaderObserver.observe(header);
+    stickyHeaderObserver.observe(container);
+}
+
+window.setDocumentLanguage = function (ietfTag) {
+    document.documentElement.lang = ietfTag
+}
+
 window.formatChatInputMarkdown = function (inputId, formatType) {
     let input = document.getElementById(inputId)
     if (input && input.tagName !== 'TEXTAREA' && input.tagName !== 'INPUT')
@@ -289,7 +355,7 @@ window.localShortcut = {
 }
 
 // What floats above the page without ever being a drop target. Two of these take part in hit testing as
-// MudBlazor 8.15 stands: an open .mud-popover -- a closed one already declines pointer events through
+// MudBlazor 9.12 stands: an open .mud-popover -- a closed one already declines pointer events through
 // .mud-popover:not(.mud-popover-open) -- and .mud-snackbar, which asks for them explicitly with
 // pointer-events: auto even though its container declines them, and snackbars appear constantly in this
 // app. Without this list, a drag would be answered by whatever happens to float on screen rather than by
@@ -302,12 +368,12 @@ const skippedDropOverlays = '.mud-popover, .mud-tooltip, .mud-snackbar, #mud-sna
 
 // The drop zones of the app, addressed by the cursor position of a native drag and drop event.
 //
-// The arbitration between overlapping zones is left to the browser, and it can be: MudBlazor 8.15 gives
+// The arbitration between overlapping zones is left to the browser, and it can be: MudBlazor 9.12 gives
 // neither .mud-dialog-container nor .mud-overlay a pointer-events: none. Both fill the viewport while a
 // dialog is open, so a point beside the dialog box hits the container, and nothing there is a drop zone. A
 //  drop, therefore, cannot reach through an open dialog into the page behind it -- the very thing the app
 // used to enforce by counting layers in C#. That single CSS property carries this whole design, so it
-// belongs on the checklist for every MudBlazor major version, starting with the move to 9.
+// belongs on the checklist for every MudBlazor major version.
 window.dropZones = {
 
     // Names the drop zone at the given viewport position, or null when there is none.

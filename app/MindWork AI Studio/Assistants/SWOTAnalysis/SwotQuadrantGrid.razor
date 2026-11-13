@@ -1,0 +1,12 @@
+<div class="swot-quadrant-grid">
+    @foreach (var category in CATEGORIES)
+    {
+        <section class="swot-quadrant @CssClassOf(category)">
+            <div class="swot-quadrant-header">
+                <MudText Typo="Typo.h6">@this.Labels.NameOf(category)</MudText>
+                <span class="swot-quadrant-axes">@this.Labels.AxesOf(category)</span>
+            </div>
+            @this.ChildContent(category)
+        </section>
+    }
+</div>

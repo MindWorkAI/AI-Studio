@@ -1,9 +1,18 @@
 @inherits MSGComponentBase
 
 <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
-    <MudJustifiedText Typo="Typo.body2">
-        @this.WarningText
-    </MudJustifiedText>
+    @if (this.SendsEmbeddingsToCloud)
+    {
+        <MudJustifiedText Typo="Typo.body2">
+            @this.WarningText
+        </MudJustifiedText>
+    }
+    @if (this.SendsMediaToCloudTranscription)
+    {
+        <MudJustifiedText Typo="Typo.body2" Class="@(this.SendsEmbeddingsToCloud ? "mt-2" : string.Empty)">
+            @this.TranscriptionWarningText
+        </MudJustifiedText>
+    }
 </MudAlert>
 
-<MudTextSwitch Value="@this.UserAcknowledged" ValueChanged="@this.UserAcknowledgedChanged" Label="@T("I confirm that I have read and understood the above")" LabelOn="@T("Yes, please send my data to the external embedding provider")" LabelOff="@T("No, I will choose another embedding")" Validation="@this.Validation"/>
+<MudTextSwitch Value="@this.UserAcknowledged" ValueChanged="@this.UserAcknowledgedChanged" Label="@T("I confirm that I have read and understood the above")" LabelOn="@this.LabelOn" LabelOff="@this.LabelOff" Validation="@this.Validation"/>

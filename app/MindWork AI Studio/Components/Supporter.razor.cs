@@ -18,9 +18,9 @@ public partial class Supporter : ComponentBase
 
     private string Icon => this.Type switch
     {
-        SupporterType.INDIVIDUAL => Icons.Material.Filled.Person,
-        SupporterType.ORGANIZATION => Icons.Material.Filled.Business,
+        SupporterType.INDIVIDUAL => AppIcons.USER,
+        SupporterType.ORGANIZATION => AppIcons.BUSINESS_SUPPORTER,
         
-        _ => Icons.Material.Filled.Person4,
+        _ => AppIcons.USER,
     };
 }

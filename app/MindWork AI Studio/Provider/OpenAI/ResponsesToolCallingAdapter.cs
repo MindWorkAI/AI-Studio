@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 
@@ -11,9 +13,9 @@ namespace AIStudio.Provider.OpenAI;
 /// correlated by call ID. Unlike Chat Completions, the whole output of a round has to be sent
 /// back for the next one, reasoning items included, or the API refuses to continue.
 /// </remarks>
-public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> baseInput, IDictionary<string, object> apiParameters, IList<object> providerTools,
+public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> baseInput, IDictionary<string, object> apiParameters,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-    Func<ResponsesAPIRequest, CancellationToken, Task<ResponsesResponse?>> executeRequestAsync) : IToolCallingProviderAdapter
+    Func<ResponsesAPIRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync) : IToolCallingProviderAdapter
 {
     private readonly List<object> internalItems = [];
     private readonly List<string> recordedRequestTexts = [];
@@ -23,43 +25,54 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
     public IReadOnlyList<string> RecordedRequestTexts => this.recordedRequestTexts;
 
     /// <summary>
-    /// The tools offered to the model: the provider-native ones plus our local functions.
+    /// The tools offered to the model: our local functions.
     /// </summary>
-    /// <remarks>
-    /// A provider-native tool whose type collides with one of our function names is dropped
-    /// because the model could not tell the two apart.
-    /// </remarks>
-    private readonly IList<object> effectiveProviderTools = BuildEffectiveProviderTools(providerTools, runnableTools);
+    private readonly IList<object> offeredTools = runnableTools.Select(x => (object)ProviderToolAdapters.ToResponsesTool(x.Definition)).ToList();
 
     /// <inheritdoc />
-    public async Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default)
+    public async IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, [EnumeratorCancellation] CancellationToken token = default)
     {
         var requestInput = new List<object>(baseInput);
         if (finalResponseInstruction is not null && requestInput.FirstOrDefault() is TextMessage systemPrompt)
         {
             requestInput[0] = systemPrompt with
             {
-                Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
+                Content = $"{systemPrompt.Content}\n\n{finalResponseInstruction}",
             };
         }
 
         requestInput.AddRange(this.internalItems);
 
-        var response = await executeRequestAsync(new ResponsesAPIRequest
+        var request = new ResponsesAPIRequest
         {
             Model = chatModel.Id,
             Input = requestInput,
-            Stream = false,
+            Stream = true,
             Store = false,
-            Tools = includeTools ? this.effectiveProviderTools : [],
+            Tools = includeTools ? this.offeredTools : [],
             AdditionalApiParameters = apiParameters,
-        }, token);
+        };
 
+        //
+        // The text goes out while it is being written, the round only once the stream closed it.
+        // Sources travel with the text because the API announces them as it cites them. The usage
+        // goes out with every round: which of them describes the conversation is the loop's
+        // decision, which knows which round this is.
+        //
+        var accumulator = new ResponsesStreamAccumulator();
+        await foreach (var serverSentEvent in streamRequestAsync(request, token))
+        {
+            var part = accumulator.Process(serverSentEvent);
+            if (part.HasContent || part.Usage.IsKnown)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage));
+        }
+
+        var response = accumulator.Build();
         if (response is null)
-            return null;
+            yield break;
 
         this.lastResponse = response;
-        return new ToolCallingRound(
+        yield return ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(
             response.GetTextOutput(),
             response.GetFunctionCalls()
                 .Select(call => new ToolCallingRequestedCall(
@@ -69,7 +82,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
                     !string.IsNullOrWhiteSpace(call.Name) && ToolExecutor.IsValidArgumentsJson(call.Arguments)))
                 .ToList(),
             
-            response.GetSources());
+            response.GetSources()));
     }
 
     /// <inheritdoc />
@@ -109,17 +122,5 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
 
         if (!string.IsNullOrWhiteSpace(content))
             this.recordedRequestTexts.Add(content);
-    }
-
-    private static IList<object> BuildEffectiveProviderTools(IList<object> providerTools, IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools)
-    {
-        var localFunctionNames = runnableTools
-            .Select(x => x.Definition.Function.Name)
-            .ToHashSet(StringComparer.Ordinal);
-
-        return providerTools
-            .Where(x => x is not ProviderTool providerTool || !localFunctionNames.Contains(providerTool.Type))
-            .Concat(runnableTools.Select(x => (object)ProviderToolAdapters.ToResponsesTool(x.Definition)))
-            .ToList();
     }
 }

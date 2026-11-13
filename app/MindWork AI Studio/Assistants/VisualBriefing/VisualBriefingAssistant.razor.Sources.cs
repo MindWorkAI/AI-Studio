@@ -36,7 +36,7 @@ public partial class VisualBriefingAssistant
         {
             this.editor.SourceMaterial.ExceptWith(displaced);
             await this.MessageBus.SendWarning(new(
-                Icons.Material.Filled.Warning,
+                AppIcons.WARNING,
                 string.Format(
                     T("These files are already attached as visual assets and were removed from the source material: {0}"),
                     string.Join(", ", displaced.Select(attachment => Path.GetFileName(attachment.FilePath))))));
@@ -119,7 +119,7 @@ public partial class VisualBriefingAssistant
             { dialog => dialog.Message, T("The media file changed. Transcribe it again with the configured transcription provider?") },
         };
 
-        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Transcribe media again"), parameters, DialogOptions.FULLSCREEN);
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Transcribe media again"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
         var result = await reference.Result;
         if (result is null || result.Canceled)
             return;
@@ -188,16 +188,16 @@ public partial class VisualBriefingAssistant
             return;
 
         if (outcome.Failures.Count > 0)
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"))));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, string.Join('\n',outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"))));
 
         else if (outcome.Status is MediaImportStatus.FAILED)
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, T("The media file could not be transcribed.")));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, T("The media file could not be transcribed.")));
 
         if (outcome.Warnings.Count > 0)
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"))));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, string.Join('\n',outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"))));
 
         if (outcome.Status is MediaImportStatus.CANCELLED)
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, T("The media transcription was canceled.")));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, T("The media transcription was canceled.")));
     }
 
     /// <summary>

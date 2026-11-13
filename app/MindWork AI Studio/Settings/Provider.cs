@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using SharedTools;
 
@@ -23,6 +24,7 @@ namespace AIStudio.Settings;
 /// <param name="Model">The LLM model to use for chat.</param>
 /// <param name="AllowUserProvidedAPIKey">When set by a configuration plugin, the user may set their own API key for this otherwise locked, enterprise-managed provider.</param>
 /// <param name="CustomIconDataUrl">The validated custom SVG icon supplied by a configuration plugin.</param>
+/// <param name="PromptForUserAPIKey">When set by a configuration plugin, AI Studio asks the user for the API key of this provider on the home page as long as none is stored.</param>
 public sealed record Provider(
     uint Num,
     string Id,
@@ -39,8 +41,36 @@ public sealed record Provider(
     string TokenizerPath = "",
     ProviderCapabilityOverrides? CapabilityOverrides = null,
     bool AllowUserProvidedAPIKey = false,
-    string CustomIconDataUrl = "") : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    string CustomIconDataUrl = "",
+    bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost. Keep them first and in the order of the parameters, which is
+    // the order they get stored in:
+    //
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public string InstanceName { get; set; } = InstanceName;
+    public LLMProviders UsedLLMProvider { get; set; } = UsedLLMProvider;
+    public Model Model { get; set; } = Model;
+    public bool IsSelfHosted { get; set; } = IsSelfHosted;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+    public string Hostname { get; set; } = Hostname;
+    public Host Host { get; set; } = Host;
+    public HFInferenceProvider HFInferenceProvider { get; set; } = HFInferenceProvider;
+    public string AdditionalJsonApiParameters { get; set; } = AdditionalJsonApiParameters;
+
+    [JsonConverter(typeof(DataDirectoryRelativePathConverter))]
+    public string TokenizerPath { get; set; } = TokenizerPath;
+
+    public ProviderCapabilityOverrides? CapabilityOverrides { get; set; } = CapabilityOverrides;
+    public bool AllowUserProvidedAPIKey { get; set; } = AllowUserProvidedAPIKey;
+    public string CustomIconDataUrl { get; set; } = CustomIconDataUrl;
+    public bool PromptForUserAPIKey { get; set; } = PromptForUserAPIKey;
+
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
     public static readonly Provider NONE = new();
@@ -59,9 +89,9 @@ public sealed record Provider(
     public override string ToString()
     {
         if(this.IsSelfHosted)
-            return $"{this.InstanceName} ({this.UsedLLMProvider.ToName()}, {this.Host}, {this.Hostname}, {this.Model})";
+            return $"{this.InstanceName} ({this.UsedLLMProvider.Name}, {this.Host}, {this.Hostname}, {this.Model})";
 
-        return $"{this.InstanceName} ({this.UsedLLMProvider.ToName()}, {this.Model})";
+        return $"{this.InstanceName} ({this.UsedLLMProvider.Name}, {this.Model})";
     }
 
     #endregion
@@ -70,7 +100,7 @@ public sealed record Provider(
     
     /// <inheritdoc />
     [JsonIgnore]
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToSecretId()}" : this.UsedLLMProvider.ToSecretId();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.SecretId}" : this.UsedLLMProvider.SecretId;
     
     /// <inheritdoc />
     [JsonIgnore]
@@ -83,12 +113,12 @@ public sealed record Provider(
     public override string Name
     {
         get => this.InstanceName;
-        init => this.InstanceName = value;
+        set => this.InstanceName = value;
     }
 
     #endregion
     
-    public static bool TryParseProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject provider)
+    public static bool TryParseProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, bool dryRun, out ConfigurationBaseObject provider)
     {
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -158,9 +188,7 @@ public sealed record Provider(
         }
         var capabilityOverrides = ProviderCapabilityOverrides.TryParseFromLuaTable(idx, table, configPluginId, LOGGER);
 
-        var allowUserProvidedApiKey = false;
-        if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
-            allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
+        var apiKeyOptions = UserProvidedAPIKeyOptions.Read(table);
 
         var customIconDataUrl = string.Empty;
         if (table.TryGetValue("IconPath", out var iconPathValue))
@@ -187,14 +215,15 @@ public sealed record Provider(
             AdditionalJsonApiParameters = additionalJsonApiParameters,
             TokenizerPath = tokenizerPath,
             CapabilityOverrides = capabilityOverrides,
-            AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            AllowUserProvidedAPIKey = apiKeyOptions.AllowUserProvidedAPIKey,
+            PromptForUserAPIKey = apiKeyOptions.PromptForUserAPIKey,
             CustomIconDataUrl = customIconDataUrl,
         };
 
         // Handle an encrypted API key if present. When the user manages their own key for this
         // provider, we must never enqueue an embedded key: doing so would overwrite the user's
         // key in the OS keyring on every configuration reload.
-        if (allowUserProvidedApiKey)
+        if (apiKeyOptions.AllowUserProvidedAPIKey)
         {
             if (table.TryGetValue("APIKey", out var ignoredApiKeyValue) && ignoredApiKeyValue.TryRead<string>(out var ignoredApiKeyText) && !string.IsNullOrWhiteSpace(ignoredApiKeyText))
                 LOGGER.LogWarning($"The configured provider {idx} sets both AllowUserProvidedAPIKey and an embedded APIKey. Ignoring the embedded key: the user manages their own key for this provider. (Plugin ID: {configPluginId})");
@@ -202,7 +231,7 @@ public sealed record Provider(
         else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
-                LOGGER.LogWarning($"The configured provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+                LOGGER.LogWarning($"The configured provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             else
             {
                 var encryption = PluginFactory.EnterpriseEncryption;
@@ -210,13 +239,20 @@ public sealed record Provider(
                 {
                     if (encryption.TryDecrypt(apiKeyText, out var decryptedApiKey))
                     {
-                        // Queue the API key for storage in the OS keyring:
-                        PendingEnterpriseApiKeys.Add(new(
-                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
-                            instanceName,
-                            decryptedApiKey,
-                            SecretStoreType.LLM_PROVIDER));
-                        LOGGER.LogDebug($"Successfully decrypted API key for provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        //
+                        // Queue the API key for storage in the OS keyring. A dry run only checks the
+                        // configuration, so it queues nothing: the start which follows it would
+                        // otherwise store the key once more for every dry run before it:
+                        //
+                        if (!dryRun)
+                        {
+                            PendingEnterpriseApiKeys.Add(new(
+                                $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.SecretId}",
+                                instanceName,
+                                decryptedApiKey,
+                                SecretStoreType.LLM_PROVIDER));
+                            LOGGER.LogDebug($"Successfully decrypted API key for provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        }
                     }
                     else
                         LOGGER.LogWarning($"Failed to decrypt API key for provider {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
@@ -272,14 +308,15 @@ public sealed record Provider(
         }
 
         var capabilityOverridesLine = this.CapabilityOverrides?.ExportAsLuaTable("    ") ?? string.Empty;
+        var tokenizerPathLine = ExportedTokenizerPath.BuildLuaField(this.TokenizerPath, TokenizerModelId.ForProvider(this), "    ");
 
         return $$"""
                 CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
-                    
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+
+                    {{tokenizerPathLine}}
 
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

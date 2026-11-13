@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.RewriteImprove;
@@ -9,8 +10,11 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     
     protected override string Title => T("Rewrite & Improve Text");
     
-    protected override string Description => T("Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.");
+    protected override string Description => TA("Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.");
     
+    // The prompt of this assistant forbids explanations, so the chat gets a prompt of its own, which keeps the style of the text:
+    protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
+
     protected override string SystemPrompt =>
         $"""
         You are an expert in language and style. You receive a text as input. First, you review the text. If no
@@ -18,8 +22,25 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
         text. You can also correct spelling and grammar issues. You never add additional information. You never
         ask the user for additional information. Your response only contains the improved text. You do not explain
         your changes. If no changes are needed, you return the text unchanged.
-        The style of the text: {this.selectedWritingStyle.Prompt()}.{this.selectedSentenceStructure.Prompt()}
+        The style of the text: {this.selectedWritingStyle.Prompt}.{this.selectedSentenceStructure.Prompt}
         You follow the rules according to {this.SystemPromptLanguage()} in all your changes.
+        """;
+
+    /// <summary>
+    /// Creates the system prompt of a chat which continues an improved text, for follow-up questions about it.
+    /// </summary>
+    private string CreateChatSystemPrompt() =>
+        $"""
+        You are an expert in language and style. The user had a text improved: the conversation so far holds the text
+        and its improved version. Now you answer the user's follow-up questions about the changes, e.g., why a sentence
+        reads better now, and you revise the text further when the user asks for it. You never add information which
+        the text does not contain, unless the user asks for it.
+
+        The user chose these settings for the text, which a revised text keeps unless the user asks otherwise:
+        The style of the text: {this.selectedWritingStyle.Prompt}.{this.selectedSentenceStructure.Prompt}
+        You follow the rules according to {this.SystemPromptLanguage()} in all your changes.
+
+        Answer questions in the language the user writes in.
         """;
     
     protected override bool AllowProfiles => false;
@@ -32,13 +53,12 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     [
         new SendToButton
         {
-            Self = Tools.Components.REWRITE_ASSISTANT,
             UseResultingContentBlockData = false,
             GetText = () => string.IsNullOrWhiteSpace(this.rewrittenText) ? this.inputText : this.rewrittenText,
         },
     ];
     
-    protected override string SubmitText => T("Improve your text");
+    protected override string SubmitText => TA("Improve your text");
 
     protected override Func<Task> SubmitAction => this.RewriteText;
 
@@ -73,16 +93,9 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
         return false;
     }
     
-    #region Overrides of ComponentBase
+    #region Overrides of AssistantBase
 
-    protected override async Task OnInitializedAsync()
-    {
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_REWRITE_ASSISTANT).LastOrDefault();
-        if (deferredContent is not null)
-            this.inputText = deferredContent;
-        
-        await base.OnInitializedAsync();
-    }
+    protected override void ApplyTextLaunchPayload(TextLaunchPayload payload) => this.inputText = payload.Text;
 
     #endregion
     
@@ -124,7 +137,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     private string? ValidateText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -132,7 +145,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }
@@ -144,7 +157,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
             CommonLanguages.AS_IS => "the source language",
             CommonLanguages.OTHER => this.customTargetLanguage,
             
-            _ => $"{this.selectedTargetLanguage.Name()}",
+            _ => $"{this.selectedTargetLanguage.Name}",
         };
 
         if (string.IsNullOrWhiteSpace(lang))
@@ -155,7 +168,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     
     private async Task RewriteText()
     {
-        await this.Form!.Validate();
+        await this.Form!.ValidateAsync();
         if (!this.InputIsValid)
             return;
         

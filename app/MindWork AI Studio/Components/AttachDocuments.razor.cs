@@ -34,6 +34,18 @@ public partial class AttachDocuments : MSGComponentBase
     public Func<HashSet<FileAttachment>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
 
     /// <summary>
+    /// Takes the audio and video files the user dropped or chose, for an owner which transcribes them itself.
+    /// </summary>
+    /// <remarks>
+    /// Without it, this control transcribes them, after asking the user, and attaches their transcripts. With it, the
+    /// files go to the owner as they arrived, once their format passed AllowedFileTypes: the owner checks the
+    /// transcription provider against rules of its own, asks the user, and keeps the transcripts where it wants them,
+    /// as the BeyondFacts Lab does.
+    /// </remarks>
+    [Parameter]
+    public EventCallback<IReadOnlyList<string>> OnMediaFiles { get; set; }
+
+    /// <summary>
     /// Makes this component the default target of its area, meaning of its page, assistant, or
     /// dialog: it then also takes the drops which land anywhere in that area without hitting a zone
     /// of their own.
@@ -80,6 +92,16 @@ public partial class AttachDocuments : MSGComponentBase
     /// <summary>Creates and persists a draft owner after media import confirmation.</summary>
     [Parameter]
     public Func<string, Task<ChatThread?>> EnsureOwnerChatAsync { get; set; } = _ => Task.FromResult<ChatThread?>(null);
+
+    /// <summary>
+    /// Keeps what the preview read of an attached document, so that sending it does not read the file again.
+    /// </summary>
+    /// <remarks>
+    /// Only the chat hands one over, cf. DocumentCheckDialog.KeepReadText. Elsewhere, e.g., in the
+    /// assistants, the documents are read for every run anyway.
+    /// </remarks>
+    [Parameter]
+    public Func<FileAttachment, string, FileVersion, Task>? KeepPreviewedText { get; set; }
 
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
@@ -149,23 +171,23 @@ public partial class AttachDocuments : MSGComponentBase
 
         if (outcome.Failures.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
         else if (outcome.Status is MediaImportStatus.FAILED)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The media file could not be transcribed.")));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, this.T("The media file could not be transcribed.")));
         }
 
         if (outcome.Warnings.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
 
         if (outcome.Status is MediaImportStatus.CANCELLED)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The media transcription was canceled.")));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, this.T("The media transcription was canceled.")));
         }
     }
 
@@ -175,28 +197,16 @@ public partial class AttachDocuments : MSGComponentBase
         var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
         // Owners that persist their own sources have already taken the media over when the batch
         // started, so re-adding the delivered transcripts here would duplicate them.
-        var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources()
+        var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources
             ? Array.Empty<FileAttachment>()
             : delivery?.Attachments ?? [];
-        var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
+        var pending = this.OwnerChat?.Draft.MediaTranscripts ?? [];
         var changed = false;
-        var ownerPendingChanged = false;
-        
+
         foreach (var attachment in completed.Concat(pending))
             changed |= this.DocumentPaths.Add(attachment);
 
-        if (this.OwnerChat is not null)
-        {
-            foreach (var attachment in completed.OfType<ManagedTranscriptAttachment>())
-            {
-                if (this.OwnerChat.PendingMediaTranscripts.All(existing => existing.FilePath != attachment.FilePath))
-                {
-                    this.OwnerChat.PendingMediaTranscripts.Add(attachment);
-                    ownerPendingChanged = true;
-                }
-            }
-        }
-
+        var ownerPendingChanged = this.OwnerChat?.Draft.AddAttachments(completed.OfType<ManagedTranscriptAttachment>()) ?? false;
         if (changed || ownerPendingChanged)
         {
             await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
@@ -275,11 +285,12 @@ public partial class AttachDocuments : MSGComponentBase
             return;
 
         var previousAttachments = this.DocumentPaths.ToHashSet();
-        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths, this.AttachDroppedPathsAsync, () => this.IsUnavailable);
-        foreach (var removedAttachment in previousAttachments.Except(this.DocumentPaths))
+        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths, this.AttachDroppedPathsAsync, () => this.IsUnavailable, this.KeepPreviewedText);
+        var removedAttachments = previousAttachments.Except(this.DocumentPaths).ToList();
+        foreach (var removedAttachment in removedAttachments)
             ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
 
-        this.ReconcileOwnerPendingTranscripts();
+        this.RemoveFromOwnerDraft(removedAttachments);
 
         //
         // Said out loud, like every other path in this file. Removing a file in the dialog changed
@@ -295,11 +306,12 @@ public partial class AttachDocuments : MSGComponentBase
         if (this.IsUnavailable)
             return;
 
-        foreach (var attachment in this.DocumentPaths)
+        var removedAttachments = this.DocumentPaths.ToList();
+        foreach (var attachment in removedAttachments)
             ManagedTranscriptAttachment.TryDeleteOwnedFile(attachment);
-        
+
         this.DocumentPaths.Clear();
-        this.ReconcileOwnerPendingTranscripts();
+        this.RemoveFromOwnerDraft(removedAttachments);
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
@@ -311,21 +323,22 @@ public partial class AttachDocuments : MSGComponentBase
 
         this.DocumentPaths.Remove(fileAttachment);
         ManagedTranscriptAttachment.TryDeleteOwnedFile(fileAttachment);
-        this.ReconcileOwnerPendingTranscripts();
+        this.RemoveFromOwnerDraft([fileAttachment]);
 
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
 
-    /// <summary>Keeps persisted chat-draft transcript references aligned with the composer.</summary>
-    private void ReconcileOwnerPendingTranscripts()
-    {
-        if (this.OwnerChat is null)
-            return;
-
-        var retainedPaths = this.DocumentPaths.Select(attachment => attachment.FilePath).ToHashSet(StringComparer.Ordinal);
-        this.OwnerChat.PendingMediaTranscripts.RemoveAll(attachment => !retainedPaths.Contains(attachment.FilePath));
-    }
+    /// <summary>
+    /// Removes the attachments the user took out of the composer from the draft of the owner chat.
+    /// </summary>
+    /// <remarks>
+    /// Only what the user removed leaves the draft. The media transcription service hands a finished
+    /// transcript to the draft before the composer shows it, so aligning the draft with the composer
+    /// would drop such a transcript, and its file would stay behind without an owner.
+    /// </remarks>
+    /// <param name="removedAttachments">The attachments the user removed.</param>
+    private void RemoveFromOwnerDraft(IEnumerable<FileAttachment> removedAttachments) => this.OwnerChat?.Draft.RemoveAttachments(removedAttachments);
 
     /// <summary>
     /// Validates the given paths and attaches every file which passes.
@@ -334,7 +347,7 @@ public partial class AttachDocuments : MSGComponentBase
     /// <returns>
     /// The files this call attached, in the order they arrived. Media files are never among them:
     /// they go to the transcription service and become attachments only once their transcript is
-    /// ready, which is long after this call has returned.
+    /// ready, which is long after this call has returned, or they go to OnMediaFiles.
     /// </returns>
     private async Task<IReadOnlyList<FileAttachment>> AddFileBatchAsync(IEnumerable<string> paths)
     {
@@ -345,7 +358,7 @@ public partial class AttachDocuments : MSGComponentBase
             var rejectedPaths = pathList.Where(path => !FileTypes.IsAllowedPath(path, this.AllowedFileTypes)).ToArray();
             pathList.RemoveAll(path => rejectedPaths.Contains(path, StringComparer.Ordinal));
             if (rejectedPaths.Length > 0)
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.T("Some files do not use an allowed format and were not attached.")));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, this.T("Some files do not use an allowed format and were not attached.")));
         }
 
         var inaccessiblePaths = pathList.Where(path => !File.Exists(path)).ToList();
@@ -353,8 +366,8 @@ public partial class AttachDocuments : MSGComponentBase
         {
             this.Logger.LogWarning("Could not access {Count} dropped or selected file(s): {Paths}", inaccessiblePaths.Count, string.Join(", ", inaccessiblePaths));
             await this.MessageBus.SendWarning(new(
-                Icons.Material.Filled.Warning,
-                this.T("Some files could not be accessed. Please select them with the file chooser instead.")));
+                AppIcons.WARNING,
+                this.TA("Some files could not be accessed. Please select them with the file chooser instead.")));
         }
 
         var existingPaths = pathList.Except(inaccessiblePaths).ToList();
@@ -392,18 +405,24 @@ public partial class AttachDocuments : MSGComponentBase
             // about whether it happened to be new to us.
             //
             var attachment = FileAttachment.FromPath(path);
-            this.DocumentPaths.Add(attachment);
+            this.DocumentPaths.AttachInPlaceOfSameFile(attachment);
             attached.Add(attachment);
         }
 
         if (mediaPaths.Count is 0)
             return attached;
 
+        if (this.OnMediaFiles.HasDelegate)
+        {
+            await this.OnMediaFiles.InvokeAsync(mediaPaths);
+            return attached;
+        }
+
         if (string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
         {
             await this.MessageBus.SendWarning(new(
-                Icons.Material.Filled.VoiceChat,
-                this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
+                AppIcons.VOICE_TRANSCRIPTION,
+                this.TA("Media files require a configured transcription provider. Configure one in the transcription settings.")));
             return attached;
         }
 
@@ -424,7 +443,7 @@ public partial class AttachDocuments : MSGComponentBase
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
             this.T("Transcribe media files"),
             dialogParameters,
-            DialogOptions.FULLSCREEN);
+            DialogOptions.BLOCKING_FULLSCREEN);
 
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
@@ -435,7 +454,7 @@ public partial class AttachDocuments : MSGComponentBase
 
         // Owners that persist their own sources show the file right away and keep it next to the
         // stored document, instead of waiting for the transcription to be delivered back.
-        if (this.EffectiveImportOwner.Kind.PersistsOwnSources())
+        if (this.EffectiveImportOwner.Kind.PersistsOwnSources)
         {
             foreach (var mediaPath in mediaPaths)
                 this.DocumentPaths.Add(FileAttachment.FromPath(mediaPath));
@@ -461,6 +480,7 @@ public partial class AttachDocuments : MSGComponentBase
             { x => x.Document, fileAttachment },
             { x => x.AttachPaths, this.AttachDroppedPathsAsync },
             { x => x.IsAttachingUnavailable, () => this.IsUnavailable },
+            { x => x.KeepReadText, this.KeepPreviewedText },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);

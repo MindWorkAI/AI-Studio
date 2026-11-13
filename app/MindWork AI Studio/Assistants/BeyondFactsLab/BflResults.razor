@@ -1,0 +1,167 @@
+@inherits MSGComponentBase
+
+<MudText Typo="Typo.h6" Class="mt-6 mb-1">@TA("What would you like to take away?")</MudText>
+<MudText Typo="Typo.body2" Class="mb-3">@TA("The lab writes these materials from your confirmed work states. Check and edit each of them, and confirm it. Then you can export it as a document.")</MudText>
+
+@if (this.MissingSteps.Count > 0)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+        @string.Format(Culture, TA("These steps have no confirmed work state yet: {0}. The materials use only what you confirmed and name what is still open."), string.Join(", ", this.MissingSteps.Select(step => $"„{step.Title}“")))
+    </MudAlert>
+}
+
+<MudButton Variant="@(this.AnyCreated ? Variant.Outlined : Variant.Filled)"
+           Color="Color.Primary"
+           StartIcon="@AppIcons.GENERATE"
+           OnClick="@this.CreateAllAsync"
+           Disabled="@(!this.CanCreateAll)"
+           Class="mb-3">
+    @T("Create all materials in parallel")
+</MudButton>
+
+@* Only one material is open at a time, so that the list stays clear: *@
+<MudExpansionPanels MultiExpansion="@false">
+    @foreach (var kind in BflResultKind.All)
+    {
+        var status = this.StatusOf(kind);
+        <MudExpansionPanel @key="kind" Class="border-solid border rounded-lg" Expanded="@(this.expandedKind == kind)" ExpandedChanged="@(expanded => this.SetExpanded(kind, expanded))">
+            <TitleContent>
+                <div class="d-flex align-center">
+                    <MudIcon Icon="@StatusIcon(status)" Color="@StatusColor(status)" Class="mr-3"/>
+                    <MudText Typo="Typo.h6">@kind.Title</MudText>
+                    <MudTooltip Text="@kind.Description" Placement="Placement.Top">
+                        <MudIcon Icon="@AppIcons.INFO" Size="Size.Small" Color="Color.Info" Class="ml-2"/>
+                    </MudTooltip>
+                    <MudSpacer/>
+                    <MudText Typo="Typo.caption" Class="mr-2">@this.StatusText(status)</MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                @if (!this.results.TryGetValue(kind, out var result))
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+                        @TA("AI Studio cannot open this material. Its file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
+                    </MudAlert>
+                }
+                else
+                {
+                    @if (this.IsGenerating(kind))
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1"/>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                            <MudText Typo="Typo.caption">@T("The lab writes this material")</MudText>
+                            <MudButton Size="Size.Small" StartIcon="@AppIcons.STOP" OnClick="@(() => this.CancelAsync(kind))">@T("Stop")</MudButton>
+                        </MudStack>
+                    }
+
+                    @if (result.Draft is { } draft)
+                    {
+                        <div class="border-dashed border rounded-lg pa-3 mb-3">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">@T("Draft, not confirmed yet")</MudText>
+                            @if (BflStaleness.IsOutdated(draft, this.WorkStates))
+                            {
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2">
+                                    @TA("A work state changed since the lab wrote this draft. You can create it anew.")
+                                </MudAlert>
+                            }
+
+                            @if (this.editing.Contains(kind))
+                            {
+                                <MudTextField T="string"
+                                              Value="@draft.Text"
+                                              ValueChanged="@(value => this.SetDraftAsync(kind, value))"
+                                              Label="@kind.Title"
+                                              Disabled="@this.IsBusy(kind)"
+                                              Variant="Variant.Outlined"
+                                              Lines="10"
+                                              Sizing="InputSizing.Auto"
+                                              MaxLines="30"/>
+                            }
+                            else
+                            {
+                                <div class="border rounded pa-2" style="max-height: 320px; overflow-y: auto;">
+                                    <MudMarkdown Value="@draft.Text" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                                </div>
+                            }
+
+                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-3">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CONFIRM" OnClick="@(() => this.ConfirmAsync(kind))" Disabled="@this.IsBusy(kind)">@T("Confirm")</MudButton>
+                                @if (this.editing.Contains(kind))
+                                {
+                                    <MudButton StartIcon="@AppIcons.PREVIEW" OnClick="@(() => this.ShowPreview(kind))" Disabled="@this.IsBusy(kind)">@T("Show preview")</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton StartIcon="@AppIcons.EDIT" OnClick="@(() => this.StartEditing(kind))" Disabled="@this.IsBusy(kind)">@T("Edit")</MudButton>
+                                }
+                                <MudButton StartIcon="@AppIcons.DELETE" OnClick="@(() => this.DiscardDraftAsync(kind))" Disabled="@this.IsBusy(kind)">@T("Discard draft")</MudButton>
+                            </MudStack>
+                        </div>
+                    }
+                    else if (result.Confirmed is { } confirmed)
+                    {
+                        @if (BflStaleness.IsOutdated(confirmed, this.WorkStates))
+                        {
+                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-2">
+                                @TA("A work state changed since you confirmed this material. Please create it anew, or check whether it still fits.")
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption" Class="mb-2 d-block">@string.Format(Culture, TA("You confirmed this material on {0}."), confirmed.ChangedAtUtc.ToLocalTime().ToString("g", Culture))</MudText>
+                        }
+
+                        <div class="border rounded pa-2 mb-3" style="max-height: 320px; overflow-y: auto;">
+                            <MudMarkdown Value="@confirmed.Text" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                        </div>
+
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mb-3">
+                            <MudMenu Label="@T("Export")"
+                                     StartIcon="@AppIcons.EXPORT"
+                                     EndIcon="@AppIcons.DROPDOWN_MENU"
+                                     Variant="Variant.Filled"
+                                     Color="Color.Primary"
+                                     MaxHeight="@MenuDefaults.MAX_HEIGHT"
+                                     Disabled="@this.IsBusy(kind)">
+                                @foreach (var format in FileExportFormat.DocumentFormats)
+                                {
+                                    <MudMenuItem @key="format" OnClick="@(() => this.ExportAsync(kind, confirmed, format))" Icon="@format.Icon" Label="@format.Name"/>
+                                }
+                                <MudDivider/>
+                                @foreach (var format in FileExportFormat.TextFormats)
+                                {
+                                    <MudMenuItem @key="format" OnClick="@(() => this.ExportAsync(kind, confirmed, format))" Icon="@format.Icon" Label="@format.Name"/>
+                                }
+                            </MudMenu>
+                            <MudButton StartIcon="@AppIcons.EDIT" OnClick="@(() => this.EditAsync(kind))" Disabled="@this.IsBusy(kind)">@T("Edit")</MudButton>
+                        </MudStack>
+                    }
+
+                    @if (kind is BflResultKind.REFLECTION_FOLDER)
+                    {
+                        <MudTextSwitch @bind-Value="@this.includePersonalDisclosures"
+                                       Color="Color.Primary"
+                                       Disabled="@this.IsBusy(kind)"
+                                       Label="@T("Include personal disclosures?")"
+                                       LabelOn="@(string.Format(Culture, TA("Yes, the folder holds your personal involvement and, in the appendix, the conversation of '{0}'"), BflStep.VALUES_AND_PERSPECTIVES.Title))"
+                                       LabelOff="@(string.Format(Culture, TA("No, the folder leaves out your personal involvement and, in the appendix, the conversation of '{0}'"), BflStep.VALUES_AND_PERSPECTIVES.Title))"/>
+                        <MudTextSwitch @bind-Value="@this.includeConversations"
+                                       Color="Color.Primary"
+                                       Disabled="@this.IsBusy(kind)"
+                                       Label="@T("Add the conversations as an appendix?")"
+                                       LabelOn="@T("Yes, the folder ends with the conversations of all steps")"
+                                       LabelOff="@T("No, the folder holds no conversations")"/>
+                    }
+
+                    <MudButton Variant="@(result.Draft is null && result.Confirmed is null ? Variant.Filled : Variant.Outlined)"
+                               Color="Color.Primary"
+                               StartIcon="@(kind.IsWrittenByModel ? AppIcons.GENERATE : AppIcons.REFLECTION_FOLDER)"
+                               OnClick="@(() => this.CreateAsync(kind))"
+                               Disabled="@(this.IsBusy(kind) || kind.IsWrittenByModel && this.ProviderIssue is not null)">
+                        @(result.Draft is null && result.Confirmed is null ? T("Create") : T("Create anew"))
+                    </MudButton>
+                }
+            </ChildContent>
+        </MudExpansionPanel>
+    }
+</MudExpansionPanels>

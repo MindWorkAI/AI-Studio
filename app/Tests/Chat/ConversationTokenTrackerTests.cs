@@ -131,11 +131,11 @@ public sealed class ConversationTokenTrackerTests
         tracker.Start();
         await Task.Delay(1_000);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(runs, Is.GreaterThanOrEqualTo(2));
             Assert.That(asked, Is.EqualTo(runs));
-        });
+        }
     }
 
     [Test]
@@ -155,11 +155,11 @@ public sealed class ConversationTokenTrackerTests
         var afterDisposal = runs;
         await Task.Delay(400);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(afterDisposal, Is.GreaterThan(0), "The tracker never ran, so this proves nothing about stopping it.");
             Assert.That(runs, Is.EqualTo(afterDisposal));
-        });
+        }
     }
 
     [Test]

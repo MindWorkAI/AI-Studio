@@ -33,6 +33,7 @@ public sealed class ModelRuleBuilder(string patternText, ModelRuleKind ruleKind,
     private ContextWindow? context;
     private TokenizerRef? tokenizer;
     private ImageLimits? images;
+    private SystemPromptRole? systemPromptRole;
 
     /// <summary>
     /// The text this rule answers for, before anything was stated about it.
@@ -227,6 +228,17 @@ public sealed class ModelRuleBuilder(string patternText, ModelRuleKind ruleKind,
     }
 
     /// <summary>
+    /// Which role the model takes its system prompt in.
+    /// </summary>
+    /// <param name="role">The role.</param>
+    /// <returns>The rule, to go on stating.</returns>
+    public ModelRuleBuilder SystemPromptRole(SystemPromptRole role)
+    {
+        this.systemPromptRole = role;
+        return this;
+    }
+
+    /// <summary>
     /// Takes everything the rule stated before this one and goes on from there.
     /// </summary>
     /// <returns>The rule, to go on stating.</returns>
@@ -342,6 +354,7 @@ public sealed class ModelRuleBuilder(string patternText, ModelRuleKind ruleKind,
         Context = this.context ?? basis?.Context,
         Tokenizer = this.tokenizer ?? basis?.Tokenizer,
         Images = this.images ?? basis?.Images,
+        SystemPromptRole = this.systemPromptRole ?? basis?.SystemPromptRole,
     };
 
     private ModelRuleBuilder MatchingAs(MatchKind kind)

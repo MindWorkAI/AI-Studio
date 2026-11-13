@@ -7,20 +7,20 @@
 <MudTextField T="string"
               @bind-Text="@this.inputPrompt"
               Validation="@this.ValidateInputPrompt"
-              AdornmentIcon="@Icons.Material.Filled.AutoFixHigh"
+              AdornmentIcon="@AppIcons.ASSISTANT_PROMPT_OPTIMIZER"
               Adornment="Adornment.Start"
               Label="@T("Prompt or prompt description")"
               Variant="Variant.Outlined"
               Lines="8"
-              AutoGrow="@true"
+              Sizing="InputSizing.Auto"
               MaxLines="20"
               Class="mb-3"
               UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <EnumSelection T="CommonLanguages"
-               NameFunc="@(language => language.NameSelectingOptional())"
+               NameFunc="@(language => language.NameSelectingOptional)"
                @bind-Value="@this.selectedTargetLanguage"
-               Icon="@Icons.Material.Filled.Translate"
+               Icon="@AppIcons.LANGUAGE"
                Label="@T("Language for the optimized prompt")"
                AllowOther="@true"
                OtherValue="CommonLanguages.OTHER"
@@ -29,82 +29,75 @@
                LabelOther="@T("Custom language")"/>
 
 <MudTextField T="string"
-              AutoGrow="true"
+              Sizing="InputSizing.Auto"
               Lines="2"
               @bind-Text="@this.importantAspects"
               Class="mb-3"
               Label="@T("(Optional) Important Aspects for the prompt")"
-              HelperText="@T("(Optional) Specify aspects the optimizer should emphasize in the resulting prompt, such as output structure, or constraints.")"
+              HelperText="@TA("(Optional) Specify aspects the optimizer should emphasize in the resulting prompt, such as output structure, or constraints.")"
               ShrinkLabel="true"
               Variant="Variant.Outlined"
-              AdornmentIcon="@Icons.Material.Filled.List"
+              AdornmentIcon="@AppIcons.IMPORTANT_ASPECTS"
               Adornment="Adornment.Start"/>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-    <MudText Typo="Typo.h6">@T("Recommendations for your prompt")</MudText>
+    <MudText Typo="Typo.h6">@TA("Recommendations for your prompt")</MudText>
 </MudStack>
 
 @if (this.ShowUpdatedPromptGuidelinesIndicator)
 {
     <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined" Class="mb-3">
         <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
-            <MudText Typo="Typo.body2">@T("Prompt recommendations were updated based on your latest optimization.")</MudText>
+            <MudText Typo="Typo.body2">@TA("Prompt recommendations were updated based on your latest optimization.")</MudText>
         </MudStack>
     </MudAlert>
 }
 
 @if (!this.useCustomPromptGuide)
 {
-    <MudJustifiedText Class="mb-3">@T("Use these recommendations, that are based on the default prompt guide, to improve your prompts. The suggestions are updated based on your latest prompt optimization.")</MudJustifiedText>
+    <MudJustifiedText Class="mb-3">@TA("Use these recommendations, which are based on the default prompt guide, to improve your prompts. The suggestions are updated based on your latest prompt optimization.")</MudJustifiedText>
 
     <MudGrid Class="mb-3">
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recClarityDirectness" Label="@T("Be clear and direct")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recClarityDirectness" Label="@TA("Be clear and direct")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recExamplesContext" Label="@T("Add examples and context")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recExamplesContext" Label="@T("Add examples and context")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recSequentialSteps" Label="@T("Use sequential steps")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recSequentialSteps" Label="@T("Use sequential steps")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recStructureMarkers" Label="@T("Structure with markers")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recStructureMarkers" Label="@T("Structure with markers")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recRoleDefinition" Label="@T("Give the model a role")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recRoleDefinition" Label="@TA("Give the model a role")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
-            <MudTextField T="string" Value="@this.recLanguageChoice" Label="@T("Choose prompt language deliberately")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" />
+            <MudTextField T="string" Value="@this.recLanguageChoice" Label="@TA("Choose prompt language deliberately")" ReadOnly="true" Variant="Variant.Outlined" Lines="2" Sizing="InputSizing.Auto" />
         </MudItem>
     </MudGrid>
 } 
 
-@if (this.useCustomPromptGuide)
+@if (this.useCustomPromptGuide && this.IsCustomPromptGuideLocked)
 {
-<MudJustifiedText Class="mb-3">@T("Use the prompt recommendations from the custom prompt guide.")</MudJustifiedText>
+<MudJustifiedText Class="mb-3">@TA("Use the prompt recommendations from the prompt guide of your organization.")</MudJustifiedText>
+}
+else if (this.useCustomPromptGuide)
+{
+<MudJustifiedText Class="mb-3">@TA("Use the prompt recommendations from the custom prompt guide.")</MudJustifiedText>
 }
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" StretchItems="StretchItems.None" Class="mb-3">
     <MudButton Variant="Variant.Outlined"
-               StartIcon="@Icons.Material.Filled.MenuBook"
+               StartIcon="@AppIcons.PROMPT_GUIDE"
                OnClick="@(async () => await this.OpenPromptingGuidelineDialog())">
         @T("View default prompt guide")
     </MudButton>
 
-    <MudSwitch T="bool" Value="@this.useCustomPromptGuide" ValueChanged="@this.SetUseCustomPromptGuide" Color="Color.Primary" Class="mx-1">
+    <MudSwitch T="bool" Value="@this.useCustomPromptGuide" ValueChanged="@this.SetUseCustomPromptGuide" Disabled="@this.IsCustomPromptGuideLocked" Color="Color.Primary" Class="mx-1">
         @T("Use custom prompt guide")
     </MudSwitch>
-
-    @if (this.useCustomPromptGuide)
-    {
-        <AttachDocuments Name="Custom Prompt Guide"
-                         @bind-DocumentPaths="@this.customPromptGuideFiles"
-                         OnChange="@this.OnCustomPromptGuideFilesChanged"
-                         CatchAllDocuments="false"
-                         UseSmallForm="true"
-                         ValidateMediaFileTypes="false"
-                         Provider="@this.ProviderSettings"/>
-    }
 
     <MudTextField T="string"
                   Text="@this.CustomPromptGuideFileName"
@@ -116,11 +109,20 @@
                   Style="min-width: 18rem;"/>
 
     <MudButton Variant="Variant.Outlined"
-               StartIcon="@Icons.Material.Filled.Visibility"
+               StartIcon="@AppIcons.PREVIEW"
                Disabled="@(!this.CanPreviewCustomPromptGuide)"
                OnClick="@(async () => await this.OpenCustomPromptGuideDialog())">
         @T("View")
     </MudButton>
 </MudStack>
+
+@if (this.useCustomPromptGuide && !this.IsCustomPromptGuideLocked)
+{
+    <ReadFileContent Text="@T("Load the prompt guide from file")"
+                     @bind-FileContent="@this.customPromptingGuidelineContent"
+                     FilePathLoaded="@this.SetCustomPromptGuideFile"
+                     Filter="@CUSTOM_PROMPT_GUIDE_FILE_TYPES"
+                     EnableDragDrop="true"/>
+}
 
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

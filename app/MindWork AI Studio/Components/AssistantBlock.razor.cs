@@ -26,7 +26,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     public string Description { get; set; } = string.Empty;
 
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.DisabledByDefault;
+    public string Icon { get; set; } = AppIcons.ASSISTANT_FALLBACK;
 
     [Parameter]
     public string ButtonText { get; set; } = "Start";
@@ -125,8 +125,8 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     /// <returns><c>true</c> when this block represents the owner.</returns>
     private bool OwnedByThisBlock(MediaImportOwner owner)
     {
-        if (owner.Kind.PersistsOwnSources())
-            return owner.Kind == this.Component.MediaOwnerKind();
+        if (owner.Kind.PersistsOwnSources)
+            return owner.Kind == this.Component.MediaOwnerKind;
 
         if (string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId))
             return owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal);
@@ -139,21 +139,21 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     /// </summary>
     private AssistantSessionIndicatorData? AssistantSessionIndicator => this.MediaImportSnapshot?.Status switch
     {
-        MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => new(Icons.Material.Filled.ChangeCircle, Color.Info, this.T("Media is still being prepared.")),
-        MediaImportStatus.SUCCEEDED => new(Icons.Material.Filled.TaskAlt, Color.Success, this.T("The media transcript is ready.")),
-        MediaImportStatus.WARNING => new(Icons.Material.Filled.WarningAmber, Color.Warning, this.T("Media transcription completed with a warning. Open the assistant to review it.")),
-        MediaImportStatus.FAILED => new(Icons.Material.Filled.Error, Color.Error, this.T("Media transcription failed. Open the assistant to review it.")),
-        MediaImportStatus.CANCELLED => new(Icons.Material.Filled.Cancel, Color.Warning, this.T("Media transcription was canceled. Open the assistant to review it.")),
+        MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => new(AppIcons.RUNNING, Color.Info, this.T("Media is still being prepared.")),
+        MediaImportStatus.SUCCEEDED => new(AppIcons.SUCCESS, Color.Success, this.T("The media transcript is ready.")),
+        MediaImportStatus.WARNING => new(AppIcons.WARNING, Color.Warning, this.TA("Media transcription completed with a warning. Open the assistant to review it.")),
+        MediaImportStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.TA("Media transcription failed. Open the assistant to review it.")),
+        MediaImportStatus.CANCELLED => new(AppIcons.CANCELED, Color.Warning, this.TA("Media transcription was canceled. Open the assistant to review it.")),
         
         _ => this.AssistantSessionIndicatorWithoutMedia,
     };
 
     private AssistantSessionIndicatorData? AssistantSessionIndicatorWithoutMedia => this.AssistantSessionSnapshot?.Status switch
     {
-        AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(Icons.Material.Filled.ChangeCircle, Color.Info, this.T("Assistant is still running.")),
-        AssistantSessionStatus.COMPLETED => new(Icons.Material.Filled.TaskAlt, Color.Success, this.T("The result is ready.")),
-        AssistantSessionStatus.FAILED => new(Icons.Material.Filled.Error, Color.Error, this.T("Assistant failed. Open it to review the result.")),
-        AssistantSessionStatus.CANCELED => new(Icons.Material.Filled.Cancel, Color.Warning, this.T("Assistant was canceled. Open it to review the result.")),
+        AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(AppIcons.RUNNING, Color.Info, this.T("Assistant is still running.")),
+        AssistantSessionStatus.COMPLETED => new(AppIcons.SUCCESS, Color.Success, this.T("The result is ready.")),
+        AssistantSessionStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.TA("Assistant failed. Open it to review the result.")),
+        AssistantSessionStatus.CANCELED => new(AppIcons.CANCELED, Color.Warning, this.TA("Assistant was canceled. Open it to review the result.")),
         _ => null,
     };
 
@@ -167,7 +167,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (this.OwnedByThisBlock(owner))
-            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<TSettings>)}: rendering a media import change");
+            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<>)}: rendering a media import change");
     }
 
     protected override void DisposeResources()

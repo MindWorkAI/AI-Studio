@@ -14,8 +14,14 @@ namespace AIStudio.Tools.ToolCallingSystem.Harness;
 public interface IToolCallingProviderAdapter
 {
     /// <summary>
-    /// Executes one non-streamed round and returns what the model answered.
+    /// Executes one round and streams what the model answers.
     /// </summary>
+    /// <remarks>
+    /// Every piece of text the model writes travels as a TEXT_DELTA event, including the text it
+    /// writes before it calls a tool. The round's outcome carries that text as well, but only so
+    /// that the loop can tell an answered round from a silent one -- whatever reaches the user
+    /// reaches them through the deltas, and through them only.
+    /// </remarks>
     /// <param name="finalResponseInstruction">
     /// When set, the instruction telling the model that no more tools are available. The adapter
     /// appends it to the system prompt for this round only.
@@ -23,10 +29,12 @@ public interface IToolCallingProviderAdapter
     /// <param name="includeTools">Whether the tools may be offered in this round.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>
-    /// The round's outcome, or null when the request failed. Null ends the loop without an error
-    /// message because the adapter has already told the user what went wrong.
+    /// The events of this round: any number of TEXT_DELTA events, closed by one ROUND_COMPLETED
+    /// event carrying the outcome. A stream which ends without that closing event is a failed
+    /// round; it ends the loop without an error message because the adapter has already told the
+    /// user what went wrong.
     /// </returns>
-    public Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default);
+    public IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default);
 
     /// <summary>
     /// Records the model's turn from the round just executed, so that the next round sees it.
