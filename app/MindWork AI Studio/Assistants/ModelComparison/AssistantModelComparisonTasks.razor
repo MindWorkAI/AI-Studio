@@ -8,6 +8,9 @@
                 @T("Model Comparison")
             </MudText>
             <MudSpacer/>
+            <MudTooltip Text="@T("Results of all comparisons")">
+                <MudIconButton Variant="Variant.Text" Icon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.OpenResultsDialog"/>
+            </MudTooltip>
             <MudTooltip Text="@T("Switch mode")">
                 <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SWITCH_ASSISTANT_MODE" OnClick="@this.SwitchMode"/>
             </MudTooltip>

@@ -32,6 +32,11 @@ public partial class ModelComparisonResultsDialog : MSGComponentBase
     /// </summary>
     private ModelComparisonStatistics? statistics;
 
+    /// <summary>
+    /// Which results the statistics count.
+    /// </summary>
+    private ModelComparisonResultSource source = ModelComparisonResultSource.ALL;
+
     private bool isDeleting;
 
     #region Overrides of MSGComponentBase
@@ -45,22 +50,30 @@ public partial class ModelComparisonResultsDialog : MSGComponentBase
     #endregion
 
     /// <summary>
-    /// Reads all stored comparisons anew.
+    /// Reads the results the source names anew. The comparison series are read for every source but the compared
+    /// answers alone: they are small, since their chats stay on the disk.
     /// </summary>
     private async Task LoadStatisticsAsync()
     {
         this.statistics = null;
-        this.statistics = await ModelComparisonStatistics.ComputeAsync(this.ModelComparisonStore.ReadResultsAsync());
+        IReadOnlyList<ModelComparisonSeries> series = this.source is ModelComparisonResultSource.ANSWERS ? [] : await this.ModelComparisonStore.ListSeriesAsync();
+        this.statistics = await ModelComparisonStatistics.ComputeAsync(this.ModelComparisonStore.ReadResultsAsync(), series, this.source);
+    }
+
+    private async Task SourceChanged(ModelComparisonResultSource changedSource)
+    {
+        this.source = changedSource;
+        await this.LoadStatisticsAsync();
     }
 
     private async Task DeleteAllResultsAsync()
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { dialog => dialog.Message, TA("Are you sure you want to delete the results of all your comparisons? Your presets stay. This cannot be undone.") },
+            { dialog => dialog.Message, TA("Are you sure you want to delete the results of all your compared answers? Your presets and your comparison series stay. This cannot be undone.") },
         };
 
-        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete all results"), parameters, DialogOptions.FULLSCREEN);
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete the results of compared answers"), parameters, DialogOptions.FULLSCREEN);
         var result = await reference.Result;
         if (result is null || result.Canceled)
             return;

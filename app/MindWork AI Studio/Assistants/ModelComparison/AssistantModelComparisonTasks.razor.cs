@@ -134,6 +134,11 @@ public partial class AssistantModelComparisonTasks : MSGComponentBase
     }
 
     /// <summary>
+    /// Shows what all stored comparisons say about the models, the series whose result the user saw included.
+    /// </summary>
+    private async Task OpenResultsDialog() => await this.DialogService.ShowAsync<ModelComparisonResultsDialog>(T("Results of all comparisons"), DialogOptions.FULLSCREEN);
+
+    /// <summary>
     /// Goes back to the choice between the two modes.
     /// </summary>
     private void SwitchMode() => this.NavigationManager.NavigateTo(Routes.ASSISTANT_MODEL_COMPARISON);

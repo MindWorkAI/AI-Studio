@@ -66,8 +66,23 @@ else
         <MudText Typo="Typo.body1" Class="mb-3">
             @this.NextTaskText
         </MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.StartTaskAsync" Disabled="@(this.seriesIssue is not null || this.isSaving)">
-            @(this.DecidedTaskCount == 0 ? T("Start a task") : T("Test another task"))
-        </MudButton>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.StartTaskAsync" Disabled="@(this.seriesIssue is not null || this.isSaving)">
+                @(this.DecidedTaskCount == 0 ? T("Start a task") : T("Test another task"))
+            </MudButton>
+            @if (this.DecidedTaskCount > 0)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.ToggleResultAsync" Disabled="@this.isSaving">
+                    @(this.showsResult ? T("Hide the result") : T("Show the result"))
+                </MudButton>
+            }
+        </MudStack>
     </MudPaper>
+
+    @if (this.showsResult && this.Series.IsResolved)
+    {
+        <MudPaper Outlined="true" Class="pa-4 mb-4 mr-3">
+            <ModelComparisonSeriesResult Statistics="@ModelComparisonSeriesStatistics.Of(this.Series)"/>
+        </MudPaper>
+    }
 }

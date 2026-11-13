@@ -2,21 +2,39 @@
 @inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
+        <MudToggleGroup T="ModelComparisonResultSource" Value="@this.source" ValueChanged="@this.SourceChanged" SelectionMode="SelectionMode.SingleSelection" Size="Size.Small" Color="Color.Primary" Class="mb-3">
+            <MudToggleItem Value="@ModelComparisonResultSource.ALL" Text="@T("All results")"/>
+            <MudToggleItem Value="@ModelComparisonResultSource.ANSWERS" Text="@T("Compared answers")"/>
+            <MudToggleItem Value="@ModelComparisonResultSource.TASKS" Text="@T("Real tasks")"/>
+        </MudToggleGroup>
+
         @if (this.statistics is null)
         {
             <MudProgressLinear Color="Color.Primary" Indeterminate="@true" Class="mb-3"/>
         }
-        else if (this.statistics.ComparisonCount == 0)
+        else if (this.statistics.IsEmpty)
         {
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-                @TA("There are no results yet. As soon as you vote on the answers of a comparison, its results appear here.")
+                @TA("There are no results yet. They appear here as soon as you vote on the answers of a comparison, or once you see the result of a comparison series.")
             </MudAlert>
         }
         else
         {
             var shownStatistics = this.statistics;
-            <MudText Typo="Typo.body1" Class="mb-3">
-                @string.Format(ModelComparisonFormat.Culture, T("Stored comparisons: {0}, with {1} runs in total."), shownStatistics.ComparisonCount.CompactCount(), shownStatistics.RunCount.CompactCount())
+            @if (shownStatistics.ComparisonCount > 0)
+            {
+                <MudText Typo="Typo.body1">
+                    @string.Format(ModelComparisonFormat.Culture, T("Compared answers: {0} comparisons with {1} runs."), shownStatistics.ComparisonCount.CompactCount(), shownStatistics.RunCount.CompactCount())
+                </MudText>
+            }
+            @if (shownStatistics.SeriesCount > 0)
+            {
+                <MudText Typo="Typo.body1">
+                    @string.Format(ModelComparisonFormat.Culture, T("Real tasks: {0} comparison series with {1} tasks decided without knowing the models."), shownStatistics.SeriesCount.CompactCount(), shownStatistics.TaskCount.CompactCount())
+                </MudText>
+            }
+            <MudText Typo="Typo.caption" Class="d-block mb-3">
+                @T("A comparison series counts only once its result was shown, and only with the tasks decided before.")
             </MudText>
 
             <MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" TabPanelsClass="pa-4">
@@ -70,13 +88,13 @@
                                 @TA("Agreement with your votes")
                             </MudText>
                             <MudText Typo="Typo.body2" Class="mb-2">
-                                @TA("How often each judge chose the same as you. Only runs with both your vote and a verdict of the judge count.")
+                                @TA("How often each judge chose the same as you. Only runs and tasks with both your vote and a verdict of the judge count.")
                             </MudText>
                             <MudSimpleTable Dense="@true" Hover="@true" Class="mb-6">
                                 <thead>
                                     <tr>
                                         <th>@T("Judge")</th>
-                                        <th>@T("Compared runs")</th>
+                                        <th>@T("Compared")</th>
                                         <th>@T("Same choice")</th>
                                         <th>@T("Agreement")</th>
                                     </tr>
@@ -109,12 +127,21 @@
                 </MudTabPanel>
 
                 <MudTabPanel Text="@T("Speed")" Icon="@AppIcons.ELAPSED_TIME">
-                    <ModelComparisonSpeeds Speeds="@shownStatistics.Speeds"/>
+                    @if (shownStatistics.Speeds.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @T("Only the comparison of answers measures how fast the models answer.")
+                        </MudText>
+                    }
+                    else
+                    {
+                        <ModelComparisonSpeeds Speeds="@shownStatistics.Speeds"/>
+                    }
                 </MudTabPanel>
             </MudTabs>
 
             <MudText Typo="Typo.caption" Class="d-block mt-3">
-                @TA("The share of wins counts only the runs which one of the models won, not the ties. With few runs, chance plays a large part. Therefore, a model counts as clearly better or clearly worse only when the likely range of its share, at a confidence of 95 percent, lies entirely above or below one half. Many runs of the same request tell you a lot about that request, but little about others, so compare the models on different requests, too.")
+                @TA("The share of wins counts only the runs and tasks which one of the models won, not the ties. With few of them, chance plays a large part. Therefore, a model counts as clearly better or clearly worse only when the likely range of its share, at a confidence of 95 percent, lies entirely above or below one half. Many runs of the same request tell you a lot about that request, but little about others, so compare the models on different requests and tasks, too.")
             </MudText>
         }
     </DialogContent>
@@ -122,7 +149,7 @@
         @if (this.statistics is { ComparisonCount: > 0 })
         {
             <MudButton OnClick="@this.DeleteAllResultsAsync" Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" Disabled="@this.isDeleting">
-                @T("Delete all results")
+                @T("Delete the results of compared answers")
             </MudButton>
         }
         <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">

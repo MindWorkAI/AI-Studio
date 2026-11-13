@@ -164,7 +164,81 @@ public sealed class ModelComparisonStatisticsTests
         }
     }
 
+    [Test]
+    public async Task OnlyTheBlindTasksOfASeriesWithAShownResultCount()
+    {
+        var resolved = Series(A, B, JUDGE, isResolved: true,
+            SeriesTask(ModelComparisonModelChoice.FIRST, ModelComparisonModelChoice.FIRST),
+            SeriesTask(ModelComparisonModelChoice.FIRST, ModelComparisonModelChoice.SECOND),
+            SeriesTask(ModelComparisonModelChoice.SECOND, isBlind: false),
+            SeriesTask(vote: null, state: ModelComparisonSeriesTaskState.DECIDING));
+        var unresolved = Series(A, B, judge: null, isResolved: false, SeriesTask(ModelComparisonModelChoice.SECOND));
+
+        var statistics = await ModelComparisonStatistics.ComputeAsync(ToAsync([]), [resolved, unresolved], ModelComparisonResultSource.ALL);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(statistics.SeriesCount, Is.EqualTo(1));
+            Assert.That(statistics.TaskCount, Is.EqualTo(2));
+            Assert.That(statistics.IsEmpty, Is.False);
+            Assert.That(statistics.Pairings.Single().Votes.FirstModelWins, Is.EqualTo(2));
+            Assert.That(statistics.Pairings.Single().Votes.SecondModelWins, Is.Zero);
+            Assert.That(statistics.Pairings.Single().ComparisonCount, Is.EqualTo(1));
+            Assert.That(statistics.JudgeAgreements.Single().ComparedRuns, Is.EqualTo(2));
+            Assert.That(statistics.JudgeAgreements.Single().Agreements, Is.EqualTo(1));
+            Assert.That(statistics.Speeds, Is.Empty);
+        }
+    }
+
+    [Test]
+    public async Task TheSourceChoosesWhichResultsCount()
+    {
+        var record = Record(A, B, LATER, judge: null, Run(ModelComparisonModelChoice.FIRST));
+        var series = Series(A, B, judge: null, isResolved: true, SeriesTask(ModelComparisonModelChoice.SECOND));
+
+        var all = await ModelComparisonStatistics.ComputeAsync(ToAsync([record]), [series], ModelComparisonResultSource.ALL);
+        var answers = await ModelComparisonStatistics.ComputeAsync(ToAsync([record]), [series], ModelComparisonResultSource.ANSWERS);
+        var tasks = await ModelComparisonStatistics.ComputeAsync(ToAsync([record]), [series], ModelComparisonResultSource.TASKS);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(all.Pairings.Single().Votes.FirstModelWins, Is.EqualTo(1));
+            Assert.That(all.Pairings.Single().Votes.SecondModelWins, Is.EqualTo(1));
+            Assert.That(all.Pairings.Single().ComparisonCount, Is.EqualTo(2));
+
+            Assert.That(answers.SeriesCount, Is.Zero);
+            Assert.That(answers.Pairings.Single().Votes.SecondModelWins, Is.Zero);
+
+            Assert.That(tasks.ComparisonCount, Is.Zero);
+            Assert.That(tasks.Pairings.Single().Votes.FirstModelWins, Is.Zero);
+            Assert.That(tasks.Pairings.Single().Votes.SecondModelWins, Is.EqualTo(1));
+        }
+    }
+
     private static Task<ModelComparisonStatistics> ComputeAsync(params ModelComparisonRecord[] records) => ModelComparisonStatistics.ComputeAsync(ToAsync(records));
+
+    private static ModelComparisonSeries Series(ModelComparisonModelIdentity first, ModelComparisonModelIdentity second, ModelComparisonModelIdentity? judge, bool isResolved, params ModelComparisonSeriesTask[] tasks) => new()
+    {
+        Id = Guid.NewGuid(),
+        Name = "Series",
+        CreatedAtUtc = EARLIER,
+        First = first,
+        Second = second,
+        Judge = judge,
+        IsResolved = isResolved,
+        ResolvedAtUtc = isResolved ? LATER : null,
+        Tasks = [.. tasks],
+    };
+
+    private static ModelComparisonSeriesTask SeriesTask(ModelComparisonModelChoice? vote, ModelComparisonModelChoice? judgeChoice = null, bool isBlind = true, ModelComparisonSeriesTaskState state = ModelComparisonSeriesTaskState.DONE) => new()
+    {
+        Id = Guid.NewGuid(),
+        StartedAtUtc = EARLIER,
+        State = state,
+        Vote = vote,
+        JudgeChoice = judgeChoice,
+        IsBlind = isBlind,
+    };
 
     private static async IAsyncEnumerable<ModelComparisonRecord> ToAsync(IEnumerable<ModelComparisonRecord> records)
     {

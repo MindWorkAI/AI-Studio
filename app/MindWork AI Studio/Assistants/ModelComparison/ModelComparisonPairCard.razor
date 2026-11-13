@@ -5,7 +5,7 @@
         @string.Format(T("{0} vs. {1}"), this.Pairing.First.Label, this.Pairing.Second.Label)
     </MudText>
     <MudText Typo="Typo.caption" Class="d-block mb-2">
-        @string.Format(ModelComparisonFormat.Culture, T("Stored comparisons: {0}"), this.Pairing.ComparisonCount.CompactCount())
+        @this.CaptionText
     </MudText>
     <MudSimpleTable Dense="@true" Hover="@true">
         <thead>

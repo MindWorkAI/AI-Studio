@@ -123,6 +123,11 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     /// </summary>
     private bool isJudging;
 
+    /// <summary>
+    /// Whether the result of the series shows, which names the models. Shown from the start once the user saw it.
+    /// </summary>
+    private bool showsResult;
+
     #region Overrides of MSGComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -138,6 +143,7 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
             return;
 
         this.shownSeries = this.Series;
+        this.showsResult = this.Series.IsResolved;
         this.chatStore = new ModelComparisonSeriesChatStore(this.ModelComparisonStore, this.Series.Id);
         this.CheckModels();
         await this.ShowOpenTaskAsync();
@@ -341,6 +347,40 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
         }
 
         await this.SaveAsync();
+    }
+
+    /// <summary>
+    /// Shows or hides the result of the series. The first time, it asks: the result names the models, which ends the
+    /// blind phase of the series for good.
+    /// </summary>
+    private async Task ToggleResultAsync()
+    {
+        if (this.showsResult || this.Series.IsResolved)
+        {
+            this.showsResult = !this.showsResult;
+            return;
+        }
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { dialog => dialog.Message, TA("The result tells you which model answered in which chat. Tasks you decide afterward no longer count as blind: the result shows them apart, and the results of all comparisons leave them out. Do you want to see the result?") },
+        };
+
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Show the result"), parameters, DialogOptions.FULLSCREEN);
+        var result = await reference.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        this.Series.IsResolved = true;
+        this.Series.ResolvedAtUtc = DateTimeOffset.UtcNow;
+        if (!await this.SaveAsync())
+        {
+            this.Series.IsResolved = false;
+            this.Series.ResolvedAtUtc = null;
+            return;
+        }
+
+        this.showsResult = true;
     }
 
     /// <summary>

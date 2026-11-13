@@ -17,6 +17,14 @@ public partial class ModelComparisonPairCard : MSGComponentBase
     public ModelComparisonPairing Pairing { get; set; } = null!;
 
     /// <summary>
+    /// Gets or sets what the line below the names says, or null for the number of stored comparisons.
+    /// </summary>
+    [Parameter]
+    public string? Caption { get; set; }
+
+    private string CaptionText => this.Caption ?? string.Format(ModelComparisonFormat.Culture, T("Stored comparisons: {0}"), this.Pairing.ComparisonCount.CompactCount());
+
+    /// <summary>
     /// Says which model of the pair won clearly, if one did.
     /// </summary>
     /// <param name="winShareOfFirst">The share of wins of the first model, by the votes or by the judges.</param>

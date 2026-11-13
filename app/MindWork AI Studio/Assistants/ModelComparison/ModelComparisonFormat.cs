@@ -40,6 +40,24 @@ public static class ModelComparisonFormat
         : "-";
 
     /// <summary>
+    /// Formats a duration in minutes with one decimal place, e.g., "12.5 min".
+    /// </summary>
+    /// <param name="duration">The duration, or null when it is not known.</param>
+    /// <returns>The minutes with their unit, or a dash.</returns>
+    public static string Minutes(TimeSpan? duration) => duration is { } value
+        ? $"{value.TotalMinutes.ToString("0.0", Culture)} min"
+        : "-";
+
+    /// <summary>
+    /// Formats a number with one decimal place, e.g., an average.
+    /// </summary>
+    /// <param name="number">The number, or null when it is not known.</param>
+    /// <returns>The number, or a dash.</returns>
+    public static string Decimal(double? number) => number is { } value
+        ? value.ToString("0.0", Culture)
+        : "-";
+
+    /// <summary>
     /// Formats a share as a whole percentage.
     /// </summary>
     /// <param name="share">The share between 0 and 1, or null when it is not known.</param>

@@ -32,62 +32,49 @@ internal sealed class ModelComparisonStatisticsBuilder
 
     private int runCount;
 
+    private int seriesCount;
+
+    private int taskCount;
+
     /// <summary>
-    /// Counts a stored comparison.
+    /// Counts a stored comparison of the stability mode.
     /// </summary>
     /// <param name="record">The stored comparison.</param>
     public void Add(ModelComparisonRecord record)
     {
         this.comparisonCount++;
         this.runCount += record.Runs.Count;
-
-        var first = this.Remember(record.First, record.FinishedAtUtc);
-        var second = this.Remember(record.Second, record.FinishedAtUtc);
-        if (record.Judge is { } judge)
-            this.Remember(judge, record.FinishedAtUtc);
-
-        var comparesTwoModels = first != second;
-        var pair = ModelComparisonPairKey.Of(first, second);
-        var pairIsSwapped = pair.First != first;
-        if (comparesTwoModels)
-        {
-            var pairing = this.pairings.GetValueOrDefault(pair) ?? new ModelComparisonPairing
-            {
-                First = pairIsSwapped ? record.Second : record.First,
-                Second = pairIsSwapped ? record.First : record.Second,
-            };
-
-            this.pairings[pair] = pairing with { ComparisonCount = pairing.ComparisonCount + 1 };
-        }
+        this.AddComparison(record.First, record.Second, record.Judge, record.FinishedAtUtc);
 
         foreach (var run in record.Runs)
         {
-            this.AddTimes(first, run.First);
-            this.AddTimes(second, run.Second);
-
-            if (comparesTwoModels)
-            {
-                Count(this.voteStandings, record.First, record.Second, run.Vote);
-                Count(this.judgeStandings, record.First, record.Second, run.JudgeChoice);
-
-                var pairing = this.pairings[pair];
-                this.pairings[pair] = pairing with
-                {
-                    Votes = pairing.Votes.Plus(Oriented(run.Vote, pairIsSwapped)),
-                    JudgeVerdicts = pairing.JudgeVerdicts.Plus(Oriented(run.JudgeChoice, pairIsSwapped)),
-                };
-            }
-
-            if (record.Judge is { } judgeOfRun && run.Vote is { } vote && run.JudgeChoice is { } judgeChoice)
-            {
-                var agreement = this.judgeAgreements.GetValueOrDefault(judgeOfRun.Key) ?? new ModelComparisonJudgeAgreement { Judge = judgeOfRun };
-                this.judgeAgreements[judgeOfRun.Key] = agreement with
-                {
-                    Agreements = agreement.Agreements + (vote == judgeChoice ? 1 : 0),
-                    ComparedRuns = agreement.ComparedRuns + 1,
-                };
-            }
+            this.AddTimes(record.First.Key, run.First);
+            this.AddTimes(record.Second.Key, run.Second);
+            this.AddDecision(record.First, record.Second, record.Judge, run.Vote, run.JudgeChoice);
         }
+    }
+
+    /// <summary>
+    /// Counts the blind tasks of a comparison series whose result the user saw. A series before its result counts not
+    /// at all: its models must not show up anywhere with their names. A task decided after the result is not blind and
+    /// stays out, too. The tasks have no times of the answers, so they count toward neither speed.
+    /// </summary>
+    /// <param name="series">The series.</param>
+    public void Add(ModelComparisonSeries series)
+    {
+        if (!series.IsResolved)
+            return;
+
+        var blindTasks = series.Tasks.Where(task => task is { State: ModelComparisonSeriesTaskState.DONE, IsBlind: true }).ToList();
+        if (blindTasks.Count == 0)
+            return;
+
+        this.seriesCount++;
+        this.taskCount += blindTasks.Count;
+        this.AddComparison(series.First, series.Second, series.Judge, series.ResolvedAtUtc ?? series.LastActivityUtc);
+
+        foreach (var task in blindTasks)
+            this.AddDecision(series.First, series.Second, series.Judge, task.Vote, task.JudgeChoice);
     }
 
     /// <summary>
@@ -98,6 +85,8 @@ internal sealed class ModelComparisonStatisticsBuilder
     {
         ComparisonCount = this.comparisonCount,
         RunCount = this.runCount,
+        SeriesCount = this.seriesCount,
+        TaskCount = this.taskCount,
         VoteRanking = this.Rank(this.voteStandings),
         JudgeRanking = this.Rank(this.judgeStandings),
         Pairings =
@@ -130,21 +119,83 @@ internal sealed class ModelComparisonStatisticsBuilder
     };
 
     /// <summary>
+    /// Counts a comparison of two models: remembers their names, and counts it for their pair.
+    /// </summary>
+    /// <param name="first">The first model of the comparison.</param>
+    /// <param name="second">The second model of the comparison.</param>
+    /// <param name="judge">The judge, or null without one.</param>
+    /// <param name="finishedAtUtc">When the comparison was finished.</param>
+    private void AddComparison(ModelComparisonModelIdentity first, ModelComparisonModelIdentity second, ModelComparisonModelIdentity? judge, DateTimeOffset finishedAtUtc)
+    {
+        this.Remember(first, finishedAtUtc);
+        this.Remember(second, finishedAtUtc);
+        if (judge is not null)
+            this.Remember(judge, finishedAtUtc);
+
+        // A comparison of a model with itself tests how consistently it answers, not which model is better:
+        if (first.Key == second.Key)
+            return;
+
+        var pair = ModelComparisonPairKey.Of(first.Key, second.Key);
+        var pairIsSwapped = pair.First != first.Key;
+        var pairing = this.pairings.GetValueOrDefault(pair) ?? new ModelComparisonPairing
+        {
+            First = pairIsSwapped ? second : first,
+            Second = pairIsSwapped ? first : second,
+        };
+
+        this.pairings[pair] = pairing with { ComparisonCount = pairing.ComparisonCount + 1 };
+    }
+
+    /// <summary>
+    /// Counts the vote of the user and the choice of the judge on one run or task.
+    /// </summary>
+    /// <param name="first">The first model of the comparison.</param>
+    /// <param name="second">The second model of the comparison.</param>
+    /// <param name="judge">The judge, or null without one.</param>
+    /// <param name="vote">The vote of the user, or null without one.</param>
+    /// <param name="judgeChoice">The choice of the judge, or null without a usable verdict.</param>
+    private void AddDecision(ModelComparisonModelIdentity first, ModelComparisonModelIdentity second, ModelComparisonModelIdentity? judge, ModelComparisonModelChoice? vote, ModelComparisonModelChoice? judgeChoice)
+    {
+        if (first.Key != second.Key)
+        {
+            Count(this.voteStandings, first, second, vote);
+            Count(this.judgeStandings, first, second, judgeChoice);
+
+            var pair = ModelComparisonPairKey.Of(first.Key, second.Key);
+            var pairIsSwapped = pair.First != first.Key;
+            var pairing = this.pairings[pair];
+            this.pairings[pair] = pairing with
+            {
+                Votes = pairing.Votes.Plus(Oriented(vote, pairIsSwapped)),
+                JudgeVerdicts = pairing.JudgeVerdicts.Plus(Oriented(judgeChoice, pairIsSwapped)),
+            };
+        }
+
+        if (judge is not null && vote is { } decidedVote && judgeChoice is { } decidedJudgeChoice)
+        {
+            var agreement = this.judgeAgreements.GetValueOrDefault(judge.Key) ?? new ModelComparisonJudgeAgreement { Judge = judge };
+            this.judgeAgreements[judge.Key] = agreement with
+            {
+                Agreements = agreement.Agreements + (decidedVote == decidedJudgeChoice ? 1 : 0),
+                ComparedRuns = agreement.ComparedRuns + 1,
+            };
+        }
+    }
+
+    /// <summary>
     /// Remembers the identity of a model when its comparison is the latest one so far.
     /// </summary>
     /// <param name="identity">The identity in the stored comparison.</param>
     /// <param name="finishedAtUtc">When the comparison was finished.</param>
-    /// <returns>The key of the model.</returns>
-    private ModelComparisonModelKey Remember(ModelComparisonModelIdentity identity, DateTimeOffset finishedAtUtc)
+    private void Remember(ModelComparisonModelIdentity identity, DateTimeOffset finishedAtUtc)
     {
         var key = identity.Key;
-        if (!this.latestTimes.TryGetValue(key, out var latest) || finishedAtUtc >= latest)
-        {
-            this.latestTimes[key] = finishedAtUtc;
-            this.latestIdentities[key] = identity;
-        }
+        if (this.latestTimes.TryGetValue(key, out var latest) && finishedAtUtc < latest)
+            return;
 
-        return key;
+        this.latestTimes[key] = finishedAtUtc;
+        this.latestIdentities[key] = identity;
     }
 
     /// <summary>
@@ -242,7 +293,7 @@ internal sealed class ModelComparisonStatisticsBuilder
     /// </summary>
     /// <param name="times">The times.</param>
     /// <returns>The median, or null without any times.</returns>
-    private static TimeSpan? Median(List<TimeSpan> times)
+    internal static TimeSpan? Median(IReadOnlyCollection<TimeSpan> times)
     {
         if (times.Count == 0)
             return null;
