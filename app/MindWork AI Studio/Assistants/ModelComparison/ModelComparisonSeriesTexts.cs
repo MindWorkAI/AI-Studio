@@ -14,6 +14,11 @@ public static class ModelComparisonSeriesTexts
     public static string WhatASeriesIs => TA("A comparison series collects your real tasks over days or weeks. You work on each task with one of the two models, and then on the same task with the other one; the second chat starts with your first message of the first one. Afterward, you decide which chat helped you more. You learn which model was which only when you look at the result of the series.");
 
     /// <summary>
+    /// How a task of a series runs, step by step.
+    /// </summary>
+    public static string HowATaskWorks => TA("A task runs in four steps. First, you start it, and AI Studio chooses at random which of the two models you chat with first. Second, you work on your task in the chat as you always do: you can attach files, and the model uses the profile, tools, and data sources of the series. Third, once you are done, the other model gets your first message with its files, and you continue the same task with it. Fourth, you decide which chat helped you more; when the series has a judge, it gives its own verdict afterward. You can look at the result of the series whenever you like. Since it names the models, the tasks you decide afterward no longer count as blind.");
+
+    /// <summary>
     /// How the two models of a series are chosen and kept blind.
     /// </summary>
     public static string WhatTheModelsAreFor => TA("Choose the two models you want to compare, e.g., the model you work with every day and a new one. For every task, AI Studio decides at random which model you chat with first, and it hides their names until you look at the result of the series.");

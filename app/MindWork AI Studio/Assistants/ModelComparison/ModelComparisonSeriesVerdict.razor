@@ -14,34 +14,35 @@
             <MudText Typo="Typo.body1" Class="mb-1">
                 @this.VerdictText
             </MudText>
+            @* The reasoning is written by the judge, and its line breaks belong to it: *@
             <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
                 @this.SeriesTask.JudgeReasoning
             </MudText>
             break;
 
         case ModelComparisonSeriesJudgeStatus.TOO_LONG:
-            <MudText Typo="Typo.body2">
+            <MudJustifiedText Typo="Typo.body1">
                 @T("Both chats together are too long for the judge, so it did not judge this task.")
-            </MudText>
+            </MudJustifiedText>
             break;
 
         case ModelComparisonSeriesJudgeStatus.UNAVAILABLE:
-            <MudText Typo="Typo.body2">
+            <MudJustifiedText Typo="Typo.body1">
                 @T("The judge is no longer available as it was when the series began, so it did not judge this task.")
-            </MudText>
+            </MudJustifiedText>
             break;
 
         case ModelComparisonSeriesJudgeStatus.NOT_ASKED or ModelComparisonSeriesJudgeStatus.NO_VERDICT when this.IsJudging:
             <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2"/>
-            <MudText Typo="Typo.body2">
+            <MudJustifiedText Typo="Typo.body1">
                 @T("The judge reads both chats. This can take a while.")
-            </MudText>
+            </MudJustifiedText>
             break;
 
         default:
-            <MudText Typo="Typo.body2" Class="mb-2">
+            <MudJustifiedText Typo="Typo.body1" Class="mb-2">
                 @(this.SeriesTask.JudgeStatus is ModelComparisonSeriesJudgeStatus.NO_VERDICT ? T("The judge did not give a usable verdict.") : T("The judge has not judged this task yet."))
-            </MudText>
+            </MudJustifiedText>
             <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@AppIcons.JUDGE" OnClick="@(() => this.AskJudge.InvokeAsync())">
                 @T("Ask the judge")
             </MudButton>

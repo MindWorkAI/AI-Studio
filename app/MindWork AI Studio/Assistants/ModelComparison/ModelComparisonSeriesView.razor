@@ -7,6 +7,12 @@
     </MudAlert>
 }
 
+<CompactExpansionPanel HeaderIcon="@AppIcons.HELP" HeaderText="@T("How a task works")" Class="mb-3 mr-3" @bind-Expanded="@this.explanationExpanded">
+    <MudJustifiedText Typo="Typo.body1">
+        @ModelComparisonSeriesTexts.HowATaskWorks
+    </MudJustifiedText>
+</CompactExpansionPanel>
+
 @if (this.Series.OpenTask is { } task)
 {
     <MudPaper Outlined="true" Class="pa-4 mb-4 mr-3">
@@ -22,14 +28,14 @@
 
         @if (task.CurrentChat is { } chat)
         {
-            <MudText Typo="Typo.body2" Class="mb-1">
+            <MudJustifiedText Typo="Typo.body1" Class="mb-2">
                 @this.ChatHint(task)
-            </MudText>
+            </MudJustifiedText>
             @if (this.allowedFileTypes is not null)
             {
-                <MudText Typo="Typo.caption" Class="d-block mb-1">
-                    @TA("You cannot attach images in this series, since not both models can read them.")
-                </MudText>
+                <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+                    @TA("You cannot attach images in this series, since not both models can read them. Other files, such as documents, work as usual.")
+                </MudJustifiedText>
             }
 
             <EmbeddedChat @key="@chat.ChatId"
@@ -63,9 +69,9 @@ else
             <ModelComparisonSeriesVerdict SeriesTask="@decidedTask" TaskNumber="@(this.Series.Tasks.IndexOf(decidedTask) + 1)" IsJudging="@this.isJudging" AskJudge="@(() => this.AskJudgeAsync(decidedTask))"/>
         }
 
-        <MudText Typo="Typo.body1" Class="mb-3">
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @this.NextTaskText
-        </MudText>
+        </MudJustifiedText>
         <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.StartTaskAsync" Disabled="@(this.seriesIssue is not null || this.isSaving)">
                 @(this.DecidedTaskCount == 0 ? T("Start a task") : T("Test another task"))

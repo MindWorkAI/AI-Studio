@@ -128,6 +128,11 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     /// </summary>
     private bool showsResult;
 
+    /// <summary>
+    /// Whether the explanation of how a task works shows. Open until the user decided the first task of the series.
+    /// </summary>
+    private bool explanationExpanded;
+
     #region Overrides of MSGComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -144,6 +149,7 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
 
         this.shownSeries = this.Series;
         this.showsResult = this.Series.IsResolved;
+        this.explanationExpanded = this.DecidedTaskCount == 0;
         this.chatStore = new ModelComparisonSeriesChatStore(this.ModelComparisonStore, this.Series.Id);
         this.CheckModels();
         await this.ShowOpenTaskAsync();
