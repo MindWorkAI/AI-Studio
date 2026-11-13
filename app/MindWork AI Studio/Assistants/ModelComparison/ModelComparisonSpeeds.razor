@@ -1,8 +1,8 @@
 @inherits MSGComponentBase
 
-<MudText Typo="Typo.body2" Class="mb-3">
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
     @T("The median time each model took, so that a single slow answer does not distort the picture. Only complete answers count. The times also depend on the length of the answers and on how busy the servers were.")
-</MudText>
+</MudJustifiedText>
 @if (this.timedSpeeds.Count > 0)
 {
     <MudChart T="double" ChartType="ChartType.Bar" ChartLabels="@ModelComparisonCharts.ModelLabels(this.timedSpeeds.Select(speed => speed.Model))" ChartSeries="@this.SpeedSeries" ChartOptions="@this.ChartOptions" Width="100%" Height="300px"/>

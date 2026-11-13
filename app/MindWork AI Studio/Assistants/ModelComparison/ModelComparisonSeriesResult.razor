@@ -3,31 +3,40 @@
 <MudText Typo="Typo.h6" Class="mb-2">
     @T("Result of the series")
 </MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
+    @ModelComparisonResultTexts.WhatTheSeriesResultShows
+</MudJustifiedText>
 
 @if (this.Statistics.Pairing.ComparisonCount == 0)
 {
-    <MudText Typo="Typo.body2" Class="mb-3">
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
         @TA("You decided no task of this series without knowing the models, so it has no result.")
-    </MudText>
+    </MudJustifiedText>
 }
 else
 {
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+        @ModelComparisonResultTexts.WhatThePairAssessmentMeans
+    </MudJustifiedText>
     <ModelComparisonPairCard Pairing="@this.Statistics.Pairing" Caption="@this.BlindTasksText"/>
 
-    <MudText Typo="Typo.body2" Class="mb-1">
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
         @this.ChatOrderText
-    </MudText>
+    </MudJustifiedText>
     @if (this.Statistics.JudgeAgreement is { ComparedRuns: > 0 } agreement)
     {
-        <MudText Typo="Typo.body2" Class="mb-1">
+        <MudJustifiedText Typo="Typo.body1" Class="mb-2">
             @string.Format(ModelComparisonFormat.Culture, TA("The judge chose the same as you in {0} of {1} tasks ({2})."), agreement.Agreements.CompactCount(), agreement.ComparedRuns.CompactCount(), ModelComparisonFormat.Share(agreement.Share))
-        </MudText>
+        </MudJustifiedText>
     }
 }
 
 <MudText Typo="Typo.subtitle1" Class="mt-3">
     @TA("Your effort with each model")
 </MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @ModelComparisonResultTexts.WhatTheEffortMeans
+</MudJustifiedText>
 <MudSimpleTable Dense="@true" Hover="@true" Class="mb-3">
     <thead>
         <tr>
@@ -52,7 +61,7 @@ else
 
 @if (this.Statistics.NotBlindVotes.TotalRunCount > 0)
 {
-    <MudText Typo="Typo.caption" Class="d-block">
+    <MudJustifiedText Typo="Typo.body1">
         @this.NotBlindText
-    </MudText>
+    </MudJustifiedText>
 }
