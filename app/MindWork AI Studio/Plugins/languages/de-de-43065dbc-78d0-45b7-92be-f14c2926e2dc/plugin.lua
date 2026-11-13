@@ -13588,10 +13588,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::INFORMATIONDIALOG::T3448155331"] = "Schließ
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1058933136"] = "Verglichen"
 
 -- Are you sure you want to delete all results of the mode “Answer Variance” and all comparison series of the mode “Everyday Tasks” with their chats, also those whose result you have not seen yet? Your presets stay. This cannot be undone.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1167627412"] = "Möchten Sie wirklich alle Ergebnisse des Modus „Antwortvarianz“ und alle Vergleichsreihen des Modus „Alltagsaufgaben“ samt Chats löschen – auch diejenigen, deren Ergebnisse Sie noch nicht angesehen haben? Ihre Voreinstellungen bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1167627412"] = "Möchten Sie wirklich alle Ergebnisse des Modus „Antwortvarianz“ und alle Vergleichsreihen des Modus „Alltagsaufgaben“ samt Chats löschen, auch die, deren Ergebnis Sie noch nicht gesehen haben? Ihre Voreinstellungen bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
 
 -- Are you sure you want to delete all results of the mode “Answer Variance” and all comparison series of the mode “Everyday Tasks” with their chats, also those whose result you have not seen yet? Your presets stay. This cannot be undone.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1167627412::INFORMAL"] = "Möchtest du wirklich alle Ergebnisse des Modus „Antwortvarianz“ und alle Vergleichsreihen des Modus „Alltagsaufgaben“ samt Chats löschen – auch diejenigen, deren Ergebnisse du noch nicht angesehen hast? Deine Voreinstellungen bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T1167627412::INFORMAL"] = "Möchtest du wirklich alle Ergebnisse des Modus „Antwortvarianz“ und alle Vergleichsreihen des Modus „Alltagsaufgaben“ samt Chats löschen, auch die, deren Ergebnis du noch nicht gesehen hast? Deine Voreinstellungen bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
 
 -- {0}: {1} comparisons with {2} runs.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T119967148"] = "{0}: {1} Vergleiche mit {2} Durchläufen."
@@ -13708,10 +13708,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T865427974"] =
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T922668471"] = "Nur der Modus „Antwortvarianz“ misst, wie schnell die Modelle antworten."
 
 -- Are you sure you want to delete all comparison series of the mode “Everyday Tasks” with their chats, also those whose result you have not seen yet? Your presets and the results of the mode “Answer Variance” stay. This cannot be undone.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T93821586"] = "Möchten Sie wirklich alle Vergleichsreihen des Modus „Alltagsaufgaben“ mitsamt den zugehörigen Chats löschen, auch solche, deren Ergebnis Sie noch nicht gesehen haben? Ihre Voreinstellungen und die Ergebnisse des Modus „Antwortvarianz“ bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T93821586"] = "Möchten Sie wirklich alle Vergleichsreihen des Modus „Alltagsaufgaben“ samt Chats löschen, auch die, deren Ergebnis Sie noch nicht gesehen haben? Ihre Voreinstellungen und die Ergebnisse des Modus „Antwortvarianz“ bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
 
 -- Are you sure you want to delete all comparison series of the mode “Everyday Tasks” with their chats, also those whose result you have not seen yet? Your presets and the results of the mode “Answer Variance” stay. This cannot be undone.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T93821586::INFORMAL"] = "Möchtest du wirklich alle Vergleichsreihen des Modus „Alltagsaufgaben“ mitsamt den zugehörigen Chats löschen, auch solche, deren Ergebnis du noch nicht gesehen hast? Deine Voreinstellungen und die Ergebnisse des Modus „Antwortvarianz“ bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONRESULTSDIALOG::T93821586::INFORMAL"] = "Möchtest du wirklich alle Vergleichsreihen des Modus „Alltagsaufgaben“ samt Chats löschen, auch die, deren Ergebnis du noch nicht gesehen hast? Deine Voreinstellungen und die Ergebnisse des Modus „Antwortvarianz“ bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden."
 
 -- Judge (optional)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1206060603"] = "Richter (optional)"
