@@ -100,13 +100,13 @@ public partial class VisualBriefingAssistant
 
         var parameters = new DialogParameters<SingleInputDialog>
         {
-            { dialog => dialog.Message, T("Enter a new name for this visual briefing.") },
+            { dialog => dialog.Message, TA("Enter a new name for this visual briefing.") },
             { dialog => dialog.InputHeaderText, T("Briefing name") },
             { dialog => dialog.UserInput, this.editor.Name },
             { dialog => dialog.ConfirmText, T("Rename") },
             { dialog => dialog.ConfirmColor, Color.Info },
             { dialog => dialog.AllowEmptyInput, false },
-            { dialog => dialog.EmptyInputErrorMessage, T("Please enter a briefing name.") },
+            { dialog => dialog.EmptyInputErrorMessage, TA("Please enter a briefing name.") },
         };
 
         var reference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename visual briefing"), parameters, DialogOptions.FULLSCREEN);
@@ -131,7 +131,7 @@ public partial class VisualBriefingAssistant
             parameters.Add(dialog => dialog.Message, string.Format(T("Permanently delete the visual briefing '{0}' and all of its versions and transcripts?"), this.selectedProject.Name));
         else
         {
-            var reportingWarning = T("This visual briefing cannot currently be opened. Consider reporting the problem in the [MindWork AI Studio issue tracker](https://github.com/MindWorkAI/AI-Studio), because a future update may make the briefing accessible again.");
+            var reportingWarning = TA("This visual briefing cannot currently be opened. Consider reporting the problem in the [MindWork AI Studio issue tracker](https://github.com/MindWorkAI/AI-Studio), because a future update may make the briefing accessible again.");
             var deletionWarning = T("Permanently delete this visual briefing and all of its versions and transcripts?");
             parameters.Add(dialog => dialog.MarkdownBody, $"{reportingWarning}\n\n{deletionWarning}");
         }

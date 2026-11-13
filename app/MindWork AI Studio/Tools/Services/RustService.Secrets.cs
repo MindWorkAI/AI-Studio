@@ -8,11 +8,11 @@ public sealed partial class RustService
     {
         SecretStoreIssueCode.NONE => issue,
         SecretStoreIssueCode.SECRET_NOT_FOUND => TB("No saved secret was found."),
-        SecretStoreIssueCode.NO_DEFAULT_COLLECTION => TB("AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default."),
-        SecretStoreIssueCode.COLLECTION_LOCKED => TB("AI Studio could not access secure storage because the default collection is locked. Open your password manager and unlock the default collection."),
-        SecretStoreIssueCode.PROMPT_DISMISSED => TB("The secure-storage confirmation was canceled. Repeat the operation and confirm the password manager prompt."),
-        SecretStoreIssueCode.SERVICE_UNAVAILABLE => TB("No compatible secure-storage service is available. Configure a password manager that provides the FreeDesktop Secret Service."),
-        _ => TB("AI Studio could not access secure storage. See the log for technical details."),
+        SecretStoreIssueCode.NO_DEFAULT_COLLECTION => TA("AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default."),
+        SecretStoreIssueCode.COLLECTION_LOCKED => TA("AI Studio could not access secure storage because the default collection is locked. Open your password manager and unlock the default collection."),
+        SecretStoreIssueCode.PROMPT_DISMISSED => TA("The secure-storage confirmation was canceled. Repeat the operation and confirm the password manager prompt."),
+        SecretStoreIssueCode.SERVICE_UNAVAILABLE => TA("No compatible secure-storage service is available. Configure a password manager that provides the FreeDesktop Secret Service."),
+        _ => TA("AI Studio could not access secure storage. See the log for technical details."),
     };
 
     private static StoreSecretResponse TranslateSecretStoreIssue(StoreSecretResponse response) =>

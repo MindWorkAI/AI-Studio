@@ -40,7 +40,7 @@ public partial class UserAPIKeyPrompt : MSGComponentBase
     private string issue = string.Empty;
     private bool isBusy;
 
-    private string Title => string.IsNullOrWhiteSpace(this.Group.Prompt?.Title) ? T("Your API key is missing") : this.Group.Prompt.Title;
+    private string Title => string.IsNullOrWhiteSpace(this.Group.Prompt?.Title) ? TA("Your API key is missing") : this.Group.Prompt.Title;
 
     private async Task StoreAPIKeyAsync()
     {
@@ -55,7 +55,7 @@ public partial class UserAPIKeyPrompt : MSGComponentBase
             var result = await PendingUserAPIKeys.StoreAsync(this.Group, enteredAPIKey, this.RustService, this.Logger);
             if (result.Check is UserAPIKeyCheckOutcome.REJECTED)
             {
-                this.issue = T("The provider did not accept this API key. Please check the key and try again.");
+                this.issue = TA("The provider did not accept this API key. Please check the key and try again.");
                 return;
             }
 
@@ -71,9 +71,9 @@ public partial class UserAPIKeyPrompt : MSGComponentBase
 
             this.apiKey = string.Empty;
             if (result.Check is UserAPIKeyCheckOutcome.ACCEPTED)
-                await this.MessageBus.SendSuccess(new DataSuccessMessage(AppIcons.KEY, T("AI Studio checked your API key and stored it. You can now use the AI providers of your organization.")));
+                await this.MessageBus.SendSuccess(new DataSuccessMessage(AppIcons.KEY, TA("AI Studio checked your API key and stored it. You can now use the AI providers of your organization.")));
             else
-                await this.MessageBus.SendWarning(new DataWarningMessage(AppIcons.KEY, T("AI Studio stored your API key but could not check it. If the AI providers of your organization do not work, please correct the key in the settings.")));
+                await this.MessageBus.SendWarning(new DataWarningMessage(AppIcons.KEY, TA("AI Studio stored your API key but could not check it. If the AI providers of your organization do not work, please correct the key in the settings.")));
 
             // Tell everyone that the providers are usable now. The home page removes this panel once no provider waits any longer:
             await this.SendMessage<bool>(Event.CONFIGURATION_CHANGED);

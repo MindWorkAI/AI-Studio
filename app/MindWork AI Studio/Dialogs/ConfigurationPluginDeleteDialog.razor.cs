@@ -50,8 +50,8 @@ public partial class ConfigurationPluginDeleteDialog : MSGComponentBase
         // Data sources are called out separately: removing them also deletes their credentials from
         // the operating system's keychain, which the user cannot undo by reinstalling the plugin.
         Add(summary.DataSources,
-            this.T("{0} data source, including its credentials in your operating system's keychain"),
-            this.T("{0} data sources, including their credentials in your operating system's keychain"));
+            this.TA("{0} data source, including its credentials in your operating system's keychain"),
+            this.TA("{0} data sources, including their credentials in your operating system's keychain"));
 
         Add(summary.LockedSettings, this.T("{0} setting returns to its default value"), this.T("{0} settings return to their default values"));
 

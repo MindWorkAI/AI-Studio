@@ -43,7 +43,7 @@ public partial class DataFolders : MSGComponentBase
         {
             var notice = T("The following is meant for experts who back up their computer with a tool of their own.");
             return this.SettingsManager.ConfigurationData.App.AllowUserToBackUpData
-                ? $"{notice} {T("To back up your data with AI Studio itself, or to move it to another computer, use Data Backup & Restore on this page or in the settings instead.")}"
+                ? $"{notice} {TA("To back up your data with AI Studio itself, or to move it to another computer, use Data Backup & Restore on this page or in the settings instead.")}"
                 : notice;
         }
     }
@@ -75,25 +75,25 @@ public partial class DataFolders : MSGComponentBase
 
     private string Describe(DataBackupEntryKind kind) => kind switch
     {
-        DataBackupEntryKind.SETTINGS => T("Your settings."),
-        DataBackupEntryKind.WORKSPACES => T("Your chats in workspaces, along with their transcripts."),
-        DataBackupEntryKind.TEMPORARY_CHATS => T("Your temporary chats, along with their transcripts."),
-        DataBackupEntryKind.CHAT_PROVENANCE => T("What the AI received in your chats besides your messages, such as the content of attached files, the results of tools, and passages of your data sources. It is part of your chats."),
-        DataBackupEntryKind.PLUGINS => T("Your plugins, such as the assistants you built, apart from the folders listed below."),
-        DataBackupEntryKind.TOKENIZERS => T("The tokenizers you chose for your providers."),
-        DataBackupEntryKind.VISUAL_BRIEFINGS => T("Your projects in the Visual Briefing Assistant."),
-        DataBackupEntryKind.BEYOND_FACTS_LAB => T("Your preparations in the BeyondFacts Lab, with their material and conversations."),
-        DataBackupEntryKind.DATA_SOURCE_INDEX => T("The index of your local data sources: which files AI Studio embedded, and their text."),
-        DataBackupEntryKind.VECTOR_STORES => T("The embeddings of your local data sources."),
-        DataBackupEntryKind.MEDIA_TRANSCRIPTS => T("The transcripts of the audio and video files in your local data sources."),
+        DataBackupEntryKind.SETTINGS => TA("Your settings."),
+        DataBackupEntryKind.WORKSPACES => TA("Your chats in workspaces, along with their transcripts."),
+        DataBackupEntryKind.TEMPORARY_CHATS => TA("Your temporary chats, along with their transcripts."),
+        DataBackupEntryKind.CHAT_PROVENANCE => TA("What the AI received in your chats besides your messages, such as the content of attached files, the results of tools, and passages of your data sources. It is part of your chats."),
+        DataBackupEntryKind.PLUGINS => TA("Your plugins, such as the assistants you built, apart from the folders listed below."),
+        DataBackupEntryKind.TOKENIZERS => TA("The tokenizers you chose for your providers."),
+        DataBackupEntryKind.VISUAL_BRIEFINGS => TA("Your projects in the Visual Briefing Assistant."),
+        DataBackupEntryKind.BEYOND_FACTS_LAB => TA("Your preparations in the BeyondFacts Lab, with their material and conversations."),
+        DataBackupEntryKind.DATA_SOURCE_INDEX => TA("The index of your local data sources: which files AI Studio embedded, and their text."),
+        DataBackupEntryKind.VECTOR_STORES => TA("The embeddings of your local data sources."),
+        DataBackupEntryKind.MEDIA_TRANSCRIPTS => TA("The transcripts of the audio and video files in your local data sources."),
 
-        DataBackupEntryKind.SETTINGS_OF_OTHER_VERSIONS => T("Copies of your settings, which every version of AI Studio keeps for itself. Your current settings are all a backup needs."),
+        DataBackupEntryKind.SETTINGS_OF_OTHER_VERSIONS => TA("Copies of your settings, which every version of AI Studio keeps for itself. Your current settings are all a backup needs."),
         DataBackupEntryKind.BUILT_IN_PLUGINS => T("Plugins which come with AI Studio, such as the language packs. AI Studio brings them back by itself."),
-        DataBackupEntryKind.ORGANIZATION_PLUGINS => T("Plugins of your organization. Your organization brings them back."),
+        DataBackupEntryKind.ORGANIZATION_PLUGINS => TA("Plugins of your organization. Your organization brings them back."),
         DataBackupEntryKind.TEMPORARY_FILES => T("Files which AI Studio needs only for a moment and deletes again."),
         DataBackupEntryKind.DOWNLOADED_TOOLS => T("Tools which AI Studio downloaded for this OS, such as Pandoc. On another computer, AI Studio downloads them again."),
         DataBackupEntryKind.INTERFACE_KEYS => T("Keys with which AI Studio protects data in its user interface. Only the Flatpak keeps them here, and on another computer, AI Studio creates new ones."),
-        DataBackupEntryKind.LOGS => T("Log files. They help when something goes wrong, but they hold none of your data."),
+        DataBackupEntryKind.LOGS => TA("Log files. They help when something goes wrong, but they hold none of your data."),
 
         _ => string.Empty,
     };

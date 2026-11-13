@@ -15,13 +15,13 @@
                       Class="dialog-fit"
                       Context="isDropTarget">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("See how we load your file. Review the content before we process it further.")
+            @TA("See how we load your file. Review the content before we process it further.")
         </MudJustifiedText>
 
         @if (this.CanAttach)
         {
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("You can drag another file into this window. We attach it right away and show it here.")
+                @TA("You can drag another file into this window. We attach it right away and show it here.")
             </MudJustifiedText>
         }
 
@@ -36,7 +36,7 @@
         @if (this.isLoadingContent)
         {
             <MudJustifiedText Typo="Typo.body1" Class="my-3">
-                @T("Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.")
+                @TA("Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.")
             </MudJustifiedText>
             <MudSkeleton Width="30%" Height="42px"/>
             <MudSkeleton Width="80%"/>
@@ -61,7 +61,7 @@
             {
                 @* The text the AI received outlives the file, so the file being gone is worth a note, not an error: *@
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="my-2">
-                    @T("The file is no longer in its original location. Below is the text the AI received from it when you sent it.")
+                    @TA("The file is no longer in its original location. Below is the text the AI received from it when you sent it.")
                 </MudAlert>
             }
 
@@ -71,7 +71,7 @@
                 Kind="@this.ViewerKind"
                 Text="@this.fileContent"
                 MediaUrl="@(this.document?.FilePathAsUrl ?? string.Empty)"
-                HelperText="@(this.showsStoredText ? T("This is the text the AI received from your file when you first sent it. Later changes to the file do not reach the AI in this chat.") : T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected."))"
+                HelperText="@(this.showsStoredText ? TA("This is the text the AI received from your file when you first sent it. Later changes to the file do not reach the AI in this chat.") : TA("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected."))"
                 CharacterLimit="@PREVIEW_CHARACTER_LIMIT"
                 CutOffNotice="@this.CutOffNotice"
                 MaxHeight="@ContentViewer.NO_HEIGHT_LIMIT">

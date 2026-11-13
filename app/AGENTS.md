@@ -80,15 +80,23 @@ and the translations keep the line breaks. A text which is not one literal, such
 or a concatenation, gets no translation; the collector warns about it.
 
 **A text which addresses the reader**, with "you" or by asking them to do something in a sentence, uses `TA()`
-instead of `T()` or `TB()`; labels, buttons, titles, and examples stay with those. A static class gets a `TA()` of
-its own next to its `TB()`: `private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(X).Namespace, nameof(X));`.
+instead of `T()` or `TB()`, and so does a label with "your", such as "Your name"; other labels, buttons, titles,
+and examples stay with those. A thank-you on the supporters page addresses the supporter, not the reader, and
+stays with `T()`. `AddressedTextsTests` checks the rule: a text with "you", or one whose German translation says
+"Sie" inside a sentence, needs `TA()`. A static class gets a `TA()` of its own next to its `TB()`:
+`private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(X).Namespace, nameof(X));`, in a
+component, which inherits `TA()`, as `private new static string TA(...)`. A base class whose texts the collector
+files under its own name, such as `AssistantBase`, uses
+`private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(X).Namespace, nameof(X));`.
 The collector files such a text under two keys: the usual one, translated with the formal address, such as "Sie"
 in German, and the same key ending in `::INFORMAL`, translated with the informal address, such as "du". The
 localization assistant writes the informal variant from the formal translation and changes only the form of
-address; whoever corrects a formal translation in the review corrects its informal variant alike. Which one
-the app shows follows `I18N.I.AddressForm`; when the language in use lacks the informal variant, it shows the
-formal one. So far, only the BeyondFacts Lab uses `TA()`, and its option "Form of address" decides, see
-`Program.cs`. The rest of the app addresses the reader formally until it gets a setting of its own for this.
+address, in German with "du" and "dein" in lowercase; whoever corrects a formal translation in the review
+corrects its informal variant alike. In US English, it gives every informal variant the words of the formal text
+of the plugin, so that English offers no choice; the test checks that as well. Which one the app shows follows `I18N.I.AddressForm`; when the language in use lacks the informal variant, it shows the
+formal one. The option "Form of address" of the app settings decides, `DataApp.AddressForm`, see `Program.cs`;
+the settings show it only in a language with both forms. A change sends `Event.ADDRESS_FORM_CHANGED`, which
+every component handles by rendering again.
 
 ## Plugin System
 

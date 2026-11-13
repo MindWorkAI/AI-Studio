@@ -146,7 +146,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
                 else
                 {
                     this.dataSecret = string.Empty;
-                    this.dataSecretStorageIssue = string.Format(T("Failed to load the auth. secret from the operating system. The message was: {0}. You might ignore this message and provide the secret again."), requestedSecret.Issue);
+                    this.dataSecretStorageIssue = string.Format(TA("Failed to load the auth. secret from the operating system. The message was: {0}. You might ignore this message and provide the secret again."), requestedSecret.Issue);
                     await this.form.ValidateAsync();
                 }
             }
@@ -311,7 +311,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
                     this.dataSelectedRetrievalProcess = importedRetrieval;
                 else
                 {
-                    this.importRetrievalIssue = string.Format(T("The server does not offer the imported retrieval process '{0}'. Please select another one before you save."), this.importedRetrievalId);
+                    this.importRetrievalIssue = string.Format(TA("The server does not offer the imported retrieval process '{0}'. Please select another one before you save."), this.importedRetrievalId);
                     this.dataSelectedRetrievalProcess = default;
                 }
 
@@ -393,7 +393,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             var storeResponse = await this.RustService.SetSecret(this, this.dataSecret, SecretStoreType.DATA_SOURCE);
             if (!storeResponse.Success)
             {
-                this.dataSecretStorageIssue = string.Format(T("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
+                this.dataSecretStorageIssue = string.Format(TA("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.ValidateAsync();
                 return;
             }

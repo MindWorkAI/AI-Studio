@@ -14,6 +14,8 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantPluginGenerationService).Namespace, nameof(AssistantPluginGenerationService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(AssistantPluginGenerationService).Namespace, nameof(AssistantPluginGenerationService));
+
     // Internal rather than private, so that a test can check the JSON the models get:
     internal static readonly JsonSerializerOptions UNTRUSTED_PROMPT_JSON_OPTIONS = new JsonSerializerOptions
     {
@@ -44,17 +46,17 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     public async Task<AssistantPluginDraftGenerationResult> GenerateAssistantDraftAsync(AssistantPluginDraftGenerationRequest request, ProviderSettings provider, CancellationToken token = default)
     {
         if (string.IsNullOrWhiteSpace(request.AssistantDescription))
-            return DraftFailure(TB("Please describe the assistant you want to create."));
+            return DraftFailure(TA("Please describe the assistant you want to create."));
 
         if (!IsValidChatLaunchRequest(request.ChatLaunch))
             return DraftFailure(TB("The chat launcher configuration is incomplete or invalid."));
 
         if (!ProviderIsUsable(provider))
-            return DraftFailure(TB("Please select a provider."));
+            return DraftFailure(TA("Please select a provider."));
 
         var context = await this.LoadAssistantBuilderContextAsync();
         if (string.IsNullOrWhiteSpace(context))
-            return DraftFailure(TB("The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."));
+            return DraftFailure(TA("The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."));
 
         var prompt = BuildAssistantDraftPrompt(request, context);
         var markdown = await this.GenerateTextAsync(provider, prompt, TB("Assistant Draft"), BuildDraftSystemPrompt(), token);
@@ -67,13 +69,13 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     public async Task<AssistantPluginGenerationDraft> GenerateInitialLuaAsync(AssistantPluginLuaGenerationRequest request, ProviderSettings provider, CancellationToken token = default)
     {
         if (string.IsNullOrWhiteSpace(request.ApprovedAssistantDraft))
-            return InitialFailure(TB("Please create an assistant draft first."));
+            return InitialFailure(TA("Please create an assistant draft first."));
 
         if (!IsValidChatLaunchRequest(request.ChatLaunch))
             return InitialFailure(TB("The chat launcher configuration is incomplete or invalid."));
 
         if (!ProviderIsUsable(provider))
-            return InitialFailure(TB("Please select a provider."));
+            return InitialFailure(TA("Please select a provider."));
 
         //
         // A launcher is fully described by the Builder form, so nothing about it is left for a
@@ -120,7 +122,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             return InitialFailure(TB("The generated assistant metadata does not match the generated plugin."));
 
         if (this.FindUnknownToolIds(generatedAssistant) is { Count: > 0 } unknownToolIds)
-            return InitialFailure(string.Format(TB("The generated assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
+            return InitialFailure(string.Format(TA("The generated assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
 
         return new(true, fullLua, parsedResponse.Plugin?.Name ?? string.Empty, string.Empty);
     }
@@ -200,10 +202,10 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             return RevisionFailure(TB("The current plugin.lua content is empty."));
 
         if (string.IsNullOrWhiteSpace(changeRequest))
-            return RevisionFailure(TB("Please describe what should be changed."));
+            return RevisionFailure(TA("Please describe what should be changed."));
 
         if (!ProviderIsUsable(provider))
-            return RevisionFailure(TB("Please select a provider."));
+            return RevisionFailure(TA("Please select a provider."));
 
         var context = await this.LoadAssistantBuilderContextAsync();
         if (string.IsNullOrWhiteSpace(context))
@@ -240,7 +242,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             return RevisionFailure(TB("The revised assistant metadata does not match the revised plugin."));
 
         if (this.FindUnknownToolIds(revisedAssistant, plugin) is { Count: > 0 } unknownToolIds)
-            return RevisionFailure(string.Format(TB("The revised assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
+            return RevisionFailure(string.Format(TA("The revised assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
 
         return new(true, revisedLua, parsedResponse.Plugin?.Name ?? plugin.Name, string.Empty);
     }

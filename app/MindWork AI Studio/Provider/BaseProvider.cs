@@ -26,6 +26,8 @@ namespace AIStudio.Provider;
 public abstract class BaseProvider : IProvider, ISecretId
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(BaseProvider).Namespace, nameof(BaseProvider));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(BaseProvider).Namespace, nameof(BaseProvider));
     
     /// <summary>
     /// The HTTP client to use it for all requests.
@@ -154,7 +156,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected Task SendTimeoutError(string action) => MessageBus.INSTANCE.SendError(new(
         AppIcons.TIMEOUT,
         string.Format(
-            TB("The request to the LLM provider '{0}' (type={1}) timed out after {2} while {3}. Please try again or check whether the provider is still responding."),
+            TA("The request to the LLM provider '{0}' (type={1}) timed out after {2} while {3}. Please try again or check whether the provider is still responding."),
             this.InstanceName,
             this.Provider,
             ExternalHttpClientTimeout.GetTimeoutDescription(),
@@ -262,11 +264,11 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <returns>The message to show, or an empty string when we have nothing to say.</returns>
     protected virtual string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default) => failureReason switch
     {
-        ProviderRequestFailureReason.TOO_MANY_REQUESTS => TB("The provider rejected the request because too many requests were sent. Please wait a moment and try again."),
-        ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY => string.Format(TB("The API key for the provider '{0}' is missing or was rejected. Please check the key in the settings."), this.InstanceName),
-        ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => string.Format(TB("The provider '{0}' refused the request. Your account might not be allowed to use the selected model, or the provider might not serve your region."), this.InstanceName),
-        ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => string.Format(TB("The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again."), this.InstanceName),
-        ProviderRequestFailureReason.MODEL_NOT_FOUND => string.Format(TB("The provider '{0}' does not know the selected model. Please select another model."), this.InstanceName),
+        ProviderRequestFailureReason.TOO_MANY_REQUESTS => TA("The provider rejected the request because too many requests were sent. Please wait a moment and try again."),
+        ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY => string.Format(TA("The API key for the provider '{0}' is missing or was rejected. Please check the key in the settings."), this.InstanceName),
+        ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => string.Format(TA("The provider '{0}' refused the request. Your account might not be allowed to use the selected model, or the provider might not serve your region."), this.InstanceName),
+        ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => string.Format(TA("The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again."), this.InstanceName),
+        ProviderRequestFailureReason.MODEL_NOT_FOUND => string.Format(TA("The provider '{0}' does not know the selected model. Please select another model."), this.InstanceName),
         //
         // Naming the number is the whole point of knowing it: "too long" leaves the user guessing
         // by how much, while the window turns the next step into arithmetic. Where nobody knows the
@@ -276,10 +278,10 @@ public abstract class BaseProvider : IProvider, ISecretId
         // by asking the user to set a chunk size, and 32.77k is not a number anybody types into a
         // field.
         //
-        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED when contextWindow.IsKnown => string.Format(TB("The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source."), contextWindow.DefaultTokens.ToString("N0", I18N.I.Culture)),
-        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED => TB("The text was longer than the selected model accepts. Please select a model which takes longer texts, or reduce the chunk size of the data source."),
-        ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED => string.Format(TB("The selected model is not able to use tools. Please select a model which can, or open the settings of the provider '{0}', show its expert settings, and switch the function calling capability off there."), this.InstanceName),
-        ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED => string.Format(TB("The provider '{0}' cannot create embeddings. Please select a provider which offers an embedding model."), this.InstanceName),
+        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED when contextWindow.IsKnown => string.Format(TA("The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source."), contextWindow.DefaultTokens.ToString("N0", I18N.I.Culture)),
+        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED => TA("The text was longer than the selected model accepts. Please select a model which takes longer texts, or reduce the chunk size of the data source."),
+        ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED => string.Format(TA("The selected model is not able to use tools. Please select a model which can, or open the settings of the provider '{0}', show its expert settings, and switch the function calling capability off there."), this.InstanceName),
+        ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED => string.Format(TA("The provider '{0}' cannot create embeddings. Please select a provider which offers an embedding model."), this.InstanceName),
         ProviderRequestFailureReason.INVALID_RESPONSE => string.Format(TB("The provider '{0}' sent an answer AI Studio was not able to read."), this.InstanceName),
         _ => string.Empty,
     };
@@ -700,7 +702,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// </remarks>
     /// <param name="providerMessage">What the provider itself said about the failure.</param>
     /// <returns>The message to show.</returns>
-    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments and the passages of your data sources, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
+    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TA("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments and the passages of your data sources, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
 
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
@@ -774,7 +776,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
-                await MessageBus.INSTANCE.SendError(new(AppIcons.BLOCKED, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.BLOCKED, string.Format(TA("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -1508,7 +1510,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             return classifiedMessage;
 
         if (IsUndecodableFormatFailure(statusCode, responseBody))
-            return string.Format(TB("The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it."), this.InstanceName);
+            return string.Format(TA("The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it."), this.InstanceName);
 
         var providerMessage = ReadProviderErrorMessage(responseBody);
         if (!string.IsNullOrWhiteSpace(providerMessage))

@@ -101,7 +101,7 @@ public partial class Chat : MSGComponentBase
 
     private string WorkspaceSearchIcon => this.workspaceSearchVisible ? AppIcons.HIDE_SEARCH : AppIcons.SEARCH;
 
-    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Hide search") : T("Search your workspaces");
+    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Hide search") : TA("Search your workspaces");
 
     private bool AreWorkspacesVisible => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
                                          && ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)

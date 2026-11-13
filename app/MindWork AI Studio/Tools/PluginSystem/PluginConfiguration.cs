@@ -244,6 +244,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: save energy while the AI streams its answers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.IsSavingEnergy, this.Id, settingsTable, dryRun);
 
+        // Config: how should the texts address the user?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AddressForm, this.Id, settingsTable, dryRun);
+
         // Config: show prompt-injection alert dialogs?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowPromptInjectionAlert, this.Id, settingsTable, dryRun);
 
@@ -519,7 +522,6 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: BeyondFacts Lab defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.AddressForm, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.AllowPromptOverrides, this.Id, settingsTable, dryRun);
 
         // Config: Assistant Builder defaults?

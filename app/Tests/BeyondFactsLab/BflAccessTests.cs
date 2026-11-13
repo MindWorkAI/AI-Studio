@@ -61,13 +61,5 @@ public sealed class BflAccessTests
         Assert.That(levels, Is.EqualTo(new[] { ConfidenceLevel.HIGH }));
     }
 
-    [Test]
-    public void TheSettingsOfferEveryFormOfAddress()
-    {
-        var forms = ConfigurationSelectDataFactory.GetBeyondFactsLabAddressFormData().Select(data => data.Value);
-
-        Assert.That(forms, Is.EquivalentTo(Enum.GetValues<AddressForm>()));
-    }
-
     private static SettingsManager CreateSettingsManager() => new(NullLogger<SettingsManager>.Instance, null!);
 }

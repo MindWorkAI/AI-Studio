@@ -25,6 +25,8 @@ public sealed class ConfigurationSnippetParser
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationSnippetParser).Namespace, nameof(ConfigurationSnippetParser));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ConfigurationSnippetParser).Namespace, nameof(ConfigurationSnippetParser));
+
     /// <summary>
     /// Reads a snippet of the form <c>CONFIG["SECTION"][#CONFIG["SECTION"]+1] = { ... }</c>.
     /// </summary>
@@ -39,7 +41,7 @@ public sealed class ConfigurationSnippetParser
         issue = string.Empty;
         if (string.IsNullOrWhiteSpace(source) || source.Length > 1_000_000)
         {
-            issue = TB("Please paste one exported configuration of at most 1 MB.");
+            issue = TA("Please paste one exported configuration of at most 1 MB.");
             return false;
         }
 
@@ -126,7 +128,7 @@ public sealed class ConfigurationSnippetParser
 
         // In Lua, nil leaves a field out, and in a list it ends what the parsers read of it:
         if (this.TakeWord("nil"))
-            throw new FormatException(string.Format(TB("The value nil at character {0} is not supported. Leave the field out instead."), this.position - 2));
+            throw new FormatException(string.Format(TA("The value nil at character {0} is not supported. Leave the field out instead."), this.position - 2));
 
         var start = this.position;
         if (this.Peek() == '-')
@@ -280,7 +282,7 @@ public sealed class ConfigurationSnippetParser
                 // is refused:
                 //
                 if (this.IsLongBracketAt(this.position + 2))
-                    throw new FormatException(string.Format(TB("The block comment at character {0} is not supported. Please use line comments, which start with -- and end at the end of the line."), this.position + 1));
+                    throw new FormatException(string.Format(TA("The block comment at character {0} is not supported. Please use line comments, which start with -- and end at the end of the line."), this.position + 1));
 
                 this.position += 2;
                 while (this.position < this.source.Length && this.source[this.position] != '\n')

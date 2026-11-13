@@ -21,6 +21,8 @@ namespace AIStudio.Settings;
 public static class ConfigurationSelectDataFactory
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationSelectDataFactory).Namespace, nameof(ConfigurationSelectDataFactory));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ConfigurationSelectDataFactory).Namespace, nameof(ConfigurationSelectDataFactory));
     
     public static IEnumerable<ConfigurationSelectData<LangBehavior>> GetLangBehaviorData()
     {
@@ -52,7 +54,7 @@ public static class ConfigurationSelectDataFactory
     
     public static IEnumerable<ConfigurationSelectData<SendBehavior>> GetSendBehaviorData()
     {
-        yield return new(TB("No key is sending the input"), SendBehavior.NO_KEY_IS_SENDING);
+        yield return new(TA("No key is sending the input"), SendBehavior.NO_KEY_IS_SENDING);
         yield return new(TB("Modifier key + enter is sending the input"), SendBehavior.MODIFER_ENTER_IS_SENDING);
         yield return new(TB("Enter is sending the input"), SendBehavior.ENTER_IS_SENDING);
     }
@@ -69,7 +71,7 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<UpdateInterval>> GetManagedUpdateIntervalData(UpdateInterval currentValue)
     {
         if (currentValue is UpdateInterval.DISABLE_UPDATES)
-            yield return new(TB("Updates disabled by your organization"), UpdateInterval.DISABLE_UPDATES);
+            yield return new(TA("Updates disabled by your organization"), UpdateInterval.DISABLE_UPDATES);
 
         foreach (var option in GetUpdateIntervalData())
             yield return option;
@@ -330,7 +332,7 @@ public static class ConfigurationSelectDataFactory
                 yield return new(level.Name, level);
     }
 
-    public static IEnumerable<ConfigurationSelectData<AddressForm>> GetBeyondFactsLabAddressFormData()
+    public static IEnumerable<ConfigurationSelectData<AddressForm>> GetAddressFormData()
     {
         foreach (var addressForm in Enum.GetValues<AddressForm>())
             yield return new(addressForm.Name, addressForm);

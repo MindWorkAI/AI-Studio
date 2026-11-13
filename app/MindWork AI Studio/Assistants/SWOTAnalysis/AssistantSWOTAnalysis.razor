@@ -3,7 +3,7 @@
 
 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
     <MudText Align="Align.Justify">
-        @T("The quality of this SWOT analysis depends on the material you provide. The AI uses only your input, the attached documents, and the results of the tools you selected. Treat the result as a first draft and check it before you base decisions on it.")
+        @TA("The quality of this SWOT analysis depends on the material you provide. The AI uses only your input, the attached documents, and the results of the tools you selected. Treat the result as a first draft and check it before you base decisions on it.")
     </MudText>
 </MudAlert>
 
@@ -22,14 +22,14 @@
 </MudText>
 <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.analysisGoal" Validation="@this.ValidatingAnalysisGoal" AdornmentIcon="@AppIcons.ANALYSIS_GOAL" Adornment="Adornment.Start" Label="@T("Analysis goal")" Variant="Variant.Outlined" Lines="4" Sizing="InputSizing.Auto" Class="mb-3"/>
 <ReadFileContent @bind-FileContent="@this.analysisGoal" MediaImportTargetId="swot-analysis-goal" EnableDragDrop="true"/>
-<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.importantAspects" AdornmentIcon="@AppIcons.IMPORTANT_ASPECTS" Adornment="Adornment.Start" Label="@T("(Optional) Analysis focus")" HelperText="@T("Specify topics the SWOT analysis should pay particular attention to.")" Variant="Variant.Outlined" Lines="4" Sizing="InputSizing.Auto" Class="mb-3"/>
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.importantAspects" AdornmentIcon="@AppIcons.IMPORTANT_ASPECTS" Adornment="Adornment.Start" Label="@T("(Optional) Analysis focus")" HelperText="@TA("Specify topics the SWOT analysis should pay particular attention to.")" Variant="Variant.Outlined" Lines="4" Sizing="InputSizing.Auto" Class="mb-3"/>
 <ReadFileContent @bind-FileContent="@this.importantAspects" MediaImportTargetId="swot-analysis-focus" EnableDragDrop="true"/>
 
 <MudText Typo="Typo.h5" Class="mb-3 mt-6">
     @T("Contextual Knowledge")
 </MudText>
 <MudText Typo="Typo.body2" Class="mb-4">
-    @T("To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment.")
+    @TA("To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment.")
 </MudText>
 <AttachDocuments Name="SWOT Analysis Context Material" @bind-DocumentPaths="@this.contextMaterials" UseSmallForm="false" Provider="@this.ProviderSettings"/>
 

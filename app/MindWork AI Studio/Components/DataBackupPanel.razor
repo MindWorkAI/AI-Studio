@@ -5,7 +5,7 @@
     <MudTabPanel Text="@T("Back up")" Icon="@AppIcons.BACKUP" Disabled="@(this.isBusy || this.DataRestoreService.IsPreparing)">
 
         <MudText Typo="Typo.body1" Class="mb-3">
-            @T("Back up all your data into one file: your settings, chats, plugins, and the indexes of your data sources. Your API keys and passwords stay out of it. AI Studio keeps them in the secure storage of your OS.")
+            @TA("Back up all your data into one file: your settings, chats, plugins, and the indexes of your data sources. Your API keys and passwords stay out of it. AI Studio keeps them in the secure storage of your OS.")
         </MudText>
 
         @if (this.DataBackupService.IsRunning)
@@ -20,7 +20,7 @@
                 </MudButton>
             </MudStack>
             <MudText Typo="Typo.caption">
-                @T("The backup goes on when you leave this page.")
+                @TA("The backup goes on when you leave this page.")
             </MudText>
         }
         else
@@ -42,7 +42,7 @@
                         @if (!backupResult.IncludesDataSourceIndexes)
                         {
                             <MudText Typo="Typo.body2">
-                                @T("The indexes of your data sources are not part of this backup, because they were not available. After a restore, AI Studio indexes your data sources anew.")
+                                @TA("The indexes of your data sources are not part of this backup, because they were not available. After a restore, AI Studio indexes your data sources anew.")
                             </MudText>
                         }
                     </MudAlert>
@@ -66,13 +66,13 @@
     <MudTabPanel Text="@T("Restore")" Icon="@AppIcons.RESTORE_BACKUP" Disabled="@(this.isBusy || this.DataBackupService.IsRunning)">
 
         <MudText Typo="Typo.body1" Class="mb-3">
-            @T("Restore a backup: replace all your data with those of the backup, e.g., on a new computer, or add only its chats to the chats you have.")
+            @TA("Restore a backup: replace all your data with those of the backup, e.g., on a new computer, or add only its chats to the chats you have.")
         </MudText>
 
         @if (this.DataRestoreService.IsRestoreUnfinished)
         {
             <MudAlert Severity="Severity.Error" Dense="@true" Class="mb-3">
-                @T("AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first.")
+                @TA("AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first.")
             </MudAlert>
         }
 
@@ -120,7 +120,7 @@
                     @T("Replace all data")
                 </MudText>
                 <MudText Typo="Typo.body2" Class="mb-2">
-                    @T("Replaces your settings, chats, plugins, and the indexes of your data sources with those of the backup. AI Studio restarts to do so. The plugins and settings of your organization stay as they are.")
+                    @TA("Replaces your settings, chats, plugins, and the indexes of your data sources with those of the backup. AI Studio restarts to do so. The plugins and settings of your organization stay as they are.")
                 </MudText>
 
                 @if (this.DataRestoreService.IsPreparing)
@@ -145,7 +145,7 @@
                 @if (this.DataRestoreService.LastResult is { Success: false } restoreResult)
                 {
                     <MudAlert Severity="@(restoreResult.Cancelled ? Severity.Info : Severity.Error)" Dense="@true" Class="mt-3">
-                        @(restoreResult.Cancelled ? T("The restore was stopped. All your data stay as they are.") : restoreResult.Issue)
+                        @(restoreResult.Cancelled ? TA("The restore was stopped. All your data stay as they are.") : restoreResult.Issue)
                     </MudAlert>
                 }
 
@@ -153,7 +153,7 @@
                     @T("Add chats only")
                 </MudText>
                 <MudText Typo="Typo.body2" Class="mb-2">
-                    @T("Adds the chats of the backup to the chats you have. Nothing else changes.")
+                    @TA("Adds the chats of the backup to the chats you have. Nothing else changes.")
                 </MudText>
 
                 <MudSelect T="ChatArchiveCollisionBehavior" @bind-Value="@this.collisionBehavior" Label="@T("When a chat already exists")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="@this.isBusy" Class="mb-3">
@@ -177,7 +177,7 @@
                         </MudButton>
                     </MudStack>
                     <MudText Typo="Typo.caption">
-                        @T("Please stay on this page until this is done. Leaving the page stops adding the chats.")
+                        @TA("Please stay on this page until this is done. Leaving the page stops adding the chats.")
                     </MudText>
                 }
                 else

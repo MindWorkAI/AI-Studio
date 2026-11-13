@@ -109,6 +109,8 @@ public record ChatTemplate(
     public string? WorkspaceName { get; set; }
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
     private static readonly ILogger<ChatTemplate> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ChatTemplate>();
     
@@ -601,7 +603,7 @@ public record ChatTemplate(
 
         if (string.IsNullOrWhiteSpace(pluginDirectory) || !File.Exists(Path.Combine(pluginDirectory, "plugin.lua")))
         {
-            issue = TB("Please select a valid configuration plugin folder. The folder must contain a plugin.lua file.");
+            issue = TA("Please select a valid configuration plugin folder. The folder must contain a plugin.lua file.");
             return false;
         }
 

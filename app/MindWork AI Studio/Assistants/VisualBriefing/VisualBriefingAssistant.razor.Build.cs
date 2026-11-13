@@ -169,7 +169,7 @@ public partial class VisualBriefingAssistant
                 parentRevisionId, generationProvider, generationProfile, reusableBuildId, token),
             T("A new visual briefing version was created."),
             T("The visual briefing generation was canceled."),
-            T("The visual briefing operation failed unexpectedly. Copy the technical details for support."));
+            TA("The visual briefing operation failed unexpectedly. Copy the technical details for support."));
     }
 
     /// <summary>
@@ -189,7 +189,7 @@ public partial class VisualBriefingAssistant
             token => this.BuildOrchestrator.RecompileAsync(recompileBriefing, parentRevisionId, token),
             T("The briefing was recompiled with the current AI Studio version."),
             T("The visual briefing recompilation was canceled."),
-            T("The visual briefing recompilation failed unexpectedly. Copy the technical details for support."));
+            TA("The visual briefing recompilation failed unexpectedly. Copy the technical details for support."));
     }
 
     /// <summary>

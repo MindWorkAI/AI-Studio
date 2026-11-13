@@ -50,6 +50,8 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IndexedRunContext).Namespace, nameof(IndexedRunContext));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(IndexedRunContext).Namespace, nameof(IndexedRunContext));
+
     /// <summary>
     /// One chunk on its way to the stores, with the id it is stored under and the hash of its text.
     /// </summary>
@@ -743,20 +745,20 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         }
 
         if (vectors.Count != texts.Count)
-            throw new InvalidOperationException(string.Format(TB("The embedding provider answered with {0} vectors for {1} parts of '{2}'. Please select another embedding model or provider."), vectors.Count, texts.Count, document.Key));
+            throw new InvalidOperationException(string.Format(TA("The embedding provider answered with {0} vectors for {1} parts of '{2}'. Please select another embedding model or provider."), vectors.Count, texts.Count, document.Key));
 
         var vectorSize = vectors.FirstOrDefault()?.Count ?? 0;
         if (vectorSize <= 0)
-            throw new InvalidOperationException(TB("The embedding provider answered with an empty vector. Please select another embedding model or provider."));
+            throw new InvalidOperationException(TA("The embedding provider answered with an empty vector. Please select another embedding model or provider."));
 
         if (vectors.Any(vector => vector.Count != vectorSize))
-            throw new InvalidOperationException(TB("The embedding provider answered with vectors of different sizes. Please select another embedding model or provider."));
+            throw new InvalidOperationException(TA("The embedding provider answered with vectors of different sizes. Please select another embedding model or provider."));
 
         if (vectors.Any(vector => vector.Any(value => !float.IsFinite(value))))
-            throw new InvalidOperationException(TB("The embedding provider answered with a vector containing an invalid number. Please select another embedding model or provider."));
+            throw new InvalidOperationException(TA("The embedding provider answered with a vector containing an invalid number. Please select another embedding model or provider."));
 
         if (manifest.VectorSize > 0 && manifest.VectorSize != vectorSize)
-            throw new InvalidOperationException(string.Format(TB("The size of the embedding vectors changed from {0} to {1}. Please save the data source again to index it from scratch."), manifest.VectorSize, vectorSize));
+            throw new InvalidOperationException(string.Format(TA("The size of the embedding vectors changed from {0} to {1}. Please save the data source again to index it from scratch."), manifest.VectorSize, vectorSize));
 
         return vectors;
     }
@@ -782,7 +784,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
                 await vectorStore.DeleteVectorStore(this.CollectionName, token);
                 ensureResult = await vectorStore.EnsureVectorStoreExists(this.CollectionName, dataSource.Name, vectorSize, token);
                 if (!ensureResult.Created)
-                    throw new InvalidOperationException(string.Format(TB("The local index '{0}' could not be created again. Please restart AI Studio and try once more."), this.CollectionName));
+                    throw new InvalidOperationException(string.Format(TA("The local index '{0}' could not be created again. Please restart AI Studio and try once more."), this.CollectionName));
             }
 
             await indexStore.UpdateVectorSizeAsync(dataSource.Id, vectorSize, token);

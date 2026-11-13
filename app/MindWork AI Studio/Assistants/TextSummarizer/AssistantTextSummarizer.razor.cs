@@ -10,7 +10,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     
     protected override string Title => T("Text Summarizer");
     
-    protected override string Description => T("Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.");
+    protected override string Description => TA("Summarize long text into a shorter version while retaining the main points. You might want to change the language of the summary to make it more readable. It is also possible to change the complexity of the summary to make it easy to understand.");
     
     // The prompt of this assistant asks for the summary only, so the chat gets a prompt of its own, which keeps the settings of the summary:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
@@ -147,7 +147,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -155,7 +155,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }
@@ -163,7 +163,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private string? ValidateExpertInField(string field)
     {
         if(this.selectedComplexity == Complexity.SCIENTIFIC_LANGUAGE_OTHER_EXPERTS && string.IsNullOrWhiteSpace(field))
-            return T("Please provide your field of expertise.");
+            return TA("Please provide your field of expertise.");
         
         return null;
     }

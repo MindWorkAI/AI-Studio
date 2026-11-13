@@ -9,6 +9,8 @@ public abstract class SettingsPanelProviderBase : SettingsPanelBase
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SettingsPanelProviderBase).Namespace, nameof(SettingsPanelProviderBase));
 
+    private new static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(SettingsPanelProviderBase).Namespace, nameof(SettingsPanelProviderBase));
+
     /// <summary>
     /// Exports the provider configuration as Lua code, optionally including the encrypted API key if the provider has one
     /// configured and the user agrees to include it. The exportFunc should generate the Lua code based on the provided
@@ -29,7 +31,7 @@ public abstract class SettingsPanelProviderBase : SettingsPanelBase
             // Ask the user if they want to export the API key:
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, TB("This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.") },
+                { x => x.Message, TA("This provider has an API key configured. Do you want to include the encrypted API key in the export? Note: The recipient will need the same encryption secret to use the API key.") },
             };
 
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(TB("Export API Key?"), dialogParameters, DialogOptions.FULLSCREEN);

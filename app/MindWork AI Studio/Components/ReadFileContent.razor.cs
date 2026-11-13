@@ -219,7 +219,7 @@ public partial class ReadFileContent : MSGComponentBase
             this.Logger.LogWarning("Could not access {Count} dropped file(s): {Paths}", inaccessiblePaths.Count, string.Join(", ", inaccessiblePaths));
             await this.MessageBus.SendWarning(new(
                 AppIcons.WARNING,
-                this.T("Some dropped files could not be accessed. Please select them with the file chooser instead.")));
+                this.TA("Some dropped files could not be accessed. Please select them with the file chooser instead.")));
         }
 
         foreach (var path in paths)
@@ -240,7 +240,7 @@ public partial class ReadFileContent : MSGComponentBase
         if (this.Filter is { Length: > 0 } && !FileTypes.IsAllowedPath(filePath, this.Filter))
         {
             this.Logger.LogWarning("Selected file does not match the configured file type filter: '{FilePath}'", filePath);
-            await this.MessageBus.SendWarning(new(AppIcons.WARNING, this.T("Please select a file with a supported file type.")));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, this.TA("Please select a file with a supported file type.")));
             return false;
         }
 
@@ -292,7 +292,7 @@ public partial class ReadFileContent : MSGComponentBase
         {
             await this.MessageBus.SendWarning(new(
                 AppIcons.VOICE_TRANSCRIPTION,
-                this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
+                this.TA("Media files require a configured transcription provider. Configure one in the transcription settings.")));
             return false;
         }
 

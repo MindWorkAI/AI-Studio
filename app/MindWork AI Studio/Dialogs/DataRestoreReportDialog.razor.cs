@@ -58,17 +58,17 @@ public partial class DataRestoreReportDialog : MSGComponentBase
 
     private string Headline => this.Report.Outcome switch
     {
-        DataRestoreOutcome.APPLIED => T("Your backup was restored"),
-        DataRestoreOutcome.ROLLBACK_FAILED => T("Restoring your backup is not finished"),
-        _ => T("Your backup was not restored"),
+        DataRestoreOutcome.APPLIED => TA("Your backup was restored"),
+        DataRestoreOutcome.ROLLBACK_FAILED => TA("Restoring your backup is not finished"),
+        _ => TA("Your backup was not restored"),
     };
 
     private string Explanation => this.Report.Outcome switch
     {
-        DataRestoreOutcome.APPLIED => T("AI Studio replaced your data with those of the backup. The plugins and settings of your organization stayed as they were."),
-        DataRestoreOutcome.REFUSED => T("AI Studio could not start restoring your backup, so all your data stayed as they were."),
-        DataRestoreOutcome.ROLLED_BACK => T("Restoring your backup failed. AI Studio put all your data back the way they were before."),
-        DataRestoreOutcome.ROLLBACK_FAILED => T("Restoring your backup failed, and AI Studio could not yet put all your data back the way they were. It tries again at the next start, so please restart AI Studio. If this message appears again, please contact the support, and keep the folders '.restore-previous' and '.restore-pending' in your data folder."),
+        DataRestoreOutcome.APPLIED => TA("AI Studio replaced your data with those of the backup. The plugins and settings of your organization stayed as they were."),
+        DataRestoreOutcome.REFUSED => TA("AI Studio could not start restoring your backup, so all your data stayed as they were."),
+        DataRestoreOutcome.ROLLED_BACK => TA("Restoring your backup failed. AI Studio put all your data back the way they were before."),
+        DataRestoreOutcome.ROLLBACK_FAILED => TA("Restoring your backup failed, and AI Studio could not yet put all your data back the way they were. It tries again at the next start, so please restart AI Studio. If this message appears again, please contact the support, and keep the folders '.restore-previous' and '.restore-pending' in your data folder."),
         _ => string.Empty,
     };
 
@@ -85,16 +85,16 @@ public partial class DataRestoreReportDialog : MSGComponentBase
 
     private string Describe(DataRestoreOpenPoint openPoint) => openPoint.Kind switch
     {
-        DataRestoreOpenPointKind.PROVIDER_WITHOUT_API_KEY => string.Format(T("Enter the API key of the provider '{0}' again, if it needs one."), openPoint.Name),
-        DataRestoreOpenPointKind.EMBEDDING_PROVIDER_WITHOUT_API_KEY => string.Format(T("Enter the API key of the embedding provider '{0}' again, if it needs one."), openPoint.Name),
-        DataRestoreOpenPointKind.TRANSCRIPTION_PROVIDER_WITHOUT_API_KEY => string.Format(T("Enter the API key of the transcription provider '{0}' again, if it needs one."), openPoint.Name),
-        DataRestoreOpenPointKind.DATA_SOURCE_WITHOUT_SECRET => string.Format(T("Enter the password or token of the data source '{0}' again."), openPoint.Name),
-        DataRestoreOpenPointKind.MAILBOX_WITHOUT_PASSWORD => string.Format(T("Enter the password of the mailbox '{0}' again."), openPoint.Name),
-        DataRestoreOpenPointKind.TOOL_WITHOUT_SECRET => string.Format(T("Enter the setting '{1}' of the tool '{0}' again, if you used it."), openPoint.Name, openPoint.Setting),
-        DataRestoreOpenPointKind.DATA_SOURCE_NOT_FOUND => string.Format(T("The data source '{0}' names a file or folder which does not exist on this computer. Choose it anew."), openPoint.Name),
+        DataRestoreOpenPointKind.PROVIDER_WITHOUT_API_KEY => string.Format(TA("Enter the API key of the provider '{0}' again, if it needs one."), openPoint.Name),
+        DataRestoreOpenPointKind.EMBEDDING_PROVIDER_WITHOUT_API_KEY => string.Format(TA("Enter the API key of the embedding provider '{0}' again, if it needs one."), openPoint.Name),
+        DataRestoreOpenPointKind.TRANSCRIPTION_PROVIDER_WITHOUT_API_KEY => string.Format(TA("Enter the API key of the transcription provider '{0}' again, if it needs one."), openPoint.Name),
+        DataRestoreOpenPointKind.DATA_SOURCE_WITHOUT_SECRET => string.Format(TA("Enter the password or token of the data source '{0}' again."), openPoint.Name),
+        DataRestoreOpenPointKind.MAILBOX_WITHOUT_PASSWORD => string.Format(TA("Enter the password of the mailbox '{0}' again."), openPoint.Name),
+        DataRestoreOpenPointKind.TOOL_WITHOUT_SECRET => string.Format(TA("Enter the setting '{1}' of the tool '{0}' again, if you used it."), openPoint.Name, openPoint.Setting),
+        DataRestoreOpenPointKind.DATA_SOURCE_NOT_FOUND => string.Format(TA("The data source '{0}' names a file or folder which does not exist on this computer. Choose it anew."), openPoint.Name),
         DataRestoreOpenPointKind.BATCH_PROCESSING_PATH_NOT_FOUND => string.Format(T("The batch processing uses '{0}', which does not exist on this computer."), openPoint.Name),
         DataRestoreOpenPointKind.PROMPT_OPTIMIZER_GUIDE_NOT_FOUND => string.Format(T("The Prompt Optimizer uses the prompt guide '{0}', which does not exist on this computer."), openPoint.Name),
-        DataRestoreOpenPointKind.CERTIFICATE_BUNDLE_NOT_FOUND => string.Format(T("The file with your own root certificates, '{0}', does not exist on this computer."), openPoint.Name),
+        DataRestoreOpenPointKind.CERTIFICATE_BUNDLE_NOT_FOUND => string.Format(TA("The file with your own root certificates, '{0}', does not exist on this computer."), openPoint.Name),
         DataRestoreOpenPointKind.ERI_SERVER_DIRECTORY_NOT_FOUND => string.Format(T("The ERI server '{0}' writes into a folder which does not exist on this computer."), openPoint.Name),
         _ => openPoint.Name,
     };

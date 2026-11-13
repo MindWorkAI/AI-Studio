@@ -15,8 +15,8 @@ namespace AIStudio.Dialogs;
 /// <remarks>
 /// Nobody types this prompt as it is sent. A chat template or an assistant whose conversation the chat
 /// continues replaces the default, a profile, the
-/// retrieved data of a data source, and the policy of the selected tools are added to it, and the
-/// date goes in front. Each part stands under its own heading, in the order of the prompt, so a
+/// retrieved data of a data source, the policy of the selected tools, and the explanation of the notes
+/// in front of earlier answers are added to it, and the date goes in front. Each part stands under its own heading, in the order of the prompt, so a
 /// person does not have to work out from the text alone where a paragraph came from.<br/><br/>
 ///
 /// The parts are those ChatThread.BuildSystemPrompt recorded, so the dialog decides nothing about
@@ -85,7 +85,7 @@ public partial class SystemPromptDialog : MSGComponentBase
             {
                 case SystemPromptPartKind.BASE_PROMPT or SystemPromptPartKind.CHAT_TEMPLATE when !hasRetrievedData:
                     if (this.NoticeWithoutRetrievedData is { Length: > 0 } notice)
-                        result.Add(new(T("Data from your data sources"), string.Empty, notice));
+                        result.Add(new(TA("Data from your data sources"), string.Empty, notice));
 
                     this.AddSwitchedOffProfile(result);
                     break;
@@ -104,14 +104,15 @@ public partial class SystemPromptDialog : MSGComponentBase
         SystemPromptPartKind.DATE_TIME => new(T("Current date and time"), part.Text, string.Empty),
 
         // A prompt which an assistant wrote for the chat is not the one it created its result with, which the heading must not hide:
-        SystemPromptPartKind.BASE_PROMPT when part.Origin is { Source: ChatSystemPromptSource.CUSTOM } origin => new(string.Format(T("Chat prompt of the assistant '{0}'"), origin.AssistantName), part.Text, string.Format(T("The assistant '{0}' wrote these instructions for your follow-up questions in this chat. They differ from the instructions with which the assistant created its result."), origin.AssistantName)),
+        SystemPromptPartKind.BASE_PROMPT when part.Origin is { Source: ChatSystemPromptSource.CUSTOM } origin => new(string.Format(T("Chat prompt of the assistant '{0}'"), origin.AssistantName), part.Text, string.Format(TA("The assistant '{0}' wrote these instructions for your follow-up questions in this chat. They differ from the instructions with which the assistant created its result."), origin.AssistantName)),
         SystemPromptPartKind.BASE_PROMPT when part.Origin is { } origin => new(string.Format(T("System prompt of the assistant '{0}'"), origin.AssistantName), part.Text, string.Empty),
         SystemPromptPartKind.BASE_PROMPT when part.Text == SystemPrompts.DEFAULT => new(T("Default prompt of AI Studio"), part.Text, string.Empty),
         SystemPromptPartKind.BASE_PROMPT => new(T("System prompt of this chat"), part.Text, string.Empty),
         SystemPromptPartKind.CHAT_TEMPLATE => new(string.Format(T("Chat template '{0}'"), part.SourceName), part.Text, string.Empty),
-        SystemPromptPartKind.RETRIEVED_DATA => new(T("Data from your data sources"), part.Text, this.NoticeWithRetrievedData),
+        SystemPromptPartKind.RETRIEVED_DATA => new(TA("Data from your data sources"), part.Text, this.NoticeWithRetrievedData),
         SystemPromptPartKind.PROFILE => new(string.Format(T("Profile '{0}'"), part.SourceName), part.Text, string.Empty),
-        SystemPromptPartKind.TOOL_INSTRUCTIONS => new(string.Format(T("Instructions for your tools: {0}"), string.Join(", ", this.ToolNames)), part.Text, T("When the AI reaches the limit of tool calls for one answer, AI Studio adds one more instruction at the end: to answer with what the tools have returned so far.")),
+        SystemPromptPartKind.TOOL_INSTRUCTIONS => new(string.Format(TA("Instructions for your tools: {0}"), string.Join(", ", this.ToolNames)), part.Text, T("When the AI reaches the limit of tool calls for one answer, AI Studio adds one more instruction at the end: to answer with what the tools have returned so far.")),
+        SystemPromptPartKind.HISTORY_NOTES => new(T("Instructions for the notes on earlier answers"), part.Text, TA("When an earlier answer in this chat used tools or sources, AI Studio puts a note in front of it which names them. Only the AI receives this note; you do not see it in the chat. These instructions tell the AI what the note means.")),
         _ => new(string.Empty, part.Text, string.Empty),
     };
 
@@ -120,17 +121,17 @@ public partial class SystemPromptDialog : MSGComponentBase
         if (this.Prompt.SwitchedOffProfile == Profile.NO_PROFILE)
             return;
 
-        result.Add(new(string.Format(T("Profile '{0}'"), this.Prompt.SwitchedOffProfile.Name), string.Empty, T("The chat template does not allow profiles, so your selected profile is not part of the prompt.")));
+        result.Add(new(string.Format(T("Profile '{0}'"), this.Prompt.SwitchedOffProfile.Name), string.Empty, TA("The chat template does not allow profiles, so your selected profile is not part of the prompt.")));
     }
 
     private string NoticeWithRetrievedData => this.RetrievalMode is DataSourceRetrievalMode.EVERY_MESSAGE
-        ? T("AI Studio retrieved this data for your last message. When you send your next message, AI Studio searches your data sources again and replaces this data with what it finds then.")
-        : T("AI Studio sent this data with your last message. When you send your next message, AI Studio works out this part anew.");
+        ? TA("AI Studio retrieved this data for your last message. When you send your next message, AI Studio searches your data sources again and replaces this data with what it finds then.")
+        : TA("AI Studio sent this data with your last message. When you send your next message, AI Studio works out this part anew.");
 
     private string NoticeWithoutRetrievedData => this.RetrievalMode switch
     {
-        DataSourceRetrievalMode.EVERY_MESSAGE => T("When you send your next message, AI Studio searches your data sources and adds what it finds here."),
-        DataSourceRetrievalMode.SEMANTIC_SEARCH => T("The AI searches your data sources itself whenever a question calls for it. What it finds reaches the AI as the result of that search, not as part of this prompt."),
+        DataSourceRetrievalMode.EVERY_MESSAGE => TA("When you send your next message, AI Studio searches your data sources and adds what it finds here."),
+        DataSourceRetrievalMode.SEMANTIC_SEARCH => TA("The AI searches your data sources itself whenever a question calls for it. What it finds reaches the AI as the result of that search, not as part of this prompt."),
         _ => string.Empty,
     };
 

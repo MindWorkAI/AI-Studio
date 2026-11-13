@@ -13,7 +13,7 @@ public partial class SettingsPanelAgentAssistantAudit : SettingsPanelBase
             {
                 {
                     x => x.Message,
-                    this.T("Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?")
+                    this.TA("Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?")
                 },
             };
 

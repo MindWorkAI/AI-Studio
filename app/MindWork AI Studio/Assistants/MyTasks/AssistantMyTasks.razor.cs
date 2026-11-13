@@ -12,7 +12,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     
     protected override string Title => T("My Tasks");
     
-    protected override string Description => T("You received a cryptic email or document that was sent to many recipients and you are now wondering if you need to do something? Copy the text into the input field, attach one or more documents, or use both. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.");
+    protected override string Description => TA("You received a cryptic email or document that was sent to many recipients and you are now wondering if you need to do something? Copy the text into the input field, attach one or more documents, or use both. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.");
     
     // This prompt gives advice in the chosen language, which suits the follow-up questions of the chat:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
@@ -142,7 +142,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text) && !this.HasValidInputDocuments())
-            return T("Please provide some text or at least one valid document as input. For example, an email.");
+            return TA("Please provide some text or at least one valid document as input. For example, an email.");
         
         return null;
     }
@@ -158,7 +158,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private string? ValidateProfile(Profile profile)
     {
         if(profile == Profile.NO_PROFILE)
-            return T("Please select one of your profiles.");
+            return TA("Please select one of your profiles.");
         
         return null;
     }
@@ -166,7 +166,7 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }

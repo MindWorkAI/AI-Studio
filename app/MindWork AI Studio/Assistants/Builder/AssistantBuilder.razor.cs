@@ -34,7 +34,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     
     protected override string Title => T("Assistant Builder");
     
-    protected override string Description => T("Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.");
+    protected override string Description => TA("Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.");
     
     // This assistant generates a plugin and has no conversation for a chat to continue:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
@@ -369,7 +369,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string? ValidateAssistantDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return T("Please describe the assistant you want to create.");
+            return TA("Please describe the assistant you want to create.");
 
         return null;
     }
@@ -382,7 +382,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string? ValidateCustomCategory(string category)
     {
         if(this.selectedCategory is AssistantCategory.OTHER && string.IsNullOrWhiteSpace(category))
-            return T("Please provide a custom category.");
+            return TA("Please provide a custom category.");
 
         return null;
     }
@@ -390,7 +390,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string? ValidateCustomOutputLanguage(string language)
     {
         if(this.selectedOutputLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom output language.");
+            return TA("Please provide a custom output language.");
 
         return null;
     }
@@ -447,7 +447,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
         if (string.IsNullOrWhiteSpace(this.generatedAssistantSpec))
         {
-            this.AddInputIssue(T("Please create an assistant draft first."));
+            this.AddInputIssue(TA("Please create an assistant draft first."));
             return;
         }
 
@@ -609,7 +609,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         if (!this.createChatLauncher || !this.MaySuggestDescription())
             return;
 
-        var suggestion = T("Create a tile that opens a preconfigured chat directly, without an input form of its own.");
+        var suggestion = TA("Create a tile that opens a preconfigured chat directly, without an input form of its own.");
         suggestion = string.IsNullOrWhiteSpace(this.launcherWorkspaceName)
             ? $"{suggestion} {T("The chat opens as a disappearing chat, without a workspace.")}"
             : $"{suggestion} {string.Format(T("Workspace: {0}"), this.launcherWorkspaceName.Trim())}";
@@ -740,8 +740,8 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             if (this.IsActivationBlockedBySettings)
             {
                 this.stepperIndex = (int)BuilderInstallStep.ENABLE_ASSISTANT;
-                this.FailInstallStep(BuilderInstallStep.ENABLE_ASSISTANT, T("This assistant cannot be enabled because the security check is below your required level."));
-                await this.MessageBus.SendError(new(AppIcons.BLOCKED, T("The assistant cannot be enabled because it is below your required security level.")));
+                this.FailInstallStep(BuilderInstallStep.ENABLE_ASSISTANT, TA("This assistant cannot be enabled because the security check is below your required level."));
+                await this.MessageBus.SendError(new(AppIcons.BLOCKED, TA("The assistant cannot be enabled because it is below your required security level.")));
                 return;
             }
 
@@ -791,7 +791,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 x => x.Message,
                 string.Format(
-                    T("The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"),
+                    TA("The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"),
                     this.pluginInstallResult?.PluginName ?? T("Unknown assistant"),
                     this.pluginAudit?.Level.Name ?? T("Unknown"),
                     this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel.Name)

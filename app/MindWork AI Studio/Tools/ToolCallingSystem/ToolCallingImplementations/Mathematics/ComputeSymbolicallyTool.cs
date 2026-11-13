@@ -30,6 +30,8 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ComputeSymbolicallyTool).Namespace, nameof(ComputeSymbolicallyTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ComputeSymbolicallyTool).Namespace, nameof(ComputeSymbolicallyTool));
+
     private const string OPERATION_ARGUMENT = "operation";
     private const string EXPRESSION_ARGUMENT = "expression";
     private const string VARIABLE_ARGUMENT = "variable";
@@ -122,7 +124,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
 
     public string GetDisplayName() => TB("Compute Symbolically");
 
-    public string GetDescription() => TB("Lets the AI work with formulas: simplify and factor them, differentiate and integrate them, take limits, and solve equations. Every result is checked numerically where possible, right on your computer.");
+    public string GetDescription() => TA("Lets the AI work with formulas: simplify and factor them, differentiate and integrate them, take limits, and solve equations. Every result is checked numerically where possible, right on your computer.");
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {

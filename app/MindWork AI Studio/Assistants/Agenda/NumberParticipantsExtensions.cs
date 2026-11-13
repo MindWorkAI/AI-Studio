@@ -3,12 +3,14 @@ namespace AIStudio.Assistants.Agenda;
 public static class NumberParticipantsExtensions
 {
     private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(NumberParticipantsExtensions).Namespace, nameof(NumberParticipantsExtensions));
+
+    private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(NumberParticipantsExtensions).Namespace, nameof(NumberParticipantsExtensions));
     
     extension(NumberParticipants numberParticipants)
     {
         public string Name => numberParticipants switch
         {
-            NumberParticipants.NOT_SPECIFIED => TB("Please select how many participants are expected"),
+            NumberParticipants.NOT_SPECIFIED => TA("Please select how many participants are expected"),
         
             NumberParticipants.PEER_TO_PEER => TB("2 (peer to peer)"),
         

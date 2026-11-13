@@ -135,7 +135,7 @@ public partial class ProfileDialog : MSGComponentBase
     private string? ValidateNeedToKnow(string text)
     {
         if (string.IsNullOrWhiteSpace(this.DataNeedToKnow) && string.IsNullOrWhiteSpace(this.DataActions))
-            return T("Please enter what the LLM should know about you and/or what actions it should take.");
+            return TA("Please enter what the LLM should know about you and/or what actions it should take.");
 
         return null;
     }
@@ -143,7 +143,7 @@ public partial class ProfileDialog : MSGComponentBase
     private string? ValidateActions(string text)
     {
         if (string.IsNullOrWhiteSpace(this.DataNeedToKnow) && string.IsNullOrWhiteSpace(this.DataActions))
-            return T("Please enter what the LLM should know about you and/or what actions it should take.");
+            return TA("Please enter what the LLM should know about you and/or what actions it should take.");
 
         return null;
     }
@@ -151,7 +151,7 @@ public partial class ProfileDialog : MSGComponentBase
     private string? ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return T("Please enter a profile name.");
+            return TA("Please enter a profile name.");
 
         if (name.Length > 40)
             return T("The profile name must not exceed 40 characters.");

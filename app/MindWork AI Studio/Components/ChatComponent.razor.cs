@@ -257,7 +257,7 @@ public partial class ChatComponent : MSGComponentBase
                 budget = string.Format(this.T("{0}, of which approx. {1} from tools"), budget, TokenAmount.Format(this.conversationTokens.ToolTokens, this.currentCulture));
 
             if (this.conversationTokens.DraftTokens > 0)
-                budget = string.Format(this.T("{0}, plus approx. {1} for your message"), budget, TokenAmount.Format(this.conversationTokens.DraftTokens, this.currentCulture));
+                budget = string.Format(this.TA("{0}, plus approx. {1} for your message"), budget, TokenAmount.Format(this.conversationTokens.DraftTokens, this.currentCulture));
 
             //
             // The pictures of the whole conversation, not of the message being written: every one
@@ -789,16 +789,16 @@ public partial class ChatComponent : MSGComponentBase
 
     private bool IsCurrentChatStreaming => this.ChatThread is not null && this.AIJobService.IsChatGenerationActive(this.ChatThread.ChatId);
     
-    private string ProviderPlaceholder => this.IsProviderSelected ? T("Type your input here...") : T("Select a provider first");
+    private string ProviderPlaceholder => this.IsProviderSelected ? TA("Type your input here...") : TA("Select a provider first");
 
     private string InputLabel
     {
         get
         {
             if (this.IsProviderSelected)
-                return string.Format(T("Your Prompt (use selected instance '{0}', provider '{1}')"), this.Provider.InstanceName, this.Provider.UsedLLMProvider.Name);
+                return string.Format(TA("Your Prompt (use selected instance '{0}', provider '{1}')"), this.Provider.InstanceName, this.Provider.UsedLLMProvider.Name);
             
-            return this.T("Select a provider first");
+            return this.TA("Select a provider first");
         }
     }
 
@@ -833,7 +833,7 @@ public partial class ChatComponent : MSGComponentBase
     // The chat template locks the profile for good, an answer being written only until it is complete:
     private string ProfileDisabledText => this.currentChatTemplate.AllowProfileUsage
         ? T("Profile changes are locked while a response is running.")
-        : T("Profile usage is disabled according to your chat template settings.");
+        : TA("Profile usage is disabled according to your chat template settings.");
 
     /// <summary>
     /// Whether the open chat can move into a workspace, which is exactly when the workspace tree offers it.
@@ -1927,7 +1927,7 @@ public partial class ChatComponent : MSGComponentBase
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, T("Are you sure you want to start a new chat? All unsaved changes will be lost.") },
+                { x => x.Message, TA("Are you sure you want to start a new chat? All unsaved changes will be lost.") },
             };
         
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Start New Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -2084,7 +2084,7 @@ public partial class ChatComponent : MSGComponentBase
         
         var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
-            { x => x.Message, T("Please select the workspace where you want to move the chat to.") },
+            { x => x.Message, TA("Please select the workspace where you want to move the chat to.") },
             { x => x.SelectedWorkspace, this.ChatThread?.WorkspaceId ?? Guid.Empty },
             { x => x.ConfirmText, T("Move chat") },
         };

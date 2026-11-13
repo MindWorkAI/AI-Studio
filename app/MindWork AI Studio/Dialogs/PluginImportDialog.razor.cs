@@ -27,12 +27,12 @@ public partial class PluginImportDialog : MSGComponentBase
     /// </summary>
     private string IntroductionText => this.Preview.Plugin.Type switch
     {
-        PluginType.LANGUAGE => this.T("You are about to install a language plugin from a file."),
-        PluginType.ASSISTANT => this.T("You are about to install an assistant plugin from a file."),
-        PluginType.CONFIGURATION => this.T("You are about to install a configuration plugin from a file."),
-        PluginType.THEME => this.T("You are about to install a theme plugin from a file."),
+        PluginType.LANGUAGE => this.TA("You are about to install a language plugin from a file."),
+        PluginType.ASSISTANT => this.TA("You are about to install an assistant plugin from a file."),
+        PluginType.CONFIGURATION => this.TA("You are about to install a configuration plugin from a file."),
+        PluginType.THEME => this.TA("You are about to install a theme plugin from a file."),
 
-        _ => this.T("You are about to install a plugin from a file."),
+        _ => this.TA("You are about to install a plugin from a file."),
     };
 
     private string TypeLabel => this.Preview.Plugin.Type.Name;
@@ -70,7 +70,7 @@ public partial class PluginImportDialog : MSGComponentBase
             Add(summary.ChatTemplates, this.T("{0} chat template"), this.T("{0} chat templates"));
             Add(summary.Profiles, this.T("{0} profile"), this.T("{0} profiles"));
             Add(summary.DocumentAnalysisPolicies, this.T("{0} document analysis policy"), this.T("{0} document analysis policies"));
-            Add(summary.MandatoryInfos, this.T("{0} mandatory information you have to accept before using AI Studio"), this.T("{0} mandatory information you have to accept before using AI Studio"));
+            Add(summary.MandatoryInfos, this.TA("{0} mandatory information you have to accept before using AI Studio"), this.TA("{0} mandatory information you have to accept before using AI Studio"));
             Add(summary.Introductions, this.T("{0} introduction on the welcome page"), this.T("{0} introductions on the welcome page"));
             Add(summary.MailboxProviders, this.T("{0} mail server offered for new mailboxes"), this.T("{0} mail servers offered for new mailboxes"));
 

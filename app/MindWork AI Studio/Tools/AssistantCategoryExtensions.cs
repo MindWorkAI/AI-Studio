@@ -5,6 +5,8 @@ namespace AIStudio.Tools;
 public static class AssistantCategoryExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantCategoryExtensions).Namespace, nameof(AssistantCategoryExtensions));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(AssistantCategoryExtensions).Namespace, nameof(AssistantCategoryExtensions));
     
     extension(AssistantCategory category)
     {
@@ -28,7 +30,7 @@ public static class AssistantCategoryExtensions
             get
             {
                 if(category is AssistantCategory.AS_IS)
-                    return TB("Please select the assistant category");
+                    return TA("Please select the assistant category");
 
                 return category.Name;
             }

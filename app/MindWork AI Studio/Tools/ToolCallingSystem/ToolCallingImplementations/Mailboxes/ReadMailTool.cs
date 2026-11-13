@@ -28,6 +28,8 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ReadMailTool).Namespace, nameof(ReadMailTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ReadMailTool).Namespace, nameof(ReadMailTool));
+
     private const string MAIL_ID_ARGUMENT = "mail_id";
     private const string ATTACHMENT_ARGUMENT = "attachment";
     private const string INCLUDE_HEADERS_ARGUMENT = "include_headers";
@@ -108,7 +110,7 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
 
     public string GetDisplayName() => TB("Read Mail");
 
-    public string GetDescription() => TB("Lets the AI read the mails it found in your mailboxes, including their attachments.");
+    public string GetDescription() => TA("Lets the AI read the mails it found in your mailboxes, including their attachments.");
 
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(ToolDefinition definition, IReadOnlyDictionary<string, string> settingsValues, CancellationToken token = default) =>
         Task.FromResult(MailToolConfiguration.GetState(settingsManager));

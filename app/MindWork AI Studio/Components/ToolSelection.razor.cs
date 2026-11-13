@@ -209,10 +209,10 @@ public partial class ToolSelection : MSGComponentBase
     {
         var warnings = new List<string>(4);
         if (!item.ConfigurationState.IsConfigured)
-            warnings.Add(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? T("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message);
+            warnings.Add(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? TA("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message);
 
         if (!item.IsActive)
-            warnings.Add(T("This tool has been disabled by your organization."));
+            warnings.Add(TA("This tool has been disabled by your organization."));
 
         var providerConfidenceHint = this.GetProviderConfidenceHint(item);
         if (!string.IsNullOrWhiteSpace(providerConfidenceHint))

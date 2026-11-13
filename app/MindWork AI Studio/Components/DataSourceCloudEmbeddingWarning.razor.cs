@@ -41,15 +41,15 @@ public partial class DataSourceCloudEmbeddingWarning : MSGComponentBase
     private bool SendsMediaToCloudTranscription => !string.IsNullOrWhiteSpace(this.CloudTranscriptionProvider);
 
     private string LabelOn => this.SendsMediaToCloudTranscription
-        ? T("Yes, please send my data to the external providers")
-        : T("Yes, please send my data to the external embedding provider");
+        ? TA("Yes, please send my data to the external providers")
+        : TA("Yes, please send my data to the external embedding provider");
 
     private string LabelOff => this.SendsMediaToCloudTranscription
         ? T("No, I will choose other providers or files")
         : T("No, I will choose another embedding");
 
     private string TranscriptionWarningText => string.Format(
-        T("Warning: Your transcription provider '{0}' is not self-hosted. Audio and video files this data source selects are sent to it to be transcribed, which can cost money. AI Studio keeps every transcript, so an unchanged recording is sent only once. MindWork AI Studio has no control over what that third party does with the recordings after they are sent."),
+        TA("Warning: Your transcription provider '{0}' is not self-hosted. Audio and video files this data source selects are sent to it to be transcribed, which can cost money. AI Studio keeps every transcript, so an unchanged recording is sent only once. MindWork AI Studio has no control over what that third party does with the recordings after they are sent."),
         this.CloudTranscriptionProvider);
 
     private string WarningText

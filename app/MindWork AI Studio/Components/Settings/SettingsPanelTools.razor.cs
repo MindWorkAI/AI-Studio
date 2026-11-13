@@ -57,11 +57,11 @@ public partial class SettingsPanelTools : SettingsPanelBase
     private string GetSwitchTooltip(ToolCatalogItem item)
     {
         if (IsSwitchLocked(item))
-            return this.T("This tool has been disabled by your organization.");
+            return this.TA("This tool has been disabled by your organization.");
 
         return IsSwitchedOffByUser(item)
-            ? this.T("Switch this tool on to use it again.")
-            : this.T("Switch this tool off if you never need it. It then appears in no tool selection, and the AI cannot use it.");
+            ? this.TA("Switch this tool on to use it again.")
+            : this.TA("Switch this tool off if you never need it. It then appears in no tool selection, and the AI cannot use it.");
     }
 
     private async Task SwitchToolOnOrOff(ToolCatalogItem item, bool isOn)

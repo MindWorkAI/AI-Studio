@@ -8,7 +8,7 @@
         @if (this.IsEnterpriseConfiguration)
         {
             <MudAlert Severity="Severity.Info" Class="mb-4">
-                @T("This transcription provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.")
+                @TA("This transcription provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.")
             </MudAlert>
         }
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
@@ -33,7 +33,7 @@
             @if (this.IsProviderProhibited)
             {
                 <MudAlert Severity="Severity.Warning" Class="mb-3">
-                    @T("The use of this provider has been prohibited by your organization. Please select a different provider.")
+                    @TA("The use of this provider has been prohibited by your organization. Please select a different provider.")
                 </MudAlert>
             }
             else
