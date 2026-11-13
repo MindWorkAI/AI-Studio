@@ -473,7 +473,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         if (trimmedName.Length is > 60 or < 6)
             return TA("The name of your preset must be between 6 and 60 characters long.");
 
-        if (this.presets.Any(preset => preset.Id != this.selectedPresetId && string.Equals(preset.Name, trimmedName, StringComparison.CurrentCultureIgnoreCase)))
+        if (ModelComparisonNames.IsTaken(trimmedName, this.presets.Where(preset => preset.Id != this.selectedPresetId).Select(preset => preset.Name)))
             return TA("A preset with this name already exists. Please choose a different name.");
 
         return null;

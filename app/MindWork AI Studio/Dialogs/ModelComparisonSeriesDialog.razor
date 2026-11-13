@@ -21,7 +21,7 @@
             }
 
             <MudText Typo="Typo.h6" Class="mb-1">@T("Name")</MudText>
-            <MudTextField T="string" @bind-Text="@this.seriesName" Label="@T("Name of the series")" Placeholder="@T("e.g., Weekly reports")" Variant="Variant.Outlined" Immediate="@true" MaxLength="60" Counter="60" Class="mb-3"/>
+            <MudTextField T="string" @bind-Text="@this.seriesName" Validation="@this.ValidatingSeriesName" Label="@T("Name of the series")" Placeholder="@T("e.g., Weekly reports")" Variant="Variant.Outlined" Immediate="@true" MaxLength="@MAX_NAME_LENGTH" Counter="@MAX_NAME_LENGTH" Class="mb-3"/>
 
             <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Models")</MudText>
             <MudJustifiedText Typo="Typo.body1" Class="mb-2">

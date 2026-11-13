@@ -25,6 +25,11 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
 {
     private const Tools.Components COMPONENT = Tools.Components.MODEL_COMPARISON_ASSISTANT;
 
+    /// <summary>
+    /// How long the name of a series may be.
+    /// </summary>
+    private const int MAX_NAME_LENGTH = 60;
+
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
@@ -51,6 +56,12 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     private ILogger<ModelComparisonSeriesDialog> Logger { get; init; } = null!;
 
     private string seriesName = string.Empty;
+
+    /// <summary>
+    /// The names of the existing series, which a new series must not take again.
+    /// </summary>
+    private IReadOnlyList<string> takenSeriesNames = [];
+
     private AIStudio.Settings.Provider firstProvider = AIStudio.Settings.Provider.NONE;
     private AIStudio.Settings.Provider secondProvider = AIStudio.Settings.Provider.NONE;
     private bool judgeEnabled;
@@ -84,11 +95,14 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        this.takenSeriesNames = [.. (await this.ModelComparisonStore.ListSeriesAsync()).Select(existingSeries => existingSeries.Name)];
         if (this.BasedOn is { } series)
         {
             var selectableToolIds = await this.ToolRegistry.FilterSelectableToolIdsAsync(COMPONENT, series.ToolIds);
             var copy = ModelComparisonSeriesCopy.Of(this.SettingsManager, series, selectableToolIds);
-            this.seriesName = series.Name;
+
+            // The name of the series itself is taken, so the new one counts on, e.g., "Weekly reports (2)":
+            this.seriesName = ModelComparisonNames.FreeNameFrom(series.Name, this.takenSeriesNames, MAX_NAME_LENGTH);
             this.firstProvider = copy.First;
             this.secondProvider = copy.Second;
             this.judgeEnabled = copy.JudgeEnabled;
@@ -151,6 +165,21 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
         _ => string.Empty,
     };
 
+    /// <summary>
+    /// Checks the name of the series: it is needed, and no other series may have it.
+    /// </summary>
+    /// <returns>The issue, or null when the name is fine.</returns>
+    private string? ValidatingSeriesName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return TA("Please give the series a name, so that you find it again.");
+
+        if (ModelComparisonNames.IsTaken(name, this.takenSeriesNames))
+            return TA("A series with this name already exists. Please choose a different name.");
+
+        return null;
+    }
+
     private void FirstProviderChanged(AIStudio.Settings.Provider provider) => this.firstProvider = provider;
 
     private void SecondProviderChanged(AIStudio.Settings.Provider provider) => this.secondProvider = provider;
@@ -171,8 +200,8 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     /// <returns>The reason, or null when the series can begin.</returns>
     private string? CheckForm()
     {
-        if (string.IsNullOrWhiteSpace(this.seriesName))
-            return TA("Please give the series a name, so that you find it again.");
+        if (this.ValidatingSeriesName(this.seriesName) is { } nameIssue)
+            return nameIssue;
 
         if (ModelComparisonProviderCheck.IssueOf(this.SettingsManager, this.firstProvider) is { } firstIssue)
             return firstIssue;
