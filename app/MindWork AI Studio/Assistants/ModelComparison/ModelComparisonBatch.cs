@@ -23,6 +23,11 @@ public sealed class ModelComparisonBatch(int runCount)
     private readonly List<ModelComparisonVote?> votes = [];
 
     /// <summary>
+    /// The ID of the batch, which names the file of its results, see ModelComparisonRecord.
+    /// </summary>
+    public Guid Id { get; private init; } = Guid.NewGuid();
+
+    /// <summary>
     /// How many runs the batch makes.
     /// </summary>
     public int RunCount { get; } = runCount;
@@ -207,6 +212,7 @@ public sealed class ModelComparisonBatch(int runCount)
     {
         var copy = new ModelComparisonBatch(this.RunCount)
         {
+            Id = this.Id,
             CurrentIndex = this.CurrentIndex,
             SkipsRemainingVotes = this.SkipsRemainingVotes,
         };

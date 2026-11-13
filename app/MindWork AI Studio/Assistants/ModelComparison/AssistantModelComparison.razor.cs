@@ -567,6 +567,9 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
             }).ConfigureAwait(false);
 
             this.RequestBackgroundUIRefresh();
+
+            // A batch whose remaining votes the user skipped, or which the user stopped, is over only now:
+            await this.InvokeAsync(this.StoreResultsIfFinished).ConfigureAwait(false);
         }
     }
 
@@ -644,6 +647,48 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     {
         await this.RefreshAssistantUIAsync();
         await this.CheckpointAssistantSession();
+        await this.StoreResultsIfFinished();
+    }
+
+    /// <summary>
+    /// The batch whose results this page stored already, so that it does not write them again: after the last vote
+    /// and once more when the batch settles, for example.
+    /// </summary>
+    private Guid? storedBatchId;
+
+    /// <summary>
+    /// Stores the results of the batch once the user is through with it, for the statistics.
+    /// </summary>
+    /// <remarks>
+    /// Only then all votes are in. A batch without any vote and without any verdict of a judge holds nothing to count
+    /// and is not stored. Called on the dispatcher of the page only, since it reads the batch.
+    /// </remarks>
+    private async Task StoreResultsIfFinished()
+    {
+        if (this.batch is not { IsFinished: true } finishedBatch || this.storedBatchId == finishedBatch.Id)
+            return;
+
+        var record = ModelComparisonRecord.Of(
+            finishedBatch,
+            DateTimeOffset.UtcNow,
+            this.CurrentRequest.GetQuestionPreview(QUESTION_PREVIEW_LENGTH),
+            ModelComparisonModelIdentity.Of(this.ProviderSettings),
+            ModelComparisonModelIdentity.Of(this.secondProvider),
+            this.judgeEnabled ? ModelComparisonModelIdentity.Of(this.judgeProvider) : null);
+
+        this.storedBatchId = finishedBatch.Id;
+        if (!record.HoldsAnyChoice)
+            return;
+
+        try
+        {
+            await this.ModelComparisonStore.SaveResultAsync(record);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            this.Logger.LogError(exception, "Could not store the results of a batch of the Model Comparison assistant.");
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ASSISTANT_MODEL_COMPARISON, T("AI Studio could not save the results of this comparison for the statistics.")));
+        }
     }
 
     /// <summary>
