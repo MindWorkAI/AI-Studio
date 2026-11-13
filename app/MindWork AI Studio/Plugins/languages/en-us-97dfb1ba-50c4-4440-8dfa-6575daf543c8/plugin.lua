@@ -4779,6 +4779,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 -- Judge model
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T953975257"] = "Judge model"
 
+-- Enter a new name for this comparison series.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1211403772"] = "Enter a new name for this comparison series."
+
+-- Enter a new name for this comparison series.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1211403772::INFORMAL"] = "Enter a new name for this comparison series."
+
 -- Open
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T1401622761"] = "Open"
 
@@ -4794,6 +4800,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 -- Switch mode
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2045889708"] = "Switch mode"
 
+-- Name of the series
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2083243781"] = "Name of the series"
+
 -- Are you sure you want to delete the comparison series '{0}' with all its chats? This cannot be undone.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2398358753"] = "Are you sure you want to delete the comparison series '{0}' with all its chats? This cannot be undone."
 
@@ -4806,6 +4815,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 -- Your comparison series
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T242544328::INFORMAL"] = "Your comparison series"
 
+-- AI Studio could not rename the comparison series. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2698444055"] = "AI Studio could not rename the comparison series. Please try again."
+
+-- AI Studio could not rename the comparison series. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2698444055::INFORMAL"] = "AI Studio could not rename the comparison series. Please try again."
+
 -- Back to all series
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2733157589"] = "Back to all series"
 
@@ -4814,6 +4829,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 
 -- Started {0}, decided tasks: {1}, result shown
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T2970598131"] = "Started {0}, decided tasks: {1}, result shown"
+
+-- Rename
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T3355849203"] = "Rename"
+
+-- Rename series
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T3550827604"] = "Rename series"
 
 -- AI Studio could not delete the comparison series. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISONTASKS::T3650237868"] = "AI Studio could not delete the comparison series. Please try again."
@@ -4899,6 +4920,15 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONBATCHVIEW
 -- Waiting for the next run...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONBATCHVIEW::T758625750"] = "Waiting for the next run..."
 
+-- Your messages on average
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONEFFORTCHARTS::T1422468824"] = "Your messages on average"
+
+-- Your messages on average
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONEFFORTCHARTS::T1422468824::INFORMAL"] = "Your messages on average"
+
+-- Median time
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONEFFORTCHARTS::T2152829620"] = "Median time"
+
 -- The judge saw both answers as equally good, matching your own vote.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEVERDICTCARD::T110452334"] = "The judge saw both answers as equally good, matching your own vote."
 
@@ -4964,6 +4994,24 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODEEXTEN
 
 -- Answer Variance
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODEEXTENSIONS::T3575446502"] = "Answer Variance"
+
+-- A series with this name already exists. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T1933751712"] = "A series with this name already exists. Please choose a different name."
+
+-- A series with this name already exists. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T1933751712::INFORMAL"] = "A series with this name already exists. Please choose a different name."
+
+-- Please give the series a name, so that you find it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T2512778872"] = "Please give the series a name, so that you find it again."
+
+-- Please give the series a name, so that you find it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T2512778872::INFORMAL"] = "Please give the series a name, so that you find it again."
+
+-- The name of your series may have at most {0} characters.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T4001587725"] = "The name of your series may have at most {0} characters."
+
+-- The name of your series may have at most {0} characters.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONNAMES::T4001587725::INFORMAL"] = "The name of your series may have at most {0} characters."
 
 -- {0} is clearly better
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONPAIRCARD::T1539751573"] = "{0} is clearly better"
@@ -5354,6 +5402,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIE
 
 -- One of the two models is no longer available as it was when the series began: its provider was deleted, or it uses another model now. You cannot work on another task in this series, but you can start a new series with its setup and choose the model anew.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T116035530::INFORMAL"] = "One of the two models is no longer available as it was when the series began: its provider was deleted, or it uses another model now. You cannot work on another task in this series, but you can start a new series with its setup and choose the model anew."
+
+-- You have seen the result of this series, so you know which model answers in which chat. Another task therefore no longer counts as blind: the result shows it apart, and the results of all comparisons leave it out. To compare blindly again, start a new series with the setup of this one. Do you want to test another task in this series anyway?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T1163964876"] = "You have seen the result of this series, so you know which model answers in which chat. Another task therefore no longer counts as blind: the result shows it apart, and the results of all comparisons leave it out. To compare blindly again, start a new series with the setup of this one. Do you want to test another task in this series anyway?"
+
+-- You have seen the result of this series, so you know which model answers in which chat. Another task therefore no longer counts as blind: the result shows it apart, and the results of all comparisons leave it out. To compare blindly again, start a new series with the setup of this one. Do you want to test another task in this series anyway?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T1163964876::INFORMAL"] = "You have seen the result of this series, so you know which model answers in which chat. Another task therefore no longer counts as blind: the result shows it apart, and the results of all comparisons leave it out. To compare blindly again, start a new series with the setup of this one. Do you want to test another task in this series anyway?"
 
 -- Task {0}: chat 1
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T134264261"] = "Task {0}: chat 1"
@@ -13650,23 +13704,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1531478547"] =
 -- Please choose two different models. A series compares how well two models help you.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1531478547::INFORMAL"] = "Please choose two different models. A series compares how well two models help you."
 
--- A series with this name already exists. Please choose a different name.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1933751712"] = "A series with this name already exists. Please choose a different name."
-
--- A series with this name already exists. Please choose a different name.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T1933751712::INFORMAL"] = "A series with this name already exists. Please choose a different name."
-
 -- Create series
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2037222750"] = "Create series"
 
 -- Name of the series
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2083243781"] = "Name of the series"
-
--- Please give the series a name, so that you find it again.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2512778872"] = "Please give the series a name, so that you find it again."
-
--- Please give the series a name, so that you find it again.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2512778872::INFORMAL"] = "Please give the series a name, so that you find it again."
 
 -- No judge
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::MODELCOMPARISONSERIESDIALOG::T2562272449"] = "No judge"
