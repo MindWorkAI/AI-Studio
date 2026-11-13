@@ -283,7 +283,7 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
                 RetrievalMode = dataSources.RetrievalMode,
             };
 
-            await this.ModelComparisonStore.SaveSeriesAsync(series);
+            await this.ModelComparisonStore.CreateSeriesAsync(series);
             this.MudDialog.Close(DialogResult.Ok(series));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)

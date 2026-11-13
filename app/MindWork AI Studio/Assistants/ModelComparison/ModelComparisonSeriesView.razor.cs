@@ -464,6 +464,10 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     /// <summary>
     /// Stores the series and tells the user when that fails.
     /// </summary>
+    /// <remarks>
+    /// A series the user deleted meanwhile, e.g., with all series in the results of all comparisons, stays deleted:
+    /// the page closes it, so there is nothing to tell.
+    /// </remarks>
     /// <returns>Whether the series was stored.</returns>
     private async Task<bool> SaveAsync()
     {
@@ -472,6 +476,11 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
         {
             await this.ModelComparisonStore.SaveSeriesAsync(this.Series);
             return true;
+        }
+        catch (FileNotFoundException)
+        {
+            this.Logger.LogInformation("A comparison series of the Model Comparison assistant was not stored, since the user deleted it meanwhile.");
+            return false;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {

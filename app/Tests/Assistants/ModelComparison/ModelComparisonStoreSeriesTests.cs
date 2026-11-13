@@ -36,7 +36,7 @@ public sealed class ModelComparisonStoreSeriesTests
     public async Task AStoredSeriesIsReadBackWithAllItsFields()
     {
         var series = Series(EARLIER);
-        await this.CreateStore().SaveSeriesAsync(series);
+        await this.CreateStore().CreateSeriesAsync(series);
 
         var loaded = await this.CreateStore().LoadSeriesAsync(series.Id);
         var task = loaded!.Tasks.Single();
@@ -64,8 +64,8 @@ public sealed class ModelComparisonStoreSeriesTests
         var store = this.CreateStore();
         var older = Series(EARLIER);
         var newer = Series(LATER);
-        await store.SaveSeriesAsync(older);
-        await store.SaveSeriesAsync(newer);
+        await store.CreateSeriesAsync(older);
+        await store.CreateSeriesAsync(newer);
 
         var series = await store.ListSeriesAsync();
 
@@ -77,7 +77,7 @@ public sealed class ModelComparisonStoreSeriesTests
     {
         var store = this.CreateStore();
         var series = Series(EARLIER);
-        await store.SaveSeriesAsync(series);
+        await store.CreateSeriesAsync(series);
 
         var thread = new ChatThread { ChatId = Guid.NewGuid() };
         thread.Blocks.Add(new ContentBlock { Role = ChatRole.USER, ContentType = ContentType.TEXT, Content = new ContentText { Text = "Summarize the report." } });
@@ -98,7 +98,7 @@ public sealed class ModelComparisonStoreSeriesTests
     {
         var store = this.CreateStore();
         var series = Series(EARLIER);
-        await store.SaveSeriesAsync(series);
+        await store.CreateSeriesAsync(series);
 
         Assert.That(await store.LoadSeriesChatAsync(series.Id, Guid.NewGuid()), Is.Null);
     }
@@ -108,7 +108,7 @@ public sealed class ModelComparisonStoreSeriesTests
     {
         var store = this.CreateStore();
         var series = Series(EARLIER);
-        await store.SaveSeriesAsync(series);
+        await store.CreateSeriesAsync(series);
         await store.DeleteSeriesAsync(series.Id);
 
         await Assert.ThrowsAsync<FileNotFoundException>(() => store.SaveSeriesChatAsync(series.Id, new ChatThread { ChatId = Guid.NewGuid() }));
@@ -116,11 +116,36 @@ public sealed class ModelComparisonStoreSeriesTests
     }
 
     [Test]
+    public async Task SavingASeriesReplacesWhatWasStoredOfIt()
+    {
+        var store = this.CreateStore();
+        var series = Series(EARLIER);
+        await store.CreateSeriesAsync(series);
+
+        series.Name = "Monthly reports";
+        await store.SaveSeriesAsync(series);
+
+        Assert.That((await this.CreateStore().LoadSeriesAsync(series.Id))!.Name, Is.EqualTo("Monthly reports"));
+    }
+
+    [Test]
+    public async Task ADeletedSeriesDoesNotComeBackWhenItIsSaved()
+    {
+        var store = this.CreateStore();
+        var series = Series(EARLIER);
+        await store.CreateSeriesAsync(series);
+        await store.DeleteSeriesAsync(series.Id);
+
+        await Assert.ThrowsAsync<FileNotFoundException>(() => store.SaveSeriesAsync(series));
+        Assert.That(Directory.Exists(Path.Combine(this.dataDirectory, ModelComparisonStore.ROOT_DIRECTORY_NAME, "series", series.Id.ToString("D"))), Is.False, "E.g., the verdict of the judge must not bring a deleted series back.");
+    }
+
+    [Test]
     public async Task DeletingASeriesDeletesItsChats()
     {
         var store = this.CreateStore();
         var series = Series(EARLIER);
-        await store.SaveSeriesAsync(series);
+        await store.CreateSeriesAsync(series);
         var thread = new ChatThread { ChatId = Guid.NewGuid() };
         await store.SaveSeriesChatAsync(series.Id, thread);
 
@@ -138,7 +163,7 @@ public sealed class ModelComparisonStoreSeriesTests
     {
         var store = this.CreateStore();
         var series = Series(EARLIER);
-        await store.SaveSeriesAsync(series);
+        await store.CreateSeriesAsync(series);
         var chatId = Guid.NewGuid();
         var path = Path.Combine(this.dataDirectory, ModelComparisonStore.ROOT_DIRECTORY_NAME, "series", series.Id.ToString("D"), "chats", $"{chatId:D}.json");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

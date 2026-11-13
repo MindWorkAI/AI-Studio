@@ -148,7 +148,7 @@ public sealed class ProvenanceCleanupServiceTests
     {
         var comparisonStore = this.CreateComparisonStore();
         var seriesId = Guid.NewGuid();
-        await comparisonStore.SaveSeriesAsync(new ModelComparisonSeries { Id = seriesId, Name = "Reports" });
+        await comparisonStore.CreateSeriesAsync(new ModelComparisonSeries { Id = seriesId, Name = "Reports" });
 
         var thread = new ChatThread { ChatId = Guid.NewGuid() };
         var referenced = await this.store.Client.StoreAsync(thread.ChatId, ProvenanceKind.WEB_PAGE, "of a page the chat of the series read", null, TOKEN);

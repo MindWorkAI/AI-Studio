@@ -84,12 +84,12 @@ public sealed partial class ModelComparisonStore
     }
 
     /// <summary>
-    /// Stores a comparison series, in place of what was stored of it before.
+    /// Stores a new comparison series.
     /// </summary>
     /// <param name="series">The series.</param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="ArgumentException">The series has no ID.</exception>
-    public async Task SaveSeriesAsync(ModelComparisonSeries series, CancellationToken token = default)
+    public async Task CreateSeriesAsync(ModelComparisonSeries series, CancellationToken token = default)
     {
         if (series.Id == Guid.Empty)
             throw new ArgumentException("A comparison series needs an ID.", nameof(series));
@@ -100,6 +100,39 @@ public sealed partial class ModelComparisonStore
         try
         {
             await WriteJsonAtomicAsync(this.SeriesPath(series.Id), series, token);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    /// <summary>
+    /// Stores a comparison series which exists already, in place of what was stored of it before.
+    /// </summary>
+    /// <remarks>
+    /// Guarded by the lock of the series, so that a series deleted meanwhile does not come back, e.g., with the verdict
+    /// of its judge. A new series goes through CreateSeriesAsync.
+    /// </remarks>
+    /// <param name="series">The series.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <exception cref="ArgumentException">The series has no ID.</exception>
+    /// <exception cref="FileNotFoundException">The series does not exist, e.g., because the user deleted it.</exception>
+    public async Task SaveSeriesAsync(ModelComparisonSeries series, CancellationToken token = default)
+    {
+        if (series.Id == Guid.Empty)
+            throw new ArgumentException("A comparison series needs an ID.", nameof(series));
+
+        await this.InitializeAsync(token);
+        var gate = this.GetLock(series.Id);
+        await gate.WaitAsync(token);
+        try
+        {
+            var seriesPath = this.SeriesPath(series.Id);
+            if (!File.Exists(seriesPath))
+                throw new FileNotFoundException("The comparison series does not exist.", seriesPath);
+
+            await WriteJsonAtomicAsync(seriesPath, series, token);
         }
         finally
         {
