@@ -524,6 +524,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.AllowPromptOverrides, this.Id, settingsTable, dryRun);
 
+        // Config: Model Comparison defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.ModelComparison, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.ModelComparison, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.ModelComparison, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.ModelComparison, x => x.PreselectedJudgeProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+
         // Config: Assistant Builder defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantBuilder, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);

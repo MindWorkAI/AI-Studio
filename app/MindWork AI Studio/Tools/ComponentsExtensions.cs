@@ -176,6 +176,7 @@ public static class ComponentsExtensions
             // A policy-specific minimum is merged with this component default inside
             // the Batch Processing Assistant; the stricter level wins.
             Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence : default,
+            Components.MODEL_COMPARISON_ASSISTANT => settingsManager.ConfigurationData.ModelComparison.PreselectOptions ? settingsManager.ConfigurationData.ModelComparison.MinimumProviderConfidence : default,
 
             _ => default,
         };
@@ -209,6 +210,10 @@ public static class ComponentsExtensions
             Components.DOCUMENT_ANALYSIS_ASSISTANT => Settings.Provider.NONE,
 
             Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.BatchProcessing.PreselectedProvider) : Settings.Provider.NONE,
+
+            // The first model of a new comparison. The assistant resolves its options itself, see ModelComparisonPreselection,
+            // because the option may also preselect no model at all, which GetPreselectedProvider cannot express:
+            Components.MODEL_COMPARISON_ASSISTANT => settingsManager.ConfigurationData.ModelComparison.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.ModelComparison.PreselectedProvider) : Settings.Provider.NONE,
 
             // Dynamic assistants have no dedicated settings yet, so they derive their defaults from the chat:
             Components.DYNAMIC_ASSISTANT or Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Chat.PreselectedProvider) : Settings.Provider.NONE,

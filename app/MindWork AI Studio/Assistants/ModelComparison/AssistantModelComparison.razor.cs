@@ -9,7 +9,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.ModelComparison;
 
-public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPanel>
+public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialogModelComparison>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -67,7 +67,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
         this.inputContext = string.Empty;
         this.inputQuestion = string.Empty;
         this.secondProvider = Settings.Provider.NONE;
-        this.judgeEnabled = true;
+        this.judgeEnabled = false;
         this.judgeProvider = Settings.Provider.NONE;
         this.judgeInstructions = string.Empty;
         this.runCount = 1;
@@ -144,16 +144,31 @@ public partial class AssistantModelComparison : AssistantBaseCore<NoSettingsPane
     protected override bool MightPreselectValues() => false;
 
     /// <summary>
+    /// Starts with the models which the options of the assistant preselect, once the page opens and after every reset.
+    /// </summary>
+    /// <remarks>
+    /// The base class preselects the first model through GetPreselectedProvider, which falls back to the provider of
+    /// the whole app even when the options preselect no model, see ModelComparisonPreselection.
+    /// </remarks>
+    protected override Task OnDefaultsAppliedAsync()
+    {
+        this.ProviderSettings = this.SettingsManager.PreselectedComparisonModel;
+        this.judgeProvider = this.SettingsManager.PreselectedComparisonJudge;
+        this.judgeEnabled = this.judgeProvider != Settings.Provider.NONE;
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
     /// The first model is ProviderSettings of the base class, so that everything the
     /// base class does with a provider keeps working for it. This is the second one.
     /// </summary>
     private AIStudio.Settings.Provider secondProvider = Settings.Provider.NONE;
 
     /// <summary>
-    /// Whether an optional third model judges the two answers. On by default; the user can still
-    /// switch it off for a plain two-model comparison.
+    /// Whether an optional third model judges the two answers. On from the start only when the options of the
+    /// assistant preselect a judge model, see OnDefaultsAppliedAsync.
     /// </summary>
-    private bool judgeEnabled = true;
+    private bool judgeEnabled;
 
     /// <summary>
     /// The judge model, asked only when judgeEnabled is set.

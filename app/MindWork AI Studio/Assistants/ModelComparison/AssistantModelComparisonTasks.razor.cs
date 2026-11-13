@@ -1,6 +1,7 @@
 using AIStudio.Chat.Embedded;
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Dialogs.Settings;
 
 using Microsoft.AspNetCore.Components;
 
@@ -142,4 +143,9 @@ public partial class AssistantModelComparisonTasks : MSGComponentBase
     /// Goes back to the choice between the two modes.
     /// </summary>
     private void SwitchMode() => this.NavigationManager.NavigateTo(Routes.ASSISTANT_MODEL_COMPARISON);
+
+    /// <summary>
+    /// Opens the options of the assistant, which both modes share, as the Answer Test does through its base class.
+    /// </summary>
+    private async Task OpenSettingsDialog() => await this.DialogService.ShowAsync<SettingsDialogModelComparison>(null, new DialogParameters(), DialogOptions.FULLSCREEN);
 }

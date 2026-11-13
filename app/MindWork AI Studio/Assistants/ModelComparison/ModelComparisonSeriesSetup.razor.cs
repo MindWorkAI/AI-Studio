@@ -68,6 +68,9 @@ public partial class ModelComparisonSeriesSetup : MSGComponentBase
     {
         await base.OnInitializedAsync();
         this.profile = this.SettingsManager.GetPreselectedProfile(COMPONENT);
+        this.firstProvider = this.SettingsManager.PreselectedComparisonModel;
+        this.judgeProvider = this.SettingsManager.PreselectedComparisonJudge;
+        this.judgeEnabled = this.judgeProvider != AIStudio.Settings.Provider.NONE;
     }
 
     #endregion
