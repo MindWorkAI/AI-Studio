@@ -27,9 +27,9 @@
     <InnerScrolling>
         <ChildContent>
             <MudForm @ref="@(this.Form)" @bind-IsValid="@(this.InputIsValid)" @bind-Errors="@(this.InputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
-                <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-2">
+                <MudJustifiedText Typo="Typo.body1" Class="mb-2">
                     @this.Description
-                </MudText>
+                </MudJustifiedText>
 
                 @if (this.Body is not null)
                 {
