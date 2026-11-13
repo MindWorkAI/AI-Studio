@@ -8,7 +8,7 @@
 }
 
 <CompactExpansionPanel HeaderIcon="@AppIcons.HELP" HeaderText="@T("How a task works")" Class="mb-3 mr-3" @bind-Expanded="@this.explanationExpanded">
-    <MudJustifiedText Typo="Typo.body1">
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
         @ModelComparisonSeriesTexts.HowATaskWorks
     </MudJustifiedText>
 </CompactExpansionPanel>
@@ -16,15 +16,22 @@
 @if (this.Series.OpenTask is { } task)
 {
     <MudPaper Outlined="true" Class="pa-4 mb-4 mr-3">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
-            <MudText Typo="Typo.h6">
-                @this.TaskHeading(task)
-            </MudText>
-            <MudSpacer/>
-            <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" OnClick="@this.DiscardTaskAsync" Disabled="@this.isSaving">
-                @T("Discard task")
-            </MudButton>
-        </MudStack>
+        @* Stays at the top while the user scrolls through a long chat, like the header of the BeyondFacts Lab: which
+           task and chat this is, and the setup both models work with, which matters for the decision. Its background
+           is that of the paper below it. *@
+        <div class="pb-2 mb-2" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-surface);">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1">
+                <MudText Typo="Typo.h6">
+                    @this.TaskHeading(task)
+                </MudText>
+                <MudSpacer/>
+                <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" OnClick="@this.DiscardTaskAsync" Disabled="@this.isSaving">
+                    @T("Discard task")
+                </MudButton>
+            </MudStack>
+            <ModelComparisonSeriesSetupLine Series="@this.Series" Class="mb-2"/>
+            <MudDivider/>
+        </div>
 
         @if (task.CurrentChat is { } chat)
         {
