@@ -114,9 +114,15 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             //
             // No outcome means the round failed: the request errored out, or the stream ended
             // mid-sentence. Either way the adapter has already reported it. The answer keeps what
-            // was written so far, and with it what the tools of the earlier rounds contributed:
+            // was written so far, and with it what the tools of the earlier rounds contributed.
             //
-            if (round is null)
+            // A canceled request ends the same way, even when the adapter completed the round:
+            // the stream reader ends quietly on a cancellation, and an adapter then builds a
+            // round from whatever arrived until then. A model stopped while it was still
+            // thinking leaves a round without text and without calls, which is not an invalid
+            // answer, and a call which did arrive must not run after the user said stop.
+            //
+            if (round is null || token.IsCancellationRequested)
             {
                 await context.ResetToolRuntimeStatusAsync();
                 if (toolSources.Count > 0 || toolPassages.Count > 0)

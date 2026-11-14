@@ -217,6 +217,45 @@ public sealed class ToolCallingLoopTests
     }
 
     [Test]
+    public async Task AModelStoppedWhileThinkingIsNotReportedAsAnInvalidAnswer()
+    {
+        //
+        // A reasoning model may think for minutes before its first word. Stopped in that time,
+        // the adapter still completes the round from what arrived: no text and no calls. On the
+        // first round, that used to be reported as an invalid answer of the provider.
+        //
+        using var cancellation = new CancellationTokenSource();
+        var adapter = new ScriptedAdapter([Completed(string.Empty)])
+        {
+            CancelAfterFirstEvent = cancellation,
+        };
+
+        var chunks = await Collect(adapter, cancellation.Token);
+
+        Assert.That(string.Concat(chunks.Select(x => x.Content)), Is.Empty, "A stop is neither an error nor an answer, so nothing is written on its behalf.");
+    }
+
+    [Test]
+    public async Task AToolCallWhichArrivedBeforeTheStopDoesNotRun()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var adapter = new ScriptedAdapter(
+            [Completed(string.Empty, [Call("call-1")])],
+            [Text(ANSWER), Completed(ANSWER)])
+        {
+            CancelAfterFirstEvent = cancellation,
+        };
+
+        var written = string.Concat((await Collect(adapter, cancellation.Token)).Select(x => x.Content));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(adapter.Recordings, Is.Empty, "Nothing is recorded and nothing is run once the user said stop.");
+            Assert.That(written, Is.Empty, "And no further round is asked for.");
+        }
+    }
+
+    [Test]
     public async Task OnlyTheFirstRoundsUsageReachesTheAnswer()
     {
         //
