@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Text;
 using System.Text.Json;
 
 using AIStudio.Settings;
@@ -79,44 +78,19 @@ public sealed partial class ModelComparisonStore(ILogger<ModelComparisonStore> l
     /// <summary>
     /// Writes a file of the store so that readers see either the old or the new content, never a part of it.
     /// </summary>
+    /// <remarks>
+    /// The content reaches the disk before it replaces the file: the results of a series took weeks of work, and a
+    /// power failure must not take them away.
+    /// </remarks>
     /// <typeparam name="T">The type of the file.</typeparam>
     /// <param name="targetPath">The file to write.</param>
     /// <param name="value">The new content.</param>
     /// <param name="token">The cancellation token.</param>
     /// <param name="options">The JSON options, those of the assistant by default; a chat takes those of the workspaces.</param>
-    private static async Task WriteJsonAtomicAsync<T>(string targetPath, T value, CancellationToken token, JsonSerializerOptions? options = null)
+    private static Task WriteJsonAtomicAsync<T>(string targetPath, T value, CancellationToken token, JsonSerializerOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-        var temporaryPath = $"{targetPath}.tmp-{Guid.NewGuid():N}";
-        try
-        {
-            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(value, options ?? JSON_OPTIONS), new UTF8Encoding(false), token);
-            await using (var stream = new FileStream(temporaryPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 4_096, true))
-                await stream.FlushAsync(token);
-
-            File.Move(temporaryPath, targetPath, overwrite: true);
-        }
-        finally
-        {
-            TryDeleteFile(temporaryPath);
-        }
-    }
-
-    /// <summary>
-    /// Deletes a file when it exists, without failing.
-    /// </summary>
-    /// <param name="path">The file to delete.</param>
-    private static void TryDeleteFile(string path)
-    {
-        try
-        {
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            // Cleaning up a temporary file is best effort; the next start tries again.
-        }
+        return AtomicFile.WriteJsonAsync(targetPath, value, options ?? JSON_OPTIONS, token, flushToDisk: true);
     }
 
     /// <summary>
@@ -150,8 +124,7 @@ public sealed partial class ModelComparisonStore(ILogger<ModelComparisonStore> l
                 return;
 
             Directory.CreateDirectory(this.RootDirectory);
-            foreach (var temporaryPath in Directory.EnumerateFiles(this.RootDirectory, "*.tmp-*", SearchOption.AllDirectories))
-                TryDeleteFile(temporaryPath);
+            AtomicFile.DeleteTemporaryFiles(this.RootDirectory, logger);
 
             this.initialized = true;
         }

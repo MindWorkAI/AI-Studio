@@ -129,31 +129,19 @@ public partial class AssistantBatchProcessing
 
     private async Task WriteCsvFileAsync(string targetFilePath, string content)
     {
-        // Write to a sibling file first, then rename. This way, an aborted
-        // write can never destroy the results of the previous files:
-        var tempFilePath = targetFilePath + ".tmp";
         try
         {
-            // We write the CSV file with a byte order mark, so that spreadsheet
-            // applications recognize the UTF-8 encoding of, e.g., umlauts:
-            await File.WriteAllTextAsync(tempFilePath, content, new UTF8Encoding(true), CancellationToken.None);
-            File.Move(tempFilePath, targetFilePath, true);
+            // AtomicFile writes to a sibling file first, then renames it. This way, an aborted
+            // write can never destroy the results of the previous files. It also removes the
+            // sibling file when the write fails, so that it neither looks like a result to the
+            // user nor piles up over several runs. We write the CSV file with a byte order
+            // mark, so that spreadsheet applications recognize the UTF-8 encoding of, e.g.,
+            // umlauts:
+            await AtomicFile.WriteTextAsync(targetFilePath, content, new UTF8Encoding(true), CancellationToken.None, logger: this.Logger);
         }
         catch (Exception e)
         {
             this.Logger.LogError(e, "Was not able to write the batch output file '{TargetFilePath}'.", targetFilePath);
-
-            // Remove our leftover: a failing rename keeps the temporary file in
-            // the output folder, where it looks like a result to the user and
-            // piles up over several runs.
-            try
-            {
-                File.Delete(tempFilePath);
-            }
-            catch (Exception deleteError)
-            {
-                this.Logger.LogWarning(deleteError, "Was not able to remove the temporary file '{TempFilePath}'.", tempFilePath);
-            }
 
             // A failing write repeats for every document. We report it once per
             // run: without any message, the UI would show a successful run

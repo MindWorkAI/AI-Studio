@@ -46,7 +46,7 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
         Directory.CreateDirectory(operationDirectory);
         var originalFileName = Path.GetFileName(originalPath);
         var stagingPath = Path.Combine(operationDirectory, $"{Guid.NewGuid():N}.md");
-        await WriteMarkdownAsync(stagingPath, originalFileName, transcript);
+        await File.WriteAllTextAsync(stagingPath, BuildMarkdown(originalFileName, transcript), new UTF8Encoding(false));
         return FromPath(stagingPath, originalFileName, isStaged: true);
     }
 
@@ -58,18 +58,8 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
     internal static async Task<ManagedTranscriptAttachment> CreateAtomicAsync(string targetPath, string originalFileName, string transcript)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-        var temporaryPath = Path.Combine(Path.GetDirectoryName(targetPath)!, $".{Guid.NewGuid():N}.tmp");
-        try
-        {
-            await WriteMarkdownAsync(temporaryPath, originalFileName, transcript);
-            File.Move(temporaryPath, targetPath);
-            return FromPath(targetPath, originalFileName, isStaged: false);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-                File.Delete(temporaryPath);
-        }
+        await AtomicFile.WriteTextAsync(targetPath, BuildMarkdown(originalFileName, transcript), new UTF8Encoding(false), CancellationToken.None, overwrite: false);
+        return FromPath(targetPath, originalFileName, isStaged: false);
     }
 
     /// <summary>Deletes a file only when its canonical path has an exact managed structure.</summary>
@@ -162,15 +152,11 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
         originalFileName,
         isStaged);
 
-    /// <summary>Writes localized transcript Markdown without a UTF-8 byte-order mark.</summary>
-    private static async Task WriteMarkdownAsync(string path, string originalFileName, string transcript)
-    {
-        var markdown = $"""
-                        # Transcription: {originalFileName}
-                        
-                        {transcript.Trim()}
-                        """;
-        
-        await File.WriteAllTextAsync(path, markdown, new UTF8Encoding(false));
-    }
+    /// <summary>Builds the Markdown of a transcript; both callers write it without a UTF-8 byte-order mark.</summary>
+    private static string BuildMarkdown(string originalFileName, string transcript) =>
+        $"""
+         # Transcription: {originalFileName}
+
+         {transcript.Trim()}
+         """;
 }
