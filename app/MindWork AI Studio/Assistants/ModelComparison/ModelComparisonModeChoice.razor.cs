@@ -1,6 +1,10 @@
 using AIStudio.Components;
+using AIStudio.Dialogs;
+using AIStudio.Dialogs.Settings;
 
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.ModelComparison;
 
@@ -15,6 +19,9 @@ public partial class ModelComparisonModeChoice : MSGComponentBase
 {
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
+
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
 
     #region Overrides of MSGComponentBase
 
@@ -34,4 +41,14 @@ public partial class ModelComparisonModeChoice : MSGComponentBase
     ];
 
     private void ChooseMode(ModelComparisonMode mode) => this.NavigationManager.NavigateTo(mode.Route);
+
+    /// <summary>
+    /// Shows what all stored comparisons say about the models, as both modes do.
+    /// </summary>
+    private async Task OpenResultsDialog() => await this.DialogService.ShowAsync<ModelComparisonResultsDialog>(T("Results of all comparisons"), DialogOptions.FULLSCREEN);
+
+    /// <summary>
+    /// Opens the options of the assistant, which both modes share.
+    /// </summary>
+    private async Task OpenSettingsDialog() => await this.DialogService.ShowAsync<SettingsDialogModelComparison>(null, new DialogParameters(), DialogOptions.FULLSCREEN);
 }
