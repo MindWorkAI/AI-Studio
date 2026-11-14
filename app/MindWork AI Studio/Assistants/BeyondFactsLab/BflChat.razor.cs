@@ -16,7 +16,7 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// A chat of the BeyondFacts Lab, such as the one of a step below its form "Your details".
 /// </summary>
 /// <remarks>
-/// The chat itself lives in BflConversationService, so an answer goes on while the person looks elsewhere; this
+/// The chat itself lives in EmbeddedChatService, so an answer goes on while the person looks elsewhere; this
 /// component shows it and renders whenever the service says it changed. It offers no "send to": the lab neither
 /// receives content from other assistants nor hands its answers on.
 /// </remarks>
@@ -48,6 +48,9 @@ public partial class BflChat : MSGComponentBase
 
     [Inject]
     private BflConversationService ConversationService { get; init; } = null!;
+
+    [Inject]
+    private EmbeddedChatService ChatService { get; init; } = null!;
 
     [Inject]
     private BflMaterialService MaterialService { get; init; } = null!;
@@ -89,7 +92,7 @@ public partial class BflChat : MSGComponentBase
     /// <summary>
     /// The chat shown, or null while it loads.
     /// </summary>
-    private BflConversation? conversation;
+    private EmbeddedConversation? conversation;
 
     /// <summary>
     /// Where the chat shown belongs, to notice when the parent shows another one.
@@ -145,7 +148,7 @@ public partial class BflChat : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.countToken = this.countCancellation.Token;
-        this.ConversationService.ConversationChanged += this.OnConversationChangedAsync;
+        this.ChatService.ConversationChanged += this.OnConversationChangedAsync;
         this.MaterialService.MaterialsChanged += this.OnMaterialsChangedAsync;
         this.SettingsManager.InjectSpellchecking(this.inputAttributes);
         await base.OnInitializedAsync();
@@ -170,7 +173,7 @@ public partial class BflChat : MSGComponentBase
     /// <inheritdoc />
     protected override void DisposeResources()
     {
-        this.ConversationService.ConversationChanged -= this.OnConversationChangedAsync;
+        this.ChatService.ConversationChanged -= this.OnConversationChangedAsync;
         this.MaterialService.MaterialsChanged -= this.OnMaterialsChangedAsync;
         this.countCancellation.Cancel();
         this.countCancellation.Dispose();
@@ -180,10 +183,10 @@ public partial class BflChat : MSGComponentBase
     /// <summary>
     /// Renders the chat again when the service changed it, and counts again once an answer is complete.
     /// </summary>
-    /// <param name="location">Where the chat which changed belongs.</param>
-    private Task OnConversationChangedAsync(BflThreadLocation location)
+    /// <param name="chatId">The ID of the chat which changed.</param>
+    private Task OnConversationChangedAsync(Guid chatId)
     {
-        if (location != this.Location)
+        if (chatId != this.Location.ChatId)
             return Task.CompletedTask;
 
         return this.InvokeAsync(async () =>
