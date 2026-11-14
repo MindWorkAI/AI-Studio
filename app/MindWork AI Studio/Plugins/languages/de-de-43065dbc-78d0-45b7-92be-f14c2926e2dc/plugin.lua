@@ -4629,12 +4629,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 -- Give your preset a name which tells you later what it compares.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1326490469::INFORMAL"] = "Gib deiner Voreinstellung einen Namen, aus dem später hervorgeht, was sie vergleicht."
 
--- The judge model cannot be used. Please select another judge model, or switch the judge off.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1376336992"] = "Das Richtermodell kann nicht verwendet werden. Bitte wählen Sie ein anderes Richtermodell aus oder schalten Sie den Richter aus."
-
--- The judge model cannot be used. Please select another judge model, or switch the judge off.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1376336992::INFORMAL"] = "Das Richtermodell kann nicht verwendet werden. Bitte wähle ein anderes Richtermodell aus oder schalte den Richter aus."
-
 -- Please provide a name for your preset.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1408294373"] = "Bitte geben Sie einen Namen für Ihre Voreinstellung ein."
 
