@@ -130,7 +130,7 @@ public sealed class EmbeddedChatServiceTests
         var service = this.CreateService(Answer("An answer."));
 
         var conversation = await service.GetAsync(store, COMPONENT, chatId, () => new ChatThread());
-        var sent = await service.SendAsync(chatId, this.Request("A question.") with { PrepareAsync = _ => Task.FromResult(false) });
+        var sent = await service.SendAsync(chatId, this.Request("A question.") with { PrepareAsync = _ => Task.FromResult(EmbeddedChatPreparation.REFUSED) });
 
         using (Assert.EnterMultipleScope())
         {
@@ -202,7 +202,8 @@ public sealed class EmbeddedChatServiceTests
 
         await service.GetAsync(store, COMPONENT, chatId, () => new ChatThread());
         var extraBlock = new ContentBlock { Role = ChatRole.USER, ContentType = ContentType.TEXT, Content = new ContentText { Text = "An image description." } };
-        await service.SendAsync(chatId, this.Request("A question.") with { ThreadForRequest = thread => thread with { Blocks = [extraBlock, .. thread.Blocks] } });
+        var preparation = EmbeddedChatPreparation.READY with { ThreadForRequest = thread => thread with { Blocks = [extraBlock, .. thread.Blocks] } };
+        await service.SendAsync(chatId, this.Request("A question.") with { PrepareAsync = _ => Task.FromResult(preparation) });
 
         using (Assert.EnterMultipleScope())
         {

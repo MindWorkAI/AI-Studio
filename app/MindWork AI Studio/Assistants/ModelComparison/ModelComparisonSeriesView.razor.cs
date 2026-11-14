@@ -104,7 +104,7 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     /// <summary>
     /// Readies a request of the chat the user works in right now, with the provider of that chat.
     /// </summary>
-    private Func<ChatThread, Task<bool>> prepareChat = _ => Task.FromResult(true);
+    private Func<ChatThread, Task<EmbeddedChatPreparation>> prepareChat = _ => Task.FromResult(EmbeddedChatPreparation.READY);
 
     /// <summary>
     /// The copy of the first message of the first chat, with which the second chat starts, or null in the first chat.
@@ -230,12 +230,12 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
     /// </summary>
     /// <param name="thread">The chat.</param>
     /// <param name="provider">The provider which answers in the chat.</param>
-    /// <returns>Always true: whether the provider may answer, the embedded chat checks itself.</returns>
-    private Task<bool> PrepareAsync(ChatThread thread, AIStudio.Settings.Provider provider)
+    /// <returns>Always ready: whether the provider may answer, the embedded chat checks itself.</returns>
+    private Task<EmbeddedChatPreparation> PrepareAsync(ChatThread thread, AIStudio.Settings.Provider provider)
     {
         var toolIds = this.ToolRegistry.FilterToolIdsForProvider(provider, this.Series.ToolIds, thread.RequiredOutboundDataRestriction.Restriction);
         ModelComparisonSeriesThreads.PrepareForRequest(thread, this.Series, provider, toolIds);
-        return Task.FromResult(true);
+        return Task.FromResult(EmbeddedChatPreparation.READY);
     }
 
     /// <summary>

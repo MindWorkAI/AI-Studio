@@ -56,7 +56,7 @@ public partial class EmbeddedChat : MSGComponentBase
     /// Gets or sets how a request is readied before the message goes in, see EmbeddedChatRequest.PrepareAsync.
     /// </summary>
     [Parameter]
-    public Func<ChatThread, Task<bool>> PrepareAsync { get; set; } = _ => Task.FromResult(true);
+    public Func<ChatThread, Task<EmbeddedChatPreparation>> PrepareAsync { get; set; } = _ => Task.FromResult(EmbeddedChatPreparation.READY);
 
     /// <summary>
     /// Gets or sets whether messages to the user leave out which provider and which model answer.

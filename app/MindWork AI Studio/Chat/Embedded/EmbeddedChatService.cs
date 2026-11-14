@@ -134,7 +134,8 @@ public sealed class EmbeddedChatService(SettingsManager settingsManager, Assista
         var status = AssistantSessionStatus.FAILED;
         try
         {
-            if (!await request.PrepareAsync(thread) || !await this.CheckProviderAsync(conversation, thread, request.Provider))
+            var preparation = await request.PrepareAsync(thread);
+            if (!preparation.IsReady || !await this.CheckProviderAsync(conversation, thread, request.Provider))
                 return false;
 
             thread.RuntimeComponent = conversation.Component;
@@ -177,7 +178,7 @@ public sealed class EmbeddedChatService(SettingsManager settingsManager, Assista
             sessionId = (await sessionService.TryBeginAsync(sessionKey, conversation.Component.Name, cancellation, thread, new(StringComparer.Ordinal))).SessionId;
             await this.NotifyAsync(chatId);
 
-            await this.answerAsync(request, answer, request.ThreadForRequest(thread), cancellation.Token);
+            await this.answerAsync(request, answer, preparation.ThreadForRequest(thread), cancellation.Token);
             status = cancellation.IsCancellationRequested ? AssistantSessionStatus.CANCELED : AssistantSessionStatus.COMPLETED;
         }
         catch (OperationCanceledException)
