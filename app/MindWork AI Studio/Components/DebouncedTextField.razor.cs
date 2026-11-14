@@ -64,12 +64,22 @@ public partial class DebouncedTextField : MudComponentBase, IDisposable
         this.debounceTimer.Elapsed += (_, _) =>
         {
             this.debounceTimer.Stop();
-            this.InvokeAsync(async () => await this.TextChanged.InvokeAsync(this.text)).Observe($"{nameof(DebouncedTextField)}: notifying about changed text");
+            this.InvokeAsync(async () =>
+            {
+                // The parent hands this text back with its next render, which is no change of its own, cf. OnParametersSetAsync:
+                this.lastParameterText = this.text;
+                await this.TextChanged.InvokeAsync(this.text);
+            }).Observe($"{nameof(DebouncedTextField)}: notifying about changed text");
             this.InvokeAsync(async () => await this.WhenTextChangedAsync(this.text)).Observe($"{nameof(DebouncedTextField)}: handling changed text asynchronously");
             this.InvokeAsync(() => this.WhenTextCanged(this.text)).Observe($"{nameof(DebouncedTextField)}: handling changed text");
         };
         
         this.isInitialized = true;
+
+        // A text the field starts with, e.g., one sent from another assistant, is handled like a typed one:
+        if (!string.IsNullOrWhiteSpace(this.text))
+            this.debounceTimer.Start();
+
         await base.OnInitializedAsync();
     }
     
@@ -82,16 +92,19 @@ public partial class DebouncedTextField : MudComponentBase, IDisposable
         if(Math.Abs(this.debounceTimer.Interval - this.DebounceTime.TotalMilliseconds) > 1)
             this.debounceTimer.Interval = this.DebounceTime.TotalMilliseconds;
         
-        // Only sync when the parent's parameter actually changed since the last change:
+        //
+        // Only a text which the parent changed itself, e.g., by a reset, is synced and handled like a typed one. Every
+        // other render of the parent leaves the timer alone: restarting it there let its notification render the parent
+        // again, which restarted the timer, and so on, as long as the assistant stayed open.
+        //
         if (this.Text != this.lastParameterText)
         {
             this.text = this.Text;
             this.lastParameterText = this.Text;
+            this.debounceTimer.Stop();
+            this.debounceTimer.Start();
         }
-        
-        this.debounceTimer.Stop();
-        this.debounceTimer.Start();
-        
+
         await base.OnParametersSetAsync();
     }
 
