@@ -97,6 +97,25 @@ public partial class EmbeddedChat : MSGComponentBase
     public bool ShowsContextWindow { get; set; }
 
     /// <summary>
+    /// Gets or sets how the count of tokens gets the system prompt of the next request, for an assistant which puts it
+    /// together anew for every request in PrepareAsync; null as its result means it cannot be known now, and the count
+    /// stays unknown. Without it, the count takes the system prompt the chat stores, which is the one of its last
+    /// request.
+    /// </summary>
+    /// <remarks>
+    /// It must not fail: whatever goes wrong, sending reports anyway.
+    /// </remarks>
+    [Parameter]
+    public Func<Task<string?>>? SystemPromptForCountAsync { get; set; }
+
+    /// <summary>
+    /// Gets or sets a number which changes whenever what the next request carries beside the conversation changed,
+    /// e.g., material of the assistant in its system prompt; the chat counts its tokens again then.
+    /// </summary>
+    [Parameter]
+    public int ContextVersion { get; set; }
+
+    /// <summary>
     /// Gets or sets whether the user may attach files to a message.
     /// </summary>
     [Parameter]
@@ -185,6 +204,12 @@ public partial class EmbeddedChat : MSGComponentBase
     private string countedProviderId = string.Empty;
 
     /// <summary>
+    /// The version of what a request carries beside the conversation which the tokens were counted for, see
+    /// ContextVersion.
+    /// </summary>
+    private int countedContextVersion;
+
+    /// <summary>
     /// The chat shown, or null while it loads.
     /// </summary>
     private EmbeddedConversation? conversation;
@@ -246,7 +271,7 @@ public partial class EmbeddedChat : MSGComponentBase
             this.conversation = await this.ChatService.GetAsync(this.Store, this.Component, this.ChatId, this.CreateThread);
             await this.RecountAsync();
         }
-        else if (this.countedProviderId != this.Provider.Id)
+        else if (this.countedProviderId != this.Provider.Id || this.countedContextVersion != this.ContextVersion)
             await this.RecountAsync();
 
         // Not awaited: the answer arrives through ConversationChanged, and the parameters of the next render must not wait for it.
@@ -289,12 +314,14 @@ public partial class EmbeddedChat : MSGComponentBase
     /// Counts what the conversation carries so far, while no answer runs.
     /// </summary>
     /// <remarks>
-    /// The system prompt counts as the chat stores it: what PrepareAsync adds for a request is not known before. The
-    /// count is therefore an estimate, and the message being written is left out.
+    /// The system prompt counts as SystemPromptForCountAsync gives it, otherwise as the chat stores it: what
+    /// PrepareAsync adds for a request is not known before then. The count is therefore an estimate, and the message
+    /// being written is left out.
     /// </remarks>
     private async Task RecountAsync()
     {
         this.countedProviderId = this.Provider.Id;
+        this.countedContextVersion = this.ContextVersion;
         if (this.IsReadOnly || this.conversation is not { Thread: { } thread, IsRunning: false } || this.ProviderIssue is not null || this.Provider.UsedLLMProvider is LLMProviders.NONE)
         {
             this.tokens = ConversationTokens.UNAVAILABLE;
@@ -303,7 +330,14 @@ public partial class EmbeddedChat : MSGComponentBase
 
         try
         {
-            var parts = ConversationParts.Of(thread, thread.SystemPrompt, string.Empty, null, false, null);
+            var systemPrompt = this.SystemPromptForCountAsync is { } systemPromptForCountAsync ? await systemPromptForCountAsync() : thread.SystemPrompt;
+            if (systemPrompt is null)
+            {
+                this.tokens = ConversationTokens.UNAVAILABLE;
+                return;
+            }
+
+            var parts = ConversationParts.Of(thread, systemPrompt, string.Empty, null, false, null);
             this.tokens = await this.TokenCounter.CountAsync(this.Provider, parts, thread.ReportedHistoryFor(this.Provider.Model), this.countToken);
         }
         catch (OperationCanceledException)
