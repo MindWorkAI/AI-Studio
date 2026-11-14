@@ -78,7 +78,8 @@
     <ReadFileContent Text="@T("Load material from a file")" @bind-FileContent="@this.inputContext" EnableDragDrop="true" CatchAllDocuments="true"/>
     <MudTextField T="string" @bind-Text="@this.inputContext" AdornmentIcon="@AppIcons.INPUT_TEXT" Adornment="Adornment.Start" Label="@T("Material")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="24" Class="mb-3 mt-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-    <CompactExpansionPanel HeaderIcon="@AppIcons.JUDGE" HeaderText="@T("Judge (optional)")" Class="mt-6 mb-3" @bind-Expanded="@this.judgePanelExpanded">
+    @* The form checks the fields of the judge also while the panel is collapsed: *@
+    <CompactExpansionPanel HeaderIcon="@AppIcons.JUDGE" HeaderText="@T("Judge (optional)")" Class="mt-6 mb-3" @bind-Expanded="@this.judgePanelExpanded" KeepContentAlive="@true">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @ModelComparisonTexts.WhatTheJudgeIsFor
         </MudJustifiedText>
@@ -88,7 +89,7 @@
             <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Judge model")</MudText>
             <ProviderSelectionWithConfidence @bind-ProviderSettings="@this.judgeProvider" ValidateProvider="@this.ValidatingJudgeProvider"/>
 
-            <ModelComparisonJudgeExpectations @bind-Expectations="@this.judgeInstructions" @bind-OwnStandardsAccepted="@this.judgeOwnStandardsAccepted" ShowsIssue="@this.hasAttemptedCompare"/>
+            <ModelComparisonJudgeExpectations @bind-Expectations="@this.judgeInstructions" @bind-OwnStandardsAccepted="@this.judgeOwnStandardsAccepted"/>
         }
     </CompactExpansionPanel>
 }

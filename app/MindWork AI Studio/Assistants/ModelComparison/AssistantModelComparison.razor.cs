@@ -570,27 +570,16 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         // find fault with, and an empty question would go through.
         //
         await this.Form!.ValidateAsync();
+
+        //
+        // The fields of the judge sit in a panel the user may have closed. The form checks them all the same, but the
+        // user would not see which one is wrong. So the page opens the panel:
+        //
+        if (this.JudgeHasIssue)
+            this.judgePanelExpanded = true;
+
         if (!this.InputIsValid)
             return;
-
-        //
-        // The judge model sits in a panel the user may have closed, where its field cannot show what is wrong. So the
-        // page opens the panel and says so, rather than letting every run go without a verdict:
-        //
-        if (this.judgeEnabled && this.ValidatingComparedProvider(this.judgeProvider) is not null)
-        {
-            this.judgePanelExpanded = true;
-            this.AddInputIssue(TA("The judge model cannot be used. Please select another judge model, or switch the judge off."));
-            return;
-        }
-
-        // Without the standards of the user, the judge decides by its own, which the user has to confirm:
-        if (this.judgeEnabled && ModelComparisonJudgeExpectations.IssueOf(this.judgeInstructions, this.judgeOwnStandardsAccepted) is { } expectationsIssue)
-        {
-            this.judgePanelExpanded = true;
-            this.AddInputIssue(expectationsIssue);
-            return;
-        }
 
         // The preset keeps what was compared, also when the form changed only a moment ago:
         await this.StorePresetIfChanged();
@@ -852,4 +841,10 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     {
         return this.hasAttemptedCompare ? this.ValidatingComparedProvider(provider) : null;
     }
+
+    /// <summary>
+    /// Whether one of the fields of the switched-on judge has an issue: its model, or the expectations of the user
+    /// without the confirmation that the judge may decide by its own standards.
+    /// </summary>
+    private bool JudgeHasIssue => this.judgeEnabled && (this.ValidatingComparedProvider(this.judgeProvider) is not null || ModelComparisonJudgeExpectations.IssueOf(this.judgeInstructions, this.judgeOwnStandardsAccepted) is not null);
 }
