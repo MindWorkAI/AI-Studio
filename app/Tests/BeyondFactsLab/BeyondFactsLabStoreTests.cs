@@ -198,14 +198,20 @@ public sealed class BeyondFactsLabStoreTests
         await store.SetHappenedAsync(created.ProjectId, DateTimeOffset.UtcNow);
         await store.RememberSelectionAsync(created.ProjectId);
 
-        Assert.That(Directory.EnumerateFiles(this.RootDirectory, "*.tmp-*", SearchOption.AllDirectories), Is.Empty);
+        Assert.That(Directory.EnumerateFiles(this.RootDirectory, "*.tmp*", SearchOption.AllDirectories), Is.Empty);
     }
 
-    [Test]
-    public async Task ANewStoreRemovesTemporaryFilesACrashLeftBehind()
+    /// <summary>
+    /// Covers the temporary files of AtomicFile, which end in ".tmp", and those of earlier versions, which end in
+    /// ".tmp-" and a GUID.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task ANewStoreRemovesTemporaryFilesACrashLeftBehind(bool fromAnEarlierVersion)
     {
         var created = await this.CreateStore().CreateAsync("Panel");
-        var leftOver = $"{this.ProjectPath(created.ProjectId)}.tmp-{Guid.NewGuid():N}";
+        var projectPath = this.ProjectPath(created.ProjectId);
+        var leftOver = fromAnEarlierVersion ? $"{projectPath}.tmp-{Guid.NewGuid():N}" : $"{projectPath}.{Guid.NewGuid():N}.tmp";
         await File.WriteAllTextAsync(leftOver, "{");
 
         await this.CreateStore().ListProjectsAsync();

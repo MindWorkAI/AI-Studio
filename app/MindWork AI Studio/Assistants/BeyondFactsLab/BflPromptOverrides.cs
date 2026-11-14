@@ -103,17 +103,16 @@ public static class BflPromptOverrides
                 continue;
 
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-            var temporary = $"{target}.{Guid.NewGuid():N}.tmp";
-            await File.WriteAllTextAsync(temporary, await BflPromptLibrary.ReadBuiltInAsync(path, token), new UTF8Encoding(false), token);
+            var prompt = await BflPromptLibrary.ReadBuiltInAsync(path, token);
             try
             {
-                // Moving fails when the file appeared meanwhile, so the person's file is never overwritten:
-                File.Move(temporary, target, false);
+                // Writing fails when the file appeared meanwhile, so the person's file is never overwritten:
+                await AtomicFile.WriteTextAsync(target, prompt, new UTF8Encoding(false), token, overwrite: false, flushToDisk: true);
                 copied++;
             }
             catch (IOException) when (File.Exists(target))
             {
-                File.Delete(temporary);
+                // The person's file stays, and AtomicFile removed its temporary file already.
             }
         }
 

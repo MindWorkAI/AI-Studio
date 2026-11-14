@@ -111,26 +111,22 @@ public sealed partial class VisualBriefingStore(
     }
 
     /// <summary>
-    /// Defines <c>WriteTextAtomicAsync</c> for the visual briefing feature.
+    /// Writes a text file of a briefing so that readers see either the old or the new content, never a part of it.
     /// </summary>
-    private static async Task WriteTextAtomicAsync(string targetPath,
+    /// <remarks>
+    /// The content reaches the disk before it replaces the file, so that a power failure takes no briefing away.
+    /// </remarks>
+    /// <param name="targetPath">The file to write.</param>
+    /// <param name="content">The new content.</param>
+    /// <param name="overwrite">Whether an existing file is replaced; otherwise, an existing file fails the write with an IOException.</param>
+    /// <param name="token">The cancellation token.</param>
+    private static Task WriteTextAtomicAsync(string targetPath,
         string content,
         bool overwrite,
         CancellationToken token)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-        var temporaryPath = $"{targetPath}.tmp-{Guid.NewGuid():N}";
-        try
-        {
-            await File.WriteAllTextAsync(temporaryPath, content, new UTF8Encoding(false), token);
-            await using (var stream = new FileStream(temporaryPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 4_096, true))
-                await stream.FlushAsync(token);
-            File.Move(temporaryPath, targetPath, overwrite);
-        }
-        finally
-        {
-            TryDeleteFile(temporaryPath);
-        }
+        return AtomicFile.WriteTextAsync(targetPath, content, new UTF8Encoding(false), token, overwrite, flushToDisk: true);
     }
 
     /// <summary>

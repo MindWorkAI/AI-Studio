@@ -98,8 +98,7 @@ public sealed partial class VisualBriefingStore
                 return;
 
             Directory.CreateDirectory(this.RootDirectory);
-            foreach (var temporaryPath in Directory.EnumerateFiles(this.RootDirectory, "*.tmp-*", SearchOption.AllDirectories))
-                TryDeleteFile(temporaryPath);
+            AtomicFile.DeleteTemporaryFiles(this.RootDirectory, logger);
 
             await this.LoadSelectionAsync(token);
             foreach (var directory in Directory.EnumerateDirectories(this.RootDirectory))
