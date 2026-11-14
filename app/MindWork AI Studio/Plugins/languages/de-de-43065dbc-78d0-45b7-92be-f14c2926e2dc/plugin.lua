@@ -18771,6 +18771,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3060804484"] = "Inhaltliche Beitr
 -- Financial Support
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3061261435"] = "Finanzielle Unterstützung"
 
+-- Thank you, Dominic, for supporting us not only financially but also with code: the Model Comparison assistant, a smoother chat, the audio quality setting for transcriptions, personal API keys for providers of an organization, sharing feature usage with self-hosted servers, and a better Confluence search.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3091322681"] = "Vielen Dank, Dominic, dass du uns nicht nur finanziell, sondern auch mit Code unterstützt: mit dem Assistenten „Modellvergleich“, einem reibungsloseren Chat, der Einstellung für die Audioqualität der Transkription, persönlichen API-Schlüsseln für Anbieter einer Organisation, der Möglichkeit, die Funktionsnutzung mit selbst gehosteten Servern zu teilen, und einer besseren Confluence-Suche."
+
 -- Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3226413110"] = "Vielen Dank, Prodman, dass du LiteLLM als neuen Anbieter in AI Studio integriert hast."
 
@@ -18782,9 +18785,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3264998714"] = "Deutsches Zentrum
 
 -- The first 10 supporters who make a monthly contribution:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3364384944"] = "Die ersten 10 Spender, die einen monatlichen Beitrag leisten:"
-
--- Thank you, Dominic, for supporting us not only financially but also with code: a smoother chat, the audio quality setting for transcriptions, personal API keys for providers of an organization, sharing feature usage with self-hosted servers, and a better Confluence search.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T348735370"] = "Vielen Dank, Dominic, dass du uns nicht nur finanziell, sondern auch mit Code unterstützt: mit einem reibungsloseren Chat, der Einstellung für die Audioqualität der Transkription, persönlichen API-Schlüsseln für Anbieter einer Organisation, der Möglichkeit, die Funktionsnutzung mit selbst gehosteten Servern zu teilen, und einer besseren Confluence-Suche."
 
 -- Thanks, Eric, for bringing llmman to AI Studio as a new option for self-hosted models.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3520213035"] = "Danke, Eric, dass du llmman als neue Option für selbst gehostete Modelle in AI Studio integriert hast."
