@@ -4680,12 +4680,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 -- 1 (single comparison)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2267053576"] = "1 (single comparison)"
 
--- The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2490942889"] = "The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source."
-
--- The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2490942889::INFORMAL"] = "The judge already sees the request and both answers and judges by them alone, unless you add something more specific here, for example: a good summary keeps every number and names its source."
-
 -- No judge
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2562272449"] = "No judge"
 
@@ -4724,9 +4718,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON
 
 -- Ask a judge?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3641185871"] = "Ask a judge?"
-
--- What should the judge pay particular attention to? (optional)
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3641650214"] = "What should the judge pay particular attention to? (optional)"
 
 -- Load material from a file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3699307713"] = "Load material from a file"
@@ -4929,6 +4920,48 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONEFFORTCHA
 -- Median time
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONEFFORTCHARTS::T2152829620"] = "Median time"
 
+-- Describe your expectations, values, and goals to the judge
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T1734361278"] = "Describe your expectations, values, and goals to the judge"
+
+-- Describe your expectations, values, and goals to the judge
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T1734361278::INFORMAL"] = "Describe your expectations, values, and goals to the judge"
+
+-- Please describe your expectations, values, and goals to the judge, or confirm that an AI may decide for you what is good and right.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T2577739352"] = "Please describe your expectations, values, and goals to the judge, or confirm that an AI may decide for you what is good and right."
+
+-- Please describe your expectations, values, and goals to the judge, or confirm that an AI may decide for you what is good and right.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T2577739352::INFORMAL"] = "Please describe your expectations, values, and goals to the judge, or confirm that an AI may decide for you what is good and right."
+
+-- Your expectations, values, and goals
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T2641486288"] = "Your expectations, values, and goals"
+
+-- Your expectations, values, and goals
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T2641486288::INFORMAL"] = "Your expectations, values, and goals"
+
+-- Yes, an AI may decide for me what is good and right
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T2805496671"] = "Yes, an AI may decide for me what is good and right"
+
+-- For example: I prefer short answers which get to the point. Technical terms are welcome, since I work in the field. An answer should weigh several views instead of taking a side.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T326873300"] = "For example: I prefer short answers which get to the point. Technical terms are welcome, since I work in the field. An answer should weigh several views instead of taking a side."
+
+-- Without your expectations, values, and goals, the judge decides by its own standards: by what it learned in training, with the bias of those who trained it. Its verdicts then tell you what this AI considers good and right, not what you do.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T332317276"] = "Without your expectations, values, and goals, the judge decides by its own standards: by what it learned in training, with the bias of those who trained it. Its verdicts then tell you what this AI considers good and right, not what you do."
+
+-- Without your expectations, values, and goals, the judge decides by its own standards: by what it learned in training, with the bias of those who trained it. Its verdicts then tell you what this AI considers good and right, not what you do.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T332317276::INFORMAL"] = "Without your expectations, values, and goals, the judge decides by its own standards: by what it learned in training, with the bias of those who trained it. Its verdicts then tell you what this AI considers good and right, not what you do."
+
+-- I confirm that I have read and understood the above
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T3683380716"] = "I confirm that I have read and understood the above"
+
+-- No, I will describe my expectations, values, and goals
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T401061652"] = "No, I will describe my expectations, values, and goals"
+
+-- What makes an answer good is up to you, not up to an AI. Without your guidance, the judge decides by what it learned in training: by the values, preferences, and bias of those who trained it, e.g., of a provider in the US or in China. Is a long, detailed answer better than a short one? Should an answer name its sources? Should it take a side or weigh several views? Only you can say. Therefore, describe to the judge as precisely as you can what you expect, what matters to you, and what you want to achieve. We strongly recommend it: otherwise, the verdicts say more about the judge than about your models.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T588888121"] = "What makes an answer good is up to you, not up to an AI. Without your guidance, the judge decides by what it learned in training: by the values, preferences, and bias of those who trained it, e.g., of a provider in the US or in China. Is a long, detailed answer better than a short one? Should an answer name its sources? Should it take a side or weigh several views? Only you can say. Therefore, describe to the judge as precisely as you can what you expect, what matters to you, and what you want to achieve. We strongly recommend it: otherwise, the verdicts say more about the judge than about your models."
+
+-- What makes an answer good is up to you, not up to an AI. Without your guidance, the judge decides by what it learned in training: by the values, preferences, and bias of those who trained it, e.g., of a provider in the US or in China. Is a long, detailed answer better than a short one? Should an answer name its sources? Should it take a side or weigh several views? Only you can say. Therefore, describe to the judge as precisely as you can what you expect, what matters to you, and what you want to achieve. We strongly recommend it: otherwise, the verdicts say more about the judge than about your models.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEEXPECTATIONS::T588888121::INFORMAL"] = "What makes an answer good is up to you, not up to an AI. Without your guidance, the judge decides by what it learned in training: by the values, preferences, and bias of those who trained it, e.g., of a provider in the US or in China. Is a long, detailed answer better than a short one? Should an answer name its sources? Should it take a side or weigh several views? Only you can say. Therefore, describe to the judge as precisely as you can what you expect, what matters to you, and what you want to achieve. We strongly recommend it: otherwise, the verdicts say more about the judge than about your models."
+
 -- The judge saw both answers as equally good, matching your own vote.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONJUDGEVERDICTCARD::T110452334"] = "The judge saw both answers as equally good, matching your own vote."
 
@@ -4970,6 +5003,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODECHOIC
 
 -- Compare two models without knowing which one answers. Choose what you want to find out.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODECHOICE::T1060503021::INFORMAL"] = "Compare two models without knowing which one answers. Choose what you want to find out."
+
+-- Results of all comparisons
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODECHOICE::T1990305431"] = "Results of all comparisons"
 
 -- Send the same request to both models, once or many times in a row, and vote blindly for the better answer each time. You learn which model answers better, and how much its answers vary from run to run. An optional judge model gives its own verdict. At the end, you see which model wrote which answer.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONMODECHOICE::T2256226870"] = "Send the same request to both models, once or many times in a row, and vote blindly for the better answer each time. You learn which model answers better, and how much its answers vary from run to run. An optional judge model gives its own verdict. At the end, you see which model wrote which answer."
@@ -5304,11 +5340,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESSET
 -- Semantic Search
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESSETUPLINE::T853993291"] = "Semantic Search"
 
--- After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It gives you a second opinion which does not depend on your own taste, and in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2057033694"] = "After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It gives you a second opinion which does not depend on your own taste, and in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task."
+-- After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It applies your expectations, values, and goals to every task in the same way and so gives you a second opinion; in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T1606451454"] = "After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It applies your expectations, values, and goals to every task in the same way and so gives you a second opinion; in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task."
 
--- After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It gives you a second opinion which does not depend on your own taste, and in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2057033694::INFORMAL"] = "After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It gives you a second opinion which does not depend on your own taste, and in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task."
+-- After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It applies your expectations, values, and goals to every task in the same way and so gives you a second opinion; in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T1606451454::INFORMAL"] = "After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It applies your expectations, values, and goals to every task in the same way and so gives you a second opinion; in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task."
 
 -- Both models work with the same profile, the same tools, and the same data sources, so that the comparison stays fair. AI Studio therefore offers only what each of them may use: the model with the lower confidence decides which tools and data sources you can choose, and the tool selection lists the others with the reason. When both models can search the data sources themselves, they do so with Semantic Search; otherwise, AI Studio searches them with every message for both. In each task, you can attach files to your message, which both models receive; images only when both models can read them.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESTEXTS::T2709626367"] = "Both models work with the same profile, the same tools, and the same data sources, so that the comparison stays fair. AI Studio therefore offers only what each of them may use: the model with the lower confidence decides which tools and data sources you can choose, and the tool selection lists the others with the reason. When both models can search the data sources themselves, they do so with Semantic Search; otherwise, AI Studio searches them with every message for both. In each task, you can attach files to your message, which both models receive; images only when both models can read them."
@@ -5496,6 +5532,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSPEEDS::T
 -- Until the complete answer
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSPEEDS::T517769867"] = "Until the complete answer"
 
+-- A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It applies your expectations, values, and goals to every run in the same way and so gives you a second opinion. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your description deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T1958437853"] = "A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It applies your expectations, values, and goals to every run in the same way and so gives you a second opinion. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your description deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run."
+
+-- A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It applies your expectations, values, and goals to every run in the same way and so gives you a second opinion. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your description deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T1958437853::INFORMAL"] = "A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It applies your expectations, values, and goals to every run in the same way and so gives you a second opinion. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your description deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run."
+
 -- Every model answers a little differently each time, so a single comparison says little. With several runs, AI Studio asks both models the same request again and again, and you vote on every run blindly. The more runs, the more the result tells you, but each run costs one request per model, and one more with a judge.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T2158946259"] = "Every model answers a little differently each time, so a single comparison says little. With several runs, AI Studio asks both models the same request again and again, and you vote on every run blindly. The more runs, the more the result tells you, but each run costs one request per model, and one more with a judge."
 
@@ -5513,12 +5555,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T3
 
 -- Both models receive your question or task and the material below, and nothing else: no tools, no data sources, no mailboxes, and no web pages, even when you use them in the chat. A web address in your request stays plain text, which no model opens. That way, the answers show what the models themselves make of the same text. To compare how well two models help you with tools, data sources, and your own files, use the mode “Everyday Tasks”.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T3491184146::INFORMAL"] = "Both models receive your question or task and the material below, and nothing else: no tools, no data sources, no mailboxes, and no web pages, even when you use them in the chat. A web address in your request stays plain text, which no model opens. That way, the answers show what the models themselves make of the same text. To compare how well two models help you with tools, data sources, and your own files, use the mode “Everyday Tasks”."
-
--- A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It gives you a second opinion which does not depend on your own taste, and it pays attention to what you name below. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your criteria deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T4040478889"] = "A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It gives you a second opinion which does not depend on your own taste, and it pays attention to what you name below. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your criteria deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run."
-
--- A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It gives you a second opinion which does not depend on your own taste, and it pays attention to what you name below. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your criteria deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T4040478889::INFORMAL"] = "A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It gives you a second opinion which does not depend on your own taste, and it pays attention to what you name below. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your criteria deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run."
 
 -- Choose the two models you want to compare. Both receive the same request, and AI Studio shows their answers side by side, in a random order and without their names: you vote for the better answer blindly and learn only at the end which model wrote which. You may also choose the same model twice. Then the comparison shows how much its answers vary when you ask it the same thing again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONTEXTS::T477339319"] = "Choose the two models you want to compare. Both receive the same request, and AI Studio shows their answers side by side, in a random order and without their names: you vote for the better answer blindly and learn only at the end which model wrote which. You may also choose the same model twice. Then the comparison shows how much its answers vary when you ask it the same thing again."
