@@ -42,7 +42,7 @@ public sealed class ModelComparisonRunner(ILogger logger, Func<IReadOnlyList<str
     /// settled before it is asked rather than after. Ignored without a <paramref name="judge"/>.
     /// </param>
     /// <param name="judge">The optional judge, asked once both models have answered.</param>
-    /// <param name="judgeInstructions">What the user wants the judge to pay attention to. Ignored without a <paramref name="judge"/>.</param>
+    /// <param name="judgeInstructions">The expectations, values, and goals of the user, by which the judge decides, see ModelComparisonJudgeExpectations. Ignored without a <paramref name="judge"/>.</param>
     public async Task<ModelComparisonRunResult> RunAsync(ModelComparisonParticipant first, ModelComparisonParticipant second, ModelComparisonRequest request, CancellationToken token, ModelComparisonPresentationOrder presentationOrder = ModelComparisonPresentationOrder.FIRST_MODEL_FIRST, ModelComparisonParticipant? judge = null, string judgeInstructions = "")
     {
         //

@@ -182,11 +182,17 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     private AIStudio.Settings.Provider judgeProvider = Settings.Provider.NONE;
 
     /// <summary>
-    /// What the user wants the judge to pay attention to, in their own words, for example what makes
-    /// a good summary. Sent to the judge together with the request and both answers, but the judge
-    /// never learns which model wrote which answer.
+    /// The expectations, values, and goals of the user, in their own words, by which the judge decides which answer is
+    /// better, see ModelComparisonJudgeExpectations. Sent to the judge together with the request and both answers, but
+    /// the judge never learns which model wrote which answer.
     /// </summary>
     private string judgeInstructions = string.Empty;
+
+    /// <summary>
+    /// Whether the user confirmed that the judge may decide by its own standards, which counts only while
+    /// judgeInstructions is empty. Not part of a preset: whoever describes nothing confirms that once per session.
+    /// </summary>
+    private bool judgeOwnStandardsAccepted;
 
     /// <summary>
     /// Whether the user has tried to submit the form at least once. The judge's provider field mounts
@@ -488,6 +494,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
     private static readonly AssistantSessionStateKey<bool> JUDGE_ENABLED_STATE_KEY = new(nameof(judgeEnabled));
     private static readonly AssistantSessionStateKey<AIStudio.Settings.Provider> JUDGE_PROVIDER_STATE_KEY = new(nameof(judgeProvider));
     private static readonly AssistantSessionStateKey<string> JUDGE_INSTRUCTIONS_STATE_KEY = new(nameof(judgeInstructions));
+    private static readonly AssistantSessionStateKey<bool> JUDGE_OWN_STANDARDS_ACCEPTED_STATE_KEY = new(nameof(judgeOwnStandardsAccepted));
     private static readonly AssistantSessionStateKey<Guid?> SELECTED_PRESET_ID_STATE_KEY = new(nameof(selectedPresetId));
     private static readonly AssistantSessionStateKey<string> PRESET_NAME_STATE_KEY = new(nameof(presetName));
 
@@ -503,6 +510,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         state.Set(JUDGE_ENABLED_STATE_KEY, this.judgeEnabled);
         state.Set(JUDGE_PROVIDER_STATE_KEY, this.judgeProvider);
         state.Set(JUDGE_INSTRUCTIONS_STATE_KEY, this.judgeInstructions);
+        state.Set(JUDGE_OWN_STANDARDS_ACCEPTED_STATE_KEY, this.judgeOwnStandardsAccepted);
         state.Set(SELECTED_PRESET_ID_STATE_KEY, this.selectedPresetId);
         state.Set(PRESET_NAME_STATE_KEY, this.presetName);
     }
@@ -526,6 +534,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         state.Restore(JUDGE_ENABLED_STATE_KEY, value => this.judgeEnabled = value);
         state.Restore(JUDGE_PROVIDER_STATE_KEY, value => this.judgeProvider = value);
         state.Restore(JUDGE_INSTRUCTIONS_STATE_KEY, value => this.judgeInstructions = value);
+        state.Restore(JUDGE_OWN_STANDARDS_ACCEPTED_STATE_KEY, value => this.judgeOwnStandardsAccepted = value);
 
         Guid? sessionPresetId = null;
         state.Restore(SELECTED_PRESET_ID_STATE_KEY, value => sessionPresetId = value);
@@ -572,6 +581,14 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
         {
             this.judgePanelExpanded = true;
             this.AddInputIssue(TA("The judge model cannot be used. Please select another judge model, or switch the judge off."));
+            return;
+        }
+
+        // Without the standards of the user, the judge decides by its own, which the user has to confirm:
+        if (this.judgeEnabled && ModelComparisonJudgeExpectations.IssueOf(this.judgeInstructions, this.judgeOwnStandardsAccepted) is { } expectationsIssue)
+        {
+            this.judgePanelExpanded = true;
+            this.AddInputIssue(expectationsIssue);
             return;
         }
 

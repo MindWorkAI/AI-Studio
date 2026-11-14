@@ -30,5 +30,5 @@ public static class ModelComparisonTexts
     /// <summary>
     /// What the judge does, why it is useful, and what it costs.
     /// </summary>
-    public static string WhatTheJudgeIsFor => TA("A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It gives you a second opinion which does not depend on your own taste, and it pays attention to what you name below. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your criteria deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run.");
+    public static string WhatTheJudgeIsFor => TA("A judge is a third model which reads the request and both answers of each run and decides which answer is better, just as blindly as you do. It applies your expectations, values, and goals to every run in the same way and so gives you a second opinion. At the end, you see how often the judge agreed with you: when it rarely does, your votes or your description deserve a second look. You see its verdicts only after your own votes, and it costs one more request per run.");
 }

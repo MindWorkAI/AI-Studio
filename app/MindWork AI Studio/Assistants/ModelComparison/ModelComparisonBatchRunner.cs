@@ -45,7 +45,7 @@ public sealed class ModelComparisonBatchRunner(ModelComparisonRunner runner)
     /// <param name="runCount">How many independent runs to start. At least one.</param>
     /// <param name="token">Cancels every run of the batch, in flight or still queued.</param>
     /// <param name="judge">The optional judge, asked in every run once its two answers are in.</param>
-    /// <param name="judgeInstructions">What the user wants the judge to pay attention to. Ignored without a <paramref name="judge"/>.</param>
+    /// <param name="judgeInstructions">The expectations, values, and goals of the user, by which the judge decides, see ModelComparisonJudgeExpectations. Ignored without a <paramref name="judge"/>.</param>
     /// <returns>One task per run, already started, in no particular order of completion.</returns>
     public IReadOnlyList<Task<ModelComparisonBatchEntry>> Start(
         ModelComparisonParticipant first,

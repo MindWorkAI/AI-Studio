@@ -11,15 +11,16 @@ public sealed class ModelComparisonJudgeRequestTests
     private static readonly ModelComparisonRequest REQUEST = new("The document.", "Summarize it.");
 
     [Test]
-    public void ThePromptCarriesTheUserInstructionsAndBothAnswers()
+    public void ThePromptCarriesTheExpectationsOfTheUserAndBothAnswers()
     {
-        var judgeRequest = new ModelComparisonJudgeRequest(REQUEST, "A good summary keeps every number.", "Answer from the first model.", "Answer from the second model.");
+        var judgeRequest = new ModelComparisonJudgeRequest(REQUEST, "I prefer short answers.", "Answer from the first model.", "Answer from the second model.");
 
         var prompt = judgeRequest.ToPrompt();
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(prompt, Does.Contain("A good summary keeps every number."));
+            Assert.That(prompt, Does.Contain("# Expectations, values, and goals of the user\nI prefer short answers."));
+            Assert.That(prompt, Does.Contain("before any preference of your own"), "The standards of the user come first.");
             Assert.That(prompt, Does.Contain("Answer from the first model."));
             Assert.That(prompt, Does.Contain("Answer from the second model."));
             Assert.That(prompt, Does.Contain(REQUEST.ToPrompt(headingLevel: 2)), "The request stands below the heading of the judge prompt.");
@@ -36,9 +37,9 @@ public sealed class ModelComparisonJudgeRequestTests
     }
 
     [Test]
-    public void WithoutInstructionsThePromptStillCarriesAGenericCriterion()
+    public void WithoutExpectationsThePromptCarriesTheGenericCriterionAlone()
     {
-        // The judge already sees the request and both answers, so the field is a refinement, not a requirement:
+        // The user confirmed that the judge may decide by its own standards:
         var judgeRequest = new ModelComparisonJudgeRequest(REQUEST, string.Empty, "Answer from the first model.", "Answer from the second model.");
 
         var prompt = judgeRequest.ToPrompt();
@@ -48,7 +49,7 @@ public sealed class ModelComparisonJudgeRequestTests
             Assert.That(prompt, Does.Contain("better answers the question or better completes the task"));
             Assert.That(prompt, Does.Contain("Answer from the first model."));
             Assert.That(prompt, Does.Contain("Answer from the second model."));
-            Assert.That(prompt, Does.Not.Contain("Pay particular attention to this:"));
+            Assert.That(prompt, Does.Not.Contain("Expectations, values, and goals of the user"));
         }
     }
 

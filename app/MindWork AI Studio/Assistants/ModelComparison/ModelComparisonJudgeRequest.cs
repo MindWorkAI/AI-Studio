@@ -2,7 +2,7 @@ namespace AIStudio.Assistants.ModelComparison;
 
 /// <summary>
 /// What the judge is asked: the same request the two models received, their two answers, and
-/// optionally what the user wants the judge to pay particular attention to.
+/// the expectations, values, and goals of the user, when the user described them.
 /// </summary>
 /// <remarks>
 /// The judge is asked once both models have answered, and is kept as blind to which model wrote
@@ -16,10 +16,10 @@ public sealed record ModelComparisonJudgeRequest
 {
     /// <param name="request">The request the two models were asked.</param>
     /// <param name="instructions">
-    /// What the user wants the judge to pay particular attention to, in their own words, or an empty
-    /// text to leave the judge with nothing but the generic criterion: which answer better answers
-    /// the question or completes the task. The judge already sees the request and both answers, so
-    /// this is a refinement, not a requirement.
+    /// The expectations, values, and goals of the user, in their own words, by which the judge
+    /// decides, see ModelComparisonJudgeExpectations; or an empty text, when the user confirmed that
+    /// the judge may decide by its own standards with nothing but the generic criterion: which answer
+    /// better answers the question or completes the task.
     /// </param>
     /// <param name="answerA">The answer standing in column A.</param>
     /// <param name="answerB">The answer standing in column B.</param>
@@ -47,12 +47,10 @@ public sealed record ModelComparisonJudgeRequest
     public string LanguageName { get; }
 
     /// <summary>
-    /// What the judge is told to look for: the generic criterion alone, or that criterion refined by
-    /// what the user wrote, when they wrote anything.
+    /// What the judge is told to look for: the generic criterion, and the expectations, values, and
+    /// goals of the user, when the user described them, which come first.
     /// </summary>
-    private string Criterion => this.Instructions.Length == 0
-        ? "Judge which answer better answers the question or better completes the task in the request below."
-        : $"Judge which answer better answers the question or better completes the task in the request below. Pay particular attention to this: {this.Instructions}";
+    private string Criterion => "Judge which answer better answers the question or better completes the task in the request below." + ModelComparisonJudgeFormat.ExpectationsOfTheUser(this.Instructions);
 
     /// <summary>
     /// Builds the prompt for the judge model, asking for one JSON object and nothing else.

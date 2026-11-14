@@ -56,6 +56,16 @@ public sealed record ModelComparisonJudgeFormat(string Subject, string NameKind,
     }
 
     /// <summary>
+    /// Tells the judge to decide by the expectations, values, and goals of the user, see
+    /// ModelComparisonJudgeExpectations: without them, the judge would decide by what it learned in training.
+    /// </summary>
+    /// <param name="expectations">The expectations, values, and goals of the user, or an empty text when the user gave none.</param>
+    /// <returns>A paragraph and a section of their own, to follow the criterion of the judge, or an empty text.</returns>
+    public static string ExpectationsOfTheUser(string expectations) => expectations.Trim().Length == 0
+        ? string.Empty
+        : $"\n\nDecide by the expectations, values, and goals of the user below. They decide what counts as good here, before any preference of your own.\n\n# Expectations, values, and goals of the user\n{expectations.Trim()}";
+
+    /// <summary>
     /// Adds an identifier to a prompt of a judge as a plainly labeled, ignorable line, so that a caching gateway does
     /// not answer a judge which is asked again about similar content from its cache, see ModelComparisonRequest.ToPrompt.
     /// </summary>

@@ -1,0 +1,16 @@
+@inherits MSGComponentBase
+
+<MudText Typo="Typo.subtitle1" Class="mb-1 mt-3">@TA("Your expectations, values, and goals")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
+    @TA("What makes an answer good is up to you, not up to an AI. Without your guidance, the judge decides by what it learned in training: by the values, preferences, and bias of those who trained it, e.g., of a provider in the US or in China. Is a long, detailed answer better than a short one? Should an answer name its sources? Should it take a side or weigh several views? Only you can say. Therefore, describe to the judge as precisely as you can what you expect, what matters to you, and what you want to achieve. We strongly recommend it: otherwise, the verdicts say more about the judge than about your models.")
+</MudJustifiedText>
+<MudTextField T="string" Text="@this.Expectations" TextChanged="@this.OnExpectationsChanged" AdornmentIcon="@AppIcons.JUDGE" Adornment="Adornment.Start" Label="@TA("Describe your expectations, values, and goals to the judge")" HelperText="@T("For example: I prefer short answers which get to the point. Technical terms are welcome, since I work in the field. An answer should weigh several views instead of taking a side.")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3"/>
+@if (!this.HasExpectations)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+        <MudJustifiedText Typo="Typo.body2">
+            @TA("Without your expectations, values, and goals, the judge decides by its own standards: by what it learned in training, with the bias of those who trained it. Its verdicts then tell you what this AI considers good and right, not what you do.")
+        </MudJustifiedText>
+    </MudAlert>
+    <MudTextSwitch Value="@this.OwnStandardsAccepted" ValueChanged="@this.OwnStandardsAcceptedChanged" Label="@T("I confirm that I have read and understood the above")" LabelOn="@T("Yes, an AI may decide for me what is good and right")" LabelOff="@T("No, I will describe my expectations, values, and goals")" Validation="@this.ValidatingAcceptance"/>
+}

@@ -39,6 +39,9 @@ public sealed record ModelComparisonPreset
     /// </summary>
     public string JudgeProviderId { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The expectations, values, and goals of the user, by which the judge decides, see ModelComparisonJudgeExpectations.
+    /// </summary>
     public string JudgeInstructions { get; set; } = string.Empty;
 
     public string Context { get; set; } = string.Empty;
