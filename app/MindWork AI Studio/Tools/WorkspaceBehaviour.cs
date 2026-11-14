@@ -938,13 +938,9 @@ public static partial class WorkspaceBehaviour
             Directory.CreateDirectory(chatDirectory);
 
             FinalizeStagedTranscripts(chat, chatDirectory);
-            var chatNamePath = Path.Join(chatDirectory, "name");
-            await File.WriteAllTextAsync(chatNamePath, chat.Name);
+            await StoreChatFilesAsync(chat, chatDirectory);
 
-            var chatPath = Path.Join(chatDirectory, "thread.json");
-            await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
-
-            var lastEditTime = File.GetLastWriteTimeUtc(chatPath);
+            var lastEditTime = File.GetLastWriteTimeUtc(Path.Join(chatDirectory, "thread.json"));
             await UpdateCacheAfterChatStored(chat.WorkspaceId, chat.ChatId, chatDirectory, chat.Name, lastEditTime);
             return true;
         }
@@ -1174,7 +1170,7 @@ public static partial class WorkspaceBehaviour
             movedChat.WorkspaceId = targetWorkspaceId;
             
             FinalizeStagedTranscripts(movedChat, targetDirectory);
-            await StoreMovedChatFilesAsync(movedChat, targetDirectory);
+            await StoreChatFilesAsync(movedChat, targetDirectory);
 
             var lastEditTime = File.GetLastWriteTimeUtc(Path.Join(targetDirectory, "thread.json"));
             await UpdateCacheAfterChatMoved(sourceWorkspaceId, targetWorkspaceId, chat.ChatId, targetDirectory, movedChat.Name, lastEditTime);
@@ -1202,7 +1198,7 @@ public static partial class WorkspaceBehaviour
                         Directory.Move(targetDirectory, sourceDirectory);
 
                     if (movedChat is not null && Directory.Exists(sourceDirectory))
-                        await StoreMovedChatFilesAsync(movedChat, sourceDirectory);
+                        await StoreChatFilesAsync(movedChat, sourceDirectory);
                 }
                 catch (Exception rollbackError)
                 {
@@ -1229,10 +1225,16 @@ public static partial class WorkspaceBehaviour
         return JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS) ?? throw new InvalidDataException($"The stored chat could not be read: '{chatDirectory}'.");
     }
 
-    /// <summary>Atomically stores the name and thread after a directory move.</summary>
-    private static async Task StoreMovedChatFilesAsync(ChatThread chat, string chatDirectory)
+    /// <summary>Stores the name and the thread of a chat into its directory.</summary>
+    /// <remarks>
+    /// Both files are written atomically: a crash of AI Studio while storing leaves each of them as it was before,
+    /// never half written. The thread keeps its UTF-8 byte order mark, the name has none, as before.
+    /// </remarks>
+    /// <param name="chat">The chat to store.</param>
+    /// <param name="chatDirectory">The directory of the chat, which has to exist.</param>
+    private static async Task StoreChatFilesAsync(ChatThread chat, string chatDirectory)
     {
-        await File.WriteAllTextAsync(Path.Join(chatDirectory, "name"), chat.Name);
+        await AtomicFile.WriteTextAsync(Path.Join(chatDirectory, "name"), chat.Name, new UTF8Encoding(false), CancellationToken.None, logger: LOG);
         await AtomicFile.WriteTextAsync(Path.Join(chatDirectory, "thread.json"), JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8, CancellationToken.None, logger: LOG);
     }
 
