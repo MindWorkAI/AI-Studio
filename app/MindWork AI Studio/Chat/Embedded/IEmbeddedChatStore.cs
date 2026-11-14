@@ -25,4 +25,11 @@ public interface IEmbeddedChatStore
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="FileNotFoundException">What the chat belonged to was deleted meanwhile; nothing is left to store.</exception>
     public Task SaveThreadAsync(ChatThread thread, CancellationToken token = default);
+
+    /// <summary>
+    /// Deletes a chat, so that its conversation starts over, also one which this version cannot open.
+    /// </summary>
+    /// <param name="chatId">The ID of the chat.</param>
+    /// <param name="token">The cancellation token.</param>
+    public Task DeleteThreadAsync(Guid chatId, CancellationToken token = default);
 }

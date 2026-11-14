@@ -15,4 +15,7 @@ public sealed class ModelComparisonSeriesChatStore(ModelComparisonStore store, G
 
     /// <inheritdoc />
     public Task SaveThreadAsync(ChatThread thread, CancellationToken token = default) => store.SaveSeriesChatAsync(seriesId, thread, token);
+
+    /// <inheritdoc />
+    public Task DeleteThreadAsync(Guid chatId, CancellationToken token = default) => store.DeleteSeriesChatAsync(seriesId, chatId, token);
 }

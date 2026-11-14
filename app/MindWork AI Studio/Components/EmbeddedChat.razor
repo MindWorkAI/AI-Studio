@@ -7,9 +7,19 @@
 }
 else if (this.conversation.Thread is not { } thread)
 {
-    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
-        @T("AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.")
-    </MudAlert>
+    @if (this.CanReset)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
+            @TA("AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.")
+        </MudAlert>
+        <MudButton StartIcon="@AppIcons.RESET" Color="Color.Error" OnClick="@this.ResetAsync">@T("Start over")</MudButton>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
+            @T("AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.")
+        </MudAlert>
+    }
 }
 else
 {
@@ -61,6 +71,10 @@ else
             @if (this.IsRunning)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@AppIcons.STOP" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
+            }
+            @if (this.CanReset && this.conversation.HasVisibleMessages)
+            {
+                <MudButton StartIcon="@AppIcons.RESET" OnClick="@this.ResetAsync" Disabled="@this.IsRunning">@T("Start over")</MudButton>
             }
         </MudStack>
     }

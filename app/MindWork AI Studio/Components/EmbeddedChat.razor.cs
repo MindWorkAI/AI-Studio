@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Chat.Embedded;
+using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
@@ -7,6 +8,8 @@ using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
@@ -71,6 +74,20 @@ public partial class EmbeddedChat : MSGComponentBase
     public bool IsReadOnly { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the user may start the conversation over, which deletes it. A chat which this version cannot
+    /// open then offers that as well.
+    /// </summary>
+    [Parameter]
+    public bool AllowsReset { get; set; }
+
+    /// <summary>
+    /// Gets or sets the question before the conversation starts over, e.g., which names what stays as it is; a general
+    /// question when left out.
+    /// </summary>
+    [Parameter]
+    public string? ResetQuestion { get; set; }
+
+    /// <summary>
     /// Gets or sets whether the user may attach files to a message.
     /// </summary>
     [Parameter]
@@ -117,6 +134,12 @@ public partial class EmbeddedChat : MSGComponentBase
 
     [Inject]
     private ConversationTokenCounter TokenCounter { get; init; } = null!;
+
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private ILogger<EmbeddedChat> Logger { get; init; } = null!;
 
     /// <summary>
     /// Ends a count when the component goes away.
@@ -173,6 +196,8 @@ public partial class EmbeddedChat : MSGComponentBase
     private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null;
 
     private bool CanSendMessage => this.CanSend && !string.IsNullOrWhiteSpace(this.userInput);
+
+    private bool CanReset => this.AllowsReset && !this.IsReadOnly;
 
     #region Overrides of MSGComponentBase
 
@@ -333,4 +358,30 @@ public partial class EmbeddedChat : MSGComponentBase
     /// Stops the answer the model writes.
     /// </summary>
     private Task CancelAsync() => this.ChatService.CancelAsync(this.ChatId);
+
+    /// <summary>
+    /// Deletes the conversation after asking, so that it starts over.
+    /// </summary>
+    private async Task ResetAsync()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { dialog => dialog.Message, this.ResetQuestion ?? TA("Delete this conversation and start it over?") }
+        };
+
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Start over"), parameters, DialogOptions.FULLSCREEN);
+        var result = await reference.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        try
+        {
+            await this.ChatService.ResetAsync(this.ChatId, this.CreateThread);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            this.Logger.LogError(exception, "Could not delete the embedded chat '{ChatId}'.", this.ChatId);
+            await this.MessageBus.SendError(new(AppIcons.DELETE, TA("AI Studio could not delete this conversation. Please try again.")));
+        }
+    }
 }
