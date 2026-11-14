@@ -1233,19 +1233,7 @@ public static partial class WorkspaceBehaviour
     private static async Task StoreMovedChatFilesAsync(ChatThread chat, string chatDirectory)
     {
         await File.WriteAllTextAsync(Path.Join(chatDirectory, "name"), chat.Name);
-        var chatPath = Path.Join(chatDirectory, "thread.json");
-        var temporaryPath = Path.Join(chatDirectory, $".thread-{Guid.NewGuid():N}.tmp");
-        
-        try
-        {
-            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
-            File.Move(temporaryPath, chatPath, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-                File.Delete(temporaryPath);
-        }
+        await AtomicFile.WriteTextAsync(Path.Join(chatDirectory, "thread.json"), JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8, CancellationToken.None, logger: LOG);
     }
 
     /// <summary>Rewrites absolute file paths after moving the complete chat directory.</summary>

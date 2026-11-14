@@ -81,19 +81,8 @@ public static partial class WorkspaceBehaviour
                 return true;
 
             var lastEditTime = File.GetLastWriteTimeUtc(chatPath);
-            var temporaryPath = Path.Join(chatDirectory, $".thread-{Guid.NewGuid():N}.tmp");
-            try
-            {
-                await File.WriteAllTextAsync(temporaryPath, json, Encoding.UTF8, token);
-                File.Move(temporaryPath, chatPath, overwrite: true);
-                File.SetLastWriteTimeUtc(chatPath, lastEditTime);
-            }
-            finally
-            {
-                if (File.Exists(temporaryPath))
-                    File.Delete(temporaryPath);
-            }
-
+            await AtomicFile.WriteTextAsync(chatPath, json, Encoding.UTF8, token, logger: LOG);
+            File.SetLastWriteTimeUtc(chatPath, lastEditTime);
             return true;
         }
         catch (Exception exception) when (exception is JsonException or NotSupportedException)

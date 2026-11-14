@@ -119,7 +119,6 @@ internal static class PersistentMediaTranscript
         if (!sourceBefore.StillMatches(mediaPath))
             return SourceChanged(slot);
 
-        var temporaryPath = $"{slot.Path}.{Guid.NewGuid():N}.tmp";
         try
         {
             var directory = Path.GetDirectoryName(slot.Path);
@@ -128,13 +127,18 @@ internal static class PersistentMediaTranscript
 
             //
             // The transcription is paid for at this point. Storing it is quick, so it is completed
-            // even when the caller cancelled meanwhile, and the next attempt can use it:
+            // even when the caller cancelled meanwhile, and the next attempt can use it. A transcript
+            // of a media file which changed meanwhile is discarded instead of replacing the old one:
             //
-            await File.WriteAllTextAsync(temporaryPath, transcription.Text, new UTF8Encoding(false), CancellationToken.None);
-            if (!sourceBefore.StillMatches(mediaPath))
+            var stored = await AtomicFile.WriteOrDiscardAsync(slot.Path, async (stream, writeToken) =>
+            {
+                await AtomicFile.WriteTextAsync(stream, transcription.Text, new UTF8Encoding(false), writeToken);
+                return sourceBefore.StillMatches(mediaPath);
+            }, CancellationToken.None, logger: logger);
+
+            if (!stored)
                 return SourceChanged(slot);
 
-            File.Move(temporaryPath, slot.Path, true);
             logger.LogInformation("Stored the transcript '{TranscriptFilePath}' of the media file '{MediaFilePath}'.", slot.Path, mediaPath);
             return PersistentMediaTranscriptResult.Ready(slot, reused: false);
         }
@@ -142,18 +146,6 @@ internal static class PersistentMediaTranscript
         {
             logger.LogWarning(exception, "Could not store the transcript '{TranscriptFilePath}' of the media file '{MediaFilePath}'.", slot.Path, mediaPath);
             return PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.STORE_FAILED, slot, string.Format(TB("Was not able to store the transcript: {0}"), exception.Message));
-        }
-        finally
-        {
-            try
-            {
-                if (File.Exists(temporaryPath))
-                    File.Delete(temporaryPath);
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(exception, "Could not remove the temporary transcript '{TempFilePath}'.", temporaryPath);
-            }
         }
     }
 
