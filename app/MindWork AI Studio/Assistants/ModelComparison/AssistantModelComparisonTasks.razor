@@ -1,0 +1,92 @@
+@attribute [Route(Routes.ASSISTANT_MODEL_COMPARISON_TASKS)]
+@inherits MSGComponentBase
+
+<CascadingValue Value="Components.MODEL_COMPARISON_ASSISTANT">
+    <div class="inner-scrolling-context">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
+            <MudText Typo="Typo.h3">
+                @ModelComparisonMode.TASKS.PageTitle
+            </MudText>
+            <MudSpacer/>
+            <MudTooltip Text="@T("Results of all comparisons")">
+                <MudIconButton Variant="Variant.Text" Icon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.OpenResultsDialog"/>
+            </MudTooltip>
+            <MudTooltip Text="@T("Switch mode")">
+                <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SWITCH_ASSISTANT_MODE" OnClick="@this.SwitchMode"/>
+            </MudTooltip>
+            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SETTINGS" OnClick="@this.OpenSettingsDialog"/>
+        </MudStack>
+
+        <InnerScrolling>
+            @if (this.openSeries is { } series)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3 mr-3">
+                    <MudTooltip Text="@T("Back to all series")">
+                        <MudIconButton Icon="@AppIcons.BACK_TO_LIST" OnClick="@this.CloseSeries"/>
+                    </MudTooltip>
+                    <MudText Typo="Typo.h5">@series.Name</MudText>
+                    <MudTooltip Text="@T("Rename series")">
+                        <MudIconButton Icon="@AppIcons.RENAME" OnClick="@(async () => await this.RenameSeriesAsync(series))"/>
+                    </MudTooltip>
+                    <MudSpacer/>
+                    <MudTooltip Text="@T("Start a new series with this setup")">
+                        <MudIconButton Icon="@AppIcons.DUPLICATE" OnClick="@(async () => await this.CreateSeriesAsync(series))"/>
+                    </MudTooltip>
+                </MudStack>
+                @* A new series started from this one replaces it here, and it must not inherit the state of its view: *@
+                <ModelComparisonSeriesView @key="@series.Id" Series="@series"/>
+            }
+            else
+            {
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3 mr-3">
+                    @ModelComparisonSeriesTexts.WhatASeriesIs
+                </MudJustifiedText>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@(async () => await this.CreateSeriesAsync(null))" Class="mb-4">
+                    @T("New comparison series")
+                </MudButton>
+
+                <MudText Typo="Typo.h5" Class="mb-2">@TA("Your comparison series")</MudText>
+                @if (this.allSeries is null)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
+                }
+                else if (this.allSeries.Count == 0)
+                {
+                    <MudJustifiedText Typo="Typo.body1" Class="mb-3 mr-3">@TA("You have no comparison series yet.")</MudJustifiedText>
+                }
+                else
+                {
+                    <MudJustifiedText Typo="Typo.body1" Class="mb-3 mr-3">
+                        @TA("Open a series to work on another task or to look at its result. The list does not name the models, so that you do not learn which one is which before you look at the result. To compare the same models again, or to replace one of them with a new model, start a new series with the setup of an existing one.")
+                    </MudJustifiedText>
+
+                    @foreach (var entry in this.allSeries)
+                    {
+                        <MudPaper @key="@entry.Id" Outlined="true" Class="pa-3 mb-2 mr-3">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.subtitle1">@entry.Name</MudText>
+                                    <MudText Typo="Typo.caption">@this.DescribeSeries(entry)</MudText>
+                                </MudStack>
+                                <MudSpacer/>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.COMPARISON_TASKS" OnClick="@(() => this.OpenSeries(entry))">
+                                    @T("Open")
+                                </MudButton>
+                                <MudTooltip Text="@T("Rename series")">
+                                    <MudIconButton Icon="@AppIcons.RENAME" OnClick="@(async () => await this.RenameSeriesAsync(entry))"/>
+                                </MudTooltip>
+                                <MudTooltip Text="@T("Start a new series with this setup")">
+                                    <MudIconButton Icon="@AppIcons.DUPLICATE" OnClick="@(async () => await this.CreateSeriesAsync(entry))"/>
+                                </MudTooltip>
+                                <MudTooltip Text="@T("Delete series")">
+                                    <MudIconButton Icon="@AppIcons.DELETE" Color="Color.Error" OnClick="@(async () => await this.DeleteSeriesAsync(entry))"/>
+                                </MudTooltip>
+                            </MudStack>
+                        </MudPaper>
+                    }
+                }
+            }
+        </InnerScrolling>
+    </div>
+</CascadingValue>

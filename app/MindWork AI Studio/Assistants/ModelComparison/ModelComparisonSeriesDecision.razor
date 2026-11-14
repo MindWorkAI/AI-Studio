@@ -1,0 +1,20 @@
+@inherits MSGComponentBase
+
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
+    @TA("Which chat helped you more with your task? Read both chats again if you like. You still do not know which model answered in which chat.")
+</MudJustifiedText>
+
+<ModelComparisonVoteColumns ALabel="@T("Chat 1 helped more")" BLabel="@T("Chat 2 helped more")" TieLabel="@T("Both helped equally")" Disabled="@this.IsSaving" Vote="@this.Vote">
+    <ColumnA>
+        <MudText Typo="Typo.h6" Class="mb-2">
+            @T("Chat 1")
+        </MudText>
+        <EmbeddedChat Store="@this.Store" Component="@COMPONENT" ChatId="@this.SeriesTask.ChatOne.ChatId" CreateThread="@this.CreateThread" HidesModelIdentity="true" IsReadOnly="true" ExportFileName="@T("Chat 1")"/>
+    </ColumnA>
+    <ColumnB>
+        <MudText Typo="Typo.h6" Class="mb-2">
+            @T("Chat 2")
+        </MudText>
+        <EmbeddedChat Store="@this.Store" Component="@COMPONENT" ChatId="@this.SeriesTask.ChatTwo.ChatId" CreateThread="@this.CreateThread" HidesModelIdentity="true" IsReadOnly="true" ExportFileName="@T("Chat 2")"/>
+    </ColumnB>
+</ModelComparisonVoteColumns>

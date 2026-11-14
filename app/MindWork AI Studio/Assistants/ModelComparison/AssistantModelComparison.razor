@@ -1,0 +1,149 @@
+@attribute [Route(Routes.ASSISTANT_MODEL_COMPARISON_STABILITY)]
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogModelComparison>
+
+@* Two views: the form to fill in, and the batch in short while it runs and once it has. *@
+@if (!this.ShowsBatch)
+{
+    <MudText Typo="Typo.h5" Class="mb-1">
+        @T("Presets")
+    </MudText>
+
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+        @TA("A preset keeps everything you set up below, so that you can run the same comparison again later, e.g., once a new model is available. You always work in a preset, and AI Studio saves your changes by itself.")
+    </MudJustifiedText>
+
+    <MudList T="Guid" Disabled="@this.ArePresetControlsDisabled" Color="Color.Primary" Class="mb-1" SelectedValue="@(this.selectedPresetId ?? Guid.Empty)" SelectedValueChanged="@this.SelectedPresetChanged">
+        @foreach (var preset in this.presets)
+        {
+            <MudListItem T="Guid" @key="@preset.Id" Icon="@AppIcons.PRESET" Value="@preset.Id">
+                @this.ListedName(preset)
+            </MudListItem>
+        }
+    </MudList>
+
+    <MudStack Row="@true" Class="mt-1">
+        <MudButton OnClick="@this.AddPreset" Disabled="@this.ArePresetControlsDisabled" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Add preset")
+        </MudButton>
+        <MudButton OnClick="@this.DeletePreset" Disabled="@(this.ArePresetControlsDisabled || this.SelectedPreset is null)" Variant="Variant.Filled" Color="Color.Error">
+            @T("Delete this preset")
+        </MudButton>
+    </MudStack>
+
+    <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6" />
+
+    @if (this.SelectedPreset is not null)
+    {
+        <MudTextField T="string" @bind-Text="@this.presetName" Validation="@this.ValidatingPresetName" Immediate="@true" Label="@T("Preset name")" HelperText="@TA("Give your preset a name which tells you later what it compares.")" Counter="60" MaxLength="60" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+    }
+
+    <MudText Typo="Typo.h5" Class="mb-1 mt-3">@T("Models")</MudText>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+        @ModelComparisonTexts.WhatTheModelsAreFor
+    </MudJustifiedText>
+    <MudGrid Class="mb-1">
+        <MudItem xs="12" lg="6">
+            <MudText Typo="Typo.h6" Class="mb-1">@T("First model")</MudText>
+            <ProviderSelectionWithConfidence @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingComparedProvider"/>
+        </MudItem>
+        <MudItem xs="12" lg="6">
+            <MudText Typo="Typo.h6" Class="mb-1">@T("Second model")</MudText>
+            <ProviderSelectionWithConfidence @bind-ProviderSettings="@this.secondProvider" ValidateProvider="@this.ValidatingComparedProvider"/>
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Number of runs")</MudText>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+        @ModelComparisonTexts.WhatTheRunsAreFor
+    </MudJustifiedText>
+    <MudSelect T="int" @bind-Value="@this.runCount" Variant="Variant.Outlined" Class="mb-3">
+        <MudSelectItem Value="1">@T("1 (single comparison)")</MudSelectItem>
+        <MudSelectItem Value="3">3</MudSelectItem>
+        <MudSelectItem Value="5">5</MudSelectItem>
+        <MudSelectItem Value="10">10</MudSelectItem>
+        <MudSelectItem Value="15">15</MudSelectItem>
+        <MudSelectItem Value="20">@T("20 (heavy load on the models)")</MudSelectItem>
+    </MudSelect>
+
+    <MudText Typo="Typo.h5" Class="mb-1 mt-6">@TA("Your request")</MudText>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+        @ModelComparisonTexts.WhatTheModelsReceive
+    </MudJustifiedText>
+    <MudTextField T="string" @bind-Text="@this.inputQuestion" Validation="@this.ValidatingQuestion" AdornmentIcon="@AppIcons.QUESTIONS" Adornment="Adornment.Start" Label="@TA("Your question or task")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Material (optional)")</MudText>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+        @ModelComparisonTexts.WhatTheMaterialIs
+    </MudJustifiedText>
+    <ReadFileContent Text="@T("Load material from a file")" @bind-FileContent="@this.inputContext" EnableDragDrop="true" CatchAllDocuments="true"/>
+    <MudTextField T="string" @bind-Text="@this.inputContext" AdornmentIcon="@AppIcons.INPUT_TEXT" Adornment="Adornment.Start" Label="@T("Material")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="24" Class="mb-3 mt-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    @* The form checks the fields of the judge also while the panel is collapsed: *@
+    <CompactExpansionPanel HeaderIcon="@AppIcons.JUDGE" HeaderText="@T("Judge (optional)")" Class="mt-6 mb-3" @bind-Expanded="@this.judgePanelExpanded" KeepContentAlive="@true">
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @ModelComparisonTexts.WhatTheJudgeIsFor
+        </MudJustifiedText>
+        <MudTextSwitch Label="@T("Ask a judge?")" @bind-Value="@this.judgeEnabled" LabelOn="@T("A judge assesses every run")" LabelOff="@T("No judge")"/>
+        @if (this.judgeEnabled)
+        {
+            <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Judge model")</MudText>
+            <ProviderSelectionWithConfidence @bind-ProviderSettings="@this.judgeProvider" ValidateProvider="@this.ValidatingJudgeProvider"/>
+
+            <ModelComparisonJudgeExpectations @bind-Expectations="@this.judgeInstructions" @bind-OwnStandardsAccepted="@this.judgeOwnStandardsAccepted"/>
+        }
+    </CompactExpansionPanel>
+}
+else
+{
+    @* What was asked, in short: without it, the answers below would have to be judged from memory. *@
+    var request = this.CurrentRequest;
+    <MudPaper Outlined="true" Class="pa-3 mb-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+            <MudIcon Icon="@AppIcons.PROMPT" Color="Color.Primary"/>
+            <MudText Typo="Typo.subtitle1" Class="flex-grow-1">
+                @TA("Your request")
+            </MudText>
+            <MudIconButton Icon="@(this.requestSummaryExpanded ? AppIcons.EXPAND_LESS : AppIcons.EXPAND_MORE)" Size="Size.Small" OnClick="@(() => this.requestSummaryExpanded = !this.requestSummaryExpanded)" title="@(this.requestSummaryExpanded ? T("Collapse") : T("Expand"))"/>
+        </MudStack>
+
+        <MudCollapse Expanded="@this.requestSummaryExpanded">
+            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;" Class="mb-1 mt-1">
+                @request.GetQuestionPreview()
+            </MudText>
+            @if (request.Context.Length > 0)
+            {
+                <MudText Typo="Typo.caption" Class="d-block mb-1">
+                    @string.Format(DisplayCulture, T("Material: {0} characters"), request.Context.Length.CompactCount())
+                </MudText>
+            }
+        </MudCollapse>
+
+        @if (this.batch is { RunCount: > 1 } shownBatch)
+        {
+            <ModelComparisonRunProgress Batch="@shownBatch" JudgeEnabled="@this.judgeEnabled"/>
+        }
+    </MudPaper>
+}
+
+@code {
+
+    private protected override RenderFragment HeaderActions => @<MudStack Row="true" Spacing="0">
+        <MudTooltip Text="@T("Results of all comparisons")">
+            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.OpenResultsDialog"/>
+        </MudTooltip>
+        <MudTooltip Text="@T("Switch mode")">
+            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SWITCH_ASSISTANT_MODE" OnClick="@this.SwitchMode"/>
+        </MudTooltip>
+    </MudStack>;
+
+    private protected override RenderFragment BelowSubmitContent => @<ModelComparisonBatchView Batch="@this.batch"
+                                                                                             IsComparing="@this.isComparing"
+                                                                                             JudgeEnabled="@this.judgeEnabled"
+                                                                                             Vote="@this.Vote"
+                                                                                             SkipThisRun="@this.SkipThisRun"
+                                                                                             SkipRemainingVotes="@this.SkipRemainingVotes"
+                                                                                             NextEntry="@this.GoToNextEntry"
+                                                                                             StartNewBatch="@this.StartNewBatch"
+                                                                                             OpenResults="@this.OpenResultsDialog"/>;
+
+}

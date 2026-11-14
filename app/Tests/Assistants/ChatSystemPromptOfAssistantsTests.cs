@@ -16,6 +16,7 @@ using AIStudio.Assistants.I18N;
 using AIStudio.Assistants.IconFinder;
 using AIStudio.Assistants.JobPosting;
 using AIStudio.Assistants.LegalCheck;
+using AIStudio.Assistants.ModelComparison;
 using AIStudio.Assistants.MyTasks;
 using AIStudio.Assistants.PromptOptimizer;
 using AIStudio.Assistants.RewriteImprove;
@@ -61,6 +62,7 @@ public sealed class ChatSystemPromptOfAssistantsTests
         [typeof(AssistantIconFinder)] = ChatSystemPromptSource.ASSISTANT,
         [typeof(AssistantJobPostings)] = ChatSystemPromptSource.CUSTOM,
         [typeof(AssistantLegalCheck)] = ChatSystemPromptSource.ASSISTANT,
+        [typeof(AssistantModelComparison)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
         [typeof(AssistantMyTasks)] = ChatSystemPromptSource.ASSISTANT,
         [typeof(AssistantPromptOptimizer)] = ChatSystemPromptSource.AI_STUDIO_DEFAULT,
         [typeof(AssistantRewriteImprove)] = ChatSystemPromptSource.CUSTOM,

@@ -222,7 +222,12 @@ public sealed class Data
     /// Gets the managed settings of the BeyondFacts Lab.
     /// </summary>
     public DataBeyondFactsLab BeyondFactsLab { get; set; } = new(x => x.BeyondFactsLab);
-    
+
+    /// <summary>
+    /// Gets the options of the Model Comparison assistant.
+    /// </summary>
+    public DataModelComparison ModelComparison { get; set; } = new(x => x.ModelComparison);
+
     public DataLegalCheck LegalCheck { get; set; } = new();
     
     public DataSynonyms Synonyms { get; set; } = new();

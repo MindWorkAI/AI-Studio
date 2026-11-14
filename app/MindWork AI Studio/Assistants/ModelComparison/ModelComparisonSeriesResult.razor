@@ -1,0 +1,68 @@
+@inherits MSGComponentBase
+
+<MudText Typo="Typo.h6" Class="mb-2">
+    @T("Result of the series")
+</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
+    @ModelComparisonResultTexts.WhatTheSeriesResultShows
+</MudJustifiedText>
+
+@if (this.Statistics.Pairing.ComparisonCount == 0)
+{
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+        @TA("You decided no task of this series without knowing the models, so it has no result.")
+    </MudJustifiedText>
+}
+else
+{
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+        @ModelComparisonResultTexts.WhatThePairAssessmentMeans
+    </MudJustifiedText>
+    <ModelComparisonPairCard Pairing="@this.Statistics.Pairing" Caption="@this.BlindTasksText"/>
+
+    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+        @this.ChatOrderText
+    </MudJustifiedText>
+    @if (this.Statistics.JudgeAgreement is { ComparedRuns: > 0 } agreement)
+    {
+        <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+            @string.Format(ModelComparisonFormat.Culture, TA("The judge chose the same as you in {0} of {1} tasks ({2})."), agreement.Agreements.CompactCount(), agreement.ComparedRuns.CompactCount(), ModelComparisonFormat.Share(agreement.Share))
+        </MudJustifiedText>
+    }
+}
+
+<MudText Typo="Typo.subtitle1" Class="mt-3">
+    @TA("Your effort with each model")
+</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @ModelComparisonResultTexts.WhatTheEffortMeans
+</MudJustifiedText>
+<ModelComparisonEffortCharts Efforts="@this.Efforts"/>
+<MudSimpleTable Dense="@true" Hover="@true" Class="mb-3">
+    <thead>
+        <tr>
+            <th>@T("Model")</th>
+            <th>@T("Decided tasks")</th>
+            <th>@TA("Your messages on average")</th>
+            <th>@T("Median time")</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var effort in this.Efforts)
+        {
+            <tr @key="effort.Model.Key">
+                <td>@effort.Model.Label</td>
+                <td>@effort.TaskCount.CompactCount()</td>
+                <td>@ModelComparisonFormat.Decimal(effort.AverageUserMessages)</td>
+                <td>@ModelComparisonFormat.Minutes(effort.MedianDuration)</td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
+
+@if (this.Statistics.NotBlindVotes.TotalRunCount > 0)
+{
+    <MudJustifiedText Typo="Typo.body1">
+        @this.NotBlindText
+    </MudJustifiedText>
+}

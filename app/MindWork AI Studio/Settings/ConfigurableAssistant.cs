@@ -30,6 +30,7 @@ public enum ConfigurableAssistant
     VISUAL_BRIEFING_ASSISTANT,
     BATCH_PROCESSING_ASSISTANT,
     BEYOND_FACTS_LAB_ASSISTANT,
+    MODEL_COMPARISON_ASSISTANT,
 
     // ReSharper disable InconsistentNaming
     I18N_ASSISTANT,

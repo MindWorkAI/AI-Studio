@@ -119,6 +119,9 @@ public static class AppIcons
     /// <summary>Marks the log viewer assistant.</summary>
     public const string ASSISTANT_LOG_VIEWER = LucideIcons.LOGS;
 
+    /// <summary>Marks the Model Comparison assistant.</summary>
+    public const string ASSISTANT_MODEL_COMPARISON = LucideIcons.GIT_COMPARE_ARROWS;
+
     /// <summary>Marks the My Tasks assistant.</summary>
     public const string ASSISTANT_MY_TASKS = LucideIcons.LIST_TODO;
 
@@ -185,6 +188,9 @@ public static class AppIcons
     /// <summary>Backs up the data of AI Studio.</summary>
     public const string BACKUP = LucideIcons.ARCHIVE_ARROW_DOWN;
 
+    /// <summary>Goes back from an opened item to the list it belongs to, such as from a comparison series to all series.</summary>
+    public const string BACK_TO_LIST = LucideIcons.ARROW_LEFT;
+
     /// <summary>Marks something as blocked, such as a provider prohibited by the organization or a plugin below the required security level.</summary>
     public const string BLOCKED = LucideIcons.BAN;
 
@@ -227,6 +233,12 @@ public static class AppIcons
     /// <summary>Clears an input, such as a search, a filter, or a shortcut.</summary>
     public const string CLEAR = LucideIcons.ERASER;
 
+    /// <summary>Marks a model which won clearly more than half of its decided model comparisons.</summary>
+    public const string CLEARLY_BETTER = LucideIcons.TRENDING_UP;
+
+    /// <summary>Marks a model which won clearly less than half of its decided model comparisons.</summary>
+    public const string CLEARLY_WORSE = LucideIcons.TRENDING_DOWN;
+
     /// <summary>Clears a chosen folder, such as the picture library of the slide assistant.</summary>
     public const string CLEAR_FOLDER = LucideIcons.FOLDER_X;
 
@@ -241,6 +253,15 @@ public static class AppIcons
 
     /// <summary>Marks the name of a company, such as the employer in a job posting.</summary>
     public const string COMPANY = LucideIcons.BUILDING;
+
+    /// <summary>Shows the results of all model comparisons, with charts.</summary>
+    public const string COMPARISON_RESULTS = LucideIcons.CHART_COLUMN_STACKED;
+
+    /// <summary>Stands for comparing how consistently two models answer the same request, in the Model Comparison assistant.</summary>
+    public const string COMPARISON_STABILITY = LucideIcons.REPEAT_2;
+
+    /// <summary>Stands for comparing two models while working on real tasks with each of them, in the Model Comparison assistant.</summary>
+    public const string COMPARISON_TASKS = LucideIcons.BRIEFCASE_BUSINESS;
 
     /// <summary>Marks the messages of a compiler that the coding assistant takes as input.</summary>
     public const string COMPILER_MESSAGES = LucideIcons.TRIANGLE_EXCLAMATION_POINT;
@@ -346,6 +367,9 @@ public static class AppIcons
 
     /// <summary>Marks a document, such as a Markdown file.</summary>
     public const string DOCUMENT = LucideIcons.FILE_TEXT;
+
+    /// <summary>Ends the work with one model on a task, such as in a comparison series of the Model Comparison assistant.</summary>
+    public const string DONE_WITH_MODEL = LucideIcons.FLAG;
 
     /// <summary>Downloads something from the internet, such as Pandoc or the content of a web page.</summary>
     public const string DOWNLOAD = LucideIcons.DOWNLOAD;
@@ -587,6 +611,9 @@ public static class AppIcons
     /// <summary>Marks a text detail of a job posting, such as the mandatory information, the job description, the qualifications, or the responsibilities.</summary>
     public const string JOB_DETAILS = LucideIcons.CLIPBOARD_LIST;
 
+    /// <summary>Marks the model which judges the answers of other models, such as the judge of the Model Comparison assistant.</summary>
+    public const string JUDGE = LucideIcons.GAVEL;
+
     /// <summary>Stands for a secret credential, such as an API key, a password, or an encryption secret.</summary>
     public const string KEY = LucideIcons.KEY_ROUND;
 
@@ -740,6 +767,9 @@ public static class AppIcons
     /// <summary>Marks a step that has not started yet, such as a research of the BeyondFacts Lab.</summary>
     public const string NOT_STARTED = LucideIcons.CIRCLE_DASHED;
 
+    /// <summary>Marks a result which may still be chance, such as a model with too few decided model comparisons.</summary>
+    public const string NOT_YET_CLEAR = LucideIcons.HOURGLASS;
+
     /// <summary>Removes the selected template, so that no template is used.</summary>
     public const string NO_TEMPLATE = LucideIcons.SQUARE_DASHED;
 
@@ -811,6 +841,9 @@ public static class AppIcons
 
     /// <summary>Validates a generated assistant plugin before it is installed.</summary>
     public const string PLUGIN_VALIDATION = LucideIcons.FILE_CHECK;
+
+    /// <summary>Marks a saved set of inputs which can be loaded again, such as a preset of the Model Comparison assistant.</summary>
+    public const string PRESET = LucideIcons.BOOKMARK;
 
     /// <summary>Shows a read-only view or a preview of an item, such as a profile or an assistant draft.</summary>
     public const string PREVIEW = LucideIcons.EYE;
@@ -953,6 +986,9 @@ public static class AppIcons
     /// <summary>Stands for a runtime that AI Studio runs on, such as .NET or Tauri.</summary>
     public const string RUNTIME = LucideIcons.CPU;
 
+    /// <summary>Marks a run of a model comparison which got no vote, because a model did not answer or the vote was skipped.</summary>
+    public const string RUN_WITHOUT_VOTE = LucideIcons.CIRCLE_SLASH;
+
     /// <summary>Saves something, such as a chat, a setting, or a plugin.</summary>
     public const string SAVE = LucideIcons.SAVE;
 
@@ -1079,6 +1115,9 @@ public static class AppIcons
     /// <summary>Marks an on/off value, such as the switch component of an assistant plugin or a boolean value.</summary>
     public const string SWITCH = LucideIcons.TOGGLE_RIGHT;
 
+    /// <summary>Goes back to the choice between the modes of an assistant, such as those of the Model Comparison assistant.</summary>
+    public const string SWITCH_ASSISTANT_MODE = LucideIcons.ARROW_RIGHT_LEFT;
+
     /// <summary>Marks a chat message from the system role, such as the system prompt.</summary>
     public const string SYSTEM_ROLE = LucideIcons.COG;
 
@@ -1183,6 +1222,21 @@ public static class AppIcons
 
     /// <summary>Marks the transcription of speech into text, such as of a voice recording or a media file.</summary>
     public const string VOICE_TRANSCRIPTION = LucideIcons.AUDIO_LINES;
+
+    /// <summary>Marks a run of a model comparison which got your vote.</summary>
+    public const string VOTED = LucideIcons.VOTE;
+
+    /// <summary>Marks the answer which lost a vote of a model comparison.</summary>
+    public const string VOTE_LOST = LucideIcons.CIRCLE_X;
+
+    /// <summary>Marks a run of a model comparison which still waits for your vote.</summary>
+    public const string VOTE_MISSING = LucideIcons.CIRCLE_QUESTION_MARK;
+
+    /// <summary>Marks two answers which a vote of a model comparison found equally good.</summary>
+    public const string VOTE_TIE = LucideIcons.CIRCLE_EQUAL;
+
+    /// <summary>Marks the answer which won a vote of a model comparison.</summary>
+    public const string VOTE_WON = LucideIcons.CIRCLE_CHECK;
 
     /// <summary>Signals a warning.</summary>
     public const string WARNING = LucideIcons.TRIANGLE_EXCLAMATION_POINT;

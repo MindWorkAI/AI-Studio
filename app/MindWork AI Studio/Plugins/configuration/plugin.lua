@@ -920,8 +920,8 @@ CONFIG["SETTINGS"] = {}
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
 --   DOCUMENT_ANALYSIS_ASSISTANT, BATCH_PROCESSING_ASSISTANT, SLIDE_BUILDER_ASSISTANT,
---   VISUAL_BRIEFING_ASSISTANT, BEYOND_FACTS_LAB_ASSISTANT, I18N_ASSISTANT,
---   LOG_VIEWER_ASSISTANT
+--   VISUAL_BRIEFING_ASSISTANT, BEYOND_FACTS_LAB_ASSISTANT, MODEL_COMPARISON_ASSISTANT,
+--   I18N_ASSISTANT, LOG_VIEWER_ASSISTANT
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
 -- completely. This is what lets a department show an assistant again that the base
@@ -1009,6 +1009,22 @@ CONFIG["SETTINGS"] = {}
 -- and the lab shows a banner while one of them replaces a prompt. Set it to false and lock it to keep
 -- users with the prompts which come with AI Studio.
 -- CONFIG["SETTINGS"]["DataBeyondFactsLab.AllowPromptOverrides"] = false
+
+-- Configure defaults for the Model Comparison assistant.
+-- Preselection must be enabled for the remaining Model Comparison settings to take effect.
+-- CONFIG["SETTINGS"]["DataModelComparison.PreselectOptions"] = true
+--
+-- Configure the minimum provider confidence which every compared model and every judge needs.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataModelComparison.MinimumProviderConfidence"] = "NONE"
+--
+-- Configure the model which new presets and comparison series start with as their first model,
+-- and the judge which they start with. A preselected judge also switches the judge on.
+-- Use one of the provider IDs defined in CONFIG["LLM_PROVIDERS"], an empty text for the
+-- app-wide default provider, or "00000000-0000-0000-0000-000000000000" for no model at all,
+-- which is also the default.
+-- CONFIG["SETTINGS"]["DataModelComparison.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataModelComparison.PreselectedJudgeProvider"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure defaults for the Assistant Builder.
 -- Preselection must be enabled for the remaining Assistant Builder settings to take effect.

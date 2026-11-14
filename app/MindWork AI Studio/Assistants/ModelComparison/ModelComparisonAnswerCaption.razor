@@ -1,0 +1,22 @@
+@inherits MSGComponentBase
+
+<MudItem xs="12" md="6" Class="@this.ItemClass">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+        @if (this.VoteChoice is not null)
+        {
+            <MudIcon Icon="@ModelComparisonOutcome.IconOf(this.VoteChoice, this.Model)" Color="@ModelComparisonOutcome.ColorOf(this.VoteChoice, this.Model)" Size="Size.Small"/>
+        }
+        <MudText Typo="Typo.body1" Color="@ModelComparisonOutcome.ColorOf(this.VoteChoice, this.Model)" Class="font-weight-bold">
+            @this.Answer.Label
+        </MudText>
+        @if (ModelComparisonOutcome.JudgeFavors(this.JudgeChoice, this.Model))
+        {
+            <MudChip T="string" Icon="@AppIcons.JUDGE" Size="Size.Medium" Variant="Variant.Filled" Color="Color.Tertiary" Class="font-weight-bold">
+                @T("Judge")
+            </MudChip>
+        }
+    </MudStack>
+    <MudText Typo="Typo.body2">
+        @this.TimesText
+    </MudText>
+</MudItem>

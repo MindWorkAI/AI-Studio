@@ -1,0 +1,75 @@
+@inherits MSGComponentBase
+
+<MudPaper Outlined="true" Class="pa-4 mb-4">
+    <MudText Typo="Typo.h5" Class="mb-3">
+        @this.Heading
+    </MudText>
+
+    @if (this.Batch.Entries.Count > 0)
+    {
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @ModelComparisonResultTexts.WhatTheBatchSummaryShows
+        </MudJustifiedText>
+
+        <MudSimpleTable Dense="true" Hover="true" Class="mb-2">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>@this.Batch.Entries[0].Result.First.Label</th>
+                    <th>@T("Equally good")</th>
+                    <th>@this.Batch.Entries[0].Result.Second.Label</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>@TA("Your votes")</td>
+                    <td>@this.voteTally.FirstModelWins</td>
+                    <td>@this.voteTally.Ties</td>
+                    <td>@this.voteTally.SecondModelWins</td>
+                </tr>
+                @if (this.judgeTally is { } shownJudgeTally)
+                {
+                    <tr>
+                        <td>@T("Judge verdicts")</td>
+                        <td>@shownJudgeTally.FirstModelWins</td>
+                        <td>@shownJudgeTally.Ties</td>
+                        <td>@shownJudgeTally.SecondModelWins</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+
+        @if (this.voteTally.UnscoredRunCount > 0)
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="mb-1">
+                @string.Format(ModelComparisonFormat.Culture, TA("{0} of {1} runs have no vote from you, because you skipped them or a model did not answer. They are not counted above."), this.voteTally.UnscoredRunCount, this.voteTally.TotalRunCount)
+            </MudJustifiedText>
+        }
+        @if (this.judgeTally is { UnscoredRunCount: > 0 } incompleteJudgeTally)
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="mb-1">
+                @string.Format(ModelComparisonFormat.Culture, T("{0} of {1} runs have no usable judge verdict. They are not counted above."), incompleteJudgeTally.UnscoredRunCount, incompleteJudgeTally.TotalRunCount)
+            </MudJustifiedText>
+        }
+    }
+</MudPaper>
+
+@if (this.Batch.Entries.Count > 0)
+{
+    @* One run at a time: two open runs, each with two long answers, are hard to tell apart. *@
+    <MudExpansionPanels MultiExpansion="@false" Class="mb-4">
+        @foreach (var index in Enumerable.Range(0, this.Batch.Entries.Count))
+        {
+            <ModelComparisonRunPanel @key="@index" Batch="@this.Batch" Index="@index"/>
+        }
+    </MudExpansionPanels>
+}
+
+<MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.RESET" OnClick="@(() => this.StartNewBatch.InvokeAsync())">
+        @T("Start a new request")
+    </MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.COMPARISON_RESULTS" OnClick="@(() => this.OpenResults.InvokeAsync())">
+        @T("Results of all comparisons")
+    </MudButton>
+</MudStack>

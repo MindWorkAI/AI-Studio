@@ -33,8 +33,27 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
     [Parameter]
     public Func<bool> IsLocked { get; set; } = () => false;
 
+    /// <summary>
+    /// The label of the option, or null for "Preselected provider".
+    /// </summary>
+    [Parameter]
+    public string? OptionDescription { get; set; }
+
+    /// <summary>
+    /// The text of an entry which preselects no provider at all, or null to offer no such entry.
+    /// </summary>
+    /// <remarks>
+    /// The entry stands before "Use app default" and selects the ID of Provider.NONE, because an empty text already
+    /// means the provider of the whole app.
+    /// </remarks>
+    [Parameter]
+    public string? NoPreselectionText { get; set; }
+
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
+        if (this.NoPreselectionText is not null)
+            yield return new(this.NoPreselectionText, AIStudio.Settings.Provider.NONE.Id);
+
         if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
             yield return new(T("Use app default"), string.Empty);
 
@@ -69,6 +88,10 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
             case Event.CONFIGURATION_CHANGED:
                 
                 if(string.IsNullOrWhiteSpace(this.SelectedValue()))
+                    break;
+
+                // Preselecting no provider stays valid, whichever providers exist:
+                if (this.NoPreselectionText is not null && this.SelectedValue() == AIStudio.Settings.Provider.NONE.Id)
                     break;
                 
                 // Check if the selected value is still valid:

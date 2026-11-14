@@ -1,4 +1,5 @@
 using AIStudio.Assistants.BeyondFactsLab;
+using AIStudio.Assistants.ModelComparison;
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tools.DataBackup;
@@ -11,10 +12,12 @@ namespace AIStudio.Tools.Services;
 /// One-shot startup service that removes from the provenance store what no stored chat refers to, see ProvenanceCleanup.
 /// </summary>
 /// <remarks>
-/// It knows the chats of the workspaces, the temporary chats, and the chats of the BeyondFacts Lab. It reads the
-/// latter also while the lab is switched off: otherwise, they would lose what they received at every start.
+/// It knows the chats of the workspaces, the temporary chats, the chats of the BeyondFacts Lab, and those of the
+/// comparison series of the Model Comparison assistant. It reads the chats of the lab also while the lab is switched
+/// off, and those of the series also while the assistant is hidden: otherwise, they would lose what they received at
+/// every start.
 /// </remarks>
-public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClientProvider, DataRestoreService dataRestoreService, BeyondFactsLabStore labStore, ILogger<ProvenanceCleanupService> logger) : BackgroundService
+public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClientProvider, DataRestoreService dataRestoreService, BeyondFactsLabStore labStore, ModelComparisonStore comparisonStore, ILogger<ProvenanceCleanupService> logger) : BackgroundService
 {
     /// <summary>
     /// When this run of the app started. Entries stored since belong to it and stay.
@@ -103,6 +106,9 @@ public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClie
         foreach (var (chatId, labThread) in labStore.ReadAllThreadLocations())
             locations[chatId] = StoredChatLocation.InLab(labThread);
 
+        foreach (var (chatId, seriesId) in comparisonStore.ReadAllSeriesChatLocations())
+            locations[chatId] = StoredChatLocation.InComparisonSeries(seriesId);
+
         return locations;
     }
 
@@ -114,17 +120,19 @@ public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClie
     /// <returns>The chat, or null when it cannot be read.</returns>
     private async Task<ChatThread?> LoadChatAsync(StoredChatLocation location, Guid chatId)
     {
-        if (location.LabThread is not { } labThread)
+        if (location.LabThread is null && location.ComparisonSeriesId is null)
             return await WorkspaceBehaviour.LoadChatAsync(new(location.WorkspaceId, chatId));
 
         try
         {
-            return await labStore.LoadThreadAsync(labThread);
+            return location.LabThread is { } labThread
+                ? await labStore.LoadThreadAsync(labThread)
+                : await comparisonStore.LoadSeriesChatAsync(location.ComparisonSeriesId!.Value, chatId);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             // A chat which cannot be read keeps everything it received:
-            logger.LogDebug(exception, "The provenance startup cleanup could not read a chat of the BeyondFacts Lab.");
+            logger.LogDebug(exception, "The provenance startup cleanup could not read a chat of an assistant.");
             return null;
         }
     }
@@ -135,7 +143,11 @@ public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClie
     /// <param name="location">The place of the chat.</param>
     /// <param name="chatId">The ID of the chat.</param>
     /// <returns>The time, or null when it is not known.</returns>
-    private DateTimeOffset? GetChatWrittenAt(StoredChatLocation location, Guid chatId) => location.LabThread is { } labThread
-        ? labStore.GetThreadWrittenAt(labThread)
-        : WorkspaceBehaviour.GetChatWrittenAt(location.WorkspaceId, chatId);
+    private DateTimeOffset? GetChatWrittenAt(StoredChatLocation location, Guid chatId) => location switch
+    {
+        { LabThread: { } labThread } => labStore.GetThreadWrittenAt(labThread),
+        { ComparisonSeriesId: { } seriesId } => comparisonStore.GetSeriesChatWrittenAt(seriesId, chatId),
+
+        _ => WorkspaceBehaviour.GetChatWrittenAt(location.WorkspaceId, chatId),
+    };
 }

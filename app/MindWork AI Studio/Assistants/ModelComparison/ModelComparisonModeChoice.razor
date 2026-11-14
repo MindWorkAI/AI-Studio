@@ -1,0 +1,22 @@
+@attribute [Route(Routes.ASSISTANT_MODEL_COMPARISON)]
+@inherits MSGComponentBase
+
+<div class="inner-scrolling-context">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
+        <MudText Typo="Typo.h3">
+            @T("Model Comparison")
+        </MudText>
+        <MudSpacer/>
+        <MudTooltip Text="@T("Results of all comparisons")">
+            <MudIconButton Variant="Variant.Text" Icon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.OpenResultsDialog"/>
+        </MudTooltip>
+        <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SETTINGS" OnClick="@this.OpenSettingsDialog"/>
+    </MudStack>
+
+    <InnerScrolling>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3 mr-3">
+            @TA("Compare two models without knowing which one answers. Choose what you want to find out.")
+        </MudJustifiedText>
+        <AssistantModeChoice TMode="ModelComparisonMode" Options="@this.Options" ModeChosen="@this.ChooseMode"/>
+    </InnerScrolling>
+</div>

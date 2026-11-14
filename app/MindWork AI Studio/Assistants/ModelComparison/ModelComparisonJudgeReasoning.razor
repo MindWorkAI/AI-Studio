@@ -1,0 +1,8 @@
+@inherits MSGComponentBase
+
+@foreach (var paragraph in this.paragraphs)
+{
+    <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+        @paragraph
+    </MudJustifiedText>
+}
