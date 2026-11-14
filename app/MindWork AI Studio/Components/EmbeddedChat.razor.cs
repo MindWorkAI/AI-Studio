@@ -189,8 +189,13 @@ public partial class EmbeddedChat : MSGComponentBase
     private readonly CancellationTokenSource countCancellation = new();
 
     /// <summary>
-    /// The token of countCancellation, taken while the source still lives, see BflChat.
+    /// The token of countCancellation, taken while the source still lives.
     /// </summary>
+    /// <remarks>
+    /// A count goes on after an await, when the component may have gone away meanwhile, e.g., because the user moved on
+    /// to another step of an assistant. The source is disposed by then and refuses to hand out its token; the token
+    /// taken before still tells that the count was cancelled.
+    /// </remarks>
     private CancellationToken countToken;
 
     /// <summary>

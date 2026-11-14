@@ -64,57 +64,12 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     public IEmbeddedChatStore StoreOf(BflThreadLocation location) => new BflChatStore(store, location);
 
     /// <summary>
-    /// Lets the model open a conversation, as its prompt describes.
-    /// </summary>
-    /// <param name="location">Where the chat belongs.</param>
-    /// <param name="provider">The provider which answers.</param>
-    public Task StartAsync(BflThreadLocation location, AIStudio.Settings.Provider provider) => this.SendAsync(location, provider, OpeningRequestFor(location), isHidden: true);
-
-    /// <summary>
-    /// Gets the request which lets the model open a conversation.
+    /// Gets the request which lets the model open a conversation, see EmbeddedChat.StartRequest. The person does not see
+    /// it.
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
     /// <returns>The request, which names the section of the prompt that describes the first message.</returns>
     public static string OpeningRequestFor(BflThreadLocation location) => location is BflOnboardingThreadLocation ? ONBOARDING_OPENING_REQUEST : OPENING_REQUEST;
-
-    /// <summary>
-    /// Sends a message of the person and lets the model answer it.
-    /// </summary>
-    /// <remarks>
-    /// What goes wrong is reported through the message bus; the method itself does not fail.
-    /// </remarks>
-    /// <param name="location">Where the chat belongs.</param>
-    /// <param name="provider">The provider which answers.</param>
-    /// <param name="text">The message.</param>
-    /// <param name="isHidden">Whether the person does not see the message, e.g., the request which opens a conversation.</param>
-    public async Task SendAsync(BflThreadLocation location, AIStudio.Settings.Provider provider, string text, bool isHidden = false)
-    {
-        await this.GetAsync(location);
-        await chatService.SendAsync(location.ChatId, new EmbeddedChatRequest
-        {
-            Provider = provider,
-            Message = new ContentText { Text = text },
-            IsHidden = isHidden,
-            PrepareAsync = thread => this.PrepareAsync(location, provider, thread)
-        });
-    }
-
-    /// <summary>
-    /// Stops the answer the model writes in a chat.
-    /// </summary>
-    /// <param name="location">Where the chat belongs.</param>
-    public Task CancelAsync(BflThreadLocation location) => chatService.CancelAsync(location.ChatId);
-
-    /// <summary>
-    /// Deletes a conversation, so that it starts over.
-    /// </summary>
-    /// <param name="location">Where the chat belongs.</param>
-    /// <returns>False while the model answers in the chat.</returns>
-    public async Task<bool> ResetAsync(BflThreadLocation location)
-    {
-        await this.GetAsync(location);
-        return await chatService.ResetAsync(location.ChatId, () => BflThreadFactory.Create(location));
-    }
 
     /// <summary>
     /// Stops every answer of a preparation and forgets its chats, e.g., because the person deleted it.
