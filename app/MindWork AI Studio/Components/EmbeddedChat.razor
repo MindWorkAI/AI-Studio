@@ -74,7 +74,7 @@ else
                       OnKeyUp="@this.InputKeyEventAsync"
                       UserAttributes="@this.inputAttributes"
                       HelperText="@this.TokenText"
-                      Class="mt-2"
+                      Class="@this.InputClass"
                       Disabled="@(!this.CanSend)"/>
 
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">

@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Chat.Embedded;
 using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
@@ -107,9 +108,9 @@ public partial class BflChat : MSGComponentBase
 
     private bool IsRunning => this.conversation?.IsRunning ?? false;
 
-    private BflTokenBudgetState Budget => BflTokenBudget.Of(this.tokens);
+    private EmbeddedChatTokenBudgetState Budget => EmbeddedChatTokenBudget.Of(this.tokens);
 
-    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null && this.Budget is not BflTokenBudgetState.FULL;
+    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null && this.Budget is not EmbeddedChatTokenBudgetState.FULL;
 
     private bool CanSendMessage => this.CanSend && !string.IsNullOrWhiteSpace(this.userInput);
 
@@ -265,8 +266,8 @@ public partial class BflChat : MSGComponentBase
             var budget = string.Format(this.tokens.IsEstimate && !this.tokens.HistoryIsReported ? T("approx. {0} of {1} tokens") : T("{0} of {1} tokens"), counted, window);
             return this.Budget switch
             {
-                BflTokenBudgetState.FULL => $"{budget}. {TA("This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.")}",
-                BflTokenBudgetState.WARNING => $"{budget}. {TA("This conversation fills most of the context window of the model. Soon, you will have to start it over.")}",
+                EmbeddedChatTokenBudgetState.FULL => $"{budget}. {TA("This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.")}",
+                EmbeddedChatTokenBudgetState.WARNING => $"{budget}. {TA("This conversation fills most of the context window of the model. Soon, you will have to start it over.")}",
                 _ => budget
             };
         }
@@ -277,8 +278,8 @@ public partial class BflChat : MSGComponentBase
     /// </summary>
     private string InputClass => this.Budget switch
     {
-        BflTokenBudgetState.FULL => "mt-2 token-budget-exceeded",
-        BflTokenBudgetState.WARNING => "mt-2 token-budget-nearly-full",
+        EmbeddedChatTokenBudgetState.FULL => "mt-2 token-budget-exceeded",
+        EmbeddedChatTokenBudgetState.WARNING => "mt-2 token-budget-nearly-full",
         _ => "mt-2"
     };
 

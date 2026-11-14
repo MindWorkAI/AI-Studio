@@ -21,7 +21,8 @@ namespace AIStudio.Components;
 /// The chat itself lives in EmbeddedChatService, so an answer goes on while the user looks elsewhere; this component
 /// shows it and renders whenever the service says it changed. What a request carries beside the conversation, such as
 /// the system prompt and the tools, the assistant decides through PrepareAsync. The count of tokens leaves out the
-/// context window of the model on purpose: it would tell models apart which the user compares without knowing them.
+/// context window of the model by default: it would tell models apart which the user compares without knowing them.
+/// An assistant whose requests carry long instructions shows it, see ShowsContextWindow.
 /// </remarks>
 public partial class EmbeddedChat : MSGComponentBase
 {
@@ -86,6 +87,14 @@ public partial class EmbeddedChat : MSGComponentBase
     /// </summary>
     [Parameter]
     public string? ResetQuestion { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the count of tokens shows how much of the context window of the model the conversation
+    /// fills: it warns when most of it is used, and the chat sends no more when the next message and its answer would
+    /// not fit anymore, see EmbeddedChatTokenBudget. Leave it out where the user must not tell the models apart.
+    /// </summary>
+    [Parameter]
+    public bool ShowsContextWindow { get; set; }
 
     /// <summary>
     /// Gets or sets whether the user may attach files to a message.
@@ -207,7 +216,9 @@ public partial class EmbeddedChat : MSGComponentBase
 
     private bool IsRunning => this.conversation?.IsRunning ?? false;
 
-    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null;
+    private EmbeddedChatTokenBudgetState Budget => this.ShowsContextWindow ? EmbeddedChatTokenBudget.Of(this.tokens) : EmbeddedChatTokenBudgetState.UNKNOWN;
+
+    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null && this.Budget is not EmbeddedChatTokenBudgetState.FULL;
 
     private bool CanSendMessage => this.CanSend && !string.IsNullOrWhiteSpace(this.userInput);
 
@@ -302,11 +313,58 @@ public partial class EmbeddedChat : MSGComponentBase
     }
 
     /// <summary>
-    /// Gets about how many tokens the conversation carries, or null when nothing could be counted.
+    /// Gets about how many tokens the conversation carries, with how full the context of the model is when the chat shows
+    /// it, or null when nothing could be counted.
     /// </summary>
-    private string? TokenText => this.tokens.IsKnown
-        ? string.Format(T("approx. {0} tokens"), TokenAmount.Format(this.tokens.Tokens, Tools.PluginSystem.I18N.I.Culture))
-        : null;
+    private string? TokenText
+    {
+        get
+        {
+            if (!this.tokens.IsKnown)
+                return null;
+
+            var culture = Tools.PluginSystem.I18N.I.Culture;
+            var counted = TokenAmount.Format(this.tokens.Tokens, culture);
+            if (!this.ShowsContextWindow)
+                return string.Format(T("approx. {0} tokens"), counted);
+
+            if (!this.tokens.Window.IsKnown)
+                return string.Format(T("approx. {0} tokens; the context window of this model is unknown"), counted);
+
+            var window = TokenAmount.Format(this.tokens.Window.DefaultTokens, culture);
+            var budget = string.Format(this.tokens.IsEstimate && !this.tokens.HistoryIsReported ? T("approx. {0} of {1} tokens") : T("{0} of {1} tokens"), counted, window);
+            return this.Budget switch
+            {
+                EmbeddedChatTokenBudgetState.FULL => $"{budget}. {this.FullContextText}",
+                EmbeddedChatTokenBudgetState.WARNING => $"{budget}. {this.NearlyFullContextText}",
+                _ => budget
+            };
+        }
+    }
+
+    /// <summary>
+    /// Gets what the user can do once the conversation fills the context of the model.
+    /// </summary>
+    private string FullContextText => this.CanReset
+        ? TA("This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.")
+        : TA("This conversation fills the context window of the model. Choose a provider whose model reads more at once.");
+
+    /// <summary>
+    /// Gets the warning once the conversation fills most of the context of the model.
+    /// </summary>
+    private string NearlyFullContextText => this.CanReset
+        ? TA("This conversation fills most of the context window of the model. Soon, you will have to start it over.")
+        : T("This conversation fills most of the context window of the model.");
+
+    /// <summary>
+    /// Gets the classes of the message field; like on the chat page, they colour its helper text with the tokens.
+    /// </summary>
+    private string InputClass => this.Budget switch
+    {
+        EmbeddedChatTokenBudgetState.FULL => "mt-2 token-budget-exceeded",
+        EmbeddedChatTokenBudgetState.WARNING => "mt-2 token-budget-nearly-full",
+        _ => "mt-2"
+    };
 
     private Task AttachmentsChanged(HashSet<FileAttachment> changedAttachments)
     {
