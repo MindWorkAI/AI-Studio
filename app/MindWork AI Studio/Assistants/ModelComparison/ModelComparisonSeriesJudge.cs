@@ -58,7 +58,7 @@ public sealed class ModelComparisonSeriesJudge(SettingsManager settingsManager, 
         var languageName = ModelComparisonFormat.LanguageName;
 
         // The filter only removes text, so the prompt before it is the longest the judge can get:
-        if (!await this.FitsAsync(judgeProvider, new ModelComparisonChatJudgeRequest(transcriptOfChatOne, transcriptOfChatTwo, languageName).ToPrompt(), token))
+        if (!await this.FitsAsync(judgeProvider, new ModelComparisonChatJudgeRequest(transcriptOfChatOne, transcriptOfChatTwo, languageName, series.JudgeInstructions).ToPrompt(), token))
         {
             task.SkipJudge(ModelComparisonSeriesJudgeStatus.TOO_LONG);
             return;
@@ -68,7 +68,7 @@ public sealed class ModelComparisonSeriesJudge(SettingsManager settingsManager, 
         await using var reportingScope = guard.BeginAction();
         var runner = new ModelComparisonRunner(logger, ModelComparisonProviderAdapter.CreateJudgeInputFilter(guard, reportingScope, title));
         var judge = ModelComparisonProviderAdapter.CreateParticipant(judgeProvider, settingsManager, Tools.Components.MODEL_COMPARISON_ASSISTANT, title);
-        var verdict = await runner.JudgeChatsAsync(judge, transcriptOfChatOne, transcriptOfChatTwo, languageName, token);
+        var verdict = await runner.JudgeChatsAsync(judge, transcriptOfChatOne, transcriptOfChatTwo, languageName, series.JudgeInstructions, token);
 
         // A canceled judge has no verdict, but it was not the fault of the judge either:
         token.ThrowIfCancellationRequested();

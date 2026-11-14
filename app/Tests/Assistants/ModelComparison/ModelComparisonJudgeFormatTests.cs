@@ -61,14 +61,27 @@ public sealed class ModelComparisonJudgeFormatTests
     public void TheJudgeOfChatsReadsBothChats()
     {
         // The prompt is a raw string literal, which keeps the line endings of the checkout:
-        var prompt = new ModelComparisonChatJudgeRequest("[User]\nfirst", "[User]\nsecond", string.Empty).ToPrompt().ReplaceLineEndings("\n");
+        var prompt = new ModelComparisonChatJudgeRequest("[User]\nfirst", "[User]\nsecond", string.Empty, string.Empty).ToPrompt().ReplaceLineEndings("\n");
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(prompt, Does.Contain("# Chat 1\n[User]\nfirst"));
             Assert.That(prompt, Does.Contain("# Chat 2\n[User]\nsecond"));
             Assert.That(prompt, Does.Contain("must not guess, which model answered in which chat"));
+            Assert.That(prompt, Does.Not.Contain("Expectations, values, and goals of the user"));
             Assert.That(prompt, Does.EndWith("not forced into English."));
+        }
+    }
+
+    [Test]
+    public void TheJudgeOfChatsDecidesByTheExpectationsOfTheUser()
+    {
+        var prompt = new ModelComparisonChatJudgeRequest("[User]\nfirst", "[User]\nsecond", string.Empty, "I prefer short answers.").ToPrompt().ReplaceLineEndings("\n");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(prompt, Does.Contain("# Expectations, values, and goals of the user\nI prefer short answers.\n\n# Chat 1"), "The standards of the user stand before the chats.");
+            Assert.That(prompt, Does.Contain("before any preference of your own"));
         }
     }
 

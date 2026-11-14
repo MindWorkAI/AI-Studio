@@ -47,6 +47,7 @@
                 {
                     <MudText Typo="Typo.subtitle1" Class="mb-1 mt-3">@T("Judge model")</MudText>
                     <ProviderSelectionWithConfidence ProviderSettings="@this.judgeProvider" ProviderSettingsChanged="@this.JudgeProviderChanged"/>
+                    <ModelComparisonJudgeExpectations @bind-Expectations="@this.judgeInstructions" @bind-OwnStandardsAccepted="@this.judgeOwnStandardsAccepted" ShowsIssue="@(this.issue is not null)"/>
                 }
             </CompactExpansionPanel>
 

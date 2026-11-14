@@ -26,7 +26,7 @@ public static class ModelComparisonSeriesTexts
     /// <summary>
     /// What the judge of a series does, why it is useful, and what it needs.
     /// </summary>
-    public static string WhatTheJudgeIsFor => TA("After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It gives you a second opinion which does not depend on your own taste, and in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task.");
+    public static string WhatTheJudgeIsFor => TA("After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It applies your expectations, values, and goals to every task in the same way and so gives you a second opinion; in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task.");
 
     /// <summary>
     /// What both models of a series share, and what decides what the selection offers.

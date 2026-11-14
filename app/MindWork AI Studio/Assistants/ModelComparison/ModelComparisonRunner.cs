@@ -114,14 +114,15 @@ public sealed class ModelComparisonRunner(ILogger logger, Func<IReadOnlyList<str
     /// <param name="transcriptOfChatOne">The first chat, see ChatTranscript.</param>
     /// <param name="transcriptOfChatTwo">The second chat.</param>
     /// <param name="languageName">The language of the reasoning, by its English name, or an empty text to leave it to the judge.</param>
+    /// <param name="judgeInstructions">The expectations, values, and goals of the user, by which the judge decides, see ModelComparisonJudgeExpectations.</param>
     /// <param name="token">Cancels the judge.</param>
     /// <returns>The verdict: COLUMN_A names the first chat, COLUMN_B the second one.</returns>
-    public async Task<ModelComparisonJudgeVerdict> JudgeChatsAsync(ModelComparisonParticipant judge, string transcriptOfChatOne, string transcriptOfChatTwo, string languageName, CancellationToken token)
+    public async Task<ModelComparisonJudgeVerdict> JudgeChatsAsync(ModelComparisonParticipant judge, string transcriptOfChatOne, string transcriptOfChatTwo, string languageName, string judgeInstructions, CancellationToken token)
     {
         if (await this.FilterForJudgeAsync(judge, [transcriptOfChatOne, transcriptOfChatTwo]).ConfigureAwait(false) is not { } filteredChats)
             return ModelComparisonJudgeVerdict.Parse(judge.Label, false, string.Empty, ModelComparisonJudgeFormat.CHATS);
 
-        var judgeRequest = new ModelComparisonChatJudgeRequest(filteredChats[0], filteredChats[1], languageName);
+        var judgeRequest = new ModelComparisonChatJudgeRequest(filteredChats[0], filteredChats[1], languageName, judgeInstructions);
         var judgeAnswer = await this.AskAsync(judge, judgeRequest.ToPrompt(Guid.NewGuid().ToString("N")), token).ConfigureAwait(false);
 
         return ModelComparisonJudgeVerdict.Parse(judgeAnswer.Label, judgeAnswer.Completed, judgeAnswer.Text, ModelComparisonJudgeFormat.CHATS);

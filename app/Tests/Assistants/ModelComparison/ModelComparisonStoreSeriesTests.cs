@@ -46,6 +46,7 @@ public sealed class ModelComparisonStoreSeriesTests
             Assert.That(loaded.Name, Is.EqualTo(series.Name));
             Assert.That(loaded.First, Is.EqualTo(series.First));
             Assert.That(loaded.Judge, Is.EqualTo(series.Judge));
+            Assert.That(loaded.JudgeInstructions, Is.EqualTo("I prefer short answers."));
             Assert.That(loaded.ToolIds, Is.EqualTo(series.ToolIds));
             Assert.That(loaded.DataSourceIds, Is.EqualTo(series.DataSourceIds));
             Assert.That(loaded.RetrievalMode, Is.EqualTo(DataSourceRetrievalMode.SEMANTIC_SEARCH));
@@ -226,6 +227,7 @@ public sealed class ModelComparisonStoreSeriesTests
         Second = new() { LLMProvider = LLMProviders.MISTRAL, ModelId = "model-b", Label = "Model B" },
         JudgeProviderId = "provider-judge",
         Judge = new() { LLMProvider = LLMProviders.ANTHROPIC, ModelId = "judge", Label = "Judge" },
+        JudgeInstructions = "I prefer short answers.",
         ToolIds = ["web_search"],
         DataSourceIds = ["data-source-1"],
         RetrievalMode = DataSourceRetrievalMode.SEMANTIC_SEARCH,

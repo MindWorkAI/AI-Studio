@@ -67,6 +67,18 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     private bool judgeEnabled;
     private bool judgePanelExpanded;
     private AIStudio.Settings.Provider judgeProvider = AIStudio.Settings.Provider.NONE;
+
+    /// <summary>
+    /// The expectations, values, and goals of the user, by which the judge decides, see ModelComparisonJudgeExpectations.
+    /// </summary>
+    private string judgeInstructions = string.Empty;
+
+    /// <summary>
+    /// Whether the user confirmed that the judge may decide by its own standards, which counts only while
+    /// judgeInstructions is empty.
+    /// </summary>
+    private bool judgeOwnStandardsAccepted;
+
     private Profile profile = Profile.NO_PROFILE;
     private HashSet<string> selectedToolIds = [];
 
@@ -108,6 +120,7 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
             this.judgeEnabled = copy.JudgeEnabled;
             this.judgePanelExpanded = copy.JudgeEnabled;
             this.judgeProvider = copy.Judge;
+            this.judgeInstructions = series.JudgeInstructions;
             this.profile = copy.Profile;
             this.selectedToolIds = copy.ToolIds;
             this.dataSourceOptions = copy.DataSourceOptions;
@@ -209,6 +222,13 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
             return judgeIssue;
         }
 
+        // Without the standards of the user, the judge decides by its own, which the user has to confirm:
+        if (this.judgeEnabled && ModelComparisonJudgeExpectations.IssueOf(this.judgeInstructions, this.judgeOwnStandardsAccepted) is { } expectationsIssue)
+        {
+            this.judgePanelExpanded = true;
+            return expectationsIssue;
+        }
+
         return null;
     }
 
@@ -277,6 +297,7 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
                 Second = ModelComparisonModelIdentity.Of(this.secondProvider),
                 JudgeProviderId = this.judgeEnabled ? this.judgeProvider.Id : string.Empty,
                 Judge = this.judgeEnabled ? ModelComparisonModelIdentity.Of(this.judgeProvider) : null,
+                JudgeInstructions = this.judgeEnabled ? this.judgeInstructions.Trim() : string.Empty,
                 ProfileId = this.profile.Id,
                 ToolIds = this.ToolsForBoth(),
                 DataSourceIds = [.. dataSources.DataSourceIds],

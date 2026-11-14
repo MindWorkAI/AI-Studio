@@ -10,7 +10,11 @@ namespace AIStudio.Assistants.ModelComparison;
 /// <param name="TranscriptOfChatOne">The first chat.</param>
 /// <param name="TranscriptOfChatTwo">The second chat.</param>
 /// <param name="LanguageName">The language of the reasoning, by its English name, or an empty text to leave it to the judge.</param>
-public sealed record ModelComparisonChatJudgeRequest(string TranscriptOfChatOne, string TranscriptOfChatTwo, string LanguageName)
+/// <param name="Expectations">
+/// The expectations, values, and goals of the user, by which the judge decides, see ModelComparisonJudgeExpectations;
+/// or an empty text, when the user confirmed that the judge may decide by its own standards.
+/// </param>
+public sealed record ModelComparisonChatJudgeRequest(string TranscriptOfChatOne, string TranscriptOfChatTwo, string LanguageName, string Expectations)
 {
     /// <summary>
     /// Builds the prompt for the judge model, asking for one JSON object and nothing else.
@@ -22,7 +26,7 @@ public sealed record ModelComparisonChatJudgeRequest(string TranscriptOfChatOne,
         var prompt = $$"""
                        You judge two chats in which a user worked on the same task, each time with another AI model. Both chats began with the same first message; afterward, the user may have written different messages in each. You do not know, and must not guess, which model answered in which chat, so judge only by what the chats say.
 
-                       Judge in which chat the AI model helped the user more with the task: how correct, complete, and useful its answers were, and how little the user had to correct it or ask again. A call of a tool is a line of its own, without its result. Attached files are named, without their content.
+                       Judge in which chat the AI model helped the user more with the task: how correct, complete, and useful its answers were, and how little the user had to correct it or ask again. A call of a tool is a line of its own, without its result. Attached files are named, without their content.{{ModelComparisonJudgeFormat.ExpectationsOfTheUser(this.Expectations)}}
 
                        # Chat 1
                        {{this.TranscriptOfChatOne}}

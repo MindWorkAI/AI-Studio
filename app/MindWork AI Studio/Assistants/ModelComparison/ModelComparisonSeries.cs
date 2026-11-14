@@ -61,6 +61,13 @@ public sealed record ModelComparisonSeries
     public ModelComparisonModelIdentity? Judge { get; set; }
 
     /// <summary>
+    /// The expectations, values, and goals of the user, by which the judge decides, see ModelComparisonJudgeExpectations;
+    /// empty when the user confirmed that the judge may decide by its own standards. Fixed with the series like its
+    /// models, so that the judge decides every task by the same standards.
+    /// </summary>
+    public string JudgeInstructions { get; set; } = string.Empty;
+
+    /// <summary>
     /// The ID of the profile both chats use.
     /// </summary>
     public string ProfileId { get; set; } = string.Empty;
