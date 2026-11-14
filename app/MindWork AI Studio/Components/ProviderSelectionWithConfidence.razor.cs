@@ -1,3 +1,5 @@
+using AIStudio.Provider;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -29,4 +31,17 @@ public partial class ProviderSelectionWithConfidence : MSGComponentBase
     /// </summary>
     [Parameter]
     public Func<AIStudio.Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
+
+    /// <summary>
+    /// Gets or sets the confidence a provider needs at least to be offered, when it is higher than the minimum of the
+    /// component, see ProviderSelection.ExplicitMinimumConfidence.
+    /// </summary>
+    [Parameter]
+    public ConfidenceLevel ExplicitMinimumConfidence { get; set; } = ConfidenceLevel.UNKNOWN;
+
+    /// <summary>
+    /// Gets or sets whether the selection is disabled, see ProviderSelection.Disabled.
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
 }
