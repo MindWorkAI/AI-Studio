@@ -112,6 +112,20 @@ public partial class EmbeddedChat : MSGComponentBase
     public ContentText? OpeningMessage { get; set; }
 
     /// <summary>
+    /// Gets or sets a request which lets the model open the conversation, e.g., by asking for what it needs. While the
+    /// chat holds no message the user sees, it offers a button which sends the request; the user does not see the
+    /// request, and may write first instead. Leave OpeningMessage out with it.
+    /// </summary>
+    [Parameter]
+    public string? StartRequest { get; set; }
+
+    /// <summary>
+    /// Gets or sets a heading above the chat, or nothing where the place of the chat names it already.
+    /// </summary>
+    [Parameter]
+    public string? Heading { get; set; }
+
+    /// <summary>
     /// Gets or sets why the provider cannot answer, or null when it can.
     /// </summary>
     [Parameter]
@@ -312,6 +326,15 @@ public partial class EmbeddedChat : MSGComponentBase
         this.userInput = string.Empty;
         this.attachments = [];
         await this.ChatService.SendAsync(this.ChatId, this.RequestOf(message));
+    }
+
+    /// <summary>
+    /// Lets the model open the conversation, see StartRequest.
+    /// </summary>
+    private async Task StartAsync()
+    {
+        if (this.CanSend && !string.IsNullOrWhiteSpace(this.StartRequest))
+            await this.ChatService.SendAsync(this.ChatId, this.RequestOf(new ContentText { Text = this.StartRequest }) with { IsHidden = true });
     }
 
     /// <summary>

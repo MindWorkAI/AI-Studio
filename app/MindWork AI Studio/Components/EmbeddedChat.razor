@@ -1,6 +1,11 @@
 @using AIStudio.Chat
+@using AIStudio.Chat.Embedded
 @inherits MSGComponentBase
 
+@if (!string.IsNullOrWhiteSpace(this.Heading))
+{
+    <MudText Typo="Typo.h6" Class="mt-6 mb-2">@this.Heading</MudText>
+}
 @if (this.conversation is null)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
@@ -26,6 +31,15 @@ else
     @if (!this.conversation.HasVisibleMessages && !this.IsRunning && !string.IsNullOrWhiteSpace(this.Introduction))
     {
         <MudText Typo="Typo.body2" Class="mb-3">@this.Introduction</MudText>
+    }
+
+    @if (!this.IsReadOnly && EmbeddedChatOpening.OffersStart(this.StartRequest, this.conversation))
+    {
+        <div class="mb-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CHAT" OnClick="@this.StartAsync" Disabled="@(!this.CanSend)">
+                @T("Start the conversation")
+            </MudButton>
+        </div>
     }
 
     @foreach (var block in thread.Blocks)
