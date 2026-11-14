@@ -3,6 +3,7 @@
 @inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues" FieldChanged="@this.RevalidateAfterFieldChange">
         @* A dialog does not get the cascading values of the page which opened it, and the model selections need this one: *@
         <CascadingValue Value="Components.MODEL_COMPARISON_ASSISTANT">
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
@@ -30,15 +31,16 @@
             <MudGrid Class="mb-1">
                 <MudItem xs="12" lg="6">
                     <MudText Typo="Typo.subtitle1" Class="mb-1">@T("First model")</MudText>
-                    <ProviderSelectionWithConfidence ProviderSettings="@this.firstProvider" ProviderSettingsChanged="@this.FirstProviderChanged"/>
+                    <ProviderSelectionWithConfidence ProviderSettings="@this.firstProvider" ProviderSettingsChanged="@this.FirstProviderChanged" ValidateProvider="@this.ValidatingFirstModel"/>
                 </MudItem>
                 <MudItem xs="12" lg="6">
                     <MudText Typo="Typo.subtitle1" Class="mb-1">@T("Second model")</MudText>
-                    <ProviderSelectionWithConfidence ProviderSettings="@this.secondProvider" ProviderSettingsChanged="@this.SecondProviderChanged"/>
+                    <ProviderSelectionWithConfidence ProviderSettings="@this.secondProvider" ProviderSettingsChanged="@this.SecondProviderChanged" ValidateProvider="@this.ValidatingSecondModel"/>
                 </MudItem>
             </MudGrid>
 
-            <CompactExpansionPanel HeaderIcon="@AppIcons.JUDGE" HeaderText="@T("Judge (optional)")" Class="mt-3 mb-3" @bind-Expanded="@this.judgePanelExpanded">
+            @* The form checks the fields of the judge also while the panel is collapsed: *@
+            <CompactExpansionPanel HeaderIcon="@AppIcons.JUDGE" HeaderText="@T("Judge (optional)")" Class="mt-3 mb-3" @bind-Expanded="@this.judgePanelExpanded" KeepContentAlive="@true">
                 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                     @ModelComparisonSeriesTexts.WhatTheJudgeIsFor
                 </MudJustifiedText>
@@ -46,7 +48,7 @@
                 @if (this.judgeEnabled)
                 {
                     <MudText Typo="Typo.subtitle1" Class="mb-1 mt-3">@T("Judge model")</MudText>
-                    <ProviderSelectionWithConfidence ProviderSettings="@this.judgeProvider" ProviderSettingsChanged="@this.JudgeProviderChanged"/>
+                    <ProviderSelectionWithConfidence ProviderSettings="@this.judgeProvider" ProviderSettingsChanged="@this.JudgeProviderChanged" ValidateProvider="@this.ValidatingJudgeModel"/>
                     <ModelComparisonJudgeExpectations @bind-Expectations="@this.judgeInstructions" @bind-OwnStandardsAccepted="@this.judgeOwnStandardsAccepted"/>
                 }
             </CompactExpansionPanel>
@@ -79,12 +81,9 @@
                     @TA("Choose both models first: what you can select here depends on them.")
                 </MudJustifiedText>
             }
-
-            @if (this.issue is { } shownIssue)
-            {
-                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-3">@shownIssue</MudAlert>
-            }
         </CascadingValue>
+        </MudForm>
+        <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled" Disabled="@this.isSaving">

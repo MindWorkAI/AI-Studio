@@ -8,6 +8,8 @@ using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
+using MudBlazor.Utilities;
+
 namespace AIStudio.Dialogs;
 
 /// <summary>
@@ -99,7 +101,24 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     /// </summary>
     private IReadOnlyList<ModelComparisonSeriesPart> missingParts = [];
 
-    private string? issue;
+    private bool dataIsValid;
+    private string[] dataIssues = [];
+
+    // We get the form reference from Blazor code to validate it manually:
+    private MudForm form = null!;
+
+    /// <summary>
+    /// Whether the user has tried to create the series at least once. The field of the judge model mounts only once
+    /// the judge is switched on, and it stays silent until then, see ValidatingJudgeModel. Afterward, every change
+    /// checks the form anew, see RevalidateAfterFieldChange.
+    /// </summary>
+    private bool hasAttemptedCreate;
+
+    /// <summary>
+    /// Whether the form has to be checked anew once the fields hold their new values, i.e., after the next render.
+    /// </summary>
+    private bool revalidatesAfterRender;
+
     private bool isSaving;
 
     #region Overrides of MSGComponentBase
@@ -133,6 +152,26 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
         this.judgeProvider = this.SettingsManager.PreselectedComparisonJudge;
         this.judgeEnabled = this.judgeProvider != AIStudio.Settings.Provider.NONE;
         this.judgePanelExpanded = this.judgeEnabled;
+    }
+
+    #endregion
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // We don't want to show validation errors when the user opens the dialog:
+        if (firstRender)
+            await this.form.ResetValidationAsync();
+
+        // A check asked for after a change waits until the fields hold their new values, cf. DependentFieldValidation:
+        if (this.revalidatesAfterRender)
+        {
+            this.revalidatesAfterRender = false;
+            await this.form.ValidateAsync();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     #endregion
@@ -184,6 +223,50 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     /// <returns>The issue, or null when the name is fine.</returns>
     private string? ValidatingSeriesName(string name) => ModelComparisonNames.SeriesNameIssue(name, this.takenSeriesNames);
 
+    private string? ValidatingFirstModel(AIStudio.Settings.Provider provider) => ModelComparisonProviderCheck.IssueOf(this.SettingsManager, provider);
+
+    /// <summary>
+    /// Checks the second model, which must be another model than the first one: a series compares how well two models
+    /// help the user.
+    /// </summary>
+    /// <returns>The issue, or null when the model is fine.</returns>
+    private string? ValidatingSecondModel(AIStudio.Settings.Provider provider)
+    {
+        if (ModelComparisonProviderCheck.IssueOf(this.SettingsManager, provider) is { } issue)
+            return issue;
+
+        return ModelComparisonModelIdentity.Of(this.firstProvider).IsSameModelAs(ModelComparisonModelIdentity.Of(provider))
+            ? TA("Please choose two different models. A series compares how well two models help you.")
+            : null;
+    }
+
+    /// <summary>
+    /// Checks the judge model.
+    /// </summary>
+    /// <remarks>
+    /// Silent until hasAttemptedCreate: this field mounts only once the judge is switched on, often well after the form
+    /// first rendered, and MudForm would otherwise flag it as soon as it exists, before the user had any chance to fill
+    /// it in. The same holds for the judge model of the mode Answer Variance.
+    /// </remarks>
+    private string? ValidatingJudgeModel(AIStudio.Settings.Provider provider) => this.hasAttemptedCreate ? ModelComparisonProviderCheck.IssueOf(this.SettingsManager, provider) : null;
+
+    /// <summary>
+    /// Whether one of the fields of the switched-on judge has an issue: its model, or the expectations of the user
+    /// without the confirmation that the judge may decide by its own standards.
+    /// </summary>
+    private bool JudgeHasIssue => this.judgeEnabled && (ModelComparisonProviderCheck.IssueOf(this.SettingsManager, this.judgeProvider) is not null || ModelComparisonJudgeExpectations.IssueOf(this.judgeInstructions, this.judgeOwnStandardsAccepted) is not null);
+
+    /// <remarks>
+    /// The second model is checked against the first one, which a MudForm does not know: it checks a field only when
+    /// that very field changes. Once the user tried to create the series and saw the issues, every change checks the
+    /// whole form anew, so that an issue which no longer holds goes away.
+    /// </remarks>
+    private void RevalidateAfterFieldChange(FormFieldChangedEventArgs _)
+    {
+        if (this.hasAttemptedCreate)
+            this.revalidatesAfterRender = true;
+    }
+
     private void FirstProviderChanged(AIStudio.Settings.Provider provider) => this.firstProvider = provider;
 
     private void SecondProviderChanged(AIStudio.Settings.Provider provider) => this.secondProvider = provider;
@@ -197,40 +280,6 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
     private void ToolsChanged(HashSet<string> toolIds) => this.selectedToolIds = toolIds;
 
     private void DataSourceOptionsChanged(DataSourceOptions options) => this.dataSourceOptions = options;
-
-    /// <summary>
-    /// Checks the form and tells the user what is missing.
-    /// </summary>
-    /// <returns>The reason, or null when the series can begin.</returns>
-    private string? CheckForm()
-    {
-        if (this.ValidatingSeriesName(this.seriesName) is { } nameIssue)
-            return nameIssue;
-
-        if (ModelComparisonProviderCheck.IssueOf(this.SettingsManager, this.firstProvider) is { } firstIssue)
-            return firstIssue;
-
-        if (ModelComparisonProviderCheck.IssueOf(this.SettingsManager, this.secondProvider) is { } secondIssue)
-            return secondIssue;
-
-        if (ModelComparisonModelIdentity.Of(this.firstProvider).IsSameModelAs(ModelComparisonModelIdentity.Of(this.secondProvider)))
-            return TA("Please choose two different models. A series compares how well two models help you.");
-
-        if (this.judgeEnabled && ModelComparisonProviderCheck.IssueOf(this.SettingsManager, this.judgeProvider) is { } judgeIssue)
-        {
-            this.judgePanelExpanded = true;
-            return judgeIssue;
-        }
-
-        // Without the standards of the user, the judge decides by its own, which the user has to confirm:
-        if (this.judgeEnabled && ModelComparisonJudgeExpectations.IssueOf(this.judgeInstructions, this.judgeOwnStandardsAccepted) is { } expectationsIssue)
-        {
-            this.judgePanelExpanded = true;
-            return expectationsIssue;
-        }
-
-        return null;
-    }
 
     /// <summary>
     /// Gets the selected tools which both models may use.
@@ -278,8 +327,19 @@ public partial class ModelComparisonSeriesDialog : MSGComponentBase
 
     private async Task CreateAsync()
     {
-        this.issue = this.CheckForm();
-        if (this.issue is not null)
+        // Set before validating, so the judge model -- silent about being empty until now -- reports its issue at once:
+        this.hasAttemptedCreate = true;
+        await this.form.ValidateAsync();
+
+        //
+        // The fields of the judge sit in a panel the user may have closed. The form checks them all the same, but the
+        // user would not see which one is wrong. So the dialog opens the panel:
+        //
+        if (this.JudgeHasIssue)
+            this.judgePanelExpanded = true;
+
+        // When the data is not valid, we don't store it:
+        if (!this.dataIsValid)
             return;
 
         this.isSaving = true;
