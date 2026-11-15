@@ -66,6 +66,18 @@ public static class BflPromptLibrary
     private const string ADDRESS_INFORMAL_PATH = FOLDER + "/Prompts/snippets/address-informal.md";
 
     /// <summary>
+    /// How the chats of the steps treat the guidelines of the organization; the core carries it only while there are
+    /// any, see BflOrganizationRules.
+    /// </summary>
+    public const string ORGANIZATION_RULES_PATH = FOLDER + "/Prompts/snippets/organization-rules.md";
+
+    /// <summary>
+    /// What the conversation about whether the lab fits a task knows about the guidelines of the organization; it
+    /// carries it only while there are any.
+    /// </summary>
+    public const string ONBOARDING_ORGANIZATION_RULES_PATH = FOLDER + "/Prompts/snippets/organization-rules-onboarding.md";
+
+    /// <summary>
     /// The placeholders BflPromptComposer fills in the core.
     /// </summary>
     private static readonly FrozenSet<string> CORE_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
@@ -78,7 +90,8 @@ public static class BflPromptLibrary
         BflPromptTemplate.RESEARCH,
         BflPromptTemplate.DETAILS,
         BflPromptTemplate.MISSING_DETAILS,
-        BflPromptTemplate.WORK_STATES);
+        BflPromptTemplate.WORK_STATES,
+        BflPromptTemplate.ORGANIZATION_RULES);
 
     /// <summary>
     /// The placeholders BflPromptComposer fills in the prompt of the onboarding.
@@ -86,7 +99,8 @@ public static class BflPromptLibrary
     private static readonly FrozenSet<string> ONBOARDING_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
         BflPromptTemplate.RESPONSE_LANGUAGE,
         BflPromptTemplate.ADDRESS_FORM,
-        BflPromptTemplate.TOOLS);
+        BflPromptTemplate.TOOLS,
+        BflPromptTemplate.ORGANIZATION_RULES);
 
     /// <summary>
     /// The placeholders BflPromptComposer fills in the request for a work state.
@@ -165,6 +179,8 @@ public static class BflPromptLibrary
         RESEARCH_PATH,
         ..BflResearchTopic.All.Select(ResearchTopicPath),
         ..Enum.GetValues<AddressForm>().Select(AddressPath).Distinct(),
+        ORGANIZATION_RULES_PATH,
+        ONBOARDING_ORGANIZATION_RULES_PATH,
         ..BflStep.All.Select(StepPath)
     ];
 
@@ -208,7 +224,8 @@ public static class BflPromptLibrary
         await ReadAsync(CORE_PATH, overrideDirectory, token),
         await ReadAsync(KNOWLEDGE_PATH, overrideDirectory, token),
         await ReadAsync(StepPath(step), overrideDirectory, token),
-        await ReadAsync(AddressPath(addressForm), overrideDirectory, token));
+        await ReadAsync(AddressPath(addressForm), overrideDirectory, token),
+        await ReadAsync(ORGANIZATION_RULES_PATH, overrideDirectory, token));
 
     /// <summary>
     /// Reads the texts of the system prompt of the conversation about whether the lab fits a task.
@@ -221,7 +238,8 @@ public static class BflPromptLibrary
     /// <exception cref="BflPromptOverrideException">A file which replaces a prompt contains a placeholder which the lab does not fill in it.</exception>
     public static async Task<BflOnboardingPromptParts> LoadOnboardingPartsAsync(AddressForm addressForm, string? overrideDirectory = null, CancellationToken token = default) => new(
         await ReadAsync(ONBOARDING_PATH, overrideDirectory, token),
-        await ReadAsync(AddressPath(addressForm), overrideDirectory, token));
+        await ReadAsync(AddressPath(addressForm), overrideDirectory, token),
+        await ReadAsync(ONBOARDING_ORGANIZATION_RULES_PATH, overrideDirectory, token));
 
     /// <summary>
     /// Reads the texts of the system prompt of a research agent.

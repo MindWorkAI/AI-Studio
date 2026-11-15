@@ -11,7 +11,7 @@ public sealed class BflPromptComposerTests
 {
     private const string CORE = "Sprache: {{RESPONSE_LANGUAGE}}\n{{ADDRESS_FORM}}\n{{KNOWLEDGE}}\n{{STEP}}\n{{MATERIALS}}\n{{DETAILS}}\n{{MISSING_DETAILS}}";
 
-    private static readonly BflPromptParts PARTS = new(CORE, "Leitfaden", "Schritt", "Anrede");
+    private static readonly BflPromptParts PARTS = new(CORE, "Leitfaden", "Schritt", "Anrede", string.Empty);
 
     [Test]
     public void APlaceholderWithoutAValueIsAnError()
@@ -33,6 +33,58 @@ public sealed class BflPromptComposerTests
         var prompt = BflPromptTemplate.Fill("{{STEP}}", new Dictionary<string, string> { [BflPromptTemplate.STEP] = "Die Person schrieb {{KNOWLEDGE}}." });
 
         Assert.That(prompt, Is.EqualTo("Die Person schrieb {{KNOWLEDGE}}."), "What the person entered must never be read as a placeholder.");
+    }
+
+    [Test]
+    public void AnEmptyPlaceholderOnALineOfItsOwnLeavesNoGap()
+    {
+        var values = new Dictionary<string, string> { [BflPromptTemplate.ORGANIZATION_RULES] = string.Empty, [BflPromptTemplate.STEP] = "Schritt" };
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflPromptTemplate.Fill("Davor.\n\n{{ORGANIZATION_RULES}}\n\n# Danach", values), Is.EqualTo("Davor.\n\n# Danach"));
+            Assert.That(BflPromptTemplate.Fill("Davor.\r\n\r\n{{ ORGANIZATION_RULES }}\r\n\r\n# Danach", values), Is.EqualTo("Davor.\r\n\r\n# Danach"));
+            Assert.That(BflPromptTemplate.Fill("- Erstens\n{{ORGANIZATION_RULES}}\n  - Zweitens", values), Is.EqualTo("- Erstens\n  - Zweitens"), "The indentation of the next line stays.");
+            Assert.That(BflPromptTemplate.Fill("Davor.\n\n{{ORGANIZATION_RULES}}", values), Is.EqualTo("Davor.\n\n"));
+            Assert.That(BflPromptTemplate.Fill("Im Satz {{ORGANIZATION_RULES}} bleibt die Zeile.", values), Is.EqualTo("Im Satz  bleibt die Zeile."));
+            Assert.That(BflPromptTemplate.Fill("{{STEP}}\n\n# Danach", values), Is.EqualTo("Schritt\n\n# Danach"), "A placeholder with a value keeps its line.");
+        }
+    }
+
+    [Test]
+    public async Task OnlyWithGuidelinesThePromptOfAStepSaysHowToTreatThem()
+    {
+        foreach (var step in BflStep.All)
+        {
+            var parts = await BflPromptLibrary.LoadPartsAsync(step, AddressForm.FORMAL);
+            var without = BflPromptComposer.Compose(parts, step, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch");
+            var with = BflPromptComposer.Compose(parts, step, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch", organizationRules: "- Die Pressestelle kontaktieren.");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(without, Does.Not.Contain("hinweise_der_organisation").And.Not.Contain("# Hinweise der Organisation"), step.ToString());
+                Assert.That(without, Does.Contain("aufzubauen.\n\n# Widersprüche und Lücken"), "No gap where the section would be.");
+                Assert.That(with, Does.Contain(WithLf(parts.OrganizationRules.Trim()) + "\n\n# Widersprüche und Lücken"), step.ToString());
+                Assert.That(with, Does.Not.Contain("Pressestelle kontaktieren"), "The guidelines themselves go along with the first message, never in the system prompt.");
+            }
+        }
+    }
+
+    [Test]
+    public async Task OnlyWithGuidelinesTheOnboardingKnowsThatTheyExist()
+    {
+        var parts = await BflPromptLibrary.LoadOnboardingPartsAsync(AddressForm.FORMAL);
+
+        var without = BflPromptComposer.ComposeOnboarding(parts, "Deutsch");
+        var with = BflPromptComposer.ComposeOnboarding(parts, "Deutsch", organizationRules: "- Die Pressestelle kontaktieren.");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(without, Does.Not.Contain("Vorgaben"));
+            Assert.That(without, Does.Not.Contain("{{"));
+            Assert.That(with, Does.Contain(WithLf(parts.OrganizationRules.Trim())));
+            Assert.That(with, Does.Not.Contain("Pressestelle kontaktieren"), "The onboarding never gets the text of the guidelines.");
+        }
     }
 
     [Test]
@@ -101,7 +153,7 @@ public sealed class BflPromptComposerTests
     [Test]
     public void TheOnboardingIsTheSameOnEverySystem()
     {
-        var parts = new BflOnboardingPromptParts("Sprache: {{RESPONSE_LANGUAGE}}\r\n{{ADDRESS_FORM}}\r\nEnde", " Anrede\r\n");
+        var parts = new BflOnboardingPromptParts("Sprache: {{RESPONSE_LANGUAGE}}\r\n{{ADDRESS_FORM}}\r\nEnde", " Anrede\r\n", string.Empty);
 
         var prompt = BflPromptComposer.ComposeOnboarding(parts, "Deutsch");
 
@@ -111,7 +163,7 @@ public sealed class BflPromptComposerTests
     [Test]
     public void TheOnboardingKnowsNoDetailsOfAPreparation()
     {
-        var parts = new BflOnboardingPromptParts("{{DETAILS}}", "Anrede");
+        var parts = new BflOnboardingPromptParts("{{DETAILS}}", "Anrede", string.Empty);
 
         Assert.Throws<FormatException>(() => BflPromptComposer.ComposeOnboarding(parts, "Deutsch"));
     }
@@ -324,7 +376,7 @@ public sealed class BflPromptComposerTests
     [Test]
     public void TheOnboardingKnowsNoMaterial()
     {
-        var parts = new BflOnboardingPromptParts("{{MATERIALS}}", "Anrede");
+        var parts = new BflOnboardingPromptParts("{{MATERIALS}}", "Anrede", string.Empty);
 
         Assert.Throws<FormatException>(() => BflPromptComposer.ComposeOnboarding(parts, "Deutsch"));
     }

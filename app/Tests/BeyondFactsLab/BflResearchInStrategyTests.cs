@@ -8,7 +8,7 @@ namespace AIStudio.Tests.BeyondFactsLab;
 [TestFixture]
 public sealed class BflResearchInStrategyTests
 {
-    private static readonly BflPromptParts PARTS = new("{{RESEARCH}}", "Leitfaden", "Schritt", "Anrede");
+    private static readonly BflPromptParts PARTS = new("{{RESEARCH}}", "Leitfaden", "Schritt", "Anrede", string.Empty);
 
     private static readonly DateTimeOffset CREATED_AT_UTC = new(2026, 11, 10, 14, 0, 0, TimeSpan.Zero);
 

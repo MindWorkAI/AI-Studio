@@ -15,8 +15,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// runs, so that an answer goes on while the person looks at another page, and registers each request in
 /// AssistantSessionService. A chat lives where the lab keeps it, see BflChatStore. What the lab decides for every
 /// request comes from here, see PrepareAsync: the system prompt with the guide, the details, and the material, the
-/// images of the material, the tools, and where the chat may send data. The service does nothing until the page of the
-/// lab asks for a chat.
+/// images of the material, the guidelines of the organization, the tools, and where the chat may send data. The
+/// service does nothing until the page of the lab asks for a chat.
 /// </remarks>
 /// <param name="store">The store of the lab.</param>
 /// <param name="chatService">The service which runs the embedded chats.</param>
@@ -128,8 +128,8 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers.</param>
     /// <param name="thread">The chat, which gets its prompt, its tools, and its restriction.</param>
-    /// <param name="requestMaterial">The system prompt and the images of the material.</param>
-    /// <returns>The preparation, whose request carries the images, see WithImages.</returns>
+    /// <param name="requestMaterial">The system prompt, the images of the material, and the guidelines of the organization.</param>
+    /// <returns>The preparation, whose request carries the images and the guidelines, see ForRequest.</returns>
     internal static EmbeddedChatPreparation Prepare(BflThreadLocation location, AIStudio.Settings.Provider provider, ChatThread thread, BflRequestMaterial requestMaterial)
     {
         // A chat stored before the lab offered tools gets its restriction now, before it may read a page:
@@ -137,19 +137,28 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         BflThreadFactory.PrepareForRequest(thread, provider, requestMaterial.SystemPrompt, BflChatTools.For(location));
 
         var images = requestMaterial.Images;
-        return EmbeddedChatPreparation.READY with { ThreadForRequest = request => WithImages(request, images) };
+        var rules = requestMaterial.OrganizationRules;
+        return EmbeddedChatPreparation.READY with { ThreadForRequest = request => ForRequest(request, images, rules) };
     }
 
     /// <summary>
-    /// Puts together the system prompt of a chat, anew for every request, so that changed details, material, and a
-    /// changed form of address count right away. The chat also uses it to count what the next request carries.
+    /// Puts together, as text, what the next request of a chat carries beside the conversation, for the count of
+    /// tokens: the system prompt, and the guidelines of the organization in front of the first message.
     /// </summary>
+    /// <remarks>
+    /// Both are put together anew for every request, so that changed details, material, guidelines, and a changed form
+    /// of address count right away.
+    /// </remarks>
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
-    /// <returns>The system prompt.</returns>
+    /// <returns>The text to count.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
     /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
-    public async Task<string> ComposeSystemPromptAsync(BflThreadLocation location, AIStudio.Settings.Provider provider) => (await this.ComposeRequestAsync(location, provider)).SystemPrompt;
+    public async Task<string> ComposeTextForCountAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
+    {
+        var requestMaterial = await this.ComposeRequestAsync(location, provider);
+        return requestMaterial.SystemPrompt + BflOrganizationRules.Frame(requestMaterial.OrganizationRules);
+    }
 
     /// <summary>
     /// Checks whether files in the test folder replace prompts of the lab right now, so that the lab can tell the
@@ -160,12 +169,12 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     public async Task<bool> UsesPromptOverridesAsync(CancellationToken token = default) => this.PromptOverridesDirectory is { } directory && (await BflPromptOverrides.FindAsync(directory, token)).Count > 0;
 
     /// <summary>
-    /// Puts together what a request of a chat carries beside the conversation: the system prompt, and the images of
-    /// the material the model may see.
+    /// Puts together what a request of a chat carries beside the conversation: the system prompt, the images of the
+    /// material the model may see, and the guidelines of the organization.
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
-    /// <returns>The system prompt and the images.</returns>
+    /// <returns>The system prompt, the images, and the guidelines.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
     /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
     internal async Task<BflRequestMaterial> ComposeRequestAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
@@ -173,6 +182,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         var addressForm = Tools.PluginSystem.I18N.I.AddressForm;
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
         var tools = await BflResearchAvailability.CheckAsync(toolRegistry, provider);
+        var rules = BflOrganizationRules.For(location, settingsManager.ConfigurationData.BeyondFactsLab);
         switch (location)
         {
             case BflStepThreadLocation stepLocation:
@@ -180,17 +190,29 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
                 var workStates = await store.LoadWorkStatesAsync(stepLocation.ProjectId);
                 var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm, this.PromptOverridesDirectory);
                 var research = await this.LoadResearchAsync(stepLocation);
-                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, workStates, tools, research, language, provider);
+                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, workStates, tools, research, rules, language, provider);
                 var materials = await this.ReadMaterialsAsync(stepLocation.ProjectId, shares);
-                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language, workStates, tools, research), this.ImagesOf(stepLocation.ProjectId, shares));
+                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language, workStates, tools, research, rules), this.ImagesOf(stepLocation.ProjectId, shares), rules);
 
             case BflOnboardingThreadLocation:
-                return new(BflPromptComposer.ComposeOnboarding(await BflPromptLibrary.LoadOnboardingPartsAsync(addressForm, this.PromptOverridesDirectory), language, tools), []);
+                // It never gets the guidelines themselves, but it tells the person that they exist:
+                var onboardingParts = await BflPromptLibrary.LoadOnboardingPartsAsync(addressForm, this.PromptOverridesDirectory);
+                return new(BflPromptComposer.ComposeOnboarding(onboardingParts, language, tools, settingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules), [], rules);
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(location), location, "The lab has no prompt for this chat.");
         }
     }
+
+    /// <summary>
+    /// Gives a request what goes along with its first message without being stored in the chat: the images of the
+    /// material, and the guidelines of the organization in front of the text.
+    /// </summary>
+    /// <param name="thread">The chat.</param>
+    /// <param name="images">The images to send.</param>
+    /// <param name="rules">The guidelines of the organization; empty without any.</param>
+    /// <returns>The chat for the request, see WithImages and BflOrganizationRules.WithRules.</returns>
+    internal static ChatThread ForRequest(ChatThread thread, IReadOnlyList<FileAttachmentImage> images, string rules) => BflOrganizationRules.WithRules(WithImages(thread, images), rules);
 
     /// <summary>
     /// Gives a request the images of the material, attached to the first message of the person, without storing them
@@ -287,7 +309,8 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm, this.PromptOverridesDirectory);
         var tools = await BflResearchAvailability.CheckAsync(toolRegistry, provider);
         var research = await this.LoadResearchAsync(location);
-        return await this.ShareMaterialsAsync(location, parts, forms, workStates, tools, research, language, provider);
+        var rules = BflOrganizationRules.For(location, settingsManager.ConfigurationData.BeyondFactsLab);
+        return await this.ShareMaterialsAsync(location, parts, forms, workStates, tools, research, rules, language, provider);
     }
 
     /// <summary>
@@ -309,10 +332,11 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="workStates">The work states of the preparation, whose confirmed ones take room in the prompt as well.</param>
     /// <param name="tools">What keeps the tools of the lab from being offered, which the prompt describes as well.</param>
     /// <param name="research">The research the prompt of the step carries, by its topics.</param>
+    /// <param name="organizationRules">The guidelines of the organization, which take room in the prompt and in the first message.</param>
     /// <param name="language">The name of the language the model answers in.</param>
     /// <param name="provider">The provider which answers.</param>
     /// <returns>The share of each material this version can open, in the order the person added them.</returns>
-    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflStep, BflWorkState> workStates, BflResearchAvailability tools, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, string language, AIStudio.Settings.Provider provider)
+    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflStep, BflWorkState> workStates, BflResearchAvailability tools, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, string organizationRules, string language, AIStudio.Settings.Provider provider)
     {
         var materials = (await store.ListMaterialsAsync(location.ProjectId)).Select(entry => entry.Material).OfType<BflMaterial>().ToList();
         if (materials.Count is 0)
@@ -321,8 +345,8 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         var imageShares = BflMaterialBudget.ShareImages([.. materials.Where(material => material.Kind is BflMaterialKind.IMAGE)], ImagesTheModelTakes(provider));
         var sentImages = imageShares.Count(share => share.Image is BflImageDelivery.SENT);
 
-        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language, workStates, tools, research);
-        var characters = BflMaterialBudget.CharactersFor(provider.GetModelProfile().Context, promptWithoutMaterials.Length, sentImages);
+        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language, workStates, tools, research, organizationRules);
+        var characters = BflMaterialBudget.CharactersFor(provider.GetModelProfile().Context, promptWithoutMaterials.Length + BflOrganizationRules.Frame(organizationRules).Length, sentImages);
         var textShares = BflMaterialBudget.Share([.. materials.Where(material => material.Kind is not BflMaterialKind.IMAGE)], characters);
 
         var sharesById = textShares.Concat(imageShares).ToDictionary(share => share.Material.MaterialId);

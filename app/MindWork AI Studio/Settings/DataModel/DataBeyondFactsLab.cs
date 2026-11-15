@@ -21,6 +21,15 @@ public sealed class DataBeyondFactsLab(Expression<Func<Data, DataBeyondFactsLab>
     public const ConfidenceLevel MINIMUM_CONFIDENCE_FLOOR = ConfidenceLevel.MEDIUM;
 
     /// <summary>
+    /// The most characters the notes of an organization may have, see OrganizationRules.
+    /// </summary>
+    /// <remarks>
+    /// The chats of the steps receive the notes with every request, so they take room in the context of the model
+    /// each time. A configuration plugin with longer notes leaves the lab without any, and the log says why.
+    /// </remarks>
+    public const int ORGANIZATION_RULES_MAX_CHARACTERS = 2_000;
+
+    /// <summary>
     /// Initializes unmanaged settings of the BeyondFacts Lab.
     /// </summary>
     public DataBeyondFactsLab() : this(null)
@@ -48,6 +57,17 @@ public sealed class DataBeyondFactsLab(Expression<Func<Data, DataBeyondFactsLab>
     /// preparation of an appearance. An organization may switch it off and lock it.
     /// </remarks>
     public bool AllowPromptOverrides { get; set; } = ManagedConfiguration.Register(configSelection, value => value.AllowPromptOverrides, false);
+
+    /// <summary>
+    /// Gets or sets the notes of the organization for public appearances, e.g., to contact the press office before
+    /// every public event; empty without any. Markdown, with LF line breaks and without spaces around it.
+    /// </summary>
+    /// <remarks>
+    /// Only a configuration plugin sets them; the options of the lab offer no field. The lab shows them word for
+    /// word, and the chats of the steps receive them as information along with the first message, never in the
+    /// system prompt, so that the rules of the lab prevail where the notes contradict them.
+    /// </remarks>
+    public string OrganizationRules { get; set; } = ManagedConfiguration.Register(configSelection, value => value.OrganizationRules, string.Empty);
 
     /// <summary>
     /// Gets or sets the hash of the notes the person confirmed, see BflNotice; empty while they confirmed none.

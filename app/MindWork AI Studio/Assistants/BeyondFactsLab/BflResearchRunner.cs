@@ -176,7 +176,8 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
             sessionId = (await sessionService.TryBeginAsync(sessionKey, Tools.Components.BEYOND_FACTS_LAB_ASSISTANT.Name, cancellation, null, new(StringComparer.Ordinal))).SessionId;
             await this.NotifyAsync(location);
 
-            var answer = await BflHiddenRequest.AskForAnswerAsync(hidden, provider, REQUEST, [], cancellation.Token);
+            // Neither the material nor the guidelines of the organization: the research learns the public details only.
+            var answer = await BflHiddenRequest.AskForAnswerAsync(hidden, provider, REQUEST, [], string.Empty, cancellation.Token);
             if (cancellation.IsCancellationRequested)
             {
                 status = AssistantSessionStatus.CANCELED;

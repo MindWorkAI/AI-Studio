@@ -74,6 +74,21 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     /// </summary>
     private bool introductionExpanded;
 
+    /// <summary>
+    /// Whether the area with the guidelines of the organization is open. It opens with every visit of the page, so
+    /// that the person has them in view while preparing.
+    /// </summary>
+    private bool organizationRulesExpanded = true;
+
+    /// <summary>
+    /// Gets the guidelines of the organization for public appearances, which only a configuration plugin sets; empty
+    /// without any.
+    /// </summary>
+    /// <remarks>
+    /// Read anew with every render, so that a reloaded configuration plugin shows right away.
+    /// </remarks>
+    private string OrganizationRules => this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules;
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
@@ -192,6 +207,16 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     private Task IntroductionExpandedChanged(bool isExpanded)
     {
         this.introductionExpanded = isExpanded;
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Remembers whether the person opened or closed the area with the guidelines of the organization.
+    /// </summary>
+    /// <param name="isExpanded">Whether the area is open now.</param>
+    private Task OrganizationRulesExpandedChanged(bool isExpanded)
+    {
+        this.organizationRulesExpanded = isExpanded;
         return Task.CompletedTask;
     }
 

@@ -1009,6 +1009,18 @@ CONFIG["SETTINGS"] = {}
 -- and the lab shows a banner while one of them replaces a prompt. Set it to false and lock it to keep
 -- users with the prompts which come with AI Studio.
 -- CONFIG["SETTINGS"]["DataBeyondFactsLab.AllowPromptOverrides"] = false
+--
+-- Configure the notes of your organization for public appearances, e.g., to contact the press office
+-- before every public event. The lab shows them word for word in a panel of their own, and the chats of
+-- the steps receive them along with the first message, as information from the organization. They do not
+-- replace the rules of the lab: where they contradict them, the rules of the lab apply, and the chat
+-- points out the contradiction. The material "Open points and next steps" ends with them as well. Markdown
+-- is allowed, with at most 2000 characters; the lab ignores longer notes. The options of the lab offer no
+-- field for them, so only a configuration plugin sets them.
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.OrganizationRules"] = [[
+-- - Before every public event, contact the press office: press@example.org
+-- - Speak on behalf of the institute only after consulting your head of department.
+-- ]]
 
 -- Configure defaults for the Model Comparison assistant.
 -- Preselection must be enabled for the remaining Model Comparison settings to take effect.

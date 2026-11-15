@@ -80,7 +80,7 @@
                             else
                             {
                                 <div class="border rounded pa-2" style="max-height: 320px; overflow-y: auto;">
-                                    <MudMarkdown Value="@draft.Text" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                                    <MudMarkdown Value="@this.Shown(kind, draft.Text)" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                                 </div>
                             }
 
@@ -112,7 +112,7 @@
                         }
 
                         <div class="border rounded pa-2 mb-3" style="max-height: 320px; overflow-y: auto;">
-                            <MudMarkdown Value="@confirmed.Text" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                            <MudMarkdown Value="@this.Shown(kind, confirmed.Text)" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                         </div>
 
                         <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mb-3">
