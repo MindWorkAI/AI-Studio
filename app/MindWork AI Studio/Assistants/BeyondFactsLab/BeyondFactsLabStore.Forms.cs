@@ -113,11 +113,18 @@ public sealed partial class BeyondFactsLabStore
             throw new InvalidDataException("This version of AI Studio cannot open the form.", exception);
         }
 
-        if (form is null || form.SchemaVersion is < 1 or > BflStepFormData.CURRENT_SCHEMA_VERSION || IsNull(form.Values) || form.CardSort is { } cardSort && IsBroken(cardSort))
+        if (form is null || form.SchemaVersion is < 1 or > BflStepFormData.CURRENT_SCHEMA_VERSION || IsNull(form.Values) || form.CardSort is { } cardSort && IsBroken(cardSort) || form.Simulation is { } simulation && IsBroken(simulation))
             throw new InvalidDataException("This version of AI Studio cannot open the form.");
 
         return form;
     }
+
+    /// <summary>
+    /// Tells whether a stored simulation lacks one of its parts, which JSON can make null, or names a mode this version
+    /// does not know.
+    /// </summary>
+    /// <param name="simulation">The simulation.</param>
+    private static bool IsBroken(BflSimulation simulation) => !Enum.IsDefined(simulation.Mode) || IsNull(simulation.People) || simulation.People.Any(IsNull);
 
     /// <summary>
     /// Tells whether a stored card sort lacks one of its parts, which JSON can make null.

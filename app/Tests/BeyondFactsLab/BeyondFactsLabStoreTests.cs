@@ -406,6 +406,54 @@ public sealed class BeyondFactsLabStoreTests
     }
 
     [Test]
+    public async Task ASimulationIsStoredWithTheFormOfItsStep()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var form = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.PANEL_DISCUSSION, People = ["Eva Klein", "Frank Ott"] } };
+
+        await store.SaveFormAsync(created.ProjectId, BflStep.TEST_SITUATION, form);
+        var json = await File.ReadAllTextAsync(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "06-test", "form.json"));
+        var loaded = (await this.CreateStore().LoadFormAsync(created.ProjectId, BflStep.TEST_SITUATION)).Simulation;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(json, Does.Contain("\"PANEL_DISCUSSION\""), "The mode is stored by its name, which never changes.");
+            Assert.That(loaded, Is.Not.Null);
+            Assert.That(loaded!.Mode, Is.EqualTo(BflSimulationMode.PANEL_DISCUSSION));
+            Assert.That(loaded.People, Is.EqualTo(new[] { "Eva Klein", "Frank Ott" }));
+        }
+    }
+
+    [Test]
+    public async Task AFormOfTheSecondVersionIsStillOpenedWithoutASimulation()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteFormFileAsync(created.ProjectId, "06-test", """{ "schemaVersion": 2, "values": { "test_notes": "Text" } }""");
+
+        var form = await store.LoadFormAsync(created.ProjectId, BflStep.TEST_SITUATION);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(form.Get(BflFieldCatalog.TEST_NOTES), Is.EqualTo("Text"));
+            Assert.That(form.Simulation, Is.Null);
+        }
+    }
+
+    [TestCase("""{ "schemaVersion": 3, "values": {}, "simulation": { "mode": "PANEL_DISCUSSION", "people": null } }""")]
+    [TestCase("""{ "schemaVersion": 3, "values": {}, "simulation": { "mode": "PANEL_DISCUSSION", "people": [ null ] } }""")]
+    [TestCase("""{ "schemaVersion": 3, "values": {}, "simulation": { "mode": 42, "people": [] } }""")]
+    public async Task AFormWithABrokenSimulationIsNotOpened(string json)
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteFormFileAsync(created.ProjectId, "06-test", json);
+
+        await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadFormAsync(created.ProjectId, BflStep.TEST_SITUATION));
+    }
+
+    [Test]
     public async Task AStepWithoutAFormGetsAnEmptyOne()
     {
         var store = this.CreateStore();
@@ -463,7 +511,7 @@ public sealed class BeyondFactsLabStoreTests
     [Test]
     public async Task AFormOfANewerVersionIsNotOverwritten()
     {
-        const string NEWER = """{ "schemaVersion": 3, "values": {} }""";
+        const string NEWER = """{ "schemaVersion": 4, "values": {} }""";
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
         var formPath = await this.WriteFormFileAsync(created.ProjectId, "05-strategy", NEWER);
