@@ -1047,6 +1047,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 -- Details missing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T506453229"] = "Angaben fehlen"
 
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T661725016"] = "Richtlinien Ihrer Organisation"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T661725016::INFORMAL"] = "Richtlinien deiner Organisation"
+
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T724820205"] = "Veraltet"
 
@@ -1058,6 +1064,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 
 -- The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T916994259::INFORMAL"] = "Das Lab hat die Recherche im Web noch nicht gestartet. Übernimm oder verwirf zuerst den Vorschlag unter dem Arbeitsstand, ob die Veranstaltung öffentlich ist. Danach kannst du die Recherche im Schritt „{0}“ starten."
+
+-- Your organization has set these guidelines for public appearances. The conversations of the steps know them as well, and the material '{0}' ends with them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T951943350"] = "Ihre Organisation hat diese Richtlinien für öffentliche Auftritte festgelegt. Auch die Unterhaltungen der Schritte kennen sie, und im Material „{0}“ stehen sie am Ende."
+
+-- Your organization has set these guidelines for public appearances. The conversations of the steps know them as well, and the material '{0}' ends with them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T951943350::INFORMAL"] = "Deine Organisation hat diese Richtlinien für öffentliche Auftritte festgelegt. Auch die Unterhaltungen der Schritte kennen sie, und im Material „{0}“ stehen sie am Ende."
 
 -- Your preparations
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T972511272"] = "Ihre Vorbereitungen"
@@ -1089,20 +1101,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T586836727
 -- Phone number
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T987655160"] = "Telefonnummer"
 
--- Stop
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T1266644741"] = "Stoppen"
-
--- approx. {0} of {1} tokens
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T1992478915"] = "ca. {0} von {1} Token"
-
 -- Delete this conversation and start it over?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2055072982"] = "Dieses Gespräch löschen und neu beginnen?"
 
 -- Delete this conversation and start it over?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2055072982::INFORMAL"] = "Dieses Gespräch löschen und neu beginnen?"
-
--- Start the conversation
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2172806379"] = "Gespräch beginnen"
 
 -- The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2610371636"] = "Das Lab eröffnet das Gespräch dieses Schritts mit dem, was Ihre Angaben schon sagen, und fragt nach dem, was fehlt. Sie können auch zuerst schreiben."
@@ -1113,65 +1116,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2610371636::INF
 -- Conversation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2640583206"] = "Gespräch"
 
--- Export message
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T274919936"] = "Nachricht exportieren"
-
 -- Tell the lab what you are preparing for. It tells you whether it fits your task and how to work with it. You can also let the lab begin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2858940496"] = "Erzählen Sie dem Lab, worauf Sie sich vorbereiten. Es sagt Ihnen, ob es zu Ihrer Aufgabe passt und wie Sie damit arbeiten. Sie können das Lab auch beginnen lassen."
 
 -- Tell the lab what you are preparing for. It tells you whether it fits your task and how to work with it. You can also let the lab begin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2858940496::INFORMAL"] = "Erzähl dem Lab, worauf du dich vorbereitest. Es sagt dir, ob es zu deiner Aufgabe passt und wie du damit arbeitest. Du kannst das Lab auch beginnen lassen."
 
--- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2927156281"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Sie können das Gespräch neu beginnen; dabei wird es gelöscht."
-
--- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2927156281::INFORMAL"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Du kannst das Gespräch neu beginnen; dabei wird es gelöscht."
-
--- approx. {0} tokens; the context window of this model is unknown
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T357466604"] = "ca. {0} Token; das Kontextfenster dieses Modells ist unbekannt"
-
 -- Is the lab right for my task?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3584565592"] = "Passt das Lab zu meiner Aufgabe?"
-
--- Your message
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3642105949"] = "Ihre Nachricht"
-
--- Your message
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3642105949::INFORMAL"] = "Deine Nachricht"
 
 -- Delete the conversation of this step and start it over? Your details stay as they are.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112"] = "Das Gespräch dieses Schritts löschen und neu beginnen? Ihre Angaben bleiben unverändert."
 
 -- Delete the conversation of this step and start it over? Your details stay as they are.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112::INFORMAL"] = "Das Gespräch dieses Schritts löschen und neu beginnen? Deine Angaben bleiben unverändert."
-
--- AI Studio could not delete this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3757008686"] = "AI Studio konnte dieses Gespräch nicht löschen. Bitte versuchen Sie es erneut."
-
--- AI Studio could not delete this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3757008686::INFORMAL"] = "AI Studio konnte dieses Gespräch nicht löschen. Bitte versuche es erneut."
-
--- {0} of {1} tokens
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3996190985"] = "{0} von {1} Token"
-
--- Send
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T4069397711"] = "Senden"
-
--- Start over
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T606705767"] = "Neu beginnen"
-
--- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T962106497"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beginnen Sie es neu, oder wählen Sie einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
-
--- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T962106497::INFORMAL"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beginne es neu, oder wähle einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
-
--- This conversation fills most of the context window of the model. Soon, you will have to start it over.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Bald müssen Sie es neu beginnen."
-
--- This conversation fills most of the context window of the model. Soon, you will have to start it over.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295::INFORMAL"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Bald musst du es neu beginnen."
 
 -- Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T281612290"] = "Sobald Sie den Arbeitsstand eines Schritts bestätigen, erscheint er hier, und das Lab baut in den späteren Schritten darauf auf."
@@ -1223,12 +1181,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 
 -- The selected provider may not see your preparation. Please select another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3133264313::INFORMAL"] = "Der ausgewählte Anbieter darf deine Vorbereitung nicht sehen. Bitte wähle einen anderen Anbieter aus."
-
--- AI Studio could not save this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884"] = "AI Studio konnte dieses Gespräch nicht speichern. Bitte versuchen Sie es erneut."
-
--- AI Studio could not save this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884::INFORMAL"] = "AI Studio konnte dieses Gespräch nicht speichern. Bitte versuche es erneut."
 
 -- The event is not public. Therefore, the lab does not research it on the web.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLEVENTVISIBILITY::T2308862256"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht im Web zu ihr."
@@ -1545,6 +1497,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675
 -- In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476::INFORMAL"] = "Im Schritt „{0}“ recherchieren Agenten des Labs zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Die Agenten starten von selbst, sobald du die Rahmendaten bestätigst, sofern die Websuche in AI Studio eingerichtet ist. Du kannst sie jederzeit erneut starten."
 
+-- Your organization has set guidelines for public appearances, which you find above your preparations. The conversations of the steps know them as information, and the material '{0}' ends with them. They add to the rules of the lab: where they contradict them, the rules of the lab apply, and the conversation points that out. Sharing with the research team leaves them out, since they would reveal your organization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3771709114"] = "Ihre Organisation hat Richtlinien für öffentliche Auftritte festgelegt, die Sie oberhalb Ihrer Vorbereitungen finden. In den Unterhaltungen der einzelnen Schritte werden sie als Informationen berücksichtigt und an das Ende des Materials „{0}“ angefügt. Sie ergänzen die Laborregeln: Bei Widersprüchen haben die Laborregeln Vorrang, und die Unterhaltung weist darauf hin. Beim Teilen mit dem Forschungsteam werden sie ausgelassen, da sie Ihre Organisation preisgeben würden."
+
+-- Your organization has set guidelines for public appearances, which you find above your preparations. The conversations of the steps know them as information, and the material '{0}' ends with them. They add to the rules of the lab: where they contradict them, the rules of the lab apply, and the conversation points that out. Sharing with the research team leaves them out, since they would reveal your organization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3771709114::INFORMAL"] = "Deine Organisation hat Richtlinien für öffentliche Auftritte festgelegt, die du oberhalb deiner Vorbereitungen findest. In den Unterhaltungen der einzelnen Schritte werden sie als Informationen berücksichtigt und an das Ende des Materials „{0}“ angefügt. Sie ergänzen die Laborregeln: Bei Widersprüchen haben die Laborregeln Vorrang, und die Unterhaltung weist darauf hin. Beim Teilen mit dem Forschungsteam werden sie ausgelassen, da sie deine Organisation preisgeben würden."
+
 -- Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3813171730"] = "Ist ein Schritt weitgehend geklärt, lassen Sie das Lab unter dem Gespräch seinen Arbeitsstand erstellen. Sie prüfen und bearbeiten ihn, und sobald Sie ihn bestätigen, bauen die späteren Schritte darauf auf. Außerdem schlägt das Lab Werte für leere Felder in „Ihre Angaben“ vor, die Sie einzeln übernehmen."
 
@@ -1589,6 +1547,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T5711897
 
 -- The strategy fits your real speaking time and focuses on a few key messages.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T571189717::INFORMAL"] = "Die Strategie passt zu deiner realen Redezeit und beschränkt sich auf wenige Kernbotschaften."
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T661725016"] = "Richtlinien Ihrer Organisation"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T661725016::INFORMAL"] = "Richtlinien deiner Organisation"
 
 -- Fill in what you know. Fields may stay empty: the lab shows which key details are missing and asks for them in the conversation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T780122078"] = "Tragen Sie ein, was Sie wissen. Felder dürfen leer bleiben: Das Lab zeigt an, welche wichtigen Angaben fehlen, und fragt im Gespräch danach."
@@ -2147,6 +2111,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3926195314"]
 
 -- Include personal disclosures?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3989412584"] = "Persönliche Angaben aufnehmen?"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T661725016"] = "Richtlinien Ihrer Organisation"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T661725016::INFORMAL"] = "Richtlinien deiner Organisation"
 
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T724820205"] = "Veraltet"
@@ -9159,14 +9129,41 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 -- Change what this tile opens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Ändern, was diese Kachel öffnet"
 
+-- This conversation fills the context window of the model. Choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T103248473"] = "Diese Konversation füllt das Kontextfenster des Modells. Wählen Sie einen Anbieter, dessen Modell mehr Text auf einmal verarbeiten kann."
+
+-- This conversation fills the context window of the model. Choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T103248473::INFORMAL"] = "Diese Konversation füllt das Kontextfenster des Modells. Wähle einen Anbieter, dessen Modell mehr Text auf einmal verarbeiten kann."
+
 -- Stop
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1266644741"] = "Stoppen"
 
 -- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1561705002"] = "AI Studio kann diese Unterhaltung nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert."
 
+-- approx. {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1992478915"] = "ca. {0} von {1} Tokens"
+
+-- Delete this conversation and start it over?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982"] = "Möchten Sie diese Unterhaltung löschen und neu beginnen?"
+
+-- Delete this conversation and start it over?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982::INFORMAL"] = "Möchtest du diese Unterhaltung löschen und neu beginnen?"
+
+-- Start the conversation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2172806379"] = "Unterhaltung starten"
+
 -- Export message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T274919936"] = "Nachricht exportieren"
+
+-- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281"] = "AI Studio kann diese Unterhaltung nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Sie können die Unterhaltung neu beginnen. Dabei wird sie gelöscht."
+
+-- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281::INFORMAL"] = "AI Studio kann diese Unterhaltung nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Du kannst die Unterhaltung neu beginnen. Dabei wird sie gelöscht."
+
+-- approx. {0} tokens; the context window of this model is unknown
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T357466604"] = "ca. {0} Tokens; das Kontextfenster dieses Modells ist unbekannt"
 
 -- Your message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949"] = "Ihre Nachricht"
@@ -9174,11 +9171,38 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949"] = "Ihre Nachr
 -- Your message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949::INFORMAL"] = "Deine Nachricht"
 
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3757008686"] = "AI Studio konnte diese Unterhaltung nicht löschen. Bitte versuchen Sie es erneut."
+
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3757008686::INFORMAL"] = "AI Studio konnte diese Unterhaltung nicht löschen. Bitte versuche es erneut."
+
+-- {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3996190985"] = "{0} von {1} Tokens"
+
 -- Send
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4069397711"] = "Senden"
 
+-- This conversation fills most of the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4195068513"] = "Diese Unterhaltung nimmt den größten Teil des Kontextfensters des Modells ein."
+
+-- Start over
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T606705767"] = "Von vorn beginnen"
+
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T857715435"] = "ca. {0} Tokens"
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T962106497"] = "Diese Unterhaltung füllt das Kontextfenster des Modells. Starten Sie sie neu oder wählen Sie einen Anbieter, dessen Modell mehr auf einmal verarbeiten kann."
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T962106497::INFORMAL"] = "Diese Unterhaltung füllt das Kontextfenster des Modells. Starte sie neu oder wähle einen Anbieter, dessen Modell mehr auf einmal verarbeiten kann."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T991103295"] = "Diese Unterhaltung füllt den größten Teil des Kontextfensters des Modells. Bald müssen Sie eine neue Unterhaltung beginnen."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T991103295::INFORMAL"] = "Diese Unterhaltung füllt den größten Teil des Kontextfensters des Modells. Bald musst du eine neue Unterhaltung beginnen."
 
 -- Copy the path: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1140628382"] = "Pfad kopieren: {0}"
