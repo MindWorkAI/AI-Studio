@@ -112,13 +112,14 @@ public sealed class BflSimulationTests
     [Test]
     public void TheDossiersAreCountedWithTheCharactersPerTokenOfTheMaterial()
     {
-        var person = new BflPersonResearch { Name = "Eva Klein" };
-        person.Set(BflPersonResearchStage.PROFILE, new BflResearch { Text = new string('a', 4_000), CreatedAtUtc = CREATED_AT_UTC });
-        person.Set(BflPersonResearchStage.POSITIONS, new BflResearch { Text = $"  {new string('b', 3_999)}\n", CreatedAtUtc = CREATED_AT_UTC });
+        var research = new BflPersonResearch { Name = "Eva Klein" };
+        research.Set(BflPersonResearchStage.PROFILE, new BflResearch { Text = new string('a', 3_000), CreatedAtUtc = CREATED_AT_UTC });
+        research.Set(BflPersonResearchStage.POSITIONS, new BflResearch { Text = $"  {new string('b', 3_999)}\n", CreatedAtUtc = CREATED_AT_UTC });
+        var person = new BflSimulatedPerson(new() { Name = "Eva Klein", Entry = $" {new string('c', 1_000)} " }, research);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(BflSimulationBudget.DossierTokens([person]), Is.EqualTo(2_000));
+            Assert.That(BflSimulationBudget.DossierTokens([person]), Is.EqualTo(2_000), "The entry in the list goes into the prompt as well.");
             Assert.That(BflSimulationBudget.RequiredTokens([person]), Is.EqualTo(BflModelRequirements.MINIMUM_CONTEXT_TOKENS + 2_000));
         }
     }
@@ -126,8 +127,9 @@ public sealed class BflSimulationTests
     [Test]
     public void AKnownWindowWhichIsTooSmallRefusesAndAnUnknownOneWarns()
     {
-        var person = new BflPersonResearch { Name = "Eva Klein" };
-        person.Set(BflPersonResearchStage.POSITIONS, new BflResearch { Text = new string('a', 40_000), CreatedAtUtc = CREATED_AT_UTC });
+        var research = new BflPersonResearch { Name = "Eva Klein" };
+        research.Set(BflPersonResearchStage.POSITIONS, new BflResearch { Text = new string('a', 40_000), CreatedAtUtc = CREATED_AT_UTC });
+        var person = new BflSimulatedPerson(new() { Name = "Eva Klein" }, research);
         var simulation = new BflEffectiveSimulation(BflSimulationMode.SINGLE_PERSON, [person]);
         var required = BflSimulationBudget.RequiredTokens([person]);
 
@@ -141,7 +143,7 @@ public sealed class BflSimulationTests
         }
     }
 
-    private static List<BflPersonResearch> Candidates(params string[] names)
+    private static List<BflSimulatedPerson> Candidates(params string[] names)
     {
         var forms = Forms();
         return [.. BflSimulationCandidates.Of(forms, Topics(forms, names), [.. names.Select(name => Person(forms, name, BflPersonResearchStage.All))])];

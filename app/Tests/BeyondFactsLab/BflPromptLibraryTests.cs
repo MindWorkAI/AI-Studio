@@ -102,6 +102,13 @@ public sealed class BflPromptLibraryTests
         foreach (var step in BflStep.All)
             longestStep = Math.Max(longestStep, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.StepPath(step))).Length);
 
+        // The step "Test situation" carries the simulation of people from the research as well:
+        var longestSimulation = 0;
+        foreach (var mode in BflSimulationMode.All)
+            longestSimulation = Math.Max(longestSimulation, (await BflPromptLibrary.LoadPartsAsync(BflStep.TEST_SITUATION, AddressForm.FORMAL, simulation: mode)).Simulation.Length);
+
+        longestStep = Math.Max(longestStep, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.StepPath(BflStep.TEST_SITUATION))).Length + longestSimulation + 2);
+
         var longestAddress = 0;
         foreach (var addressForm in Enum.GetValues<AddressForm>())
             longestAddress = Math.Max(longestAddress, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.AddressPath(addressForm))).Length);

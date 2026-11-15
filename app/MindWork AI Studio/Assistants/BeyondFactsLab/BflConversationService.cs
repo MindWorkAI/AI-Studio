@@ -119,6 +119,13 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
             return EmbeddedChatPreparation.REFUSED;
         }
 
+        // The dossiers of the people the chat plays are never shortened, so a window which is known to be too small refuses:
+        if (BflSimulationBudget.Check(requestMaterial.Simulation ?? BflEffectiveSimulation.GENERIC, provider.GetModelProfile().Context) is BflSimulationFit.TOO_SMALL)
+        {
+            await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, TA("The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider.")));
+            return EmbeddedChatPreparation.REFUSED;
+        }
+
         return Prepare(location, provider, thread, requestMaterial);
     }
 
@@ -188,12 +195,13 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
             case BflStepThreadLocation stepLocation:
                 var forms = await store.LoadFormsAsync(stepLocation.ProjectId);
                 var workStates = await store.LoadWorkStatesAsync(stepLocation.ProjectId);
-                var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm, this.PromptOverridesDirectory);
+                var simulation = await this.LoadSimulationAsync(stepLocation, forms);
+                var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm, this.PromptOverridesDirectory, simulation.Mode);
                 var research = await this.LoadResearchAsync(stepLocation);
                 var valueDeck = await LoadValueDeckAsync(stepLocation);
-                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, workStates, tools, research, rules, valueDeck, language, provider);
+                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, workStates, tools, research, rules, valueDeck, simulation, language, provider);
                 var materials = await this.ReadMaterialsAsync(stepLocation.ProjectId, shares);
-                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language, workStates, tools, research.Topics, rules, valueDeck, research.People), this.ImagesOf(stepLocation.ProjectId, shares), rules);
+                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language, workStates, tools, research.Topics, rules, valueDeck, research.People, simulation), this.ImagesOf(stepLocation.ProjectId, shares), rules, simulation);
 
             case BflOnboardingThreadLocation:
                 // It never gets the guidelines themselves, but it tells the person that they exist:
@@ -307,11 +315,28 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
         var forms = await store.LoadFormsAsync(location.ProjectId);
         var workStates = await store.LoadWorkStatesAsync(location.ProjectId);
-        var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm, this.PromptOverridesDirectory);
+        var simulation = await this.LoadSimulationAsync(location, forms);
+        var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm, this.PromptOverridesDirectory, simulation.Mode);
         var tools = await BflResearchAvailability.CheckAsync(toolRegistry, provider);
         var research = await this.LoadResearchAsync(location);
         var rules = BflOrganizationRules.For(location, settingsManager.ConfigurationData.BeyondFactsLab);
-        return await this.ShareMaterialsAsync(location, parts, forms, workStates, tools, research, rules, await LoadValueDeckAsync(location), language, provider);
+        return await this.ShareMaterialsAsync(location, parts, forms, workStates, tools, research, rules, await LoadValueDeckAsync(location), simulation, language, provider);
+    }
+
+    /// <summary>
+    /// Loads whom the chat of a step plays: in the step "Test situation" what the person chose of the people who
+    /// qualify, in every other step generic counterparts.
+    /// </summary>
+    /// <param name="location">The step.</param>
+    /// <param name="forms">The forms of the preparation, with the choice of the person.</param>
+    /// <returns>The simulation in effect.</returns>
+    public async Task<BflEffectiveSimulation> LoadSimulationAsync(BflStepThreadLocation location, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
+    {
+        if (location.Step is not BflStep.TEST_SITUATION || forms.GetValueOrDefault(BflStep.TEST_SITUATION)?.Simulation is not { Mode.HasPeople: true } simulation)
+            return BflEffectiveSimulation.GENERIC;
+
+        var candidates = BflSimulationCandidates.Of(forms, await store.LoadAllResearchAsync(location.ProjectId), await store.LoadAllPersonResearchAsync(location.ProjectId));
+        return BflEffectiveSimulation.Of(simulation, candidates);
     }
 
     /// <summary>
@@ -347,10 +372,11 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="research">The research the prompt of the step carries, on the topics and on people.</param>
     /// <param name="organizationRules">The guidelines of the organization, which take room in the prompt and in the first message.</param>
     /// <param name="valueDeck">The value deck with which the prompt of the step shows the card sort, which takes room as well; null for the other steps.</param>
+    /// <param name="simulation">Whom the chat of the step "Test situation" plays, whose dossiers take room as well.</param>
     /// <param name="language">The name of the language the model answers in.</param>
     /// <param name="provider">The provider which answers.</param>
     /// <returns>The share of each material this version can open, in the order the person added them.</returns>
-    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflStep, BflWorkState> workStates, BflResearchAvailability tools, BflStepResearch research, string organizationRules, BflValueDeck? valueDeck, string language, AIStudio.Settings.Provider provider)
+    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflStep, BflWorkState> workStates, BflResearchAvailability tools, BflStepResearch research, string organizationRules, BflValueDeck? valueDeck, BflEffectiveSimulation simulation, string language, AIStudio.Settings.Provider provider)
     {
         var materials = (await store.ListMaterialsAsync(location.ProjectId)).Select(entry => entry.Material).OfType<BflMaterial>().ToList();
         if (materials.Count is 0)
@@ -359,7 +385,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         var imageShares = BflMaterialBudget.ShareImages([.. materials.Where(material => material.Kind is BflMaterialKind.IMAGE)], ImagesTheModelTakes(provider));
         var sentImages = imageShares.Count(share => share.Image is BflImageDelivery.SENT);
 
-        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language, workStates, tools, research.Topics, organizationRules, valueDeck, research.People);
+        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language, workStates, tools, research.Topics, organizationRules, valueDeck, research.People, simulation);
         var characters = BflMaterialBudget.CharactersFor(provider.GetModelProfile().Context, promptWithoutMaterials.Length + BflOrganizationRules.Frame(organizationRules).Length, sentImages);
         var textShares = BflMaterialBudget.Share([.. materials.Where(material => material.Kind is not BflMaterialKind.IMAGE)], characters);
 

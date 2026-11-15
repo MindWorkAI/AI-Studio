@@ -40,6 +40,19 @@ public static class BflSimulationModeExtensions
         public bool HasPeople => mode.MaxPeople > 0;
 
         /// <summary>
+        /// Gets the stem of the file which describes the simulation of the mode, see BflPromptLibrary.SimulationPath.
+        /// Generic counterparts need no file of their own: the prompt of the step describes them.
+        /// </summary>
+        public string FileStem => mode switch
+        {
+            BflSimulationMode.SINGLE_PERSON => "single-person",
+            BflSimulationMode.PANEL_DISCUSSION => "panel-discussion",
+            BflSimulationMode.PRESS_CONFERENCE => "press-conference",
+
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, "The mode has no file of its own."),
+        };
+
+        /// <summary>
         /// Gets every mode, in the order the selection shows them.
         /// </summary>
         public static IReadOnlyList<BflSimulationMode> All => Enum.GetValues<BflSimulationMode>();

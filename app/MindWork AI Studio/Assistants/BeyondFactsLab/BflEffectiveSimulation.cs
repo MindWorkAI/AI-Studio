@@ -10,8 +10,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// counterparts, as it did before the person chose a mode.
 /// </remarks>
 /// <param name="Mode">The mode in effect.</param>
-/// <param name="People">The research on the people the chat plays, in the order of the list; empty for generic counterparts.</param>
-public sealed record BflEffectiveSimulation(BflSimulationMode Mode, IReadOnlyList<BflPersonResearch> People)
+/// <param name="People">The people the chat plays, in the order of the list; empty for generic counterparts.</param>
+public sealed record BflEffectiveSimulation(BflSimulationMode Mode, IReadOnlyList<BflSimulatedPerson> People)
 {
     /// <summary>
     /// The simulation with generic counterparts, no specific person.
@@ -24,7 +24,7 @@ public sealed record BflEffectiveSimulation(BflSimulationMode Mode, IReadOnlyLis
     /// <param name="simulation">What the person chose; null when they chose nothing.</param>
     /// <param name="candidates">The people the chat may play, in the order of the list, see BflSimulationCandidates.</param>
     /// <returns>The simulation in effect.</returns>
-    public static BflEffectiveSimulation Of(BflSimulation? simulation, IReadOnlyList<BflPersonResearch> candidates)
+    public static BflEffectiveSimulation Of(BflSimulation? simulation, IReadOnlyList<BflSimulatedPerson> candidates)
     {
         if (simulation is null || !simulation.Mode.HasPeople)
             return GENERIC;

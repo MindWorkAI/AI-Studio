@@ -18,13 +18,20 @@ public static class BflSimulationCandidates
     /// <param name="forms">The forms of the preparation, by their steps.</param>
     /// <param name="topics">The research on the topics, with the list of participants.</param>
     /// <param name="people">The research on every person stored for the preparation.</param>
-    /// <returns>The research on each person who qualifies, in the order of the list.</returns>
-    public static IReadOnlyList<BflPersonResearch> Of(IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflResearchTopic, BflResearch> topics, IReadOnlyList<BflPersonResearch> people)
+    /// <returns>Each person who qualifies, with their entry in the list and the research on them, in the order of the list.</returns>
+    public static IReadOnlyList<BflSimulatedPerson> Of(IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflResearchTopic, BflResearch> topics, IReadOnlyList<BflPersonResearch> people)
     {
         if (BflEventVisibility.IsNotPublic(forms))
             return [];
 
-        return [.. BflStepResearch.Of(topics, people).People.Where(HasPositions)];
+        List<BflSimulatedPerson> candidates = [];
+        foreach (var participant in topics.GetValueOrDefault(BflResearchTopic.PARTICIPANTS)?.Participants ?? [])
+        {
+            if (people.FirstOrDefault(person => participant.HasName(person.Name)) is { } research && HasPositions(research))
+                candidates.Add(new(participant, research));
+        }
+
+        return candidates;
     }
 
     /// <summary>
