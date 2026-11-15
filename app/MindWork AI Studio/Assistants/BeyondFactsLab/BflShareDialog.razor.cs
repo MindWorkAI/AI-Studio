@@ -144,7 +144,8 @@ public partial class BflShareDialog : MSGComponentBase
             }
 
             var researchTopics = research.Where(entry => !string.IsNullOrWhiteSpace(entry.Value.Text)).Select(entry => entry.Key).ToList();
-            this.source = new BflShareInput(forms, workStates, results, conversations, materials, researchTopics, false, APP_VERSION, DateTimeOffset.UtcNow, Culture, await this.LoadValueDeckAsync());
+            var researchedPeople = BflStepResearch.Of(research, await this.Store.LoadAllPersonResearchAsync(this.ProjectId)).People.Count(person => person.Stages.Count > 0);
+            this.source = new BflShareInput(forms, workStates, results, conversations, materials, researchTopics, researchedPeople, false, APP_VERSION, DateTimeOffset.UtcNow, Culture, await this.LoadValueDeckAsync());
             this.otherNames = string.Join('\n', BflShareNames.Suggest(forms, workStates, research.GetValueOrDefault(BflResearchTopic.PARTICIPANTS)));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
