@@ -125,6 +125,35 @@ public sealed class ToolCallingLoopTests
     }
     
     [Test]
+    public async Task OnlyANoticeInPlaceOfTheAnswerIsMarkedAsOne()
+    {
+        //
+        // An agent which stores the answer as a result has to tell the notice apart from a word of the model, without
+        // reading the text, which a language plugin translates:
+        //
+        var silentAfterLimit = await Collect(new ScriptedAdapter([..ExhaustTheToolBudget(), [Completed(string.Empty)]]));
+        var silentAfterCall = await Collect(new ScriptedAdapter(
+            [Completed(string.Empty, [Call("call-1")])],
+            [Completed(string.Empty)]));
+
+        var answering = await Collect(new ScriptedAdapter(
+            [Completed(string.Empty, [Call("call-1")])],
+            [Text(ANSWER), Completed(ANSWER)]));
+
+        var answeringAfterLimit = await Collect(new ScriptedAdapter([..ExhaustTheToolBudget(), [Text(ANSWER), Completed(ANSWER)]]));
+        var neverCompleting = await Collect(new ScriptedAdapter([Text(PREAMBLE)]));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(silentAfterLimit.Where(chunk => chunk.EndsWithoutAnswer).Select(chunk => chunk.Content), Has.One.Contains(NO_ANSWER), "Silence after the last tools is a notice, and it carries the mark.");
+            Assert.That(silentAfterCall.Where(chunk => chunk.EndsWithoutAnswer).Select(chunk => chunk.Content), Has.One.Contains(NO_ANSWER), "Silence after a tool call is a notice as well.");
+            Assert.That(answering.Select(chunk => chunk.EndsWithoutAnswer), Is.All.False, "The model answered, so nothing is a notice.");
+            Assert.That(answeringAfterLimit.Select(chunk => chunk.EndsWithoutAnswer), Is.All.False, "An answer after the limit is an answer.");
+            Assert.That(neverCompleting.Select(chunk => chunk.EndsWithoutAnswer), Is.All.False, "A failed round was reported by its adapter, and the loop adds no notice of its own.");
+        }
+    }
+
+    [Test]
     public async Task TheSourcesArriveAlthoughTheFinalTextNoLongerDoes()
     {
         //

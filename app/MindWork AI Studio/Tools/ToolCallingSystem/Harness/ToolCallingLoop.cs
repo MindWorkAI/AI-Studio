@@ -152,7 +152,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                 // the tools contributed. An empty chunk is how sources travel on their own; the
                 // streaming paths of the providers attach their annotations the same way.
                 //
-                yield return WithWhatTheToolsContributed(roundAnswered ? string.Empty : NO_ANSWER_AFTER_LIMIT);
+                yield return roundAnswered ? WithWhatTheToolsContributed(string.Empty) : WithoutAnswer(NO_ANSWER_AFTER_LIMIT);
                 yield break;
             }
 
@@ -167,7 +167,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
 
                 if (toolCallCount > 0)
                 {
-                    yield return WithWhatTheToolsContributed(NO_ANSWER_AFTER_TOOL_CALL);
+                    yield return WithoutAnswer(NO_ANSWER_AFTER_TOOL_CALL);
                     yield break;
                 }
 
@@ -264,6 +264,12 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
         // ends, so none of them hands over the sources and forgets the passages.
         //
         ContentStreamChunk WithWhatTheToolsContributed(string content) => new(content, [..toolSources]) { Passages = [..toolPassages] };
+
+        //
+        // A notice in place of the answer is marked as such, so that whoever stores the answer as a result can tell
+        // the two apart without reading the text:
+        //
+        ContentStreamChunk WithoutAnswer(string notice) => WithWhatTheToolsContributed(notice) with { EndsWithoutAnswer = true };
     }
 
     private static string GetDisplayName(ToolCallingLoopContext context, string toolName) => context.RunnableTools
