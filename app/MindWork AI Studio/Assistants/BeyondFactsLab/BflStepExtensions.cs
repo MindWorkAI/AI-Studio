@@ -35,7 +35,7 @@ public static class BflStepExtensions
             BflStep.GOALS_AND_ROLE => TA("What you want to achieve, and in which role you speak."),
             BflStep.VALUES_AND_PERSPECTIVES => TA("What matters to you, what touches you, and what moves others."),
             BflStep.STRATEGY => TA("How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step."),
-            BflStep.TEST_SITUATION => TA("Play through critical questions and opposing positions."),
+            BflStep.TEST_SITUATION => TA("Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth."),
             BflStep.RESULTS => TA("What you take away from your preparation."),
 
             _ => string.Empty,
