@@ -17,9 +17,6 @@ namespace AIStudio.Tools.ToolCallingSystem.Harness;
 /// </remarks>
 public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCallingLoop
 {
-    private const string NO_ANSWER_AFTER_TOOL_CALL = "The model completed the tool call but did not return a final answer.";
-    private const string NO_ANSWER_AFTER_LIMIT = "The model did not return a final answer after completing the available tool calls.";
-    
     /// <summary>
     /// What separates the text of one round from the text of the next one.
     /// </summary>
@@ -152,7 +149,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                 // the tools contributed. An empty chunk is how sources travel on their own; the
                 // streaming paths of the providers attach their annotations the same way.
                 //
-                yield return roundAnswered ? WithWhatTheToolsContributed(string.Empty) : WithoutAnswer(NO_ANSWER_AFTER_LIMIT);
+                yield return roundAnswered ? WithWhatTheToolsContributed(string.Empty) : WithoutAnswer(ToolCallingMessages.NoAnswerAfterLimit);
                 yield break;
             }
 
@@ -167,7 +164,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
 
                 if (toolCallCount > 0)
                 {
-                    yield return WithoutAnswer(NO_ANSWER_AFTER_TOOL_CALL);
+                    yield return WithoutAnswer(ToolCallingMessages.NoAnswerAfterToolCall);
                     yield break;
                 }
 

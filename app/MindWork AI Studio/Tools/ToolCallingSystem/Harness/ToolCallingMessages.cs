@@ -14,6 +14,18 @@ public static class ToolCallingMessages
 {
     private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ToolCallingMessages).Namespace, nameof(ToolCallingMessages));
 
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ToolCallingMessages).Namespace, nameof(ToolCallingMessages));
+
+    /// <summary>
+    /// Says in place of the answer that the model stayed silent after a tool call.
+    /// </summary>
+    public static string NoAnswerAfterToolCall => TB("The model completed the tool call but did not return a final answer.");
+
+    /// <summary>
+    /// Says in place of the answer that the model stayed silent after it used up its tool calls.
+    /// </summary>
+    public static string NoAnswerAfterLimit => TB("The model did not return a final answer after completing the available tool calls.");
+
     /// <summary>
     /// Builds the exception for a response that cannot be used to continue.
     /// </summary>
