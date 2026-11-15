@@ -1,17 +1,17 @@
 @inherits MSGComponentBase
 
 <MudText Typo="Typo.h6" Class="mt-2 mb-1">@T("Research on individual participants")</MudText>
-<MudText Typo="Typo.body2" Class="mb-2">@TA("Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found.")</MudText>
-<MudText Typo="Typo.body2" Class="mb-3">@T("The agents look only for public, professional information and public statements on the topic. They keep summaries with sources, no full texts, create no personality profiles, and judge nobody.")</MudText>
+<MudJustifiedText Typo="Typo.body2" Class="mb-2">@TA("Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found.")</MudJustifiedText>
+<MudJustifiedText Typo="Typo.body2" Class="mb-3">@T("The agents look only for public, professional information and public statements on the topic. They keep summaries with sources, no full texts, create no personality profiles, and judge nobody.")</MudJustifiedText>
 
 @if (this.List is null)
 {
-    <MudText Typo="Typo.body2" Class="mb-3">@TA("Once the research on the participants found a list of people, you can choose here whom the lab researches in depth.")</MudText>
+    <MudJustifiedText Typo="Typo.body2" Class="mb-3">@TA("Once the research on the participants found a list of people, you can choose here whom the lab researches in depth.")</MudJustifiedText>
 }
 else if (this.List.Participants.Count is 0)
 {
     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
-        @string.Format(Culture, TA("The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'."), BflResearchTopic.PARTICIPANTS.Title, BflStep.FRAMEWORK.Title)
+        <MudJustifiedText Typo="Typo.body2">@string.Format(Culture, TA("The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'."), BflResearchTopic.PARTICIPANTS.Title, BflStep.FRAMEWORK.Title)</MudJustifiedText>
     </MudAlert>
 }
 else
@@ -26,17 +26,17 @@ else
     else if (this.IsSuggestion)
     {
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@AppIcons.SELECTION_SUGGESTION" Class="mb-2">
-            @TA("The lab suggested this selection because the list is long. Check it and change it as you like.")
+            <MudJustifiedText Typo="Typo.body2">@TA("The lab suggested this selection because the list is long. Check it and change it as you like.")</MudJustifiedText>
         </MudAlert>
     }
     else if (BflParticipantSelection.NeedsSuggestion(this.List, this.selection))
     {
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2">
-            @TA("The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research.")
+            <MudJustifiedText Typo="Typo.body2">@TA("The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research.")</MudJustifiedText>
         </MudAlert>
     }
 
-    <MudText Typo="Typo.body2" Class="mb-1">@TA("If your own name is on the list, leave it unchosen.")</MudText>
+    <MudJustifiedText Typo="Typo.body2" Class="mb-1">@TA("If your own name is on the list, leave it unchosen.")</MudJustifiedText>
     <div class="border-dashed border rounded-lg pa-2 mb-1">
         <MudChipSet T="string"
                     SelectionMode="SelectionMode.MultiSelection"
@@ -122,13 +122,13 @@ else
                         @if (!isRunning && found.IsOutdated(this.PublicDetails))
                         {
                             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2">
-                                @TA("The public details changed since this research. You can research this person again.")
+                                <MudJustifiedText Typo="Typo.body2">@TA("The public details changed since this research. You can research this person again.")</MudJustifiedText>
                             </MudAlert>
                         }
                         else if (!isRunning && !found.IsComplete)
                         {
                             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2">
-                                @T("This research stopped before all of its stages were done.")
+                                <MudJustifiedText Typo="Typo.body2">@T("This research stopped before all of its stages were done.")</MudJustifiedText>
                             </MudAlert>
                         }
 
