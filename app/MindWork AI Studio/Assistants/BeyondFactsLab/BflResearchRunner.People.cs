@@ -190,6 +190,14 @@ public sealed partial class BflResearchRunner
         var answer = await BflHiddenRequest.AskForAnswerAsync(hidden, provider, REQUEST, [], string.Empty, token);
         token.ThrowIfCancellationRequested();
 
+        // A notice of the app in place of the answer is no stage, and the stages found so far stay:
+        if (answer.EndedWithoutAnswer)
+        {
+            logger.LogWarning("The agent of the stage '{Stage}' of the research '{Location}' of the BeyondFacts Lab used up its tools without an answer.", stage, location.Key);
+            await messageBus.SendError(new(AppIcons.ERROR, NoAnswerMessage));
+            return false;
+        }
+
         var found = BflResearch.Of(answer.Text, answer.ToolInvocations, answer.Sources, details, DateTimeOffset.UtcNow, BflPersonResearch.MAX_STAGE_TEXT_CHARACTERS);
         if (found.Text.Length is 0)
         {

@@ -49,6 +49,11 @@ public sealed partial class BflResearchRunner(BeyondFactsLabStore store, BflConv
     private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(BflResearchRunner).Namespace, nameof(BflResearchRunner));
 
     /// <summary>
+    /// Tells the person that an agent used up its tools before it wrote a result, see ContentText.EndedWithoutAnswer.
+    /// </summary>
+    private static string NoAnswerMessage => TA("The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.");
+
+    /// <summary>
     /// The research the agents do right now.
     /// </summary>
     private readonly HashSet<BflResearchLocation> running = [];
@@ -111,9 +116,31 @@ public sealed partial class BflResearchRunner(BeyondFactsLabStore store, BflConv
 
         var topics = TopicsDue(await store.LoadAllResearchAsync(projectId), details).Where(topic => !this.IsRunning(new BflResearchLocation(projectId, topic))).ToList();
         if (topics.Count > 0)
-            _ = Task.WhenAll(topics.Select(topic => this.RunAsync(new BflResearchLocation(projectId, topic), provider)));
+            _ = this.RunInBackgroundAsync(projectId, topics, provider);
 
         return topics;
+    }
+
+    /// <summary>
+    /// Lets the agents of some topics research while nobody waits for them, and logs what nobody expected to fail.
+    /// </summary>
+    /// <remarks>
+    /// RunAsync reports the failures it expects itself. Anything else would otherwise vanish with the task, and with
+    /// it the reason why a page never learned that a research ended.
+    /// </remarks>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="topics">The topics to research.</param>
+    /// <param name="provider">The provider of the preparation.</param>
+    private async Task RunInBackgroundAsync(Guid projectId, IReadOnlyList<BflResearchTopic> topics, AIStudio.Settings.Provider provider)
+    {
+        try
+        {
+            await Task.WhenAll(topics.Select(topic => this.RunAsync(new BflResearchLocation(projectId, topic), provider)));
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "The research of the preparation '{ProjectId}' of the BeyondFacts Lab failed unexpectedly.", projectId);
+        }
     }
 
     /// <summary>
@@ -173,6 +200,14 @@ public sealed partial class BflResearchRunner(BeyondFactsLabStore store, BflConv
             if (cancellation.IsCancellationRequested)
             {
                 status = AssistantSessionStatus.CANCELED;
+                return;
+            }
+
+            // A notice of the app in place of the answer is no research, and the earlier one stays:
+            if (answer.EndedWithoutAnswer)
+            {
+                logger.LogWarning("The agent of the research '{Location}' of the BeyondFacts Lab used up its tools without an answer.", location.Key);
+                await messageBus.SendError(new(AppIcons.ERROR, NoAnswerMessage));
                 return;
             }
 
@@ -307,9 +342,13 @@ public sealed partial class BflResearchRunner(BeyondFactsLabStore store, BflConv
     private async Task NotifyAsync<TLocation>(Func<TLocation, Task>? handlers, TLocation location)
     {
         if (handlers is null)
+        {
+            logger.LogDebug("No page of the BeyondFacts Lab listens to the change of the research '{Location}'.", location);
             return;
+        }
 
-        foreach (var handler in handlers.GetInvocationList().Cast<Func<TLocation, Task>>())
+        var pages = handlers.GetInvocationList().Cast<Func<TLocation, Task>>().ToList();
+        foreach (var handler in pages)
         {
             try
             {
@@ -321,6 +360,8 @@ public sealed partial class BflResearchRunner(BeyondFactsLabStore store, BflConv
                 logger.LogDebug(exception, "A page of the BeyondFacts Lab could not show a change of a research.");
             }
         }
+
+        logger.LogDebug("Told {Count} page(s) of the BeyondFacts Lab about the change of the research '{Location}'.", pages.Count, location);
     }
 
     /// <summary>
