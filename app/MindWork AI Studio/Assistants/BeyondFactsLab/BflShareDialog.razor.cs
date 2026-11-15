@@ -144,7 +144,7 @@ public partial class BflShareDialog : MSGComponentBase
             }
 
             var researchTopics = research.Where(entry => !string.IsNullOrWhiteSpace(entry.Value.Text)).Select(entry => entry.Key).ToList();
-            this.source = new BflShareInput(forms, workStates, results, conversations, materials, researchTopics, false, APP_VERSION, DateTimeOffset.UtcNow, Culture);
+            this.source = new BflShareInput(forms, workStates, results, conversations, materials, researchTopics, false, APP_VERSION, DateTimeOffset.UtcNow, Culture, await this.LoadValueDeckAsync());
             this.otherNames = string.Join('\n', BflShareNames.Suggest(forms, workStates, research.GetValueOrDefault(BflResearchTopic.PARTICIPANTS)));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
@@ -155,6 +155,23 @@ public partial class BflShareDialog : MSGComponentBase
         finally
         {
             this.isLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Reads the value deck in the language of the app, with which the session shows the card sort.
+    /// </summary>
+    /// <returns>The deck, or null when the app comes without a readable one; the session then leaves the card sort out.</returns>
+    private async Task<BflValueDeck?> LoadValueDeckAsync()
+    {
+        try
+        {
+            return await BflValueDeck.LoadAsync(Culture);
+        }
+        catch (Exception exception) when (exception is FileNotFoundException or FormatException)
+        {
+            this.Logger.LogError(exception, "Could not read the value deck of the BeyondFacts Lab to share the card sort.");
+            return null;
         }
     }
 

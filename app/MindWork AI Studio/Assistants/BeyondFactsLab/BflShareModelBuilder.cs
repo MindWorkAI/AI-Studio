@@ -8,8 +8,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// </summary>
 /// <remarks>
 /// <para>
-/// A session holds the details of every step, its confirmed work state, its conversation as the person saw it, and the
-/// confirmed materials the lab wrote. It leaves out everything the research team does not need and which would point
+/// A session holds the details of every step, among them the card sort, its confirmed work state, its conversation as
+/// the person saw it, and the confirmed materials the lab wrote. It leaves out everything the research team does not need and which would point
 /// to the person: the name of the preparation, the content and the file names of the material, the texts of the
 /// research on the web, which describe the event, the fields which pin down the event, drafts, and hidden messages. The
 /// reflection folder stays out as well, since it only repeats the confirmed work states. AI Studio keeps no profile
@@ -108,8 +108,35 @@ public static class BflShareModelBuilder
                 AppendItem(text, field.Label, value);
         }
 
+        if (step is BflStep.VALUES_AND_PERSPECTIVES && input.ValueDeck is { } deck && form?.CardSort is { IsEmpty: false } cardSort)
+        {
+            any = true;
+            AppendCardSort(text, cardSort, deck);
+        }
+
         if (!any)
             text.Append('_').Append(TB("No details.")).AppendLineLF("_");
+    }
+
+    /// <summary>
+    /// Appends the card sort of the person: the category of every value of the deck, the values of their own, and
+    /// those they chose to look at more closely, with the names the person saw.
+    /// </summary>
+    /// <param name="text">The session so far.</param>
+    /// <param name="cardSort">The card sort of the person.</param>
+    /// <param name="deck">The value deck in the language of the app.</param>
+    private static void AppendCardSort(StringBuilder text, BflCardSort cardSort, BflValueDeck deck)
+    {
+        text.Append("**").Append(TB("Card sort")).AppendLineLF(":**").AppendLineLF();
+        foreach (var card in deck.Cards)
+            AppendItem(text, card.Name, cardSort.CategoryOf(card.Id).Title);
+
+        var ownValues = cardSort.OwnValues.Select(value => value.Definition.Trim().Length is 0 ? value.Name.Trim() : $"{value.Name.Trim()} ({value.Definition.Trim()})").ToList();
+        AppendItem(text, TB("Own values"), ownValues.Count is 0 ? TB("None") : string.Join("; ", ownValues));
+
+        var focus = cardSort.FocusIn(deck).Select(valueId => cardSort.NameOf(valueId, deck)?.Trim()).ToList();
+        AppendItem(text, TB("To look at more closely"), focus.Count is 0 ? TB("None") : string.Join(", ", focus));
+        text.AppendLineLF();
     }
 
     /// <summary>
