@@ -17,7 +17,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// the chat, see ContentText.CreateFromProviderAsync.
 ///
 /// The conversation about whether the lab fits a task prepares no appearance, and the research must learn nothing but
-/// the public details of the event, so neither of them gets the guidelines.
+/// the public details of the event, so neither of them gets the guidelines. The open points and next steps end with
+/// them, see AddTo.
 /// </remarks>
 public static class BflOrganizationRules
 {
@@ -68,4 +69,22 @@ public static class BflOrganizationRules
         blocks[index] = firstMessage;
         return thread with { Blocks = blocks };
     }
+
+    /// <summary>
+    /// Adds the guidelines to a result where they belong: the open points and next steps end with them, word for word,
+    /// under a heading of their own.
+    /// </summary>
+    /// <remarks>
+    /// Added whenever the result is shown or exported, never stored and never written by the model: so they stay word
+    /// for word and as they are now, and sharing a session with the research team, which takes the stored texts, leaves
+    /// them out, since they would reveal the organization.
+    /// </remarks>
+    /// <param name="kind">The kind of result.</param>
+    /// <param name="text">The text of the result, as stored.</param>
+    /// <param name="rules">The guidelines of the organization; empty without any.</param>
+    /// <param name="heading">The heading of the guidelines, in the language of the app.</param>
+    /// <returns>The text to show or export.</returns>
+    public static string AddTo(BflResultKind kind, string text, string rules, string heading) => kind is BflResultKind.OPEN_POINTS && !string.IsNullOrWhiteSpace(rules)
+        ? $"{text.TrimEnd()}\n\n## {heading}\n\n{rules}"
+        : text;
 }

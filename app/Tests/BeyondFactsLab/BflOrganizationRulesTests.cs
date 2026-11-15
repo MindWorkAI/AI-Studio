@@ -63,6 +63,21 @@ public sealed class BflOrganizationRulesTests
         }
     }
 
+    [Test]
+    public void OnlyTheOpenPointsEndWithTheGuidelines()
+    {
+        const string TEXT = "# Offene Punkte\n\n## Recherchieren\n\n- [ ] Studienlage prüfen\n";
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflOrganizationRules.AddTo(BflResultKind.OPEN_POINTS, TEXT, RULES, "Vorgaben Ihrer Organisation"), Is.EqualTo($"# Offene Punkte\n\n## Recherchieren\n\n- [ ] Studienlage prüfen\n\n## Vorgaben Ihrer Organisation\n\n{RULES}"));
+            Assert.That(BflOrganizationRules.AddTo(BflResultKind.OPEN_POINTS, TEXT, string.Empty, "Vorgaben Ihrer Organisation"), Is.EqualTo(TEXT));
+
+            foreach (var kind in BflResultKind.All.Where(kind => kind is not BflResultKind.OPEN_POINTS))
+                Assert.That(BflOrganizationRules.AddTo(kind, TEXT, RULES, "Vorgaben Ihrer Organisation"), Is.EqualTo(TEXT), kind.ToString());
+        }
+    }
+
     private static string TextOf(ContentBlock block) => ((ContentText)block.Content!).Text;
 
     private static ChatThread ThreadWith(string message) => new()
@@ -70,7 +85,7 @@ public sealed class BflOrganizationRulesTests
         Blocks =
         [
             new ContentBlock { ContentType = ContentType.TEXT, Role = ChatRole.USER, Content = new ContentText { Text = message } },
-            new ContentBlock { ContentType = ContentType.TEXT, Role = ChatRole.AI, Content = new ContentText { Text = "Worum geht es Ihnen?" } },
-        ],
+            new ContentBlock { ContentType = ContentType.TEXT, Role = ChatRole.AI, Content = new ContentText { Text = "Worum geht es Ihnen?" } }
+        ]
     };
 }
