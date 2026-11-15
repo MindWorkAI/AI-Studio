@@ -1,28 +1,30 @@
-using System.Collections.Concurrent;
-
 using AIStudio.Chat;
+using AIStudio.Chat.Embedded;
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
-/// Runs the chats of the BeyondFacts Lab, such as those of the steps of a preparation.
+/// Opens the chats of the BeyondFacts Lab, such as those of the steps of a preparation, and puts together what each of
+/// their requests carries.
 /// </summary>
 /// <remarks>
-/// A singleton, so that an answer goes on while the person looks at another page: the page asks for the chat again
-/// when it comes back and listens to ConversationChanged. Each request registers in AssistantSessionService, which
-/// shows the work in the navigation. The service does nothing until the page of the lab asks for a chat.
+/// The chats themselves run in EmbeddedChatService, like the chats of other assistants: it keeps them while the app
+/// runs, so that an answer goes on while the person looks at another page, and registers each request in
+/// AssistantSessionService. A chat lives where the lab keeps it, see BflChatStore. What the lab decides for every
+/// request comes from here, see PrepareAsync: the system prompt with the guide, the details, and the material, the
+/// images of the material, the tools, and where the chat may send data. The service does nothing until the page of the
+/// lab asks for a chat.
 /// </remarks>
 /// <param name="store">The store of the lab.</param>
+/// <param name="chatService">The service which runs the embedded chats.</param>
 /// <param name="settingsManager">The settings.</param>
-/// <param name="sessionService">The registry of running assistant sessions.</param>
 /// <param name="messageBus">The message bus, for errors.</param>
 /// <param name="toolRegistry">The registry of the tools, which tells the chats what they can do on the web.</param>
 /// <param name="logger">The logger.</param>
-public sealed class BflConversationService(BeyondFactsLabStore store, SettingsManager settingsManager, AssistantSessionService sessionService, MessageBus messageBus, ToolRegistry toolRegistry, ILogger<BflConversationService> logger)
+public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedChatService chatService, SettingsManager settingsManager, MessageBus messageBus, ToolRegistry toolRegistry, ILogger<BflConversationService> logger)
 {
     /// <summary>
     /// The request which lets the model open the conversation of a step. The person does not see it.
@@ -38,41 +40,13 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// </summary>
     public const string ONBOARDING_OPENING_REQUEST = "Beginne das Gespräch mit deiner ersten Nachricht, wie es der Abschnitt „Gesprächsführung“ beschreibt.";
 
-    /// <summary>
-    /// How often a streamed answer renders at most.
-    /// </summary>
-    private static readonly TimeSpan STREAMING_RENDER_MIN_TIME = TimeSpan.FromMilliseconds(100);
-
     private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(BflConversationService).Namespace, nameof(BflConversationService));
-
-    /// <summary>
-    /// The chats loaded so far, by their places.
-    /// </summary>
-    private readonly ConcurrentDictionary<BflThreadLocation, BflConversation> conversations = new();
-
-    /// <summary>
-    /// Serializes loading a chat, so that two pages never load the same chat twice.
-    /// </summary>
-    private readonly SemaphoreSlim loadLock = new(1, 1);
-
-    /// <summary>
-    /// Guards whether a chat answers right now, so that two requests never run in the same chat.
-    /// </summary>
-    private readonly Lock runningLock = new();
 
     /// <summary>
     /// Gets the folder whose files replace the prompts of the lab, or null while the person does not allow it. The
     /// setting counts anew for every request, so that switching it on or off shows in the next answer.
     /// </summary>
-    internal string? PromptOverridesDirectory =>BflPromptOverrides.ActiveDirectory(settingsManager.ConfigurationData.BeyondFactsLab, store.PromptOverridesDirectory);
-
-    /// <summary>
-    /// Happens whenever a chat changed: a message, a chunk of an answer, or the end of a request.
-    /// </summary>
-    /// <remarks>
-    /// Called on the thread of the request. A page renders through InvokeAsync.
-    /// </remarks>
-    public event Func<BflThreadLocation, Task>? ConversationChanged;
+    internal string? PromptOverridesDirectory => BflPromptOverrides.ActiveDirectory(settingsManager.ConfigurationData.BeyondFactsLab, store.PromptOverridesDirectory);
 
     /// <summary>
     /// Gets a chat, loading it on the first call.
@@ -80,72 +54,52 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The chat; it is not available when this version cannot open the stored one.</returns>
-    public async Task<BflConversation> GetAsync(BflThreadLocation location, CancellationToken token = default)
-    {
-        if (this.conversations.TryGetValue(location, out var conversation))
-            return conversation;
-
-        await this.loadLock.WaitAsync(token);
-        try
-        {
-            if (this.conversations.TryGetValue(location, out conversation))
-                return conversation;
-
-            ChatThread? thread;
-            try
-            {
-                thread = await store.LoadThreadAsync(location, token) ?? BflThreadFactory.Create(location);
-            }
-            catch (InvalidDataException exception)
-            {
-                // The file stays as it is, see BeyondFactsLabStore.SaveThreadAsync:
-                logger.LogWarning(exception, "Could not open the chat '{Location}' of the BeyondFacts Lab.", location.Key);
-                thread = null;
-            }
-
-            conversation = new BflConversation { Location = location, Thread = thread };
-            this.conversations[location] = conversation;
-            return conversation;
-        }
-        finally
-        {
-            this.loadLock.Release();
-        }
-    }
+    public Task<EmbeddedConversation> GetAsync(BflThreadLocation location, CancellationToken token = default) => chatService.GetAsync(this.StoreOf(location), Tools.Components.BEYOND_FACTS_LAB_ASSISTANT, location.ChatId, () => BflThreadFactory.Create(location), token);
 
     /// <summary>
-    /// Lets the model open a conversation, as its prompt describes.
+    /// Gets where a chat of the lab lives.
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
-    /// <param name="provider">The provider which answers.</param>
-    public Task StartAsync(BflThreadLocation location, AIStudio.Settings.Provider provider) => this.SendAsync(location, provider, OpeningRequestFor(location), isHidden: true);
+    /// <returns>The store, which serves this chat only.</returns>
+    public IEmbeddedChatStore StoreOf(BflThreadLocation location) => new BflChatStore(store, location);
 
     /// <summary>
-    /// Gets the request which lets the model open a conversation.
+    /// Gets the request which lets the model open a conversation, see EmbeddedChat.StartRequest. The person does not see
+    /// it.
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
     /// <returns>The request, which names the section of the prompt that describes the first message.</returns>
     public static string OpeningRequestFor(BflThreadLocation location) => location is BflOnboardingThreadLocation ? ONBOARDING_OPENING_REQUEST : OPENING_REQUEST;
 
     /// <summary>
-    /// Sends a message of the person and lets the model answer it.
+    /// Stops every answer of a preparation and forgets its chats, e.g., because the person deleted it.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <returns>The IDs of the chats the preparation could have had.</returns>
+    public async Task<IReadOnlyList<Guid>> ForgetProjectAsync(Guid projectId)
+    {
+        List<Guid> chatIds = [.. BflStep.All.Select(step => new BflStepThreadLocation(projectId, step).ChatId)];
+        foreach (var chatId in chatIds)
+            await chatService.ForgetAsync(chatId);
+
+        return chatIds;
+    }
+
+    /// <summary>
+    /// Readies a chat of the lab for a request, see EmbeddedChatRequest.PrepareAsync: checks the provider and puts
+    /// together what the request carries.
     /// </summary>
     /// <remarks>
-    /// The message is stored before the model answers, so that a crash loses at most the answer. What goes wrong is
-    /// reported through the message bus; the method itself does not fail.
+    /// What goes wrong is reported through the message bus; the request then does not go out.
     /// </remarks>
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers.</param>
-    /// <param name="text">The message.</param>
-    /// <param name="isHidden">Whether the person does not see the message, e.g., the request which opens a conversation.</param>
-    public async Task SendAsync(BflThreadLocation location, AIStudio.Settings.Provider provider, string text, bool isHidden = false)
+    /// <param name="thread">The chat.</param>
+    /// <returns>What the request carries, or EmbeddedChatPreparation.REFUSED.</returns>
+    public async Task<EmbeddedChatPreparation> PrepareAsync(BflThreadLocation location, AIStudio.Settings.Provider provider, ChatThread thread)
     {
-        if (string.IsNullOrWhiteSpace(text))
-            return;
-
-        var conversation = await this.GetAsync(location);
-        if (conversation.Thread is not { } thread || !await this.CheckProviderAsync(location, thread, provider))
-            return;
+        if (!await this.CheckProviderAsync(location, thread, provider))
+            return EmbeddedChatPreparation.REFUSED;
 
         BflRequestMaterial requestMaterial;
         try
@@ -155,139 +109,35 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         catch (BflPromptOverrideException exception)
         {
             logger.LogWarning(exception, "A prompt override of the BeyondFacts Lab has a placeholder which the lab does not fill.");
-            await messageBus.SendError(new(AppIcons.ERROR, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."),exception.FileName, exception.Placeholder)));
-            return;
+            await messageBus.SendError(new(AppIcons.ERROR, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), exception.FileName, exception.Placeholder)));
+            return EmbeddedChatPreparation.REFUSED;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
         {
             logger.LogError(exception, "The BeyondFacts Lab could not put together the system prompt of the chat '{Location}'.", location.Key);
             await messageBus.SendError(new(AppIcons.ERROR, TA("The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.")));
-            return;
+            return EmbeddedChatPreparation.REFUSED;
         }
 
-        lock (this.runningLock)
-        {
-            if (conversation.IsRunning)
-                return;
-
-            conversation.IsRunning = true;
-        }
-
-        ContentBlock? answerBlock = null;
-        var sessionKey = SessionKey(location);
-        var sessionId = Guid.Empty;
-        var status = AssistantSessionStatus.FAILED;
-        try
-        {
-            // A chat stored before the lab offered tools gets its restriction now, before it may read a page:
-            BflChatTools.Restrict(thread, location);
-            BflThreadFactory.PrepareForRequest(thread, provider, requestMaterial.SystemPrompt, BflChatTools.For(location));
-            var request = new ContentText { Text = text };
-            thread.Blocks.Add(new ContentBlock
-            {
-                Time = DateTimeOffset.Now,
-                ContentType = ContentType.TEXT,
-                Role = ChatRole.USER,
-                Content = request,
-                HideFromUser = isHidden
-            });
-
-            await store.SaveThreadAsync(location, thread);
-
-            var answer = new ContentText { InitialRemoteWait = true };
-            answerBlock = new ContentBlock
-            {
-                Time = DateTimeOffset.Now,
-                ContentType = ContentType.TEXT,
-                Role = ChatRole.AI,
-                Content = answer
-            };
-
-            var lastRendering = DateTimeOffset.MinValue;
-            answer.StreamingEvent = async () =>
-            {
-                var now = DateTimeOffset.Now;
-                if (now - lastRendering < STREAMING_RENDER_MIN_TIME)
-                    return;
-
-                lastRendering = now;
-                await this.NotifyAsync(location);
-            };
-
-            answer.StreamingDone = () => this.NotifyAsync(location);
-            thread.Blocks.Add(answerBlock);
-
-            var cancellation = new CancellationTokenSource();
-            sessionId = (await sessionService.TryBeginAsync(sessionKey, Tools.Components.BEYOND_FACTS_LAB_ASSISTANT.Name, cancellation, thread, new(StringComparer.Ordinal))).SessionId;
-            await this.NotifyAsync(location);
-
-            await answer.CreateFromProviderAsync(provider.CreateProvider(), provider.Model, request, WithImages(thread, requestMaterial.Images), cancellation.Token);
-            status = cancellation.IsCancellationRequested ? AssistantSessionStatus.CANCELED : AssistantSessionStatus.COMPLETED;
-        }
-        catch (OperationCanceledException)
-        {
-            status = AssistantSessionStatus.CANCELED;
-        }
-        catch (ProviderRequestException exception)
-        {
-            logger.LogError(exception, "The provider request of the BeyondFacts Lab failed. Status={StatusCode}, Reason='{ReasonPhrase}'.", exception.StatusCode, exception.ReasonPhrase);
-            await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, exception.UserMessage));
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
-        {
-            logger.LogError(exception, "The BeyondFacts Lab could not store the chat '{Location}'.", location.Key);
-            await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not save this conversation. Please try again.")));
-        }
-        finally
-        {
-            await this.FinishAsync(conversation, thread, answerBlock, sessionKey, sessionId, status);
-        }
+        return Prepare(location, provider, thread, requestMaterial);
     }
 
     /// <summary>
-    /// Stops the answer the model writes in a chat.
+    /// Readies a chat of the lab for a request with what the lab put together for it.
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
-    public Task CancelAsync(BflThreadLocation location) => sessionService.CancelAsync(SessionKey(location));
-
-    /// <summary>
-    /// Deletes a conversation, so that it starts over.
-    /// </summary>
-    /// <param name="location">Where the chat belongs.</param>
-    /// <returns>False while the model answers in the chat.</returns>
-    public async Task<bool> ResetAsync(BflThreadLocation location)
+    /// <param name="provider">The provider which answers.</param>
+    /// <param name="thread">The chat, which gets its prompt, its tools, and its restriction.</param>
+    /// <param name="requestMaterial">The system prompt and the images of the material.</param>
+    /// <returns>The preparation, whose request carries the images, see WithImages.</returns>
+    internal static EmbeddedChatPreparation Prepare(BflThreadLocation location, AIStudio.Settings.Provider provider, ChatThread thread, BflRequestMaterial requestMaterial)
     {
-        var conversation = await this.GetAsync(location);
-        lock (this.runningLock)
-        {
-            if (conversation.IsRunning)
-                return false;
-        }
+        // A chat stored before the lab offered tools gets its restriction now, before it may read a page:
+        BflChatTools.Restrict(thread, location);
+        BflThreadFactory.PrepareForRequest(thread, provider, requestMaterial.SystemPrompt, BflChatTools.For(location));
 
-        await store.DeleteThreadAsync(location);
-        conversation.Thread = BflThreadFactory.Create(location);
-
-        // The new conversation keeps the ID of the chat, so what the old one received would otherwise wait for the next start:
-        await ChatProvenance.ForgetChatsAsync([location.ChatId]);
-        await this.NotifyAsync(location);
-        return true;
-    }
-
-    /// <summary>
-    /// Stops every answer of a preparation and forgets its chats, e.g., because the person deleted it.
-    /// </summary>
-    /// <param name="projectId">The ID of the preparation.</param>
-    /// <returns>The IDs of the chats the preparation could have had.</returns>
-    public async Task<IReadOnlyList<Guid>> ForgetProjectAsync(Guid projectId)
-    {
-        var locations = BflStep.All.Select(step => new BflStepThreadLocation(projectId, step)).ToList();
-        foreach (var location in locations)
-        {
-            await sessionService.CancelAsync(SessionKey(location));
-            this.conversations.TryRemove(location, out _);
-        }
-
-        return [.. locations.Select(location => location.ChatId)];
+        var images = requestMaterial.Images;
+        return EmbeddedChatPreparation.READY with { ThreadForRequest = request => WithImages(request, images) };
     }
 
     /// <summary>
@@ -535,78 +385,4 @@ public sealed class BflConversationService(BeyondFactsLabStore store, SettingsMa
         await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, reason));
         return false;
     }
-
-    /// <summary>
-    /// Ends a request: removes an empty answer, stores the chat, and closes the session.
-    /// </summary>
-    /// <param name="conversation">The chat.</param>
-    /// <param name="thread">The thread of the chat.</param>
-    /// <param name="answerBlock">The block of the answer, or null when the request did not get that far.</param>
-    /// <param name="sessionKey">The key of the session.</param>
-    /// <param name="sessionId">The ID of the session, or Guid.Empty when none began.</param>
-    /// <param name="status">How the request ended.</param>
-    private async Task FinishAsync(BflConversation conversation, ChatThread thread, ContentBlock? answerBlock, AssistantSessionKey sessionKey, Guid sessionId, AssistantSessionStatus status)
-    {
-        if (answerBlock is { Content: ContentText answer } && string.IsNullOrWhiteSpace(answer.Text))
-            thread.Blocks.Remove(answerBlock);
-
-        if (answerBlock is not null)
-        {
-            try
-            {
-                await store.SaveThreadAsync(conversation.Location, thread);
-            }
-            catch (FileNotFoundException)
-            {
-                // The person deleted the preparation while the model answered; nothing is left to store.
-            }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
-            {
-                logger.LogError(exception, "The BeyondFacts Lab could not store the chat '{Location}'.", conversation.Location.Key);
-                await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not save this conversation. Please try again.")));
-            }
-        }
-
-        lock (this.runningLock)
-            conversation.IsRunning = false;
-
-        if (sessionId != Guid.Empty)
-        {
-            await sessionService.CompleteAsync(sessionKey, sessionId, status, string.Empty, thread, new(StringComparer.Ordinal));
-
-            // The lab keeps the chat itself; the registry only shows that the lab is at work:
-            await sessionService.ClearAsync(sessionKey);
-        }
-
-        await this.NotifyAsync(conversation.Location);
-    }
-
-    /// <summary>
-    /// Tells every page which listens that a chat changed.
-    /// </summary>
-    /// <param name="location">Where the chat belongs.</param>
-    private async Task NotifyAsync(BflThreadLocation location)
-    {
-        if (this.ConversationChanged is not { } handlers)
-            return;
-
-        foreach (var handler in handlers.GetInvocationList().Cast<Func<BflThreadLocation, Task>>())
-        {
-            try
-            {
-                await handler(location);
-            }
-            catch (Exception exception)
-            {
-                // A page which went away meanwhile must not stop the answer:
-                logger.LogDebug(exception, "A page of the BeyondFacts Lab could not show a change of a chat.");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets the key under which a request of a chat registers in AssistantSessionService.
-    /// </summary>
-    /// <param name="location">Where the chat belongs.</param>
-    private static AssistantSessionKey SessionKey(BflThreadLocation location) => new(Tools.Components.BEYOND_FACTS_LAB_ASSISTANT, location.Key);
 }

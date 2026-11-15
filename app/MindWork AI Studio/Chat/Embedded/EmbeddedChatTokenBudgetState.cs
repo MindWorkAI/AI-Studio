@@ -1,9 +1,9 @@
-namespace AIStudio.Assistants.BeyondFactsLab;
+namespace AIStudio.Chat.Embedded;
 
 /// <summary>
-/// How much room a chat of the BeyondFacts Lab has left in the context of its model.
+/// How much room an embedded chat has left in the context of its model.
 /// </summary>
-public enum BflTokenBudgetState
+public enum EmbeddedChatTokenBudgetState
 {
     /// <summary>
     /// Nobody knows: the count failed, or the model has no statement about its context.
@@ -16,12 +16,12 @@ public enum BflTokenBudgetState
     OK,
 
     /// <summary>
-    /// Most of the context is used; the person should think about starting over.
+    /// Most of the context is used; the user should think about starting over.
     /// </summary>
     WARNING,
 
     /// <summary>
-    /// The next message and its answer would not fit anymore, so the lab sends no more.
+    /// The next message and its answer would not fit anymore, so the chat sends no more.
     /// </summary>
     FULL,
 }
