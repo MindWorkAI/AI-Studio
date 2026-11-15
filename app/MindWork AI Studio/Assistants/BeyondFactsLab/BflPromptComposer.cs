@@ -39,9 +39,10 @@ public static class BflPromptComposer
     /// <param name="research">The research of the preparation, by its topics; only the step "Strategy" gets it. Null when there is none.</param>
     /// <param name="organizationRules">The guidelines of the organization, which the first message carries, see BflOrganizationRules; only while there are any, the prompt says how to treat them. Null when there are none.</param>
     /// <param name="valueDeck">The value deck in the language of the app, with which the step "Values and perspectives" shows the card sort of the person among its details; the other steps leave it out. Null when there is none.</param>
+    /// <param name="people">The research on single people of the list of participants, in the order of the list; only the step "Strategy" gets it. Null when there is none.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FormatException">The core prompt has a placeholder without a value.</exception>
-    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, BflResearchAvailability? tools = null, IReadOnlyDictionary<BflResearchTopic, BflResearch>? research = null, string? organizationRules = null, BflValueDeck? valueDeck = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
+    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, BflResearchAvailability? tools = null, IReadOnlyDictionary<BflResearchTopic, BflResearch>? research = null, string? organizationRules = null, BflValueDeck? valueDeck = null, IReadOnlyList<BflPersonResearch>? people = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
     {
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
         [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim(),
@@ -49,7 +50,7 @@ public static class BflPromptComposer
         [BflPromptTemplate.STEP] = parts.Step.Trim(),
         [BflPromptTemplate.MATERIALS] = Materials(materials),
         [BflPromptTemplate.TOOLS] = BflToolStatus.ForStep(tools ?? NO_TOOLS).Trim(),
-        [BflPromptTemplate.RESEARCH] = Research(step, research ?? new Dictionary<BflResearchTopic, BflResearch>(), forms),
+        [BflPromptTemplate.RESEARCH] = Research(step, research ?? new Dictionary<BflResearchTopic, BflResearch>(), people ?? [], forms),
         [BflPromptTemplate.WORK_STATES] = WorkStates(step, workStates ?? new Dictionary<BflStep, BflWorkState>(), forms),
         [BflPromptTemplate.DETAILS] = Details(step, forms, valueDeck),
         [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms),
@@ -265,13 +266,15 @@ public static class BflPromptComposer
     /// The other steps leave the research out: what the person takes over from it, such as the participants, reaches
     /// them through the confirmed work state of the step "Strategy". A research whose public details changed since is
     /// marked, so that the model checks it with the person. The research comes in the order of its topics, each with
-    /// the day it was done. For an event which is not public, an earlier research no longer counts: the person said
-    /// that its details are not public, see BflEventVisibility.
+    /// the day it was done, followed by the research on single people with their stages, in the order of the list. For
+    /// an event which is not public, an earlier research no longer counts: the person said that its details are not
+    /// public, see BflEventVisibility.
     /// </remarks>
     /// <param name="step">The step the chat belongs to.</param>
     /// <param name="research">The research of the preparation, by its topics.</param>
+    /// <param name="people">The research on single people of the list of participants, in the order of the list.</param>
     /// <param name="forms">The forms of the preparation, by their steps.</param>
-    private static string Research(BflStep step, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
+    private static string Research(BflStep step, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, IReadOnlyList<BflPersonResearch> people, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
     {
         if (step is not BflStep.STRATEGY)
             return "Die Recherche nutzt der Schritt „Strategie“. Was die Person daraus übernimmt, steht in dessen bestätigtem Arbeitsstand.";
@@ -294,6 +297,27 @@ public static class BflPromptComposer
                 text.Append("(Die öffentlichen Angaben haben sich seit dieser Recherche geändert. Sie passt womöglich nicht mehr zur Veranstaltung.)").Append(LINE_BREAK);
 
             text.Append(found.Text.Trim().ReplaceLineEndings(LINE_BREAK.ToString())).Append(LINE_BREAK).Append("</thema>").Append(LINE_BREAK);
+        }
+
+        foreach (var person in people.Where(person => person.Stages.Any(stage => stage.Research.Text.Trim().Length > 0)))
+        {
+            if (text.Length > 0)
+                text.Append(LINE_BREAK);
+
+            text.Append($"<person name=\"{person.Name}\">").Append(LINE_BREAK);
+            if (person.IsOutdated(details))
+                text.Append("(Die öffentlichen Angaben haben sich seit dieser Recherche geändert. Sie passt womöglich nicht mehr zur Veranstaltung.)").Append(LINE_BREAK);
+
+            if (!person.IsComplete)
+                text.Append("(Diese Recherche endete vor ihrer letzten Stufe; es fehlen Teile.)").Append(LINE_BREAK);
+
+            foreach (var stage in person.Stages.Where(stage => stage.Research.Text.Trim().Length > 0))
+            {
+                text.Append($"<stufe titel=\"{stage.Stage.Title}\" stand=\"{stage.Research.CreatedAtUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}\">").Append(LINE_BREAK);
+                text.Append(stage.Research.Text.Trim().ReplaceLineEndings(LINE_BREAK.ToString())).Append(LINE_BREAK).Append("</stufe>").Append(LINE_BREAK);
+            }
+
+            text.Append("</person>").Append(LINE_BREAK);
         }
 
         return text.Length is 0 ? "Es gibt noch keine Recherche." : text.ToString().TrimEnd();
