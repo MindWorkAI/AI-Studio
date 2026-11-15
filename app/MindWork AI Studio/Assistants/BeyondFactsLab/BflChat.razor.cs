@@ -109,6 +109,14 @@ public partial class BflChat : MSGComponentBase
         _ => TA("Delete this conversation and start it over?")
     };
 
+    /// <summary>
+    /// Gets the button with which the person ends an exercise of the step "Test situation" and asks for its evaluation,
+    /// see Prompts/steps/06-test.md; the other chats have none.
+    /// </summary>
+    private EmbeddedChatQuickMessage? QuickMessage => this.Location is BflStepThreadLocation { Step: BflStep.TEST_SITUATION }
+        ? new(T("End and evaluate the exercise"), AppIcons.END_EXERCISE, T("I would like to end the exercise now and get its evaluation."), TA("This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between."))
+        : null;
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {

@@ -141,6 +141,19 @@ public sealed class BflSimulationPromptTests
     }
 
     [Test]
+    public async Task ThePromptOfTheTestSituationTellsHowTheButtonEndsAnExercise()
+    {
+        var step = (await BflPromptLibrary.ReadAsync(BflPromptLibrary.StepPath(BflStep.TEST_SITUATION))).ReplaceLineEndings("\n");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(step, Does.Contain("\n### Übung beenden\n"));
+            Assert.That(step, Does.Contain("folge dann „Nach einer Übung“"));
+            Assert.That(step, Does.Contain("\n### Nach einer Übung\n"));
+        }
+    }
+
+    [Test]
     public async Task TheServiceLoadsWhomOnlyTheTestSituationPlays()
     {
         var store = new BeyondFactsLabStore(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.dataDirectory });

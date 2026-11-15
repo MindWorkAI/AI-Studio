@@ -82,6 +82,10 @@ else
             {
                 <AttachDocuments Name="File Attachments" DocumentPaths="@this.attachments" DocumentPathsChanged="@this.AttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" AllowedFileTypes="@this.AllowedFileTypes" Disabled="@(!this.CanSend)"/>
             }
+            @if (this.QuickMessage is { } quickMessage && this.conversation.HasAnswer)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@quickMessage.Icon" OnClick="@this.SendQuickMessageAsync" Disabled="@(!this.CanSend)">@quickMessage.Label</MudButton>
+            }
             @if (this.IsRunning)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@AppIcons.STOP" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
@@ -91,5 +95,9 @@ else
                 <MudButton StartIcon="@AppIcons.RESET" OnClick="@this.ResetAsync" Disabled="@this.IsRunning">@T("Start over")</MudButton>
             }
         </MudStack>
+        @if (this.QuickMessage is { Hint.Length: > 0 } hintedMessage && this.conversation.HasAnswer)
+        {
+            <MudText Typo="Typo.caption" Class="d-block mt-1">@hintedMessage.Hint</MudText>
+        }
     }
 }

@@ -413,6 +413,9 @@ public static class AppIcons
     /// <summary>Enables an item, such as an installed assistant plugin, or shows that it is enabled.</summary>
     public const string ENABLE = LucideIcons.TOGGLE_RIGHT;
 
+    /// <summary>Ends an exercise and asks for its evaluation, such as in the test situation of the BeyondFacts Lab.</summary>
+    public const string END_EXERCISE = LucideIcons.FLAG;
+
     /// <summary>Stands for encrypting a connection, such as the transport security of a mailbox.</summary>
     public const string ENCRYPTION = LucideIcons.LOCK_KEYHOLE;
 

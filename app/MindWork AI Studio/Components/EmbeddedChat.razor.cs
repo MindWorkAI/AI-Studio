@@ -171,6 +171,13 @@ public partial class EmbeddedChat : MSGComponentBase
     [Parameter]
     public string ExportFileName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets a message the user sends with one click once the model has answered, such as asking for the
+    /// evaluation at the end of an exercise; null for none.
+    /// </summary>
+    [Parameter]
+    public EmbeddedChatQuickMessage? QuickMessage { get; set; }
+
     [Inject]
     private EmbeddedChatService ChatService { get; init; } = null!;
 
@@ -423,6 +430,18 @@ public partial class EmbeddedChat : MSGComponentBase
         this.userInput = string.Empty;
         this.attachments = [];
         await this.ChatService.SendAsync(this.ChatId, this.RequestOf(message));
+    }
+
+    /// <summary>
+    /// Sends the message of the button, see QuickMessage, as if the user had written it. What the user typed meanwhile
+    /// stays in the field.
+    /// </summary>
+    private async Task SendQuickMessageAsync()
+    {
+        if (this.QuickMessage is not { } quickMessage || !this.CanSend)
+            return;
+
+        await this.ChatService.SendAsync(this.ChatId, this.RequestOf(new ContentText { Text = quickMessage.Message }));
     }
 
     /// <summary>
