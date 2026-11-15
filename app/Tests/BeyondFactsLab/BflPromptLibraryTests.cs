@@ -73,8 +73,8 @@ public sealed class BflPromptLibraryTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(BflPromptComposer.Compose(new(core, "Leitfaden", "Schritt", "Anrede"), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch"), Does.Not.Contain("{{"));
-            Assert.That(BflPromptComposer.ComposeOnboarding(new(onboarding, "Anrede"), "Deutsch"), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.Compose(new(core, "Leitfaden", "Schritt", "Anrede", "Vorgaben"), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch"), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.ComposeOnboarding(new(onboarding, "Anrede", "Vorgaben"), "Deutsch"), Does.Not.Contain("{{"));
             Assert.That(BflPromptComposer.ComposeWorkStateRequest(workState, BflStep.FRAMEWORK, new BflStepFormData()), Does.Not.Contain("{{"));
             Assert.That(BflPromptComposer.ComposeResultRequest(result, new Dictionary<BflStep, BflWorkState>()), Does.Not.Contain("{{"));
             Assert.That(BflPromptComposer.ComposeResearch(new(research, "Auftrag"), [], "Deutsch"), Does.Not.Contain("{{"));

@@ -37,9 +37,10 @@ public static class BflPromptComposer
     /// <param name="workStates">The work states of the preparation, by their steps; only the confirmed ones reach the prompt. Null when there are none.</param>
     /// <param name="tools">What keeps the tools of the lab from being offered with the provider of the preparation; null counts as no tools at all.</param>
     /// <param name="research">The research of the preparation, by its topics; only the step "Strategy" gets it. Null when there is none.</param>
+    /// <param name="organizationRules">The guidelines of the organization, which the first message carries, see BflOrganizationRules; only while there are any, the prompt says how to treat them. Null when there are none.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FormatException">The core prompt has a placeholder without a value.</exception>
-    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, BflResearchAvailability? tools = null, IReadOnlyDictionary<BflResearchTopic, BflResearch>? research = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
+    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, BflResearchAvailability? tools = null, IReadOnlyDictionary<BflResearchTopic, BflResearch>? research = null, string? organizationRules = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
     {
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
         [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim(),
@@ -50,7 +51,8 @@ public static class BflPromptComposer
         [BflPromptTemplate.RESEARCH] = Research(step, research ?? new Dictionary<BflResearchTopic, BflResearch>(), forms),
         [BflPromptTemplate.WORK_STATES] = WorkStates(step, workStates ?? new Dictionary<BflStep, BflWorkState>(), forms),
         [BflPromptTemplate.DETAILS] = Details(step, forms),
-        [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms)
+        [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms),
+        [BflPromptTemplate.ORGANIZATION_RULES] = OnlyWithRules(parts.OrganizationRules, organizationRules)
     }).ReplaceLineEndings(LINE_BREAK.ToString());
 
     /// <summary>
@@ -62,14 +64,25 @@ public static class BflPromptComposer
     /// <param name="parts">The texts of the prompt.</param>
     /// <param name="responseLanguage">The name of the language the model answers in, e.g., the language of the app.</param>
     /// <param name="tools">What keeps the tools of the lab from being offered with the provider of the conversation; null counts as no tools at all.</param>
+    /// <param name="organizationRules">The guidelines of the organization; only while there are any, the prompt tells that they exist, never their text. Null when there are none.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FormatException">The prompt has a placeholder without a value.</exception>
-    public static string ComposeOnboarding(BflOnboardingPromptParts parts, string responseLanguage, BflResearchAvailability? tools = null) => BflPromptTemplate.Fill(parts.Onboarding, new Dictionary<string, string>(StringComparer.Ordinal)
+    public static string ComposeOnboarding(BflOnboardingPromptParts parts, string responseLanguage, BflResearchAvailability? tools = null, string? organizationRules = null) => BflPromptTemplate.Fill(parts.Onboarding, new Dictionary<string, string>(StringComparer.Ordinal)
     {
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
         [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim(),
-        [BflPromptTemplate.TOOLS] = BflToolStatus.ForOnboarding(tools ?? NO_TOOLS).Trim()
+        [BflPromptTemplate.TOOLS] = BflToolStatus.ForOnboarding(tools ?? NO_TOOLS).Trim(),
+        [BflPromptTemplate.ORGANIZATION_RULES] = OnlyWithRules(parts.OrganizationRules, organizationRules)
     }).ReplaceLineEndings(LINE_BREAK.ToString());
+
+    /// <summary>
+    /// Gets what a prompt says about the guidelines of the organization: nothing without guidelines, so that a prompt
+    /// carries no instructions it does not need, which would only take room and distract smaller models.
+    /// </summary>
+    /// <param name="text">The text about the guidelines, see BflPromptLibrary.ORGANIZATION_RULES_PATH and ONBOARDING_ORGANIZATION_RULES_PATH.</param>
+    /// <param name="organizationRules">The guidelines of the organization; null or empty without any.</param>
+    /// <returns>The text, or nothing.</returns>
+    private static string OnlyWithRules(string text, string? organizationRules) => string.IsNullOrWhiteSpace(organizationRules) ? string.Empty : text.Trim();
 
     /// <summary>
     /// Puts together the request which lets the model write the work state of a step, at the end of its conversation.
