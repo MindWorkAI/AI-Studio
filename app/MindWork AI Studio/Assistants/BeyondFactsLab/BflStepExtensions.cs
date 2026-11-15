@@ -26,7 +26,7 @@ public static class BflStepExtensions
         };
 
         /// <summary>
-        /// Gets one sentence about what the step is for.
+        /// Gets one or two sentences about what the step is for.
         /// </summary>
         public string Description => step switch
         {
@@ -34,7 +34,7 @@ public static class BflStepExtensions
             BflStep.KNOWLEDGE => TA("What you know for sure, what is uncertain, and where your expertise ends."),
             BflStep.GOALS_AND_ROLE => TA("What you want to achieve, and in which role you speak."),
             BflStep.VALUES_AND_PERSPECTIVES => TA("What matters to you, what touches you, and what moves others."),
-            BflStep.STRATEGY => TA("How you convey evidence, trade-offs between values, and open questions."),
+            BflStep.STRATEGY => TA("How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step."),
             BflStep.TEST_SITUATION => TA("Play through critical questions and opposing positions."),
             BflStep.RESULTS => TA("What you take away from your preparation."),
 
