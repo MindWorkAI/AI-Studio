@@ -26,7 +26,7 @@
                 @if (!string.IsNullOrWhiteSpace(this.OrganizationRules))
                 {
                     <ExpansionPanel HeaderIcon="@AppIcons.ORGANIZATION" HeaderText="@TA("Guidelines from your organization")" IsExpanded="@this.organizationRulesExpanded" ExpandedChanged="@this.OrganizationRulesExpandedChanged">
-                        <MudText Typo="Typo.body2" Class="mb-3">@TA("Your organization has set these guidelines for public appearances.")</MudText>
+                        <MudText Typo="Typo.body2" Class="mb-3">@TA("Your organization has set these guidelines for public appearances. The conversations of the steps know them as well.")</MudText>
                         <MudMarkdown Value="@this.OrganizationRules" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                     </ExpansionPanel>
                 }

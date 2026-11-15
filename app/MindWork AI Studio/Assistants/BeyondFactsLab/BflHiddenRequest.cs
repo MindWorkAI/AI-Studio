@@ -8,7 +8,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// or a result, or in a hidden chat of its own, e.g., for a research agent.
 /// </summary>
 /// <remarks>
-/// The copy carries the system prompt and the messages of the conversation, so the model knows all the step knows.
+/// The copy carries the system prompt and the messages of the conversation, so the model knows all the step knows; its
+/// first message carries the images of the material and the guidelines of the organization, as in the conversation.
 /// The lab never stores it, and the conversation itself stays as it is.
 /// </remarks>
 public static class BflHiddenRequest
@@ -20,9 +21,10 @@ public static class BflHiddenRequest
     /// <param name="provider">The provider which answers.</param>
     /// <param name="text">The request.</param>
     /// <param name="images">The images of the material, which go along with the first message.</param>
+    /// <param name="organizationRules">The guidelines of the organization, which go along with the first message; empty without any.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The answer, empty when the provider failed.</returns>
-    public static async Task<string> AskAsync(ChatThread hidden, AIStudio.Settings.Provider provider, string text, IReadOnlyList<FileAttachmentImage> images, CancellationToken token) => (await AskForAnswerAsync(hidden, provider, text, images, token)).Text;
+    public static async Task<string> AskAsync(ChatThread hidden, AIStudio.Settings.Provider provider, string text, IReadOnlyList<FileAttachmentImage> images, string organizationRules, CancellationToken token) => (await AskForAnswerAsync(hidden, provider, text, images, organizationRules, token)).Text;
 
     /// <summary>
     /// Sends a request in a hidden chat and waits for the whole answer, together with what the tools did meanwhile.
@@ -31,9 +33,10 @@ public static class BflHiddenRequest
     /// <param name="provider">The provider which answers.</param>
     /// <param name="text">The request.</param>
     /// <param name="images">The images of the material, which go along with the first message.</param>
+    /// <param name="organizationRules">The guidelines of the organization, which go along with the first message; empty without any.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The answer with the calls of the tools and their sources; its text is empty when the provider failed.</returns>
-    public static async Task<ContentText> AskForAnswerAsync(ChatThread hidden, AIStudio.Settings.Provider provider, string text, IReadOnlyList<FileAttachmentImage> images, CancellationToken token)
+    public static async Task<ContentText> AskForAnswerAsync(ChatThread hidden, AIStudio.Settings.Provider provider, string text, IReadOnlyList<FileAttachmentImage> images, string organizationRules, CancellationToken token)
     {
         var request = new ContentText { Text = text };
         hidden.Blocks.Add(new ContentBlock
@@ -55,7 +58,7 @@ public static class BflHiddenRequest
             HideFromUser = true
         });
 
-        await answer.CreateFromProviderAsync(provider.CreateProvider(), provider.Model, request, BflConversationService.WithImages(hidden, images), token);
+        await answer.CreateFromProviderAsync(provider.CreateProvider(), provider.Model, request, BflConversationService.ForRequest(hidden, images, organizationRules), token);
         return answer;
     }
 }

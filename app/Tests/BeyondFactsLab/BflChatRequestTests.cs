@@ -24,6 +24,8 @@ public sealed class BflChatRequestTests
 
     private const string SYSTEM_PROMPT = "Der Prompt des Schritts.";
 
+    private const string RULES = "- Vor jeder öffentlichen Veranstaltung die Pressestelle kontaktieren.";
+
     private string dataDirectory = string.Empty;
     private SettingsManager settingsManager = null!;
     private ServiceProvider serviceProvider = null!;
@@ -65,7 +67,7 @@ public sealed class BflChatRequestTests
         var service = this.CreateService(thread => sent = thread);
 
         await service.GetAsync(new BflChatStore(store, location), LAB, location.ChatId, () => BflThreadFactory.Create(location));
-        var isSent = await service.SendAsync(location.ChatId, this.Request(location, "Ich spreche auf einem Podium.", new(SYSTEM_PROMPT, [])));
+        var isSent = await service.SendAsync(location.ChatId, this.Request(location, "Ich spreche auf einem Podium.", new(SYSTEM_PROMPT, [], string.Empty)));
 
         using (Assert.EnterMultipleScope())
         {
@@ -89,7 +91,7 @@ public sealed class BflChatRequestTests
         var service = this.CreateService(thread => sent = thread);
 
         await service.GetAsync(new BflChatStore(store, location), LAB, location.ChatId, () => BflThreadFactory.Create(location));
-        await service.SendAsync(location.ChatId, this.Request(location, "Passt das Lab zu meinem Interview?", new(SYSTEM_PROMPT, [])));
+        await service.SendAsync(location.ChatId, this.Request(location, "Passt das Lab zu meinem Interview?", new(SYSTEM_PROMPT, [], string.Empty)));
 
         using (Assert.EnterMultipleScope())
         {
@@ -110,7 +112,7 @@ public sealed class BflChatRequestTests
         var service = this.CreateService(thread => sent = thread);
 
         await service.GetAsync(new BflChatStore(store, location), LAB, location.ChatId, () => BflThreadFactory.Create(location));
-        await service.SendAsync(location.ChatId, this.Request(location, BflConversationService.OPENING_REQUEST, new(SYSTEM_PROMPT, [image]), isHidden: true));
+        await service.SendAsync(location.ChatId, this.Request(location, BflConversationService.OPENING_REQUEST, new(SYSTEM_PROMPT, [image], string.Empty), isHidden: true));
 
         var stored = await store.LoadThreadAsync(location);
         var storedFile = await File.ReadAllTextAsync(Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, created.ProjectId.ToString("D"), "steps", BflStep.KNOWLEDGE.FolderName, "thread.json"));
@@ -136,7 +138,7 @@ public sealed class BflChatRequestTests
 
         var conversation = await service.GetAsync(new BflChatStore(store, location), LAB, location.ChatId, () => BflThreadFactory.Create(location));
         var restrictionBefore = conversation.Thread!.RequiredOutboundDataRestriction;
-        await service.SendAsync(location.ChatId, this.Request(location, "Wer sitzt mit auf dem Podium?", new(SYSTEM_PROMPT, [])));
+        await service.SendAsync(location.ChatId, this.Request(location, "Wer sitzt mit auf dem Podium?", new(SYSTEM_PROMPT, [], string.Empty)));
 
         using (Assert.EnterMultipleScope())
         {
@@ -145,6 +147,74 @@ public sealed class BflChatRequestTests
             Assert.That((await store.LoadThreadAsync(location))!.RequiredOutboundDataRestriction, Is.EqualTo(BflChatTools.STEP_REQUIREMENT), "The chat stores the restriction.");
         }
     }
+
+    [Test]
+    public async Task TheGuidelinesOfTheOrganizationGoAlongWithTheOpeningRequestOnly()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var location = new BflStepThreadLocation(created.ProjectId, BflStep.STRATEGY);
+        var image = new FileAttachmentImage("Poster.png", Path.Combine(this.dataDirectory, "poster-copy.png"), 1_024);
+        ChatThread? sent = null;
+        var service = this.CreateService(thread => sent = thread);
+
+        await service.GetAsync(new BflChatStore(store, location), LAB, location.ChatId, () => BflThreadFactory.Create(location));
+        await service.SendAsync(location.ChatId, this.Request(location, BflConversationService.OPENING_REQUEST, new(SYSTEM_PROMPT, [image], RULES), isHidden: true));
+
+        var stored = await store.LoadThreadAsync(location);
+        var storedFile = await File.ReadAllTextAsync(Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, created.ProjectId.ToString("D"), "steps", BflStep.STRATEGY.FolderName, "thread.json"));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(TextOf(sent!.Blocks[0]), Is.EqualTo($"<hinweise_der_organisation>\n{RULES}\n</hinweise_der_organisation>\n\n{BflConversationService.OPENING_REQUEST}"));
+            Assert.That(sent.Blocks[0].Content!.FileAttachments, Is.EqualTo(new FileAttachment[] { image }), "The images go along with the same message.");
+            Assert.That(sent.SystemPrompt, Is.EqualTo(SYSTEM_PROMPT), "The guidelines never reach the system prompt.");
+            Assert.That(sent.Blocks, Has.Count.EqualTo(stored!.Blocks.Count), "The request keeps as many messages as the chat.");
+            Assert.That(TextOf(stored.Blocks[0]), Is.EqualTo(BflConversationService.OPENING_REQUEST), "The stored chat keeps the message as it was.");
+            Assert.That(storedFile, Does.Not.Contain("Pressestelle"));
+        }
+    }
+
+    [Test]
+    public async Task TheGuidelinesGoInFrontOfTheMessageOfThePersonWhoWritesFirst()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var location = new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
+        ChatThread? sent = null;
+        var service = this.CreateService(thread => sent = thread);
+
+        await service.GetAsync(new BflChatStore(store, location), LAB, location.ChatId, () => BflThreadFactory.Create(location));
+        await service.SendAsync(location.ChatId, this.Request(location, "Ich spreche auf einem Podium.", new(SYSTEM_PROMPT, [], RULES)));
+        var firstRequest = sent!;
+        await service.SendAsync(location.ChatId, this.Request(location, "Es geht um Wärmepumpen.", new(SYSTEM_PROMPT, [], RULES)));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(firstRequest.Blocks.Select(block => block.Role), Is.EqualTo(new[] { ChatRole.USER, ChatRole.AI }), "No message of its own: two messages of the user in a row break some models.");
+            Assert.That(TextOf(firstRequest.Blocks[0]), Does.StartWith("<hinweise_der_organisation>\n").And.EndWith("</hinweise_der_organisation>\n\nIch spreche auf einem Podium."));
+            Assert.That(TextOf(sent!.Blocks[0]), Does.StartWith("<hinweise_der_organisation>\n"), "Every request carries the guidelines in front of the first message.");
+            Assert.That(TextOf(sent.Blocks[2]), Is.EqualTo("Es geht um Wärmepumpen."), "Only the first message carries them.");
+            Assert.That((await store.LoadThreadAsync(location))!.Blocks.Select(TextOf), Has.None.Contains("Pressestelle"));
+        }
+    }
+
+    [Test]
+    public async Task WithoutGuidelinesTheRequestCarriesTheOpeningRequestAsItIs()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var location = new BflStepThreadLocation(created.ProjectId, BflStep.GOALS_AND_ROLE);
+        ChatThread? sent = null;
+        var service = this.CreateService(thread => sent = thread);
+
+        await service.GetAsync(new BflChatStore(store, location), LAB, location.ChatId, () => BflThreadFactory.Create(location));
+        await service.SendAsync(location.ChatId, this.Request(location, BflConversationService.OPENING_REQUEST, new(SYSTEM_PROMPT, [], string.Empty), isHidden: true));
+
+        Assert.That(TextOf(sent!.Blocks[0]), Is.EqualTo(BflConversationService.OPENING_REQUEST));
+    }
+
+    private static string TextOf(ContentBlock block) => ((ContentText)block.Content!).Text;
 
     private EmbeddedChatRequest Request(BflThreadLocation location, string text, BflRequestMaterial requestMaterial, bool isHidden = false) => new()
     {

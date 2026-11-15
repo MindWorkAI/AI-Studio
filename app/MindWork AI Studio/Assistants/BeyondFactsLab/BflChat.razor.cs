@@ -12,7 +12,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// <remarks>
 /// The embedded chat of assistants with what the lab decides for each of its places: the opening request, the
 /// introduction, the question before starting over, and, for every request, the system prompt with the guide, the
-/// details, and the material, see BflConversationService.PrepareAsync. The count of tokens shows how full the context
+/// details, and the material, and the guidelines of the organization in front of the first message, see
+/// BflConversationService.PrepareAsync. The count of tokens shows how full the context
 /// of the model is, since every request carries the guide. It offers no "send to": the lab neither receives content
 /// from other assistants nor hands its answers on.
 /// </remarks>
@@ -57,8 +58,8 @@ public partial class BflChat : MSGComponentBase
     private Func<ChatThread, Task<EmbeddedChatPreparation>> prepareAsync = _ => Task.FromResult(EmbeddedChatPreparation.REFUSED);
 
     /// <summary>
-    /// Gets the system prompt of the next request of the chat shown, for the count of tokens; made anew whenever the
-    /// chat or the provider changes.
+    /// Gets what the next request of the chat shown carries beside the conversation, for the count of tokens; made anew
+    /// whenever the chat or the provider changes.
     /// </summary>
     private Func<Task<string?>> systemPromptForCountAsync = () => Task.FromResult<string?>(null);
 
@@ -66,6 +67,12 @@ public partial class BflChat : MSGComponentBase
     /// Changes whenever the material of the preparation changes, since every request of a step carries it.
     /// </summary>
     private int materialsVersion;
+
+    /// <summary>
+    /// Gets a number which changes whenever what the next request carries beside the conversation changed: the
+    /// material, or the guidelines of the organization after a configuration plugin was reloaded.
+    /// </summary>
+    private int ContextVersion => HashCode.Combine(this.materialsVersion, this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules);
 
     /// <summary>
     /// Gets what the chat says before its conversation begins.
@@ -142,16 +149,17 @@ public partial class BflChat : MSGComponentBase
     }
 
     /// <summary>
-    /// Puts together the system prompt of the next request of a chat, for the count of tokens.
+    /// Puts together what the next request of a chat carries beside the conversation, for the count of tokens: the
+    /// system prompt, and the guidelines of the organization in front of the first message.
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers.</param>
-    /// <returns>The system prompt, or null when it cannot be put together now.</returns>
+    /// <returns>The text to count, or null when it cannot be put together now.</returns>
     private async Task<string?> SystemPromptForCountAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
         try
         {
-            return await this.ConversationService.ComposeSystemPromptAsync(location, provider);
+            return await this.ConversationService.ComposeTextForCountAsync(location, provider);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
         {
