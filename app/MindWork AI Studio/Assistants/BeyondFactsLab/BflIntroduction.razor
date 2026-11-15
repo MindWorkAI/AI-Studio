@@ -61,6 +61,15 @@
     @TA("With 'Share with the research team' above your preparation, you can share your session with the research team of the lab, so that it can develop the lab further; the lab also asks once you confirm the work state of the last step for the first time. Sharing is voluntary. Before you share, AI Studio removes the personal details it recognizes, and you check the preview, since its rules may miss something. You export the file and send it with your own mail program, which shows your address.")
 </MudJustifiedText>
 
+@* Only when a configuration plugin sets guidelines, since nobody else can: *@
+@if (!string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules))
+{
+    <MudText Typo="Typo.h6">@TA("Guidelines from your organization")</MudText>
+    <MudJustifiedText Typo="Typo.body1" Class="mb-4">
+        @string.Format(Culture, TA("Your organization has set guidelines for public appearances, which you find above your preparations. The conversations of the steps know them as information, and the material '{0}' ends with them. They add to the rules of the lab: where they contradict them, the rules of the lab apply, and the conversation points that out. Sharing with the research team leaves them out, since they would reveal your organization."), BflResultKind.OPEN_POINTS.Title)
+    </MudJustifiedText>
+}
+
 <MudText Typo="Typo.h6">@T("How to recognize good results")</MudText>
 <MudList T="string" ReadOnly="@true" Dense="@true" Class="mud-text-list mb-3">
     <MudListItem T="string" Icon="@AppIcons.CHECKLIST_ITEM" Style="@LIST_ITEM_STYLE">
