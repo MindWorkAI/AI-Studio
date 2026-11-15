@@ -25,6 +25,16 @@ public sealed record ContentStreamChunk(string Content, IList<ISource> Sources, 
     public IReadOnlyList<SourcePassage> Passages { get; init; } = [];
 
     /// <summary>
+    /// Whether the model was reasoning when this chunk arrived.
+    /// </summary>
+    /// <remarks>
+    /// The reasoning itself never travels with the chunk; nothing shows it. The chunk only says
+    /// that it happens, so that the user reads why no text arrives yet. A provider which hides
+    /// its reasoning inside think tags sets nothing here: that text arrives as content.
+    /// </remarks>
+    public bool IsReasoning { get; init; }
+
+    /// <summary>
     /// Implicit conversion to string.
     /// </summary>
     /// <param name="chunk">The content stream chunk.</param>

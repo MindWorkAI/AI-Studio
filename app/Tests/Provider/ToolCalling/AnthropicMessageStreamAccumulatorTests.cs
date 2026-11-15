@@ -64,6 +64,25 @@ public sealed class AnthropicMessageStreamAccumulatorTests
     }
     
     [Test]
+    public void ThinkingSaysThatTheModelReasons()
+    {
+        var accumulator = new AnthropicMessageStreamAccumulator();
+        var parts = Lines(
+                """{"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}""",
+                """{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Let me consider this."}}""",
+                """{"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}}""",
+                """{"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"The answer."}}""")
+            .Select(accumulator.Process)
+            .ToList();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(parts[1].IsReasoning, Is.True, "A thinking delta tells the user why no text arrives yet.");
+            Assert.That(parts[3].IsReasoning, Is.False, "Text is the answer, not reasoning.");
+        }
+    }
+
+    [Test]
     public void AThinkingBlockKeepsItsSignature()
     {
         //

@@ -140,6 +140,16 @@
         {
             if (this.Content.IsStreaming)
             {
+                @*
+                    The provider says that the model is reasoning, or chunks arrive without any
+                    text the user may read, as while a model reasons inside think tags.
+                *@
+                @if (this.Content is ContentText { ToolRuntimeStatus.IsRunning: false } streamingText && (streamingText.IsReasoning || string.IsNullOrWhiteSpace(streamingText.Text.RemoveThinkTags())))
+                {
+                    <MudText Typo="Typo.body2" Class="mb-2">
+                        @T("The model is thinking...")
+                    </MudText>
+                }
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
             }
             
@@ -225,6 +235,12 @@
 
                         if (textContent.InitialRemoteWait)
                         {
+                            @if (!textContent.ToolRuntimeStatus.IsRunning)
+                            {
+                                <MudText Typo="Typo.body2" Class="mb-2">
+                                    @T("Processing the prompt...")
+                                </MudText>
+                            }
                             <MudSkeleton Width="30%" Height="42px;"/>
                             <MudSkeleton Width="80%"/>
                             <MudSkeleton Width="100%"/>

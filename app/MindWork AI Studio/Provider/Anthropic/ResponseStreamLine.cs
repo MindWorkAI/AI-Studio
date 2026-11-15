@@ -19,10 +19,15 @@ public readonly record struct ResponseStreamLine(string Type, int Index, Delta D
     public AnthropicStreamMessage? Message { get; init; }
 
     /// <inheritdoc />
-    public bool ContainsContent() => this != default && !string.IsNullOrWhiteSpace(this.Delta.Text);
+    public bool ContainsContent() => this != default && (!string.IsNullOrWhiteSpace(this.Delta.Text) || this.IsThinking);
 
     /// <inheritdoc />
-    public ContentStreamChunk GetContent() => new(this.Delta.Text, []);
+    public ContentStreamChunk GetContent() => new(this.Delta.Text ?? string.Empty, []) { IsReasoning = this.IsThinking };
+
+    /// <summary>
+    /// Whether this line carries thinking of the model, which says that it is reasoning.
+    /// </summary>
+    private bool IsThinking => !string.IsNullOrEmpty(this.Delta.Thinking);
 
     /// <inheritdoc />
     /// <remarks>

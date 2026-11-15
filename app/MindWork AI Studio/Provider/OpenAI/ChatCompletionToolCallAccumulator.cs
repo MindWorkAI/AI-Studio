@@ -73,7 +73,8 @@ public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, ILis
 
         this.hasReadAnything = true;
         
-        if (!string.IsNullOrEmpty(delta.ReasoningContent))
+        var isReasoning = !string.IsNullOrEmpty(delta.ReasoningContent);
+        if (isReasoning)
             this.reasoning.Append(delta.ReasoningContent);
 
         foreach (var toolCallDelta in delta.ToolCalls ?? [])
@@ -86,10 +87,12 @@ public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, ILis
 
         var textDelta = delta.Content;
         if (textDelta.Length is 0)
-            return WithSources(string.Empty, sources, usage);
+            return isReasoning
+                ? new ChatCompletionStreamPart(string.Empty, sources, usage) { IsReasoning = true }
+                : WithSources(string.Empty, sources, usage);
 
         this.text.Append(textDelta);
-        return new ChatCompletionStreamPart(textDelta, sources, usage);
+        return new ChatCompletionStreamPart(textDelta, sources, usage) { IsReasoning = isReasoning };
     }
     
     /// <summary>

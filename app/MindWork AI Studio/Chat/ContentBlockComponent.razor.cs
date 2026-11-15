@@ -449,6 +449,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                 hash.Add(text.ToolInvocations.Count);
                 hash.Add(text.Presentation?.Kind);
                 hash.Add(text.Presentation?.GetDataHashCode() ?? 0);
+                hash.Add(text.IsReasoning);
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);
                 hash.Add(this.showToolTrace);

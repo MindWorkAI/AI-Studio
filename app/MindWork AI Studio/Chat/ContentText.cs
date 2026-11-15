@@ -43,6 +43,15 @@ public sealed class ContentText : IContent
     [JsonIgnore]
     public bool IsStreaming { get; set; }
 
+    /// <summary>
+    /// Whether the model is reasoning right now, as far as its provider says so.
+    /// </summary>
+    /// <remarks>
+    /// Only meaningful while the answer is streaming, see ApplyStreamChunk.
+    /// </remarks>
+    [JsonIgnore]
+    public bool IsReasoning { get; private set; }
+
     /// <inheritdoc />
     [JsonIgnore]
     public Func<Task> StreamingDone { get; set; } = IContent.NO_STREAMING_HANDLER;
@@ -376,6 +385,12 @@ public sealed class ContentText : IContent
         this.InitialRemoteWait = false;
         this.IsStreaming = true;
 
+        // Reasoning lasts until the first text after it:
+        if (chunk.IsReasoning)
+            this.IsReasoning = true;
+        else if (!string.IsNullOrEmpty(chunk.Content))
+            this.IsReasoning = false;
+
         this.Text += chunk;
         if (chunk.Sources.Count > 0 || chunk.Passages.Count > 0)
             this.AddSources(chunk.Sources, chunk.Passages);
@@ -515,6 +530,7 @@ public sealed class ContentText : IContent
                     // was stopped, or no content was received):
                     this.InitialRemoteWait = false;
                     this.IsStreaming = false;
+                    this.IsReasoning = false;
                 }
             }, token);
         }

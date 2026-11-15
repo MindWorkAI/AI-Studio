@@ -47,6 +47,28 @@ public sealed class ResponsesStreamAccumulatorTests
     }
     
     [Test]
+    public void AnOpeningReasoningItemSaysThatTheModelReasons()
+    {
+        var accumulator = new ResponsesStreamAccumulator();
+        var parts = Lines(
+                """{"type":"response.output_item.added","output_index":0,"item":{"id":"rs_1","type":"reasoning","summary":[]}}""",
+                """{"type":"response.reasoning_summary_text.delta","item_id":"rs_1","delta":"Weighing the options."}""",
+                """{"type":"response.output_item.added","output_index":1,"item":{"id":"msg_1","type":"message","content":[]}}""",
+                """{"type":"response.output_text.delta","delta":"The answer."}""")
+            .Select(accumulator.Process)
+            .ToList();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(parts[0].IsReasoning, Is.True, "The opening of a reasoning item is all the API says about reasoning it keeps to itself.");
+            Assert.That(parts[1].IsReasoning, Is.True, "A summary of the reasoning says the same.");
+            Assert.That(parts[1].HasContent, Is.False, "The reasoning itself does not show.");
+            Assert.That(parts[2].IsReasoning, Is.False, "A message which opens is not reasoning.");
+            Assert.That(parts[3].IsReasoning, Is.False, "Text is the answer, not reasoning.");
+        }
+    }
+
+    [Test]
     public void TheTextIsShownWhileItIsBeingWritten()
     {
         var accumulator = new ResponsesStreamAccumulator();

@@ -1294,6 +1294,27 @@ public abstract class BaseProvider : IProvider, ISecretId
                 // Yield the response:
                 yield return new(string.Empty, providerResponse.GetSources());
             }
+
+            //
+            // Find the lines which say that the model reasons: the opening of a reasoning item,
+            // which is all the API tells about reasoning it keeps to itself, and the reasoning
+            // which does arrive as text. None of it is shown; the chunk only says that it happens.
+            //
+            else if (serverSentEvent.Data.StartsWith(
+                         """
+                         {"type":"response.reasoning
+                         """, StringComparison.InvariantCulture) ||
+                     (serverSentEvent.Data.StartsWith(
+                          """
+                          {"type":"response.output_item.added"
+                          """, StringComparison.InvariantCulture) &&
+                      serverSentEvent.Data.Contains(
+                          """
+                          "type":"reasoning"
+                          """, StringComparison.InvariantCulture)))
+            {
+                yield return new(string.Empty, []) { IsReasoning = true };
+            }
         }
     }
 
