@@ -147,6 +147,15 @@
                                 {
                                     var step = this.activeStep;
                                     <BflStepForm Step="@step" Form="@form" FormChanged="@(() => this.SaveFormAsync(step))"/>
+                                    @if (step is BflStep.TEST_SITUATION)
+                                    {
+                                        <BflSimulationChoice ProjectId="@project.ProjectId"
+                                                             Forms="@this.forms"
+                                                             Form="@form"
+                                                             FormChanged="@(() => this.SaveFormAsync(step))"
+                                                             Provider="@this.providerSettings"
+                                                             Class="mt-3"/>
+                                    }
                                 }
                                 else
                                 {
@@ -164,7 +173,7 @@
                                                       ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
                                 }
 
-                                <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                                <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)" DetailsVersion="@this.ChatDetailsVersion"/>
 
                                 <BflWorkStatePanel Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))"
                                                    WorkStates="@this.workStates"

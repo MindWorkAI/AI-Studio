@@ -7,6 +7,8 @@ public static class BflSimulationModeExtensions
 {
     private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(BflSimulationModeExtensions).Namespace, nameof(BflSimulationModeExtensions));
 
+    private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(BflSimulationModeExtensions).Namespace, nameof(BflSimulationModeExtensions));
+
     /// <param name="mode">The mode.</param>
     extension(BflSimulationMode mode)
     {
@@ -20,6 +22,18 @@ public static class BflSimulationModeExtensions
             BflSimulationMode.PRESS_CONFERENCE => TB("Press conference with up to five people"),
 
             _ => TB("Generic counterparts, no specific person"),
+        };
+
+        /// <summary>
+        /// Gets what the chat does in this mode, and when the person gets feedback, as the selection explains it.
+        /// </summary>
+        public string Description => mode switch
+        {
+            BflSimulationMode.SINGLE_PERSON => TA("The lab plays one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise."),
+            BflSimulationMode.PANEL_DISCUSSION => TA("The lab plays a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise."),
+            BflSimulationMode.PRESS_CONFERENCE => TA("The lab plays a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise."),
+
+            _ => TA("The lab asks critical questions as they could come up at the event, without playing a specific person. After every answer, you get feedback."),
         };
 
         /// <summary>

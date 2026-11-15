@@ -1,0 +1,86 @@
+@inherits MSGComponentBase
+
+@* Whom the conversation of the step plays belongs to the details of the step, so it stands in a dashed frame like the
+   sections of the other forms. It stays right above the conversation, so that the person sees whom the lab simulates. *@
+<MudPaper Elevation="1" Class="@($"pa-3 border-dashed border rounded-lg {this.Class}")">
+    <MudText Typo="Typo.h6" Class="mb-2">@T("Simulation")</MudText>
+
+    <MudSelect T="BflSimulationMode"
+               Value="@this.Mode"
+               ValueChanged="@this.SetModeAsync"
+               Label="@T("Whom the lab plays")"
+               HelperText="@this.Mode.Description"
+               Disabled="@this.Disabled"
+               Variant="Variant.Outlined">
+        @foreach (var mode in BflSimulationMode.All)
+        {
+            <MudSelectItem T="BflSimulationMode" Value="@mode">@mode.Title</MudSelectItem>
+        }
+    </MudSelect>
+
+    @if (this.Mode.HasPeople)
+    {
+        @if (BflEventVisibility.IsNotPublic(this.Forms))
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@AppIcons.NOT_PUBLIC" Class="mt-3">
+                <MudJustifiedText Typo="Typo.body2">@TA("The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts.")</MudJustifiedText>
+            </MudAlert>
+        }
+        else if (this.Candidates.Count is 0)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@AppIcons.PERSON_RESEARCH" Class="mt-3">
+                <MudJustifiedText Typo="Typo.body2">@string.Format(Culture, TA("Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab plays generic counterparts."), BflStep.STRATEGY.Title)</MudJustifiedText>
+            </MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mt-3">@this.ChooseText</MudText>
+            <MudChipSet T="string"
+                        SelectionMode="SelectionMode.MultiSelection"
+                        SelectedValues="@this.ChosenNames"
+                        SelectedValuesChanged="@this.ChooseAsync"
+                        CheckMark="true"
+                        Color="Color.Primary"
+                        Variant="Variant.Outlined"
+                        Disabled="@this.Disabled">
+                @foreach (var candidate in this.Candidates)
+                {
+                    <MudChip @key="candidate.Name" T="string" Value="@candidate.Name" Text="@candidate.Name" Disabled="@this.IsOverTheLimit(candidate)"/>
+                }
+            </MudChipSet>
+            <MudText Typo="Typo.caption" Class="d-block mb-1">@string.Format(Culture, TA("Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'."), BflStep.STRATEGY.Title)</MudText>
+
+            @if (this.Effective.People.Count is 0)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                    <MudJustifiedText Typo="Typo.body2">@TA("Choose at least one person. Until then, the lab plays generic counterparts.")</MudJustifiedText>
+                </MudAlert>
+            }
+            else
+            {
+                @switch (this.Fit)
+                {
+                    case BflSimulationFit.TOO_SMALL:
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                            <MudJustifiedText Typo="Typo.body2">@string.Format(Culture, TA("The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing."), this.DossierTokens.CompactCount(), this.ContextTokens.CompactCount())</MudJustifiedText>
+                        </MudAlert>
+                        break;
+
+                    case BflSimulationFit.UNKNOWN_CONTEXT:
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                            <MudJustifiedText Typo="Typo.body2">@string.Format(Culture, TA("The research on the people you chose takes about {0} tokens. Nobody knows how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. The conversation shows how much room is left."), this.DossierTokens.CompactCount())</MudJustifiedText>
+                        </MudAlert>
+                        break;
+
+                    default:
+                        <MudText Typo="Typo.caption" Class="d-block mt-1">@string.Format(Culture, T("The research on these people takes about {0} of the {1} tokens the model reads at once."), this.DossierTokens.CompactCount(), this.ContextTokens.CompactCount())</MudText>
+                        break;
+                }
+
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@AppIcons.PERSON_RESEARCH" Class="mt-3">
+                    <MudJustifiedText Typo="Typo.body2">@string.Format(Culture, TA("In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation."), string.Join(", ", this.Effective.People.Select(person => person.Name)))</MudJustifiedText>
+                </MudAlert>
+            }
+        }
+    }
+</MudPaper>

@@ -43,6 +43,13 @@ public partial class BflChat : MSGComponentBase
     [Parameter]
     public string? ProviderIssue { get; set; }
 
+    /// <summary>
+    /// Gets or sets a number which changes whenever a detail changes which takes much room in the next request, such as
+    /// whom the step "Test situation" simulates, whose research the prompt carries.
+    /// </summary>
+    [Parameter]
+    public int DetailsVersion { get; set; }
+
     [Inject]
     private BflConversationService ConversationService { get; init; } = null!;
 
@@ -70,9 +77,10 @@ public partial class BflChat : MSGComponentBase
 
     /// <summary>
     /// Gets a number which changes whenever what the next request carries beside the conversation changed: the
-    /// material, or the guidelines of the organization after a configuration plugin was reloaded.
+    /// material, the guidelines of the organization after a configuration plugin was reloaded, or a detail which takes
+    /// much room, see DetailsVersion.
     /// </summary>
-    private int ContextVersion => HashCode.Combine(this.materialsVersion, this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules);
+    private int ContextVersion => HashCode.Combine(this.materialsVersion, this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules, this.DetailsVersion);
 
     /// <summary>
     /// Gets what the chat says before its conversation begins.
