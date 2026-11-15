@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Assistants.BeyondFactsLab;
 
 /// <summary>
@@ -5,14 +7,14 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// </summary>
 /// <remarks>
 /// The values are stored under the IDs of the fields of BflFieldCatalog. A value of a field this version does not
-/// know, e.g., one a newer version added, stays as it is and is written back unchanged.
+/// know, e.g., one a newer version added, stays as it is and is written back unchanged. Version 2 added the card sort.
 /// </remarks>
 public sealed class BflStepFormData
 {
     /// <summary>
     /// The version of the stored form this version of AI Studio writes. Raise it with every new property.
     /// </summary>
-    public const int CURRENT_SCHEMA_VERSION = 1;
+    public const int CURRENT_SCHEMA_VERSION = 2;
 
     /// <summary>
     /// The character which separates the options of a field with several choices.
@@ -28,6 +30,15 @@ public sealed class BflStepFormData
     /// Gets or sets the values, by the IDs of their fields.
     /// </summary>
     public Dictionary<string, string> Values { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Gets or sets the card sort of the step "Values and perspectives", see BflCardSort.
+    /// </summary>
+    /// <remarks>
+    /// Null for every other step, and until the person sorts a value there; the file then leaves it out.
+    /// </remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public BflCardSort? CardSort { get; set; }
 
     /// <summary>
     /// Gets the value of a field, or an empty string when the field has none.
