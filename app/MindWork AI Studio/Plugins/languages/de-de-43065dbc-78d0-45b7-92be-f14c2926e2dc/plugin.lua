@@ -2047,10 +2047,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T31331
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850::INFORMAL"] = "Bitte gib zuerst im Schritt „{0}“ öffentliche Angaben zur Veranstaltung ein, z. B. ihr Thema oder ihren Link. Die Recherche erhält nur diese Angaben."
 
 -- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743"] = "Der Recherche-Agent hat sein Kontingent an Suchanfragen und Seiten aufgebraucht, bevor er ein Ergebnis erstellt hat. Bitte versuchen Sie es erneut oder verwenden Sie einen anderen Anbieter."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743"] = "Der Recherche-Agent hat seine Suchanfragen und Seiten aufgebraucht, bevor er ein Ergebnis geschrieben hat. Bitte versuchen Sie es erneut oder wählen Sie einen anderen Anbieter."
 
 -- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743::INFORMAL"] = "Der Recherche-Agent hat sein Kontingent an Suchanfragen und Seiten aufgebraucht, bevor er ein Ergebnis erstellt hat. Bitte versuche es erneut oder verwende einen anderen Anbieter."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743::INFORMAL"] = "Der Recherche-Agent hat seine Suchanfragen und Seiten aufgebraucht, bevor er ein Ergebnis geschrieben hat. Bitte versuche es erneut oder wähle einen anderen Anbieter."
 
 -- This person is no longer on the list of participants, so the lab does not research them. Please research the participants again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T980791662"] = "Diese Person steht nicht mehr in der Liste der Teilnehmenden, deshalb recherchiert das Lab sie nicht. Bitte recherchieren Sie die Teilnehmenden erneut."
@@ -2545,10 +2545,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T25243
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2524378548::INFORMAL"] = "Du kannst einzelne Felder ausfüllen oder direkt im Chat beginnen."
 
 -- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618"] = "Wie Sie Belege, Abwägungen zwischen Werten und offene Fragen vermitteln. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu den Teilnehmenden und zur öffentlichen Debatte."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618"] = "Wie Sie Evidenz, Wertabwägungen und offene Fragen vermitteln. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte."
 
 -- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618::INFORMAL"] = "Wie du Belege, Abwägungen zwischen Werten und offene Fragen vermittelst. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu den Teilnehmenden und zur öffentlichen Debatte."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618::INFORMAL"] = "Wie du Evidenz, Wertabwägungen und offene Fragen vermittelst. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte."
 
 -- Goals and role
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2988481290"] = "Ziele und Rolle"
@@ -23833,10 +23833,10 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGE
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3117779001::INFORMAL"] = "Die Anfrage zum Aufruf des Werkzeugs ist mit dem Statuscode {0} fehlgeschlagen. Weitere Details findest du in den Protokollen."
 
 -- The model did not return a final answer after completing the available tool calls.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3613099681"] = "Das Modell hat nach Abschluss der verfügbaren Tool-Aufrufe keine abschließende Antwort zurückgegeben."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3613099681"] = "Das Modell hat nach den verfügbaren Werkzeugaufrufen keine abschließende Antwort gegeben."
 
 -- The model completed the tool call but did not return a final answer.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T54566803"] = "Das Modell hat den Tool-Aufruf abgeschlossen, aber keine abschließende Antwort zurückgegeben."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T54566803"] = "Das Modell hat den Werkzeugaufruf abgeschlossen, aber keine abschließende Antwort gegeben."
 
 -- General
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T1432485131"] = "Allgemein"
