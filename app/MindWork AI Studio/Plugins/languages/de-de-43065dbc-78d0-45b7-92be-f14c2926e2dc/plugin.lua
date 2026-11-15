@@ -1456,7 +1456,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266933::INFORMAL"] = "Plane für eine Vorbereitung etwa 30 bis 60 Minuten ein. Du kannst jederzeit unterbrechen: AI Studio speichert deine Angaben und Gespräche, und du machst später dort weiter, wo du aufgehört hast."
 
 -- Value card sort
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T194927200"] = "Wertekarten sortieren"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T194927200"] = "Werte-Sortierung"
 
 -- Work through the seven steps, in any order you like. Each step has the form 'Your details' and a conversation of its own.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2001857602"] = "Bearbeiten Sie die sieben Schritte in beliebiger Reihenfolge. Jeder Schritt hat das Formular „Ihre Angaben“ und ein eigenes Gespräch."
@@ -1489,10 +1489,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2980837
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2988041082"] = "Was das Lab nicht tut"
 
 -- In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819"] = "In Schritt „{0}“ können Sie zwölf Werte in drei Runden danach sortieren, wie wichtig sie Ihnen für diesen Anlass sind. Sie können eigene Werte hinzufügen und zwei oder drei Werte auswählen, die Sie genauer betrachten möchten. Das Gespräch in diesem Schritt berücksichtigt Ihre Kartensortierung und baut darauf auf. Die späteren Schritte erfahren über den bestätigten Arbeitsstand, was Sie daraus mitnehmen. Die Kartensortierung ist freiwillig und kein validierter Werte- oder Persönlichkeitstest."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819"] = "Im Schritt „{0}“ können Sie zwölf Werte in drei Runden danach sortieren, wie wichtig sie Ihnen für diesen Anlass sind. Sie können eigene Werte ergänzen und zwei oder drei Werte auswählen, die Sie genauer betrachten möchten. Das Gespräch dieses Schritts kennt Ihre Werte-Sortierung und baut darauf auf; die späteren Schritte erfahren über seinen bestätigten Arbeitsstand, was Sie daraus mitnehmen. Die Werte-Sortierung ist freiwillig und kein validierter Werte- oder Persönlichkeitstest."
 
 -- In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819::INFORMAL"] = "In Schritt „{0}“ kannst du zwölf Werte in drei Runden danach sortieren, wie wichtig sie dir für diesen Anlass sind. Du kannst eigene Werte hinzufügen und zwei oder drei Werte auswählen, die du genauer betrachten möchtest. Das Gespräch in diesem Schritt berücksichtigt deine Kartensortierung und baut darauf auf. Die späteren Schritte erfahren über den bestätigten Arbeitsstand, was du daraus mitnimmst. Die Kartensortierung ist freiwillig und kein validierter Werte- oder Persönlichkeitstest."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819::INFORMAL"] = "Im Schritt „{0}“ kannst du zwölf Werte in drei Runden danach sortieren, wie wichtig sie dir für diesen Anlass sind. Du kannst eigene Werte ergänzen und zwei oder drei Werte auswählen, die du genauer betrachten möchtest. Das Gespräch dieses Schritts kennt deine Werte-Sortierung und baut darauf auf; die späteren Schritte erfahren über seinen bestätigten Arbeitsstand, was du daraus mitnimmst. Die Werte-Sortierung ist freiwillig und kein validierter Werte- oder Persönlichkeitstest."
 
 -- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3499941356"] = "Lassen Sie das Lab das Gespräch eines Schritts beginnen, oder schreiben Sie zuerst und sagen Sie, wobei Sie Unterstützung möchten, etwa bei Ihrer Rolle, Ihrer Strategie oder mit einer Runde kritischer Fragen. Sie können jederzeit „Ich weiß es nicht“ antworten."
@@ -2302,7 +2302,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMAIL::T3622173728
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1085223273"] = "Kein bestätigter Arbeitsstand."
 
 -- Card sort
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T116016553"] = "Karten sortieren"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T116016553"] = "Werte-Sortierung"
 
 -- No conversation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1296316689"] = "Kein Gespräch."
@@ -2365,7 +2365,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T36
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3731741448"] = "BeyondFacts Lab: eine geteilte Sitzung"
 
 -- To look at more closely
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3757621498"] = "Genauer ansehen"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3757621498"] = "Genauer betrachten"
 
 -- Left out, as it may contain personal disclosures.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3986361996"] = "Ausgelassen, da es persönliche Angaben enthalten kann."
@@ -2479,37 +2479,37 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3459633363"] = "Öffentliche Angabe: Die Recherche des Labs erhält sie"
 
 -- {0} of at most {1} values chosen.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2016759665"] = "{0} von maximal {1} Werten ausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2016759665"] = "{0} von höchstens {1} Werten ausgewählt."
 
 -- Please enter a name, or remove the value.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524"] = "Bitte geben Sie einen Namen ein oder löschen Sie den Wert."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524"] = "Bitte geben Sie einen Namen ein oder entfernen Sie den Wert."
 
 -- Please enter a name, or remove the value.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524::INFORMAL"] = "Bitte gib einen Namen ein oder lösche den Wert."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524::INFORMAL"] = "Bitte gib einen Namen ein oder entferne den Wert."
 
 -- You have added {0} values of your own, as many as the card sort takes.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734"] = "Sie haben {0} eigene Werte hinzugefügt – so viele, wie die Kartensortierung zulässt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734"] = "Sie haben {0} eigene Werte hinzugefügt, so viele, wie die Werte-Sortierung aufnimmt."
 
 -- You have added {0} values of your own, as many as the card sort takes.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734::INFORMAL"] = "Du hast {0} eigene Werte hinzugefügt – so viele, wie die Kartensortierung zulässt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734::INFORMAL"] = "Du hast {0} eigene Werte hinzugefügt, so viele, wie die Werte-Sortierung aufnimmt."
 
 -- Look more closely
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2616202800"] = "Sehen Sie genauer hin."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2616202800"] = "Genauer betrachten"
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2646845972"] = "Hinzufügen"
 
 -- What it means to you
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372"] = "Was es für Sie bedeutet"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372"] = "Was er für Sie bedeutet"
 
 -- What it means to you
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372::INFORMAL"] = "Was es für dich bedeutet"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372::INFORMAL"] = "Was er für dich bedeutet"
 
 -- Value
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3511155050"] = "Wert"
 
 -- AI Studio cannot show the card sort, because its values are missing or damaged.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3585110184"] = "AI Studio kann die Kartensortierung nicht anzeigen, weil ihre Werte fehlen oder beschädigt sind."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3585110184"] = "AI Studio kann die Werte-Sortierung nicht anzeigen, weil ihre Werte fehlen oder beschädigt sind."
 
 -- Based on: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3634031667"] = "Basierend auf: {0}"
@@ -2521,34 +2521,34 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T365187
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3695292997"] = "Runde {0}"
 
 -- Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772"] = "Ordnen Sie jeden Wert danach, wie wichtig er Ihnen für diesen Anlass ist. Ein Wert, den Sie nicht einsortieren, bleibt offen und gilt nicht als weniger wichtig. Ergänzen Sie anschließend fehlende Werte und wählen Sie zwei oder drei Werte aus, die Sie im Gespräch näher betrachten möchten. Alles ist freiwillig und kann jederzeit geändert werden. Sie können diesen Schritt auch ohne Kartensortierung abschließen. Dies ist kein validierter Werte- oder Persönlichkeitstest."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772"] = "Ordnen Sie jeden Wert danach ein, wie wichtig er Ihnen für diesen Anlass ist. Ein Wert, den Sie nicht einordnen, bleibt offen und gilt nicht als weniger wichtig. Ergänzen Sie anschließend fehlende Werte und wählen Sie zwei oder drei Werte aus, die Sie im Gespräch genauer betrachten möchten. Alles ist freiwillig und bleibt änderbar; Sie können diesen Schritt auch ohne Werte-Sortierung abschließen. Die Werte-Sortierung ist kein validierter Werte- oder Persönlichkeitstest."
 
 -- Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772::INFORMAL"] = "Ordne jeden Wert danach, wie wichtig er dir für diesen Anlass ist. Ein Wert, den du nicht einsortierst, bleibt offen und gilt nicht als weniger wichtig. Ergänze anschließend fehlende Werte und wähle zwei oder drei Werte aus, die du im Gespräch näher betrachten möchtest. Alles ist freiwillig und kann jederzeit geändert werden. Du kannst diesen Schritt auch ohne Kartensortierung abschließen. Dies ist kein validierter Werte- oder Persönlichkeitstest."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772::INFORMAL"] = "Ordne jeden Wert danach ein, wie wichtig er dir für diesen Anlass ist. Ein Wert, den du nicht einordnest, bleibt offen und gilt nicht als weniger wichtig. Ergänze anschließend fehlende Werte und wähle zwei oder drei Werte aus, die du im Gespräch genauer betrachten möchtest. Alles ist freiwillig und bleibt änderbar; du kannst diesen Schritt auch ohne Werte-Sortierung abschließen. Die Werte-Sortierung ist kein validierter Werte- oder Persönlichkeitstest."
 
 -- Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849"] = "Welche zwei oder drei Werte möchten Sie bei diesem Anlass genauer betrachten? Im anschließenden Gespräch geht es darum, was diese Werte für Ihren Beitrag bedeuten und wo sie möglicherweise miteinander in Spannung stehen. Ihre Auswahl stellt keine Rangfolge dar."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849"] = "Welche zwei oder drei Werte möchten Sie für diesen Anlass genauer betrachten? Das Gespräch fragt dann, was diese Werte für Ihren Beitrag bedeuten und wo sie unterschiedliche Handlungen nahelegen könnten. Ihre Auswahl ist keine Rangfolge."
 
 -- Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849::INFORMAL"] = "Welche zwei oder drei Werte möchtest du bei diesem Anlass genauer betrachten? Im anschließenden Gespräch geht es darum, was diese Werte für deinen Beitrag bedeuten und wo sie möglicherweise miteinander in Spannung stehen. Deine Auswahl stellt keine Rangfolge dar."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849::INFORMAL"] = "Welche zwei oder drei Werte möchtest du für diesen Anlass genauer betrachten? Das Gespräch fragt dann, was diese Werte für deinen Beitrag bedeuten und wo sie unterschiedliche Handlungen nahelegen könnten. Deine Auswahl ist keine Rangfolge."
 
 -- Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460"] = "Welcher wichtige Wert fehlt Ihnen? Fügen Sie ihn hinzu und geben Sie an, was er für Sie bedeutet. Sie können auch eigene Werte auswählen, die Sie näher betrachten möchten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460"] = "Welcher wichtige Wert fehlt Ihnen? Fügen Sie ihn hinzu und geben Sie an, was er für Sie bedeutet. Sie können auch eigene Werte auswählen, die Sie genauer betrachten möchten."
 
 -- Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460::INFORMAL"] = "Welcher wichtige Wert fehlt dir? Füge ihn hinzu und gib an, was er für dich bedeutet. Du kannst auch eigene Werte auswählen, die du näher betrachten möchtest."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460::INFORMAL"] = "Welcher wichtige Wert fehlt dir? Füge ihn hinzu und gib an, was er für dich bedeutet. Du kannst auch eigene Werte auswählen, die du genauer betrachten möchtest."
 
 -- New value
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T840803648"] = "Neuer Wert"
 
 -- Not sorted yet
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2675795693"] = "Noch nicht sortiert"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2675795693"] = "Noch nicht zugeordnet"
 
 -- Unclear
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2886397187"] = "Unklar"
 
 -- Less important for this occasion
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2929600398"] = "Für diesen Anlass weniger wichtig"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2929600398"] = "Weniger wichtig für diesen Anlass"
 
 -- Also important
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T3500243228"] = "Auch wichtig"
