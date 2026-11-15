@@ -133,6 +133,63 @@ public static class BflPromptComposer
     }).ReplaceLineEndings(LINE_BREAK.ToString());
 
     /// <summary>
+    /// Puts together the system prompt of an agent of the research on a person.
+    /// </summary>
+    /// <remarks>
+    /// Like the research on a topic, it carries nothing of the preparation but the public details about the event. The
+    /// person comes from the list of participants, which an agent found on the web, and the earlier stages are what
+    /// agents found on the web as well; both are the answers of models which read only filtered web content.
+    /// </remarks>
+    /// <param name="parts">The texts of the prompt; the topic is the task of the stage.</param>
+    /// <param name="details">The public details about the event, see PublicDetailsOf.</param>
+    /// <param name="participant">The person, as the list of participants gives them.</param>
+    /// <param name="earlierStages">What the earlier stages of this research found, in their order.</param>
+    /// <param name="responseLanguage">The name of the language the agent writes in, e.g., the language of the app.</param>
+    /// <returns>The system prompt.</returns>
+    /// <exception cref="FormatException">The prompt has a placeholder without a value.</exception>
+    public static string ComposePersonResearch(BflResearchPromptParts parts, IReadOnlyList<BflResearchDetail> details, BflParticipant participant, IReadOnlyList<BflPersonStageResearch> earlierStages, string responseLanguage) => BflPromptTemplate.Fill(parts.Research, new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
+        [BflPromptTemplate.TOPIC] = parts.Topic.Trim(),
+        [BflPromptTemplate.TOOL_CALLS] = ToolSelectionRules.MAX_TOOL_CALLS.ToString(CultureInfo.InvariantCulture),
+        [BflPromptTemplate.PERSON] = Person(participant),
+        [BflPromptTemplate.EARLIER_STAGES] = EarlierStages(earlierStages),
+        [BflPromptTemplate.PUBLIC_DETAILS] = PublicDetails(details)
+    }).ReplaceLineEndings(LINE_BREAK.ToString());
+
+    /// <summary>
+    /// Describes the person an agent of the research on people looks into, as the list of participants gives them.
+    /// </summary>
+    /// <param name="participant">The person.</param>
+    private static string Person(BflParticipant participant)
+    {
+        var text = new StringBuilder("Name: ").Append(participant.Name).Append(LINE_BREAK).Append(LINE_BREAK);
+        var entry = participant.Entry.Trim();
+        return (entry.Length is 0
+            ? text.Append("Die Liste nennt nur den Namen.")
+            : text.Append("Eintrag in der Liste:").Append(LINE_BREAK).Append(entry.ReplaceLineEndings(LINE_BREAK.ToString()))).ToString();
+    }
+
+    /// <summary>
+    /// Lists what the earlier stages of a research on a person found, each with its title and the day it was done.
+    /// </summary>
+    /// <param name="earlierStages">The earlier stages, in their order.</param>
+    private static string EarlierStages(IReadOnlyList<BflPersonStageResearch> earlierStages)
+    {
+        var text = new StringBuilder();
+        foreach (var stage in earlierStages.Where(stage => stage.Research.Text.Trim().Length > 0))
+        {
+            if (text.Length > 0)
+                text.Append(LINE_BREAK);
+
+            text.Append($"<stufe titel=\"{stage.Stage.Title}\" stand=\"{stage.Research.CreatedAtUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}\">").Append(LINE_BREAK);
+            text.Append(stage.Research.Text.Trim().ReplaceLineEndings(LINE_BREAK.ToString())).Append(LINE_BREAK).Append("</stufe>").Append(LINE_BREAK);
+        }
+
+        return text.Length is 0 ? "Du bist die erste Stufe; es gibt noch keine Ergebnisse." : text.ToString().TrimEnd();
+    }
+
+    /// <summary>
     /// Gets the public details about the event from the forms of a preparation: the only details a research receives.
     /// </summary>
     /// <remarks>

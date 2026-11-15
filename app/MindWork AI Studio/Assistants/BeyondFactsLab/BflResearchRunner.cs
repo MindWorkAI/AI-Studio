@@ -22,6 +22,9 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// a budget of its own, and the agents run side by side. Like the conversations, a singleton, so that the work goes on
 /// while the person looks at another page.
 /// </para>
+/// <para>
+/// The research on single people from the list of participants runs here as well, in stages, see RunPersonAsync.
+/// </para>
 /// </remarks>
 /// <param name="store">The store of the lab.</param>
 /// <param name="conversations">The conversations of the lab, whose checks of a provider the research shares.</param>
@@ -30,7 +33,7 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// <param name="sessionService">The registry of running assistant sessions.</param>
 /// <param name="messageBus">The message bus, for errors.</param>
 /// <param name="logger">The logger.</param>
-public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversationService conversations, ToolRegistry toolRegistry, SettingsManager settingsManager, AssistantSessionService sessionService, MessageBus messageBus, ILogger<BflResearchRunner> logger)
+public sealed partial class BflResearchRunner(BeyondFactsLabStore store, BflConversationService conversations, ToolRegistry toolRegistry, SettingsManager settingsManager, AssistantSessionService sessionService, MessageBus messageBus, ILogger<BflResearchRunner> logger)
 {
     /// <summary>
     /// The request which lets an agent start its research. German, like the prompts.
@@ -153,20 +156,8 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
         var status = AssistantSessionStatus.FAILED;
         try
         {
-            // The forms on disk decide, since the person may have changed them since the research was asked for:
-            var forms = await store.LoadFormsAsync(location.ProjectId);
-            if (BflEventVisibility.IsNotPublic(forms))
-            {
-                await messageBus.SendError(new(AppIcons.NOT_PUBLIC, BflEventVisibility.NotPublicMessage));
+            if (await this.LoadPublicDetailsAsync(location.ProjectId) is not { } details)
                 return;
-            }
-
-            var details = BflPromptComposer.PublicDetailsOf(forms);
-            if (details.Count is 0)
-            {
-                await messageBus.SendError(new(AppIcons.WEB_RESEARCH, string.Format(TA("Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."), BflStep.FRAMEWORK.Title)));
-                return;
-            }
 
             var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
             var parts = await BflPromptLibrary.LoadResearchPartsAsync(location.Topic, conversations.PromptOverridesDirectory);
@@ -204,24 +195,9 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
         {
             status = AssistantSessionStatus.CANCELED;
         }
-        catch (BflPromptOverrideException exception)
+        catch (Exception exception) when (IsReportedFailure(exception))
         {
-            logger.LogWarning(exception, "A prompt override of the BeyondFacts Lab has a placeholder which the lab does not fill.");
-            await messageBus.SendError(new(AppIcons.ERROR, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), exception.FileName, exception.Placeholder)));
-        }
-        catch (ProviderRequestException exception)
-        {
-            logger.LogError(exception, "The provider request for a research of the BeyondFacts Lab failed. Status={StatusCode}, Reason='{ReasonPhrase}'.", exception.StatusCode, exception.ReasonPhrase);
-            await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, exception.UserMessage));
-        }
-        catch (FileNotFoundException)
-        {
-            // The person deleted the preparation while the agent researched; nothing is left to store.
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or FormatException)
-        {
-            logger.LogError(exception, "The BeyondFacts Lab could not do the research '{Location}'.", location.Key);
-            await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not finish this research. Please try again.")));
+            await this.ReportFailureAsync(exception, location.Key);
         }
         finally
         {
@@ -239,6 +215,72 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
     }
 
     /// <summary>
+    /// Loads the public details about the event, the only details a research receives.
+    /// </summary>
+    /// <remarks>
+    /// The forms on disk decide, since the person may have changed them since the research was asked for. While the
+    /// event is not public, or the person entered no public detail yet, the person learns why nothing is researched.
+    /// </remarks>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <returns>The public details, or null when there is nothing to research with.</returns>
+    private async Task<IReadOnlyList<BflResearchDetail>?> LoadPublicDetailsAsync(Guid projectId)
+    {
+        var forms = await store.LoadFormsAsync(projectId);
+        if (BflEventVisibility.IsNotPublic(forms))
+        {
+            await messageBus.SendError(new(AppIcons.NOT_PUBLIC, BflEventVisibility.NotPublicMessage));
+            return null;
+        }
+
+        var details = BflPromptComposer.PublicDetailsOf(forms);
+        if (details.Count is 0)
+        {
+            await messageBus.SendError(new(AppIcons.WEB_RESEARCH, string.Format(TA("Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."), BflStep.FRAMEWORK.Title)));
+            return null;
+        }
+
+        return details;
+    }
+
+    /// <summary>
+    /// Tells whether an agent may fail with an exception in the course of its work, which ReportFailureAsync then
+    /// reports: a faulty prompt override, a failed request, a preparation deleted meanwhile, or a file which cannot be
+    /// read or written.
+    /// </summary>
+    /// <param name="exception">The exception.</param>
+    private static bool IsReportedFailure(Exception exception) => exception is BflPromptOverrideException or ProviderRequestException or IOException or UnauthorizedAccessException or InvalidDataException or FormatException;
+
+    /// <summary>
+    /// Tells the person why an agent could not finish its research, see IsReportedFailure.
+    /// </summary>
+    /// <param name="exception">The exception.</param>
+    /// <param name="key">The key of the research, for the log.</param>
+    private async Task ReportFailureAsync(Exception exception, string key)
+    {
+        switch (exception)
+        {
+            case BflPromptOverrideException overrideException:
+                logger.LogWarning(overrideException, "A prompt override of the BeyondFacts Lab has a placeholder which the lab does not fill.");
+                await messageBus.SendError(new(AppIcons.ERROR, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), overrideException.FileName, overrideException.Placeholder)));
+                break;
+
+            case ProviderRequestException requestException:
+                logger.LogError(requestException, "The provider request for a research of the BeyondFacts Lab failed. Status={StatusCode}, Reason='{ReasonPhrase}'.", requestException.StatusCode, requestException.ReasonPhrase);
+                await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, requestException.UserMessage));
+                break;
+
+            case FileNotFoundException:
+                // The person deleted the preparation while the agent researched; nothing is left to store.
+                break;
+
+            default:
+                logger.LogError(exception, "The BeyondFacts Lab could not do the research '{Location}'.", key);
+                await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not finish this research. Please try again.")));
+                break;
+        }
+    }
+
+    /// <summary>
     /// Stops the agent of a topic.
     /// </summary>
     /// <param name="location">The research.</param>
@@ -248,12 +290,20 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
     /// Tells every page which listens that a research changed.
     /// </summary>
     /// <param name="location">The research.</param>
-    private async Task NotifyAsync(BflResearchLocation location)
+    private Task NotifyAsync(BflResearchLocation location) => this.NotifyAsync(this.ResearchChanged, location);
+
+    /// <summary>
+    /// Tells every page which listens to an event of the runner that a research changed.
+    /// </summary>
+    /// <typeparam name="TLocation">The kind of research.</typeparam>
+    /// <param name="handlers">The handlers of the event, or null when nobody listens.</param>
+    /// <param name="location">The research.</param>
+    private async Task NotifyAsync<TLocation>(Func<TLocation, Task>? handlers, TLocation location)
     {
-        if (this.ResearchChanged is not { } handlers)
+        if (handlers is null)
             return;
 
-        foreach (var handler in handlers.GetInvocationList().Cast<Func<BflResearchLocation, Task>>())
+        foreach (var handler in handlers.GetInvocationList().Cast<Func<TLocation, Task>>())
         {
             try
             {
