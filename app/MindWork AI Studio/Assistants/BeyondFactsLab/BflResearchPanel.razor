@@ -101,36 +101,7 @@ else
                             <MudMarkdown Value="@found.Text" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                         </div>
 
-                        @* What left AI Studio for this research: *@
-                        <MudText Typo="Typo.subtitle2">@T("Queries sent to the web search")</MudText>
-                        @if (found.SearchQueries.Count is 0)
-                        {
-                            <MudText Typo="Typo.body2" Class="mb-2">@T("None")</MudText>
-                        }
-                        else
-                        {
-                            <ul class="ml-4 mb-2">
-                                @foreach (var query in found.SearchQueries)
-                                {
-                                    <li><MudText Typo="Typo.body2">@query</MudText></li>
-                                }
-                            </ul>
-                        }
-
-                        <MudText Typo="Typo.subtitle2">@T("Web pages opened")</MudText>
-                        @if (found.Pages.Count is 0)
-                        {
-                            <MudText Typo="Typo.body2" Class="mb-2">@T("None")</MudText>
-                        }
-                        else
-                        {
-                            <ul class="ml-4 mb-2">
-                                @foreach (var webPage in found.Pages)
-                                {
-                                    <li><MudLink Href="@webPage.Url" Target="_blank" Typo="Typo.body2">@webPage.Title</MudLink></li>
-                                }
-                            </ul>
-                        }
+                        <BflResearchTrace Research="@found"/>
                     }
 
                     <MudButton Size="Size.Small"
@@ -144,4 +115,12 @@ else
             </MudExpansionPanel>
         }
     </MudExpansionPanels>
+
+    <BflPersonResearchPanel ProjectId="@this.ProjectId"
+                            List="@this.research.GetValueOrDefault(BflResearchTopic.PARTICIPANTS)"
+                            PublicDetails="@this.PublicDetails"
+                            CanStart="@this.CanStart"
+                            Provider="@this.Provider"
+                            ProviderIssue="@this.ProviderIssue"
+                            ResearchStored="@this.ResearchStored"/>
 }
