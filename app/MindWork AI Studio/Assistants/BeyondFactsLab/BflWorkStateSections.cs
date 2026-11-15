@@ -40,7 +40,7 @@ public static class BflWorkStateSections
         new("CONSEQUENCES", BflStep.GOALS_AND_ROLE, "Folgen von Ziel und Rolle für ihren Auftritt."),
         new(OPEN_POINTS, BflStep.GOALS_AND_ROLE, "Offene Punkte."),
 
-        new("VALUES", BflStep.VALUES_AND_PERSPECTIVES, "Für den Anlass wichtige Werte und ihre Bedeutung."),
+        new("VALUES", BflStep.VALUES_AND_PERSPECTIVES, "Für den Anlass wichtige Werte und ihre Bedeutung, auch aus der Werte-Sortierung und den eigenen Werten der Person; die Werte, die sie genauer betrachtet hat, zuerst."),
         new("VALUE_CONFLICTS", BflStep.VALUES_AND_PERSPECTIVES, "Erkannte Wertkonflikte und die Abwägungen der Person."),
         new("PERSONAL_INVOLVEMENT", BflStep.VALUES_AND_PERSPECTIVES, "Erkenntnisse zur persönlichen Betroffenheit, nur soweit die Person sie ausdrücklich übernehmen möchte; sonst leer.") { IsPersonalDisclosure = true },
         new("PERSPECTIVES", BflStep.VALUES_AND_PERSPECTIVES, "Berücksichtigte Perspektiven, jeweils mit dem Hinweis, ob sie auf Aussagen Betroffener oder auf Vermutungen beruhen."),

@@ -212,6 +212,9 @@ public static class AppIcons
     /// <summary>Marks an operation that was canceled, such as an assistant run or a media import.</summary>
     public const string CANCELED = LucideIcons.CIRCLE_SLASH;
 
+    /// <summary>Marks a round of a card sort whose values the person sorted all, such as in the BeyondFacts Lab.</summary>
+    public const string CARD_SORT_ROUND_DONE = LucideIcons.CIRCLE_CHECK;
+
     /// <summary>Marks the category of an item, such as an assistant.</summary>
     public const string CATEGORY = LucideIcons.SHAPES;
 
@@ -806,6 +809,9 @@ public static class AppIcons
     /// <summary>Stands for what comes out of an assistant, such as the expected output or the output mode.</summary>
     public const string OUTPUT = LucideIcons.LOG_OUT;
 
+    /// <summary>Marks the values a person adds to a card sort because its deck misses them, such as in the BeyondFacts Lab.</summary>
+    public const string OWN_VALUES = LucideIcons.HEART_PLUS;
+
     /// <summary>Marks Pandoc, the document converter that AI Studio uses.</summary>
     public const string PANDOC = LucideIcons.FILE_COG;
 
@@ -1195,6 +1201,9 @@ public static class AppIcons
 
     /// <summary>Moves a result back into the input field so that you can work on it again.</summary>
     public const string USE_AS_INPUT = LucideIcons.TEXT_CURSOR_INPUT;
+
+    /// <summary>Marks the values a person chooses to look at more closely, such as after the card sort of the BeyondFacts Lab.</summary>
+    public const string VALUE_FOCUS = LucideIcons.FOCUS;
 
     /// <summary>Marks a list value, such as in the metadata of an assistant plugin.</summary>
     public const string VALUE_LIST = LucideIcons.LIST;

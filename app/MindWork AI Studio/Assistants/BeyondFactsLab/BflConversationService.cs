@@ -152,8 +152,8 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
     /// <returns>The text to count.</returns>
-    /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
-    /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
+    /// <exception cref="FileNotFoundException">The app comes without one of the prompts or without the value deck.</exception>
+    /// <exception cref="FormatException">A prompt has a placeholder without a value, or something is wrong with the value deck.</exception>
     public async Task<string> ComposeTextForCountAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var requestMaterial = await this.ComposeRequestAsync(location, provider);
@@ -175,8 +175,8 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
     /// <returns>The system prompt, the images, and the guidelines.</returns>
-    /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
-    /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
+    /// <exception cref="FileNotFoundException">The app comes without one of the prompts or without the value deck.</exception>
+    /// <exception cref="FormatException">A prompt has a placeholder without a value, or something is wrong with the value deck.</exception>
     internal async Task<BflRequestMaterial> ComposeRequestAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var addressForm = Tools.PluginSystem.I18N.I.AddressForm;
@@ -190,9 +190,10 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
                 var workStates = await store.LoadWorkStatesAsync(stepLocation.ProjectId);
                 var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm, this.PromptOverridesDirectory);
                 var research = await this.LoadResearchAsync(stepLocation);
-                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, workStates, tools, research, rules, language, provider);
+                var valueDeck = await LoadValueDeckAsync(stepLocation);
+                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, workStates, tools, research, rules, valueDeck, language, provider);
                 var materials = await this.ReadMaterialsAsync(stepLocation.ProjectId, shares);
-                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language, workStates, tools, research, rules), this.ImagesOf(stepLocation.ProjectId, shares), rules);
+                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language, workStates, tools, research, rules, valueDeck), this.ImagesOf(stepLocation.ProjectId, shares), rules);
 
             case BflOnboardingThreadLocation:
                 // It never gets the guidelines themselves, but it tells the person that they exist:
@@ -299,8 +300,8 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="location">The step.</param>
     /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
     /// <returns>The share of each material this version can open, in the order the person added them.</returns>
-    /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
-    /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
+    /// <exception cref="FileNotFoundException">The app comes without one of the prompts or without the value deck.</exception>
+    /// <exception cref="FormatException">A prompt has a placeholder without a value, or something is wrong with the value deck.</exception>
     public async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
@@ -310,7 +311,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         var tools = await BflResearchAvailability.CheckAsync(toolRegistry, provider);
         var research = await this.LoadResearchAsync(location);
         var rules = BflOrganizationRules.For(location, settingsManager.ConfigurationData.BeyondFactsLab);
-        return await this.ShareMaterialsAsync(location, parts, forms, workStates, tools, research, rules, language, provider);
+        return await this.ShareMaterialsAsync(location, parts, forms, workStates, tools, research, rules, await LoadValueDeckAsync(location), language, provider);
     }
 
     /// <summary>
@@ -323,6 +324,18 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         : new Dictionary<BflResearchTopic, BflResearch>();
 
     /// <summary>
+    /// Loads the value deck a step carries in its prompt, with the card sort of the person: the step "Values and
+    /// perspectives" the deck in the language of the app, every other step none.
+    /// </summary>
+    /// <param name="location">The step.</param>
+    /// <returns>The deck, or null for every other step.</returns>
+    /// <exception cref="FileNotFoundException">The app comes without the deck.</exception>
+    /// <exception cref="FormatException">Something is wrong with the deck.</exception>
+    private static async Task<BflValueDeck?> LoadValueDeckAsync(BflStepThreadLocation location) => location.Step is BflStep.VALUES_AND_PERSPECTIVES
+        ? await BflValueDeck.LoadAsync(Tools.PluginSystem.I18N.I.Culture)
+        : null;
+
+    /// <summary>
     /// Decides how much of the material of a preparation a request of a step carries: which images go along, and how
     /// much of each text fits beside them.
     /// </summary>
@@ -333,10 +346,11 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="tools">What keeps the tools of the lab from being offered, which the prompt describes as well.</param>
     /// <param name="research">The research the prompt of the step carries, by its topics.</param>
     /// <param name="organizationRules">The guidelines of the organization, which take room in the prompt and in the first message.</param>
+    /// <param name="valueDeck">The value deck with which the prompt of the step shows the card sort, which takes room as well; null for the other steps.</param>
     /// <param name="language">The name of the language the model answers in.</param>
     /// <param name="provider">The provider which answers.</param>
     /// <returns>The share of each material this version can open, in the order the person added them.</returns>
-    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflStep, BflWorkState> workStates, BflResearchAvailability tools, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, string organizationRules, string language, AIStudio.Settings.Provider provider)
+    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflStep, BflWorkState> workStates, BflResearchAvailability tools, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, string organizationRules, BflValueDeck? valueDeck, string language, AIStudio.Settings.Provider provider)
     {
         var materials = (await store.ListMaterialsAsync(location.ProjectId)).Select(entry => entry.Material).OfType<BflMaterial>().ToList();
         if (materials.Count is 0)
@@ -345,7 +359,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         var imageShares = BflMaterialBudget.ShareImages([.. materials.Where(material => material.Kind is BflMaterialKind.IMAGE)], ImagesTheModelTakes(provider));
         var sentImages = imageShares.Count(share => share.Image is BflImageDelivery.SENT);
 
-        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language, workStates, tools, research, organizationRules);
+        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language, workStates, tools, research, organizationRules, valueDeck);
         var characters = BflMaterialBudget.CharactersFor(provider.GetModelProfile().Context, promptWithoutMaterials.Length + BflOrganizationRules.Frame(organizationRules).Length, sentImages);
         var textShares = BflMaterialBudget.Share([.. materials.Where(material => material.Kind is not BflMaterialKind.IMAGE)], characters);
 

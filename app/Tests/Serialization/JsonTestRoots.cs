@@ -71,6 +71,9 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(BflResearch), BeyondFactsLabJson.PERSISTENCE));
         yield return Case(new(typeof(Guid?), BeyondFactsLabJson.PERSISTENCE), "selected preparation");
 
+        // The value deck of the BeyondFacts Lab, which comes with the app and is read like its files:
+        yield return Case(new(typeof(BflValueDeck), BeyondFactsLabJson.PERSISTENCE), "value deck");
+
         // The presets and the stored results of the Model Comparison assistant:
         yield return Case(new(typeof(ModelComparisonPreset), ModelComparisonJson.PERSISTENCE));
         yield return Case(new(typeof(ModelComparisonRecord), ModelComparisonJson.PERSISTENCE));

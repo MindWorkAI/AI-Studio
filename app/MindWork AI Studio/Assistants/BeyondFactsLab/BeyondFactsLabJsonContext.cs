@@ -13,6 +13,9 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 [JsonSerializable(typeof(BflResult))]
 [JsonSerializable(typeof(BflResearch))]
 
+// The value deck, which comes with the app:
+[JsonSerializable(typeof(BflValueDeck))]
+
 // The preparation selected last:
 [JsonSerializable(typeof(Guid?))]
 internal sealed partial class BeyondFactsLabJsonContext : JsonSerializerContext;

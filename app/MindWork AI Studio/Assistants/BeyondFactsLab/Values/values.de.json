@@ -1,0 +1,23 @@
+{
+  "citation": "Miller, W. R., C’de Baca, J., Matthews, D. B., & Wilbourne, P. L. (2001). Personal Values Card Sort. University of New Mexico.",
+  "rounds": [
+    [
+      { "id": "honesty", "name": "Ehrlichkeit", "definition": "Aussagen aufrichtig darstellen" },
+      { "id": "self_determination", "name": "Selbstbestimmung", "definition": "Eigenständig urteilen und entscheiden" },
+      { "id": "safety", "name": "Sicherheit", "definition": "Schäden vermeiden" },
+      { "id": "knowledge", "name": "Erkenntnis", "definition": "Verstehen und dazulernen" }
+    ],
+    [
+      { "id": "justice", "name": "Gerechtigkeit", "definition": "Vorteile und Belastungen fair verteilen" },
+      { "id": "care", "name": "Fürsorge", "definition": "Bedürfnisse anderer berücksichtigen" },
+      { "id": "success", "name": "Erfolg", "definition": "Etwas erreichen und Wirkung entfalten" },
+      { "id": "loyalty", "name": "Loyalität", "definition": "Zu Menschen oder einer Organisation stehen" }
+    ],
+    [
+      { "id": "openness", "name": "Offenheit", "definition": "Andere Sichtweisen ernsthaft prüfen" },
+      { "id": "responsibility", "name": "Verantwortung", "definition": "Für Folgen des eigenen Handelns einstehen" },
+      { "id": "respect", "name": "Respekt", "definition": "Andere als gleichwertige Gesprächspartner*innen behandeln" },
+      { "id": "progress", "name": "Fortschritt", "definition": "Neues entwickeln und Verbesserungen ermöglichen" }
+    ]
+  ]
+}

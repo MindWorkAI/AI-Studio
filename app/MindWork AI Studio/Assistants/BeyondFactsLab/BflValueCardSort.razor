@@ -1,0 +1,133 @@
+@inherits MSGComponentBase
+
+<div class="@this.Class">
+    @if (this.isDeckMissing)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+            @T("AI Studio cannot show the card sort, because its values are missing or damaged.")
+        </MudAlert>
+    }
+    else if (this.deck is { } shownDeck)
+    {
+        <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+            @TA("Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality.")
+        </MudJustifiedText>
+        <MudText Typo="Typo.caption" Class="d-block mb-3">@string.Format(Culture, T("Based on: {0}"), shownDeck.Citation)</MudText>
+
+        <MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" TabPanelsClass="pa-4">
+            @for (var index = 0; index < shownDeck.Rounds.Count; index++)
+            {
+                var round = shownDeck.Rounds[index];
+                var number = index + 1;
+                <MudTabPanel @key="number" Text="@string.Format(Culture, T("Round {0}"), number)" Icon="@this.RoundIcon(round)">
+                    <MudStack Spacing="4">
+                        @foreach (var card in round)
+                        {
+                            <div @key="card.Id">
+                                <MudText Typo="Typo.subtitle1"><strong>@card.Name</strong></MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">@card.Definition</MudText>
+                                <MudChipSet T="BflValueCategory"
+                                            SelectionMode="SelectionMode.ToggleSelection"
+                                            SelectedValue="@this.CardSort.CategoryOf(card.Id)"
+                                            SelectedValueChanged="@(category => this.SortAsync(card.Id, category))"
+                                            CheckMark="true"
+                                            Color="Color.Primary"
+                                            Variant="Variant.Outlined"
+                                            Disabled="@this.Disabled">
+                                    @foreach (var category in BflValueCategory.All)
+                                    {
+                                        <MudChip T="BflValueCategory" Value="@category" Text="@category.Title"/>
+                                    }
+                                </MudChipSet>
+                            </div>
+                        }
+                    </MudStack>
+                </MudTabPanel>
+            }
+
+            <MudTabPanel Text="@T("Own values")" Icon="@AppIcons.OWN_VALUES">
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @TA("Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely.")
+                </MudJustifiedText>
+                <MudStack Spacing="3">
+                    @foreach (var value in this.CardSort.OwnValues)
+                    {
+                        <MudStack @key="value.Id" Row="true" AlignItems="AlignItems.Start" Spacing="2">
+                            <MudTextField T="string"
+                                          Value="@value.Name"
+                                          ValueChanged="@(name => this.ChangeOwnValueAsync(value, name, value.Definition))"
+                                          Label="@T("Value")"
+                                          MaxLength="@BflCardSort.MAX_NAME_LENGTH"
+                                          Validation="@this.NameValidation"
+                                          Disabled="@this.Disabled"
+                                          Variant="Variant.Outlined"
+                                          Style="flex: 1 1 0;"/>
+                            <MudTextField T="string"
+                                          Value="@value.Definition"
+                                          ValueChanged="@(definition => this.ChangeOwnValueAsync(value, value.Name, definition))"
+                                          Label="@TA("What it means to you")"
+                                          MaxLength="@BflCardSort.MAX_DEFINITION_LENGTH"
+                                          Disabled="@this.Disabled"
+                                          Variant="Variant.Outlined"
+                                          Style="flex: 2 1 0;"/>
+                            <MudIconButton Icon="@AppIcons.DELETE" Color="Color.Error" Class="mt-2" OnClick="@(() => this.RemoveOwnValueAsync(value))" Disabled="@this.Disabled"/>
+                        </MudStack>
+                    }
+
+                    @if (this.CardSort.CanAddOwnValue)
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="2">
+                            <MudTextField T="string"
+                                          @bind-Value="@this.newName"
+                                          Immediate="@true"
+                                          Label="@T("New value")"
+                                          MaxLength="@BflCardSort.MAX_NAME_LENGTH"
+                                          Disabled="@this.Disabled"
+                                          Variant="Variant.Outlined"
+                                          Style="flex: 1 1 0;"/>
+                            <MudTextField T="string"
+                                          @bind-Value="@this.newDefinition"
+                                          Immediate="@true"
+                                          Label="@TA("What it means to you")"
+                                          MaxLength="@BflCardSort.MAX_DEFINITION_LENGTH"
+                                          Disabled="@this.Disabled"
+                                          Variant="Variant.Outlined"
+                                          Style="flex: 2 1 0;"/>
+                            <MudButton StartIcon="@AppIcons.ADD" Variant="Variant.Filled" Color="Color.Primary" Class="mt-2" OnClick="@this.AddOwnValueAsync" Disabled="@(this.Disabled || string.IsNullOrWhiteSpace(this.newName))">
+                                @T("Add")
+                            </MudButton>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">@string.Format(Culture, TA("You have added {0} values of your own, as many as the card sort takes."), BflCardSort.MAX_OWN_VALUES)</MudText>
+                    }
+                </MudStack>
+            </MudTabPanel>
+
+            <MudTabPanel Text="@T("Look more closely")" Icon="@AppIcons.VALUE_FOCUS">
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @TA("Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking.")
+                </MudJustifiedText>
+                <MudChipSet T="string"
+                            SelectionMode="SelectionMode.MultiSelection"
+                            SelectedValues="@this.CardSort.Focus"
+                            SelectedValuesChanged="@this.ChooseFocusAsync"
+                            CheckMark="true"
+                            Color="Color.Primary"
+                            Variant="Variant.Outlined"
+                            Disabled="@this.Disabled">
+                    @foreach (var card in shownDeck.Cards)
+                    {
+                        <MudChip @key="card.Id" T="string" Value="@card.Id" Text="@card.Name" Disabled="@this.IsFocusBlocked(card.Id)"/>
+                    }
+                    @foreach (var value in this.CardSort.OwnValues)
+                    {
+                        <MudChip @key="value.Id" T="string" Value="@value.Id" Text="@value.Name" Disabled="@this.IsFocusBlocked(value.Id)"/>
+                    }
+                </MudChipSet>
+                <MudText Typo="Typo.caption" Class="d-block mt-1">@string.Format(Culture, T("{0} of at most {1} values chosen."), this.CardSort.FocusIn(shownDeck).Count, BflCardSort.MAX_FOCUS)</MudText>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</div>

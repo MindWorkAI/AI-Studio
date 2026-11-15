@@ -43,6 +43,11 @@ public sealed record BflFieldDefinition(string Id, BflStep Step, BflFieldKind Ki
     public BflNameRole NameRole { get; init; } = BflNameRole.NONE;
 
     /// <summary>
+    /// Gets the section of the form which shows the field under its heading.
+    /// </summary>
+    public BflFormSection Section { get; init; } = BflFormSection.NONE;
+
+    /// <summary>
     /// Gets the options of a field which offers a choice, in the order to show them.
     /// </summary>
     public IReadOnlyList<BflFieldOption> Options { get; init; } = [];

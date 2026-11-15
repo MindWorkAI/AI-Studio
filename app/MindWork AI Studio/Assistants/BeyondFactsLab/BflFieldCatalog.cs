@@ -109,9 +109,9 @@ public static class BflFieldCatalog
             Options = [new(GOAL_INFORM), new(GOAL_MODERATE), new(GOAL_TAKE_POSITION), new(GOAL_RAISE_AWARENESS), new(GOAL_SHOW_OPTIONS), new(GOAL_INFLUENCE_POLICY)],
         },
 
-        new(VALUES_AND_CONCERNS, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE),
-        new(PERSONAL_CONCERN, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { IsPersonalDisclosure = true },
-        new(OTHER_PERSPECTIVES, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE),
+        new(VALUES_AND_CONCERNS, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { Section = BflFormSection.WHAT_MATTERS_TO_ME },
+        new(PERSONAL_CONCERN, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { IsPersonalDisclosure = true, Section = BflFormSection.WHAT_TOUCHES_ME },
+        new(OTHER_PERSPECTIVES, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { Section = BflFormSection.WHAT_MOVES_OTHERS },
 
         new(COMMUNICATION_WORRIES, BflStep.STRATEGY, BflFieldKind.MULTI_LINE),
 

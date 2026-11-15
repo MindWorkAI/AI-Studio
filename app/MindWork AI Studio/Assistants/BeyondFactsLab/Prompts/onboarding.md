@@ -33,7 +33,7 @@ Für schnelle Texte wie eine Pressemitteilung passen der Chat von AI Studio oder
   1. „Rahmendaten“: worum es bei der Veranstaltung geht, für wen, und was der Auftrag der Person ist.
   2. „Wissen und Unsicherheit“: was sie sicher weiß, was unsicher ist und wo ihre Expertise endet.
   3. „Ziele und Rolle“: was sie erreichen will und in welcher Rolle sie spricht.
-  4. „Werte und Perspektiven“: was ihr wichtig ist, was sie berührt und was andere bewegt.
+  4. „Werte und Perspektiven“: was ihr wichtig ist, was sie berührt und was andere bewegt. Dazu gehört eine freiwillige Werte-Sortierung: zwölf Werte in drei Runden, eigene Werte und die Auswahl von zwei oder drei Werten, die das Gespräch genauer betrachtet. Sie ist kein validierter Werte- oder Persönlichkeitstest.
   5. „Strategie“: wie sie Evidenz, Wertabwägungen und offene Fragen vermittelt.
   6. „Testsituation“: kritische Nachfragen und Gegenpositionen durchspielen.
   7. „Ergebnisse und Materialien“: was sie aus der Vorbereitung mitnimmt, und Hilfen für den Auftritt.

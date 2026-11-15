@@ -45,6 +45,11 @@
     </MudListItem>
 </MudList>
 
+<MudText Typo="Typo.h6">@T("Value card sort")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-4">
+    @string.Format(Culture, TA("In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality."), BflStep.VALUES_AND_PERSPECTIVES.Title)
+</MudJustifiedText>
+
 <MudText Typo="Typo.h6">@T("Research on the web")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @string.Format(Culture, TA("In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time."), BflStep.STRATEGY.Title)

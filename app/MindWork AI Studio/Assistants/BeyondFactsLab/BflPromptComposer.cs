@@ -38,9 +38,10 @@ public static class BflPromptComposer
     /// <param name="tools">What keeps the tools of the lab from being offered with the provider of the preparation; null counts as no tools at all.</param>
     /// <param name="research">The research of the preparation, by its topics; only the step "Strategy" gets it. Null when there is none.</param>
     /// <param name="organizationRules">The guidelines of the organization, which the first message carries, see BflOrganizationRules; only while there are any, the prompt says how to treat them. Null when there are none.</param>
+    /// <param name="valueDeck">The value deck in the language of the app, with which the step "Values and perspectives" shows the card sort of the person among its details; the other steps leave it out. Null when there is none.</param>
     /// <returns>The system prompt.</returns>
     /// <exception cref="FormatException">The core prompt has a placeholder without a value.</exception>
-    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, BflResearchAvailability? tools = null, IReadOnlyDictionary<BflResearchTopic, BflResearch>? research = null, string? organizationRules = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
+    public static string Compose(BflPromptParts parts, BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflMaterialExcerpt> materials, string responseLanguage, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, BflResearchAvailability? tools = null, IReadOnlyDictionary<BflResearchTopic, BflResearch>? research = null, string? organizationRules = null, BflValueDeck? valueDeck = null) => BflPromptTemplate.Fill(parts.Core, new Dictionary<string, string>(StringComparer.Ordinal)
     {
         [BflPromptTemplate.RESPONSE_LANGUAGE] = responseLanguage,
         [BflPromptTemplate.ADDRESS_FORM] = parts.Address.Trim(),
@@ -50,7 +51,7 @@ public static class BflPromptComposer
         [BflPromptTemplate.TOOLS] = BflToolStatus.ForStep(tools ?? NO_TOOLS).Trim(),
         [BflPromptTemplate.RESEARCH] = Research(step, research ?? new Dictionary<BflResearchTopic, BflResearch>(), forms),
         [BflPromptTemplate.WORK_STATES] = WorkStates(step, workStates ?? new Dictionary<BflStep, BflWorkState>(), forms),
-        [BflPromptTemplate.DETAILS] = Details(step, forms),
+        [BflPromptTemplate.DETAILS] = Details(step, forms, valueDeck),
         [BflPromptTemplate.MISSING_DETAILS] = MissingDetails(step, forms),
         [BflPromptTemplate.ORGANIZATION_RULES] = OnlyWithRules(parts.OrganizationRules, organizationRules)
     }).ReplaceLineEndings(LINE_BREAK.ToString());
@@ -397,11 +398,14 @@ public static class BflPromptComposer
     /// </summary>
     /// <remarks>
     /// Something the person confided, such as their personal involvement, reaches only the chat of its own step:
-    /// no other step may confront them with it by surprise.
+    /// no other step may confront them with it by surprise. The card sort reaches only the chat of its own step as
+    /// well: the later steps learn what the person took from it through the confirmed work state, after Lara Wüster's
+    /// rule that only what the person confirmed goes on into the preparation.
     /// </remarks>
     /// <param name="step">The step the chat belongs to.</param>
     /// <param name="forms">The forms of the preparation, by their steps.</param>
-    private static string Details(BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
+    /// <param name="valueDeck">The value deck in the language of the app, or null when there is none.</param>
+    private static string Details(BflStep step, IReadOnlyDictionary<BflStep, BflStepFormData> forms, BflValueDeck? valueDeck)
     {
         var text = new StringBuilder();
         foreach (var candidate in BflStep.All)
@@ -423,6 +427,9 @@ public static class BflPromptComposer
                 lines.Add($"- {field.Label}{marker}: {value.Replace("\n", "\n  ", StringComparison.Ordinal)}");
             }
 
+            if (candidate is BflStep.VALUES_AND_PERSPECTIVES && candidate == step && valueDeck is not null)
+                lines.Add(CardSort(form.CardSort ?? new BflCardSort(), valueDeck));
+
             if (lines.Count is 0)
                 continue;
 
@@ -435,6 +442,43 @@ public static class BflPromptComposer
         }
 
         return text.Length is 0 ? "Die Person hat noch keine Angaben gemacht." : text.ToString().TrimEnd();
+    }
+
+    /// <summary>
+    /// Lists the card sort of the person for the chat of its step: every value of the deck with its definition and the
+    /// category the person chose, the values of their own, and those to look at more closely.
+    /// </summary>
+    /// <remarks>
+    /// The values the person has not sorted come along, so that the chat can offer the card sort and take up a
+    /// sorting in the words of the person. The names of the values and of the categories are those the person sees. A
+    /// category or a choice whose value the deck does not know stays out.
+    /// </remarks>
+    /// <param name="cardSort">The card sort of the person; an empty one when they have not sorted anything.</param>
+    /// <param name="deck">The value deck in the language of the app.</param>
+    /// <returns>The card sort as an item of the details of the step.</returns>
+    private static string CardSort(BflCardSort cardSort, BflValueDeck deck)
+    {
+        var text = new StringBuilder("- Werte-Sortierung nach ").Append(deck.Citation.Trim().TrimEnd('.')).Append(':');
+        for (var index = 0; index < deck.Rounds.Count; index++)
+        {
+            text.Append(LINE_BREAK).Append($"  - Runde {index + 1}:");
+            foreach (var card in deck.Rounds[index])
+                text.Append(LINE_BREAK).Append($"    - {card.Name} ({card.Definition}): {cardSort.CategoryOf(card.Id).Title}");
+        }
+
+        text.Append(LINE_BREAK).Append("  - Eigene Werte der Person:");
+        if (cardSort.OwnValues.Count is 0)
+            text.Append(" keine");
+
+        foreach (var value in cardSort.OwnValues)
+        {
+            var definition = value.Definition.Trim().ReplaceLineEndings(" ");
+            text.Append(LINE_BREAK).Append($"    - {value.Name.Trim().ReplaceLineEndings(" ")} ({(definition.Length is 0 ? "ohne Erläuterung" : definition)})");
+        }
+
+        var focus = cardSort.FocusIn(deck);
+        text.Append(LINE_BREAK).Append("  - Genauer betrachten möchte die Person: ").Append(focus.Count is 0 ? "noch keine Auswahl" : string.Join(", ", focus.Select(valueId => cardSort.NameOf(valueId, deck)?.Trim())));
+        return text.ToString();
     }
 
     /// <summary>
