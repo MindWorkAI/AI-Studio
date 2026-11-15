@@ -1407,6 +1407,15 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T974131333
 -- Demanding
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T985014450"] = "Demanding"
 
+-- What touches me
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFORMSECTIONEXTENSIONS::T1464216834"] = "What touches me"
+
+-- What moves others
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFORMSECTIONEXTENSIONS::T4052141584"] = "What moves others"
+
+-- What matters to me
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFORMSECTIONEXTENSIONS::T840264968"] = "What matters to me"
+
 -- If you state in the event details that the event is not public, the lab never researches it on the web.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1053099788"] = "If you state in the event details that the event is not public, the lab never researches it on the web."
 
@@ -1446,6 +1455,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266
 -- Plan about 30 to 60 minutes for a preparation. You can pause at any time: AI Studio saves your details and conversations, and you continue where you left off.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266933::INFORMAL"] = "Plan about 30 to 60 minutes for a preparation. You can pause at any time: AI Studio saves your details and conversations, and you continue where you left off."
 
+-- Value card sort
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T194927200"] = "Value card sort"
+
 -- Work through the seven steps, in any order you like. Each step has the form 'Your details' and a conversation of its own.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2001857602"] = "Work through the seven steps, in any order you like. Each step has the form 'Your details' and a conversation of its own."
 
@@ -1475,6 +1487,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2980837
 
 -- What the lab does not do
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2988041082"] = "What the lab does not do"
+
+-- In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819"] = "In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality."
+
+-- In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819::INFORMAL"] = "In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality."
 
 -- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3499941356"] = "Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know."
@@ -2283,6 +2301,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMAIL::T3622173728
 -- No confirmed work state.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1085223273"] = "No confirmed work state."
 
+-- Card sort
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T116016553"] = "Card sort"
+
 -- No conversation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1296316689"] = "No conversation."
 
@@ -2337,14 +2358,23 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T34
 -- About this session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3460157970"] = "About this session"
 
+-- Own values
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3651870515"] = "Own values"
+
 -- BeyondFacts Lab: a shared session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3731741448"] = "BeyondFacts Lab: a shared session"
+
+-- To look at more closely
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3757621498"] = "To look at more closely"
 
 -- Left out, as it may contain personal disclosures.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3986361996"] = "Left out, as it may contain personal disclosures."
 
 -- Version of AI Studio
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T728223168"] = "Version of AI Studio"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T810547195"] = "None"
 
 -- Test situation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1049923473"] = "Test situation"
@@ -2447,6 +2477,84 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288:
 
 -- Public detail: the research of the lab receives it
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3459633363"] = "Public detail: the research of the lab receives it"
+
+-- {0} of at most {1} values chosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2016759665"] = "{0} of at most {1} values chosen."
+
+-- Please enter a name, or remove the value.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524"] = "Please enter a name, or remove the value."
+
+-- Please enter a name, or remove the value.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524::INFORMAL"] = "Please enter a name, or remove the value."
+
+-- You have added {0} values of your own, as many as the card sort takes.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734"] = "You have added {0} values of your own, as many as the card sort takes."
+
+-- You have added {0} values of your own, as many as the card sort takes.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734::INFORMAL"] = "You have added {0} values of your own, as many as the card sort takes."
+
+-- Look more closely
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2616202800"] = "Look more closely"
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2646845972"] = "Add"
+
+-- What it means to you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372"] = "What it means to you"
+
+-- What it means to you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372::INFORMAL"] = "What it means to you"
+
+-- Value
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3511155050"] = "Value"
+
+-- AI Studio cannot show the card sort, because its values are missing or damaged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3585110184"] = "AI Studio cannot show the card sort, because its values are missing or damaged."
+
+-- Based on: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3634031667"] = "Based on: {0}"
+
+-- Own values
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3651870515"] = "Own values"
+
+-- Round {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3695292997"] = "Round {0}"
+
+-- Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772"] = "Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality."
+
+-- Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772::INFORMAL"] = "Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality."
+
+-- Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849"] = "Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking."
+
+-- Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849::INFORMAL"] = "Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking."
+
+-- Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460"] = "Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely."
+
+-- Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460::INFORMAL"] = "Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely."
+
+-- New value
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T840803648"] = "New value"
+
+-- Not sorted yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2675795693"] = "Not sorted yet"
+
+-- Unclear
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2886397187"] = "Unclear"
+
+-- Less important for this occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2929600398"] = "Less important for this occasion"
+
+-- Also important
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T3500243228"] = "Also important"
+
+-- Especially important
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T3612865466"] = "Especially important"
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T1150375027"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
