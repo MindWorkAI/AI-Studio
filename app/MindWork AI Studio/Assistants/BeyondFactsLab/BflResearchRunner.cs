@@ -23,7 +23,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// while the person looks at another page.
 /// </para>
 /// <para>
-/// The research on single people from the list of participants runs here as well, in stages, see RunPersonAsync.
+/// The research on single people from the list of participants runs here as well, in stages, see RunPersonAsync, and
+/// so does the suggestion whom of a long list to research, see SuggestSelectionAsync.
 /// </para>
 /// </remarks>
 /// <param name="store">The store of the lab.</param>
@@ -189,6 +190,11 @@ public sealed partial class BflResearchRunner(BeyondFactsLabStore store, BflConv
             }
 
             await store.SaveResearchAsync(location.ProjectId, location.Topic, research);
+
+            // A new list needs a new selection; for a long one, the lab suggests it right away:
+            if (location.Topic is BflResearchTopic.PARTICIPANTS && research.Participants.Count > BflParticipantSelection.MAX_SUGGESTED_PEOPLE)
+                await this.SuggestSelectionAsync(location.ProjectId, provider, cancellation.Token);
+
             status = AssistantSessionStatus.COMPLETED;
         }
         catch (OperationCanceledException)

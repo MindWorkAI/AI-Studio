@@ -62,6 +62,12 @@ public static class BflPromptLibrary
     public const string PERSON_RESEARCH_PATH = RESEARCH_FOLDER + "person.md";
 
     /// <summary>
+    /// The prompt with which the lab suggests whom of a long list of participants to research. It knows the details of
+    /// the preparation, so its request has no tools.
+    /// </summary>
+    public const string PARTICIPANT_SELECTION_PATH = RESEARCH_FOLDER + "participant-selection.md";
+
+    /// <summary>
     /// The instruction to address the person formally.
     /// </summary>
     private const string ADDRESS_FORMAL_PATH = FOLDER + "/Prompts/snippets/address-formal.md";
@@ -151,6 +157,15 @@ public static class BflPromptLibrary
         BflPromptTemplate.PUBLIC_DETAILS);
 
     /// <summary>
+    /// The placeholders BflPromptComposer fills in the prompt which suggests whom to research: the details of the
+    /// preparation and the list of participants.
+    /// </summary>
+    private static readonly FrozenSet<string> PARTICIPANT_SELECTION_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
+        BflPromptTemplate.SELECTION_SIZE,
+        BflPromptTemplate.DETAILS,
+        BflPromptTemplate.PARTICIPANTS);
+
+    /// <summary>
     /// The placeholders of every other file: none, because BflPromptComposer inserts these files as values.
     /// </summary>
     private static readonly FrozenSet<string> NO_PLACEHOLDERS = FrozenSet<string>.Empty;
@@ -208,6 +223,7 @@ public static class BflPromptLibrary
         ..BflResearchTopic.All.Select(ResearchTopicPath),
         PERSON_RESEARCH_PATH,
         ..BflPersonResearchStage.All.Select(PersonResearchStagePath),
+        PARTICIPANT_SELECTION_PATH,
         ..Enum.GetValues<AddressForm>().Select(AddressPath).Distinct(),
         ORGANIZATION_RULES_PATH,
         ONBOARDING_ORGANIZATION_RULES_PATH,
@@ -226,8 +242,9 @@ public static class BflPromptLibrary
     /// </summary>
     /// <remarks>
     /// BflPromptComposer fills placeholders in the core, in the prompt of the onboarding, in the requests for a work
-    /// state and for a result, and in the prompt of the research agents only. It inserts every other file as a value,
-    /// whose placeholders it leaves as they are, so that they would reach the model as text.
+    /// state and for a result, in the prompts of the research agents on topics and on people, and in the prompt which
+    /// suggests whom to research only. It inserts every other file as a value, whose placeholders it leaves as they
+    /// are, so that they would reach the model as text.
     /// </remarks>
     /// <param name="path">The file, one of the paths of this class.</param>
     public static IReadOnlySet<string> PlaceholdersOf(string path) => path switch
@@ -237,6 +254,7 @@ public static class BflPromptLibrary
         WORK_STATE_PATH => WORK_STATE_PLACEHOLDERS,
         RESEARCH_PATH => RESEARCH_PLACEHOLDERS,
         PERSON_RESEARCH_PATH => PERSON_RESEARCH_PLACEHOLDERS,
+        PARTICIPANT_SELECTION_PATH => PARTICIPANT_SELECTION_PLACEHOLDERS,
         _ when path.StartsWith(RESULTS_FOLDER, StringComparison.Ordinal) => RESULT_PLACEHOLDERS,
         _ => NO_PLACEHOLDERS
     };

@@ -13,6 +13,7 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 [JsonSerializable(typeof(BflResult))]
 [JsonSerializable(typeof(BflResearch))]
 [JsonSerializable(typeof(BflPersonResearch))]
+[JsonSerializable(typeof(BflParticipantSelection))]
 
 // The value deck, which comes with the app:
 [JsonSerializable(typeof(BflValueDeck))]

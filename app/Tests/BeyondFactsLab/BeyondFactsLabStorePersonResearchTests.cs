@@ -139,6 +139,51 @@ public sealed class BeyondFactsLabStorePersonResearchTests
     }
 
     [Test]
+    public async Task TheSelectionOfParticipantsIsStoredBesideTheResearch()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var selection = new BflParticipantSelection { Names = ["Eva Klein", "Frank Ott"], Source = BflParticipantSelectionSource.SUGGESTION, ListCreatedAtUtc = CREATED_AT_UTC };
+
+        await store.SaveParticipantSelectionAsync(created.ProjectId, selection);
+        var loaded = await this.CreateStore().LoadParticipantSelectionAsync(created.ProjectId);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(loaded, Is.Not.Null);
+            Assert.That(loaded!.Names, Is.EqualTo(new[] { "Eva Klein", "Frank Ott" }));
+            Assert.That(loaded.Source, Is.EqualTo(BflParticipantSelectionSource.SUGGESTION));
+            Assert.That(loaded.ListCreatedAtUtc, Is.EqualTo(CREATED_AT_UTC));
+            Assert.That(await store.LoadAllPersonResearchAsync(created.ProjectId), Is.Empty);
+            Assert.That(File.Exists(Path.Combine(this.PersonDirectory(created.ProjectId), "..", "participant-selection.json")), Is.True);
+        }
+    }
+
+    [Test]
+    public async Task APreparationWithoutASelectionOfParticipantsHasNone()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+
+        Assert.That(await store.LoadParticipantSelectionAsync(created.ProjectId), Is.Null);
+    }
+
+    [Test]
+    public async Task ADamagedSelectionOfParticipantsStaysAsItIs()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var path = await this.WriteFileAsync(created.ProjectId, Path.Combine("..", "participant-selection.json"), """{ "schemaVersion": 1, "names": [ null ] }""");
+
+        using (Assert.EnterMultipleScope())
+        {
+            await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadParticipantSelectionAsync(created.ProjectId));
+            await Assert.ThrowsAsync<InvalidDataException>(async () => await store.SaveParticipantSelectionAsync(created.ProjectId, new BflParticipantSelection()));
+            Assert.That(await File.ReadAllTextAsync(path), Is.EqualTo("""{ "schemaVersion": 1, "names": [ null ] }"""));
+        }
+    }
+
+    [Test]
     public async Task ResearchOnAPersonOfAMissingPreparationIsNotStored()
     {
         var store = this.CreateStore();

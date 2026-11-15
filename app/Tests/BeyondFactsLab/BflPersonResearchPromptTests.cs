@@ -122,12 +122,13 @@ public sealed class BflPersonResearchPromptTests
     public async Task TheRequestNamesSectionsOfThePromptOfThePeople()
     {
         var prompt = (await BflPromptLibrary.ReadAsync(BflPromptLibrary.PERSON_RESEARCH_PATH)).ReplaceLineEndings("\n");
+        var request = BflResearchRunner.REQUEST;
 
         using (Assert.EnterMultipleScope())
         {
             foreach (var section in new[] { "Dein Auftrag", "Vorgehen", "Form" })
             {
-                Assert.That(BflResearchRunner.REQUEST, Does.Contain($"„{section}“"));
+                Assert.That(request, Does.Contain($"„{section}“"));
                 Assert.That(prompt, Does.Contain($"\n# {section}\n"));
             }
         }

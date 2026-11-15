@@ -110,6 +110,16 @@ public static partial class BflPromptTemplate
     public const string EARLIER_STAGES = "EARLIER_STAGES";
 
     /// <summary>
+    /// The list of participants from which the lab suggests whom to research.
+    /// </summary>
+    public const string PARTICIPANTS = "PARTICIPANTS";
+
+    /// <summary>
+    /// How many people the lab suggests to research at most.
+    /// </summary>
+    public const string SELECTION_SIZE = "SELECTION_SIZE";
+
+    /// <summary>
     /// Fills every placeholder of a template.
     /// </summary>
     /// <param name="template">The template.</param>
