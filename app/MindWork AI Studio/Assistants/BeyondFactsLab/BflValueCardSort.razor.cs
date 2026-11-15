@@ -105,7 +105,7 @@ public partial class BflValueCardSort : MSGComponentBase
             this.deck = await BflValueDeck.LoadAsync(Culture);
             this.isDeckMissing = false;
         }
-        catch (Exception exception) when (exception is FileNotFoundException or InvalidDataException)
+        catch (Exception exception) when (exception is FileNotFoundException or FormatException)
         {
             this.Logger.LogError(exception, "Could not read the value deck of the BeyondFacts Lab.");
             this.deck = null;

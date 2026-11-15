@@ -118,7 +118,7 @@ public sealed class BflValueDeck
     /// <param name="token">The cancellation token.</param>
     /// <returns>The deck.</returns>
     /// <exception cref="FileNotFoundException">The app comes without the deck.</exception>
-    /// <exception cref="InvalidDataException">The deck cannot be read, or something is wrong with it.</exception>
+    /// <exception cref="FormatException">The deck cannot be read, or something is wrong with it. Like a prompt with a placeholder without a value, it is a mistake of the app, which the lab reports the same way.</exception>
     public static async Task<BflValueDeck> LoadAsync(CultureInfo culture, CancellationToken token = default)
     {
         var path = PathOf(culture);
@@ -133,15 +133,15 @@ public sealed class BflValueDeck
         }
         catch (JsonException exception)
         {
-            throw new InvalidDataException($"The value deck '{path}' of the BeyondFacts Lab cannot be read.", exception);
+            throw new FormatException($"The value deck '{path}' of the BeyondFacts Lab cannot be read.", exception);
         }
 
         if (deck is null || IsNull(deck.Citation) || IsNull(deck.Rounds) || deck.Rounds.Any(round => IsNull(round) || round.Any(card => IsNull(card) || IsNull(card.Id) || IsNull(card.Name) || IsNull(card.Definition))))
-            throw new InvalidDataException($"The value deck '{path}' of the BeyondFacts Lab cannot be read.");
+            throw new FormatException($"The value deck '{path}' of the BeyondFacts Lab cannot be read.");
 
         var problems = deck.Problems();
         if (problems.Count > 0)
-            throw new InvalidDataException($"The value deck '{path}' of the BeyondFacts Lab is wrong: {string.Join(" ", problems)}");
+            throw new FormatException($"The value deck '{path}' of the BeyondFacts Lab is wrong: {string.Join(" ", problems)}");
 
         return deck;
     }
