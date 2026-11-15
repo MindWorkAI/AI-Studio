@@ -237,6 +237,19 @@ public partial class BflPersonResearchPanel : MSGComponentBase
             : T("Not researched yet");
     }
 
+    /// <summary>
+    /// Gets the stages of a research on a person which the panel shows.
+    /// </summary>
+    /// <remarks>
+    /// While the agents research the person anew, only the stages they found in this run count: the others belong to
+    /// the earlier research, which the run replaces, and would look like its result.
+    /// </remarks>
+    /// <param name="location">The research on the person.</param>
+    /// <param name="found">The stored research on the person.</param>
+    private IReadOnlyList<BflPersonStageResearch> StagesShown(BflPersonLocation location, BflPersonResearch found) => this.Runner.RunningSinceOf(location) is { } since
+        ? [.. found.Stages.Where(stage => stage.Research.CreatedAtUtc >= since)]
+        : found.Stages;
+
     private Task OnPersonResearchChangedAsync(BflPersonLocation location)
     {
         if (location.ProjectId != this.ProjectId)

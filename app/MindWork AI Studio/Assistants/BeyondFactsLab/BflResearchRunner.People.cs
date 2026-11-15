@@ -22,6 +22,11 @@ public sealed partial class BflResearchRunner
     private readonly Dictionary<BflPersonLocation, BflPersonResearchStage?> runningPeople = [];
 
     /// <summary>
+    /// When the research on each person which runs right now started. Guarded by the lock of the research on the topics.
+    /// </summary>
+    private readonly Dictionary<BflPersonLocation, DateTimeOffset> runningPeopleSince = [];
+
+    /// <summary>
     /// Happens when the research on a person starts, moves to its next stage, stores a stage, or ends.
     /// </summary>
     /// <remarks>
@@ -48,6 +53,18 @@ public sealed partial class BflResearchRunner
     {
         lock (this.runningLock)
             return this.runningPeople.GetValueOrDefault(location);
+    }
+
+    /// <summary>
+    /// Gets when the research on a person which runs right now started, so that a page can tell the stages it found
+    /// from those of the earlier research, which it replaces once its first stage is done.
+    /// </summary>
+    /// <param name="location">The research on the person.</param>
+    /// <returns>The start, or null while the research does not run.</returns>
+    public DateTimeOffset? RunningSinceOf(BflPersonLocation location)
+    {
+        lock (this.runningLock)
+            return this.runningPeopleSince.TryGetValue(location, out var since) ? since : null;
     }
 
     /// <summary>
@@ -95,6 +112,8 @@ public sealed partial class BflResearchRunner
         {
             if (!this.runningPeople.TryAdd(location, null))
                 return;
+
+            this.runningPeopleSince[location] = DateTimeOffset.UtcNow;
         }
 
         var sessionKey = SessionKey(location);
@@ -134,7 +153,10 @@ public sealed partial class BflResearchRunner
         finally
         {
             lock (this.runningLock)
+            {
                 this.runningPeople.Remove(location);
+                this.runningPeopleSince.Remove(location);
+            }
 
             if (sessionId != Guid.Empty)
             {

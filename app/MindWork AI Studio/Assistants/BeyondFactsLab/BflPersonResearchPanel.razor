@@ -118,20 +118,21 @@ else
 
                     @if (found is not null)
                     {
-                        @if (found.IsOutdated(this.PublicDetails))
+                        @* While the agents research anew, the notes about the earlier research no longer apply: *@
+                        @if (!isRunning && found.IsOutdated(this.PublicDetails))
                         {
                             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2">
                                 @TA("The public details changed since this research. You can research this person again.")
                             </MudAlert>
                         }
-                        else if (!found.IsComplete && !isRunning)
+                        else if (!isRunning && !found.IsComplete)
                         {
                             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-2">
                                 @T("This research stopped before all of its stages were done.")
                             </MudAlert>
                         }
 
-                        @foreach (var stage in found.Stages)
+                        @foreach (var stage in this.StagesShown(location, found))
                         {
                             <div @key="stage.Stage" class="mb-3">
                                 <div class="d-flex align-center mb-1">

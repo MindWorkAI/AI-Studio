@@ -84,11 +84,12 @@ else
                         </MudStack>
                     }
 
-                    @if (found is null)
+                    @* While the agent researches anew, the earlier research would look like its result: *@
+                    @if (!isRunning && found is null)
                     {
                         <MudText Typo="Typo.body2" Class="mb-3">@topic.Description</MudText>
                     }
-                    else
+                    else if (!isRunning && found is not null)
                     {
                         @if (found.IsOutdated(this.PublicDetails))
                         {
@@ -108,7 +109,7 @@ else
                                Variant="Variant.Outlined"
                                StartIcon="@AppIcons.WEB"
                                OnClick="@(() => this.StartAsync(topic))"
-                               Disabled="@(!this.CanStart)">
+                               Disabled="@(!this.CanStart || isRunning)">
                         @(found is null ? T("Research this topic") : T("Research this topic again"))
                     </MudButton>
                 </ChildContent>
@@ -116,8 +117,9 @@ else
         }
     </MudExpansionPanels>
 
+    @* While the list of participants is researched anew, the earlier list no longer counts: *@
     <BflPersonResearchPanel ProjectId="@this.ProjectId"
-                            List="@this.research.GetValueOrDefault(BflResearchTopic.PARTICIPANTS)"
+                            List="@(this.IsRunning(BflResearchTopic.PARTICIPANTS) ? null : this.research.GetValueOrDefault(BflResearchTopic.PARTICIPANTS))"
                             PublicDetails="@this.PublicDetails"
                             CanStart="@this.CanStart"
                             Provider="@this.Provider"
