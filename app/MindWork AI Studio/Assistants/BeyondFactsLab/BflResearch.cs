@@ -17,7 +17,7 @@ public sealed class BflResearch
     /// <summary>
     /// The version of the stored form this version of AI Studio writes. Raise it with every new property.
     /// </summary>
-    public const int CURRENT_SCHEMA_VERSION = 1;
+    public const int CURRENT_SCHEMA_VERSION = 2;
 
     /// <summary>
     /// How many characters of the answer of the agent a research keeps at most, since the text goes into the prompt of
@@ -64,6 +64,13 @@ public sealed class BflResearch
     /// Gets or sets the pages the agent opened, in the order it opened them.
     /// </summary>
     public List<BflResearchPage> Pages { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the people the research on the participants lists, read from its text when it was stored, see
+    /// BflParticipant.ListIn. Empty for the other topics, and for a research stored before the lab kept the list
+    /// (version 1 of the stored form).
+    /// </summary>
+    public List<BflParticipant> Participants { get; set; } = [];
 
     /// <summary>
     /// Gets or sets when the agent finished.

@@ -7,9 +7,9 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// should not contain, from what the lab knows about the event.
 /// </summary>
 /// <remarks>
-/// The lab knows names from three places: the field "Other participants", the headings of the research on the
-/// participants, which names each person in a heading of its own, and the names in bold in the section about the
-/// participants of a confirmed work state. A name is a run of two or three words with capital letters, or a single one
+/// The lab knows names from three places: the field "Other participants", the list of people of the research on the
+/// participants, see BflResearch.Participants, and the names in bold in the section about the participants of a
+/// confirmed work state. A name is a run of two or three words with capital letters, or a single one
 /// when it stands alone; longer runs give their last two words. The rules miss names and find words which are none,
 /// so the person checks the suggestions and adds their own name.
 /// </remarks>
@@ -54,7 +54,7 @@ public static partial class BflShareNames
         }
 
         if (participantsResearch is not null)
-            candidates.AddRange(HeadingPattern().Matches(participantsResearch.Text).SelectMany(heading => NamesIn(heading.Groups["text"].Value)));
+            candidates.AddRange(participantsResearch.Participants.SelectMany(participant => NamesIn(participant.Name)));
 
         foreach (var step in BflStep.All)
         {
@@ -152,12 +152,6 @@ public static partial class BflShareNames
     /// </summary>
     [GeneratedRegex(@":|\s[-–—]\s|\([^)]*\)|\(|\)", RegexOptions.CultureInvariant)]
     private static partial Regex SegmentSeparatorPattern();
-
-    /// <summary>
-    /// A heading of the third level, under which the research on the participants describes one person.
-    /// </summary>
-    [GeneratedRegex(@"^[ \t]{0,3}###[ \t]+(?<text>[^\n]+?)[ \t#]*$", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
-    private static partial Regex HeadingPattern();
 
     /// <summary>
     /// A text in bold.

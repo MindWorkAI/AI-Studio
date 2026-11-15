@@ -110,11 +110,17 @@ public sealed partial class BeyondFactsLabStore
             throw new InvalidDataException("This version of AI Studio cannot open the research.", exception);
         }
 
-        if (research is null || research.SchemaVersion is < 1 or > BflResearch.CURRENT_SCHEMA_VERSION || IsNull(research.Text) || IsNull(research.Details) || IsNull(research.SearchQueries) || IsNull(research.Pages))
+        if (research is null || IsBroken(research))
             throw new InvalidDataException("This version of AI Studio cannot open the research.");
 
         return research;
     }
+
+    /// <summary>
+    /// Tells whether a stored research comes from a newer version of AI Studio, or lacks one of its parts.
+    /// </summary>
+    /// <param name="research">The research.</param>
+    private static bool IsBroken(BflResearch research) => research.SchemaVersion is < 1 or > BflResearch.CURRENT_SCHEMA_VERSION || IsNull(research.Text) || IsNull(research.Details) || IsNull(research.SearchQueries) || IsNull(research.Pages) || IsNull(research.Participants) || research.Participants.Any(participant => IsNull(participant) || IsNull(participant.Name) || IsNull(participant.Entry));
 
     /// <summary>
     /// Gets the file of the research of a preparation on one topic.

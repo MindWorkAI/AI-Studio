@@ -185,6 +185,11 @@ public sealed class BflResearchRunner(BeyondFactsLabStore store, BflConversation
             }
 
             var research = BflResearch.Of(answer.Text, answer.ToolInvocations, answer.Sources, details, DateTimeOffset.UtcNow);
+
+            // The list of people is read once, from the answer itself, and travels with the research from then on:
+            if (location.Topic is BflResearchTopic.PARTICIPANTS)
+                research.Participants = [.. BflParticipant.ListIn(research.Text)];
+
             if (research.Text.Length is 0)
             {
                 logger.LogWarning("The agent wrote no text for the research '{Location}' of the BeyondFacts Lab.", location.Key);

@@ -21,16 +21,26 @@ public sealed class BflShareNamesTests
     }
 
     [Test]
-    public void TheHeadingsOfTheResearchOnTheParticipantsAreSuggested()
+    public void TheListOfPeopleOfTheResearchOnTheParticipantsIsSuggested()
     {
         var research = new BflResearch
         {
             Text = "## Teilnehmende\n\n### Dr. Eva Klein\n\n- Rolle: Podium\n\n### Frank Ott (Moderation)\n\n## Offene Punkte\n\n- Wer noch?",
             CreatedAtUtc = NOW,
         };
+        research.Participants = [.. BflParticipant.ListIn(research.Text)];
 
         var names = BflShareNames.Suggest(Forms(), new Dictionary<BflStep, BflWorkState>(), research);
         Assert.That(names, Is.EqualTo(new[] { "Eva Klein", "Frank Ott" }));
+    }
+
+    [Test]
+    public void TheHeadingsOfAResearchWithoutAListOfPeopleAreNotSuggested()
+    {
+        var research = new BflResearch { Text = "### Dr. Eva Klein", CreatedAtUtc = NOW };
+
+        var names = BflShareNames.Suggest(Forms(), new Dictionary<BflStep, BflWorkState>(), research);
+        Assert.That(names, Is.Empty);
     }
 
     [Test]
