@@ -836,6 +836,9 @@ public static class AppIcons
     /// <summary>Stands for a group of people, such as the authors of a plugin or individual contributors.</summary>
     public const string PEOPLE = LucideIcons.USERS;
 
+    /// <summary>Marks the research on single people on the web, such as the other participants of an event.</summary>
+    public const string PERSON_RESEARCH = LucideIcons.USER_SEARCH;
+
     /// <summary>Stands for a picture library, a folder of pictures to choose from.</summary>
     public const string PICTURE_LIBRARY = LucideIcons.IMAGES;
 
@@ -950,6 +953,9 @@ public static class AppIcons
     /// <summary>Reports that an item replaced another one, such as a newly selected prompt guide file.</summary>
     public const string REPLACE = LucideIcons.ARROW_LEFT_RIGHT;
 
+    /// <summary>Marks a research which stopped before all of its stages were done.</summary>
+    public const string RESEARCH_INCOMPLETE = LucideIcons.CIRCLE_DOT_DASHED;
+
     /// <summary>Resets something to its start, such as an assistant's inputs, a conversation, or a history.</summary>
     public const string RESET = LucideIcons.ROTATE_CCW;
 
@@ -1036,6 +1042,9 @@ public static class AppIcons
 
     /// <summary>Warns about a possible security risk, such as suspected prompt injections or an assistant plugin that needs an audit.</summary>
     public const string SECURITY_WARNING = LucideIcons.SHIELD_EXCLAMATION_POINT;
+
+    /// <summary>Lets the AI suggest a selection which the user checks, such as whom of a long list to research.</summary>
+    public const string SELECTION_SUGGESTION = LucideIcons.WAND_SPARKLES;
 
     /// <summary>Stands for the semantic search tool, which searches the data sources by meaning.</summary>
     public const string SEMANTIC_SEARCH = LucideIcons.TEXT_SEARCH;

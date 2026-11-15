@@ -17,9 +17,6 @@ namespace AIStudio.Tools.ToolCallingSystem.Harness;
 /// </remarks>
 public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCallingLoop
 {
-    private const string NO_ANSWER_AFTER_TOOL_CALL = "The model completed the tool call but did not return a final answer.";
-    private const string NO_ANSWER_AFTER_LIMIT = "The model did not return a final answer after completing the available tool calls.";
-    
     /// <summary>
     /// What separates the text of one round from the text of the next one.
     /// </summary>
@@ -152,7 +149,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                 // the tools contributed. An empty chunk is how sources travel on their own; the
                 // streaming paths of the providers attach their annotations the same way.
                 //
-                yield return WithWhatTheToolsContributed(roundAnswered ? string.Empty : NO_ANSWER_AFTER_LIMIT);
+                yield return roundAnswered ? WithWhatTheToolsContributed(string.Empty) : WithoutAnswer(ToolCallingMessages.NoAnswerAfterLimit);
                 yield break;
             }
 
@@ -167,7 +164,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
 
                 if (toolCallCount > 0)
                 {
-                    yield return WithWhatTheToolsContributed(NO_ANSWER_AFTER_TOOL_CALL);
+                    yield return WithoutAnswer(ToolCallingMessages.NoAnswerAfterToolCall);
                     yield break;
                 }
 
@@ -264,6 +261,12 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
         // ends, so none of them hands over the sources and forgets the passages.
         //
         ContentStreamChunk WithWhatTheToolsContributed(string content) => new(content, [..toolSources]) { Passages = [..toolPassages] };
+
+        //
+        // A notice in place of the answer is marked as such, so that whoever stores the answer as a result can tell
+        // the two apart without reading the text:
+        //
+        ContentStreamChunk WithoutAnswer(string notice) => WithWhatTheToolsContributed(notice) with { EndsWithoutAnswer = true };
     }
 
     private static string GetDisplayName(ToolCallingLoopContext context, string toolName) => context.RunnableTools

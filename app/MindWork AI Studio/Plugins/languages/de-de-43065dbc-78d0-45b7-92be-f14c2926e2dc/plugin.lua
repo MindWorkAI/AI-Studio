@@ -1473,6 +1473,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2242659
 -- Sharing with the research team
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2278322216"] = "Teilen mit dem Forschungsteam"
 
+-- From the list of participants, you choose whom the lab researches in depth; for a long list, the lab suggests whom. For this suggestion, it uses your details of the first three steps, but searches nothing, and only names from the list go on into the research. For each person you choose, research agents look into the profile, the public positions on the topic, and how the person argues in public, one stage after the other. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found. They look only for public, professional information, keep summaries with sources, and create no personality profiles.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2303061552"] = "Aus der Liste der Teilnehmenden wählen Sie, wen das Lab genauer recherchiert; bei einer langen Liste schlägt das Lab eine Auswahl vor. Für diesen Vorschlag nutzt es Ihre Angaben der ersten drei Schritte, sucht aber nichts, und nur Namen aus der Liste gehen weiter in die Recherche. Für jede Person, die Sie wählen, recherchieren Agenten nacheinander das Profil, die öffentlichen Positionen zum Thema und wie die Person öffentlich argumentiert. Die Agenten erhalten nur den Namen und den Listeneintrag der Person, die öffentlichen Angaben zur Veranstaltung und die Ergebnisse der früheren Stufen. Sie suchen nur öffentliche, berufliche Angaben, halten Zusammenfassungen mit Quellen fest und erstellen keine Persönlichkeitsprofile."
+
+-- From the list of participants, you choose whom the lab researches in depth; for a long list, the lab suggests whom. For this suggestion, it uses your details of the first three steps, but searches nothing, and only names from the list go on into the research. For each person you choose, research agents look into the profile, the public positions on the topic, and how the person argues in public, one stage after the other. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found. They look only for public, professional information, keep summaries with sources, and create no personality profiles.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2303061552::INFORMAL"] = "Aus der Liste der Teilnehmenden wählst du, wen das Lab genauer recherchiert; bei einer langen Liste schlägt das Lab eine Auswahl vor. Für diesen Vorschlag nutzt es deine Angaben der ersten drei Schritte, sucht aber nichts, und nur Namen aus der Liste gehen weiter in die Recherche. Für jede Person, die du wählst, recherchieren Agenten nacheinander das Profil, die öffentlichen Positionen zum Thema und wie die Person öffentlich argumentiert. Die Agenten erhalten nur den Namen und den Listeneintrag der Person, die öffentlichen Angaben zur Veranstaltung und die Ergebnisse der früheren Stufen. Sie suchen nur öffentliche, berufliche Angaben, halten Zusammenfassungen mit Quellen fest und erstellen keine Persönlichkeitsprofile."
+
 -- How to recognize good results
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2310692629"] = "Gute Ergebnisse erkennen"
 
@@ -1728,6 +1734,126 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLONBOARDING::T180931232
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLONBOARDING::T1809312323::INFORMAL"] = "Bitte wähle einen Anbieter aus."
 
+-- Not researched yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1044513948"] = "Noch nicht recherchiert"
+
+-- Entry in the list of participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1109522258"] = "Eintrag in der Liste der Teilnehmenden"
+
+-- Stop
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1266644741"] = "Stoppen"
+
+-- Suggest a selection
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1456767192"] = "Auswahl vorschlagen"
+
+-- This research stopped before all of its stages were done.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1487695030"] = "Diese Recherche endete, bevor alle Stufen fertig waren."
+
+-- Incomplete
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1753679941"] = "Unvollständig"
+
+-- Waiting for a free agent
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1819938491"] = "Wartet auf einen freien Agenten"
+
+-- The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1894639302"] = "Die Recherche zu den Teilnehmenden hat keine Liste von Personen gefunden. Recherchieren Sie das Thema „{0}“ erneut, oder tragen Sie zuerst die Namen, die Sie kennen, im Schritt „{1}“ ein."
+
+-- The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1894639302::INFORMAL"] = "Die Recherche zu den Teilnehmenden hat keine Liste von Personen gefunden. Recherchiere das Thema „{0}“ erneut, oder trage zuerst die Namen, die du kennst, im Schritt „{1}“ ein."
+
+-- Research this person
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1965641637"] = "Diese Person recherchieren"
+
+-- Once the research on the participants found a list of people, you can choose here whom the lab researches in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2316008723"] = "Sobald die Recherche zu den Teilnehmenden eine Liste von Personen gefunden hat, wählen Sie hier, wen das Lab genauer recherchiert."
+
+-- Once the research on the participants found a list of people, you can choose here whom the lab researches in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2316008723::INFORMAL"] = "Sobald die Recherche zu den Teilnehmenden eine Liste von Personen gefunden hat, wählst du hier, wen das Lab genauer recherchiert."
+
+-- Researching: {0} ({1} of {2})
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2602375879"] = "Recherche läuft: {0} ({1} von {2})"
+
+-- Researched on {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2673061400"] = "Recherchiert am {0}"
+
+-- The lab suggests whom to research in depth
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2980501067"] = "Das Lab schlägt vor, wen es genauer recherchiert"
+
+-- Research on individual participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3316090314"] = "Recherche zu einzelnen Teilnehmenden"
+
+-- The lab suggested this selection because the list is long. Check it and change it as you like.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3618922246"] = "Das Lab hat diese Auswahl vorgeschlagen, weil die Liste lang ist. Prüfen Sie sie, und ändern Sie sie, wie Sie möchten."
+
+-- The lab suggested this selection because the list is long. Check it and change it as you like.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3618922246::INFORMAL"] = "Das Lab hat diese Auswahl vorgeschlagen, weil die Liste lang ist. Prüfe sie, und ändere sie, wie du möchtest."
+
+-- If your own name is on the list, leave it unchosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3650529419"] = "Steht Ihr eigener Name in der Liste, wählen Sie ihn nicht."
+
+-- If your own name is on the list, leave it unchosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3650529419::INFORMAL"] = "Steht dein eigener Name in der Liste, wähle ihn nicht."
+
+-- Research the chosen people
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3779011682"] = "Gewählte Personen recherchieren"
+
+-- The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3821144196"] = "Die Liste ist lang, deshalb ist noch niemand gewählt. Wählen Sie die Personen selbst, oder lassen Sie das Lab eine Auswahl vorschlagen."
+
+-- The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3821144196::INFORMAL"] = "Die Liste ist lang, deshalb ist noch niemand gewählt. Wähle die Personen selbst, oder lass das Lab eine Auswahl vorschlagen."
+
+-- Each person takes up to {0} research agents, one after the other. At most {1} agents work at once; the others wait.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3858018313"] = "Je Person arbeiten bis zu {0} Recherche-Agenten nacheinander. Höchstens {1} Agenten arbeiten gleichzeitig; die übrigen warten."
+
+-- {0} of {1} people chosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T4020182292"] = "{0} von {1} Personen gewählt."
+
+-- The public details changed since this research. You can research this person again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T533597841"] = "Die öffentlichen Angaben haben sich seit dieser Recherche geändert. Sie können diese Person erneut recherchieren."
+
+-- The public details changed since this research. You can research this person again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T533597841::INFORMAL"] = "Die öffentlichen Angaben haben sich seit dieser Recherche geändert. Du kannst diese Person erneut recherchieren."
+
+-- AI Studio could not store the selection. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T697052960"] = "AI Studio konnte die Auswahl nicht speichern. Bitte versuchen Sie es erneut."
+
+-- AI Studio could not store the selection. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T697052960::INFORMAL"] = "AI Studio konnte die Auswahl nicht speichern. Bitte versuche es erneut."
+
+-- Outdated
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T724820205"] = "Veraltet"
+
+-- Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T804175385"] = "Wählen Sie, wen von den Teilnehmenden das Lab genauer recherchieren soll. Für jede Person arbeiten drei Recherche-Agenten nacheinander: Profil, Positionen zum Thema und öffentliche Auftritte. Die Agenten erhalten nur den Namen und den Listeneintrag der Person, die öffentlichen Angaben zur Veranstaltung und die Ergebnisse der früheren Stufen."
+
+-- Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T804175385::INFORMAL"] = "Wähle, wen von den Teilnehmenden das Lab genauer recherchieren soll. Für jede Person arbeiten drei Recherche-Agenten nacheinander: Profil, Positionen zum Thema und öffentliche Auftritte. Die Agenten erhalten nur den Namen und den Listeneintrag der Person, die öffentlichen Angaben zur Veranstaltung und die Ergebnisse der früheren Stufen."
+
+-- The agents look only for public, professional information and public statements on the topic. They keep summaries with sources, no full texts, create no personality profiles, and judge nobody.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T829595766"] = "Die Agenten suchen nur öffentliche, berufliche Angaben und öffentliche Aussagen zum Thema. Sie halten Zusammenfassungen mit Quellen fest statt vollständiger Texte, erstellen keine Persönlichkeitsprofile und bewerten niemanden."
+
+-- Research this person again
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T832975261"] = "Diese Person erneut recherchieren"
+
+-- Public appearances
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T2628455507"] = "Öffentliche Auftritte"
+
+-- Who the person is: their function, professional career, and education.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T2713760319"] = "Wer die Person ist: ihre Funktion, ihr beruflicher Werdegang und ihre Ausbildung."
+
+-- Profile
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T3440849550"] = "Profil"
+
+-- Positions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T3879692315"] = "Positionen"
+
+-- What the person has said in public on the topic of the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T686625291"] = "Was die Person öffentlich zum Thema der Veranstaltung gesagt hat."
+
+-- How the person argues in speeches, interviews, and discussions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T851469643"] = "Wie die Person in Reden, Interviews und Diskussionen argumentiert."
+
 -- The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1719028521"] = "Das Lab verwendet derzeit experimentelle Anweisungen aus seinem Testordner. Sie können sie in den Optionen des Labs deaktivieren."
 
@@ -1848,9 +1974,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T219706
 -- Research this topic
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2205528655"] = "Dieses Thema recherchieren"
 
--- Web pages opened
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2410802222"] = "Geöffnete Webseiten"
-
 -- Researched on {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2673061400"] = "Recherchiert am {0}"
 
@@ -1881,17 +2004,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T365593
 -- Start the research
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3771505473"] = "Recherche starten"
 
--- Queries sent to the web search
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3846014079"] = "Suchanfragen an die Websuche"
-
 -- The agent researches this topic
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3855362913"] = "Der Agent recherchiert dieses Thema"
 
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T724820205"] = "Veraltet"
-
--- None
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T810547195"] = "Keine"
 
 -- The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T946307726"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung. Ihre übrigen Angaben, Ihr Material, Ihre Arbeitsstände und Ihre Gespräche bleiben in Ihrer Vorbereitung und erreichen nie eine Suche."
@@ -1917,17 +2034,38 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T26144
 -- The research ended without a result. Please try again, or try another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T2614499564::INFORMAL"] = "Die Recherche endete ohne Ergebnis. Bitte versuche es erneut oder wähle einen anderen Anbieter."
 
+-- The lab could not suggest whom to research in depth. Please choose the people yourself.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T291406796"] = "Das Lab konnte keine Auswahl für die genauere Recherche vorschlagen. Bitte wählen Sie die Personen selbst."
+
+-- The lab could not suggest whom to research in depth. Please choose the people yourself.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T291406796::INFORMAL"] = "Das Lab konnte keine Auswahl für die genauere Recherche vorschlagen. Bitte wähle die Personen selbst."
+
 -- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850"] = "Bitte geben Sie zuerst im Schritt „{0}“ öffentliche Angaben zur Veranstaltung ein, z. B. ihr Thema oder ihren Link. Die Recherche erhält nur diese Angaben."
 
 -- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850::INFORMAL"] = "Bitte gib zuerst im Schritt „{0}“ öffentliche Angaben zur Veranstaltung ein, z. B. ihr Thema oder ihren Link. Die Recherche erhält nur diese Angaben."
 
+-- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743"] = "Der Recherche-Agent hat seine Suchanfragen und Seiten aufgebraucht, bevor er ein Ergebnis geschrieben hat. Bitte versuchen Sie es erneut oder wählen Sie einen anderen Anbieter."
+
+-- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743::INFORMAL"] = "Der Recherche-Agent hat seine Suchanfragen und Seiten aufgebraucht, bevor er ein Ergebnis geschrieben hat. Bitte versuche es erneut oder wähle einen anderen Anbieter."
+
+-- This person is no longer on the list of participants, so the lab does not research them. Please research the participants again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T980791662"] = "Diese Person steht nicht mehr in der Liste der Teilnehmenden, deshalb recherchiert das Lab sie nicht. Bitte recherchieren Sie die Teilnehmenden erneut."
+
+-- This person is no longer on the list of participants, so the lab does not research them. Please research the participants again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T980791662::INFORMAL"] = "Diese Person steht nicht mehr in der Liste der Teilnehmenden, deshalb recherchiert das Lab sie nicht. Bitte recherchiere die Teilnehmenden erneut."
+
 -- Participants
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T1161681831"] = "Teilnehmende"
 
 -- How the topic is discussed in public: positions, points of dispute, and the framing of others.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T2464060444"] = "Wie die Öffentlichkeit das Thema diskutiert: Positionen, Streitpunkte und das Framing anderer."
+
+-- Who else speaks or moderates, and in which role. From this list, the lab can research individual people in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3185511242"] = "Wer sonst noch spricht oder moderiert und in welcher Rolle. Aus dieser Liste kann das Lab einzelne Personen genauer recherchieren."
 
 -- Organizer, format and schedule, moderation, and earlier editions of the event.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3694495177"] = "Veranstalter, Format und Zeitplan, Moderation sowie frühere Ausgaben der Veranstaltung."
@@ -1938,8 +2076,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSION
 -- The event
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T4207163500"] = "Die Veranstaltung"
 
--- Who else speaks or moderates, in which role, and which public positions they have taken on the topic.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T821312467"] = "Wer sonst noch spricht oder moderiert, in welcher Rolle, und welche öffentlichen Positionen diese Personen zum Thema vertreten haben."
+-- Web pages opened
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTRACE::T2410802222"] = "Geöffnete Webseiten"
+
+-- Queries sent to the web search
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTRACE::T3846014079"] = "Suchanfragen an die Websuche"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTRACE::T810547195"] = "Keine"
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTGENERATOR::T1150375027"] = "Die Datei „{0}“ im Testordner des BeyondFacts Labs enthält den Platzhalter „{1}“, den das Lab in dieser Datei nicht ausfüllt. Bitte korrigieren Sie die Datei und versuchen Sie es erneut."
@@ -2370,6 +2514,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T37
 -- Left out, as it may contain personal disclosures.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3986361996"] = "Ausgelassen, da es persönliche Angaben enthalten kann."
 
+-- People researched in depth
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T530575216"] = "Genauer recherchierte Personen"
+
 -- Version of AI Studio
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T728223168"] = "Version von AI Studio"
 
@@ -2381,12 +2528,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T10499
 
 -- Knowledge and uncertainty
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1147870258"] = "Wissen und Unsicherheit"
-
--- How you convey evidence, trade-offs between values, and open questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1290723890"] = "Wie Sie Evidenz, Wertabwägungen und offene Fragen vermitteln."
-
--- How you convey evidence, trade-offs between values, and open questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1290723890::INFORMAL"] = "Wie du Evidenz, Wertabwägungen und offene Fragen vermittelst."
 
 -- Event details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T135387869"] = "Rahmendaten"
@@ -2402,6 +2543,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T25243
 
 -- You can fill in single fields or start right away in the chat.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2524378548::INFORMAL"] = "Du kannst einzelne Felder ausfüllen oder direkt im Chat beginnen."
+
+-- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618"] = "Wie Sie Evidenz, Wertabwägungen und offene Fragen vermitteln. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte."
+
+-- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618::INFORMAL"] = "Wie du Evidenz, Wertabwägungen und offene Fragen vermittelst. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte."
 
 -- Goals and role
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2988481290"] = "Ziele und Rolle"
@@ -23684,6 +23831,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGE
 
 -- The tool calling request failed with status code {0}. See the logs for details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3117779001::INFORMAL"] = "Die Anfrage zum Aufruf des Werkzeugs ist mit dem Statuscode {0} fehlgeschlagen. Weitere Details findest du in den Protokollen."
+
+-- The model did not return a final answer after completing the available tool calls.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3613099681"] = "Das Modell hat nach den verfügbaren Werkzeugaufrufen keine abschließende Antwort gegeben."
+
+-- The model completed the tool call but did not return a final answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T54566803"] = "Das Modell hat den Werkzeugaufruf abgeschlossen, aber keine abschließende Antwort gegeben."
 
 -- General
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T1432485131"] = "Allgemein"

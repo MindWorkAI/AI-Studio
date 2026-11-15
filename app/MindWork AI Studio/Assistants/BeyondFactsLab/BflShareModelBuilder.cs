@@ -45,7 +45,7 @@ public static class BflShareModelBuilder
 
     /// <summary>
     /// Appends what the research team needs to read the session: the version of AI Studio, the date, how much material
-    /// the person added, and on which topics the lab researched.
+    /// the person added, on which topics the lab researched, and how many people it researched in depth.
     /// </summary>
     /// <param name="text">The session so far.</param>
     /// <param name="input">What the session is put together from.</param>
@@ -61,6 +61,7 @@ public static class BflShareModelBuilder
         AppendItem(text, TB("Shared on"), input.SharedAtUtc.ToLocalTime().ToString("d", input.Culture));
         AppendItem(text, TB("Material"), string.Format(input.Culture, TB("{0} documents, {1} recordings, {2} images"), documents, recordings, images));
         AppendItem(text, TB("Research on the web"), topics.Count > 0 ? string.Join(", ", topics) : TB("none"));
+        AppendItem(text, TB("People researched in depth"), input.ResearchedPeople.ToString(input.Culture));
         AppendItem(text, TB("Personal disclosures"), input.IncludePersonalDisclosures ? TB("included") : TB("left out"));
     }
 

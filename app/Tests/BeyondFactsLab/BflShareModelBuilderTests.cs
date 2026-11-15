@@ -170,6 +170,16 @@ public sealed class BflShareModelBuilderTests
     }
 
     [Test]
+    public void TheNumberOfThePeopleResearchedInDepthAppears()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Build(researchedPeople: 3), Does.Contain("- **People researched in depth:** 3\n"));
+            Assert.That(Build(), Does.Contain("- **People researched in depth:** 0\n"));
+        }
+    }
+
+    [Test]
     public void EveryStepAppearsInItsOrder()
     {
         var session = Build();
@@ -227,13 +237,14 @@ public sealed class BflShareModelBuilderTests
         Assert.That(Build(forms: forms, valueDeck: deck), Does.Not.Contain("Card sort"));
     }
 
-    private static string Build(Dictionary<BflStep, BflStepFormData>? forms = null, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, IReadOnlyDictionary<BflResultKind, BflResult>? results = null, IReadOnlyDictionary<BflStep, IReadOnlyList<BflConversationMessage>>? conversations = null, IReadOnlyList<BflMaterial>? materials = null, IReadOnlyCollection<BflResearchTopic>? researchTopics = null, bool includePersonalDisclosures = false, BflValueDeck? valueDeck = null) => BflShareModelBuilder.Build(new BflShareInput(
+    private static string Build(Dictionary<BflStep, BflStepFormData>? forms = null, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, IReadOnlyDictionary<BflResultKind, BflResult>? results = null, IReadOnlyDictionary<BflStep, IReadOnlyList<BflConversationMessage>>? conversations = null, IReadOnlyList<BflMaterial>? materials = null, IReadOnlyCollection<BflResearchTopic>? researchTopics = null, int researchedPeople = 0, bool includePersonalDisclosures = false, BflValueDeck? valueDeck = null) => BflShareModelBuilder.Build(new BflShareInput(
         forms ?? Forms(),
         workStates ?? new Dictionary<BflStep, BflWorkState>(),
         results ?? new Dictionary<BflResultKind, BflResult>(),
         conversations ?? new Dictionary<BflStep, IReadOnlyList<BflConversationMessage>>(),
         materials ?? [],
         researchTopics ?? [],
+        researchedPeople,
         includePersonalDisclosures,
         "26.11.2",
         NOW,

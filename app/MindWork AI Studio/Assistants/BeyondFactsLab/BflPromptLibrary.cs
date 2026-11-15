@@ -56,6 +56,18 @@ public static class BflPromptLibrary
     public const string RESEARCH_PATH = RESEARCH_FOLDER + "research.md";
 
     /// <summary>
+    /// The prompt every agent of the research on a person starts with: its role, its rules, the person, what earlier
+    /// stages found, and the public details about the event.
+    /// </summary>
+    public const string PERSON_RESEARCH_PATH = RESEARCH_FOLDER + "person.md";
+
+    /// <summary>
+    /// The prompt with which the lab suggests whom of a long list of participants to research. It knows the details of
+    /// the preparation, so its request has no tools.
+    /// </summary>
+    public const string PARTICIPANT_SELECTION_PATH = RESEARCH_FOLDER + "participant-selection.md";
+
+    /// <summary>
     /// The instruction to address the person formally.
     /// </summary>
     private const string ADDRESS_FORMAL_PATH = FOLDER + "/Prompts/snippets/address-formal.md";
@@ -129,6 +141,31 @@ public static class BflPromptLibrary
         BflPromptTemplate.PUBLIC_DETAILS);
 
     /// <summary>
+    /// The placeholders BflPromptComposer fills in the prompt of the agents of the research on a person.
+    /// </summary>
+    /// <remarks>
+    /// Nothing but public content: the public details about the event, the entry of the person in the list of
+    /// participants, and what earlier stages found on the web. No placeholder brings the material, the work states, or
+    /// any other detail of a preparation into a research.
+    /// </remarks>
+    private static readonly FrozenSet<string> PERSON_RESEARCH_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
+        BflPromptTemplate.RESPONSE_LANGUAGE,
+        BflPromptTemplate.TOPIC,
+        BflPromptTemplate.TOOL_CALLS,
+        BflPromptTemplate.PERSON,
+        BflPromptTemplate.EARLIER_STAGES,
+        BflPromptTemplate.PUBLIC_DETAILS);
+
+    /// <summary>
+    /// The placeholders BflPromptComposer fills in the prompt which suggests whom to research: the details of the
+    /// preparation and the list of participants.
+    /// </summary>
+    private static readonly FrozenSet<string> PARTICIPANT_SELECTION_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
+        BflPromptTemplate.SELECTION_SIZE,
+        BflPromptTemplate.DETAILS,
+        BflPromptTemplate.PARTICIPANTS);
+
+    /// <summary>
     /// The placeholders of every other file: none, because BflPromptComposer inserts these files as values.
     /// </summary>
     private static readonly FrozenSet<string> NO_PLACEHOLDERS = FrozenSet<string>.Empty;
@@ -161,6 +198,12 @@ public static class BflPromptLibrary
     public static string ResearchTopicPath(BflResearchTopic topic) => $"{RESEARCH_FOLDER}{topic.FileStem}.md";
 
     /// <summary>
+    /// Gets the task of the agent of a stage of the research on a person.
+    /// </summary>
+    /// <param name="stage">The stage of the research.</param>
+    public static string PersonResearchStagePath(BflPersonResearchStage stage) => $"{RESEARCH_FOLDER}person-{stage.FileStem}.md";
+
+    /// <summary>
     /// Gets the instruction for a form of address.
     /// </summary>
     /// <param name="addressForm">The form of address.</param>
@@ -178,6 +221,9 @@ public static class BflPromptLibrary
         ..BflResultKind.All.Where(kind => kind.IsWrittenByModel).Select(ResultPath),
         RESEARCH_PATH,
         ..BflResearchTopic.All.Select(ResearchTopicPath),
+        PERSON_RESEARCH_PATH,
+        ..BflPersonResearchStage.All.Select(PersonResearchStagePath),
+        PARTICIPANT_SELECTION_PATH,
         ..Enum.GetValues<AddressForm>().Select(AddressPath).Distinct(),
         ORGANIZATION_RULES_PATH,
         ONBOARDING_ORGANIZATION_RULES_PATH,
@@ -196,8 +242,9 @@ public static class BflPromptLibrary
     /// </summary>
     /// <remarks>
     /// BflPromptComposer fills placeholders in the core, in the prompt of the onboarding, in the requests for a work
-    /// state and for a result, and in the prompt of the research agents only. It inserts every other file as a value,
-    /// whose placeholders it leaves as they are, so that they would reach the model as text.
+    /// state and for a result, in the prompts of the research agents on topics and on people, and in the prompt which
+    /// suggests whom to research only. It inserts every other file as a value, whose placeholders it leaves as they
+    /// are, so that they would reach the model as text.
     /// </remarks>
     /// <param name="path">The file, one of the paths of this class.</param>
     public static IReadOnlySet<string> PlaceholdersOf(string path) => path switch
@@ -206,6 +253,8 @@ public static class BflPromptLibrary
         ONBOARDING_PATH => ONBOARDING_PLACEHOLDERS,
         WORK_STATE_PATH => WORK_STATE_PLACEHOLDERS,
         RESEARCH_PATH => RESEARCH_PLACEHOLDERS,
+        PERSON_RESEARCH_PATH => PERSON_RESEARCH_PLACEHOLDERS,
+        PARTICIPANT_SELECTION_PATH => PARTICIPANT_SELECTION_PLACEHOLDERS,
         _ when path.StartsWith(RESULTS_FOLDER, StringComparison.Ordinal) => RESULT_PLACEHOLDERS,
         _ => NO_PLACEHOLDERS
     };
@@ -253,6 +302,19 @@ public static class BflPromptLibrary
     public static async Task<BflResearchPromptParts> LoadResearchPartsAsync(BflResearchTopic topic, string? overrideDirectory = null, CancellationToken token = default) => new(
         await ReadAsync(RESEARCH_PATH, overrideDirectory, token),
         await ReadAsync(ResearchTopicPath(topic), overrideDirectory, token));
+
+    /// <summary>
+    /// Reads the texts of the system prompt of an agent of the research on a person.
+    /// </summary>
+    /// <param name="stage">The stage of the research.</param>
+    /// <param name="overrideDirectory">The folder whose files replace the prompts, or null while the person does not allow it.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The texts, which BflPromptComposer puts together; the task of the stage is the topic.</returns>
+    /// <exception cref="FileNotFoundException">The app comes without one of the files.</exception>
+    /// <exception cref="BflPromptOverrideException">A file which replaces a prompt contains a placeholder which the lab does not fill in it.</exception>
+    public static async Task<BflResearchPromptParts> LoadPersonResearchPartsAsync(BflPersonResearchStage stage, string? overrideDirectory = null, CancellationToken token = default) => new(
+        await ReadAsync(PERSON_RESEARCH_PATH, overrideDirectory, token),
+        await ReadAsync(PersonResearchStagePath(stage), overrideDirectory, token));
 
     /// <summary>
     /// Reads a file of the lab's prompts: the file which replaces it, if there is one, or else the file which comes

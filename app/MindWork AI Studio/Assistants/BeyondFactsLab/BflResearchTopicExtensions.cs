@@ -25,7 +25,7 @@ public static class BflResearchTopicExtensions
         public string Description => topic switch
         {
             BflResearchTopic.EVENT => TB("Organizer, format and schedule, moderation, and earlier editions of the event."),
-            BflResearchTopic.PARTICIPANTS => TB("Who else speaks or moderates, in which role, and which public positions they have taken on the topic."),
+            BflResearchTopic.PARTICIPANTS => TB("Who else speaks or moderates, and in which role. From this list, the lab can research individual people in depth."),
             BflResearchTopic.DEBATE => TB("How the topic is discussed in public: positions, points of dispute, and the framing of others."),
 
             _ => string.Empty,

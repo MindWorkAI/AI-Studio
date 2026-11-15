@@ -17,7 +17,7 @@ public sealed class BflResearch
     /// <summary>
     /// The version of the stored form this version of AI Studio writes. Raise it with every new property.
     /// </summary>
-    public const int CURRENT_SCHEMA_VERSION = 1;
+    public const int CURRENT_SCHEMA_VERSION = 2;
 
     /// <summary>
     /// How many characters of the answer of the agent a research keeps at most, since the text goes into the prompt of
@@ -66,6 +66,13 @@ public sealed class BflResearch
     public List<BflResearchPage> Pages { get; set; } = [];
 
     /// <summary>
+    /// Gets or sets the people the research on the participants lists, read from its text when it was stored, see
+    /// BflParticipant.ListIn. Empty for the other topics, and for a research stored before the lab kept the list
+    /// (version 1 of the stored form).
+    /// </summary>
+    public List<BflParticipant> Participants { get; set; } = [];
+
+    /// <summary>
     /// Gets or sets when the agent finished.
     /// </summary>
     public DateTimeOffset CreatedAtUtc { get; set; }
@@ -90,12 +97,13 @@ public sealed class BflResearch
     /// <param name="sources">The sources the tools reported, for the titles of the pages.</param>
     /// <param name="details">The public details the agent received.</param>
     /// <param name="createdAtUtc">When the agent finished.</param>
+    /// <param name="maxTextCharacters">How many characters of the answer the research keeps at most.</param>
     /// <returns>The research; its text is empty when the agent wrote nothing.</returns>
-    public static BflResearch Of(string answer, IEnumerable<ToolInvocationTrace> invocations, IEnumerable<Source> sources, IReadOnlyList<BflResearchDetail> details, DateTimeOffset createdAtUtc)
+    public static BflResearch Of(string answer, IEnumerable<ToolInvocationTrace> invocations, IEnumerable<Source> sources, IReadOnlyList<BflResearchDetail> details, DateTimeOffset createdAtUtc, int maxTextCharacters = MAX_TEXT_CHARACTERS)
     {
         var text = BflResultText.Read(answer);
-        if (text.Length > MAX_TEXT_CHARACTERS)
-            text = BflMaterialBudget.EndAtLineEnd(text[..MAX_TEXT_CHARACTERS]);
+        if (text.Length > maxTextCharacters)
+            text = BflMaterialBudget.EndAtLineEnd(text[..maxTextCharacters]);
 
         var executed = invocations.Where(invocation => invocation.WasExecuted).OrderBy(invocation => invocation.Order).ToList();
         var queries = executed

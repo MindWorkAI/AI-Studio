@@ -50,6 +50,7 @@ public sealed class BeyondFactsLabStoreResearchTests
             Details = [new() { FieldId = BflFieldCatalog.EVENT_TOPIC, Value = "Klimapolitik" }],
             SearchQueries = ["Podium Klimapolitik"],
             Pages = [new() { Title = "Programm", Url = "https://example.org/programm" }],
+            Participants = [new() { Name = "Person A", Entry = "- Rolle: Podium" }],
             CreatedAtUtc = new DateTimeOffset(2026, 11, 10, 14, 0, 0, TimeSpan.Zero),
         };
 
@@ -64,6 +65,8 @@ public sealed class BeyondFactsLabStoreResearchTests
             Assert.That(loaded.Details.Single().Value, Is.EqualTo("Klimapolitik"));
             Assert.That(loaded.SearchQueries, Is.EqualTo(new[] { "Podium Klimapolitik" }));
             Assert.That(loaded.Pages.Single().Url, Is.EqualTo("https://example.org/programm"));
+            Assert.That(loaded.Participants.Single().Name, Is.EqualTo("Person A"));
+            Assert.That(loaded.Participants.Single().Entry, Is.EqualTo("- Rolle: Podium"));
             Assert.That(loaded.CreatedAtUtc, Is.EqualTo(research.CreatedAtUtc));
             Assert.That(all.Keys, Is.EquivalentTo(new[] { BflResearchTopic.PARTICIPANTS }));
             Assert.That(changed.ModifiedAtUtc, Is.GreaterThanOrEqualTo(created.ModifiedAtUtc));
@@ -95,6 +98,33 @@ public sealed class BeyondFactsLabStoreResearchTests
         await this.WriteResearchFileAsync(created.ProjectId, "debate.json", $$"""{ "schemaVersion": {{BflResearch.CURRENT_SCHEMA_VERSION + 1}}, "text": "Neu" }""");
 
         await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadResearchAsync(created.ProjectId, BflResearchTopic.DEBATE));
+    }
+
+    [Test]
+    public async Task AResearchStoredBeforeTheListOfPeopleHasAnEmptyList()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteResearchFileAsync(created.ProjectId, "participants.json", """{ "schemaVersion": 1, "text": "### Person A", "details": [], "searchQueries": [], "pages": [] }""");
+
+        var loaded = await store.LoadResearchAsync(created.ProjectId, BflResearchTopic.PARTICIPANTS);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(loaded, Is.Not.Null);
+            Assert.That(loaded!.Text, Is.EqualTo("### Person A"));
+            Assert.That(loaded.Participants, Is.Empty);
+        }
+    }
+
+    [Test]
+    public async Task AResearchWithAPersonWithoutANameStaysAsItIs()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteResearchFileAsync(created.ProjectId, "participants.json", """{ "schemaVersion": 2, "text": "Text", "details": [], "searchQueries": [], "pages": [], "participants": [ { "name": null, "entry": "" } ] }""");
+
+        await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadResearchAsync(created.ProjectId, BflResearchTopic.PARTICIPANTS));
     }
 
     [Test]
