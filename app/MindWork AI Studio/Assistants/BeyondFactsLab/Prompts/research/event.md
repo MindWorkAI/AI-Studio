@@ -1,4 +1,4 @@
-Recherchiere die Veranstaltung selbst. Die Teilnehmenden und ihre Positionen sowie die öffentliche Debatte zum Thema recherchieren andere Agenten.
+Recherchiere die Veranstaltung selbst. Die Teilnehmenden und ihre Positionen sowie die öffentliche Debatte zum Thema recherchieren andere Agenten. Ist die Veranstaltung nicht öffentlich angekündigt, schreibe das und beschreibe, was über den Veranstalter und über das Format öffentlich ist, etwa frühere Veranstaltungen dieser Art.
 
 ## Veranstaltung
 
