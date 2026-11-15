@@ -1764,9 +1764,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T
 -- Research this person
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1965641637"] = "Research this person"
 
--- Research on single people
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2250389270"] = "Research on single people"
-
 -- Once the research on the participants found a list of people, you can choose here whom the lab researches in depth.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2316008723"] = "Once the research on the participants found a list of people, you can choose here whom the lab researches in depth."
 
@@ -1781,6 +1778,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T
 
 -- The lab suggests whom to research in depth
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2980501067"] = "The lab suggests whom to research in depth"
+
+-- Research on individual participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3316090314"] = "Research on individual participants"
 
 -- The lab suggested this selection because the list is long. Check it and change it as you like.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3618922246"] = "The lab suggested this selection because the list is long. Check it and change it as you like."
@@ -2045,6 +2045,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T31331
 
 -- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850::INFORMAL"] = "Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."
+
+-- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743"] = "The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider."
+
+-- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743::INFORMAL"] = "The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider."
 
 -- This person is no longer on the list of participants, so the lab does not research them. Please research the participants again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T980791662"] = "This person is no longer on the list of participants, so the lab does not research them. Please research the participants again."
@@ -2523,12 +2529,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T10499
 -- Knowledge and uncertainty
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1147870258"] = "Knowledge and uncertainty"
 
--- How you convey evidence, trade-offs between values, and open questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1290723890"] = "How you convey evidence, trade-offs between values, and open questions."
-
--- How you convey evidence, trade-offs between values, and open questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1290723890::INFORMAL"] = "How you convey evidence, trade-offs between values, and open questions."
-
 -- Event details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T135387869"] = "Event details"
 
@@ -2543,6 +2543,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T25243
 
 -- You can fill in single fields or start right away in the chat.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2524378548::INFORMAL"] = "You can fill in single fields or start right away in the chat."
+
+-- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618"] = "How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step."
+
+-- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618::INFORMAL"] = "How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step."
 
 -- Goals and role
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2988481290"] = "Goals and role"
@@ -23825,6 +23831,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGE
 
 -- The tool calling request failed with status code {0}. See the logs for details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3117779001::INFORMAL"] = "The tool calling request failed with status code {0}. See the logs for details."
+
+-- The model did not return a final answer after completing the available tool calls.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3613099681"] = "The model did not return a final answer after completing the available tool calls."
+
+-- The model completed the tool call but did not return a final answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T54566803"] = "The model completed the tool call but did not return a final answer."
 
 -- General
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T1432485131"] = "General"
