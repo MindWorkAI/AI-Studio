@@ -90,6 +90,17 @@ public static class BflPromptLibrary
     public const string ONBOARDING_ORGANIZATION_RULES_PATH = FOLDER + "/Prompts/snippets/organization-rules-onboarding.md";
 
     /// <summary>
+    /// The folder of the files which describe how the chat of the step "Test situation" plays people from the research.
+    /// </summary>
+    private const string SIMULATION_FOLDER = FOLDER + "/Prompts/simulation/";
+
+    /// <summary>
+    /// The rules for every simulation of people from the research: their limits, how the chat marks them, and how an
+    /// exercise runs and ends.
+    /// </summary>
+    public const string PERSONA_PATH = SIMULATION_FOLDER + "persona.md";
+
+    /// <summary>
     /// The placeholders BflPromptComposer fills in the core.
     /// </summary>
     private static readonly FrozenSet<string> CORE_PLACEHOLDERS = FrozenSet.Create(StringComparer.Ordinal,
@@ -204,6 +215,13 @@ public static class BflPromptLibrary
     public static string PersonResearchStagePath(BflPersonResearchStage stage) => $"{RESEARCH_FOLDER}person-{stage.FileStem}.md";
 
     /// <summary>
+    /// Gets the file which describes the simulation of a mode with people from the research.
+    /// </summary>
+    /// <param name="mode">The mode, one with people.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The mode plays generic counterparts, which need no file of their own.</exception>
+    public static string SimulationPath(BflSimulationMode mode) => $"{SIMULATION_FOLDER}{mode.FileStem}.md";
+
+    /// <summary>
     /// Gets the instruction for a form of address.
     /// </summary>
     /// <param name="addressForm">The form of address.</param>
@@ -227,7 +245,9 @@ public static class BflPromptLibrary
         ..Enum.GetValues<AddressForm>().Select(AddressPath).Distinct(),
         ORGANIZATION_RULES_PATH,
         ONBOARDING_ORGANIZATION_RULES_PATH,
-        ..BflStep.All.Select(StepPath)
+        ..BflStep.All.Select(StepPath),
+        PERSONA_PATH,
+        ..BflSimulationMode.All.Where(mode => mode.HasPeople).Select(SimulationPath)
     ];
 
     /// <summary>
@@ -265,16 +285,37 @@ public static class BflPromptLibrary
     /// <param name="step">The step.</param>
     /// <param name="addressForm">How the model addresses the person.</param>
     /// <param name="overrideDirectory">The folder whose files replace the prompts, or null while the person does not allow it.</param>
+    /// <param name="simulation">The mode of the simulation in effect, which only the step "Test situation" reads, see BflEffectiveSimulation.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The texts, which BflPromptComposer puts together.</returns>
     /// <exception cref="FileNotFoundException">The app comes without one of the files.</exception>
     /// <exception cref="BflPromptOverrideException">A file which replaces a prompt contains a placeholder which the lab does not fill in it.</exception>
-    public static async Task<BflPromptParts> LoadPartsAsync(BflStep step, AddressForm addressForm, string? overrideDirectory = null, CancellationToken token = default) => new(
+    public static async Task<BflPromptParts> LoadPartsAsync(BflStep step, AddressForm addressForm, string? overrideDirectory = null, BflSimulationMode simulation = BflSimulationMode.GENERIC, CancellationToken token = default) => new(
         await ReadAsync(CORE_PATH, overrideDirectory, token),
         await ReadAsync(KNOWLEDGE_PATH, overrideDirectory, token),
         await ReadAsync(StepPath(step), overrideDirectory, token),
         await ReadAsync(AddressPath(addressForm), overrideDirectory, token),
-        await ReadAsync(ORGANIZATION_RULES_PATH, overrideDirectory, token));
+        await ReadAsync(ORGANIZATION_RULES_PATH, overrideDirectory, token),
+        await ReadSimulationAsync(step, simulation, overrideDirectory, token));
+
+    /// <summary>
+    /// Reads how the chat of a step plays people from the research: the rules of every simulation, followed by the
+    /// description of its mode.
+    /// </summary>
+    /// <param name="step">The step.</param>
+    /// <param name="simulation">The mode of the simulation in effect.</param>
+    /// <param name="overrideDirectory">The folder whose files replace the prompts, or null while the person does not allow it.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The text; empty for every step but "Test situation", and for generic counterparts.</returns>
+    private static async Task<string> ReadSimulationAsync(BflStep step, BflSimulationMode simulation, string? overrideDirectory, CancellationToken token)
+    {
+        if (step is not BflStep.TEST_SITUATION || !simulation.HasPeople)
+            return string.Empty;
+
+        var rules = await ReadAsync(PERSONA_PATH, overrideDirectory, token);
+        var mode = await ReadAsync(SimulationPath(simulation), overrideDirectory, token);
+        return $"{rules.Trim()}\n\n{mode.Trim()}";
+    }
 
     /// <summary>
     /// Reads the texts of the system prompt of the conversation about whether the lab fits a task.

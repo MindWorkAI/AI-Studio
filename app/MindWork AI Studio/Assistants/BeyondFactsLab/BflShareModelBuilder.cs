@@ -45,7 +45,8 @@ public static class BflShareModelBuilder
 
     /// <summary>
     /// Appends what the research team needs to read the session: the version of AI Studio, the date, how much material
-    /// the person added, on which topics the lab researched, and how many people it researched in depth.
+    /// the person added, on which topics the lab researched, how many people it researched in depth, and whom the test
+    /// situation simulates.
     /// </summary>
     /// <param name="text">The session so far.</param>
     /// <param name="input">What the session is put together from.</param>
@@ -62,7 +63,18 @@ public static class BflShareModelBuilder
         AppendItem(text, TB("Material"), string.Format(input.Culture, TB("{0} documents, {1} recordings, {2} images"), documents, recordings, images));
         AppendItem(text, TB("Research on the web"), topics.Count > 0 ? string.Join(", ", topics) : TB("none"));
         AppendItem(text, TB("People researched in depth"), input.ResearchedPeople.ToString(input.Culture));
+        AppendItem(text, TB("Simulation in the test situation"), Simulation(input));
         AppendItem(text, TB("Personal disclosures"), input.IncludePersonalDisclosures ? TB("included") : TB("left out"));
+    }
+
+    /// <summary>
+    /// Describes whom the test situation simulates: the mode and how many people, without their names.
+    /// </summary>
+    /// <param name="input">What the session is put together from.</param>
+    private static string Simulation(BflShareInput input)
+    {
+        var simulation = input.Simulation ?? BflEffectiveSimulation.GENERIC;
+        return simulation.People.Count is 0 ? simulation.Mode.Title : string.Format(input.Culture, TB("{0} ({1} simulated)"), simulation.Mode.Title, simulation.People.Count);
     }
 
     /// <summary>

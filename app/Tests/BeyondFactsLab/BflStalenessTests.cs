@@ -214,6 +214,46 @@ public sealed class BflStalenessTests
     }
 
     [Test]
+    public void WithGenericCounterpartsTheFingerprintStaysAsItWasBeforeTheSimulation()
+    {
+        var withoutSimulation = new BflStepFormData();
+        withoutSimulation.Set(BflFieldCatalog.TEST_NOTES, "Text");
+        var generic = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.GENERIC, People = ["Eva Klein"] } };
+        generic.Set(BflFieldCatalog.TEST_NOTES, "Text");
+
+        // How the lab computed the fingerprint of this form before it simulated people:
+        var before = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes($"{BflFieldCatalog.TEST_NOTES}\0Text\0")));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflStaleness.FingerprintOf(withoutSimulation), Is.EqualTo(before));
+            Assert.That(BflStaleness.FingerprintOf(generic), Is.EqualTo(before));
+        }
+    }
+
+    [Test]
+    public void TheFingerprintCountsTheModeAndThePeopleOfTheSimulation()
+    {
+        var empty = new BflStepFormData();
+        var single = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.SINGLE_PERSON, People = ["Eva Klein"] } };
+        var panel = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.PANEL_DISCUSSION, People = ["Eva Klein"] } };
+        var otherPerson = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.SINGLE_PERSON, People = ["Frank Ott"] } };
+
+        var fingerprints = new[] { empty, single, panel, otherPerson }.Select(BflStaleness.FingerprintOf).ToList();
+
+        Assert.That(fingerprints, Is.Unique);
+    }
+
+    [Test]
+    public void TheOrderAndTheSpellingOfTheSimulatedPeopleIsNoChange()
+    {
+        var first = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.PANEL_DISCUSSION, People = ["Eva Klein", "Frank Ott"] } };
+        var second = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.PANEL_DISCUSSION, People = ["frank  ott", "Eva Klein"] } };
+
+        Assert.That(BflStaleness.FingerprintOf(first), Is.EqualTo(BflStaleness.FingerprintOf(second)));
+    }
+
+    [Test]
     public void AChangedCardSortWeighsLikeChangedDetails()
     {
         var form = new BflStepFormData();

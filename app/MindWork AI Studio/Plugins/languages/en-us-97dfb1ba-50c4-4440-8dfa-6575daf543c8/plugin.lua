@@ -1107,6 +1107,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2055072982"] = 
 -- Delete this conversation and start it over?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2055072982::INFORMAL"] = "Delete this conversation and start it over?"
 
+-- This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2124231889"] = "This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between."
+
+-- This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2124231889::INFORMAL"] = "This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between."
+
 -- The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2610371636"] = "The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first."
 
@@ -1130,6 +1136,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112"] = 
 
 -- Delete the conversation of this step and start it over? Your details stay as they are.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112::INFORMAL"] = "Delete the conversation of this step and start it over? Your details stay as they are."
+
+-- End and evaluate the exercise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3886921817"] = "End and evaluate the exercise"
+
+-- I would like to end the exercise now and get its evaluation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T4175512580"] = "I would like to end the exercise now and get its evaluation."
 
 -- Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T281612290"] = "Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps."
@@ -1169,6 +1181,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 
 -- The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2261674511::INFORMAL"] = "The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug."
+
+-- The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2312257399"] = "The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider."
+
+-- The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2312257399::INFORMAL"] = "The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider."
 
 -- The model of the selected provider reads too little at once for the lab. Please select another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3132723417"] = "The model of the selected provider reads too little at once for the lab. Please select another provider."
@@ -1440,6 +1458,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652
 -- In the last step, let the lab create your materials from your confirmed work states: a reflection folder, a position paper, a conversation guide, questions and answers, and your open points. You check, edit, and confirm each of them, and then export it as a document.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652635::INFORMAL"] = "In the last step, let the lab create your materials from your confirmed work states: a reflection folder, a position paper, a conversation guide, questions and answers, and your open points. You check, edit, and confirm each of them, and then export it as a document."
 
+-- In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1320373512"] = "In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much."
+
+-- In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1320373512::INFORMAL"] = "In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much."
+
 -- Research on the web
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1322369504"] = "Research on the web"
 
@@ -1499,6 +1523,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811
 
 -- In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819::INFORMAL"] = "In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality."
+
+-- Simulated participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3371128229"] = "Simulated participants"
 
 -- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3499941356"] = "Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know."
@@ -2502,6 +2529,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T34
 -- About this session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3460157970"] = "About this session"
 
+-- {0} ({1} simulated)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3642066273"] = "{0} ({1} simulated)"
+
 -- Own values
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3651870515"] = "Own values"
 
@@ -2510,6 +2540,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T37
 
 -- To look at more closely
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3757621498"] = "To look at more closely"
+
+-- Simulation in the test situation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3853316258"] = "Simulation in the test situation"
 
 -- Left out, as it may contain personal disclosures.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3986361996"] = "Left out, as it may contain personal disclosures."
@@ -2522,6 +2555,105 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T72
 
 -- None
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T810547195"] = "None"
+
+-- Choose the person:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1010486410"] = "Choose the person:"
+
+-- Choose the person:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1010486410::INFORMAL"] = "Choose the person:"
+
+-- Simulation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1315724598"] = "Simulation"
+
+-- The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1539984278"] = "The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included."
+
+-- The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1539984278::INFORMAL"] = "The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included."
+
+-- Whom the lab simulates
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2077651045"] = "Whom the lab simulates"
+
+-- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2331929951"] = "Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts."
+
+-- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2331929951::INFORMAL"] = "Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts."
+
+-- Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3164792878"] = "Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'."
+
+-- Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3164792878::INFORMAL"] = "Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'."
+
+-- The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T333129936"] = "The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing."
+
+-- The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T333129936::INFORMAL"] = "The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing."
+
+-- Choose up to {0} people:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3459621859"] = "Choose up to {0} people:"
+
+-- Choose up to {0} people:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3459621859::INFORMAL"] = "Choose up to {0} people:"
+
+-- The research on these people takes about {0} of the {1} tokens the model reads at once.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3676628527"] = "The research on these people takes about {0} of the {1} tokens the model reads at once."
+
+-- The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T379468702"] = "The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts."
+
+-- The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T379468702::INFORMAL"] = "The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts."
+
+-- In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T48225341"] = "In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation."
+
+-- In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T48225341::INFORMAL"] = "In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation."
+
+-- Choose at least one person. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T962950702"] = "Choose at least one person. Until then, the lab simulates generic counterparts."
+
+-- Choose at least one person. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T962950702::INFORMAL"] = "Choose at least one person. Until then, the lab simulates generic counterparts."
+
+-- Generic counterparts, no specific person
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1003594062"] = "Generic counterparts, no specific person"
+
+-- The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1554315843"] = "The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1554315843::INFORMAL"] = "The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- Panel discussion with up to three people
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T181962038"] = "Panel discussion with up to three people"
+
+-- The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T2141818378"] = "The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T2141818378::INFORMAL"] = "The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T254330793"] = "The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T254330793::INFORMAL"] = "The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- Press conference with up to five people
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T296774835"] = "Press conference with up to five people"
+
+-- The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3641426213"] = "The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback."
+
+-- The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3641426213::INFORMAL"] = "The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback."
+
+-- One person from the research
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3898849536"] = "One person from the research"
 
 -- Test situation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1049923473"] = "Test situation"
@@ -2568,6 +2700,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T30523
 -- Strategy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3205650756"] = "Strategy"
 
+-- Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3595750805"] = "Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth."
+
+-- Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3595750805::INFORMAL"] = "Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth."
+
 -- Results and materials
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3602322182"] = "Results and materials"
 
@@ -2579,12 +2717,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T51769
 
 -- What you take away from your preparation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T517692701::INFORMAL"] = "What you take away from your preparation."
-
--- Play through critical questions and opposing positions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T573043138"] = "Play through critical questions and opposing positions."
-
--- Play through critical questions and opposing positions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T573043138::INFORMAL"] = "Play through critical questions and opposing positions."
 
 -- What you know for sure, what is uncertain, and where your expertise ends.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T762525208"] = "What you know for sure, what is uncertain, and where your expertise ends."

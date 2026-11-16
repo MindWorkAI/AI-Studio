@@ -96,7 +96,8 @@ public static class BflStaleness
     /// <remarks>
     /// Line endings and spaces around a value do not count, since they change nothing the model reads. The card sort
     /// counts as a detail of its step; without one, or with an empty one, the fingerprint is the same as before the lab
-    /// had a card sort, so that no confirmation of an older preparation turns into "Details changed".
+    /// had a card sort, so that no confirmation of an older preparation turns into "Details changed". The same holds for
+    /// the simulation of the step "Test situation" with generic counterparts.
     /// </remarks>
     /// <param name="form">The form.</param>
     /// <returns>The fingerprint, in hexadecimal digits.</returns>
@@ -115,7 +116,26 @@ public static class BflStaleness
         if (form.CardSort is { IsEmpty: false } cardSort)
             AppendCardSort(text, cardSort);
 
+        if (form.Simulation is { Mode.HasPeople: true } simulation)
+            AppendSimulation(text, simulation);
+
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text.ToString())));
+    }
+
+    /// <summary>
+    /// Appends a simulation with people to the text a fingerprint is computed from.
+    /// </summary>
+    /// <remarks>
+    /// Generic counterparts add nothing, so that the fingerprint stays the same as before the lab simulated people. The
+    /// people count as a set, by the keys of their names: the order the person chose them in means nothing.
+    /// </remarks>
+    /// <param name="text">The text so far.</param>
+    /// <param name="simulation">The simulation.</param>
+    private static void AppendSimulation(StringBuilder text, BflSimulation simulation)
+    {
+        text.Append(SEPARATOR).Append("simulation").Append(SEPARATOR).Append(simulation.Mode.ToString()).Append(SEPARATOR);
+        foreach (var key in simulation.People.Select(BflParticipant.NameKey).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
+            text.Append(key).Append(SEPARATOR);
     }
 
     /// <summary>
