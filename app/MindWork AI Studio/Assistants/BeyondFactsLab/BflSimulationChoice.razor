@@ -68,7 +68,7 @@
 
                     case BflSimulationFit.UNKNOWN_CONTEXT:
                         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
-                            <MudJustifiedText Typo="Typo.body2">@string.Format(Culture, TA("The research on the people you chose takes about {0} tokens. Nobody knows how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. The conversation shows how much room is left."), this.DossierTokens.CompactCount())</MudJustifiedText>
+                            <MudJustifiedText Typo="Typo.body2">@string.Format(Culture, TA("The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included."), this.DossierTokens.CompactCount())</MudJustifiedText>
                         </MudAlert>
                         break;
 
