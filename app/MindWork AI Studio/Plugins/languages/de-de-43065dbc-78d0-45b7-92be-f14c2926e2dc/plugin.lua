@@ -1458,6 +1458,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652
 -- In the last step, let the lab create your materials from your confirmed work states: a reflection folder, a position paper, a conversation guide, questions and answers, and your open points. You check, edit, and confirm each of them, and then export it as a document.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652635::INFORMAL"] = "Lass im letzten Schritt das Lab aus deinen bestätigten Arbeitsständen deine Materialien erstellen: eine Reflexionsmappe, ein Positionsblatt, einen Gesprächsleitfaden, Fragen und Antwortansätze sowie deine offenen Punkte. Du prüfst, bearbeitest und bestätigst jedes davon und exportierst es dann als Dokument."
 
+-- In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1320373512"] = "Im Schritt „{0}“ simuliert das Lab generische Gegenüber und gibt Ihnen nach jeder Antwort Feedback. Unter „Simulation“ können Sie das Lab stattdessen Teilnehmende simulieren lassen, die es genauer recherchiert hat: eine Person, eine Podiumsdiskussion mit bis zu drei oder eine Pressekonferenz mit bis zu fünf Personen. Das Lab lässt sie nur mit den Positionen argumentieren, die ihre Recherche belegt, erfindet keine Zitate und kennzeichnet jeden ihrer Beiträge als Simulation. Eine solche Simulation läuft, bis Sie sie mit „Übung beenden und auswerten“ beenden; dann erhalten Sie Feedback zur ganzen Übung, und mit „Pause“ erhalten Sie zwischendurch kurzes Feedback. Die Recherche zu jeder Person braucht Platz im Kontextfenster des Modells, und das Lab zeigt Ihnen, wie viel."
+
+-- In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1320373512::INFORMAL"] = "Im Schritt „{0}“ simuliert das Lab generische Gegenüber und gibt dir nach jeder Antwort Feedback. Unter „Simulation“ kannst du das Lab stattdessen Teilnehmende simulieren lassen, die es genauer recherchiert hat: eine Person, eine Podiumsdiskussion mit bis zu drei oder eine Pressekonferenz mit bis zu fünf Personen. Das Lab lässt sie nur mit den Positionen argumentieren, die ihre Recherche belegt, erfindet keine Zitate und kennzeichnet jeden ihrer Beiträge als Simulation. Eine solche Simulation läuft, bis du sie mit „Übung beenden und auswerten“ beendest; dann erhältst du Feedback zur ganzen Übung, und mit „Pause“ erhältst du zwischendurch kurzes Feedback. Die Recherche zu jeder Person braucht Platz im Kontextfenster des Modells, und das Lab zeigt dir, wie viel."
+
 -- Research on the web
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1322369504"] = "Recherche im Web"
 
@@ -1559,12 +1565,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3849094
 
 -- Uncertainties and the limits of your expertise stay visible.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3849094383::INFORMAL"] = "Unsicherheiten und die Grenzen deiner Expertise bleiben sichtbar."
-
--- In the step '{0}', the lab plays generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it play participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3961042628"] = "Im Schritt „{0}“ spielt das Lab generische Gegenüber und gibt Ihnen nach jeder Antwort Feedback. Unter „Simulation“ können Sie das Lab stattdessen Teilnehmende spielen lassen, die es genauer recherchiert hat: eine Person, eine Podiumsdiskussion mit bis zu drei oder eine Pressekonferenz mit bis zu fünf Personen. Das Lab lässt sie nur mit den Positionen argumentieren, die ihre Recherche belegt, erfindet keine Zitate und kennzeichnet jeden ihrer Beiträge als Simulation. Eine solche Simulation läuft, bis Sie sie mit „Übung beenden und auswerten“ beenden; dann erhalten Sie Feedback zur ganzen Übung, und mit „Pause“ erhalten Sie zwischendurch kurzes Feedback. Die Recherche zu jeder Person braucht Platz im Kontextfenster des Modells, und das Lab zeigt Ihnen, wie viel."
-
--- In the step '{0}', the lab plays generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it play participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3961042628::INFORMAL"] = "Im Schritt „{0}“ spielt das Lab generische Gegenüber und gibt dir nach jeder Antwort Feedback. Unter „Simulation“ kannst du das Lab stattdessen Teilnehmende spielen lassen, die es genauer recherchiert hat: eine Person, eine Podiumsdiskussion mit bis zu drei oder eine Pressekonferenz mit bis zu fünf Personen. Das Lab lässt sie nur mit den Positionen argumentieren, die ihre Recherche belegt, erfindet keine Zitate und kennzeichnet jeden ihrer Beiträge als Simulation. Eine solche Simulation läuft, bis du sie mit „Übung beenden und auswerten“ beendest; dann erhältst du Feedback zur ganzen Übung, und mit „Pause“ erhältst du zwischendurch kurzes Feedback. Die Recherche zu jeder Person braucht Platz im Kontextfenster des Modells, und das Lab zeigt dir, wie viel."
 
 -- The answers refer to your event and your details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4047394881"] = "Die Antworten beziehen sich auf Ihre Veranstaltung und Ihre Angaben."
@@ -2562,9 +2562,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T101
 -- Choose the person:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1010486410::INFORMAL"] = "Wähle die Person aus:"
 
--- Whom the lab plays
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1012322417"] = "Wen das Lab spielt"
-
 -- Simulation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1315724598"] = "Simulation"
 
@@ -2574,17 +2571,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T153
 -- The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1539984278::INFORMAL"] = "Die Recherche zu den Personen, die du gewählt hast, umfasst etwa {0} Token. AI Studio weiß nicht, wie viel das Modell des ausgewählten Anbieters auf einmal verarbeitet; daher kann das Lab nicht sagen, ob das passt. Unter dem Gespräch siehst du, wie viele Token es belegt, die Recherche eingeschlossen."
 
--- Choose at least one person. Until then, the lab plays generic counterparts.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2235050422"] = "Wählen Sie mindestens eine Person aus. Bis dahin spielt das Lab generische Gegenüber."
+-- Whom the lab simulates
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2077651045"] = "Wen das Lab simuliert"
 
--- Choose at least one person. Until then, the lab plays generic counterparts.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2235050422::INFORMAL"] = "Wähle mindestens eine Person aus. Bis dahin spielt das Lab generische Gegenüber."
+-- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2331929951"] = "Noch kann das Lab niemanden simulieren. Lassen Sie es im Schritt „{0}“ einzelne Teilnehmende recherchieren; hier erscheinen alle, deren öffentliche Positionen die Recherche belegt. Bis dahin simuliert das Lab generische Gegenüber."
 
--- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab plays generic counterparts.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2521752535"] = "Noch kann das Lab niemanden simulieren. Lassen Sie es im Schritt „{0}“ einzelne Teilnehmende recherchieren; hier erscheinen alle, deren öffentliche Positionen die Recherche belegt. Bis dahin spielt das Lab generische Gegenüber."
-
--- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab plays generic counterparts.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2521752535::INFORMAL"] = "Noch kann das Lab niemanden simulieren. Lass es im Schritt „{0}“ einzelne Teilnehmende recherchieren; hier erscheinen alle, deren öffentliche Positionen die Recherche belegt. Bis dahin spielt das Lab generische Gegenüber."
+-- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2331929951::INFORMAL"] = "Noch kann das Lab niemanden simulieren. Lass es im Schritt „{0}“ einzelne Teilnehmende recherchieren; hier erscheinen alle, deren öffentliche Positionen die Recherche belegt. Bis dahin simuliert das Lab generische Gegenüber."
 
 -- Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3164792878"] = "Wählen können Sie nur Personen, deren öffentliche Positionen die Recherche belegt. Lassen Sie das Lab im Schritt „{0}“ weitere Teilnehmende recherchieren."
@@ -2619,38 +2613,44 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T482
 -- In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T48225341::INFORMAL"] = "In dieser Übung simuliert das Lab {0}, auf Grundlage von Zusammenfassungen öffentlicher Quellen. Was das Lab die simulierten Personen sagen lässt, haben sie nie gesagt, und das Lab kennzeichnet jeden ihrer Beiträge als Simulation."
 
+-- Choose at least one person. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T962950702"] = "Wählen Sie mindestens eine Person aus. Bis dahin simuliert das Lab generische Gegenüber."
+
+-- Choose at least one person. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T962950702::INFORMAL"] = "Wähle mindestens eine Person aus. Bis dahin simuliert das Lab generische Gegenüber."
+
 -- Generic counterparts, no specific person
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1003594062"] = "Generische Gegenüber, keine konkrete Person"
 
--- The lab plays a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T150916703"] = "Das Lab spielt eine Podiumsdiskussion mit bis zu drei Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt eine Moderation, falls niemand von ihnen moderiert. Die Simulation läuft, bis Sie sie beenden; dann erhalten Sie Feedback zur ganzen Übung."
+-- The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1554315843"] = "Das Lab simuliert eine Podiumsdiskussion mit bis zu drei Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt eine Moderation, falls niemand von ihnen moderiert. Die Simulation läuft, bis Sie sie beenden; dann erhalten Sie Feedback zur ganzen Übung."
 
--- The lab plays a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T150916703::INFORMAL"] = "Das Lab spielt eine Podiumsdiskussion mit bis zu drei Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt eine Moderation, falls niemand von ihnen moderiert. Die Simulation läuft, bis du sie beendest; dann erhältst du Feedback zur ganzen Übung."
-
--- The lab plays one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1540654557"] = "Das Lab spielt eine teilnehmende Person in ihrer Rolle bei der Veranstaltung, auf Grundlage der Recherche zu ihr. Die Simulation läuft, bis Sie sie beenden; dann erhalten Sie Feedback zur ganzen Übung."
-
--- The lab plays one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1540654557::INFORMAL"] = "Das Lab spielt eine teilnehmende Person in ihrer Rolle bei der Veranstaltung, auf Grundlage der Recherche zu ihr. Die Simulation läuft, bis du sie beendest; dann erhältst du Feedback zur ganzen Übung."
+-- The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1554315843::INFORMAL"] = "Das Lab simuliert eine Podiumsdiskussion mit bis zu drei Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt eine Moderation, falls niemand von ihnen moderiert. Die Simulation läuft, bis du sie beendest; dann erhältst du Feedback zur ganzen Übung."
 
 -- Panel discussion with up to three people
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T181962038"] = "Podiumsdiskussion mit bis zu drei Personen"
 
--- The lab plays a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T229066214"] = "Das Lab spielt eine Pressekonferenz mit bis zu fünf Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt Fragen der Presse, falls niemand von ihnen welche stellt. Die Simulation läuft, bis Sie sie beenden; dann erhalten Sie Feedback zur ganzen Übung."
+-- The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T2141818378"] = "Das Lab simuliert eine Pressekonferenz mit bis zu fünf Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt Fragen der Presse, falls niemand von ihnen welche stellt. Die Simulation läuft, bis Sie sie beenden; dann erhalten Sie Feedback zur ganzen Übung."
 
--- The lab plays a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T229066214::INFORMAL"] = "Das Lab spielt eine Pressekonferenz mit bis zu fünf Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt Fragen der Presse, falls niemand von ihnen welche stellt. Die Simulation läuft, bis du sie beendest; dann erhältst du Feedback zur ganzen Übung."
+-- The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T2141818378::INFORMAL"] = "Das Lab simuliert eine Pressekonferenz mit bis zu fünf Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt Fragen der Presse, falls niemand von ihnen welche stellt. Die Simulation läuft, bis du sie beendest; dann erhältst du Feedback zur ganzen Übung."
 
--- The lab asks critical questions as they could come up at the event, without playing a specific person. After every answer, you get feedback.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T258650250"] = "Das Lab stellt kritische Fragen, wie sie bei der Veranstaltung fallen könnten, ohne eine bestimmte Person zu spielen. Nach jeder Antwort erhalten Sie Feedback."
+-- The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T254330793"] = "Das Lab simuliert eine teilnehmende Person in ihrer Rolle bei der Veranstaltung, auf Grundlage der Recherche zu ihr. Die Simulation läuft, bis Sie sie beenden; dann erhalten Sie Feedback zur ganzen Übung."
 
--- The lab asks critical questions as they could come up at the event, without playing a specific person. After every answer, you get feedback.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T258650250::INFORMAL"] = "Das Lab stellt kritische Fragen, wie sie bei der Veranstaltung fallen könnten, ohne eine bestimmte Person zu spielen. Nach jeder Antwort erhältst du Feedback."
+-- The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T254330793::INFORMAL"] = "Das Lab simuliert eine teilnehmende Person in ihrer Rolle bei der Veranstaltung, auf Grundlage der Recherche zu ihr. Die Simulation läuft, bis du sie beendest; dann erhältst du Feedback zur ganzen Übung."
 
 -- Press conference with up to five people
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T296774835"] = "Pressekonferenz mit bis zu fünf Personen"
+
+-- The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3641426213"] = "Das Lab stellt kritische Fragen, wie sie bei der Veranstaltung fallen könnten, ohne eine bestimmte Person zu simulieren. Nach jeder Antwort erhalten Sie Feedback."
+
+-- The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3641426213::INFORMAL"] = "Das Lab stellt kritische Fragen, wie sie bei der Veranstaltung fallen könnten, ohne eine bestimmte Person zu simulieren. Nach jeder Antwort erhältst du Feedback."
 
 -- One person from the research
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3898849536"] = "Eine Person aus der Recherche"
