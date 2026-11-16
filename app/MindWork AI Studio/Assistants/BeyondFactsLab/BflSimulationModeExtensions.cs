@@ -29,11 +29,11 @@ public static class BflSimulationModeExtensions
         /// </summary>
         public string Description => mode switch
         {
-            BflSimulationMode.SINGLE_PERSON => TA("The lab plays one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise."),
-            BflSimulationMode.PANEL_DISCUSSION => TA("The lab plays a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise."),
-            BflSimulationMode.PRESS_CONFERENCE => TA("The lab plays a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise."),
+            BflSimulationMode.SINGLE_PERSON => TA("The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise."),
+            BflSimulationMode.PANEL_DISCUSSION => TA("The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise."),
+            BflSimulationMode.PRESS_CONFERENCE => TA("The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise."),
 
-            _ => TA("The lab asks critical questions as they could come up at the event, without playing a specific person. After every answer, you get feedback."),
+            _ => TA("The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback."),
         };
 
         /// <summary>

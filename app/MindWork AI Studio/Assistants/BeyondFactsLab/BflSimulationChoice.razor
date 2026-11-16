@@ -8,7 +8,7 @@
     <MudSelect T="BflSimulationMode"
                Value="@this.Mode"
                ValueChanged="@this.SetModeAsync"
-               Label="@T("Whom the lab plays")"
+               Label="@T("Whom the lab simulates")"
                HelperText="@this.Mode.Description"
                Disabled="@this.Disabled"
                Variant="Variant.Outlined">
@@ -29,7 +29,7 @@
         else if (this.Candidates.Count is 0)
         {
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@AppIcons.PERSON_RESEARCH" Class="mt-3">
-                <MudJustifiedText Typo="Typo.body2">@string.Format(Culture, TA("Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab plays generic counterparts."), BflStep.STRATEGY.Title)</MudJustifiedText>
+                <MudJustifiedText Typo="Typo.body2">@string.Format(Culture, TA("Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts."), BflStep.STRATEGY.Title)</MudJustifiedText>
             </MudAlert>
         }
         else
@@ -53,7 +53,7 @@
             @if (this.Effective.People.Count is 0)
             {
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-2">
-                    <MudJustifiedText Typo="Typo.body2">@TA("Choose at least one person. Until then, the lab plays generic counterparts.")</MudJustifiedText>
+                    <MudJustifiedText Typo="Typo.body2">@TA("Choose at least one person. Until then, the lab simulates generic counterparts.")</MudJustifiedText>
                 </MudAlert>
             }
             else
