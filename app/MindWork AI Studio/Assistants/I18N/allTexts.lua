@@ -2563,14 +2563,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T101
 -- Whom the lab plays
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1012322417"] = "Whom the lab plays"
 
--- The research on the people you chose takes about {0} tokens. Nobody knows how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. The conversation shows how much room is left.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1126568734"] = "The research on the people you chose takes about {0} tokens. Nobody knows how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. The conversation shows how much room is left."
-
--- The research on the people you chose takes about {0} tokens. Nobody knows how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. The conversation shows how much room is left.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1126568734::INFORMAL"] = "The research on the people you chose takes about {0} tokens. Nobody knows how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. The conversation shows how much room is left."
-
 -- Simulation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1315724598"] = "Simulation"
+
+-- The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1539984278"] = "The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included."
+
+-- The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1539984278::INFORMAL"] = "The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included."
 
 -- Choose at least one person. Until then, the lab plays generic counterparts.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2235050422"] = "Choose at least one person. Until then, the lab plays generic counterparts."
