@@ -1,0 +1,10 @@
+@inherits MSGComponentBase
+
+<MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2">
+    <div>
+        @TA("You can re-enable the hidden categories in the assistant settings.")
+    </div>
+    <MudTooltip Text="@T("Open the assistant settings")">
+        <MudIconButton Icon="@AppIcons.SETTINGS" Color="Color.Inherit" OnClick="@this.OpenSettingsAsync"/>
+    </MudTooltip>
+</MudStack>

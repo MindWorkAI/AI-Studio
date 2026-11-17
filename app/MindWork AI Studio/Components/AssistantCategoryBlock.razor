@@ -2,7 +2,7 @@
 {
     if (this.HasVisibleAssistant)
     {
-        <AssistantCategoryHeader Category="@this.Category" IsCollapsed="@this.IsCollapsed" OnToggleCollapsed="@this.ToggleCollapsedAsync" Class="@this.HeaderClass"/>
+        <AssistantCategoryHeader Category="@this.Category" IsCollapsed="@this.IsCollapsed" OnToggleCollapsed="@this.ToggleCollapsedAsync" OnHide="@this.HideAsync" Class="@this.HeaderClass"/>
     }
 
     <CascadingValue Value="this" IsFixed="@true">

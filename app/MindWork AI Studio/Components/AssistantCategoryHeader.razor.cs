@@ -5,11 +5,12 @@ using Microsoft.AspNetCore.Components;
 namespace AIStudio.Components;
 
 /// <summary>
-/// The heading of a category on the assistants page, which collapses and expands the category.
+/// The heading of a category on the assistants page, which collapses and expands the category, and hides it.
 /// </summary>
 /// <remarks>
-/// The whole heading is the button, so that users find it where they look. The category block keeps the
-/// state, since it also decides what the category shows.
+/// The whole heading is the button which collapses the category, so that users find it where they look.
+/// The eye next to it hides the category. The category block keeps the state, since it also decides what
+/// the category shows.
 /// </remarks>
 public partial class AssistantCategoryHeader : MSGComponentBase
 {
@@ -30,6 +31,12 @@ public partial class AssistantCategoryHeader : MSGComponentBase
     /// </summary>
     [Parameter]
     public EventCallback OnToggleCollapsed { get; set; }
+
+    /// <summary>
+    /// Called when the user hides the category.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnHide { get; set; }
 
     /// <summary>
     /// The CSS classes of the heading.

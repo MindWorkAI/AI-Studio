@@ -25,6 +25,9 @@ public partial class AssistantCategoryBlock : ComponentBase, IDisposable
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
 
+    [Inject]
+    private ISnackbar Snackbar { get; init; } = null!;
+
     /// <summary>
     /// The registry of the assistants page, which learns which categories the page shows.
     /// </summary>
@@ -147,5 +150,23 @@ public partial class AssistantCategoryBlock : ComponentBase, IDisposable
     {
         this.SettingsManager.ConfigurationData.AssistantsPage.SetCategoryCollapsed(this.Category, !this.IsCollapsed);
         await this.SettingsManager.StoreSettings();
+    }
+
+    /// <summary>
+    /// Hides this category, remembers that, and tells the user how to get it back.
+    /// </summary>
+    /// <remarks>
+    /// The whole app learns about it, since a hidden category may also take its assistants out of the
+    /// "Send to ..." menu.
+    /// </remarks>
+    private async Task HideAsync()
+    {
+        var configuration = this.SettingsManager.ConfigurationData;
+        configuration.AssistantsPage.SetCategoryHidden(this.Category, true);
+        await this.SettingsManager.StoreSettings();
+
+        var categories = AssistantPageSections.SelectForSettings(this.Registry?.ShownCategories ?? [], configuration.App, configuration.AssistantsPage);
+        new DataAssistantCategoryHiddenMessage(categories).Show(this.Snackbar);
+        await MessageBus.INSTANCE.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 }
