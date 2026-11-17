@@ -14,6 +14,7 @@ namespace AIStudio.Tests.Tools.AssistantSessions;
 public sealed class AssistantSessionDraftTests
 {
     private static readonly AssistantSessionStateKey<string> TEXT_KEY = new("Text");
+    private static readonly AssistantSessionStateKey<bool> IS_READING_KEY = new("IsReading", isKeptOutOfDrafts: true);
 
     private static readonly AssistantSessionKey TRANSLATION_KEY = new(AIStudio.Tools.Components.TRANSLATION_ASSISTANT, "translation");
     private static readonly AssistantSessionKey SUMMARIZER_KEY = new(AIStudio.Tools.Components.TEXT_SUMMARIZER_ASSISTANT, "summarizer");
@@ -102,6 +103,37 @@ public sealed class AssistantSessionDraftTests
             Assert.That(this.service.TryTakeDraft(TRANSLATION_KEY), Is.Null, "The text sent to the assistant replaces its draft.");
             Assert.That(this.service.TryTakeDraft(SUMMARIZER_KEY), Is.Not.Null, "The drafts of other assistants stay.");
         });
+    }
+
+    [Test]
+    public void ADraftRestoresNoFlagOfWorkInProgress()
+    {
+        var state = StateWithText("hello");
+        state[IS_READING_KEY.Name] = new AssistantSessionSnapshotField<bool>(true);
+
+        var isReading = false;
+        string? text = null;
+        var reader = new AssistantSessionStateReader(state, "Translation", isDraft: true);
+        reader.Restore(IS_READING_KEY, value => isReading = value);
+        reader.Restore(TEXT_KEY, value => text = value);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(isReading, Is.False, "The work ended with the component which did it, so its flag would keep the form locked for good.");
+            Assert.That(text, Is.EqualTo("hello"), "Everything else comes back from a draft.");
+        });
+    }
+
+    [Test]
+    public void ARunRestoresFlagsOfWorkInProgress()
+    {
+        var state = StateWithText("hello");
+        state[IS_READING_KEY.Name] = new AssistantSessionSnapshotField<bool>(true);
+
+        var isReading = false;
+        new AssistantSessionStateReader(state, "Translation").Restore(IS_READING_KEY, value => isReading = value);
+
+        Assert.That(isReading, Is.True, "A run still goes on, so its flags hold.");
     }
 
     private static Dictionary<string, IAssistantSessionSnapshotField> StateWithText(string text)

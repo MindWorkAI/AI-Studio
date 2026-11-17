@@ -28,7 +28,7 @@ public partial class AssistantBatchProcessing
     private static readonly AssistantSessionStateKey<int> MAXIMUM_DELAY_SECONDS_STATE_KEY = new(nameof(maximumDelaySeconds));
     private static readonly AssistantSessionStateKey<List<BatchProcessingFileResult>> FILE_RESULTS_STATE_KEY = new(nameof(fileResults));
     private static readonly AssistantSessionStateKey<HashSet<string>> USED_RESULT_FILE_NAMES_STATE_KEY = new(nameof(usedResultFileNames));
-    private static readonly AssistantSessionStateKey<bool> IS_PROCESSING_BATCH_STATE_KEY = new(nameof(isProcessingBatch));
+    private static readonly AssistantSessionStateKey<bool> IS_PROCESSING_BATCH_STATE_KEY = new(nameof(isProcessingBatch), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<bool> HAS_REPORTED_WRITE_FAILURE_STATE_KEY = new(nameof(hasReportedWriteFailure));
     private static readonly AssistantSessionStateKey<int> NUM_PROCESSED_FILES_STATE_KEY = new(nameof(numProcessedFiles));
     private static readonly AssistantSessionStateKey<int> NUM_TOO_LARGE_FILES_STATE_KEY = new(nameof(numTooLargeFiles));

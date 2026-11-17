@@ -68,7 +68,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     private string inputQuestions = string.Empty;
     private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
     private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
-    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
+    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<string> WEB_CONTENT_URL_STATE_KEY = new(nameof(webContentURL));
     private static readonly AssistantSessionStateKey<string> INPUT_LEGAL_DOCUMENT_STATE_KEY = new(nameof(inputLegalDocument));
     private static readonly AssistantSessionStateKey<string> INPUT_QUESTIONS_STATE_KEY = new(nameof(inputQuestions));

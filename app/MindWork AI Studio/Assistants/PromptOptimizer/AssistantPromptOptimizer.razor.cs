@@ -253,7 +253,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> CUSTOM_PROMPT_GUIDE_FILES_STATE_KEY = new(nameof(customPromptGuideFiles));
     private static readonly AssistantSessionStateKey<string> CURRENT_CUSTOM_PROMPT_GUIDE_PATH_STATE_KEY = new(nameof(currentCustomPromptGuidePath));
     private static readonly AssistantSessionStateKey<string> CUSTOM_PROMPTING_GUIDELINE_CONTENT_STATE_KEY = new(nameof(customPromptingGuidelineContent));
-    private static readonly AssistantSessionStateKey<bool> IS_LOADING_CUSTOM_PROMPT_GUIDE_STATE_KEY = new(nameof(isLoadingCustomPromptGuide));
+    private static readonly AssistantSessionStateKey<bool> IS_LOADING_CUSTOM_PROMPT_GUIDE_STATE_KEY = new(nameof(isLoadingCustomPromptGuide), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<bool> HAS_UPDATED_DEFAULT_RECOMMENDATIONS_STATE_KEY = new(nameof(hasUpdatedDefaultRecommendations));
     private static readonly AssistantSessionStateKey<string> OPTIMIZED_PROMPT_STATE_KEY = new(nameof(optimizedPrompt));
     private static readonly AssistantSessionStateKey<string> REC_CLARITY_DIRECTNESS_STATE_KEY = new(nameof(recClarityDirectness));

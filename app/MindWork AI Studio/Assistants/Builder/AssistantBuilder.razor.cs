@@ -129,11 +129,11 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private BuilderInstallStep? failedInstallStep;
     private string installFlowIssue = string.Empty;
     private static readonly AssistantSessionStateKey<BuilderStep> STEP_STATE_KEY = new(nameof(step));
-    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
-    private static readonly AssistantSessionStateKey<bool> IS_CHECKING_PLUGIN_STATE_KEY = new(nameof(isCheckingPlugin));
-    private static readonly AssistantSessionStateKey<bool> IS_INSTALLING_PLUGIN_STATE_KEY = new(nameof(isInstallingPlugin));
-    private static readonly AssistantSessionStateKey<bool> IS_AUDITING_PLUGIN_STATE_KEY = new(nameof(isAuditingPlugin));
-    private static readonly AssistantSessionStateKey<bool> IS_ENABLING_PLUGIN_STATE_KEY = new(nameof(isEnablingPlugin));
+    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning), isKeptOutOfDrafts: true);
+    private static readonly AssistantSessionStateKey<bool> IS_CHECKING_PLUGIN_STATE_KEY = new(nameof(isCheckingPlugin), isKeptOutOfDrafts: true);
+    private static readonly AssistantSessionStateKey<bool> IS_INSTALLING_PLUGIN_STATE_KEY = new(nameof(isInstallingPlugin), isKeptOutOfDrafts: true);
+    private static readonly AssistantSessionStateKey<bool> IS_AUDITING_PLUGIN_STATE_KEY = new(nameof(isAuditingPlugin), isKeptOutOfDrafts: true);
+    private static readonly AssistantSessionStateKey<bool> IS_ENABLING_PLUGIN_STATE_KEY = new(nameof(isEnablingPlugin), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<string> ASSISTANT_DESCRIPTION_STATE_KEY = new(nameof(assistantDescription));
     private static readonly AssistantSessionStateKey<AssistantCategory> SELECTED_CATEGORY_STATE_KEY = new(nameof(selectedCategory));
     private static readonly AssistantSessionStateKey<string> CUSTOM_CATEGORY_STATE_KEY = new(nameof(customCategory));
