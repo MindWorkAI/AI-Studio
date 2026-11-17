@@ -892,7 +892,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             0 => string.Empty,
             1 => string.Format(TA("Your organization disabled the category '{0}'. Please choose another category for your assistant."), disabledCategories[0].Name),
 
-            _ => string.Format(TA("Your organization disabled the categories '{0}'. Please choose other categories for your assistant."), string.Join("', '", disabledCategories.Select(category => category.Name))),
+            _ => string.Format(TA("Your organization disabled these categories of your assistant: {0}. Please choose other categories."), string.Join(", ", disabledCategories.Select(category => category.Name))),
         };
     }
 
