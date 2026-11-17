@@ -39,6 +39,12 @@ public static class ConfigurationSelectDataFactory
         }
     }
     
+    public static IEnumerable<ConfigurationSelectData<AssistantOfferBehavior>> GetAssistantOfferBehaviorData()
+    {
+        yield return new(TB("""Keep offering me the assistants, e.g., in the "Send to ..." menu"""), AssistantOfferBehavior.KEEP_OFFERING);
+        yield return new(TB("""Treat the assistants as if they did not exist, e.g., not in the "Send to ..." menu"""), AssistantOfferBehavior.TREAT_AS_ABSENT);
+    }
+
     public static IEnumerable<ConfigurationSelectData<LoadingChatProviderBehavior>> GetLoadingChatProviderBehavior()
     {
         yield return new(TB("When possible, use the LLM provider which was used for each chat in the first place"), LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE);

@@ -6,7 +6,8 @@ using AIStudio.Tools.PluginSystem.Assistants;
 namespace AIStudio.Tools;
 
 /// <summary>
-/// Decides what the categories of an assistant allow, built-in assistants and plugins alike.
+/// Decides what the categories of an assistant allow, built-in assistants and plugins alike: whether your
+/// organization disabled them, and whether the user collapsed or hid them on the assistants page.
 /// </summary>
 /// <remarks>
 /// An organization disables categories through DataApp.DisabledAssistantCategories and
@@ -57,6 +58,93 @@ public static class AssistantCategoryRules
             var categories = AssistantCategoryKey.AllOf(plugin);
             return categories.Count > 0 && categories.All(category => app.IsAssistantCategoryDisabled(category));
         }
+    }
+
+    /// <param name="page">The settings of the assistants page, which hold the categories the user collapsed or hid.</param>
+    extension(DataAssistantsPage page)
+    {
+        /// <summary>
+        /// Whether the user collapsed this category on the assistants page.
+        /// </summary>
+        /// <param name="category">The category in question.</param>
+        /// <returns>True when the category is collapsed.</returns>
+        public bool IsCategoryCollapsed(AssistantCategoryKey category) => Contains(page.CollapsedCategories, page.CollapsedCustomCategories, category);
+
+        /// <summary>
+        /// Whether the user hid this category on the assistants page.
+        /// </summary>
+        /// <param name="category">The category in question.</param>
+        /// <returns>True when the category is hidden.</returns>
+        public bool IsCategoryHidden(AssistantCategoryKey category) => Contains(page.HiddenCategories, page.HiddenCustomCategories, category);
+
+        /// <summary>
+        /// Collapses a category on the assistants page or expands it again.
+        /// </summary>
+        /// <param name="category">The category in question.</param>
+        /// <param name="isCollapsed">True to collapse the category, false to expand it.</param>
+        public void SetCategoryCollapsed(AssistantCategoryKey category, bool isCollapsed) => Set(page.CollapsedCategories, page.CollapsedCustomCategories, category, isCollapsed);
+
+        /// <summary>
+        /// Hides a category on the assistants page or shows it again.
+        /// </summary>
+        /// <param name="category">The category in question.</param>
+        /// <param name="isHidden">True to hide the category, false to show it.</param>
+        public void SetCategoryHidden(AssistantCategoryKey category, bool isHidden) => Set(page.HiddenCategories, page.HiddenCustomCategories, category, isHidden);
+
+        /// <summary>
+        /// Whether AI Studio offers the assistants of this category outside of the assistants page, e.g.,
+        /// in the "Send to ..." menu.
+        /// </summary>
+        /// <remarks>
+        /// A hidden category follows the option for hidden categories, also when it is collapsed as well;
+        /// a collapsed one follows the option for collapsed categories; any other category offers its
+        /// assistants. An assistant with several categories is offered as soon as one of them offers it.
+        /// Whether your organization disabled the category is a question of its own, see
+        /// IsAssistantCategoryDisabled.
+        /// </remarks>
+        /// <param name="category">The category in question.</param>
+        /// <returns>True when AI Studio offers the assistants of the category.</returns>
+        public bool IsCategoryOffering(AssistantCategoryKey category)
+        {
+            if (page.IsCategoryHidden(category))
+                return page.HiddenCategoryAssistants is AssistantOfferBehavior.KEEP_OFFERING;
+
+            if (page.IsCategoryCollapsed(category))
+                return page.CollapsedCategoryAssistants is AssistantOfferBehavior.KEEP_OFFERING;
+
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Whether a category is among those stored in a pair of sets, one for the categories of AI Studio and
+    /// one for the names of custom categories.
+    /// </summary>
+    private static bool Contains(HashSet<PluginCategory> categories, HashSet<string> customNames, AssistantCategoryKey category) => category.Category is PluginCategory.CUSTOM
+        ? customNames.Any(name => category.Equals(new AssistantCategoryKey(PluginCategory.CUSTOM, name)))
+        : categories.Any(storedCategory => category.Equals(new AssistantCategoryKey(storedCategory)));
+
+    /// <summary>
+    /// Adds a category to a pair of sets or removes it, see Contains.
+    /// </summary>
+    /// <remarks>
+    /// Removing a category removes every spelling of it, e.g., CORE together with COMMON, or a custom
+    /// name in another case. Adding it stores the spelling of the key, so a set never holds CORE.
+    /// </remarks>
+    private static void Set(HashSet<PluginCategory> categories, HashSet<string> customNames, AssistantCategoryKey category, bool isContained)
+    {
+        if (category.Category is PluginCategory.CUSTOM)
+        {
+            customNames.RemoveWhere(name => category.Equals(new AssistantCategoryKey(PluginCategory.CUSTOM, name)));
+            if (isContained)
+                customNames.Add(category.CustomName);
+
+            return;
+        }
+
+        categories.RemoveWhere(storedCategory => category.Equals(new AssistantCategoryKey(storedCategory)));
+        if (isContained)
+            categories.Add(category.Category);
     }
 
     /// <param name="settingsManager">The settings manager which holds the rules of your organization.</param>

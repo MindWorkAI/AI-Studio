@@ -957,6 +957,23 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.DisabledAssistantCategories"] = { "ENTERTAINMENT", "GAMING" }
 -- CONFIG["SETTINGS"]["DataApp.DisabledCustomAssistantCategories"] = { "Fun & Games" }
 
+-- Users may collapse categories on the assistants page, and hide categories they do not need.
+-- Both are their own choices, which your organization cannot preset. You can preset, though,
+-- what happens to the assistants of such categories outside of the assistants page, e.g., in
+-- the "Send to ..." menu. Requires AI Studio v26.11.2 or newer. Allowed values are:
+--   KEEP_OFFERING: AI Studio keeps offering the assistants.
+--   TREAT_AS_ABSENT: AI Studio treats the assistants as if they did not exist.
+--
+-- For collapsed categories; the default is KEEP_OFFERING:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.CollapsedCategoryAssistants"] = "TREAT_AS_ABSENT"
+--
+-- For hidden categories; the default is TREAT_AS_ABSENT:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.HiddenCategoryAssistants"] = "TREAT_AS_ABSENT"
+--
+-- Allow users to change these options even though your organization set them above:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.CollapsedCategoryAssistants.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantsPage.HiddenCategoryAssistants.AllowUserOverride"] = true
+
 -- Configure organization defaults for the Visual Briefing Assistant.
 -- The assistant turns documents, images, audio, and video into a self-contained interactive
 -- briefing. All settings below are defaults for new briefings; users can change them per briefing.

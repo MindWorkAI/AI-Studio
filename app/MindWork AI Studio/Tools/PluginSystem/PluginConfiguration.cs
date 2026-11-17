@@ -338,6 +338,10 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.DisabledAssistantCategories, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.DisabledCustomAssistantCategories, this.Id, settingsTable, dryRun);
 
+        // Config: what happens to the assistants of categories users collapsed or hid?
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantsPage, x => x.CollapsedCategoryAssistants, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantsPage, x => x.HiddenCategoryAssistants, this.Id, settingsTable, dryRun);
+
         // Config: prohibit some providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProhibitedProviders, this.Id, settingsTable, dryRun);
         
