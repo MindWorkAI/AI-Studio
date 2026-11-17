@@ -126,19 +126,20 @@ public partial class AssistantCategoryBlock : ComponentBase, IDisposable
     /// <remarks>
     /// The stack must be rendered even when no assistant is visible, because the assistant blocks
     /// register themselves while rendering. Without any visible assistant, we drop the margin so
-    /// that a hidden category leaves no gap behind. A collapsed category keeps rendering its blocks
-    /// for the same reason and only hides them, so that its heading stays.
+    /// that a hidden category leaves no gap behind.
     /// </remarks>
-    private string StackClass
-    {
-        get
-        {
-            if (this.IsCollapsed)
-                return "d-none";
+    private string StackClass => this.HasVisibleAssistant ? "mb-3" : string.Empty;
 
-            return this.HasVisibleAssistant ? "mb-3" : string.Empty;
-        }
-    }
+    /// <summary>
+    /// Gets the CSS classes of the element around the assistant stack, which hide a collapsed category.
+    /// </summary>
+    /// <remarks>
+    /// A collapsed category keeps rendering its blocks, since they register themselves while rendering,
+    /// and only hides them, so that its heading stays. The class sits on a plain element around the stack:
+    /// MudStack always carries the class d-flex, which MudBlazor declares after d-none and with the same
+    /// weight, so d-none on the stack itself has no effect.
+    /// </remarks>
+    private string CollapseClass => this.IsCollapsed ? "d-none" : string.Empty;
 
     /// <summary>
     /// Collapses this category or expands it again, and remembers that.

@@ -6,12 +6,14 @@
     }
 
     <CascadingValue Value="this" IsFixed="@true">
-        <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="@this.StackClass">
-            @this.ChildContent
-            @foreach (var plugin in this.Plugins)
-            {
-                <AssistantPluginBlock @key="@plugin.Id" Plugin="@plugin"/>
-            }
-        </MudStack>
+        <div class="@this.CollapseClass">
+            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="@this.StackClass">
+                @this.ChildContent
+                @foreach (var plugin in this.Plugins)
+                {
+                    <AssistantPluginBlock @key="@plugin.Id" Plugin="@plugin"/>
+                }
+            </MudStack>
+        </div>
     </CascadingValue>
 }
