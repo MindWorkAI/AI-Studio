@@ -216,8 +216,8 @@ public partial class Plugins : MSGComponentBase
         {
             var categoryNames = AssistantCategoryKey.AllOf(pluginMeta).Select(category => category.Name).ToList();
             return categoryNames.Count == 1
-                ? string.Format(this.TA("Your organization disabled the category '{0}' of this assistant"), categoryNames[0])
-                : string.Format(this.TA("Your organization disabled the categories '{0}' of this assistant"), string.Join("', '", categoryNames));
+                ? string.Format(TA("Your organization disabled the category '{0}' of this assistant"), categoryNames[0])
+                : string.Format(TA("Your organization disabled the categories '{0}' of this assistant"), string.Join("', '", categoryNames));
         }
 
         if (isEnabled)

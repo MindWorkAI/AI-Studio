@@ -357,7 +357,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     /// The rule which carries the category of the approved draft into the plugin.
     /// </summary>
     /// <remarks>
-    /// The draft names the category in a fixed form, see <see cref="AssistantBuilderCategories"/>. The
+    /// The draft names the category in a fixed form, see AssistantBuilderCategories. The
     /// user may have edited that line, though, so a name which is no key counts as a custom category
     /// rather than a reason to give up. AI Studio checks the answer strictly afterward.
     /// </remarks>
@@ -879,7 +879,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     /// <remarks>
     /// The draft offers the model only the categories which are not disabled, but the user may edit the
     /// draft, and a revision keeps the categories a plugin had before. See
-    /// <see cref="AssistantBuilderCategories.FindDisabled"/>.
+    /// AssistantBuilderCategories.FindDisabled.
     /// </remarks>
     /// <param name="categories">The categories of the assistant.</param>
     /// <param name="customCategories">The names of its custom categories.</param>

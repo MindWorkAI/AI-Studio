@@ -5,7 +5,7 @@ namespace AIStudio.Tools.PluginSystem.Assistants;
 /// </summary>
 /// <remarks>
 /// The built-in assistants and the assistant plugins share one set of categories, see
-/// <see cref="AssistantCategoryKey"/>. The page shows the sections of its built-in assistants first, in
+/// AssistantCategoryKey. The page shows the sections of its built-in assistants first, in
 /// the order users know: "General", "Business", "Learning &amp; Reflecting", and "Software Development".
 /// The categories which only plugins name follow, the ones of AI Studio before the custom ones, each
 /// group sorted by its name. "AI Studio Development" comes last, since it concerns the development of

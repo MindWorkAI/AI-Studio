@@ -34,7 +34,7 @@ public static class ComponentsExtensions
         /// This is the single place that maps a built-in assistant to its category. The assistants page
         /// shows the assistant in the section of this category, and whatever offers assistants elsewhere
         /// asks it, too. Components which are no assistant of their own, such as the chat or the agents,
-        /// return <see cref="PluginCategory.NONE"/>.
+        /// return PluginCategory.NONE.
         /// </remarks>
         /// <value>The category of the assistant.</value>
         public PluginCategory Category => component switch
