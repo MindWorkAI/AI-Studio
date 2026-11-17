@@ -16,7 +16,7 @@ public static class PluginCategoryExtensions
             PluginCategory.UTILITY => TB("Utility"),
             PluginCategory.SOFTWARE_DEVELOPMENT => TB("Software Development"),
             PluginCategory.GAMING => TB("Gaming"),
-            PluginCategory.EDUCATION => TB("Education"),
+            PluginCategory.EDUCATION => TB("Learning & Reflecting"),
             PluginCategory.ENTERTAINMENT => TB("Entertainment"),
             PluginCategory.SOCIAL => TB("Social"),
             PluginCategory.SHOPPING => TB("Shopping"),
@@ -36,6 +36,10 @@ public static class PluginCategoryExtensions
             PluginCategory.FICTION => TB("Fiction"),
             PluginCategory.WRITING => TB("Writing"),
             PluginCategory.CONTENT_CREATION => TB("Content Creation"),
+
+            PluginCategory.COMMON => TB("General"),
+            PluginCategory.AI_STUDIO_DEVELOPMENT => TB("AI Studio Development"),
+            PluginCategory.CUSTOM => TB("Custom category"),
         
             _ => TB("Unknown plugin category"),
         };
