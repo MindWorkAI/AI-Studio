@@ -1,3 +1,4 @@
+using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 
@@ -17,6 +18,9 @@ namespace AIStudio.Components;
 public partial class AssistantCategoryBlock : ComponentBase
 {
     private readonly HashSet<IAssistantCategoryMember> members = [];
+
+    [Inject]
+    private SettingsManager SettingsManager { get; init; } = null!;
 
     /// <summary>
     /// The category of this block. Its name is the heading.
@@ -69,12 +73,39 @@ public partial class AssistantCategoryBlock : ComponentBase
     private bool HasVisibleAssistant => this.members.Any(member => member.IsVisible);
 
     /// <summary>
+    /// Gets whether the user collapsed this category.
+    /// </summary>
+    private bool IsCollapsed => this.SettingsManager.ConfigurationData.AssistantsPage.IsCategoryCollapsed(this.Category);
+
+    /// <summary>
     /// Gets the CSS classes used for the assistant stack.
     /// </summary>
     /// <remarks>
     /// The stack must be rendered even when no assistant is visible, because the assistant blocks
     /// register themselves while rendering. Without any visible assistant, we drop the margin so
-    /// that a hidden category leaves no gap behind.
+    /// that a hidden category leaves no gap behind. A collapsed category keeps rendering its blocks
+    /// for the same reason and only hides them, so that its heading stays.
     /// </remarks>
-    private string StackClass => this.HasVisibleAssistant ? "mb-3" : string.Empty;
+    private string StackClass
+    {
+        get
+        {
+            if (this.IsCollapsed)
+                return "d-none";
+
+            return this.HasVisibleAssistant ? "mb-3" : string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Collapses this category or expands it again, and remembers that.
+    /// </summary>
+    /// <remarks>
+    /// The user clicks once, so storing the settings right away costs nothing noticeable.
+    /// </remarks>
+    private async Task ToggleCollapsedAsync()
+    {
+        this.SettingsManager.ConfigurationData.AssistantsPage.SetCategoryCollapsed(this.Category, !this.IsCollapsed);
+        await this.SettingsManager.StoreSettings();
+    }
 }

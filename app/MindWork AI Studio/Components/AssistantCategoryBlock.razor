@@ -1,8 +1,6 @@
 @if (this.HasVisibleAssistant)
 {
-    <MudText Typo="Typo.h4" Class="@this.HeaderClass">
-        @this.Category.Name
-    </MudText>
+    <AssistantCategoryHeader Category="@this.Category" IsCollapsed="@this.IsCollapsed" OnToggleCollapsed="@this.ToggleCollapsedAsync" Class="@this.HeaderClass"/>
 }
 <CascadingValue Value="this" IsFixed="@true">
     <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="@this.StackClass">
