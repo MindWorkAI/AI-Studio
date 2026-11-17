@@ -5,6 +5,11 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataGrammarSpelling
 {
     /// <summary>
+    /// Whether the grammar & spelling checker asks on start to check a document or a text, or starts with one of them right away.
+    /// </summary>
+    public AssistantStartMode StartMode { get; set; } = AssistantStartMode.ASK_EVERY_TIME;
+
+    /// <summary>
     /// Preselect any rewrite options?
     /// </summary>
     public bool PreselectOptions { get; set; }

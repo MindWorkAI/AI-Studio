@@ -27,6 +27,15 @@ public sealed class SegmentResults
     public int CountOf(SegmentStatus status) => this.outcomes.Values.Count(outcome => outcome.Status == status);
 
     /// <summary>
+    /// How many distinct segments got a new text which differs from their source.
+    /// </summary>
+    /// <remarks>
+    /// A model may return a text as it is, e.g., a correction which found no mistake: such a segment counts
+    /// as transformed, but not as changed.
+    /// </remarks>
+    public int CountChanged() => this.outcomes.Count(entry => entry.Value is { Status: SegmentStatus.TRANSFORMED, Text: { } text } && !string.Equals(text, entry.Key, StringComparison.Ordinal));
+
+    /// <summary>
     /// Whether these results know what became of a segment.
     /// </summary>
     /// <remarks>

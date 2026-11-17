@@ -1855,9 +1855,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T153794455"] = "Re
 -- {0} of {1} sections done …
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T2470675815"] = "{0} of {1} sections done …"
 
--- Sections left as they are, because the security check found suspicious content in them: {0}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T2485297946"] = "Sections left as they are, because the security check found suspicious content in them: {0}"
-
 -- The document could not be read. Please check that it is a valid file and that no other program locks it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T269135711"] = "The document could not be read. Please check that it is a valid file and that no other program locks it."
 
@@ -1869,9 +1866,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T3124140929"] = "T
 
 -- The new document could not be saved. Please check that the original document can be read and that the target file is not open in another program.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T3523533471"] = "The new document could not be saved. Please check that the original document can be read and that the target file is not open in another program."
-
--- Sections left as they are, because the AI model delivered no usable answer for them: {0}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T3608642052"] = "Sections left as they are, because the AI model delivered no usable answer for them: {0}"
 
 -- Documents of this kind are not supported yet.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T3757806115"] = "Documents of this kind are not supported yet."
@@ -2434,8 +2428,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T204
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T3424652889"] = "Unknown"
 
+-- Switch to checking a document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T1054307854"] = "Switch to checking a document"
+
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T137304886"] = "Please provide a text as input. You might copy the desired text from a document or a website."
+
+-- Save corrected document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2129000916"] = "Save corrected document"
 
 -- Load text from file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2210807298"] = "Load text from file"
@@ -2443,8 +2443,23 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING
 -- Proofread
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2325568297"] = "Proofread"
 
+-- Check document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2430185044"] = "Check document"
+
+-- Corrected sections: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2546559264"] = "Corrected sections: {0}"
+
+-- Switch to checking a text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2577515836"] = "Switch to checking a text"
+
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2591284123"] = "Language"
+
+-- Corrected document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2637340209"] = "Corrected document"
+
+-- Check text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2707654846"] = "Check text"
 
 -- Your input to check
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2861221443"] = "Your input to check"
@@ -2455,14 +2470,29 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING
 -- Grammar & Spelling Checker
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3169549433"] = "Grammar & Spelling Checker"
 
--- Check the grammar and spelling of a text.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3184716499"] = "Check the grammar and spelling of a text."
+-- Check the spelling and grammar of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3276198932"] = "Check the spelling and grammar of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked."
 
 -- Check the following text for grammar and spelling mistakes:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3486937812"] = "Check the following text for grammar and spelling mistakes:"
 
+-- Select a document to check
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3551194040"] = "Select a document to check"
+
+-- Check the grammar and spelling of a document or a text.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3823036322"] = "Check the grammar and spelling of a document or a text."
+
+-- Check the spelling and grammar of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T4169924187"] = "Check the spelling and grammar of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible."
+
+-- The spelling and grammar of '{0}' are checked.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T633701556"] = "The spelling and grammar of '{0}' are checked."
+
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T656744944"] = "Please provide a custom language."
+
+-- corrected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T992760136"] = "corrected"
 
 -- Text
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1041509726"] = "Text"
@@ -5574,6 +5604,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 
 -- Change what this tile opens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Change what this tile opens"
+
+-- Sections left as they are, because the security check found suspicious content in them: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EDITEDDOCUMENTSUMMARY::T2485297946"] = "Sections left as they are, because the security check found suspicious content in them: {0}"
+
+-- Sections left as they are, because the AI model delivered no usable answer for them: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EDITEDDOCUMENTSUMMARY::T3608642052"] = "Sections left as they are, because the AI model delivered no usable answer for them: {0}"
 
 -- Copy the path: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1140628382"] = "Copy the path: {0}"
@@ -10462,6 +10498,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T36293728
 -- ERI server options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T488190224"] = "ERI server options are preselected"
 
+-- Choose whether the grammar & spelling checker asks you every time whether to check a document or a text, or whether it always starts with one of them. You can switch between both at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1177037980"] = "Choose whether the grammar & spelling checker asks you every time whether to check a document or a text, or whether it always starts with one of them. You can switch between both at any time with the button next to the gear icon."
+
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1417990312"] = "Preselect the target language"
 
@@ -10485,6 +10524,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T34
 
 -- Which target language should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T3547337928"] = "Which target language should be preselected?"
+
+-- How should the grammar & spelling checker start?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T369463242"] = "How should the grammar & spelling checker start?"
 
 -- Assistant: Grammar & Spelling Checker Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T886675455"] = "Assistant: Grammar & Spelling Checker Options"
