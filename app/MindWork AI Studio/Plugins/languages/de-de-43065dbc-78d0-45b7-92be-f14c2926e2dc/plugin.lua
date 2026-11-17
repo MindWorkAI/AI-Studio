@@ -19110,6 +19110,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2430906247::INFORMAL"] = "{0} Möcht
 -- The tile '{0}' has been updated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "Die Kachel „{0}“ wurde aktualisiert."
 
+-- Your organization disabled all categories of this assistant: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2444737585"] = "Ihre Organisation hat alle Kategorien dieses Assistenten deaktiviert: {0}."
+
+-- Your organization disabled all categories of this assistant: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2444737585::INFORMAL"] = "Deine Organisation hat alle Kategorien dieses Assistenten deaktiviert: {0}."
+
 -- Share dialog not available
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2445896850"] = "Dialog zum Teilen nicht verfügbar"
 
@@ -19211,12 +19217,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T798759833::INFORMAL"] = "Deine Organ
 
 -- The plugin could not be imported: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T837269472"] = "Das Plugin konnte nicht importiert werden: {0}"
-
--- Your organization disabled the categories '{0}' of this assistant
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T932744757"] = "Ihre Organisation hat die Kategorien „{0}“ dieses Assistenten deaktiviert."
-
--- Your organization disabled the categories '{0}' of this assistant
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T932744757::INFORMAL"] = "Deine Organisation hat die Kategorien „{0}“ dieses Assistenten deaktiviert."
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SETTINGS::T1258653480"] = "Einstellungen"
@@ -23202,6 +23202,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1
 -- The revision model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1411545143"] = "Das Überarbeitungsmodell hat keine brauchbare Antwort zurückgegeben."
 
+-- Your organization disabled these categories of your assistant: {0}. Please choose other categories.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1647997085"] = "Ihre Organisation hat diese Kategorien Ihres Assistenten deaktiviert: {0}. Bitte wählen Sie andere Kategorien aus."
+
+-- Your organization disabled these categories of your assistant: {0}. Please choose other categories.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1647997085::INFORMAL"] = "Deine Organisation hat diese Kategorien deines Assistenten deaktiviert: {0}. Bitte wähle andere Kategorien aus."
+
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1725856265"] = "Beschreibung"
 
@@ -23234,12 +23240,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2
 
 -- Tools
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2499909372"] = "Werkzeuge"
-
--- Your organization disabled the categories '{0}'. Please choose other categories for your assistant.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2608547127"] = "Ihre Organisation hat die Kategorien „{0}“ deaktiviert. Bitte wählen Sie andere Kategorien für Ihren Assistenten aus."
-
--- Your organization disabled the categories '{0}'. Please choose other categories for your assistant.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2608547127::INFORMAL"] = "Deine Organisation hat die Kategorien „{0}“ deaktiviert. Bitte wähle andere Kategorien für deinen Assistenten aus."
 
 -- Inputs
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2647381688"] = "Eingaben"
