@@ -114,6 +114,17 @@ public static class AssistantCategoryRules
 
             return true;
         }
+
+        /// <summary>
+        /// Whether AI Studio offers a built-in assistant outside of the assistants page, e.g., in the
+        /// "Send to ..." menu, as far as its category on the page is concerned.
+        /// </summary>
+        /// <remarks>
+        /// A component without a category, such as the chat, is always offered.
+        /// </remarks>
+        /// <param name="component">The assistant in question.</param>
+        /// <returns>True when the category of the assistant offers it.</returns>
+        public bool IsOfferingAssistant(Components component) => component.Category is PluginCategory.NONE || page.IsCategoryOffering(new AssistantCategoryKey(component.Category));
     }
 
     /// <summary>

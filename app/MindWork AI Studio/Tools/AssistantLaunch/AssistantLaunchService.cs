@@ -152,5 +152,11 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
         .OrderBy(destination => destination.Name.Length)
         .ToArray();
 
-    private bool IsVisible(Components destination) => settingsManager.IsAssistantVisible(destination, withLogging: false, requiredPreviewFeature: destination.RequiredPreviewFeature);
+    /// <summary>
+    /// Whether the menu offers a destination: the user sees the assistant at all, and its category on the
+    /// assistants page, collapsed or hidden, still offers it.
+    /// </summary>
+    private bool IsVisible(Components destination) =>
+        settingsManager.IsAssistantVisible(destination, withLogging: false, requiredPreviewFeature: destination.RequiredPreviewFeature) &&
+        settingsManager.ConfigurationData.AssistantsPage.IsOfferingAssistant(destination);
 }
