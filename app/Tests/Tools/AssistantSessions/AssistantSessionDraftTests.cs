@@ -1,3 +1,6 @@
+using System.Reflection;
+
+using AIStudio.Assistants;
 using AIStudio.Tools;
 using AIStudio.Tools.AssistantSessions;
 
@@ -15,6 +18,10 @@ public sealed class AssistantSessionDraftTests
 {
     private static readonly AssistantSessionStateKey<string> TEXT_KEY = new("Text");
     private static readonly AssistantSessionStateKey<bool> IS_READING_KEY = new("IsReading", isKeptOutOfDrafts: true);
+
+    // The names under which AssistantBase captures whether its form is valid:
+    private static readonly AssistantSessionStateKey<bool> INPUT_IS_VALID_KEY = new("InputIsValid");
+    private static readonly AssistantSessionStateKey<string[]> INPUT_ISSUES_KEY = new("InputIssues");
 
     private static readonly AssistantSessionKey TRANSLATION_KEY = new(AIStudio.Tools.Components.TRANSLATION_ASSISTANT, "translation");
     private static readonly AssistantSessionKey SUMMARIZER_KEY = new(AIStudio.Tools.Components.TEXT_SUMMARIZER_ASSISTANT, "summarizer");
@@ -134,6 +141,75 @@ public sealed class AssistantSessionDraftTests
         new AssistantSessionStateReader(state, "Translation").Restore(IS_READING_KEY, value => isReading = value);
 
         Assert.That(isReading, Is.True, "A run still goes on, so its flags hold.");
+    }
+
+    /// <summary>
+    /// Keys whose name reads like a flag of work in progress but is none.
+    /// </summary>
+    private static readonly HashSet<string> NO_FLAGS_OF_WORK_IN_PROGRESS =
+    [
+        // Whether the meeting of the agenda assistant takes place online, which the user chooses:
+        "IS_MEETING_VIRTUAL_STATE_KEY",
+    ];
+
+    [Test]
+    public void EveryFlagOfWorkInProgressIsKeptOutOfDrafts()
+    {
+        var flags = typeof(AssistantLowerBase).Assembly.GetTypes()
+            .Where(type => !type.ContainsGenericParameters)
+            .SelectMany(type => type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+            .Where(field => field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(AssistantSessionStateKey<>))
+            .Where(field => ReadsLikeAFlagOfWorkInProgress(field.Name) && !NO_FLAGS_OF_WORK_IN_PROGRESS.Contains(field.Name))
+            .ToList();
+
+        Assert.That(flags.Select(field => field.Name), Does.Contain("IS_PROCESSING_STATE_KEY"), "The search must find the flags, or this test checks nothing.");
+
+        var restoredFromDrafts = flags
+            .Where(field => field.FieldType.GetProperty(nameof(AssistantSessionStateKey<>.IsKeptOutOfDrafts))!.GetValue(field.GetValue(null)) is not true)
+            .Select(field => $"{field.DeclaringType!.Name}.{field.Name}")
+            .ToList();
+
+        Assert.That(restoredFromDrafts, Is.Empty, "Work outside of a run ends with the component which did it, so a flag restored from a draft stays set for good and may lock the form. Pass isKeptOutOfDrafts: true, or list a key which is no such flag in NO_FLAGS_OF_WORK_IN_PROGRESS.");
+    }
+
+    [Test]
+    public void AnAssistantWithJustItsDefaultsKeepsNoDraft()
+    {
+        Assert.That(AssistantLowerBase.IsWorthADraft(StateWithText(string.Empty), StateWithText(string.Empty), holdsSentText: false), Is.False);
+    }
+
+    [Test]
+    public void AChangedInputIsWorthADraft()
+    {
+        Assert.That(AssistantLowerBase.IsWorthADraft(StateWithText("hello"), StateWithText(string.Empty), holdsSentText: false), Is.True);
+    }
+
+    [Test]
+    public void TheValidityOfTheFormAloneIsNoChange()
+    {
+        var stateWithDefaults = StateWithText(string.Empty);
+        var state = StateWithText(string.Empty);
+        state[INPUT_IS_VALID_KEY.Name] = new AssistantSessionSnapshotField<bool>(true);
+        state[INPUT_ISSUES_KEY.Name] = new AssistantSessionSnapshotField<string[]>(["The text is missing."]);
+
+        Assert.That(AssistantLowerBase.IsWorthADraft(state, stateWithDefaults, holdsSentText: false), Is.False, "Whether the form is valid follows from the inputs, which did not change.");
+    }
+
+    [Test]
+    public void ATextSentToTheAssistantIsAlwaysWorthADraft()
+    {
+        Assert.That(AssistantLowerBase.IsWorthADraft(StateWithText(string.Empty), StateWithText(string.Empty), holdsSentText: true), Is.True, "The user chose to work on the text sent here, even before changing anything.");
+    }
+
+    private static bool ReadsLikeAFlagOfWorkInProgress(string name)
+    {
+        var words = name.Split('_');
+        return words[0] switch
+        {
+            "IS" => words.Skip(1).Any(word => word.EndsWith("ING", StringComparison.Ordinal)),
+            "EXECUTING" => true,
+            _ => false,
+        };
     }
 
     private static Dictionary<string, IAssistantSessionSnapshotField> StateWithText(string text)

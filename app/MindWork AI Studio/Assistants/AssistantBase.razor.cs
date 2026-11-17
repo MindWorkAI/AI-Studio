@@ -1257,9 +1257,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     /// <remarks>
     /// While a run goes on, its session keeps the state, so there is no draft. Neither is there one while
-    /// the assistant holds just its defaults: such a draft would bring back old defaults after the user
-    /// changed them in the settings. Whether the form is valid follows from the inputs and counts as no
-    /// change of its own. This runs while the component is disposed, so it must neither wait nor throw.
+    /// the assistant holds just its defaults, see IsWorthADraft. This runs while the component is disposed,
+    /// so it must neither wait nor throw.
     /// </remarks>
     private void SaveDraftIfChanged()
     {
@@ -1272,7 +1271,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 return;
 
             var state = this.CaptureAssistantSessionState();
-            if (!this.holdsSentText && HoldsSameInputs(state, this.stateWithDefaults))
+            if (!IsWorthADraft(state, this.stateWithDefaults, this.holdsSentText))
                 return;
 
             this.AssistantSessionService.SaveDraft(this.assistantSessionKey, this.Title, this.ChatThread, state);
@@ -1281,21 +1280,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             this.Logger.LogError(e, "Could not store the draft of the assistant '{AssistantTitle}'.", this.Title);
         }
-    }
-
-    /// <summary>
-    /// Checks whether two captured states hold the same inputs, apart from whether the form is valid.
-    /// </summary>
-    /// <param name="state">The captured state.</param>
-    /// <param name="other">The captured state to compare with.</param>
-    /// <returns><c>true</c> when both hold the same fields with the same values; otherwise, <c>false</c>.</returns>
-    private static bool HoldsSameInputs(IReadOnlyDictionary<string, IAssistantSessionSnapshotField> state, IReadOnlyDictionary<string, IAssistantSessionSnapshotField> other)
-    {
-        var inputs = state.Where(field => IsInput(field.Key)).ToList();
-        return inputs.Count == other.Count(field => IsInput(field.Key))
-               && inputs.All(field => other.TryGetValue(field.Key, out var otherField) && field.Value.HasSameValueAs(otherField));
-
-        static bool IsInput(string name) => name != INPUT_IS_VALID_STATE_KEY.Name && name != INPUT_ISSUES_STATE_KEY.Name;
     }
 
     /// <summary>

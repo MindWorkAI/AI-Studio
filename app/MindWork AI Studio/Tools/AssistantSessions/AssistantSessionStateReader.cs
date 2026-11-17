@@ -11,7 +11,17 @@ namespace AIStudio.Tools.AssistantSessions;
 public sealed class AssistantSessionStateReader(IReadOnlyDictionary<string, IAssistantSessionSnapshotField> fields, string assistantTitle, bool isDraft = false)
 {
     private static readonly ILogger<AssistantSessionStateReader> LOG = Program.LOGGER_FACTORY.CreateLogger<AssistantSessionStateReader>();
-    
+
+    /// <summary>
+    /// Gets whether the fields come from a draft rather than from a run.
+    /// </summary>
+    /// <remarks>
+    /// An assistant whose state partly follows from something outside of it, such as a plugin or a policy in
+    /// the settings, asks this to restore from a draft only what the user entered: the rest may have changed
+    /// while the user was elsewhere.
+    /// </remarks>
+    public bool IsDraft => isDraft;
+
     /// <summary>
     /// Restores a typed value when it exists in the snapshot.
     /// </summary>

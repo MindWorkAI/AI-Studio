@@ -280,6 +280,30 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     #endregion
 
+    #region Overrides of MSGComponentBase
+
+    protected override void DisposeResources()
+    {
+        //
+        // AutoSave writes the form into the policy only once the user paused typing. A draft restores no
+        // policy field, see RestoreDraftState, so a change made just before leaving would be lost without
+        // this. Disposing must not wait, so the settings are stored in the background:
+        //
+        try
+        {
+            if (this.selectedPolicy is { } policy && this.ApplyFormToPolicy(policy, force: false))
+                this.SettingsManager.StoreSettings().Observe($"{nameof(DocumentAnalysisAssistant)}: storing the policy when leaving");
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError(e, "Could not store the document analysis policy when leaving the assistant.");
+        }
+
+        base.DisposeResources();
+    }
+
+    #endregion
+
     private async Task AutoSave(bool force = false)
     {
         //
@@ -442,6 +466,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     /// <inheritdoc />
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
+        if (state.IsDraft)
+        {
+            this.RestoreDraftState(state);
+            return;
+        }
+
         state.Restore(SELECTED_POLICY_STATE_KEY, value => this.selectedPolicy = value);
         state.Restore(POLICY_IS_PROTECTED_STATE_KEY, value => this.policyIsProtected = value);
         state.Restore(POLICY_HIDE_POLICY_DEFINITION_STATE_KEY, value => this.policyHidePolicyDefinition = value);
@@ -460,6 +490,36 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Restore(ANALYZED_POLICY_NAME_STATE_KEY, value => this.analyzedPolicyName = value);
         state.RestoreList(AVAILABLE_LLM_PROVIDERS_STATE_KEY, this.availableLLMProviders);
+    }
+
+    /// <summary>
+    /// Restores from a draft which policy was selected and what the user entered besides the policy.
+    /// </summary>
+    /// <remarks>
+    /// The policies live in the settings, and AutoSave writes every change of the form into them. While the
+    /// user was elsewhere, a policy may have changed nonetheless, e.g., through a configuration plugin of the
+    /// organization, or it may be gone. A draft therefore brings back none of the policy fields, which hold
+    /// a copy of the policy, among them its minimum provider confidence: the form takes the policy as it is
+    /// now. A policy which no longer exists leaves the one selected on opening.
+    /// </remarks>
+    /// <param name="draft">The reader of the draft.</param>
+    private void RestoreDraftState(AssistantSessionStateReader draft)
+    {
+        DataDocumentAnalysisPolicy? policyOfDraft = null;
+        draft.Restore(SELECTED_POLICY_STATE_KEY, value => policyOfDraft = value);
+        if (policyOfDraft is not null && this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.FirstOrDefault(policy => policy.Id == policyOfDraft.Id) is { } currentPolicy)
+        {
+            this.selectedPolicy = currentPolicy;
+            this.MightPreselectValues();
+            draft.Restore(POLICY_DEFINITION_EXPANDED_STATE_KEY, value =>
+            {
+                this.policyDefinitionExpanded = value;
+                this.documentSelectionExpanded = !value;
+            });
+        }
+
+        draft.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        draft.Restore(ANALYZED_POLICY_NAME_STATE_KEY, value => this.analyzedPolicyName = value);
     }
     
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;

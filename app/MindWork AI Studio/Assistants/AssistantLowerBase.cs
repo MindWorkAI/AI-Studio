@@ -65,4 +65,31 @@ public abstract class AssistantLowerBase : MSGComponentBase
         this.LastUserPrompt = null;
         this.ResultingContentBlock = null;
     }
+
+    /// <summary>
+    /// Decides whether an assistant which the user leaves stores what it holds as a draft.
+    /// </summary>
+    /// <remarks>
+    /// A text sent to the assistant is kept in any case. Otherwise, a draft needs a change from the state
+    /// with the defaults: a draft of just the defaults would bring back old defaults after the user changed
+    /// them in the settings. Whether the form is valid, and its issues, follow from the inputs and count as
+    /// no change of their own.
+    /// </remarks>
+    /// <param name="state">The state the assistant holds now.</param>
+    /// <param name="stateWithDefaults">The state the assistant held once its defaults were applied.</param>
+    /// <param name="holdsSentText">Whether the assistant holds a text sent to it.</param>
+    /// <returns><c>true</c> when the assistant stores a draft; otherwise, <c>false</c>.</returns>
+    internal static bool IsWorthADraft(IReadOnlyDictionary<string, IAssistantSessionSnapshotField> state, IReadOnlyDictionary<string, IAssistantSessionSnapshotField> stateWithDefaults, bool holdsSentText)
+    {
+        if (holdsSentText)
+            return true;
+
+        var inputs = state.Where(field => IsInput(field.Key)).ToList();
+        var holdsSameInputs = inputs.Count == stateWithDefaults.Count(field => IsInput(field.Key))
+                              && inputs.All(field => stateWithDefaults.TryGetValue(field.Key, out var otherField) && field.Value.HasSameValueAs(otherField));
+
+        return !holdsSameInputs;
+
+        static bool IsInput(string name) => name != INPUT_IS_VALID_STATE_KEY.Name && name != INPUT_ISSUES_STATE_KEY.Name;
+    }
 }

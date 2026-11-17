@@ -154,7 +154,8 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     /// A draft is no run: neither <see cref="GetSnapshots"/> nor <see cref="HasActiveSessions"/> sees it, so
     /// the assistant overview shows no status for it, and AI Studio may close without asking. It lives in
     /// memory only, until AI Studio closes, the user resets the assistant, or a text is sent to it. A newer
-    /// draft replaces the older one.
+    /// draft replaces the older one. A draft holds everything its assistant captures, such as the chat
+    /// thread, attached files, or the results of a batch, so there is at most one per assistant.
     /// </remarks>
     /// <param name="key">The assistant session key.</param>
     /// <param name="title">The user-visible assistant title.</param>
