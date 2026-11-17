@@ -1,3 +1,4 @@
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 
@@ -103,6 +104,31 @@ public sealed class AssistantPageSectionsTests
             Assert.That(AssistantPageSections.IsBuiltIn(new AssistantCategoryKey(PluginCategory.SCIENCE)), Is.False);
             Assert.That(AssistantPageSections.IsBuiltIn(new AssistantCategoryKey(PluginCategory.CUSTOM, "General")), Is.False, "A custom category never takes the place of a category of AI Studio, whatever its name.");
         }
+    }
+
+    [Test]
+    public void TheSettingsOfferTheShownAndTheHiddenCategoriesInTheOrderOfThePage()
+    {
+        var app = new DataApp { DisabledAssistantCategories = [PluginCategory.ENTERTAINMENT] };
+        var page = new DataAssistantsPage
+        {
+            HiddenCategories = [PluginCategory.SCIENCE, PluginCategory.ENTERTAINMENT, PluginCategory.BUSINESS],
+            HiddenCustomCategories = ["space travel"],
+        };
+
+        var categories = AssistantPageSections.SelectForSettings(
+            [new AssistantCategoryKey(PluginCategory.AI_STUDIO_DEVELOPMENT), new AssistantCategoryKey(PluginCategory.CORE), new AssistantCategoryKey(PluginCategory.CUSTOM, "Space Travel")],
+            app,
+            page);
+
+        Assert.That(categories, Is.EqualTo(new[]
+        {
+            new AssistantCategoryKey(PluginCategory.COMMON),
+            new AssistantCategoryKey(PluginCategory.BUSINESS),
+            new AssistantCategoryKey(PluginCategory.SCIENCE),
+            new AssistantCategoryKey(PluginCategory.CUSTOM, "Space Travel"),
+            new AssistantCategoryKey(PluginCategory.AI_STUDIO_DEVELOPMENT),
+        }), "A category your organization disabled gets no switch, since no switch of the user brings it back.");
     }
 
     private static IReadOnlyList<AssistantPageSection<FakeAssistantPlugin>> Build(params FakeAssistantPlugin[] plugins) => AssistantPageSections.Build(plugins, plugin => plugin.Name);

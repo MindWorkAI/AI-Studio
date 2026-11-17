@@ -1,8 +1,11 @@
 using AIStudio.Components;
 using AIStudio.Agents.AssistantAudit;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Pages;
 
@@ -13,15 +16,55 @@ public partial class Assistants : MSGComponentBase
     private static readonly AssistantCategoryKey EDUCATION = new(PluginCategory.EDUCATION);
     private static readonly AssistantCategoryKey SOFTWARE_DEVELOPMENT = new(PluginCategory.SOFTWARE_DEVELOPMENT);
 
+    private readonly AssistantCategoryRegistry categoryRegistry = new();
+
     private bool isAutoAuditing;
 
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
 
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
     protected override async Task OnInitializedAsync()
     {
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
+        this.categoryRegistry.ShowsAnyCategoryChanged += this.StateHasChanged;
         await base.OnInitializedAsync();
+    }
+
+    /// <inheritdoc />
+    protected override void DisposeResources()
+    {
+        this.categoryRegistry.ShowsAnyCategoryChanged -= this.StateHasChanged;
+        base.DisposeResources();
+    }
+
+    /// <summary>
+    /// Gets whether the user hid every category the page would show, so that it shows none.
+    /// </summary>
+    /// <remarks>
+    /// Without a hint, the page would look broken. When your organization hid or disabled every
+    /// assistant instead, the gear brings nothing back, so we keep quiet then.
+    /// </remarks>
+    private bool HidesEveryCategory
+    {
+        get
+        {
+            var page = this.SettingsManager.ConfigurationData.AssistantsPage;
+            return this.categoryRegistry.ShowsAnyCategory is false && (page.HiddenCategories.Count > 0 || page.HiddenCustomCategories.Count > 0);
+        }
+    }
+
+    private async Task OpenSettingsDialogAsync()
+    {
+        var categories = AssistantPageSections.SelectForSettings(this.categoryRegistry.ShownCategories, this.SettingsManager.ConfigurationData.App, this.SettingsManager.ConfigurationData.AssistantsPage);
+        var dialogParameters = new DialogParameters<SettingsDialogAssistantsPage>
+        {
+            { x => x.Categories, categories },
+        };
+
+        await this.DialogService.ShowAsync<SettingsDialogAssistantsPage>(T("Assistant Settings"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

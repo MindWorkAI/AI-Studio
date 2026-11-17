@@ -13,14 +13,23 @@ namespace AIStudio.Components;
 /// The heading is derived from the assistant blocks inside this category: it is rendered only when
 /// at least one of them is visible. Thus, hiding assistants by configuration can never leave an
 /// empty category heading behind. The built-in assistants of the category come as child content,
-/// followed by the assistant plugins which name this category.
+/// followed by the assistant plugins which name this category.<br/><br/>
+/// A category the user hid renders nothing at all. One the user collapsed keeps rendering its blocks
+/// and only hides them, so that its heading stays. Each block reports to the registry of the page
+/// after rendering, so that the page knows which categories it shows.
 /// </remarks>
-public partial class AssistantCategoryBlock : ComponentBase
+public partial class AssistantCategoryBlock : ComponentBase, IDisposable
 {
     private readonly HashSet<IAssistantCategoryMember> members = [];
 
     [Inject]
     private SettingsManager SettingsManager { get; init; } = null!;
+
+    /// <summary>
+    /// The registry of the assistants page, which learns which categories the page shows.
+    /// </summary>
+    [CascadingParameter]
+    public AssistantCategoryRegistry? Registry { get; set; }
 
     /// <summary>
     /// The category of this block. Its name is the heading.
@@ -73,9 +82,40 @@ public partial class AssistantCategoryBlock : ComponentBase
     private bool HasVisibleAssistant => this.members.Any(member => member.IsVisible);
 
     /// <summary>
+    /// Gets whether this category shows at least one assistant right now, collapsed or not.
+    /// </summary>
+    internal bool IsShowingAssistants => !this.IsHidden && this.HasVisibleAssistant;
+
+    /// <summary>
     /// Gets whether the user collapsed this category.
     /// </summary>
     private bool IsCollapsed => this.SettingsManager.ConfigurationData.AssistantsPage.IsCategoryCollapsed(this.Category);
+
+    /// <summary>
+    /// Gets whether the user hid this category.
+    /// </summary>
+    private bool IsHidden => this.SettingsManager.ConfigurationData.AssistantsPage.IsCategoryHidden(this.Category);
+
+    #region Overrides of ComponentBase
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        this.Registry?.Register(this);
+        base.OnInitialized();
+    }
+
+    /// <inheritdoc />
+    protected override void OnAfterRender(bool firstRender)
+    {
+        this.Registry?.ReportChange();
+        base.OnAfterRender(firstRender);
+    }
+
+    #endregion
+
+    /// <inheritdoc />
+    public void Dispose() => this.Registry?.Unregister(this);
 
     /// <summary>
     /// Gets the CSS classes used for the assistant stack.

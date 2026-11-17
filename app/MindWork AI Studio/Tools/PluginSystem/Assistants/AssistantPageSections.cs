@@ -1,3 +1,5 @@
+using AIStudio.Settings.DataModel;
+
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
 /// <summary>
@@ -72,6 +74,32 @@ public static class AssistantPageSections
             return leftIndex.CompareTo(IndexOfLeading(right));
 
         return NameComparer.Compare(left.Name, right.Name);
+    }
+
+    /// <summary>
+    /// Selects the categories the settings dialog of the assistants page offers, in the order of the page.
+    /// </summary>
+    /// <remarks>
+    /// The dialog offers the categories the page shows right now, so that every switch changes something
+    /// the user sees, and every category the user hid, so that each one can come back. Categories your
+    /// organization disabled are missing: no switch of the user brings them back.
+    /// </remarks>
+    /// <param name="shownCategories">The categories which show at least one assistant right now.</param>
+    /// <param name="app">The app settings which hold the categories your organization disabled.</param>
+    /// <param name="page">The settings of the assistants page, which hold the categories the user hid.</param>
+    /// <returns>The categories for the dialog, each once.</returns>
+    public static IReadOnlyList<AssistantCategoryKey> SelectForSettings(IEnumerable<AssistantCategoryKey> shownCategories, DataApp app, DataAssistantsPage page)
+    {
+        var hiddenCategories = page.HiddenCategories
+            .Select(category => new AssistantCategoryKey(category))
+            .Concat(page.HiddenCustomCategories.Select(name => new AssistantCategoryKey(PluginCategory.CUSTOM, name)));
+
+        return shownCategories
+            .Concat(hiddenCategories)
+            .Distinct()
+            .Where(category => !app.IsAssistantCategoryDisabled(category))
+            .Order(Comparer<AssistantCategoryKey>.Create(Compare))
+            .ToList();
     }
 
     /// <summary>

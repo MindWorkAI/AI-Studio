@@ -1,13 +1,17 @@
-@if (this.HasVisibleAssistant)
+@if (!this.IsHidden)
 {
-    <AssistantCategoryHeader Category="@this.Category" IsCollapsed="@this.IsCollapsed" OnToggleCollapsed="@this.ToggleCollapsedAsync" Class="@this.HeaderClass"/>
+    if (this.HasVisibleAssistant)
+    {
+        <AssistantCategoryHeader Category="@this.Category" IsCollapsed="@this.IsCollapsed" OnToggleCollapsed="@this.ToggleCollapsedAsync" Class="@this.HeaderClass"/>
+    }
+
+    <CascadingValue Value="this" IsFixed="@true">
+        <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="@this.StackClass">
+            @this.ChildContent
+            @foreach (var plugin in this.Plugins)
+            {
+                <AssistantPluginBlock @key="@plugin.Id" Plugin="@plugin"/>
+            }
+        </MudStack>
+    </CascadingValue>
 }
-<CascadingValue Value="this" IsFixed="@true">
-    <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="@this.StackClass">
-        @this.ChildContent
-        @foreach (var plugin in this.Plugins)
-        {
-            <AssistantPluginBlock @key="@plugin.Id" Plugin="@plugin"/>
-        }
-    </MudStack>
-</CascadingValue>
