@@ -1,5 +1,7 @@
 using System.Globalization;
 
+using AIStudio.Settings;
+
 using Lua;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -441,10 +443,14 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
             return false;
         }
         
+        //
+        // Only the names of categories count. Enum.TryParse would also take a number such as "1", or
+        // "BUSINESS, SCIENCE" as a combination of both, and turn them into some category nobody named:
+        //
         var categoryList = new List<PluginCategory>();
         foreach(var luaCategory in categoriesTable.GetArraySpan())
             if(luaCategory.TryRead<string>(out var categoryName))
-                if(Enum.TryParse<PluginCategory>(categoryName, out var category) && category != PluginCategory.NONE)
+                if(PluginCategory.TryParseName(categoryName, out var category) && category != PluginCategory.NONE)
                     categoryList.Add(category);
         
         categories = categoryList.ToArray();
@@ -545,10 +551,11 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
             return false;
         }
 
+        // Only the names of target groups count, as for the categories:
         var targetGroupList = new List<PluginTargetGroup>();
         foreach(var luaTargetGroup in targetGroupsTable.GetArraySpan())
             if(luaTargetGroup.TryRead<string>(out var targetGroupName))
-                if(Enum.TryParse<PluginTargetGroup>(targetGroupName, out var targetGroup) && targetGroup != PluginTargetGroup.NONE)
+                if(PluginTargetGroup.TryParseName(targetGroupName, out var targetGroup) && targetGroup != PluginTargetGroup.NONE)
                     targetGroupList.Add(targetGroup);
         
         targetGroups = targetGroupList.ToArray();

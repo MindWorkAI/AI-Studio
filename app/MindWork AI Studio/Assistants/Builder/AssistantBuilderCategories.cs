@@ -89,9 +89,10 @@ public static class AssistantBuilderCategories
     /// loader accepts.
     /// </summary>
     /// <remarks>
-    /// The loader reads CATEGORIES by the exact names of the categories and drops what it does not know.
-    /// A model which writes "business" or "1" would thus leave a plugin without its category, or without
-    /// any. We refuse such an answer instead of guessing what the model meant. CORE stays valid, so that
+    /// The loader reads CATEGORIES by the names of the categories and drops what it does not know; versions
+    /// before v26.11.2 also drop a name in another case. A model which writes "1", or "business", would thus
+    /// leave a plugin without its category, at least in an older version. We refuse such an answer instead
+    /// of guessing what the model meant, and ask for the exact spelling. CORE stays valid, so that
     /// a revision of a plugin written before COMMON existed keeps working. The names of custom categories
     /// belong to CUSTOM, in both directions, as in the loader.
     /// </remarks>

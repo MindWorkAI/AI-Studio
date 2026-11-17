@@ -117,11 +117,51 @@ public sealed class PluginCategoriesTests
         }
     }
 
+    [TestCase("""CATEGORIES = {"1"}""", TestName = "ANumberIsNoCategory")]
+    [TestCase("""CATEGORIES = {"BUSINESS, SCIENCE"}""", TestName = "TwoNamesInOneAreNoCategory")]
+    [TestCase("""CATEGORIES = {"NONE"}""", TestName = "NoneIsNoCategory")]
+    public async Task OnlyTheNameOfACategoryCounts(string categoriesLine)
+    {
+        using var plugin = await LoadModelPlugin(categoriesLine);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(plugin.IsValid, Is.False, "Enum.TryParse would turn such a value into a category nobody named.");
+            Assert.That(plugin.Issues, Has.Some.Contains("CATEGORIES"));
+        }
+    }
+
+    [Test]
+    public async Task TheCaseOfANameDoesNotMatter()
+    {
+        using var plugin = await LoadModelPlugin("""CATEGORIES = {" business "}""");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(plugin.IsValid, Is.True, string.Join(" ", plugin.Issues));
+            Assert.That(plugin.Categories, Is.EqualTo(new[] { PluginCategory.BUSINESS }), "Plugins read names like configuration plugins do.");
+        }
+    }
+
+    [TestCase("""TARGET_GROUPS = {"1"}""", TestName = "ANumberIsNoTargetGroup")]
+    [TestCase("""TARGET_GROUPS = {"EVERYONE, STUDENTS"}""", TestName = "TwoNamesInOneAreNoTargetGroup")]
+    public async Task OnlyTheNameOfATargetGroupCounts(string targetGroupsLine)
+    {
+        using var plugin = await LoadModelPlugin("""CATEGORIES = {"BUSINESS"}""", targetGroupsLine);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(plugin.IsValid, Is.False);
+            Assert.That(plugin.Issues, Has.Some.Contains("TARGET_GROUPS"));
+        }
+    }
+
     /// <summary>
     /// Loads a model plugin, the plugin type with the fewest fields beyond the ones every plugin has.
     /// </summary>
     /// <param name="categoriesLines">The Lua lines which state CATEGORIES and, optionally, CUSTOM_CATEGORIES.</param>
-    private static Task<PluginBase> LoadModelPlugin(string categoriesLines) => PluginFactory.Load(null, $$"""
+    /// <param name="targetGroupsLine">The Lua line which states TARGET_GROUPS.</param>
+    private static Task<PluginBase> LoadModelPlugin(string categoriesLines, string targetGroupsLine = """TARGET_GROUPS = {"EVERYONE"}""") => PluginFactory.Load(null, $$"""
         ID = "{{PLUGIN_ID}}"
         NAME = "Models for the tests"
         DESCRIPTION = "A model plugin which declares no models."
@@ -131,7 +171,7 @@ public sealed class PluginCategoriesTests
         SUPPORT_CONTACT = "MindWork AI"
         SOURCE_URL = "https://github.com/MindWorkAI/AI-Studio"
         {{categoriesLines}}
-        TARGET_GROUPS = {"EVERYONE"}
+        {{targetGroupsLine}}
         IS_MAINTAINED = true
         DEPRECATION_MESSAGE = ""
         MODELS = {}
