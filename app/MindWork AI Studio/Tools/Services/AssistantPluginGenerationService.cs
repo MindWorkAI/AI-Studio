@@ -568,7 +568,11 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
           - Treat filled optional guidance as explicit user intent.
           - A null value means the user did not specify that detail. Derive it yourself from the assistant description. Never write the word "null", a field name, or placeholder text into the draft.
           - The "## {{TB("Name")}}" section is mandatory and must always name the assistant. Use assistant_title verbatim when it is not null. When it is null, invent a short, specific name of two to four words that says what the assistant does.
+          - The "## {{TB("Category")}}" section is mandatory and consists of exactly one line and nothing else: either one key from the "Categories" list below, spelled exactly as listed, or "{{AssistantBuilderCategories.CUSTOM_PREFIX}} " followed by the name of a category of the user's own. Use category verbatim when it is not null. When it is null, choose the one key which fits the assistant best. Never invent a custom category yourself, and never use a key which is not in the list.
           {{typeRequirements}}
+
+          Categories:
+          {{AssistantBuilderCategories.ListForPrompt()}}
           """;
     }
 

@@ -97,7 +97,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private bool isAuditingPlugin;
     private bool isEnablingPlugin;
     private string assistantDescription = string.Empty;
-    private AssistantCategory selectedCategory;
+    private PluginCategory selectedCategory;
     private string customCategory = string.Empty;
     private string assistantName = string.Empty;
     private string typicalInput = string.Empty;
@@ -135,7 +135,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private static readonly AssistantSessionStateKey<bool> IS_AUDITING_PLUGIN_STATE_KEY = new(nameof(isAuditingPlugin));
     private static readonly AssistantSessionStateKey<bool> IS_ENABLING_PLUGIN_STATE_KEY = new(nameof(isEnablingPlugin));
     private static readonly AssistantSessionStateKey<string> ASSISTANT_DESCRIPTION_STATE_KEY = new(nameof(assistantDescription));
-    private static readonly AssistantSessionStateKey<AssistantCategory> SELECTED_CATEGORY_STATE_KEY = new(nameof(selectedCategory));
+    private static readonly AssistantSessionStateKey<PluginCategory> SELECTED_CATEGORY_STATE_KEY = new(nameof(selectedCategory));
     private static readonly AssistantSessionStateKey<string> CUSTOM_CATEGORY_STATE_KEY = new(nameof(customCategory));
     private static readonly AssistantSessionStateKey<string> ASSISTANT_NAME_STATE_KEY = new(nameof(assistantName));
     private static readonly AssistantSessionStateKey<string> TYPICAL_INPUT_STATE_KEY = new(nameof(typicalInput));
@@ -241,7 +241,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         this.pluginId = Guid.NewGuid();
         this.step = BuilderStep.DESCRIBE;
         this.assistantDescription = string.Empty;
-        this.selectedCategory = AssistantCategory.AS_IS;
+        this.selectedCategory = PluginCategory.NONE;
         this.customCategory = string.Empty;
         this.assistantName = string.Empty;
         this.typicalInput = string.Empty;
@@ -374,14 +374,23 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         return null;
     }
 
-    private string? ValidatingCategory(AssistantCategory category)
+    /// <summary>
+    /// The choices of the category field: leaving it to the model, the categories of AI Studio in the
+    /// order of the assistants page, and a custom category last.
+    /// </summary>
+    private IReadOnlyList<PluginCategory> OfferedCategories => [PluginCategory.NONE, ..AssistantBuilderCategories.Offered, PluginCategory.CUSTOM];
+
+    private string NameOfCategory(PluginCategory category) => category switch
     {
-        return null;
-    }
+        PluginCategory.NONE => T("Let the model choose"),
+        PluginCategory.CUSTOM => T("Other"),
+
+        _ => category.Name,
+    };
 
     private string? ValidateCustomCategory(string category)
     {
-        if(this.selectedCategory is AssistantCategory.OTHER && string.IsNullOrWhiteSpace(category))
+        if(this.selectedCategory is PluginCategory.CUSTOM && string.IsNullOrWhiteSpace(category))
             return TA("Please provide a custom category.");
 
         return null;
@@ -407,7 +416,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             var draft = await this.AssistantPluginGenerationService.GenerateAssistantDraftAsync(
                 new(
                     this.assistantDescription,
-                    this.GetSelectedCategoryName(),
+                    this.GetSelectedCategoryForDraft(),
                     this.assistantName,
                     this.createChatLauncher ? string.Empty : this.typicalInput,
                     this.createChatLauncher ? string.Empty : this.expectedOutput,
@@ -522,12 +531,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         this.step = BuilderStep.REVIEW_SPEC;
     }
 
-    private string GetSelectedCategoryName() => this.selectedCategory switch
-    {
-        AssistantCategory.AS_IS => string.Empty,
-        AssistantCategory.OTHER => this.customCategory,
-        _ => this.selectedCategory.Name,
-    };
+    private string GetSelectedCategoryForDraft() => AssistantBuilderCategories.FormatForDraft(this.selectedCategory, this.customCategory);
 
     private string GetSelectedOutputLanguageName() => this.selectedOutputLanguage switch
     {
