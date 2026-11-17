@@ -1,3 +1,4 @@
+using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 
@@ -46,4 +47,60 @@ public static class AssistantBuilderCategories
     /// </summary>
     /// <returns>The list of the offered categories as Markdown.</returns>
     public static string ListForPrompt() => string.Join('\n', Offered.Select(category => $"- {Enum.GetName(category)}: {category.Name}"));
+
+    /// <summary>
+    /// Reads the categories a model names for a plugin, and refuses anything else than what the plugin
+    /// loader accepts.
+    /// </summary>
+    /// <remarks>
+    /// The loader reads CATEGORIES by the exact names of the categories and drops what it does not know.
+    /// A model which writes "business" or "1" would thus leave a plugin without its category, or without
+    /// any. We refuse such an answer instead of guessing what the model meant. CORE stays valid, so that
+    /// a revision of a plugin written before COMMON existed keeps working. The names of custom categories
+    /// belong to CUSTOM, in both directions, as in the loader.
+    /// </remarks>
+    /// <param name="categoryNames">The keys of the categories, as the model wrote them.</param>
+    /// <param name="customNames">The names of the custom categories, as the model wrote them.</param>
+    /// <param name="categories">The categories, each once, in the order of the model.</param>
+    /// <param name="customCategories">The trimmed names of the custom categories, each once.</param>
+    /// <returns>True when the model named at least one category, and only valid ones.</returns>
+    public static bool TryRead(IReadOnlyList<string> categoryNames, IReadOnlyList<string> customNames, out PluginCategory[] categories, out string[] customCategories)
+    {
+        categories = [];
+        customCategories = [];
+        if (categoryNames.Count == 0)
+            return false;
+
+        var readCategories = new List<PluginCategory>();
+        foreach (var categoryName in categoryNames)
+        {
+            if (!PluginCategory.TryParseName(categoryName, out var category) || category is PluginCategory.NONE || !string.Equals(Enum.GetName(category), categoryName, StringComparison.Ordinal))
+                return false;
+
+            if (!readCategories.Contains(category))
+                readCategories.Add(category);
+        }
+
+        if (customNames.Any(string.IsNullOrWhiteSpace))
+            return false;
+
+        var readCustomNames = customNames.Select(name => name.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (readCategories.Contains(PluginCategory.CUSTOM) != readCustomNames.Length > 0)
+            return false;
+
+        categories = readCategories.ToArray();
+        customCategories = readCustomNames;
+        return true;
+    }
+
+    /// <summary>
+    /// Whether a loaded plugin states the same categories as the model answer which came with it.
+    /// </summary>
+    /// <param name="plugin">The plugin as AI Studio loaded it.</param>
+    /// <param name="categories">The categories the answer names.</param>
+    /// <param name="customCategories">The custom categories the answer names.</param>
+    /// <returns>True when both name the same categories, in any order.</returns>
+    public static bool MatchPlugin(IPluginMetadata plugin, IReadOnlyCollection<PluginCategory> categories, IReadOnlyCollection<string> customCategories) =>
+        plugin.Categories.ToHashSet().SetEquals(categories) &&
+        plugin.CustomCategories.ToHashSet(StringComparer.OrdinalIgnoreCase).SetEquals(customCategories);
 }
