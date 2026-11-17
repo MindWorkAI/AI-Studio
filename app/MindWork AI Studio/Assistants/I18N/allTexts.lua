@@ -3016,23 +3016,47 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 -- For complex tasks, write prompts in English.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T85710437"] = "For complex tasks, write prompts in English."
 
+-- Rewrite and improve a Word, PowerPoint, LaTeX, Markdown, or HTML file paragraph by paragraph. The improved document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1106503382"] = "Rewrite and improve a Word, PowerPoint, LaTeX, Markdown, or HTML file paragraph by paragraph. The improved document is saved as a new file of the same type, and the formatting of the original is kept as far as possible."
+
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T137304886"] = "Please provide a text as input. You might copy the desired text from a document or a website."
+
+-- improved
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1590224381"] = "improved"
 
 -- Sentence structure
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1714063121"] = "Sentence structure"
 
+-- Rewrite and improve a document or a text. Please note that the capabilities of the different LLM providers will vary.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1754663777"] = "Rewrite and improve a document or a text. Please note that the capabilities of the different LLM providers will vary."
+
+-- Rewrite and improve a text which you type or paste, or which you load from a file. The improved text appears right here, with the changes marked.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1832596558"] = "Rewrite and improve a text which you type or paste, or which you load from a file. The improved text appears right here, with the changes marked."
+
 -- Rewrite & Improve Text
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1994150308"] = "Rewrite & Improve Text"
+
+-- Save improved document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2080446773"] = "Save improved document"
 
 -- Improve your text
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2163831433"] = "Improve your text"
 
+-- Improved document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T217405602"] = "Improved document"
+
 -- Load text from file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2210807298"] = "Load text from file"
 
+-- '{0}' is improved paragraph by paragraph: each sentence stays in its paragraph, and the structure of the document stays as it is.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2290101736"] = "'{0}' is improved paragraph by paragraph: each sentence stays in its paragraph, and the structure of the document stays as it is."
+
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2591284123"] = "Language"
+
+-- Switch to improving a text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2611538509"] = "Switch to improving a text"
 
 -- Rewrite and improve the following text:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2875363001"] = "Rewrite and improve the following text:"
@@ -3043,14 +3067,26 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 -- Your input to improve
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3037449423"] = "Your input to improve"
 
+-- Improve text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3294512994"] = "Improve text"
+
 -- Writing style
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3754048862"] = "Writing style"
 
--- Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T480915300"] = "Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary."
+-- Improve document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T377629992"] = "Improve document"
+
+-- Select a document to improve
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T550741400"] = "Select a document to improve"
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T656744944"] = "Please provide a custom language."
+
+-- Switch to improving a document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T763976467"] = "Switch to improving a document"
+
+-- Revised sections: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T797097195"] = "Revised sections: {0}"
 
 -- Passive voice
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T132535068"] = "Passive voice"
@@ -10813,6 +10849,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T37
 -- Select a prompt guide
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T4252279140"] = "Select a prompt guide"
 
+-- How should the rewrite & improve assistant start?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1085306882"] = "How should the rewrite & improve assistant start?"
+
 -- Which writing style should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1173034744"] = "Which writing style should be preselected?"
 
@@ -10827,6 +10866,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1621537655
 
 -- Assistant: Rewrite & Improve Text Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1995708818"] = "Assistant: Rewrite & Improve Text Options"
+
+-- Choose whether the rewrite & improve assistant asks you every time whether to improve a document or a text, or whether it always starts with one of them. You can switch between both at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T2544778542"] = "Choose whether the rewrite & improve assistant asks you every time whether to improve a document or a text, or whether it always starts with one of them. You can switch between both at any time with the button next to the gear icon."
 
 -- Which voice should be preselected for the sentence structure?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T2661599097"] = "Which voice should be preselected for the sentence structure?"
