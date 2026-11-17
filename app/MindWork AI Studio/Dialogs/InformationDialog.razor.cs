@@ -23,7 +23,7 @@ public partial class InformationDialog : MSGComponentBase
     /// The icon shown next to the message.
     /// </summary>
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.Info;
+    public string Icon { get; set; } = AppIcons.INFO;
 
     /// <summary>
     /// The color of the icon.

@@ -1,0 +1,1 @@
+Sprich die Person informell an: auf Deutsch mit „du“, in anderen Sprachen mit der entsprechenden vertrauten Form, etwa „tu“ im Französischen oder „tú“ im Spanischen. Die Beispielfragen in diesen Anweisungen stehen in der Sie-Form; übertrage sie in die Du-Form, wenn du sie verwendest.

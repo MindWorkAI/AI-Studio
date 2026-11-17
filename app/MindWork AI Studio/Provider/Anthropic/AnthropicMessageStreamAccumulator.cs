@@ -152,9 +152,9 @@ public sealed class AnthropicMessageStreamAccumulator
             this.unparsableToolArguments[builder.ToolUseId] = builder.UnparsableToolArguments;
     }
     
-    private static JsonElement EmptyTextBlock() => JsonSerializer.SerializeToElement(new
+    private static JsonElement EmptyTextBlock()
     {
-        type = "text",
-        text = string.Empty,
-    });
+        using var document = JsonDocument.Parse("""{"type":"text","text":""}""");
+        return document.RootElement.Clone();
+    }
 }

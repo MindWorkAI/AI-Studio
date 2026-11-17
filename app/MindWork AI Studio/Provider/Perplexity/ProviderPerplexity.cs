@@ -22,7 +22,7 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.PERPLEXITY.ToSecretId();
+    public override string Id => LLMProviders.PERPLEXITY.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Perplexity";

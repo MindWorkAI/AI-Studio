@@ -21,7 +21,7 @@
         @* One gear for all settings: the window it opens lists the workspaces next to the chat. *@
         <MudToolBar WrapContent="false" Gutters="false">
             <MudTooltip Text="@T("Show the chat options")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenChatSettingsDialog"/>
+                <MudIconButton Icon="@AppIcons.SETTINGS" Color="Color.Default" OnClick="@this.OpenChatSettingsDialog"/>
             </MudTooltip>
         </MudToolBar>
     </MudStack>
@@ -63,11 +63,11 @@
         <MudStack Row="@true" Style="width: 100%; overflow: hidden; height: 100%; flex-grow: 1; min-height: 0;">
             <MudPaper Class="border border-solid rounded-lg mb-3 d-flex">
                 <MudStack Row="false" AlignItems="AlignItems.Center" StretchItems="StretchItems.Middle" Wrap="Wrap.NoWrap">
-                    <MudTooltip Text="@T("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudTooltip Text="@TA("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Size="Size.Medium" Icon="@this.WorkspaceSidebarToggleIcon" OnClick="@(() => this.ToggleWorkspaceSidebar())"/>
                     </MudTooltip>
                     <MudText Typo="Typo.h6" Style="writing-mode: vertical-lr; word-spacing: 0.5em;">
-                        @T("Your workspaces")
+                        @TA("Your workspaces")
                     </MudText>
                 </MudStack>
             </MudPaper>
@@ -135,23 +135,23 @@
         <MudTooltip Text="@this.WorkspaceSearchTooltip" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
             <MudIconButton Icon="@this.WorkspaceSearchIcon" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
         </MudTooltip>
-        <CompactMenu Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Medium" AriaLabel="@T("Options for your workspaces")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
-            <MudMenuItem Icon="@Icons.Material.Filled.Refresh" OnClick="@this.RefreshWorkspaces">
-                @T("Reload your workspaces")
+        <CompactMenu Icon="@AppIcons.MORE_OPTIONS" Size="Size.Medium" AriaLabel="@TA("Options for your workspaces")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+            <MudMenuItem Icon="@AppIcons.REFRESH" OnClick="@this.RefreshWorkspaces">
+                @TA("Reload your workspaces")
             </MudMenuItem>
-            <MudMenuItem Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenWorkspacesSettingsDialog">
-                @T("Configure your workspaces")
+            <MudMenuItem Icon="@AppIcons.SETTINGS" OnClick="@this.OpenWorkspacesSettingsDialog">
+                @TA("Configure your workspaces")
             </MudMenuItem>
         </CompactMenu>
         @if (canHide)
         {
-            <MudTooltip Text="@T("Hide your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+            <MudTooltip Text="@TA("Hide your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                 <MudIconButton Icon="@this.WorkspaceSidebarToggleIcon" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSidebar"/>
             </MudTooltip>
         }
         @if (canClose)
         {
-            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Medium" aria-label="@T("Hide your workspaces")" OnClick="@this.ToggleWorkspacesOverlay"/>
+            <MudIconButton Icon="@AppIcons.CLOSE" Size="Size.Medium" aria-label="@TA("Hide your workspaces")" OnClick="@this.ToggleWorkspacesOverlay"/>
         }
     </MudStack>;
 }

@@ -4,8 +4,8 @@
 @if (this.SelectionMode is DataSourceSelectionMode.SELECTION_MODE)
 {
     <div class="d-flex">
-        <MudTooltip Text="@T("Select the data you want to use here.")" Placement="Placement.Top">
-            <MudIconButton Icon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection"/>
+        <MudTooltip Text="@TA("Select the data you want to use here.")" Placement="Placement.Top">
+            <MudIconButton Icon="@AppIcons.DATA_SOURCE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection"/>
         </MudTooltip>
 
         <MudPopover Open="@this.showDataSourceSelection" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" DropShadow="@true" Class="border-solid border-4 rounded-lg">
@@ -18,8 +18,8 @@
                             </MudText>
                             <PreviewBeta ChipClass=""/>
                             <MudSpacer/>
-                            <MudTooltip Text="@T("Manage your data sources")" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenSettingsDialog"/>
+                            <MudTooltip Text="@TA("Manage your data sources")" Placement="Placement.Top">
+                                <MudIconButton Icon="@AppIcons.SETTINGS" OnClick="@this.OpenSettingsDialog"/>
                             </MudTooltip>
                         </MudStack>
                     </CardHeaderContent>
@@ -34,14 +34,14 @@
                     else if (this.SettingsManager.ConfigurationData.DataSources.Count == 0)
                     {
                         <MudJustifiedText Typo="Typo.body2" Class="mb-2">
-                            @T("You haven't configured any data sources. To grant the AI access to your data, you need to add such a source. However, if you wish to use data from your device, you first have to set up a so-called embedding. This embedding is necessary so the AI can effectively search your data, find and retrieve the correct information required for each task. In addition to local data, you can also incorporate your company's data. To do so, your company must provide the data through an ERI (External Retrieval Interface).")
+                            @TA("You haven't configured any data sources. To grant the AI access to your data, you need to add such a source. However, if you wish to use data from your device, you first have to set up a so-called embedding. This embedding is necessary so the AI can effectively search your data, find and retrieve the correct information required for each task. In addition to local data, you can also incorporate your company's data. To do so, your company must provide the data through an ERI (External Retrieval Interface).")
                         </MudJustifiedText>
                         
                         <MudStack StretchItems="StretchItems.None" AlignItems="AlignItems.Start">
-                            <MudButton Variant="Variant.Filled" OnClick="this.OpenSettingsDialog" StartIcon="@Icons.Material.Filled.Settings">
+                            <MudButton Variant="Variant.Filled" OnClick="this.OpenSettingsDialog" StartIcon="@AppIcons.SETTINGS">
                                 @T("Manage Data Sources")
                             </MudButton>
-                            <MudButton Variant="Variant.Filled" Href="https://mindworkai.org/#eri---external-retrieval-interface" Target="_blank" StartIcon="@Icons.Material.Filled.Settings">
+                            <MudButton Variant="Variant.Filled" Href="https://mindworkai.org/#eri---external-retrieval-interface" Target="_blank" StartIcon="@AppIcons.OPEN_EXTERNAL">
                                 @T("Read more about ERI")
                             </MudButton>
                         </MudStack>
@@ -67,7 +67,7 @@
                             }
                             else
                             {
-                                <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@T("Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).")" LabelOff="@T("No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).")" ValueChanged="@this.SemanticSearchChanged" Dense="@true" Disabled="@this.ReadOnly"/>
+                                <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@TA("Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).")" LabelOff="@TA("No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).")" ValueChanged="@this.SemanticSearchChanged" Dense="@true" Disabled="@this.ReadOnly"/>
                             }
 
                             <MudTextSwitch Label="@T("AI-based data source selection")" Value="@this.aiBasedSourceSelection" LabelOn="@T("Yes, let the AI decide which data sources are needed.")" LabelOff="@T("No, I manually decide which data source to use.")" ValueChanged="@this.AutoModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
@@ -82,13 +82,13 @@
                             {
                                 case true when this.GetListedDataSources().Count == 0:
                                     <MudText Typo="Typo.body2" Class="mb-2">
-                                        @T("Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.")
+                                        @TA("Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.")
                                     </MudText>
                                     break; 
                                     
                                 case false when this.GetListedDataSources().Count == 0:
                                     <MudText Typo="Typo.body2" Class="mb-2">
-                                        @T("Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.")
+                                        @TA("Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.")
                                     </MudText>
                                     break;
                                     
@@ -113,12 +113,12 @@
                                     else if (this.DataSourcesAISelected.Count == 0)
                                     {
                                         <MudText Typo="Typo.body2" Class="mb-2">
-                                            @T("The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.")
+                                            @TA("The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.")
                                         </MudText>
                                     }
 
                                     <MudExpansionPanels MultiExpansion="@false" Class="mt-3" Style="max-height: 14em;">
-                                        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.TouchApp" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("Available Data Sources")">
+                                        <ExpansionPanel HeaderIcon="@AppIcons.MANUAL_SELECTION" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("Available Data Sources")">
                                             <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.SingleSelection" SelectedValues="@this.selectedDataSources" Style="max-height: 14em;">
                                                 @foreach (var source in this.GetListedDataSources())
                                                 {
@@ -133,7 +133,7 @@
                                         *@
                                         @if (!this.IsSemanticSearchEffective && this.DataSourcesAISelected.Count > 0)
                                         {
-                                            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Filter" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("AI-Selected Data Sources")">
+                                            <ExpansionPanel HeaderIcon="@AppIcons.AI_SELECTED_DATA_SOURCES" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("AI-Selected Data Sources")">
                                                 <MudList T="DataSourceAgentSelected" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
                                                     @foreach (var source in this.DataSourcesAISelected)
                                                     {
@@ -146,8 +146,8 @@
                                                                     @if (source.DataSource is IInternalDataSource internalSource)
                                                                     {
                                                                         <MudSpacer/>
-                                                                        <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                                                                            <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
+                                                                        <MudTooltip Text="@internalSource.ConfidenceLevel.Name">
+                                                                            <MudIcon Icon="@AppIcons.PROVIDER_CONFIDENCE" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                                         </MudTooltip>
                                                                     }
                                                                 </MudStack>
@@ -208,12 +208,12 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
         <MudTextSwitch Label="@T("Are data sources enabled?")" Value="@this.areDataSourcesEnabled" LabelOn="@T("Yes, I want to use data sources.")" LabelOff="@T("No, I don't want to use data sources.")" ValueChanged="@this.EnabledChanged" Disabled="@(this.ReadOnly || this.IsPreselectedDataSourcesDisabledLocked())"/>
         @if (this.areDataSourcesEnabled)
         {
-            <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@T("Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).")" LabelOff="@T("No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).")" ValueChanged="@this.SemanticSearchChanged" Disabled="@(this.ReadOnly || this.IsPreselectedDataSourcesRetrievalModeLocked())"/>
+            <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@TA("Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).")" LabelOff="@TA("No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).")" ValueChanged="@this.SemanticSearchChanged" Disabled="@(this.ReadOnly || this.IsPreselectedDataSourcesRetrievalModeLocked())"/>
             @* No provider is known here, so this says in general what the chat itself tells about its model: *@
             @if (this.IsSemanticSearchPreferred)
             {
                 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-                    @T("When the model of a chat cannot use tools, AI Studio uses classic RAG instead and searches your data sources with every message.")
+                    @TA("When the model of a chat cannot use tools, AI Studio uses classic RAG instead and searches your data sources with every message.")
                 </MudJustifiedText>
             }
 
@@ -222,7 +222,7 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
             @* Semantic Search may fall back to searching with every message, so the validation is kept, marked as belonging to that way only: *@
             <MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
                 <MudJustifiedText Typo="Typo.body2" Class="mb-2">
-                    @T("Only used with classic RAG, which searches your data sources with every message:")
+                    @TA("Only used with classic RAG, which searches your data sources with every message:")
                 </MudJustifiedText>
                 <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Disabled="@(this.ReadOnly || this.IsPreselectedDataSourcesAutomaticValidationLocked())"/>
             </MudPaper>

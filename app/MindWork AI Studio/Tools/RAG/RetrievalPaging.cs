@@ -62,72 +62,83 @@ public static class RetrievalPaging
     }
 
     /// <summary>
-    /// Cuts one page out of what two channels found.
+    /// Cuts one page out of what two channels found, the channels taking turns.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A page holds the page of the first channel, followed by the page of the second one. This
-    /// order is deterministic on purpose; reranking would replace it, and change the first page
-    /// with it.
+    /// Both channels make one ranking: the best match of the first channel, then the best of the
+    /// second, then the second best of each, and so on. A page is the next stretch of that ranking,
+    /// as many matches as the page size, whichever channel they come from. A channel which runs out
+    /// of matches leaves its turns to the other one, which then fills the page on its own. So a
+    /// page holds as many matches as configured, and each channel brings its best ones first.
+    /// This order is deterministic on purpose; reranking would replace it, and change the first
+    /// page with it.
     /// </para>
     /// <para>
-    /// A match both channels found is shown once, on the earlier of its two pages; on the same
-    /// page, in the part of the first channel. Hence, no match turns up on two pages. Matches
-    /// without a key are never taken for one another.
+    /// A match both channels found takes the first of its two places. Hence, no match turns up
+    /// twice, neither on one page nor on two. Matches without a key are never taken for one
+    /// another.
+    /// </para>
+    /// <para>
+    /// The window of the page is enough to place every match up to the one beyond the page: the
+    /// first n places of the ranking come from the first n matches of each channel at most, since
+    /// the first n matches of one channel alone already fill n places.
     /// </para>
     /// </remarks>
     /// <param name="first">What the first channel found, the most relevant first, fetched with the window of this page.</param>
     /// <param name="second">What the second channel found, likewise.</param>
     /// <param name="getKey">What identifies a match across both channels. Letter case does not matter.</param>
     /// <param name="page">The page, starting at 1.</param>
-    /// <param name="pageSize">The number of matches per page and channel.</param>
+    /// <param name="pageSize">The number of matches per page.</param>
     /// <returns>The matches of this page, and whether the next page is worth asking for.</returns>
     /// <exception cref="ArgumentOutOfRangeException">The page is below 1 or beyond the last page.</exception>
     public static (IReadOnlyList<T> Matches, bool HasMore) Merge<T>(IReadOnlyList<T> first, IReadOnlyList<T> second, Func<T, string> getKey, int page, int pageSize)
     {
         var end = GetPageEnd(page, pageSize);
         var start = end - pageSize;
-        var firstRanks = GetFirstRanks(first, end + 1, getKey);
-        var secondRanks = GetFirstRanks(second, end + 1, getKey);
-        var pageMatches = new List<T>(2 * pageSize);
 
-        for (var rank = start; rank < Math.Min(end, first.Count); rank++)
+        // The one match beyond the page tells whether the next page is worth asking for:
+        var ranking = TakeTurns(first, second, getKey, end + 1);
+        var pageMatches = ranking.Skip(start).Take(pageSize).ToList();
+
+        return (pageMatches, HasMore(page, pageSize, ranking.Count));
+    }
+
+    /// <summary>
+    /// Joins what two channels found into one ranking, the channels taking turns.
+    /// </summary>
+    /// <param name="first">What the first channel found, the most relevant first.</param>
+    /// <param name="second">What the second channel found, likewise.</param>
+    /// <param name="getKey">What identifies a match across both channels. Letter case does not matter.</param>
+    /// <param name="count">How many places of the ranking are needed.</param>
+    /// <returns>The first places of the ranking, fewer than asked for only when both channels ran out.</returns>
+    private static List<T> TakeTurns<T>(IReadOnlyList<T> first, IReadOnlyList<T> second, Func<T, string> getKey, int count)
+    {
+        var ranking = new List<T>(count);
+        var placedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (var rank = 0; ranking.Count < count && (rank < first.Count || rank < second.Count); rank++)
         {
-            var match = first[rank];
-            var key = getKey(match);
-            if (!string.IsNullOrWhiteSpace(key))
-            {
-                // The first channel found it further up already:
-                if (firstRanks[key] != rank)
-                    continue;
-
-                // The second channel showed it on an earlier page:
-                if (secondRanks.TryGetValue(key, out var secondRank) && secondRank < start)
-                    continue;
-            }
-
-            pageMatches.Add(match);
+            Place(first, rank);
+            if (ranking.Count < count)
+                Place(second, rank);
         }
 
-        for (var rank = start; rank < Math.Min(end, second.Count); rank++)
+        return ranking;
+
+        void Place(IReadOnlyList<T> channel, int rank)
         {
-            var match = second[rank];
+            if (rank >= channel.Count)
+                return;
+
+            var match = channel[rank];
             var key = getKey(match);
-            if (!string.IsNullOrWhiteSpace(key))
-            {
-                // The second channel found it further up already:
-                if (secondRanks[key] != rank)
-                    continue;
 
-                // The first channel shows it on this page or showed it on an earlier one:
-                if (firstRanks.TryGetValue(key, out var firstRank) && firstRank < end)
-                    continue;
-            }
+            // The other channel, or this one further up, placed it already:
+            if (!string.IsNullOrWhiteSpace(key) && !placedKeys.Add(key))
+                return;
 
-            pageMatches.Add(match);
+            ranking.Add(match);
         }
-
-        return (pageMatches, HasMore(page, pageSize, first.Count, second.Count));
     }
 
     /// <summary>
@@ -143,29 +154,11 @@ public static class RetrievalPaging
     }
 
     /// <remarks>
-    /// Whatever a channel found beyond this page is enough to ask for the next one. That page can
-    /// still turn out empty, when the other channel showed all of it before. Saying there is more
-    /// when there is not costs one empty page; saying the opposite would hide matches.
+    /// A single match beyond this page is enough to ask for the next one, unless this page is the
+    /// last one which can be retrieved at all.
     /// </remarks>
-    private static bool HasMore(int page, int pageSize, params int[] channelCounts)
-    {
-        if (page >= GetLastPage(pageSize))
-            return false;
-
-        var end = page * pageSize;
-        return channelCounts.Any(count => count > end);
-    }
-
-    private static Dictionary<string, int> GetFirstRanks<T>(IReadOnlyList<T> matches, int window, Func<T, string> getKey)
-    {
-        var ranks = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        for (var rank = 0; rank < Math.Min(window, matches.Count); rank++)
-        {
-            var key = getKey(matches[rank]);
-            if (!string.IsNullOrWhiteSpace(key))
-                ranks.TryAdd(key, rank);
-        }
-
-        return ranks;
-    }
+    /// <param name="page">The page, starting at 1.</param>
+    /// <param name="pageSize">The number of matches per page.</param>
+    /// <param name="count">How many matches the window of this page held.</param>
+    private static bool HasMore(int page, int pageSize, int count) => page < GetLastPage(pageSize) && count > page * pageSize;
 }

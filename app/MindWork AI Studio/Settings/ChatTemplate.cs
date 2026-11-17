@@ -22,6 +22,23 @@ public record ChatTemplate(
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default) : ConfigurationBaseObject
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost. Keep them first and in the order of the parameters, which is
+    // the order they get stored in:
+    //
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public override string Name { get; set; } = Name;
+    public string SystemPrompt { get; set; } = SystemPrompt;
+    public string PredefinedUserPrompt { get; set; } = PredefinedUserPrompt;
+    public List<ContentBlock> ExampleConversation { get; set; } = ExampleConversation;
+    public List<FileAttachment> FileAttachments { get; set; } = FileAttachments;
+    public bool AllowProfileUsage { get; set; } = AllowProfileUsage;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+
     private const string ATTACHMENTS_DIRECTORY = "attachments";
 
     public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], [], false)
@@ -38,7 +55,7 @@ public record ChatTemplate(
     /// A preselection, not a limit: the user changes the selection in the chat as usual, and a
     /// tool still has to meet the confidence requirements of the provider in use.
     /// </remarks>
-    public HashSet<string>? ToolIds { get; init; }
+    public HashSet<string>? ToolIds { get; set; }
 
     /// <summary>
     /// The data source options a chat started with this template begins with.
@@ -49,7 +66,7 @@ public record ChatTemplate(
     /// list of sources: whether data sources are used at all, whether an agent picks them, and
     /// whether the retrieved data is validated.
     /// </remarks>
-    public DataSourceOptions? DataSourceOptions { get; init; }
+    public DataSourceOptions? DataSourceOptions { get; set; }
 
     /// <summary>
     /// The profile this template preselects for a chat started with it.
@@ -63,7 +80,7 @@ public record ChatTemplate(
     /// nothing for a template which does not allow profiles, and a profile which is gone leaves the
     /// chat default in place.
     /// </remarks>
-    public string? ProfileId { get; init; }
+    public string? ProfileId { get; set; }
 
     /// <summary>
     /// The provider, and with it the model, this template preselects for a chat started with it.
@@ -74,7 +91,7 @@ public record ChatTemplate(
     /// provider which is gone, or which may not be used for chats, leaves the chat to start as if
     /// the template said nothing.
     /// </remarks>
-    public string? ProviderId { get; init; }
+    public string? ProviderId { get; set; }
 
     /// <summary>
     /// The name of the workspace a chat started with this template is kept in.
@@ -89,9 +106,11 @@ public record ChatTemplate(
     /// workspace on purpose, for example from the workspace list, stays there, and so does every
     /// chat while workspaces are switched off.
     /// </remarks>
-    public string? WorkspaceName { get; init; }
+    public string? WorkspaceName { get; set; }
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
     private static readonly ILogger<ChatTemplate> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ChatTemplate>();
     
@@ -432,7 +451,7 @@ public record ChatTemplate(
         if (!optionsTable.TryGetValue("RetrievalMode", out var retrievalModeValue))
             return DataSourceRetrievalMode.SEMANTIC_SEARCH;
 
-        if (retrievalModeValue.TryRead<string>(out var retrievalModeText) && EnumNames.TryParse<DataSourceRetrievalMode>(retrievalModeText, out var retrievalMode))
+        if (retrievalModeValue.TryRead<string>(out var retrievalModeText) && DataSourceRetrievalMode.TryParseName(retrievalModeText, out var retrievalMode))
             return retrievalMode;
 
         LOGGER.LogWarning("The RetrievalMode of chat template {IdxChatTemplate} is not one of {RetrievalModes}. The template uses semantic search instead.", idx, string.Join(", ", Enum.GetNames<DataSourceRetrievalMode>()));
@@ -584,7 +603,7 @@ public record ChatTemplate(
 
         if (string.IsNullOrWhiteSpace(pluginDirectory) || !File.Exists(Path.Combine(pluginDirectory, "plugin.lua")))
         {
-            issue = TB("Please select a valid configuration plugin folder. The folder must contain a plugin.lua file.");
+            issue = TA("Please select a valid configuration plugin folder. The folder must contain a plugin.lua file.");
             return false;
         }
 
@@ -641,7 +660,7 @@ public record ChatTemplate(
             return true;
 
         var builder = new StringBuilder();
-        builder.AppendLine("{");
+        builder.AppendLineLF("{");
         for (var i = 0; i < this.ExampleConversation.Count; i++)
         {
             var block = this.ExampleConversation[i];
@@ -663,10 +682,10 @@ public record ChatTemplate(
                 return false;
             }
 
-            builder.AppendLine("        {");
-            builder.AppendLine($"            [\"Role\"] = \"{block.Role}\",");
-            builder.AppendLine($"            [\"Content\"] = {LuaTools.ToLuaStringLiteral(textContent.Text)},");
-            builder.AppendLine("        },");
+            builder.AppendLineLF("        {");
+            builder.AppendLineLF($"            [\"Role\"] = \"{block.Role}\",");
+            builder.AppendLineLF($"            [\"Content\"] = {LuaTools.ToLuaStringLiteral(textContent.Text)},");
+            builder.AppendLineLF("        },");
         }
 
         builder.Append("    }");
@@ -676,7 +695,7 @@ public record ChatTemplate(
 
     private static string BuildOptionalStringLua(string fieldName, string? value) => value is null
         ? string.Empty
-        : $"{Environment.NewLine}    [\"{fieldName}\"] = {LuaTools.ToLuaStringLiteral(value)},";
+        : $"\n    [\"{fieldName}\"] = {LuaTools.ToLuaStringLiteral(value)},";
 
     /// <remarks>
     /// An empty set is written out as an empty table rather than being left out: the two say
@@ -689,21 +708,21 @@ public record ChatTemplate(
             return string.Empty;
 
         var builder = new StringBuilder();
-        builder.AppendLine();
+        builder.AppendLineLF();
         if (this.ToolIds.Count == 0)
         {
             builder.Append("""    ["ToolIds"] = {},""");
             return builder.ToString();
         }
 
-        builder.AppendLine("""    ["ToolIds"] = {""");
+        builder.AppendLineLF("""    ["ToolIds"] = {""");
 
         //
         // A set has no order of its own, so exporting the same template twice would otherwise
         // produce two different files. Sorting keeps the plugin diffs readable:
         //
         foreach (var toolId in this.ToolIds.Order(StringComparer.Ordinal))
-            builder.AppendLine($"        {LuaTools.ToLuaStringLiteral(toolId)},");
+            builder.AppendLineLF($"        {LuaTools.ToLuaStringLiteral(toolId)},");
 
         builder.Append("    },");
         return builder.ToString();
@@ -715,22 +734,22 @@ public record ChatTemplate(
             return string.Empty;
 
         var builder = new StringBuilder();
-        builder.AppendLine();
-        builder.AppendLine("""    ["DataSourceOptions"] = {""");
-        builder.AppendLine($"""        ["DisableDataSources"] = {options.DisableDataSources.ToString().ToLowerInvariant()},""");
-        builder.AppendLine($"""        ["AutomaticDataSourceSelection"] = {options.AutomaticDataSourceSelection.ToString().ToLowerInvariant()},""");
-        builder.AppendLine($"""        ["AutomaticValidation"] = {options.AutomaticValidation.ToString().ToLowerInvariant()},""");
-        builder.AppendLine($"""        ["RetrievalMode"] = "{options.RetrievalMode}",""");
+        builder.AppendLineLF();
+        builder.AppendLineLF("""    ["DataSourceOptions"] = {""");
+        builder.AppendLineLF($"""        ["DisableDataSources"] = {options.DisableDataSources.ToString().ToLowerInvariant()},""");
+        builder.AppendLineLF($"""        ["AutomaticDataSourceSelection"] = {options.AutomaticDataSourceSelection.ToString().ToLowerInvariant()},""");
+        builder.AppendLineLF($"""        ["AutomaticValidation"] = {options.AutomaticValidation.ToString().ToLowerInvariant()},""");
+        builder.AppendLineLF($"""        ["RetrievalMode"] = "{options.RetrievalMode}",""");
 
         if (options.PreselectedDataSourceIds.Count == 0)
-            builder.AppendLine("""        ["PreselectedDataSourceIds"] = {},""");
+            builder.AppendLineLF("""        ["PreselectedDataSourceIds"] = {},""");
         else
         {
-            builder.AppendLine("""        ["PreselectedDataSourceIds"] = {""");
+            builder.AppendLineLF("""        ["PreselectedDataSourceIds"] = {""");
             foreach (var dataSourceId in options.PreselectedDataSourceIds)
-                builder.AppendLine($"            {LuaTools.ToLuaStringLiteral(dataSourceId)},");
+                builder.AppendLineLF($"            {LuaTools.ToLuaStringLiteral(dataSourceId)},");
 
-            builder.AppendLine("        },");
+            builder.AppendLineLF("        },");
         }
 
         builder.Append("    },");
@@ -784,9 +803,9 @@ public record ChatTemplate(
             return "{}";
 
         var builder = new StringBuilder();
-        builder.AppendLine("{");
+        builder.AppendLineLF("{");
         foreach (var path in paths)
-            builder.AppendLine($"        \"{LuaTools.EscapeLuaString(path)}\",");
+            builder.AppendLineLF($"        \"{LuaTools.EscapeLuaString(path)}\",");
 
         builder.Append("    }");
         return builder.ToString();

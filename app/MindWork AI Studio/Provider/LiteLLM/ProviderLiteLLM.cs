@@ -13,7 +13,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.LITE_LLM.ToSecretId();
+    public override string Id => LLMProviders.LITE_LLM.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "LiteLLM";

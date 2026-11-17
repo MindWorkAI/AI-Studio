@@ -40,7 +40,8 @@ public sealed partial class RustService
             using var response = await this.http.PostAsJsonAsync(
                 "/security/prompt-injection/sanitize",
                 new SanitizePromptInjectionsRequest(text),
-                cancellationToken: timeoutTokenSource.Token);
+                PROMPT_INJECTION_JSON_OPTIONS,
+                timeoutTokenSource.Token);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -48,7 +49,7 @@ public sealed partial class RustService
                 return null;
             }
 
-            return await response.Content.ReadFromJsonAsync<SanitizePromptInjectionsResponse>(timeoutTokenSource.Token);
+            return await response.Content.ReadFromJsonAsync<SanitizePromptInjectionsResponse>(PROMPT_INJECTION_JSON_OPTIONS, timeoutTokenSource.Token);
         }
         catch (Exception exception)
         {
@@ -82,7 +83,8 @@ public sealed partial class RustService
             using var response = await this.http.PostAsJsonAsync(
                 "/security/prompt-injection/sanitize-batch",
                 new SanitizePromptInjectionsBatchRequest(texts),
-                cancellationToken: timeoutTokenSource.Token);
+                PROMPT_INJECTION_JSON_OPTIONS,
+                timeoutTokenSource.Token);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -90,7 +92,7 @@ public sealed partial class RustService
                 return null;
             }
 
-            var batchResponse = await response.Content.ReadFromJsonAsync<SanitizePromptInjectionsBatchResponse>(timeoutTokenSource.Token);
+            var batchResponse = await response.Content.ReadFromJsonAsync<SanitizePromptInjectionsBatchResponse>(PROMPT_INJECTION_JSON_OPTIONS, timeoutTokenSource.Token);
             if (batchResponse.Results is null || batchResponse.Results.Count != texts.Count)
             {
                 this.logger?.LogError("The prompt injection filter answered with {ResultCount} result(s) for {TextCount} text(s).", batchResponse.Results?.Count ?? 0, texts.Count);

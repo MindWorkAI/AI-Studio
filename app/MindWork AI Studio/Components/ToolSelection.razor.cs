@@ -194,8 +194,8 @@ public partial class ToolSelection : MSGComponentBase
 
         return string.Format(
             this.T("This tool requires provider confidence {0}. The selected provider has {1}."),
-            GetMinimumProviderConfidence(item).GetName(),
-            this.ProviderConfidence.GetName());
+            GetMinimumProviderConfidence(item).Name,
+            this.ProviderConfidence.Name);
     }
 
     /// <summary>
@@ -209,10 +209,10 @@ public partial class ToolSelection : MSGComponentBase
     {
         var warnings = new List<string>(4);
         if (!item.ConfigurationState.IsConfigured)
-            warnings.Add(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? T("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message);
+            warnings.Add(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? TA("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message);
 
         if (!item.IsActive)
-            warnings.Add(T("This tool has been disabled by your organization."));
+            warnings.Add(TA("This tool has been disabled by your organization."));
 
         var providerConfidenceHint = this.GetProviderConfidenceHint(item);
         if (!string.IsNullOrWhiteSpace(providerConfidenceHint))

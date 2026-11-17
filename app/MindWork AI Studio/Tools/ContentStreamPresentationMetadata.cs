@@ -7,5 +7,5 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamPresentationMetadata : ContentStreamSseMetadata
 {
     [JsonPropertyName("Presentation")] 
-    public ContentStreamPresentationDetails? Presentation { get; init; }
+    public ContentStreamPresentationDetails? Presentation { get; set; }
 }

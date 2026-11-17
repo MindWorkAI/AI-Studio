@@ -20,7 +20,7 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
     }
 
     private readonly SemaphoreSlim registrationSemaphore = new(1, 1);
-    private readonly object runtimeStateLock = new();
+    private readonly Lock runtimeStateLock = new();
     private readonly Dictionary<Shortcut, ShortcutState> lastSentStates = [];
     private readonly Dictionary<Shortcut, string> lastNonEmptyShortcuts = [];
     private readonly Dictionary<Shortcut, ShortcutRuntimeBinding> runtimeBindings = [];
@@ -217,7 +217,7 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
                     {
                         this.localFallbackWarningShown = true;
                         await this.messageBus.SendWarning(new(
-                            Icons.Material.Filled.Keyboard,
+                            AppIcons.KEYBOARD_SHORTCUT,
                             TB("The voice recording shortcut currently works only while AI Studio is focused.")));
                     }
                 }
@@ -236,9 +236,9 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
                         result.ErrorMessage);
 
                     if (result.Cancelled)
-                        await this.messageBus.SendWarning(new(Icons.Material.Filled.Keyboard, userMessage));
+                        await this.messageBus.SendWarning(new(AppIcons.KEYBOARD_SHORTCUT, userMessage));
                     else
-                        await this.messageBus.SendError(new(Icons.Material.Filled.Keyboard, userMessage));
+                        await this.messageBus.SendError(new(AppIcons.KEYBOARD_SHORTCUT, userMessage));
                 }
             }
 

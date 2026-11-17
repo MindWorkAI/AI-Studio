@@ -47,7 +47,7 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
         var requestSystemPrompt = finalResponseInstruction is null
             ? systemPrompt : systemPrompt with
             {
-                Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
+                Content = $"{systemPrompt.Content}\n\n{finalResponseInstruction}",
             };
 
         ChatCompletionAPIRequest requestDtoBase = await requestFactory(requestSystemPrompt, apiParameters, includeTools ? providerTools : null);

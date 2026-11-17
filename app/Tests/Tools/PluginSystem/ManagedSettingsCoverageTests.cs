@@ -9,6 +9,8 @@ using AIStudio.Tools.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
+using SharedTools.Text;
+
 namespace AIStudio.Tests.Tools.PluginSystem;
 
 /// <summary>
@@ -56,6 +58,7 @@ public sealed class ManagedSettingsCoverageTests
     {
         ["DataSlideBuilder.TemplatePath"] = Path.Combine(Path.GetTempPath(), "Corporate.potx").Replace('\\', '/'),
         ["DataSlideBuilder.PreselectedPictureLibraryPath"] = Path.Combine(Path.GetTempPath(), "Pictures").Replace('\\', '/'),
+        ["DataPromptOptimizer.PreselectedCustomPromptGuidePath"] = Path.Combine(Path.GetTempPath(), "Prompting-Guide.md").Replace('\\', '/'),
     };
 
     /// <summary>
@@ -203,7 +206,7 @@ public sealed class ManagedSettingsCoverageTests
             """);
 
         foreach (var setting in ManagedConfiguration.RegisteredSettings)
-            code.AppendLine($"""CONFIG["SETTINGS"]["{setting.SettingName}"] = {ToLuaValue(setting)}""");
+            code.AppendLineLF($"""CONFIG["SETTINGS"]["{setting.SettingName}"] = {ToLuaValue(setting)}""");
 
         var plugin = await PluginFactory.Load(null, code.ToString());
         if (plugin is not PluginConfiguration { IsValid: true } configurationPlugin)

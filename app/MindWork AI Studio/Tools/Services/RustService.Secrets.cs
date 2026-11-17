@@ -8,11 +8,11 @@ public sealed partial class RustService
     {
         SecretStoreIssueCode.NONE => issue,
         SecretStoreIssueCode.SECRET_NOT_FOUND => TB("No saved secret was found."),
-        SecretStoreIssueCode.NO_DEFAULT_COLLECTION => TB("AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default."),
-        SecretStoreIssueCode.COLLECTION_LOCKED => TB("AI Studio could not access secure storage because the default collection is locked. Open your password manager and unlock the default collection."),
-        SecretStoreIssueCode.PROMPT_DISMISSED => TB("The secure-storage confirmation was canceled. Repeat the operation and confirm the password manager prompt."),
-        SecretStoreIssueCode.SERVICE_UNAVAILABLE => TB("No compatible secure-storage service is available. Configure a password manager that provides the FreeDesktop Secret Service."),
-        _ => TB("AI Studio could not access secure storage. See the log for technical details."),
+        SecretStoreIssueCode.NO_DEFAULT_COLLECTION => TA("AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default."),
+        SecretStoreIssueCode.COLLECTION_LOCKED => TA("AI Studio could not access secure storage because the default collection is locked. Open your password manager and unlock the default collection."),
+        SecretStoreIssueCode.PROMPT_DISMISSED => TA("The secure-storage confirmation was canceled. Repeat the operation and confirm the password manager prompt."),
+        SecretStoreIssueCode.SERVICE_UNAVAILABLE => TA("No compatible secure-storage service is available. Configure a password manager that provides the FreeDesktop Secret Service."),
+        _ => TA("AI Studio could not access secure storage. See the log for technical details."),
     };
 
     private static StoreSecretResponse TranslateSecretStoreIssue(StoreSecretResponse response) =>
@@ -24,7 +24,7 @@ public sealed partial class RustService
     private static DeleteSecretResponse TranslateSecretStoreIssue(DeleteSecretResponse response) =>
         response.Success ? response : response with { Issue = TranslateSecretStoreIssue(response.IssueCode, response.Issue) };
 
-    private static string SecretKey(ISecretId secretId, SecretStoreType storeType) => $"{storeType.Prefix()}::{secretId.SecretId}::{secretId.SecretName}";
+    private static string SecretKey(ISecretId secretId, SecretStoreType storeType) => $"{storeType.Prefix}::{secretId.SecretId}::{secretId.SecretName}";
 
     private static string LegacySecretKey(ISecretId secretId) => $"secret::{secretId.SecretId}::{secretId.SecretName}";
 
@@ -65,14 +65,14 @@ public sealed partial class RustService
         var secretKey = SecretKey(secretId, storeType);
         var encryptedSecret = await this.encryptor!.Encrypt(secretData);
         var request = new StoreSecretRequest(secretKey, Environment.UserName, encryptedSecret);
-        var result = await this.http.PostAsJsonAsync("/secrets/store", request, this.jsonRustSerializerOptions);
+        var result = await this.http.PostAsJsonAsync("/secrets/store", request, JSON_OPTIONS);
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to store the secret data for '{secretKey}' due to an API issue: '{result.StatusCode}'");
             return new StoreSecretResponse(false, TB("Failed to store the secret data due to an API issue."));
         }
         
-        var state = await result.Content.ReadFromJsonAsync<StoreSecretResponse>(this.jsonRustSerializerOptions);
+        var state = await result.Content.ReadFromJsonAsync<StoreSecretResponse>(JSON_OPTIONS);
         if (!state.Success)
             this.logger!.LogError($"Failed to store the secret data for '{secretKey}': '{state.Issue}'");
 
@@ -104,7 +104,7 @@ public sealed partial class RustService
     private async Task<RequestedSecret> GetSecretByKey(string secretKey, bool isTrying)
     {
         var secretRequest = new SelectSecretRequest(secretKey, Environment.UserName, isTrying);
-        var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, this.jsonRustSerializerOptions);
+        var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, JSON_OPTIONS);
         if (!result.IsSuccessStatusCode)
         {
             if(isTrying)
@@ -114,7 +114,7 @@ public sealed partial class RustService
             return new RequestedSecret(false, new EncryptedText(string.Empty), TB("Failed to get the secret data due to an API issue."));
         }
 
-        var state = await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
+        var state = await result.Content.ReadFromJsonAsync<RequestedSecret>(JSON_OPTIONS);
         if (!state.Success)
         {
             //
@@ -138,14 +138,14 @@ public sealed partial class RustService
     private async Task<DeleteSecretResponse> DeleteSecretByKey(string secretKey)
     {
         var request = new SelectSecretRequest(secretKey, Environment.UserName, false);
-        var result = await this.http.PostAsJsonAsync("/secrets/delete", request, this.jsonRustSerializerOptions);
+        var result = await this.http.PostAsJsonAsync("/secrets/delete", request, JSON_OPTIONS);
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to delete the secret data for '{secretKey}' due to an API issue: '{result.StatusCode}'");
             return new DeleteSecretResponse{Success = false, WasEntryFound = false, Issue = TB("Failed to delete the secret data due to an API issue.")};
         }
         
-        var state = await result.Content.ReadFromJsonAsync<DeleteSecretResponse>(this.jsonRustSerializerOptions);
+        var state = await result.Content.ReadFromJsonAsync<DeleteSecretResponse>(JSON_OPTIONS);
         if (!state.Success)
             this.logger!.LogError($"Failed to delete the secret data for '{secretKey}': '{state.Issue}'");
         

@@ -1,0 +1,7 @@
+{
+  "plugin_id": "6f1c3a52-9d4e-4b8a-a2f7-0c5e81d94b36",
+  "plugin_name": "Meeting Notes",
+  "assistant_title": "Meeting \u0022Notes\u0022 Summary",
+  "change_request": "Add a \u003Ctone\u003E dropdown with \u201Eformal\u201C and \u201Ecasual\u201C.",
+  "test_context": null
+}

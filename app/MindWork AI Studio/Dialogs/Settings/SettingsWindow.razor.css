@@ -30,19 +30,13 @@
     overflow-y: auto;
 }
 
-/* The avatar of an entry takes the place MudBlazor keeps for it, without the wide gap it leaves before the text. */
-.settings-window-list ::deep .mud-list-item-avatar {
+/*
+ * The icon of an entry shows in its color, without a background, like the icons of the other lists of
+ * the app. It takes the place MudBlazor keeps for it, without the wide gap it leaves before the text.
+ */
+.settings-window-list ::deep .mud-list-item-icon {
     min-width: 0;
     margin-right: 12px;
-}
-
-/*
- * The icon takes three quarters of its avatar, as MudBlazor sizes the fallback icon of an avatar. Every
- * icon keeps the size Material gives it, see documentation/Icons.md.
- */
-.settings-window-list ::deep .mud-avatar .mud-icon-root {
-    width: 75%;
-    height: 75%;
 }
 
 /*

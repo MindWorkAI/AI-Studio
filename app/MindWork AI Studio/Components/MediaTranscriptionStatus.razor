@@ -12,7 +12,7 @@
                 @this.StatusText
             </MudText>
             <MudTooltip Text="@T("Stop media transcription")">
-                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@(async () => await this.MediaTranscriptionService.StopAsync(this.Owner))"/>
+                <MudIconButton Size="Size.Small" Icon="@AppIcons.STOP" Color="Color.Error" OnClick="@(async () => await this.MediaTranscriptionService.StopAsync(this.Owner))"/>
             </MudTooltip>
         </MudStack>
     }
@@ -26,7 +26,7 @@
                 </MudText>
                 <MudSpacer/>
                 <MudTooltip Text="@T("Stop media transcription")">
-                    <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@(async () => await this.MediaTranscriptionService.StopAsync(this.Owner))"/>
+                    <MudIconButton Icon="@AppIcons.STOP" Color="Color.Error" OnClick="@(async () => await this.MediaTranscriptionService.StopAsync(this.Owner))"/>
                 </MudTooltip>
             </MudStack>
         </MudPaper>

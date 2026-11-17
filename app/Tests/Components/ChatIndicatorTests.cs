@@ -2,6 +2,8 @@ using AIStudio.Components;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.Media;
 
+using MudBlazor;
+
 namespace AIStudio.Tests.Components;
 
 /// <summary>
@@ -141,7 +143,7 @@ public sealed class ChatIndicatorTests
     }
 
     [Test]
-    public void AFailureStaysVisibleAsTheBadgeOfTheSearchIcon([Values] bool isTranscript)
+    public void AFailureStaysVisibleInTheSearchIcon([Values] bool isTranscript)
     {
         var state = isTranscript
             ? ChatIndicator.Of(MediaImportStatus.FAILED, answerState: null)
@@ -149,7 +151,12 @@ public sealed class ChatIndicatorTests
 
         var indicator = ChatIndicator.FoundInChat(state);
 
-        Assert.That(indicator.Badge, Is.EqualTo(ChatIndicatorBadge.FAILED));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(indicator, Is.EqualTo(ChatIndicator.FOUND_IN_CHAT_WITH_FAILED_WORK));
+            Assert.That(indicator.Color, Is.EqualTo(Color.Error));
+            Assert.That(indicator.Badge, Is.EqualTo(ChatIndicatorBadge.NONE));
+        }
     }
 
     [Test]

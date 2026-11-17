@@ -23,17 +23,17 @@ public sealed record AnthropicUsage
     /// <summary>
     /// What the request carried after its last cache breakpoint, which is all of it without caching.
     /// </summary>
-    public int? InputTokens { get; init; }
+    public int? InputTokens { get; set; }
 
     /// <summary>
     /// What the request wrote to the cache.
     /// </summary>
-    public int? CacheCreationInputTokens { get; init; }
+    public int? CacheCreationInputTokens { get; set; }
 
     /// <summary>
     /// What the request read from the cache.
     /// </summary>
-    public int? CacheReadInputTokens { get; init; }
+    public int? CacheReadInputTokens { get; set; }
 
     /// <summary>
     /// States what this block reports, as far as it can be believed.

@@ -11,23 +11,23 @@ public sealed class VisualBriefingLayoutNode
 {
     /// <summary>Gets or sets the globally unique layout node identifier.</summary>
     [JsonRequired]
-    public string NodeId { get; init; } = string.Empty;
+    public string NodeId { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the node kind.</summary>
     [JsonRequired]
-    public VisualBriefingLayoutNodeKind Kind { get; init; }
+    public VisualBriefingLayoutNodeKind Kind { get; set; }
 
     /// <summary>Gets or sets the planned section identifier for a section node.</summary>
     [JsonRequired]
-    public string? SectionId { get; init; }
+    public string? SectionId { get; set; }
 
     /// <summary>Gets or sets the planned component identifier for a component node.</summary>
     [JsonRequired]
-    public string? ComponentId { get; init; }
+    public string? ComponentId { get; set; }
 
     /// <summary>Gets or sets the ordered child nodes.</summary>
     [JsonRequired]
-    public List<VisualBriefingLayoutNode> Children { get; init; } = [];
+    public List<VisualBriefingLayoutNode> Children { get; set; } = [];
 
     /// <summary>Gets or sets responsive columns for a grid node.</summary>
     [JsonRequired]
@@ -39,7 +39,7 @@ public sealed class VisualBriefingLayoutNode
 
     /// <summary>Gets or sets the explicit sibling order.</summary>
     [JsonRequired]
-    public int Order { get; init; }
+    public int Order { get; set; }
 
     /// <summary>Gets or sets whether the node receives visual emphasis.</summary>
     [JsonRequired]

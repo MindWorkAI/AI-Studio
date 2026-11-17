@@ -16,10 +16,10 @@ public sealed partial class RustService
                 var startDirectory = initialDirectory is null ? null : PathTools.FindNearestExistingPath(initialDirectory);
                 var result = startDirectory is null
                     ? await this.http.PostAsync($"/select/directory?title={encodedTitle}", null)
-                    : await this.http.PostAsJsonAsync($"/select/directory?title={encodedTitle}", new PreviousDirectory(startDirectory), this.jsonRustSerializerOptions);
+                    : await this.http.PostAsJsonAsync($"/select/directory?title={encodedTitle}", new PreviousDirectory(startDirectory), JSON_OPTIONS);
 
                 if (result.IsSuccessStatusCode)
-                    return await result.Content.ReadFromJsonAsync<DirectorySelectionResponse>(this.jsonRustSerializerOptions);
+                    return await result.Content.ReadFromJsonAsync<DirectorySelectionResponse>(JSON_OPTIONS);
 
                 this.logger!.LogError("Failed to select a directory: '{StatusCode}'", result.StatusCode);
                 return new DirectorySelectionResponse(true, string.Empty);
@@ -63,9 +63,9 @@ public sealed partial class RustService
                     Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
-                var result = await this.http.PostAsJsonAsync("/select/file", payload, this.jsonRustSerializerOptions);
+                var result = await this.http.PostAsJsonAsync("/select/file", payload, JSON_OPTIONS);
                 if (result.IsSuccessStatusCode)
-                    return await result.Content.ReadFromJsonAsync<FileSelectionResponse>(this.jsonRustSerializerOptions);
+                    return await result.Content.ReadFromJsonAsync<FileSelectionResponse>(JSON_OPTIONS);
 
                 this.logger!.LogError("Failed to select a file: '{StatusCode}'", result.StatusCode);
                 return new FileSelectionResponse(true, string.Empty);
@@ -87,9 +87,9 @@ public sealed partial class RustService
                     Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
-                var result = await this.http.PostAsJsonAsync("/select/files", payload, this.jsonRustSerializerOptions);
+                var result = await this.http.PostAsJsonAsync("/select/files", payload, JSON_OPTIONS);
                 if (result.IsSuccessStatusCode)
-                    return await result.Content.ReadFromJsonAsync<FilesSelectionResponse>(this.jsonRustSerializerOptions);
+                    return await result.Content.ReadFromJsonAsync<FilesSelectionResponse>(JSON_OPTIONS);
 
                 this.logger!.LogError("Failed to select files: '{StatusCode}'", result.StatusCode);
                 return new FilesSelectionResponse(true, Array.Empty<string>());
@@ -118,9 +118,9 @@ public sealed partial class RustService
                     Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
-                var result = await this.http.PostAsJsonAsync("/save/file", payload, this.jsonRustSerializerOptions);
+                var result = await this.http.PostAsJsonAsync("/save/file", payload, JSON_OPTIONS);
                 if (result.IsSuccessStatusCode)
-                    return await result.Content.ReadFromJsonAsync<FileSaveResponse>(this.jsonRustSerializerOptions);
+                    return await result.Content.ReadFromJsonAsync<FileSaveResponse>(JSON_OPTIONS);
 
                 this.logger!.LogError("Failed to select a file for writing operation: '{StatusCode}'", result.StatusCode);
                 return new FileSaveResponse(true, string.Empty);
@@ -133,7 +133,7 @@ public sealed partial class RustService
         HttpResponseMessage result;
         try
         {
-            result = await this.http.PostAsJsonAsync("/open/path", new OpenPathRequest(path), this.jsonRustSerializerOptions);
+            result = await this.http.PostAsJsonAsync("/open/path", new OpenPathRequest(path), JSON_OPTIONS);
         }
         catch (HttpRequestException e)
         {
@@ -154,7 +154,7 @@ public sealed partial class RustService
                 return new OpenPathResponse(false, string.Format(TB("The runtime file manager endpoint returned '{0}'."), result.StatusCode));
             }
 
-            var response = await result.Content.ReadFromJsonAsync<OpenPathResponse>(this.jsonRustSerializerOptions);
+            var response = await result.Content.ReadFromJsonAsync<OpenPathResponse>(JSON_OPTIONS);
             var normalizedResponse = response.Success
                 ? response
                 : new OpenPathResponse(false, string.IsNullOrWhiteSpace(response.Issue) ? TB("The runtime file manager endpoint failed without details.") : response.Issue);
@@ -187,7 +187,7 @@ public sealed partial class RustService
         HttpResponseMessage result;
         try
         {
-            result = await this.http.PostAsJsonAsync("/open/document", new OpenDocumentRequest(path, pageNumber), this.jsonRustSerializerOptions);
+            result = await this.http.PostAsJsonAsync("/open/document", new OpenDocumentRequest(path, pageNumber), JSON_OPTIONS);
         }
         catch (HttpRequestException e)
         {
@@ -208,7 +208,7 @@ public sealed partial class RustService
                 return new OpenDocumentResponse(false, false, string.Format(TB("The runtime document endpoint returned '{0}'."), result.StatusCode));
             }
 
-            var response = await result.Content.ReadFromJsonAsync<OpenDocumentResponse>(this.jsonRustSerializerOptions);
+            var response = await result.Content.ReadFromJsonAsync<OpenDocumentResponse>(JSON_OPTIONS);
             if (response.Success)
             {
                 //

@@ -64,7 +64,7 @@ public static partial class PluginFactory
                 await response.Content.CopyToAsync(tempFileStream, cancellationToken);
             }
 
-            ExtractConfigPluginArchive(tempDownloadFile, stagedDirectory);
+            await ExtractConfigPluginArchiveAsync(tempDownloadFile, stagedDirectory, cancellationToken);
 
             var configDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
             if (Directory.Exists(configDirectory))
@@ -129,9 +129,9 @@ public static partial class PluginFactory
         return wasSuccessful;
     }
 
-    private static void ExtractConfigPluginArchive(string sourceArchiveFileName, string destinationDirectory)
+    private static async Task ExtractConfigPluginArchiveAsync(string sourceArchiveFileName, string destinationDirectory, CancellationToken token)
     {
-        PluginArchive.Extract(sourceArchiveFileName, destinationDirectory);
+        await PluginArchive.ExtractAsync(sourceArchiveFileName, destinationDirectory, token);
 
         if (!Directory.EnumerateFiles(destinationDirectory, "plugin.lua", SearchOption.AllDirectories).Any())
             throw new InvalidDataException("The enterprise configuration plugin archive does not contain a plugin.lua file.");

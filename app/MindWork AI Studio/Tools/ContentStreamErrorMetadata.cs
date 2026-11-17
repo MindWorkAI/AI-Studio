@@ -7,5 +7,5 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamErrorMetadata : ContentStreamSseMetadata
 {
     [JsonPropertyName("Error")]
-    public ContentStreamErrorDetails? Error { get; init; }
+    public ContentStreamErrorDetails? Error { get; set; }
 }

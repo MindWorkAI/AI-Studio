@@ -40,4 +40,7 @@ public enum VisualBriefingStructuredResponseIssueKind
     
     /// <summary>The parsed response violated a semantic stage contract.</summary>
     SEMANTIC_CONTRACT_INVALID,
+
+    /// <summary>An object of the response named the same field more than once.</summary>
+    DUPLICATE_FIELD,
 }

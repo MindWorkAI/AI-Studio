@@ -1,0 +1,23 @@
+{
+  "artifactVersion": 41,
+  "schemaVersion": 42,
+  "runtimeVersion": 43,
+  "briefingId": "00000000-0000-4000-8000-000000000004",
+  "revisionId": "00000000-0000-4000-8000-000000000005",
+  "parentRevisionId": "00000000-0000-4000-8000-000000000006",
+  "name": "name sample 7",
+  "author": "author sample 8",
+  "createdAtUtc": "2026-10-29T12:39:15+01:00",
+  "targetLanguage": 1,
+  "customTargetLanguage": "customTargetLanguage sample 10",
+  "audienceProfile": 1,
+  "audienceAgeGroup": 1,
+  "audienceOrganizationalLevel": 1,
+  "audienceExpertise": 1,
+  "showSourceReferences": true,
+  "protectionLevel": "INTERNAL",
+  "customProtectionLevel": "customProtectionLevel sample 11",
+  "aiStudioVersion": "aiStudioVersion sample 12",
+  "runtimeAIStudioVersion": "runtimeAIStudioVersion sample 13",
+  "documentHash": "documentHash sample 14"
+}

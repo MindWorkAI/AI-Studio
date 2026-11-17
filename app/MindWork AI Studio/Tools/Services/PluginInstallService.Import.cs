@@ -26,10 +26,10 @@ public sealed partial class PluginInstallService
     public async Task<AssistantPluginInstallResult> InstallArchiveAsync(string archivePath, Func<PluginImportPreview, Task<bool>> confirmAsync, CancellationToken token)
     {
         if (!this.settingsManager.ConfigurationData.App.AllowUserToImportPlugins)
-            return Error(TB("Your organization has disabled importing plugins."));
+            return Error(TA("Your organization has disabled importing plugins."));
 
         if (!FileTypes.IsAllowedPath(archivePath, FileTypes.PLUGIN_ARCHIVE))
-            return Error(TB("Please select a plugin archive with the extension .mwplugin or .zip."));
+            return Error(TA("Please select a plugin archive with the extension .mwplugin or .zip."));
 
         if (!File.Exists(archivePath))
             return Error(TB("The selected plugin archive does not exist."));
@@ -45,7 +45,7 @@ public sealed partial class PluginInstallService
             if (!this.TryCreateStagingDirectory(PLUGIN_IMPORT_DIRECTORY_PREFIX, out stagingDirectory, out var stagingIssue))
                 return Error(stagingIssue);
 
-            PluginArchive.Extract(archivePath, stagingDirectory);
+            await PluginArchive.ExtractAsync(archivePath, stagingDirectory, token);
 
             var pluginFiles = Directory.EnumerateFiles(stagingDirectory, PLUGIN_FILE_NAME, SearchOption.AllDirectories).ToArray();
             if (pluginFiles.Length != 1)
@@ -112,7 +112,7 @@ public sealed partial class PluginInstallService
         // A plugin the user imports by hand never comes from a config server. We reject such
         // archives because AI Studio trusts this self-declared flag: an imported plugin claiming it
         // would be neither replaceable nor deletable through the user interface:
-        PluginAssistants { IsManagedByConfigServer: true } => TB("This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins."),
+        PluginAssistants { IsManagedByConfigServer: true } => TA("This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins."),
 
         PluginConfiguration configurationPlugin => this.GetConfigurationImportEligibilityIssue(configurationPlugin),
 
@@ -129,16 +129,16 @@ public sealed partial class PluginInstallService
     private string GetConfigurationImportEligibilityIssue(PluginConfiguration configurationPlugin)
     {
         if (!this.settingsManager.ConfigurationData.App.AllowUserToImportConfigurationPlugins)
-            return TB("Your organization has disabled importing configuration plugins.");
+            return TA("Your organization has disabled importing configuration plugins.");
 
         if (configurationPlugin.DeployedUsingConfigServer is true)
-            return TB("This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins.");
+            return TA("This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins.");
 
         // Never let an imported configuration take the place of one the organization deployed. This
         // also covers a deployed configuration which currently cannot be loaded, e.g. because of an
         // error in its Lua code:
         if (PluginFactory.IsEnterpriseConfigurationPlugin(configurationPlugin.Id))
-            return TB("Your organization deployed a configuration with the same ID. An imported configuration must not take its place.");
+            return TA("Your organization deployed a configuration with the same ID. An imported configuration must not take its place.");
 
         return string.Empty;
     }

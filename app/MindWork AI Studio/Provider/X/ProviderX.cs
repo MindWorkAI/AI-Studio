@@ -13,7 +13,7 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.X.ToSecretId();
+    public override string Id => LLMProviders.X.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "xAI";

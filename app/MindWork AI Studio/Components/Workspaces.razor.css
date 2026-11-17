@@ -24,11 +24,12 @@
 /*
  * The buttons act on a row or a section, so their icons take the compact size, as the entries of the
  * row's menu do, see app.css. The icon which names a row, its folder or its chat bubble, keeps the
- * usual 24 pixels. MudBlazor's usual padding of 12 pixels would make a button taller than its row; with
- * 6 pixels, a button is 32 pixels tall and fills its row from top to bottom.
+ * usual 24 pixels. MudBlazor's usual padding of 12 pixels would make a button taller than its row; the
+ * padding here makes a button 32 pixels tall, whatever the size of its icon, so it fills its row from
+ * top to bottom.
  */
 .workspace-list ::deep .mud-icon-button {
-    padding: 6px;
+    padding: calc((2rem - var(--icon-size-compact)) / 2);
 }
 
 .workspace-list ::deep .mud-icon-button .mud-icon-root {
@@ -98,7 +99,7 @@
 /*
  * Whatever shows the state of a chat sits in a slot as large as the icon of a folder, so that the names
  * of chats and workspaces line up. The fixed size keeps a name in its place while the icon in front of
- * it changes. Like every icon, the chat bubble is drawn on Material's grid, see documentation/Icons.md.
+ * it changes. The states of a chat take the variants of one bubble, see AppIcons.CHAT_IN_LIST.
  *
  * The slot sizes its content, so that a new state needs no rule of its own. An icon fills the slot,
  * since it draws within the inner 20 of its 24 units and brings its padding along. So does the sign of
@@ -118,6 +119,7 @@
 }
 
 .workspace-list ::deep .workspace-chat-icon > :is(.mud-icon-root, .search-found-icon) {
+    font-size: 1.5rem;
     width: 100%;
     height: 100%;
 }
@@ -128,10 +130,11 @@
 }
 
 /*
- * The badge of an icon, such as the one of a chat which a search found, tells the state of the chat
- * in its bottom-left corner, which the magnifier of the search leaves free: its lens fills the top left,
- * its handle the bottom right. The badge sits three of the slot's 24 units out of that corner, so it
- * touches neither of them. A ring in the color of the list sets it apart from the icon.
+ * The badge of an icon, the spinner of a chat which a search found while work on it goes on, tells the
+ * state of the chat in its bottom-left corner, which the magnifier of the search leaves free: its lens
+ * fills the top left, its handle the bottom right. The badge sits three of the slot's 24 units out of
+ * that corner, so it touches neither of them. A ring in the color of the list sets it apart from the
+ * icon. Work which failed needs no badge: the magnifier then shows an exclamation point in its lens.
  */
 .workspace-list ::deep .workspace-chat-badge {
     position: absolute;

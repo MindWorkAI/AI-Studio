@@ -1,4 +1,6 @@
 // ReSharper disable MemberCanBePrivate.Global
+using System.Globalization;
+
 namespace AIStudio.Tools.PluginSystem;
 
 /// <summary>
@@ -46,9 +48,9 @@ public readonly record struct PluginVersion(int Major, int Minor, int Patch) : I
         if (segments.Length != 3)
             throw new FormatException("The input string must be in the format 'major.minor.patch'.");
 
-        var major = int.Parse(segments[0]);
-        var minor = int.Parse(segments[1]);
-        var patch = int.Parse(segments[2]);
+        var major = int.Parse(segments[0], NumberStyles.Integer, CultureInfo.InvariantCulture);
+        var minor = int.Parse(segments[1], NumberStyles.Integer, CultureInfo.InvariantCulture);
+        var patch = int.Parse(segments[2], NumberStyles.Integer, CultureInfo.InvariantCulture);
         
         if(major < 0 || minor < 0 || patch < 0)
             throw new FormatException("The major, minor, and patch numbers must be greater than or equal to 0.");

@@ -11,11 +11,11 @@ namespace AIStudio.Provider.Anthropic;
 /// </remarks>
 public sealed record AnthropicTool
 {
-    public string Name { get; init; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 
-    public string Description { get; init; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
 
-    public bool Strict { get; init; }
+    public bool Strict { get; set; }
 
-    public JsonElement InputSchema { get; init; }
+    public JsonElement InputSchema { get; set; }
 }

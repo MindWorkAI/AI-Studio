@@ -2,8 +2,9 @@
 
     <!--
         Checks what only a published build of AI Studio lacks. The trimmer removes code of .NET which System.Text.Json
-        reaches by reflection only, while debug builds and the tests are not trimmed. Hence, this program has to run
-        published, trimmed by the same Trimming.props as the app; `dotnet run verify` does both.
+        reaches by reflection only, and the same holds for AngouriMath, which is marked as trimmable, while debug builds
+        and the tests are not trimmed. Hence, this program has to run published, trimmed by the same Trimming.props as
+        the app; `dotnet run verify` does both.
     -->
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -20,6 +21,16 @@
     </PropertyGroup>
 
     <Import Project="..\Trimming.props" />
+
+    <!--
+        AI Studio reaches nearly all of its code from its start, and with it the assemblies it depends on. This
+        program starts nowhere near that, so the trimmer would remove, e.g., the Blazor server and SQLite, and the
+        types of the app which use them could not even be loaded, let alone their options be read. Rooting the
+        app keeps what the app itself keeps, while code of .NET which only reflection reaches is still removed.
+    -->
+    <ItemGroup>
+        <TrimmerRootAssembly Include="mindworkAIStudio" />
+    </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\MindWork AI Studio\MindWork AI Studio.csproj" />

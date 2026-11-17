@@ -250,7 +250,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
                 // state, not a storage failure -- the user is just about to set their own key:
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
-                    this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
+                    this.dataAPIKeyStorageIssue = string.Format(TA("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.ValidateAsync();
                 }
             }
@@ -285,7 +285,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
     // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
     // silently end up in the wrong keyring row and never be found again.
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.SecretId}" : this.DataLLMProvider.SecretId;
 
     public string SecretName => this.DataName;
 
@@ -357,7 +357,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey, SecretStoreType.EMBEDDING_PROVIDER);
             if (!storeResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
+                this.dataAPIKeyStorageIssue = string.Format(TA("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.ValidateAsync();
                 return;
             }
@@ -371,7 +371,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             var deleteResponse = await this.RustService.DeleteAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
             if (!deleteResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
+                this.dataAPIKeyStorageIssue = string.Format(TA("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
                 await this.form.ValidateAsync();
                 return;
             }
@@ -385,7 +385,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string? ValidateTokenLimit(int tokenLimit)
     {
         if (tokenLimit < 1)
-            return T("Please enter a token limit greater than 0.");
+            return TA("Please enter a token limit greater than 0.");
 
         return null;
     }
@@ -393,7 +393,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string? ValidateEmbeddingBatchSize(int embeddingBatchSize)
     {
         if (embeddingBatchSize < 1)
-            return T("Please enter an embedding batch size greater than 0.");
+            return TA("Please enter an embedding batch size greater than 0.");
 
         return null;
     }
@@ -418,7 +418,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.isTokenizerFileDialogOpen = true;
         try
         {
-            var response = await this.RustService.SelectFile(T("Choose a custom tokenizer here"), [ FileTypes.JSON ], string.IsNullOrWhiteSpace(this.dataFilePath) ? null : this.dataFilePath);
+            var response = await this.RustService.SelectFile(TA("Choose a custom tokenizer here"), [ FileTypes.JSON ], string.IsNullOrWhiteSpace(this.dataFilePath) ? null : this.dataFilePath);
             if (!response.UserCancelled)
                 await this.OnDataFilePathChanged(response.SelectedFilePath);
         }
@@ -454,7 +454,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         }
 
         this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a tokenizer.", paths.Count);
-        await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Please drop a tokenizer file in the JSON format.")));
+        await this.MessageBus.SendWarning(new(AppIcons.WARNING, TA("Please drop a tokenizer file in the JSON format.")));
     }
 
     private async Task OnDataFilePathChanged(string? changedFilePath)
@@ -510,7 +510,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
                 return;
 
             this.Logger.LogError(e, "Failed to validate custom tokenizer.");
-            this.dataCustomTokenizerValidationIssue = T("Failed to validate the selected tokenizer. Please try again.");
+            this.dataCustomTokenizerValidationIssue = TA("Failed to validate the selected tokenizer. Please try again.");
         }
     }
 
@@ -575,7 +575,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
                 this.dataLoadingModelsIssue = result.FailureReason.ToUserMessage(provider.InstanceName);
 
             // Order descending by ID means that the newest models probably come first:
-            var orderedModels = result.Models.OrderByDescending(n => n.Id);
+            var orderedModels = result.Models.OrderByDescending(n => n.Id, Model.ID_ORDER);
 
             this.availableModels.Clear();
             this.availableModels.AddRange(orderedModels);
@@ -583,7 +583,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         catch (Exception e)
         {
             this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
-            this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
+            this.dataLoadingModelsIssue = TA("We are currently unable to communicate with the provider to load models. Please try again later.");
         }
 
         // Whatever the server answered, and whether it answered at all, the model this provider was

@@ -20,12 +20,12 @@ namespace AIStudio.Provider.OpenAI;
 public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Uri("https://api.openai.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
     
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.OPEN_AI.ToSecretId();
+    public override string Id => LLMProviders.OPEN_AI.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "OpenAI";
@@ -51,7 +51,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
     protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default) => failureReason switch
     {
-        ProviderRequestFailureReason.INSUFFICIENT_QUOTA => TB("It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."),
+        ProviderRequestFailureReason.INSUFFICIENT_QUOTA => TA("It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."),
         _ => base.GetProviderRequestFailureUserMessage(failureReason, contextWindow),
     };
 
@@ -71,7 +71,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         // OpenAI changed the role of the system prompt from one generation to the next, and the
         // early reasoning models take no system prompt at all. Which role a model takes is stated
         // by the OpenAI families in Models/OpenAI:
-        var systemPromptRole = modelProfile.SystemPromptRole.ToOpenAIRole();
+        var systemPromptRole = modelProfile.SystemPromptRole.OpenAIRole;
 
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelProfile.Has(Capability.RESPONSES_API);

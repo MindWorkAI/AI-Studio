@@ -204,7 +204,7 @@ public sealed partial class VisualBriefingArtifactService
             return context;
         
         if (path is "$index")
-            return JsonSerializer.SerializeToElement(0);
+            return JsonSerializer.SerializeToElement(0, JSON_OPTIONS);
         
         if (path.StartsWith(".", StringComparison.Ordinal))
             return GetDataAtPath(context, path[1..]);

@@ -94,7 +94,7 @@ public partial class SelectDirectory : MSGComponentBase
         if (path is null)
         {
             this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a directory.", paths.Count);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, DroppedFolder.WarningFor(paths)));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, DroppedFolder.WarningFor(paths)));
             return;
         }
 

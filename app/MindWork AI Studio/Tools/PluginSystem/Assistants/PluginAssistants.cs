@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Globalization;
+using AIStudio.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 using Lua;
@@ -46,6 +48,23 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     /// trusted enough to receive, stays out of reach either way.
     /// </remarks>
     public IReadOnlyList<string>? AssistantToolIds { get; private set; }
+
+    /// <summary>
+    /// Which system prompt a chat gets which continues the conversation of this assistant.
+    /// </summary>
+    /// <remarks>
+    /// The plugin chooses it in ChatSystemPrompt, like every assistant of AI Studio chooses it for itself.
+    /// Without that key, the chat gets the default prompt of AI Studio. A prompt the plugin writes for the
+    /// chat gets the same security preamble and postamble as its system prompt.
+    /// </remarks>
+    public ChatSystemPromptChoice ChatSystemPrompt { get; private set; } = ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+
+    /// <summary>
+    /// The prompt the plugin wrote for a chat which continues the conversation of this assistant, as the
+    /// plugin states it; empty unless it chose CUSTOM. The security audit reads it.
+    /// </summary>
+    public string RawCustomChatSystemPrompt { get; private set; } = string.Empty;
+
     public bool HasEmbeddedProfileSelection { get; private set; }
     public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
     public bool IsAssistantBuilderGenerated { get; private set; }
@@ -85,6 +104,8 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         this.SubmitText = string.Empty;
         this.AllowProfiles = true;
         this.AssistantToolIds = null;
+        this.ChatSystemPrompt = ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+        this.RawCustomChatSystemPrompt = string.Empty;
         this.HasEmbeddedProfileSelection = false;
         this.IsAssistantBuilderGenerated = false;
         this.HasDeploymentManagementMetadata = false;
@@ -140,7 +161,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         if (!assistantTable.TryGetValue("SubmitText", out var assistantSubmitTextValue) ||
             !assistantSubmitTextValue.TryRead<string>(out var assistantSubmitText))
         {
-            message = TB("The ASSISTANT table does not contain a valid system prompt.");
+            message = TB("The provided ASSISTANT lua table does not contain a valid submit text.");
             return false;
         }
         
@@ -152,6 +173,9 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         }
 
         if (!TryReadOptionalToolIds(assistantTable, out var assistantToolIds, out message))
+            return false;
+
+        if (!TryReadChatSystemPrompt(assistantTable, out var chatSystemPrompt, out var rawCustomChatSystemPrompt, out message))
             return false;
 
         if (assistantTable.TryGetValue("BuildPrompt", out var buildPromptValue))
@@ -169,6 +193,8 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         this.SubmitText = assistantSubmitText;
         this.AllowProfiles = assistantAllowProfiles;
         this.AssistantToolIds = assistantToolIds;
+        this.ChatSystemPrompt = chatSystemPrompt;
+        this.RawCustomChatSystemPrompt = rawCustomChatSystemPrompt;
 
         // Ensure that the UI table exists nested in the ASSISTANT table and is a valid Lua table:
         if (!assistantTable.TryGetValue("UI", out var uiVal) || !uiVal.TryRead<LuaTable>(out var uiTable))
@@ -374,6 +400,65 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         return true;
     }
 
+    /// <summary>
+    /// Reads which system prompt a chat gets which continues the conversation of the assistant.
+    /// </summary>
+    /// <remarks>
+    /// Optional: without ChatSystemPrompt, the chat gets the default prompt of AI Studio. A prompt of its own
+    /// goes into CustomChatSystemPrompt, and only together with CUSTOM. That prompt next to another choice,
+    /// or CUSTOM without it, is a mistake which the author would otherwise only notice in the chat, so the
+    /// plugin does not load. The names are compared exactly, apart from case: a number is no name, even
+    /// though Enum.TryParse would take it for one.
+    /// </remarks>
+    /// <param name="assistantTable">The ASSISTANT table of the plugin.</param>
+    /// <param name="choice">The choice of the plugin; the default prompt of AI Studio when it makes none.</param>
+    /// <param name="rawCustomPrompt">The prompt the plugin wrote for the chat, as it states it; empty unless it chose CUSTOM.</param>
+    /// <param name="message">Why the table could not be read; empty otherwise.</param>
+    /// <returns>True when the table states a valid choice or none at all.</returns>
+    internal static bool TryReadChatSystemPrompt(LuaTable assistantTable, out ChatSystemPromptChoice choice, out string rawCustomPrompt, out string message)
+    {
+        choice = ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+        rawCustomPrompt = string.Empty;
+        message = string.Empty;
+
+        var source = ChatSystemPromptSource.AI_STUDIO_DEFAULT;
+        if (assistantTable.TryGetValue("ChatSystemPrompt", out var sourceValue))
+        {
+            var sourceName = sourceValue.TryRead<string>(out var sourceText) ? Enum.GetNames<ChatSystemPromptSource>().FirstOrDefault(name => string.Equals(name, sourceText.Trim(), StringComparison.OrdinalIgnoreCase)) : null;
+            if (sourceName is null)
+            {
+                message = TB("The ASSISTANT table contains an invalid ChatSystemPrompt value. Expected 'AI_STUDIO_DEFAULT', 'ASSISTANT', or 'CUSTOM'.");
+                return false;
+            }
+
+            source = Enum.Parse<ChatSystemPromptSource>(sourceName);
+        }
+
+        var hasCustomPrompt = assistantTable.TryGetValue("CustomChatSystemPrompt", out var customPromptValue);
+        if (source is not ChatSystemPromptSource.CUSTOM)
+        {
+            if (hasCustomPrompt)
+            {
+                message = TB("The ASSISTANT table contains a CustomChatSystemPrompt, but its ChatSystemPrompt is not 'CUSTOM', so no chat would use that prompt.");
+                return false;
+            }
+
+            choice = source is ChatSystemPromptSource.ASSISTANT ? ChatSystemPromptChoice.ASSISTANT : ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
+            return true;
+        }
+
+        if (!hasCustomPrompt || !customPromptValue.TryRead<string>(out var customPrompt) || string.IsNullOrWhiteSpace(customPrompt))
+        {
+            message = TB("The ASSISTANT table contains the ChatSystemPrompt 'CUSTOM' but no valid CustomChatSystemPrompt.");
+            return false;
+        }
+
+        rawCustomPrompt = customPrompt.Trim();
+        var securePrompt = BuildSecureSystemPrompt(rawCustomPrompt);
+        choice = ChatSystemPromptChoice.Custom(() => securePrompt);
+        return true;
+    }
+
     public async Task<string?> TryBuildPromptAsync(LuaTable input, CancellationToken cancellationToken = default)
     {
         if (this.buildPromptFunction is null)
@@ -490,7 +575,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
     private static string BuildSecureSystemPrompt(string pluginSystemPrompt)
     {
-        var separator = $"{Environment.NewLine}{Environment.NewLine}";
+        var separator = "\n\n";
         return string.IsNullOrWhiteSpace(pluginSystemPrompt) ? $"{SECURITY_SYSTEM_PROMPT_PREAMBLE}{separator}{SECURITY_SYSTEM_PROMPT_POSTAMBLE}" : $"{SECURITY_SYSTEM_PROMPT_PREAMBLE}{separator}{pluginSystemPrompt.Trim()}{separator}{SECURITY_SYSTEM_PROMPT_POSTAMBLE}";
     }
 
@@ -772,21 +857,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         this.State.Environment["DateTime"] = new LuaFunction((context, _) =>
         {
             var format = context.ArgumentCount > 0 ? context.GetArgument<string>(0) : "yyyy-MM-dd HH:mm:ss";
-            var now = DateTime.Now;
-            var formattedDate = now.ToString(format);
-            
-            var table = new LuaTable
-            {
-                ["year"] = now.Year,
-                ["month"] = now.Month,
-                ["day"] = now.Day,
-                ["hour"] = now.Hour,
-                ["minute"] = now.Minute,
-                ["second"] = now.Second,
-                ["millisecond"] = now.Millisecond,
-                ["formatted"] = formattedDate,
-            };
-            return new(context.Return(table));
+            return new(context.Return(CreateDateTimeTable(DateTime.Now, format)));
         });
         
         this.State.Environment["Timestamp"] = new LuaFunction((context, _) =>
@@ -804,6 +875,29 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new(context.Return(AssistantLuaConversion.InspectTable(table)));
         });
     }
+
+    /// <summary>
+    /// Builds the table which the Lua function DateTime returns for the given moment.
+    /// </summary>
+    /// <remarks>
+    /// The formatted text is the same on every computer. With the culture of the computer, the separators, the
+    /// calendar, and the names of months and days would follow its region settings, e.g., the year of the Buddhist
+    /// era in Thailand.
+    /// </remarks>
+    /// <param name="moment">The moment to describe.</param>
+    /// <param name="format">The .NET format of the formatted text.</param>
+    /// <returns>The parts of the moment and the formatted text.</returns>
+    internal static LuaTable CreateDateTimeTable(DateTime moment, string format) => new()
+    {
+        ["year"] = moment.Year,
+        ["month"] = moment.Month,
+        ["day"] = moment.Day,
+        ["hour"] = moment.Hour,
+        ["minute"] = moment.Minute,
+        ["second"] = moment.Second,
+        ["millisecond"] = moment.Millisecond,
+        ["formatted"] = moment.ToString(format, CultureInfo.InvariantCulture)
+    };
 
     private static void InitializeState(IEnumerable<IAssistantComponent> components, AssistantState state)
     {
@@ -855,7 +949,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 builder.Append(string.IsNullOrWhiteSpace(stateful.UserPrompt) ? "empty" : "set");
             }
 
-            builder.AppendLine();
+            builder.AppendLineLF();
 
             if (component.Children.Count > 0)
                 AppendComponentSummary(builder, component.Children, depth + 1);

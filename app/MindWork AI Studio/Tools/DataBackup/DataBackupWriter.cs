@@ -50,7 +50,7 @@ public static class DataBackupWriter
         var buffer = new byte[BUFFER_SIZE];
 
         progress?.Report(new(DataBackupPhase.WRITING, 0, totalFiles));
-        using (var archive = new ZipArchive(target, ZipArchiveMode.Create, leaveOpen: true))
+        await using (var archive = await ZipArchive.CreateAsync(target, ZipArchiveMode.Create, leaveOpen: true, entryNameEncoding: null, token))
         {
             var settingsEntry = DataBackupContents.ENTRIES.First(entry => entry.Kind is DataBackupEntryKind.SETTINGS);
             await using (var settingsStream = new MemoryStream(Encoding.UTF8.GetBytes(sources.SettingsJson), writable: false))
@@ -179,7 +179,7 @@ public static class DataBackupWriter
 
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         long size = 0;
-        await using (var entryStream = entry.Open())
+        await using (var entryStream = await entry.OpenAsync(token))
         {
             int read;
             while ((read = await source.ReadAsync(buffer, token)) > 0)

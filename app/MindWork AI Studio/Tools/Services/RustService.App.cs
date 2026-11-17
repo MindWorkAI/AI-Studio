@@ -122,7 +122,7 @@ public sealed partial class RustService
 
     public async Task<RuntimeInfoResponse> GetRuntimeInfo()
     {
-        var response = await this.http.GetFromJsonAsync<RuntimeInfoResponse>("/system/runtime/info", this.jsonRustSerializerOptions);
+        var response = await this.http.GetFromJsonAsync<RuntimeInfoResponse>("/system/runtime/info", JSON_OPTIONS);
         return response;
     }
 
@@ -140,7 +140,7 @@ public sealed partial class RustService
                 return false;
             }
 
-            var result = await response.Content.ReadFromJsonAsync<AppExitResponse>(this.jsonRustSerializerOptions);
+            var result = await response.Content.ReadFromJsonAsync<AppExitResponse>(JSON_OPTIONS);
             if (result is null || !result.Success)
             {
                 this.logger?.LogError("Failed to exit the app: {Error}", result?.ErrorMessage ?? "Unknown error");
@@ -177,7 +177,7 @@ public sealed partial class RustService
                 return false;
             }
 
-            var result = await response.Content.ReadFromJsonAsync<AppRestartResponse>(this.jsonRustSerializerOptions);
+            var result = await response.Content.ReadFromJsonAsync<AppRestartResponse>(JSON_OPTIONS);
             if (result is null || !result.Success)
             {
                 this.logger?.LogError("Failed to restart the app: {Error}", result?.ErrorMessage ?? "Unknown error");
@@ -203,7 +203,7 @@ public sealed partial class RustService
     {
         try
         {
-            var response = await this.http.PostAsJsonAsync("/app/interface-size", request, this.jsonRustSerializerOptions);
+            var response = await this.http.PostAsJsonAsync("/app/interface-size", request, JSON_OPTIONS);
             var result = await this.ReadInterfaceSizeResponse(response, "set the interface size");
             if (result is not null)
                 this.logger?.LogInformation("Set the interface sizes of {ScreenCount} screens. AI Studio shows with the size '{Size}' at {CurrentPercent} % and a zoom of {Zoom:0.###} on the screen '{ScreenKey}'.", request.Screens.Count, result.Size, result.CurrentPercent, result.Zoom, result.ScreenKey);
@@ -243,7 +243,7 @@ public sealed partial class RustService
             return null;
         }
 
-        var result = await response.Content.ReadFromJsonAsync<InterfaceSizeResponse>(this.jsonRustSerializerOptions);
+        var result = await response.Content.ReadFromJsonAsync<InterfaceSizeResponse>(JSON_OPTIONS);
         if (result is null || !result.Success)
         {
             this.logger?.LogError("Failed to {Action}: {Error}", action, result?.ErrorMessage ?? "Unknown error");

@@ -99,7 +99,7 @@ public static class Markdown
         if (document.Descendants<FencedCodeBlock>().LastOrDefault() is not { ClosingFencedCharCount: 0 } openFence)
             return markdownText;
 
-        return $"{markdownText}{Environment.NewLine}{new string(openFence.FencedChar, openFence.OpeningFencedCharCount)}";
+        return $"{markdownText}\n{new string(openFence.FencedChar, openFence.OpeningFencedCharCount)}";
     }
 
     /// <summary>Puts a block of Markdown below a Markdown text, such as its sources or a notice.</summary>
@@ -118,7 +118,7 @@ public static class Markdown
         // The blank line is not cosmetic: it ends a paragraph, a list, a table, or a block quote, so
         // that the block stands on its own instead of being pulled into the last block of the text.
         //
-        return $"{CloseOpenCodeFence(markdownText)}{Environment.NewLine}{Environment.NewLine}{block}";
+        return $"{CloseOpenCodeFence(markdownText)}\n\n{block}";
     }
 
     public static string RemoveSharedIndentation(string value)

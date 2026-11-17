@@ -7,5 +7,5 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamPromptInjectionMetadata : ContentStreamSseMetadata
 {
     [JsonPropertyName("PromptInjection")]
-    public ContentStreamPromptInjectionDetails? PromptInjection { get; init; }
+    public ContentStreamPromptInjectionDetails? PromptInjection { get; set; }
 }

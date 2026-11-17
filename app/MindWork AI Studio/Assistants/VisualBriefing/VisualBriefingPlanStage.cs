@@ -107,10 +107,11 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
           Choose HORIZONTAL for a concise overview with few milestones and VERTICAL for longer or explanation-rich chronological narratives.
           """;
 
-    private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingEvidenceArtifact evidence) =>
+    // Internal, so that a test can check the JSON this prompt carries:
+    internal static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingEvidenceArtifact evidence) =>
         $"""
          Audience: {manifest.Settings.AudienceProfile}; {manifest.Settings.AudienceAgeGroup}; {manifest.Settings.AudienceOrganizationalLevel}; {manifest.Settings.AudienceExpertise}
          Scope instruction: {manifest.Settings.Instruction}
-         Evidence: {JsonSerializer.Serialize(new { evidence.Facts, evidence.Metrics, evidence.Tables, evidence.AssetPlan }, VisualBriefingJson.Canonical)}
+         Evidence: {JsonSerializer.Serialize(VisualBriefingEvidencePrompt.Of(evidence), VisualBriefingJson.Canonical)}
          """;
 }

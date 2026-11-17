@@ -107,11 +107,11 @@ public partial class Chat : MSGComponentBase
 
     #endregion
     
-    private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? Icons.Material.Filled.ArrowCircleLeft : Icons.Material.Filled.ArrowCircleRight;
+    private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? AppIcons.HIDE_SIDEBAR : AppIcons.SHOW_SIDEBAR;
 
-    private string WorkspaceSearchIcon => this.workspaceSearchVisible ? Icons.Material.Filled.SearchOff : Icons.Material.Filled.Search;
+    private string WorkspaceSearchIcon => this.workspaceSearchVisible ? AppIcons.HIDE_SEARCH : AppIcons.SEARCH;
 
-    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Close the search") : T("Search your workspaces");
+    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Close the search") : TA("Search your workspaces");
 
     /// <summary>
     /// Whether the sidebar shows beside the chat. It shows whenever it has something to list, the stored

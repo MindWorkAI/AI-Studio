@@ -4,75 +4,84 @@ namespace SharedTools;
 
 public static class RIDExtensions
 {
-    /// <summary>
-    /// Detects the current Runtime Identifier (RID) at runtime based on OS and architecture.
-    /// </summary>
-    /// <remarks>
-    /// This is the machine which runs the code. The architecture in the metadata of AI Studio
-    /// is the platform AI Studio was built for instead; both can differ under emulation.
-    /// </remarks>
-    /// <returns>The detected RID for the current platform.</returns>
-    public static RID GetCurrentRID()
+    extension(RID rid)
     {
-        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-        var isMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-        var arch = RuntimeInformation.OSArchitecture;
-
-        return (isWindows, isLinux, isMacOS, arch) switch
+        /// <summary>
+        /// Detects the current Runtime Identifier (RID) at runtime based on OS and architecture.
+        /// </summary>
+        /// <remarks>
+        /// This is the machine which runs the code. The architecture in the metadata of AI Studio
+        /// is the platform AI Studio was built for instead; both can differ under emulation.
+        /// </remarks>
+        /// <value>The detected RID for the current platform.</value>
+        public static RID Current
         {
-            (true, _, _, Architecture.X64) => RID.WIN_X64,
-            (true, _, _, Architecture.Arm64) => RID.WIN_ARM64,
+            get
+            {
+                var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+                var isMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                var arch = RuntimeInformation.OSArchitecture;
 
-            (_, true, _, Architecture.X64) => RID.LINUX_X64,
-            (_, true, _, Architecture.Arm64) => RID.LINUX_ARM64,
+                return (isWindows, isLinux, isMacOS, arch) switch
+                {
+                    (true, _, _, Architecture.X64) => RID.WIN_X64,
+                    (true, _, _, Architecture.Arm64) => RID.WIN_ARM64,
 
-            (_, _, true, Architecture.X64) => RID.OSX_X64,
-            (_, _, true, Architecture.Arm64) => RID.OSX_ARM64,
+                    (_, true, _, Architecture.X64) => RID.LINUX_X64,
+                    (_, true, _, Architecture.Arm64) => RID.LINUX_ARM64,
 
+                    (_, _, true, Architecture.X64) => RID.OSX_X64,
+                    (_, _, true, Architecture.Arm64) => RID.OSX_ARM64,
+
+                    _ => RID.NONE,
+                };
+            }
+        }
+
+        public string MicrosoftRid => rid switch
+        {
+            RID.WIN_X64 => "win-x64",
+            RID.WIN_ARM64 => "win-arm64",
+        
+            RID.LINUX_X64 => "linux-x64",
+            RID.LINUX_ARM64 => "linux-arm64",
+        
+            RID.OSX_X64 => "osx-x64",
+            RID.OSX_ARM64 => "osx-arm64",
+        
+            _ => string.Empty,
+        };
+
+        public string UserFriendlyName => rid switch
+        {
+            RID.WIN_X64 => "Windows x64",
+            RID.WIN_ARM64 => "Windows ARM64",
+        
+            RID.LINUX_X64 => "Linux x64",
+            RID.LINUX_ARM64 => "Linux ARM64",
+        
+            RID.OSX_X64 => "macOS x64",
+            RID.OSX_ARM64 => "macOS ARM64",
+        
+            _ => "unknown",
+        };
+    }
+    
+    extension(string rid)
+    {
+        public RID ToRID() => rid switch
+        {
+            "win-x64" => RID.WIN_X64,
+            "win-arm64" => RID.WIN_ARM64,
+        
+            "linux-x64" => RID.LINUX_X64,
+            "linux-arm64" => RID.LINUX_ARM64,
+        
+            "osx-x64" => RID.OSX_X64,
+            "osx-arm64" => RID.OSX_ARM64,
+        
             _ => RID.NONE,
         };
     }
-
-    public static string AsMicrosoftRid(this RID rid) => rid switch
-    {
-        RID.WIN_X64 => "win-x64",
-        RID.WIN_ARM64 => "win-arm64",
-        
-        RID.LINUX_X64 => "linux-x64",
-        RID.LINUX_ARM64 => "linux-arm64",
-        
-        RID.OSX_X64 => "osx-x64",
-        RID.OSX_ARM64 => "osx-arm64",
-        
-        _ => string.Empty,
-    };
-    
-    public static string ToUserFriendlyName(this RID rid) => rid switch
-    {
-        RID.WIN_X64 => "Windows x64",
-        RID.WIN_ARM64 => "Windows ARM64",
-        
-        RID.LINUX_X64 => "Linux x64",
-        RID.LINUX_ARM64 => "Linux ARM64",
-        
-        RID.OSX_X64 => "macOS x64",
-        RID.OSX_ARM64 => "macOS ARM64",
-        
-        _ => "unknown",
-    };
-    
-    public static RID ToRID(this string rid) => rid switch
-    {
-        "win-x64" => RID.WIN_X64,
-        "win-arm64" => RID.WIN_ARM64,
-        
-        "linux-x64" => RID.LINUX_X64,
-        "linux-arm64" => RID.LINUX_ARM64,
-        
-        "osx-x64" => RID.OSX_X64,
-        "osx-arm64" => RID.OSX_ARM64,
-        
-        _ => RID.NONE,
-    };
 }

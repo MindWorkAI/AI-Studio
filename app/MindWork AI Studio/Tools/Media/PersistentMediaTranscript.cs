@@ -171,13 +171,14 @@ internal static class PersistentMediaTranscript
     /// <param name="mediaPath">The audio or video file the transcript belongs to.</param>
     /// <param name="reportingScope">The action the transcript is read for, or null when it is read for none.</param>
     /// <param name="token">The cancellation token.</param>
+    /// <param name="maxCharacters">How many characters of the transcript to keep at most; the result says whether it left out any.</param>
     /// <returns>The filtered text of the transcript, or why it could not be read.</returns>
-    public static Task<FileExtractionResult> ReadTranscriptAsync(RustService rustService, PersistentMediaTranscriptResult transcript, string mediaPath, PromptInjectionReportingScope? reportingScope, CancellationToken token)
+    public static Task<FileExtractionResult> ReadTranscriptAsync(RustService rustService, PersistentMediaTranscriptResult transcript, string mediaPath, PromptInjectionReportingScope? reportingScope, CancellationToken token, int maxCharacters = int.MaxValue)
     {
         if (transcript.Status is not PersistentMediaTranscriptStatus.READY)
             throw new ArgumentException($"Only a ready transcript can be read, but its status is {transcript.Status}.", nameof(transcript));
 
-        return rustService.ReadArbitraryFileData(transcript.TranscriptPath, int.MaxValue, reportAs: PromptInjectionSource.FileContent(mediaPath), reportingScope: reportingScope, token: token);
+        return rustService.ReadArbitraryFileData(transcript.TranscriptPath, int.MaxValue, reportAs: PromptInjectionSource.FileContent(mediaPath), reportingScope: reportingScope, maxCharacters: maxCharacters, token: token);
     }
 
     private static PersistentMediaTranscriptResult SourceChanged(MediaTranscriptSlot slot) => PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.SOURCE_CHANGED, slot, TB("The media file changed while it was being transcribed, so its transcript was not kept."));

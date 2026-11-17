@@ -7,5 +7,5 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamPdfDetails
 {
     [JsonPropertyName("page_number")] 
-    public int? PageNumber { get; init; }
+    public int? PageNumber { get; set; }
 }

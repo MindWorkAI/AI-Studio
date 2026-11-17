@@ -38,7 +38,7 @@ public static class AppUserAgent
     /// <param name="settingsManager">The settings, which say whether the user shares the feature usage.</param>
     /// <returns>True when the provider runs on a self-hosted server and sharing is switched on; otherwise, false.</returns>
     public static bool IsAllowedFor(LLMProviders provider, SettingsManager settingsManager) =>
-        provider.RunsOnSelfHostedServer() && settingsManager.ConfigurationData.App.ShareFeatureUsageWithSelfHostedServerOperators;
+        provider.RunsOnSelfHostedServer && settingsManager.ConfigurationData.App.ShareFeatureUsageWithSelfHostedServerOperators;
 
     /// <summary>
     /// Sets the User-Agent as default header of the given HTTP client.
@@ -109,7 +109,7 @@ public static class AppUserAgent
 
     private static string CreateBase()
     {
-        var rid = RIDExtensions.GetCurrentRID().AsMicrosoftRid();
+        var rid = RID.Current.MicrosoftRid;
         return string.IsNullOrWhiteSpace(rid)
             ? $"MindWorkAIStudio/{META_DATA.Version}"
             : $"MindWorkAIStudio/{META_DATA.Version} ({rid})";

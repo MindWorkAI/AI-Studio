@@ -27,6 +27,27 @@ public sealed record TranscriptionProvider(
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
+    //
+    // The properties of the parameters, declared again to be settable. The source generation of System.Text.Json
+    // sets every init-only property while it creates the object, also one missing in the JSON, so its value from
+    // the parameterless constructor would get lost. Keep them first and in the order of the parameters, which is
+    // the order they get stored in:
+    //
+    public override uint Num { get; set; } = Num;
+    public override string Id { get; set; } = Id;
+    public override string Name { get; set; } = Name;
+    public LLMProviders UsedLLMProvider { get; set; } = UsedLLMProvider;
+    public Model Model { get; set; } = Model;
+    public bool IsSelfHosted { get; set; } = IsSelfHosted;
+    public override bool IsEnterpriseConfiguration { get; set; } = IsEnterpriseConfiguration;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = EnterpriseConfigurationPluginId;
+    public string Hostname { get; set; } = Hostname;
+    public Host Host { get; set; } = Host;
+    public bool AllowUserProvidedAPIKey { get; set; } = AllowUserProvidedAPIKey;
+    public string CustomIconDataUrl { get; set; } = CustomIconDataUrl;
+    public HFInferenceProvider HFInferenceProvider { get; set; } = HFInferenceProvider;
+    public bool PromptForUserAPIKey { get; set; } = PromptForUserAPIKey;
+
     private static readonly ILogger<TranscriptionProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<TranscriptionProvider>();
 
     public static readonly TranscriptionProvider NONE = new();
@@ -49,7 +70,7 @@ public sealed record TranscriptionProvider(
 
     /// <inheritdoc />
     [JsonIgnore]
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToSecretId()}" : this.UsedLLMProvider.ToSecretId();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.SecretId}" : this.UsedLLMProvider.SecretId;
 
     /// <inheritdoc />
     [JsonIgnore]
@@ -168,7 +189,7 @@ public sealed record TranscriptionProvider(
                         if (!dryRun)
                         {
                             PendingEnterpriseApiKeys.Add(new(
-                                $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
+                                $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.SecretId}",
                                 name,
                                 decryptedApiKey,
                                 SecretStoreType.TRANSCRIPTION_PROVIDER));

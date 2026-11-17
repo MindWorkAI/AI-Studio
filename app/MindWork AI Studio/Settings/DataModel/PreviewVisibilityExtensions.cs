@@ -2,48 +2,53 @@ namespace AIStudio.Settings.DataModel;
 
 public static class PreviewVisibilityExtensions
 {
-    public static IList<PreviewFeatures> GetPreviewFeatures(this PreviewVisibility visibility)
+    extension(PreviewVisibility visibility)
     {
-        var features = new List<PreviewFeatures>();
-        if (visibility >= PreviewVisibility.RELEASE_CANDIDATE)
+        public IList<PreviewFeatures> GetPreviewFeatures()
         {
-        }
+            var features = new List<PreviewFeatures>();
+            if (visibility >= PreviewVisibility.RELEASE_CANDIDATE)
+            {
+            }
         
-        if (visibility >= PreviewVisibility.BETA)
-        {
-            features.Add(PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025);
-            features.Add(PreviewFeatures.PRE_META_ASSISTANT_V1);
-            features.Add(PreviewFeatures.PRE_RAG_2024);
-            features.Add(PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026);
-        }
+            if (visibility >= PreviewVisibility.BETA)
+            {
+                features.Add(PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025);
+                features.Add(PreviewFeatures.PRE_META_ASSISTANT_V1);
+                features.Add(PreviewFeatures.PRE_RAG_2024);
+                features.Add(PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026);
+            }
         
-        if (visibility >= PreviewVisibility.ALPHA)
-        {
-        }
+            if (visibility >= PreviewVisibility.ALPHA)
+            {
+            }
         
-        if (visibility >= PreviewVisibility.PROTOTYPE)
-        {
-            features.Add(PreviewFeatures.PRE_MAILBOXES_2026);
+            if (visibility >= PreviewVisibility.PROTOTYPE)
+            {
+                features.Add(PreviewFeatures.PRE_MAILBOXES_2026);
+                features.Add(PreviewFeatures.PRE_MATHEMATICS_2026);
+                features.Add(PreviewFeatures.PRE_BEYOND_FACTS_LAB_2026);
+            }
+
+            if (visibility >= PreviewVisibility.EXPERIMENTAL)
+            {
+                features.Add(PreviewFeatures.PRE_WRITER_MODE_2024);
+            }
+        
+            return features;
         }
 
-        if (visibility >= PreviewVisibility.EXPERIMENTAL)
+        public HashSet<PreviewFeatures> FilterPreviewFeatures(HashSet<PreviewFeatures> enabledFeatures)
         {
-            features.Add(PreviewFeatures.PRE_WRITER_MODE_2024);
-        }
+            var filteredFeatures = new HashSet<PreviewFeatures>();
+            var previewFeatures = visibility.GetPreviewFeatures();
+            foreach (var feature in enabledFeatures)
+            {
+                if (previewFeatures.Contains(feature))
+                    filteredFeatures.Add(feature);
+            }
         
-        return features;
-    }
-    
-    public static HashSet<PreviewFeatures> FilterPreviewFeatures(this PreviewVisibility visibility, HashSet<PreviewFeatures> enabledFeatures)
-    {
-        var filteredFeatures = new HashSet<PreviewFeatures>();
-        var previewFeatures = visibility.GetPreviewFeatures();
-        foreach (var feature in enabledFeatures)
-        {
-            if (previewFeatures.Contains(feature))
-                filteredFeatures.Add(feature);
+            return filteredFeatures;
         }
-        
-        return filteredFeatures;
     }
 }

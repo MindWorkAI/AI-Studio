@@ -96,18 +96,17 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
           Include only facts supported by the supplied material.
           """;
 
-    private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingPreparedSources preparedSources)
+    // Internal, so that a test can check the JSON this prompt carries:
+    internal static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingPreparedSources preparedSources)
     {
         // The model never sees internal source GUIDs, only short handles. The file name is what lets
         // it tell the attached documents apart, which are supplied in the same canonical order:
         var handles = VisualBriefingSourceHandles.Map(manifest);
-        var sources = handles.Select(item => new
-        {
-            sourceId = item.Handle,
+        var sources = handles.Select(item => new VisualBriefingSourcePrompt(
+            item.Handle,
             item.Source.Kind,
-            assetId = string.IsNullOrWhiteSpace(item.Source.AssetId) ? null : item.Source.AssetId,
-            name = Path.GetFileName(item.Source.Path),
-        });
+            string.IsNullOrWhiteSpace(item.Source.AssetId) ? null : item.Source.AssetId,
+            Path.GetFileName(item.Source.Path)));
         
         var transcripts = handles
             .Where(item => preparedSources.Transcripts.ContainsKey(item.Source.SourceId))

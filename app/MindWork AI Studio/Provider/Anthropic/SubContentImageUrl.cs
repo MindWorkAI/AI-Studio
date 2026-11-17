@@ -4,5 +4,5 @@ public record SubContentImageUrl : ISubContentImageSource
 {
     public SubContentImageType Type => SubContentImageType.URL;
 
-    public string Url { get; init; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
 }

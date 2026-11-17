@@ -11,10 +11,10 @@
             @this.FindText
         </MudText>
         <MudTooltip Text="@T("Previous match in this chat")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
-            <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" Disabled="@(this.matchCount == 0)" aria-label="@T("Previous match in this chat")" OnClick="@(() => this.StepAsync(-1))"/>
+            <MudIconButton Icon="@AppIcons.PREVIOUS_RESULT" Size="Size.Small" Disabled="@(this.matchCount == 0)" aria-label="@T("Previous match in this chat")" OnClick="@(() => this.StepAsync(-1))"/>
         </MudTooltip>
         <MudTooltip Text="@T("Next match in this chat")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
-            <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Disabled="@(this.matchCount == 0)" aria-label="@T("Next match in this chat")" OnClick="@(() => this.StepAsync(1))"/>
+            <MudIconButton Icon="@AppIcons.NEXT_RESULT" Size="Size.Small" Disabled="@(this.matchCount == 0)" aria-label="@T("Next match in this chat")" OnClick="@(() => this.StepAsync(1))"/>
         </MudTooltip>
     </div>
 }

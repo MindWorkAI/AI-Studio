@@ -21,5 +21,5 @@ public sealed record ChatCompletionToolStreamLine(string? Id, IList<ChatCompleti
     /// ChatCompletionAPIRequest asks for it, the requests of the tool rounds included. Not a
     /// positional parameter, because nobody but the serializer ever builds this line.
     /// </remarks>
-    public ChatCompletionUsage? Usage { get; init; }
+    public ChatCompletionUsage? Usage { get; set; }
 }

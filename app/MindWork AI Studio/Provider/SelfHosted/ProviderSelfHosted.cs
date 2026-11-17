@@ -10,22 +10,24 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider.SelfHosted;
 
-public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvider(LLMProviders.SELF_HOSTED, new Uri($"{hostname}{host.BaseURL()}"), ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED, LOGGER)
+public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvider(LLMProviders.SELF_HOSTED, new Uri($"{hostname}{host.BaseURL}"), ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED, LOGGER)
 {
     private static readonly ILogger<ProviderSelfHosted> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderSelfHosted>();
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderSelfHosted).Namespace, nameof(ProviderSelfHosted));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ProviderSelfHosted).Namespace, nameof(ProviderSelfHosted));
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.SELF_HOSTED.ToSecretId();
+    public override string Id => LLMProviders.SELF_HOSTED.SecretId;
     
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Self-hosted";
 
     /// <inheritdoc />
-    public override bool HasModelLoadingCapability => host.IsModelListSupported();
+    public override bool HasModelLoadingCapability => host.IsModelListSupported;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -63,7 +65,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                                };
                            },
                            isTryingSecret: true,
-                           requestPath: host.ChatURL(),
+                           requestPath: host.ChatURL,
                            token: token))
             yield return content;
     }
@@ -97,7 +99,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             if (host is Host.LLAMA_CPP)
                 return await this.LoadLlamaCppTextModels(apiKeyProvisional, token);
 
-            if (!host.IsChatSupported() || !host.IsModelListSupported())
+            if (!host.IsChatSupported || !host.IsModelListSupported)
                 return ModelLoadResult.FromModels([]);
 
             var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
@@ -123,7 +125,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     {
         try
         {
-            if (!host.IsEmbeddingSupported() || !host.IsModelListSupported())
+            if (!host.IsEmbeddingSupported || !host.IsModelListSupported)
                 return ModelLoadResult.FromModels([]);
 
             var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
@@ -150,7 +152,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                     new Provider.Model("loaded-model", TB("Model as configured by whisper.cpp")),
                 ]);
 
-            if (!host.IsTranscriptionSupported() || !host.IsModelListSupported())
+            if (!host.IsTranscriptionSupported || !host.IsModelListSupported)
                 return ModelLoadResult.FromModels([]);
 
             //
@@ -260,7 +262,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             throw new ProviderRequestException(
                 ProviderRequestFailureReason.NONE,
                 string.Format(
-                    TB("The llama.cpp provider '{0}' does not offer a usable text model. Please check your provider settings."),
+                    TA("The llama.cpp provider '{0}' does not offer a usable text model. Please check your provider settings."),
                     this.InstanceName));
         }
 
@@ -276,7 +278,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             throw new ProviderRequestException(
                 ProviderRequestFailureReason.NONE,
                 string.Format(
-                    TB("The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use."),
+                    TA("The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use."),
                     this.InstanceName));
         }
 

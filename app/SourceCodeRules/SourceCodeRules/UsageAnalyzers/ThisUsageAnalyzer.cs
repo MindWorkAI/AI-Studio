@@ -89,8 +89,8 @@ public sealed class ThisUsageAnalyzer : DiagnosticAnalyzer
     
     private static bool IsTranslationMethod(SyntaxNode node)
     {
-        // Check if this is a method called 'T' (translation method)
-        if (node is IdentifierNameSyntax { Identifier.Text: "T" })
+        // Check if this is a method called 'T' or 'TA' (translation methods)
+        if (node is IdentifierNameSyntax { Identifier.Text: "T" or "TA" })
             return true;
         
         return false;

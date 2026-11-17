@@ -33,10 +33,10 @@ public sealed class ContentPresentation
         }
     }
 
-    internal static ContentPresentation Create<T>(ContentPresentationKind kind, T data) => new()
+    internal static ContentPresentation Create<T>(ContentPresentationKind kind, T data, JsonSerializerOptions options) => new()
     {
         Kind = kind,
-        Data = JsonSerializer.SerializeToElement(data),
+        Data = JsonSerializer.SerializeToElement(data, options),
     };
 
     internal ContentPresentation DeepClone() => new()

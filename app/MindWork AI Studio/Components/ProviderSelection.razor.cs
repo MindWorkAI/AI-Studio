@@ -90,12 +90,12 @@ public partial class ProviderSelection : MSGComponentBase
 
         var configuredProviders = this.SettingsManager.GetAllProviders().Where(x => x.UsedLLMProvider is not LLMProviders.NONE).ToList();
         if (configuredProviders.Count == 0)
-            return this.T("No LLM providers are configured yet. Add a provider in the app settings.");
+            return this.TA("No LLM providers are configured yet. Add a provider in the app settings.");
 
         if (configuredProviders.All(x => this.SettingsManager.IsProviderProhibited(x.UsedLLMProvider)))
-            return this.T("The use of all your LLM providers has been prohibited by your organization. Add a different provider in the app settings.");
+            return this.TA("The use of all your LLM providers has been prohibited by your organization. Add a different provider in the app settings.");
 
-        return this.T("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.");
+        return this.TA("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.");
     }
 
     private IReadOnlyList<CapabilityIcon> GetCapabilityIcons(AIStudio.Settings.Provider provider)
@@ -104,21 +104,21 @@ public partial class ProviderSelection : MSGComponentBase
         List<CapabilityIcon> capabilityIcons = [];
 
         if (profile.Has(Capability.AUDIO_INPUT))
-            capabilityIcons.Add(new(Icons.Material.Filled.GraphicEq, this.T("Audio input possible")));
+            capabilityIcons.Add(new(AppIcons.AUDIO_INPUT, this.T("Audio input possible")));
 
         if (profile.HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT))
-            capabilityIcons.Add(new(Icons.Material.Filled.Image, this.T("Image input possible")));
+            capabilityIcons.Add(new(AppIcons.IMAGE, this.T("Image input possible")));
 
         if (profile.Has(Capability.SPEECH_INPUT))
-            capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
+            capabilityIcons.Add(new(AppIcons.MICROPHONE, this.T("Speech input possible")));
 
         // The same check which decides whether a request offers tools, Semantic Search among them:
         if (provider.GetToolCallingAvailability().IsAvailable)
-            capabilityIcons.Add(new(Icons.Material.Filled.Build, this.T("Tool calling possible")));
+            capabilityIcons.Add(new(AppIcons.TOOL, this.T("Tool calling possible")));
 
         var reasoningIndicatorState = provider.GetReasoningIndicatorState();
         if (reasoningIndicatorState is not ReasoningIndicatorState.NONE)
-            capabilityIcons.Add(new(Icons.Material.Filled.Psychology, this.GetReasoningTooltip(reasoningIndicatorState)));
+            capabilityIcons.Add(new(AppIcons.REASONING, this.GetReasoningTooltip(reasoningIndicatorState)));
 
         return capabilityIcons;
     }

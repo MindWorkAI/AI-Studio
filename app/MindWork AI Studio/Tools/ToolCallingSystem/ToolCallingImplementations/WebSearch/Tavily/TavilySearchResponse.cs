@@ -10,5 +10,5 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.
 /// </remarks>
 internal sealed record TavilySearchResponse
 {
-    public IReadOnlyList<TavilySearchResult> Results { get; init; } = [];
+    public IReadOnlyList<TavilySearchResult> Results { get; set; } = [];
 }

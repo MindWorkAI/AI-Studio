@@ -1139,7 +1139,7 @@ fn xdg_open_fallback_path(target: &FileManagerTarget) -> &Path {
 }
 
 #[cfg(target_os = "linux")]
-enum LinuxPortalError {
+pub(crate) enum LinuxPortalError {
     Unavailable(String),
     RequestFailed(String),
 }

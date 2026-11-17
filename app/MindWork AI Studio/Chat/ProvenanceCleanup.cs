@@ -40,15 +40,20 @@ public static class ProvenanceCleanup
     /// <summary>
     /// Removes the entries of chats which no longer exist, and those their chat no longer refers to.
     /// </summary>
+    /// <remarks>
+    /// Chats lie in more than one place, e.g., in a workspace or in a preparation of the BeyondFacts Lab, so the
+    /// cleanup leaves it to its caller what a place is and how to read a chat there.
+    /// </remarks>
+    /// <typeparam name="TLocation">What tells where a chat lies.</typeparam>
     /// <param name="store">The provenance store.</param>
-    /// <param name="chatLocations">The workspace of every chat on the disk by its ID, Guid.Empty for a temporary chat.</param>
-    /// <param name="loadChat">Reads a chat by its workspace and ID, or answers null when it cannot be read.</param>
-    /// <param name="getChatWrittenAt">Tells when a chat file was last written, by its workspace and ID, or answers null when that is not known.</param>
+    /// <param name="chatLocations">Where every chat on the disk lies, by its ID.</param>
+    /// <param name="loadChat">Reads a chat by its place and ID, or answers null when it cannot be read.</param>
+    /// <param name="getChatWrittenAt">Tells when a chat file was last written, by its place and ID, or answers null when that is not known.</param>
     /// <param name="createdBefore">The start of this run: entries stored since may belong to a chat which is not on the disk yet.</param>
     /// <param name="lastCleanup">When the last complete cleanup began, or null to read every chat.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>What the cleanup did.</returns>
-    public static async Task<ProvenanceCleanupResult> CleanUpAsync(ProvenanceStoreClient store, IReadOnlyDictionary<Guid, Guid> chatLocations, Func<Guid, Guid, Task<ChatThread?>> loadChat, Func<Guid, Guid, DateTimeOffset?> getChatWrittenAt, DateTimeOffset createdBefore, DateTimeOffset? lastCleanup, CancellationToken token)
+    public static async Task<ProvenanceCleanupResult> CleanUpAsync<TLocation>(ProvenanceStoreClient store, IReadOnlyDictionary<Guid, TLocation> chatLocations, Func<TLocation, Guid, Task<ChatThread?>> loadChat, Func<TLocation, Guid, DateTimeOffset?> getChatWrittenAt, DateTimeOffset createdBefore, DateTimeOffset? lastCleanup, CancellationToken token)
     {
         // The chats which received an entry since the last cleanup, in one query, which the last cleanup had to leave alone:
         var chatsWithNewEntries = lastCleanup is { } since ? (await store.GetChatIdsAsync(token, since)).ToHashSet() : [];
@@ -60,21 +65,21 @@ public static class ProvenanceCleanup
         foreach (var chatId in await store.GetChatIdsAsync(token))
         {
             token.ThrowIfCancellationRequested();
-            if (!chatLocations.TryGetValue(chatId, out var workspaceId))
+            if (!chatLocations.TryGetValue(chatId, out var location))
             {
                 orphanedChats.Add(chatId);
                 continue;
             }
 
             // A chat whose time of writing is not known counts as changed:
-            if (lastCleanup is { } previousStart && !chatsWithNewEntries.Contains(chatId) && getChatWrittenAt(workspaceId, chatId) is { } writtenAt && writtenAt < previousStart - WRITE_TIME_TOLERANCE)
+            if (lastCleanup is { } previousStart && !chatsWithNewEntries.Contains(chatId) && getChatWrittenAt(location, chatId) is { } writtenAt && writtenAt < previousStart - WRITE_TIME_TOLERANCE)
             {
                 skipped++;
                 continue;
             }
 
             // A chat which cannot be read keeps everything: nothing tells what it refers to.
-            var chat = await loadChat(workspaceId, chatId);
+            var chat = await loadChat(location, chatId);
             if (chat is null)
             {
                 unreadable++;

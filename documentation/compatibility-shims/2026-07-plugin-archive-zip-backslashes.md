@@ -30,6 +30,6 @@ This works around the behavior described in dotnet/runtime#27620. A related upst
 ## Removal Checklist
 
 - Confirm supported .NET runtimes and administrator packaging guidance no longer require accepting backslashes in enterprise ZIP entry names.
-- Replace `PluginArchive.Extract(...)` with `ZipFile.ExtractToDirectory(...)`.
+- Replace `PluginArchive.ExtractAsync(...)` with `ZipFile.ExtractToDirectoryAsync(...)`.
 - Stop treating `\` as a separator in `ZipEntryNames.Normalize`, and drop the backslash cases from `ZipEntryNamesTests`. Keep the checks against rooted, drive-qualified, and `..` names: they protect every extraction, not just this shim.
 - Update this document's status to `Removed`.

@@ -9,7 +9,7 @@ namespace AIStudio.Dialogs;
 public partial class PandocDialog : MSGComponentBase
 {
     // Use runtime detection instead of metadata to ensure correct RID on dev machines:
-    private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
+    private static readonly RID CPU_ARCHITECTURE = RID.Current;
     
     [Parameter]
     public bool ShowInstallationPage { get; set; }
@@ -78,7 +78,7 @@ public partial class PandocDialog : MSGComponentBase
 
     private async Task RejectLicense()
     {
-        var message = T("Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?");
+        var message = TA("Pandoc is open-source and free, but if you reject its license, you can't install it and some MindWork AI Studio features will be limited (like the integration of Office files) or unavailable (like the generation of Office files). You can change your decision anytime. Are you sure you want to reject the license?");
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, message },
@@ -112,7 +112,7 @@ public partial class PandocDialog : MSGComponentBase
             }
             catch (Exception ex)
             {
-                this.licenseText = T("Error loading license text, please consider following the links to read the GPL.");
+                this.licenseText = TA("Error loading license text, please consider following the links to read the GPL.");
                 LOG.LogError("Error loading GPL license text: {ErrorMessage}", ex.Message);
             }
             finally

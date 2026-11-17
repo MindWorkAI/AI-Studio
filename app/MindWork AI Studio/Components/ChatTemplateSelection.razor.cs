@@ -45,9 +45,9 @@ public partial class ChatTemplateSelection : MSGComponentBase
     private string ChatTemplateIcon(ChatTemplate chatTemplate)
     {
         if (chatTemplate.IsEnterpriseConfiguration)
-            return Icons.Material.Filled.Business;
+            return AppIcons.ORGANIZATION;
 
-        return Icons.Material.Filled.RateReview;
+        return AppIcons.CHAT_TEMPLATE;
     }
 
     private async Task SelectionChanged(ChatTemplate chatTemplate)

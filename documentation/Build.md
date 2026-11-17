@@ -23,6 +23,8 @@ Regardless of whether you want to build the app locally for yourself (not trusti
 
 This is necessary because the build script and the Tauri framework assume that the .NET app is available as a so-called "sidecar." Although the sidecar is only necessary for the final release and shipping, Tauri requires it to be present during development as well.
 
+The build also downloads the PDF library Pdfium in the version which `metadata.txt` names, and downloads it again only when that version changes. `dotnet run build --offline` skips the download and uses the library which is already present.
+
 ## The quality gate
 One command checks that what you are about to build is sound:
 
@@ -35,7 +37,7 @@ It runs the .NET tests, the trim smoke test, the Rust tests, Clippy (`cargo clip
 `dotnet run build` runs the gate first and stops when it does not pass. For the quick loop while you are working on something, use `dotnet run build --skip-verify`, and let the gate run before you open a pull request. The same command runs in our GitHub workflow as the `verify` job, on every pull request which changes more than the documentation — including those without the `run-pipeline` label, because a gate which is closed exactly while nobody is looking is not a gate.
 
 Three notes:
-- The trim smoke test publishes `app/TrimSmokeTest` trimmed, exactly like the app, and reads and writes the JSON of chats, settings, Visual Briefing projects, backups, and model answers. Debug builds and the tests are not trimmed, so only a published build shows when the trimmer removed code which System.Text.Json needs; AI Studio can then neither load nor save that data. When AI Studio starts to store a new kind of file or to read a new kind of model answer, add its type to `JsonRoots` in `app/TrimSmokeTest`.
+- The trim smoke test publishes `app/TrimSmokeTest` trimmed, exactly like the app, and reads and writes the JSON of chats, settings, Visual Briefing projects, backups, model answers, and every other type AI Studio reads or writes. Debug builds and the tests are not trimmed, so only a published build shows when the trimmer removed code which System.Text.Json needs; AI Studio can then neither load nor save that data. A new kind of file or model answer needs nothing there: `JsonRoots` in `app/TrimSmokeTest` finds every type through the context of the options it is read or written with. The smoke test also lets the Mathematics tools compute a few expressions, since AngouriMath is trimmed, too; see `MathematicsChecks` there.
 - The Rust half of the gate needs the .NET sidecar (see "One-time mandatory steps" above). While that file is missing, the gate skips the Rust tests and Clippy and says so rather than failing, because the command which produces the sidecar is `dotnet run build` itself.
 - `dotnet run verify-models` reports how long ago somebody last read the pages behind the model rules, and names everything older than six months. It is a report and never a failure: a page nobody has looked at for a while is not a page which changed. Everything else about the model rules — whether two rules claim the same names, whether every family names a page and a day, whether every pattern is written the way model names arrive — is checked by the test project, and therefore by `dotnet test`.
 
@@ -79,10 +81,10 @@ Changes which touch only the documentation, such as the README or the files in `
 ## Create a release
 In order to create a release:
 1. To create a new release, you need to be a maintainer of the repository—see step 8.
-2. Make sure there's a changelog file for the version you want to create in the `/app/MindWork AI Studio/wwwroot/changelog` directory. Name the file `vX.Y.Z.md` and include all release changes—your updates and any others included in this version.
+2. Make sure there's a changelog file for the version you want to create in the `/app/MindWork AI Studio/wwwroot/changelog` directory. Name the file `vX.Y.Z.md` and include all release changes—your updates and any others included in this version. Keep its first line, the placeholder which the previous release created, such as `# v26.11.2, build 261 (2026-11-xx xx:xx UTC)`; when you rename the file for another version, change the version in that line as well. The release fills in the build time and refuses to start when the line names another version or build.
 3. After you have created the changelog file, you must commit the changes to the repository.
-4. To prepare a new release, open a terminal, go to `/app/Build` and run `dotnet run release --action <ACTION>`, where `<ACTION>` is either `patch` (creating a patch version), `minor` (creating a minor version), or `major` (creating a major version).
-5. Now wait until all process steps have been completed. Among other things, the version number will be incremented, the new changelog registered, and the version numbers of central dependencies updated, etc.
+4. To prepare a new release, open a terminal, go to `/app/Build` and run `dotnet run release --action <ACTION>`, where `<ACTION>` raises one part of the version, which reads year.month.release: `build` raises the release (26.11.1 becomes 26.11.2), `month` the month (26.12.1), and `year` the year (27.1.1). When a month passed without a release, set the version directly instead, e.g., `dotnet run release --version 27.2.1`.
+5. Now wait until all process steps have been completed. Among other things, the version number will be incremented, the build time written into the header of the new changelog, the changelog registered, and the version numbers of central dependencies updated, etc.
 6. The actual release will be built by our GitHub Workflow. For this to work, you need to create a PR with your changes.
 7. Your proposed changes will be reviewed and merged.
 8. Once the PR is merged, a member of the maintainers team will create & push an appropriate git tag in the format `vX.Y.Z`.

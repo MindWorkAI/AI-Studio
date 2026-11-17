@@ -159,7 +159,7 @@ internal static class SlideDeckSpecValidator
         {
             var familyId = chosen.Families[purpose].Id;
             if (!newSlideFamilyIds.Contains(familyId))
-                issues.Add($"The presentation has no slide on layout {familyId} for {purpose.PromptDescription()}. Add one {purpose.PromptPlacement()}.");
+                issues.Add($"The presentation has no slide on layout {familyId} for {purpose.PromptDescription}. Add one {purpose.PromptPlacement}.");
         }
 
         if (chosen.For(LayoutPurpose.IMPRINT) is { } imprintFamily && newSlideFamilyIds.Contains(imprintFamily.Id) && newSlideFamilyIds[^1] != imprintFamily.Id)
@@ -431,12 +431,12 @@ internal static class SlideDeckSpecValidator
         var slot = SlotOf(slots, role, 1);
         if (slot is null)
         {
-            issues.Add($"Slide {number} has a {role.CatalogName()}, but layout {layoutId} has none. Choose a layout with a {role.CatalogName()}, or leave it empty.");
+            issues.Add($"Slide {number} has a {role.CatalogName}, but layout {layoutId} has none. Choose a layout with a {role.CatalogName}, or leave it empty.");
             return;
         }
 
         if (slot.Capacity is { } capacity)
-            ValidateCapacity([new SlideParagraph(text, 0)], capacity, $"Slide {number}: the {role.CatalogName()}", issues);
+            ValidateCapacity([new SlideParagraph(text, 0)], capacity, $"Slide {number}: the {role.CatalogName}", issues);
     }
 
     /// <summary>
@@ -450,7 +450,7 @@ internal static class SlideDeckSpecValidator
             return true;
 
         issues.Add(slotCount == 0
-            ? $"Slide {number} has {count} {PluralOf(role, count)}, but layout {layoutId} has no {role.CatalogName()}. Choose a layout which has one."
+            ? $"Slide {number} has {count} {PluralOf(role, count)}, but layout {layoutId} has no {role.CatalogName}. Choose a layout which has one."
             : $"Slide {number} has {count} {PluralOf(role, count)}, but layout {layoutId} has only {slotCount}. Merge them, or choose a layout with more.");
 
         return false;
@@ -517,5 +517,5 @@ internal static class SlideDeckSpecValidator
         return Math.Max(1, (int)Math.Ceiling(paragraph.Text.Length / (double)width));
     }
 
-    private static string PluralOf(PlaceholderRole role, int count) => count == 1 ? role.CatalogName() : $"{role.CatalogName()}s";
+    private static string PluralOf(PlaceholderRole role, int count) => count == 1 ? role.CatalogName : $"{role.CatalogName}s";
 }

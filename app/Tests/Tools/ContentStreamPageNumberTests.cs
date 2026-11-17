@@ -84,6 +84,36 @@ public sealed class ContentStreamPageNumberTests
         }
     }
 
+    /// <remarks>
+    /// The runtime estimates the pages of a Word or OpenDocument file from its page breaks, while a
+    /// OneNote section knows its pages. The AI is told which of the two it reads.
+    /// </remarks>
+    [Test]
+    public void OnlyAnEstimatedDocumentPageIsMarkedAsEstimated()
+    {
+        var estimatedStreamId = NewStreamId();
+        var exactStreamId = NewStreamId();
+        try
+        {
+            ContentStreamSseHandler.ProcessEvent(DocumentEvent(estimatedStreamId, 1, "A page of a Word file."));
+            ContentStreamSseHandler.ProcessEvent(DocumentEvent(exactStreamId, 1, "A page of a OneNote section.", pageIsExact: true));
+
+            var estimated = ContentStreamSseHandler.Clear(estimatedStreamId);
+            var exact = ContentStreamSseHandler.Clear(exactStreamId);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(estimated?.Content, Does.StartWith("<!-- Estimated page 1 -->"));
+                Assert.That(exact?.Content, Does.StartWith("<!-- Page 1 -->"));
+            }
+        }
+        finally
+        {
+            ContentStreamSseHandler.Clear(estimatedStreamId);
+            ContentStreamSseHandler.Clear(exactStreamId);
+        }
+    }
+
     [Test]
     public void TheLastDocumentPageIsReleasedWithItsNumber()
     {
@@ -176,11 +206,11 @@ public sealed class ContentStreamPageNumberTests
         Metadata = new ContentStreamPdfMetadata { Pdf = new() { PageNumber = pageNumber } },
     };
 
-    private static ContentStreamSseEvent DocumentEvent(string streamId, int pageNumber, string content) => new()
+    private static ContentStreamSseEvent DocumentEvent(string streamId, int pageNumber, string content, bool pageIsExact = false) => new()
     {
         Content = content,
         StreamId = streamId,
-        Metadata = new ContentStreamDocumentMetadata { Document = new() { PageNumber = pageNumber } },
+        Metadata = new ContentStreamDocumentMetadata { Document = new() { PageNumber = pageNumber, PageIsExact = pageIsExact } },
     };
 
     //

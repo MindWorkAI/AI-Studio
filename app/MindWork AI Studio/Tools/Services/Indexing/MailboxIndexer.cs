@@ -74,6 +74,8 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MailboxIndexer).Namespace, nameof(MailboxIndexer));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(MailboxIndexer).Namespace, nameof(MailboxIndexer));
+
     /// <summary>
     /// One folder after the first pass of a run.
     /// </summary>
@@ -118,7 +120,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
         if (!policy.IsAllowed(mailbox.Host))
         {
             logger.LogInformation("Not connecting to mailbox '{MailboxId}' because the organization allows only its own mail servers, and this one is none of them.", mailbox.Id);
-            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(MailboxConnectionFailure.SERVER_NOT_ALLOWED.GetDescription(), DataSourceAttention.SERVER_NOT_ALLOWED);
+            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(MailboxConnectionFailure.SERVER_NOT_ALLOWED.Description, DataSourceAttention.SERVER_NOT_ALLOWED);
             return IndexedRunOutcome.DONE;
         }
 
@@ -144,7 +146,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
         var password = await this.ReadPasswordAsync(mailbox);
         if (password is null)
         {
-            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(TB("The password of the mailbox could not be read from the operating system. Please enter it again in the settings of the mailbox."));
+            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(TA("The password of the mailbox could not be read from the operating system. Please enter it again in the settings of the mailbox."));
             return IndexedRunOutcome.DONE;
         }
 
@@ -170,7 +172,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
                 progress.PublishRunFailure(GetAuthFailureMessage(failure), DataSourceAttention.AUTH_FAILED);
             }
             else
-                progress.PublishRunFailure(e.Failure.GetDescription(), e.Failure is MailboxConnectionFailure.SERVER_NOT_ALLOWED ? DataSourceAttention.SERVER_NOT_ALLOWED : DataSourceAttention.NONE);
+                progress.PublishRunFailure(e.Failure.Description, e.Failure is MailboxConnectionFailure.SERVER_NOT_ALLOWED ? DataSourceAttention.SERVER_NOT_ALLOWED : DataSourceAttention.NONE);
 
             return IndexedRunOutcome.DONE;
         }
@@ -224,7 +226,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
                 // would remove every mail from the index, and embedding them again costs hours.
                 //
                 logger.LogWarning("The server no longer lists the root folder of mailbox '{MailboxId}'. The sync stops, and nothing is removed from the index.", mailbox.Id);
-                (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(string.Format(TB("The server no longer lists the folder '{0}' to which this mailbox is limited. Perhaps it was renamed or deleted. Nothing was removed from the index. Rename the folder back on the server, or add the mailbox anew."), mailbox.RootFolder));
+                (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(string.Format(TA("The server no longer lists the folder '{0}' to which this mailbox is limited. Perhaps it was renamed or deleted. Nothing was removed from the index. Rename the folder back on the server, or add the mailbox anew."), mailbox.RootFolder));
                 return IndexedRunOutcome.DONE;
             }
 
@@ -307,7 +309,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
             this.RecordConnectionFailure(mailbox.Id, e.Failure);
             await context.OptimizeCollectionIfNeededAsync("mailbox sync stopped", token);
             progress ??= await this.CreateStoredStateProgressAsync(context, token);
-            progress.PublishRunFailure(e.Failure.GetDescription());
+            progress.PublishRunFailure(e.Failure.Description);
             return IndexedRunOutcome.DONE;
         }
     }
@@ -607,11 +609,11 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
     }
 
     private static string GetAuthFailureMessage(MailboxAuthFailure failure) => string.Format(
-        TB("Signing in to the mailbox failed on {0}. Presumably your password changed. AI Studio does not try again on its own, so that your account is not locked. Please enter your current password in the settings of the mailbox."),
+        TA("Signing in to the mailbox failed on {0}. Presumably your password changed. AI Studio does not try again on its own, so that your account is not locked. Please enter your current password in the settings of the mailbox."),
         failure.FailedAtUtc.ToLocalTime().ToString("g", I18N.I.Culture));
 
     private static string GetRemovalMessage(int removalCount) => string.Format(
-        TB("This sync would remove {0} mails from the index of AI Studio at once, so it waits for you to agree. On the server, the mails stay as they are. Should they come back later, e.g. because you choose a larger period again, they have to be embedded anew, which takes time and, with a cloud provider, money."),
+        TA("This sync would remove {0} mails from the index of AI Studio at once, so it waits for you to agree. On the server, the mails stay as they are. Should they come back later, e.g. because you choose a larger period again, they have to be embedded anew, which takes time and, with a cloud provider, money."),
         removalCount.CompactCount());
 
     /// <summary>

@@ -1,0 +1,29 @@
+{
+  "artifactVersion": 41,
+  "contractVersion": 42,
+  "artifactId": "00000000-0000-4000-8000-000000000003",
+  "createdAtUtc": "2026-10-29T12:34:15+01:00",
+  "payloadHash": "payloadHash sample 5",
+  "layout": {
+    "nodeId": "nodeId sample 6",
+    "kind": "STACK",
+    "sectionId": "sectionId sample 7",
+    "componentId": "componentId sample 8",
+    "children": [],
+    "columns": {
+      "mobile": 49,
+      "tablet": 50,
+      "desktop": 51
+    },
+    "span": 52,
+    "order": 53,
+    "emphasized": true,
+    "alignment": "CENTER"
+  },
+  "profile": "EXECUTIVE",
+  "templateHtml": "templateHtml sample 14",
+  "css": "css sample 15",
+  "templateHash": "templateHash sample 16",
+  "cssHash": "cssHash sample 17",
+  "model": "model sample 18"
+}

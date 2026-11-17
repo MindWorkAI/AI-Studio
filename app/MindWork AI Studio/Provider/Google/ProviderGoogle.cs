@@ -15,7 +15,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.GOOGLE.ToSecretId();
+    public override string Id => LLMProviders.GOOGLE.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Google Gemini";
@@ -92,16 +92,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             }
             
             // Prepare the Google Gemini embedding request:
-            var payload = new
-            {
-                content = new
-                {
-                    parts = texts.Select(text => new { text }).ToArray()
-                },
-                
-                taskType = "SEMANTIC_SIMILARITY"
-            };
-            
+            var payload = GoogleEmbeddingRequest.Of(texts);
             var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
             var embedUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:embedContent";
             using var request = new HttpRequestMessage(HttpMethod.Post, embedUrl);

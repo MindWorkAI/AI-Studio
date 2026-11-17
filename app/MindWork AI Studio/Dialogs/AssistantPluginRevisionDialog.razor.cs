@@ -220,7 +220,7 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
     private string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
         if (provider.UsedLLMProvider == LLMProviders.NONE)
-            return T("Please select a provider.");
+            return TA("Please select a provider.");
 
         return null;
     }

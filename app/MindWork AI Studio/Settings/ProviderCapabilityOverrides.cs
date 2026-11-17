@@ -89,35 +89,35 @@ public sealed record ProviderCapabilityOverrides
 
     [JsonPropertyName("AUDIO_INPUT")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? AudioInput { get; init; }
+    public bool? AudioInput { get; set; }
 
     [JsonPropertyName("FUNCTION_CALLING")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? FunctionCalling { get; init; }
+    public bool? FunctionCalling { get; set; }
 
     [JsonPropertyName("MULTIPLE_IMAGE_INPUT")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? MultipleImageInput { get; init; }
+    public bool? MultipleImageInput { get; set; }
 
     [JsonPropertyName("SPEECH_INPUT")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? SpeechInput { get; init; }
+    public bool? SpeechInput { get; set; }
 
     [JsonPropertyName("VIDEO_INPUT")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? VideoInput { get; init; }
+    public bool? VideoInput { get; set; }
 
     [JsonPropertyName("OPTIONAL_REASONING")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? OptionalReasoning { get; init; }
+    public bool? OptionalReasoning { get; set; }
 
     [JsonPropertyName("ALWAYS_REASONING")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? AlwaysReasoning { get; init; }
+    public bool? AlwaysReasoning { get; set; }
 
     [JsonPropertyName("REASONING_BY_DEFAULT")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? ReasoningByDefault { get; init; }
+    public bool? ReasoningByDefault { get; set; }
 
     /// <summary>
     /// How many tokens this installation reads and writes, or null to keep the automatic answer.
@@ -131,21 +131,21 @@ public sealed record ProviderCapabilityOverrides
     /// </remarks>
     [JsonPropertyName(CONTEXT_WINDOW_KEY)]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? ContextWindowTokens { get; init; }
+    public int? ContextWindowTokens { get; set; }
 
     /// <summary>
     /// How many images one message may carry, or null to keep the automatic answer.
     /// </summary>
     [JsonPropertyName(MAX_IMAGES_PER_MESSAGE_KEY)]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? MaxImagesPerMessage { get; init; }
+    public int? MaxImagesPerMessage { get; set; }
 
     /// <summary>
     /// How many images one request may carry, or null to keep the automatic answer.
     /// </summary>
     [JsonPropertyName(MAX_IMAGES_PER_REQUEST_KEY)]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? MaxImagesPerRequest { get; init; }
+    public int? MaxImagesPerRequest { get; set; }
 
     [JsonIgnore]
     public bool HasOverrides =>
@@ -346,14 +346,14 @@ public sealed record ProviderCapabilityOverrides
             return string.Empty;
 
         var builder = new StringBuilder();
-        builder.AppendLine($@"{indentation}[""CapabilityOverrides""] = {{");
+        builder.AppendLineLF($@"{indentation}[""CapabilityOverrides""] = {{");
         foreach (var capability in SUPPORTED_CAPABILITIES)
         {
             var overrideValue = this.GetOverride(capability);
             if (overrideValue is null)
                 continue;
 
-            builder.AppendLine($@"{indentation}    [""{capability}""] = {overrideValue.Value.ToString().ToLowerInvariant()},");
+            builder.AppendLineLF($@"{indentation}    [""{capability}""] = {overrideValue.Value.ToString().ToLowerInvariant()},");
         }
 
         foreach (var key in NUMERIC_KEYS)
@@ -361,7 +361,7 @@ public sealed record ProviderCapabilityOverrides
             if (this.GetNumber(key) is not { } number)
                 continue;
 
-            builder.AppendLine($@"{indentation}    [""{key}""] = {number.ToString(CultureInfo.InvariantCulture)},");
+            builder.AppendLineLF($@"{indentation}    [""{key}""] = {number.ToString(CultureInfo.InvariantCulture)},");
         }
 
         builder.Append($@"{indentation}}},");

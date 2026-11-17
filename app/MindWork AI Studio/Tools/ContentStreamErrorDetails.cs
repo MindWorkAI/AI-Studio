@@ -7,23 +7,23 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamErrorDetails
 {
     [JsonPropertyName("code")]
-    public string? Code { get; init; }
+    public string? Code { get; set; }
 
     [JsonPropertyName("message")]
-    public string? Message { get; init; }
+    public string? Message { get; set; }
 
     /// <summary>
     /// The page the failure belongs to, when the failure affects a single page only.
     /// </summary>
     [JsonPropertyName("page_number")]
-    public int? PageNumber { get; init; }
+    public int? PageNumber { get; set; }
 
     /// <summary>
     /// The format the runtime identified by looking at the content, e.g. when it contradicts the
     /// file extension.
     /// </summary>
     [JsonPropertyName("detected_format")]
-    public string? DetectedFormat { get; init; }
+    public string? DetectedFormat { get; set; }
 
     /// <summary>
     /// Gets the parsed error code.

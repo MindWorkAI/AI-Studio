@@ -6,5 +6,5 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamTextDetails
 {
     [JsonPropertyName("line_number")]
-    public int? LineNumber { get; init; }
+    public int? LineNumber { get; set; }
 }

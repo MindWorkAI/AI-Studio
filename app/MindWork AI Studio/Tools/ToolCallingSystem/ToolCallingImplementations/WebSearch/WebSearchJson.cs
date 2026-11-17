@@ -14,10 +14,11 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 /// </remarks>
 internal static class WebSearchJson
 {
-    public static readonly JsonSerializerOptions OPTIONS = new()
+    public static readonly JsonSerializerOptions OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
+        TypeInfoResolver = WebSearchJsonContext.Default,
+    }.AsReadOnly();
 }

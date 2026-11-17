@@ -42,7 +42,7 @@ public sealed class AssistantLaunchServiceTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(destinations, Is.Not.Empty);
-            Assert.That(destinations.All(destination => destination.AllowSendTo()), Is.True);
+            Assert.That(destinations.All(destination => destination.AllowSendTo), Is.True);
             Assert.That(destinations, Does.Not.Contain(AIStudio.Tools.Components.DYNAMIC_ASSISTANT), "Assistant plugins cannot take content yet.");
             Assert.That(destinations, Does.Not.Contain(AIStudio.Tools.Components.NONE));
         }
@@ -58,7 +58,7 @@ public sealed class AssistantLaunchServiceTests
     [Test]
     public void ShorterNamesComeFirst()
     {
-        var lengths = AssistantLaunchService.SelectDestinations(AIStudio.Tools.Components.CHAT, _ => true).Select(destination => destination.Name().Length).ToList();
+        var lengths = AssistantLaunchService.SelectDestinations(AIStudio.Tools.Components.CHAT, _ => true).Select(destination => destination.Name.Length).ToList();
         Assert.That(lengths, Is.Ordered);
     }
 }

@@ -5,19 +5,19 @@ public abstract record ConfigurationBaseObject : IConfigurationObject
     #region Implementation of IConfigurationObject
 
     /// <inheritdoc />
-    public abstract string Id { get; init; }
+    public abstract string Id { get; set; }
 
     /// <inheritdoc />
-    public abstract uint Num { get; init; }
+    public abstract uint Num { get; set; }
 
     /// <inheritdoc />
-    public abstract string Name { get; init; }
+    public abstract string Name { get; set; }
 
     /// <inheritdoc />
-    public abstract bool IsEnterpriseConfiguration { get; init; }
+    public abstract bool IsEnterpriseConfiguration { get; set; }
 
     /// <inheritdoc />
-    public abstract Guid EnterpriseConfigurationPluginId { get; init; }
+    public abstract Guid EnterpriseConfigurationPluginId { get; set; }
 
     #endregion
 }

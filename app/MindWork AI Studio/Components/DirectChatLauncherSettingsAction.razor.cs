@@ -56,7 +56,7 @@ public partial class DirectChatLauncherSettingsAction : MSGComponentBase
                 return;
 
             this.Logger.LogInformation("The chat launcher '{PluginName}' ({PluginId}) has been updated from its tile.", result.PluginName, result.PluginId);
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The tile '{0}' has been updated."), result.PluginName)));
+            await this.MessageBus.SendSuccess(new(AppIcons.SAVE, string.Format(this.T("The tile '{0}' has been updated."), result.PluginName)));
 
             // Saving already ran LoadAll, which announced PLUGINS_RELOADED. We still announce the
             // configuration change: with automatic audits enabled, the dialog stored an audit result:

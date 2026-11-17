@@ -104,4 +104,34 @@ public sealed class RetrievalTextContext : IRetrievalContext
     /// such as a text file.
     /// </remarks>
     public int? ChunkNumber { get; init; }
+
+    /// <summary>
+    /// Whether AI Studio cut the matched text, since the passage did not fit into a size limit otherwise.
+    /// </summary>
+    public bool IsMatchedTextShortened { get; private set; }
+
+    /// <summary>
+    /// Whether AI Studio cut or left out the surrounding content, since the passage did not fit into a size limit otherwise.
+    /// </summary>
+    public bool IsSurroundingContentShortened { get; private set; }
+
+    /// <summary>
+    /// A copy of this context with shorter texts, made to fit a size limit.
+    /// </summary>
+    /// <remarks>
+    /// Everything else stays as the data source delivered it. The copy remembers which of its texts
+    /// are shorter than those of the data source, so that the AI is told.
+    /// </remarks>
+    /// <param name="matchedText">The matched text, possibly shortened.</param>
+    /// <param name="surroundingContent">The surrounding content, possibly shortened.</param>
+    /// <returns>The copy.</returns>
+    internal RetrievalTextContext WithShorterTexts(string matchedText, IReadOnlyList<string> surroundingContent)
+    {
+        var copy = (RetrievalTextContext)this.MemberwiseClone();
+        copy.IsMatchedTextShortened = this.IsMatchedTextShortened || matchedText.Length < this.MatchedText.Length;
+        copy.IsSurroundingContentShortened = this.IsSurroundingContentShortened || !surroundingContent.SequenceEqual(this.SurroundingContent);
+        copy.MatchedText = matchedText;
+        copy.SurroundingContent = surroundingContent;
+        return copy;
+    }
 }

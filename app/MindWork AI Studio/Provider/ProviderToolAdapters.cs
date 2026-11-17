@@ -24,19 +24,18 @@ public static class ProviderToolAdapters
     /// </summary>
     /// <param name="definition">The tool to describe.</param>
     /// <param name="hostEnforcesStrict">Whether the host binds the model's tool calls to a strict schema. Only then is the tool sent in strict mode.</param>
-    public static object ToChatCompletionTool(ToolDefinition definition, bool hostEnforcesStrict)
+    public static ChatCompletionFunctionTool ToChatCompletionTool(ToolDefinition definition, bool hostEnforcesStrict)
     {
         var isStrict = definition.Function.Strict && hostEnforcesStrict;
-        return new
+        return new()
         {
-            type = "function",
-            function = new
+            Function = new()
             {
-                name = definition.Function.Name,
-                description = definition.Function.DescriptionForLLM,
-                parameters = ToOpenAIParameters(definition, isStrict),
-                strict = isStrict,
-            }
+                Name = definition.Function.Name,
+                Description = definition.Function.DescriptionForLLM,
+                Parameters = ToOpenAIParameters(definition, isStrict),
+                Strict = isStrict,
+            },
         };
     }
 

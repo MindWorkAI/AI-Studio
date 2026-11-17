@@ -14,5 +14,5 @@ public sealed record AnthropicStreamMessage
     /// <summary>
     /// What the request carried, where the stream states it.
     /// </summary>
-    public AnthropicUsage? Usage { get; init; }
+    public AnthropicUsage? Usage { get; set; }
 }

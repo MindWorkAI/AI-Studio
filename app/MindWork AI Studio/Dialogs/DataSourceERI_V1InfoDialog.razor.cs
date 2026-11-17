@@ -56,7 +56,7 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, ISecretId
     /// <summary>
     /// The level which applies, including what the organization or the security policy demands.
     /// </summary>
-    private string OutboundDataRestrictionName => this.DataSource.GetEffectiveOutboundDataRestriction(this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction).GetName();
+    private string OutboundDataRestrictionName => this.DataSource.GetEffectiveOutboundDataRestriction(this.SettingsManager.ConfigurationData.DataSourceSecurity.MinimumOutboundDataRestriction).Name;
 
     private async Task<(bool Success, DataSourceERI_V1 EffectiveDataSource)> CreateEffectiveDataSource()
     {
@@ -103,9 +103,9 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, ISecretId
         foreach (var (paramName, description) in parameters)
         {
             sb.Append(T("Parameter: "));
-            sb.AppendLine(paramName);
-            sb.AppendLine(description);
-            sb.AppendLine();
+            sb.AppendLineLF(paramName);
+            sb.AppendLineLF(description);
+            sb.AppendLineLF();
         }
 
         return sb.ToString();

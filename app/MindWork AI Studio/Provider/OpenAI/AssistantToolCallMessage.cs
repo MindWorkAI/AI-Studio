@@ -5,12 +5,12 @@ namespace AIStudio.Provider.OpenAI;
 
 public sealed record AssistantToolCallMessage : IMessageBase
 {
-    public string Role { get; init; } = "assistant";
+    public string Role { get; set; } = "assistant";
 
-    public JsonElement? Content { get; init; }
+    public JsonElement? Content { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? ReasoningContent { get; init; }
+    public string? ReasoningContent { get; set; }
 
-    public IList<ChatCompletionToolCall> ToolCalls { get; init; } = [];
+    public IList<ChatCompletionToolCall> ToolCalls { get; set; } = [];
 }

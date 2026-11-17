@@ -20,6 +20,7 @@ public sealed class LocalRetrievalContentTypeTests
     [TestCase("pdf", ExpectedResult = RetrievalContentType.TEXT_DOCUMENT)]
     [TestCase("xlsx", ExpectedResult = RetrievalContentType.TEXT_SPREADSHEET)]
     [TestCase("pptx", ExpectedResult = RetrievalContentType.TEXT_PRESENTATION)]
+    [TestCase("one", ExpectedResult = RetrievalContentType.TEXT_DOCUMENT)]
     [TestCase("unknown", ExpectedResult = RetrievalContentType.TEXT_DOCUMENT)]
     public RetrievalContentType AFileTypeTellsWhatItsPassagesAre(string fileType) => DataSourceLocalRetrievalService.GetRetrievalContentType(fileType);
 }

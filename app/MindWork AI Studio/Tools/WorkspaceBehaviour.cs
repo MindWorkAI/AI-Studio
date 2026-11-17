@@ -65,7 +65,9 @@ public static partial class WorkspaceBehaviour
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WorkspaceBehaviour).Namespace, nameof(WorkspaceBehaviour));
 
-    public static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(WorkspaceBehaviour).Namespace, nameof(WorkspaceBehaviour));
+
+    public static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
         AllowTrailingCommas = true,
@@ -75,8 +77,9 @@ public static partial class WorkspaceBehaviour
         Converters =
         {
             new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper),
-        }
-    };
+        },
+        TypeInfoResolver = ChatJsonContext.Default,
+    }.AsReadOnly();
 
     private static readonly TimeSpan PREFETCH_DELAY_DURATION = TimeSpan.FromMilliseconds(45);
 
@@ -1071,13 +1074,13 @@ public static partial class WorkspaceBehaviour
         var sourceName = string.IsNullOrWhiteSpace(sourceChat.Name) ? TB("Unnamed chat") : sourceChat.Name;
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { x => x.Message, string.Format(TB("Please enter a name for the copy of your chat '{0}':"), sourceName) },
+            { x => x.Message, string.Format(TA("Please enter a name for the copy of your chat '{0}':"), sourceName) },
             { x => x.InputHeaderText, TB("Chat Name") },
             { x => x.UserInput, string.Format(TB("Copy of {0}"), sourceName) },
             { x => x.ConfirmText, TB("Copy") },
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
-            { x => x.EmptyInputErrorMessage, TB("Please enter a chat name.") },
+            { x => x.EmptyInputErrorMessage, TA("Please enter a chat name.") },
         };
 
         var dialogReference = await dialogService.ShowAsync<SingleInputDialog>(TB("Copy Chat"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
@@ -1596,8 +1599,8 @@ public static partial class WorkspaceBehaviour
             {
                 x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
                 {
-                    true => string.Format(TB("Are you sure you want to delete the chat '{0}'?"), chat.Name),
-                    false => string.Format(TB("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
+                    true => string.Format(TA("Are you sure you want to delete the chat '{0}'?"), chat.Name),
+                    false => string.Format(TA("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
                 }
             },
         };

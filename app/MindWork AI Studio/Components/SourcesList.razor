@@ -89,7 +89,7 @@
                         @if (entry.Passages.Count > 0)
                         {
                             <MudTooltip Text="@this.PassagesTooltip(entry)" Placement="Placement.Left" ShowOnFocus="@false">
-                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Class="icon-button-compact" OnClick="@(() => this.ShowPassages(entry))"/>
+                                <MudIconButton Icon="@AppIcons.PREVIEW" Size="Size.Small" Class="icon-button-compact" OnClick="@(() => this.ShowPassages(entry))"/>
                             </MudTooltip>
                         }
                     </div>

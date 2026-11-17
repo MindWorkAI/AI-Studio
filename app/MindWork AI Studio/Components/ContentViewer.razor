@@ -36,7 +36,7 @@
                     break;
 
                 case ContentView.FORMATTED:
-                    <MudMarkdown Value="@this.shownText" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CONTENT_MARKDOWN_PIPELINE"/>
+                    <HighlightedMarkdown Value="@this.shownText" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.CONTENT_MARKDOWN_PIPELINE"/>
                     break;
 
                 default:

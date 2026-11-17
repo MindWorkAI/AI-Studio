@@ -10,7 +10,7 @@ public static class Environment
     public const string BUILD_OFFLINE_ENVIRONMENT_VARIABLE = "AI_STUDIO_BUILD_OFFLINE";
     public static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
     
-    private static readonly Dictionary<RID, string> ALL_RIDS = Enum.GetValues<RID>().Select(rid => new KeyValuePair<RID, string>(rid, rid.AsMicrosoftRid())).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+    private static readonly Dictionary<RID, string> ALL_RIDS = Enum.GetValues<RID>().Select(rid => new KeyValuePair<RID, string>(rid, rid.MicrosoftRid)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     
     public static bool IsWorkingDirectoryValid()
     {

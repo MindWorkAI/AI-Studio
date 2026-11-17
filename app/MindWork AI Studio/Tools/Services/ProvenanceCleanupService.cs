@@ -1,3 +1,4 @@
+using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tools.DataBackup;
@@ -9,7 +10,11 @@ namespace AIStudio.Tools.Services;
 /// <summary>
 /// One-shot startup service that removes from the provenance store what no stored chat refers to, see ProvenanceCleanup.
 /// </summary>
-public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClientProvider, DataRestoreService dataRestoreService, ILogger<ProvenanceCleanupService> logger) : BackgroundService
+/// <remarks>
+/// It knows the chats of the workspaces, the temporary chats, and the chats of the BeyondFacts Lab. It reads the
+/// latter also while the lab is switched off: otherwise, they would lose what they received at every start.
+/// </remarks>
+public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClientProvider, DataRestoreService dataRestoreService, BeyondFactsLabStore labStore, ILogger<ProvenanceCleanupService> logger) : BackgroundService
 {
     /// <summary>
     /// When this run of the app started. Entries stored since belong to it and stay.
@@ -60,9 +65,9 @@ public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClie
             //
             var result = await Task.Run(() => ProvenanceCleanup.CleanUpAsync(
                 store,
-                WorkspaceBehaviour.ReadAllChatLocations(),
-                (workspaceId, chatId) => WorkspaceBehaviour.LoadChatAsync(new(workspaceId, chatId)),
-                WorkspaceBehaviour.GetChatWrittenAt,
+                this.ReadAllChatLocations(),
+                this.LoadChatAsync,
+                this.GetChatWrittenAt,
                 this.startedAt,
                 lastCleanup,
                 stoppingToken), stoppingToken);
@@ -84,4 +89,53 @@ public sealed class ProvenanceCleanupService(DatabaseClientProvider databaseClie
             logger.LogWarning(exception, "The provenance startup cleanup failed. The next start tries again.");
         }
     }
+
+    /// <summary>
+    /// Reads where every chat on the disk lies, from the folders alone.
+    /// </summary>
+    /// <returns>The place of every chat, by its ID.</returns>
+    private IReadOnlyDictionary<Guid, StoredChatLocation> ReadAllChatLocations()
+    {
+        var locations = new Dictionary<Guid, StoredChatLocation>();
+        foreach (var (chatId, workspaceId) in WorkspaceBehaviour.ReadAllChatLocations())
+            locations[chatId] = StoredChatLocation.InWorkspace(workspaceId);
+
+        foreach (var (chatId, labThread) in labStore.ReadAllThreadLocations())
+            locations[chatId] = StoredChatLocation.InLab(labThread);
+
+        return locations;
+    }
+
+    /// <summary>
+    /// Reads a chat from its place.
+    /// </summary>
+    /// <param name="location">The place of the chat.</param>
+    /// <param name="chatId">The ID of the chat.</param>
+    /// <returns>The chat, or null when it cannot be read.</returns>
+    private async Task<ChatThread?> LoadChatAsync(StoredChatLocation location, Guid chatId)
+    {
+        if (location.LabThread is not { } labThread)
+            return await WorkspaceBehaviour.LoadChatAsync(new(location.WorkspaceId, chatId));
+
+        try
+        {
+            return await labStore.LoadThreadAsync(labThread);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            // A chat which cannot be read keeps everything it received:
+            logger.LogDebug(exception, "The provenance startup cleanup could not read a chat of the BeyondFacts Lab.");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Tells when the file of a chat was last written.
+    /// </summary>
+    /// <param name="location">The place of the chat.</param>
+    /// <param name="chatId">The ID of the chat.</param>
+    /// <returns>The time, or null when it is not known.</returns>
+    private DateTimeOffset? GetChatWrittenAt(StoredChatLocation location, Guid chatId) => location.LabThread is { } labThread
+        ? labStore.GetThreadWrittenAt(labThread)
+        : WorkspaceBehaviour.GetChatWrittenAt(location.WorkspaceId, chatId);
 }

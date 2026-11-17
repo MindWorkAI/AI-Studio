@@ -148,13 +148,13 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
 
         if (!agentProvider.AllowsDataSourceAccess(this.SettingsManager, requiredDataSecurity, requiredConfidenceLevel))
         {
-            logger.LogWarning($"The agent for retrieval context validation uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).GetName()}', but the retrieved data requires data security '{requiredDataSecurity}' and provider confidence '{requiredConfidenceLevel.GetName()}'. The agent cannot validate retrieval contexts.");
+            logger.LogWarning($"The agent for retrieval context validation uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).Name}', but the retrieved data requires data security '{requiredDataSecurity}' and provider confidence '{requiredConfidenceLevel.Name}'. The agent cannot validate retrieval contexts.");
             this.ProviderSettings = Settings.Provider.NONE;
             return false;
         }
         
         // Assign the provider settings to the agent:
-        logger.LogInformation($"The agent for the retrieval context validation uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.ToName()}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
+        logger.LogInformation($"The agent for the retrieval context validation uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.Name}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.Name}).");
         this.ProviderSettings = agentProvider;
         return true;
     }

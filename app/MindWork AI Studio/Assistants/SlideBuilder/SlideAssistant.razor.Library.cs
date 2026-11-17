@@ -227,7 +227,7 @@ public partial class SlideAssistant
         if (library.Pictures.Count == 0)
             return string.Empty;
 
-        var list = string.Join(Environment.NewLine, library.Pictures.Select((picture, index) => $"- Picture {firstNumber + index}: {picture.Name}{(picture.IsIcon ? " (icon)" : string.Empty)}"));
+        var list = string.Join('\n',library.Pictures.Select((picture, index) => $"- Picture {firstNumber + index}: {picture.Name}{(picture.IsIcon ? " (icon)" : string.Empty)}"));
         var sanitizedList = await guardService.SanitizeAsync(list, PromptInjectionSource.FileContent(folderPath), promptInjectionScope);
         return $"""
 

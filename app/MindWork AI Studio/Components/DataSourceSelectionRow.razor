@@ -15,8 +15,8 @@
                 {
                     <MudIcon Icon="@this.GetBlockedIcon()" Size="Size.Small" Color="@this.GetBlockedIconColor()" Style="flex-shrink: 0;"/>
                 }
-                <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                    <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
+                <MudTooltip Text="@internalSource.ConfidenceLevel.Name">
+                    <MudIcon Icon="@AppIcons.PROVIDER_CONFIDENCE" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                 </MudTooltip>
             }
         </MudStack>

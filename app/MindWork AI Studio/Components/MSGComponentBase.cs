@@ -23,19 +23,6 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
 
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
-    /// <summary>
-    /// How Markdown rendered by this component looks: its code blocks follow the color theme of the app.
-    /// </summary>
-    /// <remarks>
-    /// Every component which renders Markdown wants the same, so it is written down once here instead
-    /// of in each of them. Read on every render: a change of the color theme renders every component
-    /// again, cf. ProcessMessage, and the code blocks change along with it.
-    /// </remarks>
-    protected MudMarkdownStyling MarkdownStyling => new()
-    {
-        CodeBlock = { Theme = this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default },
-    };
-
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -58,6 +45,27 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
 
     #endregion
 
+    /// <summary>
+    /// Gets a text which addresses the reader, in the form of address the person chose; see I18N.AddressForm.
+    /// </summary>
+    /// <param name="fallbackEN">The text in English (US).</param>
+    /// <returns>The text from the language plugin or the English text.</returns>
+    public string TA(string fallbackEN) => this.GetText(this.Lang, fallbackEN, addressForm: I18N.I.AddressForm);
+
+    /// <summary>
+    /// Gets a text which addresses the reader, in the form of address the person chose, under the key of the given
+    /// type; see I18N.AddressForm.
+    /// </summary>
+    /// <remarks>
+    /// A base class, such as AssistantBase, needs this for its own texts: the collector files them under the base
+    /// class, while the component at runtime is a derived one.
+    /// </remarks>
+    /// <param name="fallbackEN">The text in English (US).</param>
+    /// <param name="typeNamespace">The namespace of the type requesting the text, used as part of the key.</param>
+    /// <param name="typeName">The name of the type requesting the text, used as part of the key.</param>
+    /// <returns>The text from the language plugin or the English text.</returns>
+    public string TA(string fallbackEN, string? typeNamespace, string? typeName) => this.GetText(this.Lang, fallbackEN, typeNamespace, typeName, I18N.I.AddressForm);
+
     #region Implementation of IMessageBusReceiver
 
     public async Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
@@ -67,9 +75,10 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
             switch (triggeredEvent)
             {
                 case Event.COLOR_THEME_CHANGED:
+                case Event.ADDRESS_FORM_CHANGED:
                     this.StateHasChanged();
                     break;
-            
+
                 case Event.PLUGINS_RELOADED:
                     this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
                     await this.InvokeAsync(this.StateHasChanged);
@@ -118,10 +127,11 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
     /// <param name="events">A list of events for which you want to receive messages.</param>
     protected void ApplyFilters(ComponentBase[] filterComponents, Event[] events)
     {
-        // Append the color theme changed event to the list of events:
+        // Append the events which every component handles to the list of events:
         var eventsList = new List<Event>(events)
         {
             Event.COLOR_THEME_CHANGED,
+            Event.ADDRESS_FORM_CHANGED,
             Event.PLUGINS_RELOADED,
         };
         

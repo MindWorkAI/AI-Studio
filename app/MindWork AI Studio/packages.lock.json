@@ -2,6 +2,18 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
+      "AngouriMath": {
+        "type": "Direct",
+        "requested": "[2.6.0, )",
+        "resolved": "2.6.0",
+        "contentHash": "2PCeqX7NAOHQcTprqVJJoPjzO137mdEDxdy3/o1dJd8sn3CGjJkEH5rxbKRXmLo8bnsTpLymi8qKC9h5aU/7wA==",
+        "dependencies": {
+          "Antlr4.Runtime.Standard": "4.13.1",
+          "GenericTensor": "1.0.4",
+          "HonkSharp": "1.0.3",
+          "PeterO.Numbers": "1.8.0"
+        }
+      },
       "CodeBeam.MudBlazor.Extensions": {
         "type": "Direct",
         "requested": "[9.2.0, )",
@@ -92,12 +104,12 @@
       },
       "MudBlazor.Markdown": {
         "type": "Direct",
-        "requested": "[9.0.0, )",
-        "resolved": "9.0.0",
-        "contentHash": "zu+K7epXvygGOV5HarFPGpzup3irQetUZcfUKY52iJ90CF5DPtFrNaBsYklCAGR8r2Z9YU0DuDMtlWnzySeSCw==",
+        "requested": "[9.10.0, )",
+        "resolved": "9.10.0",
+        "contentHash": "/uO8FrwS7NANxw6tI5F1fnHTD9r1g/1Xn5SBF2s2jdr6oS4CCnIGC8HSip6qNR/mzZaEx0Ioc0s7abYcMM50Wg==",
         "dependencies": {
-          "Markdig": "0.45.0",
-          "MudBlazor": "9.0.0"
+          "Markdig": "1.4.0",
+          "MudBlazor": "9.10.0"
         }
       },
       "ReverseMarkdown": {
@@ -119,6 +131,11 @@
           "SQLitePCLRaw.config.e_sqlite3": "3.0.5"
         }
       },
+      "Antlr4.Runtime.Standard": {
+        "type": "Transitive",
+        "resolved": "4.13.1",
+        "contentHash": "Da5+i4kFHUseJRZGcBG5fmZGpA/Ns180ibrQMxgZzjpQOnENVvSL5gi5HZ8Ncz8/AR2WsKbOg2lMBzjz0HUQcA=="
+      },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",
         "resolved": "2.7.0",
@@ -132,6 +149,16 @@
           "System.IO.Packaging": "10.0.2"
         }
       },
+      "GenericTensor": {
+        "type": "Transitive",
+        "resolved": "1.0.4",
+        "contentHash": "sQsqRbJiwFH37OjriIKQx3VWKuRJ09s/SZdwqL0FreJbFSpbpY1UKeiP8RWsb88QcS2DgyicheyvdJ9YgLnUpQ=="
+      },
+      "HonkSharp": {
+        "type": "Transitive",
+        "resolved": "1.0.3",
+        "contentHash": "nV2VQhjXCuF7UC730/Pmb+CLfsdZad2J1JCNqlVCHjgBbn41LWODrJv5LDQPUKYIjZJC66pR9rSmSmyalKF7fA=="
+      },
       "LuaCSharp.Annotations": {
         "type": "Transitive",
         "resolved": "0.5.8",
@@ -144,8 +171,8 @@
       },
       "Markdig": {
         "type": "Transitive",
-        "resolved": "0.45.0",
-        "contentHash": "ObNLcA1b+0lpNNoEg256g9faMeJZi35wZW0AnKJ4nGPJe+5qkwnV26kUvQTHuanFnSX9SdvPzOO41BVJ6XarAg=="
+        "resolved": "1.4.0",
+        "contentHash": "lLhaiI/mNDTNzgLqnmknhf4LjgTqOAyjx5+GNz0X3AxYMxUhmFppF2WVMdER+SDqwhE5wUF1pzs/cuLwFxs7xA=="
       },
       "Microsoft.EntityFrameworkCore": {
         "type": "Transitive",
@@ -198,6 +225,11 @@
           "BouncyCastle.Cryptography": "2.7.0",
           "System.Security.Cryptography.Pkcs": "10.0.13"
         }
+      },
+      "PeterO.Numbers": {
+        "type": "Transitive",
+        "resolved": "1.8.0",
+        "contentHash": "N8ffDC+jwF1XcA+VfugZO1+wFClOvWjyXzXrstkpdjkgH2LgAfnEZIAFQbKgidHtTh5RAfwhCtH3MSfgZXxXwA=="
       },
       "SQLite": {
         "type": "Transitive",

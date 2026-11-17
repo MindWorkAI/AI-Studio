@@ -2,12 +2,12 @@ namespace AIStudio.Assistants.Builder;
 
 internal sealed class AssistantBuilderAssistantMetadata
 {
-    public string Kind { get; init; } = string.Empty;
-    public string Title { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
-    public string? SystemPrompt { get; init; }
-    public string? SubmitText { get; init; }
-    public bool? AllowAiStudioProfiles { get; init; }
-    public string[]? ToolIds { get; init; }
-    public AssistantBuilderChatLaunchMetadata? Launch { get; init; }
+    public string Kind { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string? SystemPrompt { get; set; }
+    public string? SubmitText { get; set; }
+    public bool? AllowAiStudioProfiles { get; set; }
+    public string[]? ToolIds { get; set; }
+    public AssistantBuilderChatLaunchMetadata? Launch { get; set; }
 }

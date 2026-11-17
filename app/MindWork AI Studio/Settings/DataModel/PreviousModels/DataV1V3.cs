@@ -13,12 +13,12 @@ public sealed class DataV1V3
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; init; } = Version.V3;
+    public Version Version { get; set; } = Version.V3;
 
     /// <summary>
     /// List of configured providers.
     /// </summary>
-    public List<Provider> Providers { get; init; } = [];
+    public List<Provider> Providers { get; set; } = [];
 
     /// <summary>
     /// The next provider number to use.

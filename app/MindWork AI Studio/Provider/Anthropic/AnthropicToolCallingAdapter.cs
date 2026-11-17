@@ -47,7 +47,7 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
             Messages = [..baseMessages, ..this.internalMessages],
             System = finalResponseInstruction is null
                 ? systemPrompt
-                : $"{systemPrompt}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
+                : $"{systemPrompt}\n\n{finalResponseInstruction}",
 
             MaxTokens = maxTokens,
             Stream = true,

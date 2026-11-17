@@ -17,8 +17,6 @@ namespace AIStudio.Models;
 /// </remarks>
 public abstract class ModelFamily
 {
-    private IReadOnlyList<ModelRule>? declaredRules;
-
     /// <summary>
     /// Who builds the models of this family.
     /// </summary>
@@ -48,7 +46,7 @@ public abstract class ModelFamily
     /// <summary>
     /// The rules this family states, worked out once.
     /// </summary>
-    public IReadOnlyList<ModelRule> Rules => this.declaredRules ??= this.BuildRules();
+    public IReadOnlyList<ModelRule> Rules => field ??= this.BuildRules();
 
     /// <summary>
     /// Adjusts a profile in a way no pattern can express.

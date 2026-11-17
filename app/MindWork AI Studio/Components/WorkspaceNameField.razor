@@ -2,7 +2,7 @@
 
 @if (this.availableWorkspaces.Count > 0 && !this.ReadOnly)
 {
-    <MudSelect T="string" Value="@this.WorkspaceName" ValueChanged="@this.SelectExistingWorkspace" Strict="@false" Label="@this.SelectLabel" Variant="Variant.Outlined" Margin="Margin.Dense" Class="@this.SelectClass" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Folder">
+    <MudSelect T="string" Value="@this.WorkspaceName" ValueChanged="@this.SelectExistingWorkspace" Strict="@false" Label="@this.SelectLabel" Variant="Variant.Outlined" Margin="Margin.Dense" Class="@this.SelectClass" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.WORKSPACE">
         @foreach (var workspace in this.availableWorkspaces)
         {
             <MudSelectItem T="string" Value="@workspace.Name">@workspace.Name</MudSelectItem>

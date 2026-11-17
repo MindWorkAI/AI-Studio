@@ -5,12 +5,12 @@ namespace AIStudio.Provider.OpenAI;
 
 public sealed record ChatCompletionToolCall
 {
-    public string? Id { get; init; }
+    public string? Id { get; set; }
 
-    public string? Type { get; init; } = "function";
+    public string? Type { get; set; } = "function";
 
-    public ChatCompletionToolFunction? Function { get; init; }
+    public ChatCompletionToolFunction? Function { get; set; }
 
     [JsonExtensionData]
-    public IDictionary<string, JsonElement> AdditionalMetadata { get; init; } = new Dictionary<string, JsonElement>();
+    public IDictionary<string, JsonElement> AdditionalMetadata { get; set; } = new Dictionary<string, JsonElement>();
 }

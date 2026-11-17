@@ -8,27 +8,27 @@ public sealed class DataV5
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; init; } = Version.V5;
+    public Version Version { get; set; } = Version.V5;
 
     /// <summary>
     /// List of configured providers.
     /// </summary>
-    public List<AIStudio.Settings.Provider> Providers { get; init; } = [];
+    public List<AIStudio.Settings.Provider> Providers { get; set; } = [];
     
     /// <summary>
     /// Settings concerning the LLM providers.
     /// </summary>
-    public DataLLMProvidersV5 LLMProviders { get; init; } = new();
+    public DataLLMProvidersV5 LLMProviders { get; set; } = new();
 
     /// <summary>
     /// A collection of embedding providers configured.
     /// </summary>
-    public List<EmbeddingProvider> EmbeddingProviders { get; init; } = [];
+    public List<EmbeddingProvider> EmbeddingProviders { get; set; } = [];
     
     /// <summary>
     /// A collection of speech providers configured.
     /// </summary>
-    public List<TranscriptionProvider> TranscriptionProviders { get; init; } = [];
+    public List<TranscriptionProvider> TranscriptionProviders { get; set; } = [];
 
     /// <summary>
     /// A collection of data sources configured.
@@ -38,12 +38,12 @@ public sealed class DataV5
     /// <summary>
     /// List of configured profiles.
     /// </summary>
-    public List<Profile> Profiles { get; init; } = [];
+    public List<Profile> Profiles { get; set; } = [];
     
     /// <summary>
     /// List of configured chat templates.
     /// </summary>
-    public List<ChatTemplate> ChatTemplates { get; init; } = [];
+    public List<ChatTemplate> ChatTemplates { get; set; } = [];
 
     /// <summary>
     /// List of enabled plugins.
@@ -95,55 +95,55 @@ public sealed class DataV5
     /// </summary>
     public uint NextDocumentAnalysisPolicyNum { get; set; } = 1;
 
-    public DataApp App { get; init; } = new(x => x.App);
+    public DataApp App { get; set; } = new(x => x.App);
 
-    public DataChat Chat { get; init; } = new();
+    public DataChat Chat { get; set; } = new();
 
-    public DataWorkspace Workspace { get; init; } = new();
+    public DataWorkspace Workspace { get; set; } = new();
 
-    public DataIconFinder IconFinder { get; init; } = new();
+    public DataIconFinder IconFinder { get; set; } = new();
 
-    public DataTranslation Translation { get; init; } = new();
+    public DataTranslation Translation { get; set; } = new();
 
-    public DataCoding Coding { get; init; } = new();
+    public DataCoding Coding { get; set; } = new();
     
-    public DataERI ERI { get; init; } = new();
+    public DataERI ERI { get; set; } = new();
     
-    public DataDocumentAnalysis DocumentAnalysis { get; init; } = new();
+    public DataDocumentAnalysis DocumentAnalysis { get; set; } = new();
 
-    public DataMandatoryInformation MandatoryInformation { get; init; } = new();
+    public DataMandatoryInformation MandatoryInformation { get; set; } = new();
 
-    public DataTextSummarizer TextSummarizer { get; init; } = new();
+    public DataTextSummarizer TextSummarizer { get; set; } = new();
 
-    public DataTextContentCleaner TextContentCleaner { get; init; } = new();
+    public DataTextContentCleaner TextContentCleaner { get; set; } = new();
     
-    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new();
+    public DataAgentDataSourceSelection AgentDataSourceSelection { get; set; } = new();
     
-    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new();
+    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; set; } = new();
 
-    public DataAssistantPluginAudit AssistantPluginAudit { get; init; } = new(x => x.AssistantPluginAudit);
+    public DataAssistantPluginAudit AssistantPluginAudit { get; set; } = new(x => x.AssistantPluginAudit);
     
-    public DataAgenda Agenda { get; init; } = new();
+    public DataAgenda Agenda { get; set; } = new();
     
-    public DataGrammarSpelling GrammarSpelling { get; init; } = new();
+    public DataGrammarSpelling GrammarSpelling { get; set; } = new();
     
-    public DataRewriteImprove RewriteImprove { get; init; } = new();
+    public DataRewriteImprove RewriteImprove { get; set; } = new();
     
-    public DataPromptOptimizer PromptOptimizer { get; init; } = new();
+    public DataPromptOptimizer PromptOptimizer { get; set; } = new();
 
-    public DataEMail EMail { get; init; } = new();
+    public DataEMail EMail { get; set; } = new();
     
-    public DataSlideBuilder SlideBuilder { get; init; } = new();
+    public DataSlideBuilder SlideBuilder { get; set; } = new();
     
-    public DataLegalCheck LegalCheck { get; init; } = new();
+    public DataLegalCheck LegalCheck { get; set; } = new();
     
-    public DataSynonyms Synonyms { get; init; } = new();
+    public DataSynonyms Synonyms { get; set; } = new();
 
-    public DataMyTasks MyTasks { get; init; } = new();
+    public DataMyTasks MyTasks { get; set; } = new();
     
-    public DataJobPostings JobPostings { get; init; } = new();
+    public DataJobPostings JobPostings { get; set; } = new();
     
-    public DataBiasOfTheDay BiasOfTheDay { get; init; } = new();
+    public DataBiasOfTheDay BiasOfTheDay { get; set; } = new();
     
-    public DataI18N I18N { get; init; } = new();
+    public DataI18N I18N { get; set; } = new();
 }

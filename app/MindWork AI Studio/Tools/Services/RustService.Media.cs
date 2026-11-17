@@ -18,11 +18,11 @@ public partial class RustService
         using var response = await this.http.PostAsJsonAsync(
             "/media/jobs",
             new CreateMediaJobRequest(inputPath, outputPath, OpusBitrateBps: opusBitrateBps),
-            this.jsonRustSerializerOptions,
+            JSON_OPTIONS,
             token);
 
         response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<CreateMediaJobResponse>(this.jsonRustSerializerOptions, token);
+        var result = await response.Content.ReadFromJsonAsync<CreateMediaJobResponse>(JSON_OPTIONS, token);
         return result?.JobId ?? throw new InvalidOperationException("The Rust runtime did not return a media job ID.");
     }
 
@@ -49,7 +49,7 @@ public partial class RustService
                 continue;
 
             var json = line["data:".Length..].Trim();
-            var mediaEvent = JsonSerializer.Deserialize<MediaJobEvent>(json, this.jsonRustSerializerOptions);
+            var mediaEvent = JsonSerializer.Deserialize<MediaJobEvent>(json, JSON_OPTIONS);
             if (mediaEvent is not null)
                 yield return mediaEvent;
 

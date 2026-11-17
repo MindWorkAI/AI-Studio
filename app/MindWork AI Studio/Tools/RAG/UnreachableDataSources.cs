@@ -26,8 +26,8 @@ public static class UnreachableDataSources
     /// <param name="dataSources">The data sources whose server could not be reached, in the order to list them.</param>
     public static void AppendTo(StringBuilder builder, IReadOnlyList<IDataSource> dataSources)
     {
-        builder.AppendLine("These external data sources of this chat could not be reached or signed in to right now, so they cannot be searched. Their content is missing rather than empty; tell the user so when a question concerns them:");
+        builder.AppendLineLF("These external data sources of this chat could not be reached or signed in to right now, so they cannot be searched. Their content is missing rather than empty; tell the user so when a question concerns them:");
         foreach (var dataSource in dataSources)
-            builder.AppendLine($"- name='{dataSource.Name}'");
+            builder.AppendLineLF($"- name='{dataSource.Name}'");
     }
 }

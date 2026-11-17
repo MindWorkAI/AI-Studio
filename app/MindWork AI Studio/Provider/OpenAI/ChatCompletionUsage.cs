@@ -17,7 +17,7 @@ public sealed record ChatCompletionUsage
     /// <summary>
     /// What everything sent to the model cost.
     /// </summary>
-    public int? PromptTokens { get; init; }
+    public int? PromptTokens { get; set; }
 
     /// <summary>
     /// States what this block reports, as far as it can be believed.

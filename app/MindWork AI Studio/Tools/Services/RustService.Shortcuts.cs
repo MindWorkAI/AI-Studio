@@ -18,7 +18,7 @@ public sealed partial class RustService
         try
         {
             var request = new RegisterShortcutRequest(shortcutId, shortcut, description, reconfigure);
-            var response = await this.http.PostAsJsonAsync("/shortcuts/register", request, this.jsonRustSerializerOptions);
+            var response = await this.http.PostAsJsonAsync("/shortcuts/register", request, JSON_OPTIONS);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -26,7 +26,7 @@ public sealed partial class RustService
                 return ShortcutRegistrationResult.Failed(TB("The global shortcut could not be registered because the desktop service is unavailable."));
             }
 
-            var result = await response.Content.ReadFromJsonAsync<ShortcutRegistrationResult>(this.jsonRustSerializerOptions);
+            var result = await response.Content.ReadFromJsonAsync<ShortcutRegistrationResult>(JSON_OPTIONS);
             if (result is null || !result.Success)
             {
                 this.logger?.LogError("Failed to register global shortcut '{ShortcutId}': {Error}", shortcutId, result?.ErrorMessage ?? "Unknown error");
@@ -53,7 +53,7 @@ public sealed partial class RustService
         try
         {
             var request = new ValidateShortcutRequest(shortcut);
-            var response = await this.http.PostAsJsonAsync("/shortcuts/validate", request, this.jsonRustSerializerOptions);
+            var response = await this.http.PostAsJsonAsync("/shortcuts/validate", request, JSON_OPTIONS);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -61,7 +61,7 @@ public sealed partial class RustService
                 return new ShortcutValidationResult(false, "Network error during validation", false, string.Empty);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<ShortcutValidationResponse>(this.jsonRustSerializerOptions);
+            var result = await response.Content.ReadFromJsonAsync<ShortcutValidationResponse>(JSON_OPTIONS);
             if (result is null)
                 return new ShortcutValidationResult(false, "Invalid response from server", false, string.Empty);
 
@@ -91,7 +91,7 @@ public sealed partial class RustService
                 return false;
             }
 
-            var result = await response.Content.ReadFromJsonAsync<ShortcutResponse>(this.jsonRustSerializerOptions);
+            var result = await response.Content.ReadFromJsonAsync<ShortcutResponse>(JSON_OPTIONS);
             if (result is null || !result.Success)
             {
                 this.logger?.LogError("Failed to suspend shortcut processing: {Error}", result?.ErrorMessage ?? "Unknown error");
@@ -123,7 +123,7 @@ public sealed partial class RustService
                 return false;
             }
 
-            var result = await response.Content.ReadFromJsonAsync<ShortcutResponse>(this.jsonRustSerializerOptions);
+            var result = await response.Content.ReadFromJsonAsync<ShortcutResponse>(JSON_OPTIONS);
             if (result is null || !result.Success)
             {
                 this.logger?.LogError("Failed to resume shortcut processing: {Error}", result?.ErrorMessage ?? "Unknown error");

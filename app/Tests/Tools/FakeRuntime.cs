@@ -10,9 +10,10 @@ namespace AIStudio.Tests.Tools;
 /// Plays the runtime for a test, so whatever goes through RustService can be checked without one.
 /// </summary>
 /// <remarks>
-/// It reads files from the disk and filters prompt injections, like the runtime, but only as far as
-/// a test needs it: the one passage the test names is replaced by the marker of the runtime wherever
-/// it occurs, in a file as well as in a text. The answers are spelled out in the wire format of the
+/// It reads files from the disk, filters prompt injections, and counts tokens, like the runtime, but
+/// only as far as a test needs it: the one passage the test names is replaced by the marker of the
+/// runtime wherever it occurs, in a file as well as in a text, and every few characters count as one
+/// token. The answers are spelled out in the wire format of the
 /// runtime, so a test fails as soon as the app stops understanding what the runtime actually sends.
 /// </remarks>
 /// <param name="suspiciousPassage">The passage the filter removes.</param>
@@ -22,6 +23,11 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
     /// What the runtime puts where it removed a passage.
     /// </summary>
     public const string REDACTION_MARKER = "[AI Studio removed suspicious content here]";
+
+    /// <summary>
+    /// How many characters the tokenizer counts as one token, about as many as a real one counts in English prose.
+    /// </summary>
+    public const int CHARACTERS_PER_TOKEN = 4;
 
     private readonly ConcurrentQueue<string> readFiles = new();
     private readonly ConcurrentQueue<string> filteredTexts = new();
@@ -76,6 +82,13 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
                     return Answer(JsonSerializer.Serialize(new { results = texts.Select(text => ToResponse(this.Filter(text))) }), "application/json");
                 }
 
+            case "/tokenizer/count":
+                using (var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken)))
+                {
+                    var text = body.RootElement.GetProperty("text").GetString() ?? string.Empty;
+                    return Answer(JsonSerializer.Serialize(new { success = true, token_count = CountTokens(text), message = string.Empty, stored_path = string.Empty }), "application/json");
+                }
+
             default:
                 return new HttpResponseMessage(HttpStatusCode.NotFound);
         }
@@ -103,6 +116,11 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
         var findings = Enumerable.Repeat<object>(new { rule_id = "instruction_override", category = "override", snippet = suspiciousPassage }, occurrences).ToArray();
         return new(text.Replace(suspiciousPassage, REDACTION_MARKER, StringComparison.Ordinal), findings);
     }
+
+    /// <summary>
+    /// Counts the tokens of a text the way the tokenizer of FakeRuntime does.
+    /// </summary>
+    public static int CountTokens(string text) => (text.Length + CHARACTERS_PER_TOKEN - 1) / CHARACTERS_PER_TOKEN;
 
     private static object ToResponse(FilteredText filtered) => new { sanitized_text = filtered.Text, findings = filtered.Findings, redacted_count = filtered.Findings.Length };
 

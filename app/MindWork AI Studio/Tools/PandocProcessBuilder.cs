@@ -10,7 +10,7 @@ namespace AIStudio.Tools;
 public sealed class PandocProcessBuilder
 {
     // Pandoc is a program of its own, so it has to fit the machine, not the build of AI Studio:
-    private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
+    private static readonly RID CPU_ARCHITECTURE = RID.Current;
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocProcessBuilder));
     private const string FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY = "/app/plugins/pandoc/bin";
 

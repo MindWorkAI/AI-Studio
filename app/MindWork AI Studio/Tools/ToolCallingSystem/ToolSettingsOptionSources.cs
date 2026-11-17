@@ -100,7 +100,7 @@ public static class ToolSettingsOptionSources
         // translation. Adding a search service therefore adds it to this list, and to the
         // dropdown offering it, without a line of code here:
         //
-        WEB_SEARCH_BACKENDS => Enum.GetValues<WebSearchBackend>().Select(backend => new ToolSettingsOption(backend.ToString(), backend.ToName())).ToList(),
+        WEB_SEARCH_BACKENDS => Enum.GetValues<WebSearchBackend>().Select(backend => new ToolSettingsOption(backend.ToString(), backend.Name)).ToList(),
         WEB_SEARCH_BACKEND_STRATEGY =>
         [
             new(nameof(WebSearchBackendStrategy.FAILOVER), TB("One after another, until one answers")),
@@ -114,7 +114,7 @@ public static class ToolSettingsOptionSources
             new(nameof(FreeAddressChoice.ON), TB("On: the AI may also choose web addresses itself")),
         ],
 
-        OUTBOUND_DATA_RESTRICTION => Enum.GetValues<OutboundDataRestriction>().Select(restriction => new ToolSettingsOption(restriction.ToString(), restriction.GetName())).ToList(),
+        OUTBOUND_DATA_RESTRICTION => Enum.GetValues<OutboundDataRestriction>().Select(restriction => new ToolSettingsOption(restriction.ToString(), restriction.Name)).ToList(),
 
         _ => [],
     };
@@ -136,9 +136,9 @@ public static class ToolSettingsOptionSources
             // user may keep a text as it is or type a language of their own. A search engine needs
             // a concrete tag, and ANY_LANGUAGE above already covers "no preference".
             //
-            var tag = language.ToIETFTag();
+            var tag = language.IETFTag;
             if (!string.IsNullOrWhiteSpace(tag))
-                options.Add(new(tag, language.Name()));
+                options.Add(new(tag, language.Name));
         }
 
         return options;

@@ -1,4 +1,3 @@
-using AIStudio.Tools.PluginSystem.Assistants.Icons;
 using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
@@ -105,5 +104,5 @@ public sealed class AssistantSwitch : StatefulAssistantComponentBase
 
     public static Color GetColor(string colorString) => Enum.TryParse<Color>(colorString, out var color) ? color : Color.Inherit;
     public Placement GetLabelPlacement() => Enum.TryParse<Placement>(this.LabelPlacement, out var placement) ? placement : Placement.Right;
-    public string GetIconSvg() => MudBlazorIconRegistry.TryGetSvg(this.Icon, out var svg) ? svg : string.Empty;
+    public string GetIcon() => AssistantComponentPropHelper.GetIcon(this.Icon);
 }

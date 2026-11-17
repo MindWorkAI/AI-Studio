@@ -17,9 +17,9 @@ public static class PluginArchive
     // Compatibility shim for Windows-created ZIPs with backslashes in entry names (dotnet/runtime#27620);
     // remove after dotnet/runtime#27620 and #41914 are fixed.
     // See documentation/compatibility-shims/2026-07-plugin-archive-zip-backslashes.md.
-    public static void Extract(string sourceArchiveFileName, string destinationDirectory)
+    public static async Task ExtractAsync(string sourceArchiveFileName, string destinationDirectory, CancellationToken token = default)
     {
-        using var archive = ZipFile.OpenRead(sourceArchiveFileName);
+        await using var archive = await ZipFile.OpenReadAsync(sourceArchiveFileName, token);
         Directory.CreateDirectory(destinationDirectory);
 
         foreach (var entry in archive.Entries)
@@ -37,7 +37,7 @@ public static class PluginArchive
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-            entry.ExtractToFile(destinationPath);
+            await entry.ExtractToFileAsync(destinationPath, token);
         }
     }
 }

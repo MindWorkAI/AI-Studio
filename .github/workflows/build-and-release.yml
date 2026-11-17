@@ -793,7 +793,7 @@ jobs:
 
       - name: Read the toolchain versions from the metadata
         run: |
-          # The .NET SDK version. The format is '10.0.114 (commit 0427b9abbe)',
+          # The .NET SDK version. The format is '10.0.403 (commit 5a2162bea6)',
           # so we extract the version number alone:
           dotnet_sdk_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
 

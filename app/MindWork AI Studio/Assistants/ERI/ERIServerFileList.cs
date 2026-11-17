@@ -13,18 +13,19 @@ namespace AIStudio.Assistants.ERI;
 /// </remarks>
 internal sealed class ERIServerFileList
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         AllowTrailingCommas = false,
         ReadCommentHandling = JsonCommentHandling.Disallow,
         MaxDepth = 8,
-    };
+        TypeInfoResolver = ERIServerFileListJsonContext.Default,
+    }.AsReadOnly();
 
     /// <summary>
     /// The paths of the files, relative to the base directory.
     /// </summary>
-    public List<string>? Files { get; init; }
+    public List<string>? Files { get; set; }
 
     /// <summary>
     /// Reads the list of files out of the answer of the model.

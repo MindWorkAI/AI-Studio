@@ -24,7 +24,7 @@
                 Immediate="@true"
                 Validation="@this.dataSourceValidation.ValidatingName"
                 Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                AdornmentIcon="@AppIcons.NAME"
                 AdornmentColor="Color.Info"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 Variant="Variant.Outlined"
@@ -39,9 +39,9 @@
                 Counter="200"
                 Immediate="@true"
                 Adornment="Adornment.Start"
-                AdornmentIcon="@Icons.Material.Filled.Description"
+                AdornmentIcon="@AppIcons.DESCRIPTION"
                 AdornmentColor="Color.Info"
-                HelperText="@T("Describe what data this file contains to help the AI select it.")"
+                HelperText="@TA("Describe what data this file contains to help the AI select it.")"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 Variant="Variant.Outlined"
                 Lines="3"
@@ -51,7 +51,7 @@
                 @T("File")
             </MudText>
             <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-                @T("Select a file for this data source. The content of this file will be processed for the data source. An audio or video file is transcribed by your transcription provider first.")
+                @TA("Select a file for this data source. The content of this file will be processed for the data source. An audio or video file is transcribed by your transcription provider first.")
             </MudJustifiedText>
             <SelectFile @bind-File="@this.dataFilePath" Label="@T("Selected file path for this data source")" FileDialogTitle="@T("Select the file")" Validation="@this.dataSourceValidation.ValidateFilePath" EnableDragDrop="true" CatchAllDocuments="true" />
 
@@ -59,9 +59,9 @@
                 @T("Embedding")
             </MudText>
             <MudText Typo="Typo.body2" Class="mb-3">
-                @T("Choose an embedding provider to make this data source searchable.")
+                @TA("Choose an embedding provider to make this data source searchable.")
             </MudText>
-            <MudSelect @ref="@this.embeddingSelect" @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
+            <MudSelect @ref="@this.embeddingSelect" @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
                 @foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
                 {
                     <MudSelectItem Value="@provider.Id">
@@ -77,7 +77,7 @@
             else if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
             {
                 <MudJustifiedText Typo="Typo.body2" Color="Color.Tertiary" Class="mb-3">
-                    @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
+                    @TA("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
                 </MudJustifiedText>
             }
             
@@ -86,7 +86,7 @@
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Data sharing")
             </MudText>
-            <MudSelect @ref="@this.confidenceLevelSelect" @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.GetName()" Label="@T("Required provider confidence level")" HelperText="@T("Only providers with this confidence level or higher may receive and process data from this data source.")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
+            <MudSelect @ref="@this.confidenceLevelSelect" @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.Name" Label="@T("Required provider confidence level")" HelperText="@T("Only providers with this confidence level or higher may receive and process data from this data source.")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
                 @foreach (var level in this.ConfidenceLevels)
                 {
                     <MudSelectItem Value="@level.Value">
@@ -95,7 +95,7 @@
                 }
             </MudSelect>
 
-            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@T("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction"/>
+            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@TA("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction"/>
 
             @if (this.MediaTranscriptionHint is { } mediaTranscriptionHint)
             {
@@ -105,7 +105,7 @@
             }
 
             <MudStack Class="mb-3">
-                <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+                <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@AppIcons.ADVANCED_SETTINGS">
                     @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
                 </MudButton>
                 <MudDivider/>
@@ -124,7 +124,7 @@
                             ReadOnly="@true"
                             Variant="Variant.Outlined"
                             Adornment="Adornment.Start"
-                            AdornmentIcon="@Icons.Material.Filled.TextFields"
+                            AdornmentIcon="@AppIcons.TOKENIZER"
                             AdornmentColor="Color.Info"/>
                     }
                     <MudNumericField
@@ -139,7 +139,7 @@
                         HelperText="@this.MaxChunkTokenLengthHelperText"
                         Variant="Variant.Outlined"
                         Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.FormatListNumbered"
+                        AdornmentIcon="@AppIcons.NUMERIC_LIMIT"
                         AdornmentColor="Color.Info"/>
                     <MudNumericField
                         @ref="@this.chunkOverlapTokenLengthField"
@@ -152,18 +152,18 @@
                         HelperText="@this.ChunkOverlapTokenLengthHelperText"
                         Variant="Variant.Outlined"
                         Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.CompareArrows"
+                        AdornmentIcon="@AppIcons.TOKEN_OVERLAP"
                         AdornmentColor="Color.Info"/>
                     <MudText Typo="Typo.subtitle2" Class="mb-2 mt-4">@T("Search results")</MudText>
                     <MudNumericField
                         T="ushort"
                         Min="10"
                         @bind-Value="@this.dataMaxMatches"
-                        Label="@T("How many matches do you want at most per query?")"
+                        Label="@TA("How many matches do you want at most per query?")"
                         Variant="Variant.Outlined"
                         Step="10"
                         Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.Search"
+                        AdornmentIcon="@AppIcons.SEARCH"
                         AdornmentColor="Color.Info"/>
                 </MudCollapse>
             </MudStack>

@@ -137,8 +137,8 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
     /// <remarks>
     /// With a query, the mails are searched by meaning and by words, and each mail comes with the
     /// passage which matched best. Without one, the mails which meet the conditions are listed, the
-    /// most recently received first. Either way, a page holds the mails of the page of each channel
-    /// and is cut the same way, see RetrievalPaging. The query comes from the model, so its problems
+    /// most recently received first. Either way, a page holds as many mails as the mailbox is set
+    /// to, and is cut the same way, see RetrievalPaging. The query comes from the model, so its problems
     /// are reported to the model and not to the user.
     /// </remarks>
     /// <param name="chatProviderConfidence">How much the provider of the chat is trusted.</param>
@@ -284,7 +284,7 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
     /// which turns out empty; saying the opposite would hide mails.
     /// </remarks>
     /// <param name="page">The page, starting at 1.</param>
-    /// <param name="pageSize">How many mails a page lists per channel.</param>
+    /// <param name="pageSize">How many mails a page lists.</param>
     /// <param name="chunkWindow">How many chunks each channel was asked for.</param>
     /// <param name="chunkCounts">How many chunks each channel delivered.</param>
     /// <returns>True when the next page is worth asking for.</returns>

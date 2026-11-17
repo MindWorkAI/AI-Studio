@@ -13,6 +13,8 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginShareService).Namespace, nameof(PluginShareService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(PluginShareService).Namespace, nameof(PluginShareService));
+
     private const string PLUGIN_FILE_NAME = "plugin.lua";
 
     /// <remarks>
@@ -101,7 +103,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
 
         if (!settingsManager.ConfigurationData.App.AllowUserToSharePlugins)
         {
-            issue = TB("Your organization has disabled sharing plugins.");
+            issue = TA("Your organization has disabled sharing plugins.");
             return false;
         }
 
@@ -140,7 +142,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
                 // one next to it, which is what deleting and recreating would come down to.
                 //
                 await using var archiveStream = File.Create(archivePath);
-                ZipFile.CreateFromDirectory(pluginRoot, archiveStream, CompressionLevel.Optimal, false);
+                await ZipFile.CreateFromDirectoryAsync(pluginRoot, archiveStream, CompressionLevel.Optimal, false, token);
             }, token);
 
             logger.LogInformation("Exported plugin '{PluginName}' ({PluginId}) to the archive '{ArchivePath}'.", plugin.Name, plugin.Id, archivePath);
@@ -177,10 +179,10 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
             Directory.CreateDirectory(archiveDirectory);
             this.CleanUpExpiredArchives(archiveDirectory);
 
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 token.ThrowIfCancellationRequested();
-                ZipFile.CreateFromDirectory(pluginRoot, archivePath, CompressionLevel.Optimal, false);
+                await ZipFile.CreateFromDirectoryAsync(pluginRoot, archivePath, CompressionLevel.Optimal, false, token);
             }, token);
 
             token.ThrowIfCancellationRequested();
@@ -195,7 +197,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
                 // We keep it for that case; the clean-up removes it once it expired:
                 //
                 case ShareSheetOutcome.UNRESPONSIVE:
-                    return ShareSheetUnavailable(plugin, TB("The share dialog of your operating system did not respond."));
+                    return ShareSheetUnavailable(plugin, TA("The share dialog of your operating system did not respond."));
 
                 case ShareSheetOutcome.FAILED:
                 case ShareSheetOutcome.UNKNOWN:

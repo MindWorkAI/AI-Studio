@@ -7,5 +7,5 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamSpreadsheetMetadata : ContentStreamSseMetadata
 {
     [JsonPropertyName("Spreadsheet")] 
-    public ContentStreamSpreadsheetDetails? Spreadsheet { get; init; }
+    public ContentStreamSpreadsheetDetails? Spreadsheet { get; set; }
 }

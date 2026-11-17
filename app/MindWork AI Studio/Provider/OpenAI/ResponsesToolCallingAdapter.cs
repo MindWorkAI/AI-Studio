@@ -37,7 +37,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
         {
             requestInput[0] = systemPrompt with
             {
-                Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
+                Content = $"{systemPrompt.Content}\n\n{finalResponseInstruction}",
             };
         }
 

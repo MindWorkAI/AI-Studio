@@ -10,9 +10,9 @@ namespace AIStudio.Tools.RAG;
 /// </remarks>
 /// <param name="Contexts">What this page found, the most relevant first.</param>
 /// <param name="HasMore">True when the next page can be retrieved and may hold further matches. That
-/// page can still turn out empty, when everything on it was already shown on an earlier page. False
-/// when the search is exhausted, or when this page is the last one which can be retrieved at all, cf.
-/// RetrievalPaging.GetLastPage.</param>
+/// page can still turn out empty, when its matches have nothing left to show, e.g., a chunk without
+/// text. False when the search is exhausted, or when this page is the last one which can be
+/// retrieved at all, cf. RetrievalPaging.GetLastPage.</param>
 public sealed record RetrievalPage(IReadOnlyList<IRetrievalContext> Contexts, bool HasMore)
 {
     /// <summary>

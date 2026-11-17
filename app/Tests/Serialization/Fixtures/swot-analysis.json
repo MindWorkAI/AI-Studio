@@ -1,0 +1,103 @@
+{
+  "matrix_heading": "matrix_heading sample 1",
+  "internal_label": "internal_label sample 2",
+  "external_label": "external_label sample 3",
+  "positive_label": "positive_label sample 4",
+  "negative_label": "negative_label sample 5",
+  "strengths": {
+    "label": "label sample 6",
+    "empty_message": "empty_message sample 7",
+    "findings": [
+      {
+        "summary": "summary sample 8",
+        "explanation": "explanation sample 9"
+      },
+      {
+        "summary": "summary sample 10",
+        "explanation": "explanation sample 11"
+      }
+    ]
+  },
+  "weaknesses": {
+    "label": "label sample 12",
+    "empty_message": "empty_message sample 13",
+    "findings": [
+      {
+        "summary": "summary sample 14",
+        "explanation": "explanation sample 15"
+      },
+      {
+        "summary": "summary sample 16",
+        "explanation": "explanation sample 17"
+      }
+    ]
+  },
+  "opportunities": {
+    "label": "label sample 18",
+    "empty_message": "empty_message sample 19",
+    "findings": [
+      {
+        "summary": "summary sample 20",
+        "explanation": "explanation sample 21"
+      },
+      {
+        "summary": "summary sample 22",
+        "explanation": "explanation sample 23"
+      }
+    ]
+  },
+  "threats": {
+    "label": "label sample 24",
+    "empty_message": "empty_message sample 25",
+    "findings": [
+      {
+        "summary": "summary sample 26",
+        "explanation": "explanation sample 27"
+      },
+      {
+        "summary": "summary sample 28",
+        "explanation": "explanation sample 29"
+      }
+    ]
+  },
+  "overall_assessment": {
+    "label": "label sample 30",
+    "text": "text sample 31"
+  },
+  "prioritized_actions": {
+    "label": "label sample 32",
+    "empty_message": "empty_message sample 33",
+    "items": [
+      {
+        "action": "action sample 34",
+        "rationale": "rationale sample 35",
+        "addressed_factors": [
+          "addressed_factors sample 36",
+          "addressed_factors sample 37"
+        ]
+      },
+      {
+        "action": "action sample 38",
+        "rationale": "rationale sample 39",
+        "addressed_factors": [
+          "addressed_factors sample 40",
+          "addressed_factors sample 41"
+        ]
+      }
+    ]
+  },
+  "moderation_notes": {
+    "label": "label sample 42",
+    "empty_message": "empty_message sample 43",
+    "items": [
+      {
+        "change": "change sample 44",
+        "reason": "reason sample 45"
+      },
+      {
+        "change": "change sample 46",
+        "reason": "reason sample 47"
+      }
+    ]
+  }
+}

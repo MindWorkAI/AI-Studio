@@ -2,5 +2,5 @@
 
 public sealed record GoogleEmbedding
 {
-    public List<float>? Values { get; init; }
+    public List<float>? Values { get; set; }
 }

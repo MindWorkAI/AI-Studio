@@ -20,10 +20,10 @@ public sealed partial class RustService
         bool optimize,
         CancellationToken token = default)
     {
-        using var response = await this.http.PostAsJsonAsync("/image/prepare", new { path, optimize }, this.jsonRustSerializerOptions, token);
+        using var response = await this.http.PostAsJsonAsync("/image/prepare", new PrepareImageRequest(path, optimize), JSON_OPTIONS, token);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<ImagePrepareResponse>(this.jsonRustSerializerOptions, token)
+        return await response.Content.ReadFromJsonAsync<ImagePrepareResponse>(JSON_OPTIONS, token)
             ?? throw new InvalidDataException("The Rust image preparation returned an empty response.");
     }
 
@@ -44,10 +44,10 @@ public sealed partial class RustService
     {
         try
         {
-            using var response = await this.http.PostAsJsonAsync("/image/prepare-for-model", new { path, maxBytes }, this.jsonRustSerializerOptions, token);
+            using var response = await this.http.PostAsJsonAsync("/image/prepare-for-model", new PrepareImageForModelRequest(path, maxBytes), JSON_OPTIONS, token);
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<PreparedModelImage>(this.jsonRustSerializerOptions, token)
+            return await response.Content.ReadFromJsonAsync<PreparedModelImage>(JSON_OPTIONS, token)
                 ?? PreparedModelImage.Failed(ModelImageErrorCode.UNKNOWN);
         }
         catch (Exception e) when (e is not OperationCanceledException)

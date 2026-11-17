@@ -34,7 +34,7 @@ public sealed class SettingsPanesTests
     {
         Color[] calmColors = [Color.Primary, Color.Secondary, Color.Tertiary, Color.Info, Color.Dark];
         var wrong = SettingsPanes.ALL.Where(pane => !calmColors.Contains(pane.IconColor)).Select(pane => pane.Path.Value);
-        Assert.That(wrong, Is.Empty, "Red, orange, and green stand for errors, warnings, and success in the app; the avatar of a pane takes another theme color.");
+        Assert.That(wrong, Is.Empty, "Red, orange, and green stand for errors, warnings, and success in the app; the icon of a pane takes another theme color.");
     }
 
     [Test]

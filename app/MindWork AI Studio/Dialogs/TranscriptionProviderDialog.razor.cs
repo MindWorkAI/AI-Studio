@@ -205,7 +205,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
                 // state, not a storage failure -- the user is just about to set their own key:
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
-                    this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
+                    this.dataAPIKeyStorageIssue = string.Format(TA("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.ValidateAsync();
                 }
             }
@@ -240,7 +240,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
     // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
     // silently end up in the wrong keyring row and never be found again.
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.SecretId}" : this.DataLLMProvider.SecretId;
 
     public string SecretName => this.DataName;
 
@@ -276,7 +276,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey, SecretStoreType.TRANSCRIPTION_PROVIDER);
             if (!storeResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
+                this.dataAPIKeyStorageIssue = string.Format(TA("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.ValidateAsync();
                 return;
             }
@@ -290,7 +290,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             var deleteResponse = await this.RustService.DeleteAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
             if (!deleteResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
+                this.dataAPIKeyStorageIssue = string.Format(TA("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
                 await this.form.ValidateAsync();
                 return;
             }
@@ -357,7 +357,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
                 this.dataLoadingModelsIssue = result.FailureReason.ToUserMessage(provider.InstanceName);
 
             // Order descending by ID means that the newest models probably come first:
-            var orderedModels = result.Models.OrderByDescending(n => n.Id);
+            var orderedModels = result.Models.OrderByDescending(n => n.Id, Model.ID_ORDER);
 
             this.availableModels.Clear();
             this.availableModels.AddRange(orderedModels);
@@ -365,7 +365,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         catch (Exception e)
         {
             this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
-            this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
+            this.dataLoadingModelsIssue = TA("We are currently unable to communicate with the provider to load models. Please try again later.");
         }
     }
     

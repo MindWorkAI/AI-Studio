@@ -111,7 +111,7 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
             // never into the dialog:
             this.Logger.LogError(e, "Failed to load the configuration of the tool collection '{CollectionId}' for export.", this.CollectionId);
             this.item = null;
-            this.message = T("The tool configuration could not be loaded. Please close this dialog and try again.");
+            this.message = TA("The tool configuration could not be loaded. Please close this dialog and try again.");
         }
         finally
         {
@@ -147,7 +147,7 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
     private string GetMinimumProviderConfidenceName()
     {
         var confidence = this.item is null ? ConfidenceLevel.NONE : this.ToolRegistry.GetMinimumProviderConfidence(this.item.Id);
-        return confidence is ConfidenceLevel.NONE ? T("No minimum confidence level chosen") : confidence.GetName();
+        return confidence is ConfidenceLevel.NONE ? T("No minimum confidence level chosen") : confidence.Name;
     }
 
     private async Task Export()
@@ -192,7 +192,7 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
         catch (Exception e)
         {
             this.Logger.LogError(e, "Failed to export the configuration of the tool collection '{CollectionId}'.", this.CollectionId);
-            this.message = T("The tool configuration could not be exported. Please try again.");
+            this.message = TA("The tool configuration could not be exported. Please try again.");
         }
         finally
         {

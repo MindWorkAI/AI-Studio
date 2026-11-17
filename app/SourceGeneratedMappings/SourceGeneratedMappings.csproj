@@ -21,10 +21,13 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <!--
-            Never above the Roslyn of the .NET SDK we build with (see metadata.txt): the 10.0.1xx SDKs ship
+            Never above the Roslyn of the oldest .NET SDK which may build AI Studio: the 10.0.1xx SDKs ship
             Roslyn 5.0. Built against a newer one, the compiler skips this generator with CS9057, and the
-            generated namespaces such as AIStudio.Tools.PluginSystem.Assistants.Icons go missing. Raise it
-            only together with the SDK feature band, with SourceCodeRules, and with the Tests project.
+            generated namespaces such as AIStudio.Tools.PluginSystem.Assistants.Icons go missing. The
+            pipeline builds with the SDK in metadata.txt, a 10.0.4xx with Roslyn 5.9, but the .NET packages
+            of Linux distributions bring a 10.0.1xx, and so may the computer of a contributor. Raise it only
+            together with SourceCodeRules and the Tests project, and only once a 10.0.1xx SDK no longer has
+            to build AI Studio.
         -->
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     </ItemGroup>

@@ -27,6 +27,7 @@ public sealed partial class Routes
     public const string ASSISTANT_SYNONYMS = "/assistant/synonyms";
     public const string ASSISTANT_SLIDE_BUILDER = "/assistant/slide-builder";
     public const string ASSISTANT_VISUAL_BRIEFING = "/assistant/visual-briefing";
+    public const string ASSISTANT_BEYOND_FACTS_LAB = "/assistant/beyondfacts-lab";
     public const string ASSISTANT_MY_TASKS = "/assistant/my-tasks";
     public const string ASSISTANT_JOB_POSTING = "/assistant/job-posting";
     public const string ASSISTANT_BIAS = "/assistant/bias-of-the-day";

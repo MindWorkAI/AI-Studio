@@ -433,7 +433,7 @@ public sealed class PresentationTemplateTests
                 (PlaceholderRole.TEXT, 3, StackedHeadings.THIRD_TEXT, 8U),
             }), "The copies are numbered after the slots of the layout, in reading order.");
             Assert.That(slide.SlotCopies.Select(copy => copy.Slot.Capacity), Is.EqualTo(new TextCapacity?[] { new TextCapacity(1, 14), new TextCapacity(3, 25), new TextCapacity(1, 18), new TextCapacity(3, 25) }), "A copy holds what its size allows, as a moved slot does.");
-            Assert.That(slide.Slots.Select(slot => $"{slot.Role.CatalogName()} {slot.Ordinal}"), Is.EqualTo(new[] { "title 1", "label 1", "text 1", "label 2", "text 2", "label 3", "text 3" }));
+            Assert.That(slide.Slots.Select(slot => $"{slot.Role.CatalogName} {slot.Ordinal}"), Is.EqualTo(new[] { "title 1", "label 1", "text 1", "label 2", "text 2", "label 3", "text 3" }));
             Assert.That(slide.Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[]
             {
                 (PlaceholderRole.TITLE, "Missions"),
@@ -500,7 +500,7 @@ public sealed class PresentationTemplateTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(slide.SlotCopies.Select(copy => (copy.Slot.Ordinal, copy.Slot.Bounds)), Is.EqualTo(new[] { (2, upperRight), (3, lowerRight) }));
-            Assert.That(slide.Slots.Select(slot => $"{slot.Role.CatalogName()} {slot.Ordinal}"), Is.EqualTo(new[] { "title 1", "label 1", "text 2", "text 1", "text 3" }), "The slots of the layout keep their numbers; a copy goes where a reader comes across it.");
+            Assert.That(slide.Slots.Select(slot => $"{slot.Role.CatalogName} {slot.Ordinal}"), Is.EqualTo(new[] { "title 1", "label 1", "text 2", "text 1", "text 3" }), "The slots of the layout keep their numbers; a copy goes where a reader comes across it.");
         }
     }
 

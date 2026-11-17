@@ -8,12 +8,12 @@ public class ContentBlock
     /// <summary>
     /// Time when the content block was created.
     /// </summary>
-    public DateTimeOffset Time { get; init; }
+    public DateTimeOffset Time { get; set; }
     
     /// <summary>
     /// Type of the content block, e.g., text, image, voice, etc.
     /// </summary>
-    public ContentType ContentType { get; init; } = ContentType.NONE;
+    public ContentType ContentType { get; set; } = ContentType.NONE;
     
     /// <summary>
     /// The content of the block.
@@ -28,7 +28,7 @@ public class ContentBlock
     /// <summary>
     /// Should the content block be hidden from the user?
     /// </summary>
-    public bool HideFromUser { get; init; }
+    public bool HideFromUser { get; set; }
 
     public ContentBlock DeepClone(bool changeHideState = false, bool hideFromUser = true) => new()
     {

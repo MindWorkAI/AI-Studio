@@ -141,7 +141,7 @@ public sealed class ChatThreadEditTests
         Directory.CreateDirectory(transcriptDirectory);
 
         var path = Path.Combine(transcriptDirectory, $"{stem}-transcript-0001.md");
-        File.WriteAllText(path, $"# Transcription: {stem}.mp4{Environment.NewLine}{Environment.NewLine}Hello and welcome.");
+        File.WriteAllText(path, $"# Transcription: {stem}.mp4\n\nHello and welcome.");
         return new ManagedTranscriptAttachment(Path.GetFileName(path), path, new FileInfo(path).Length, $"{stem}.mp4", false);
     }
 

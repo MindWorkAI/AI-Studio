@@ -11,5 +11,5 @@ public interface IMessage<T> : IMessageBase
     /// The content encapsulates the core information or data being transmitted,
     /// and its type can vary based on the specific implementation or use case.
     /// </summary>
-    public T Content { get; init; }
+    public T Content { get; set; }
 }

@@ -15,17 +15,17 @@ public sealed record PromptInjectionFinding
     /// Which rule matched, e.g. "instruction_override".
     /// </summary>
     [JsonPropertyName("rule_id")]
-    public string RuleId { get; init; } = string.Empty;
+    public string RuleId { get; set; } = string.Empty;
 
     /// <summary>
     /// The rule's family, e.g. "exfiltration".
     /// </summary>
     [JsonPropertyName("category")]
-    public PromptInjectionFindingCategory Category { get; init; } = PromptInjectionFindingCategory.UNKNOWN;
+    public PromptInjectionFindingCategory Category { get; set; } = PromptInjectionFindingCategory.UNKNOWN;
 
     /// <summary>
     /// The passage as it appeared in the content, so the user can see what was removed.
     /// </summary>
     [JsonPropertyName("snippet")]
-    public string Snippet { get; init; } = string.Empty;
+    public string Snippet { get; set; } = string.Empty;
 }

@@ -370,7 +370,10 @@ public sealed partial class VisualBriefingArtifactService
     /// <summary>
     /// Defines <c>AddProtectedArtifactData</c> for the visual briefing feature.
     /// </summary>
-    private static JsonElement AddProtectedArtifactData(VisualBriefingManifest manifest, VisualBriefingRevisionRequest request)
+    /// <remarks>
+    /// Internal, so that a test can check the JSON it writes.
+    /// </remarks>
+    internal static JsonElement AddProtectedArtifactData(VisualBriefingManifest manifest, VisualBriefingRevisionRequest request)
     {
         var source = request.Data;
         var dictionary = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(source.GetRawText(), JSON_OPTIONS) ?? [];
@@ -378,26 +381,24 @@ public sealed partial class VisualBriefingArtifactService
         dictionary.Remove("footerTemplates");
         dictionary.Remove("protectionLabel");
         dictionary.Remove("_mwai");
-        dictionary["_mwai"] = JsonSerializer.SerializeToElement(new
-        {
-            schemaVersion = VisualBriefingVersions.SCHEMA,
-            runtimeVersion = VisualBriefingVersions.RUNTIME,
-            aiStudioVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? "unknown",
-            assets = request.EmbeddedAssets ?? new Dictionary<string, string>(StringComparer.Ordinal),
-            assetMetadata = (request.AssetPlan ?? []).ToDictionary(
+        dictionary["_mwai"] = JsonSerializer.SerializeToElement(new VisualBriefingProtectedData(
+            VisualBriefingVersions.SCHEMA,
+            VisualBriefingVersions.RUNTIME,
+            Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? "unknown",
+            request.EmbeddedAssets ?? new Dictionary<string, string>(StringComparer.Ordinal),
+            (request.AssetPlan ?? []).ToDictionary(
                 asset => asset.AssetId,
-                asset => new { asset.Description, asset.AltText },
+                asset => new VisualBriefingAssetMetadata(asset.Description, asset.AltText),
                 StringComparer.Ordinal),
-            footer = BuildFooter(manifest, request),
-        }, JSON_OPTIONS);
-        
+            BuildFooter(manifest, request)), JSON_OPTIONS);
+
         return JsonSerializer.SerializeToElement(dictionary, JSON_OPTIONS);
     }
 
     /// <summary>
     /// Defines <c>BuildFooter</c> for the visual briefing feature.
     /// </summary>
-    private static object BuildFooter(VisualBriefingManifest manifest, VisualBriefingRevisionRequest request)
+    private static Dictionary<string, string> BuildFooter(VisualBriefingManifest manifest, VisualBriefingRevisionRequest request)
     {
         var source = request.ExportMetadataSource;
         var protectionLevel = source?.ProtectionLevel ?? manifest.Settings.ProtectionLevel;

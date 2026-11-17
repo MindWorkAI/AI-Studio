@@ -14,7 +14,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.MISTRAL.ToSecretId();
+    public override string Id => LLMProviders.MISTRAL.SecretId;
     
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Mistral";

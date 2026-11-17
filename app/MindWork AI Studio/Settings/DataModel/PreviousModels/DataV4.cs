@@ -6,22 +6,22 @@ public sealed class DataV4
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; init; }
+    public Version Version { get; set; }
 
     /// <summary>
     /// List of configured providers.
     /// </summary>
-    public List<Provider> Providers { get; init; } = [];
+    public List<Provider> Providers { get; set; } = [];
     
     /// <summary>
     /// Settings concerning the LLM providers.
     /// </summary>
-    public DataLLMProvidersV5 LLMProviders { get; init; } = new();
+    public DataLLMProvidersV5 LLMProviders { get; set; } = new();
     
     /// <summary>
     /// List of configured profiles.
     /// </summary>
-    public List<Profile> Profiles { get; init; } = [];
+    public List<Profile> Profiles { get; set; } = [];
 
     /// <summary>
     /// The next provider number to use.
@@ -33,27 +33,27 @@ public sealed class DataV4
     /// </summary>
     public uint NextProfileNum { get; set; } = 1;
 
-    public DataApp App { get; init; } = new(x => x.App);
+    public DataApp App { get; set; } = new(x => x.App);
 
-    public DataChat Chat { get; init; } = new();
+    public DataChat Chat { get; set; } = new();
 
-    public DataWorkspace Workspace { get; init; } = new();
+    public DataWorkspace Workspace { get; set; } = new();
 
-    public DataIconFinder IconFinder { get; init; } = new();
+    public DataIconFinder IconFinder { get; set; } = new();
 
-    public DataTranslation Translation { get; init; } = new();
+    public DataTranslation Translation { get; set; } = new();
 
-    public DataCoding Coding { get; init; } = new();
+    public DataCoding Coding { get; set; } = new();
 
-    public DataTextSummarizer TextSummarizer { get; init; } = new();
+    public DataTextSummarizer TextSummarizer { get; set; } = new();
 
-    public DataTextContentCleaner TextContentCleaner { get; init; } = new();
+    public DataTextContentCleaner TextContentCleaner { get; set; } = new();
     
-    public DataAgenda Agenda { get; init; } = new();
+    public DataAgenda Agenda { get; set; } = new();
     
-    public DataGrammarSpelling GrammarSpelling { get; init; } = new();
+    public DataGrammarSpelling GrammarSpelling { get; set; } = new();
     
-    public DataRewriteImprove RewriteImprove { get; init; } = new();
+    public DataRewriteImprove RewriteImprove { get; set; } = new();
 
     public DataEMail EMail { get; set; } = new();
     

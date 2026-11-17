@@ -8,5 +8,5 @@ internal sealed record StaanQueryInfo
     /// <summary>
     /// The query Staan searched for after correcting it, or empty when it searched what it was given.
     /// </summary>
-    public string AlteredQuery { get; init; } = string.Empty;
+    public string AlteredQuery { get; set; } = string.Empty;
 }

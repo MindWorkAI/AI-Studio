@@ -29,6 +29,8 @@ public partial class FileActions : MSGComponentBase
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileActions).Namespace, nameof(FileActions));
 
+    private new static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(FileActions).Namespace, nameof(FileActions));
+
     /// <summary>
     /// What a path names.
     /// </summary>
@@ -99,7 +101,7 @@ public partial class FileActions : MSGComponentBase
     /// <returns>The tooltip.</returns>
     internal static string GetOpenTooltip(int? pageNumber) => pageNumber is { } page
         ? string.Format(TB("Open the file at page {0}"), page)
-        : TB("Open the file in the program your system uses for it");
+        : TA("Open the file in the program your system uses for it");
 
     #region Overrides of ComponentBase
 

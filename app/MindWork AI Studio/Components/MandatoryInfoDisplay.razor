@@ -16,7 +16,7 @@
         else if (this.AcceptanceStatus is MandatoryInfoAcceptanceStatus.VERSION_CHANGED)
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true">
-                @T("A new version of the terms is available. Please review it again.")
+                @TA("A new version of the terms is available. Please review it again.")
                 <br />
                 @T("Last accepted version"): @this.Acceptance!.AcceptedVersion
                 <br />
@@ -26,7 +26,7 @@
         else if (this.AcceptanceStatus is MandatoryInfoAcceptanceStatus.CONTENT_CHANGED)
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true">
-                @T("Please review this text again. The content was changed.")
+                @TA("Please review this text again. The content was changed.")
                 <br />
                 @T("Last accepted version"): @this.Acceptance!.AcceptedVersion
                 <br />

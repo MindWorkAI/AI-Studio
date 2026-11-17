@@ -13,5 +13,5 @@ namespace AIStudio.Provider.OpenAI;
 public record SubContentImageUrlData : ISubContentImageUrl
 {
     /// <inheritdoc />
-    public string Url { get; init; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
 }

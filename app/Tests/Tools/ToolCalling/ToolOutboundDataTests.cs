@@ -140,7 +140,7 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
             Assert.That(hasRun, Is.False, "The mail would already have left AI Studio.");
             Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.BLOCKED));
             Assert.That(outcome.Content, Does.Contain("Work mailbox"), "The user learns which mailbox stands in the way.");
-            Assert.That(outcome.Content, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName()));
+            Assert.That(outcome.Content, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.Name));
         }
     }
 
@@ -154,7 +154,7 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         {
             Assert.That(message, Does.Contain("removed since"));
             Assert.That(message, Does.Not.Contain("Private mailbox"), "Another mailbox did not restrict the chat.");
-            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()), "The restriction stays, so the user still learns why.");
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.Name), "The restriction stays, so the user still learns why.");
         }
     }
 
@@ -168,7 +168,7 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         {
             Assert.That(message, Does.Contain("Confluence wiki"), "The user learns that the wiki stands in the way.");
             Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
-            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName()));
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.Name));
         }
     }
 
@@ -182,7 +182,7 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         {
             Assert.That(message, Does.Contain("intranet.example.org"), "The user learns which page stands in the way.");
             Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
-            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()));
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.Name));
         }
     }
 
@@ -196,7 +196,7 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         {
             Assert.That(message, Does.Contain("Project files"), "The user learns which data source stands in the way.");
             Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
-            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName()));
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.Name));
         }
     }
 
@@ -210,7 +210,7 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         {
             Assert.That(message, Does.Contain("removed since"));
             Assert.That(message, Does.Not.Contain("Minutes"), "Another data source did not restrict the chat.");
-            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()), "The restriction stays, so the user still learns why.");
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.Name), "The restriction stays, so the user still learns why.");
         }
     }
 

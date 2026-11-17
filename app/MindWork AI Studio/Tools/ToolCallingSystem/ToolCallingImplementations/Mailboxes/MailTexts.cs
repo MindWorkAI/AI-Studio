@@ -31,5 +31,7 @@ internal sealed class MailTexts
         return this.texts.Count - 1;
     }
 
-    public async Task SanitizeAsync(PromptInjectionGuardService guardService) => this.sanitizedTexts = await guardService.SanitizeAsync(this.texts);
+    /// <param name="guardService">The prompt injection filter.</param>
+    /// <param name="reportingScope">The action the texts belong to, when it filters more than once; without one, the user hears right away what was filtered.</param>
+    public async Task SanitizeAsync(PromptInjectionGuardService guardService, PromptInjectionReportingScope? reportingScope = null) => this.sanitizedTexts = await guardService.SanitizeAsync(this.texts, reportingScope);
 }

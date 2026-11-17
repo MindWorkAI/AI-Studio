@@ -45,7 +45,10 @@ public static class JsonContractWalker
             return;
         }
 
-        foreach (var property in typeInfo.Properties)
+        //
+        // System.Text.Json never meets the type of an ignored property, e.g., one marked with JsonIgnore:
+        //
+        foreach (var property in typeInfo.Properties.Where(property => property is not { Get: null, Set: null, AssociatedParameter: null }))
             Visit(property.PropertyType, $"{path} → {property.Name}", options, visited, failures);
 
         if (typeInfo.KeyType is { } keyType)

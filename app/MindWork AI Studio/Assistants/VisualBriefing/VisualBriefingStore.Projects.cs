@@ -24,7 +24,7 @@ public sealed partial class VisualBriefingStore
         try
         {
             this.LastSelectedBriefingId = briefingId;
-            await WriteTextAtomicAsync(this.SelectionPath(), JsonSerializer.Serialize<Guid?>(briefingId), overwrite: true, token);
+            await WriteTextAtomicAsync(this.SelectionPath(), JsonSerializer.Serialize<Guid?>(briefingId, JSON_OPTIONS), overwrite: true, token);
         }
         finally
         {
@@ -47,7 +47,7 @@ public sealed partial class VisualBriefingStore
                 return;
 
             this.LastSelectedBriefingId = null;
-            await WriteTextAtomicAsync(this.SelectionPath(), JsonSerializer.Serialize<Guid?>(null), overwrite: true, token);
+            await WriteTextAtomicAsync(this.SelectionPath(), JsonSerializer.Serialize<Guid?>(null, JSON_OPTIONS), overwrite: true, token);
         }
         finally
         {
@@ -67,7 +67,7 @@ public sealed partial class VisualBriefingStore
         try
         {
             var serialized = await File.ReadAllTextAsync(path, token);
-            var selected = JsonSerializer.Deserialize<Guid?>(serialized);
+            var selected = JsonSerializer.Deserialize<Guid?>(serialized, JSON_OPTIONS);
             this.LastSelectedBriefingId = selected is not null &&
                                           Directory.Exists(this.BriefingDirectory(selected.Value))
                 ? selected

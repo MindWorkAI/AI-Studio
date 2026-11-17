@@ -147,7 +147,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         if (!this.SettingsManager.IsAssistantVisible(
                 ComponentKind.VISUAL_BRIEFING_ASSISTANT,
                 assistantName: T("Visual Briefing Assistant"),
-                requiredPreviewFeature: ComponentKind.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature()))
+                requiredPreviewFeature: ComponentKind.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature))
         {
             this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
             return;
@@ -225,7 +225,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
                 "Could not auto-save visual briefing. BriefingId={BriefingId} ExceptionType={ExceptionType}",
                 this.selectedBriefing.BriefingId,
                 exception.GetType().Name);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, T("The visual briefing settings could not be saved.")));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, T("The visual briefing settings could not be saved.")));
         }
     }
 

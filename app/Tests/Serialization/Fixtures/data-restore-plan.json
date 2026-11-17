@@ -1,0 +1,24 @@
+{
+  "format_version": 41,
+  "prepared_at_utc": "2026-10-29T12:32:15+01:00",
+  "backup_created_at_utc": "2026-10-29T12:33:15+01:00",
+  "backup_app_version": "BackupAppVersion sample 4",
+  "elements": [
+    {
+      "location": "CONFIG_DIRECTORY",
+      "relative_path": "/samples/RelativePath-5.txt",
+      "keep": [
+        "Keep sample 6",
+        "Keep sample 7"
+      ]
+    },
+    {
+      "location": "CONFIG_DIRECTORY",
+      "relative_path": "/samples/RelativePath-8.txt",
+      "keep": [
+        "Keep sample 9",
+        "Keep sample 10"
+      ]
+    }
+  ]
+}

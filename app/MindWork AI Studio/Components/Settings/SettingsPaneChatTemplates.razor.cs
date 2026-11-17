@@ -48,7 +48,7 @@ public partial class SettingsPaneChatTemplates : SettingsPanelBase
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the chat template '{0}'?"), chatTemplate.Name) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the chat template '{0}'?"), chatTemplate.Name) },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -130,7 +130,7 @@ public partial class SettingsPaneChatTemplates : SettingsPanelBase
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?"), string.Join(", ", localDataSourceNames)) },
+            { x => x.Message, string.Format(TA("This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?"), string.Join(", ", localDataSourceNames)) },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Export Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);

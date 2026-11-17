@@ -187,7 +187,7 @@ public sealed class WorkspaceChatMoveTests
 
         var fileName = $"{stem}-transcript-{number:D4}.md";
         var path = Path.Combine(transcriptDirectory, fileName);
-        File.WriteAllText(path, $"# Transcription: {stem}.mp4{Environment.NewLine}{Environment.NewLine}Hello and welcome.");
+        File.WriteAllText(path, $"# Transcription: {stem}.mp4\n\nHello and welcome.");
         return new ManagedTranscriptAttachment(fileName, path, new FileInfo(path).Length, $"{stem}.mp4", false);
     }
 }

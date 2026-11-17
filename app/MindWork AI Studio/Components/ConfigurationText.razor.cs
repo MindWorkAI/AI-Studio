@@ -23,7 +23,7 @@ public partial class ConfigurationText : ConfigurationBaseCore
     /// The icon to display next to the textfield, when it has a single line.
     /// </summary>
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.Info;
+    public string Icon { get; set; } = AppIcons.INFO;
 
     /// <summary>
     /// Removes the default bottom margin when the field is part of a compact group.

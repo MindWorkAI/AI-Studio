@@ -57,11 +57,11 @@ public partial class SettingsPanelTools : SettingsPanelBase
     private string GetSwitchTooltip(ToolCatalogItem item)
     {
         if (IsSwitchLocked(item))
-            return this.T("This tool has been disabled by your organization.");
+            return this.TA("This tool has been disabled by your organization.");
 
         return IsSwitchedOffByUser(item)
-            ? this.T("Switch this tool on to use it again.")
-            : this.T("Switch this tool off if you never need it. It then appears in no tool selection, and the AI cannot use it.");
+            ? this.TA("Switch this tool on to use it again.")
+            : this.TA("Switch this tool off if you never need it. It then appears in no tool selection, and the AI cannot use it.");
     }
 
     private async Task SwitchToolOnOrOff(ToolCatalogItem item, bool isOn)
@@ -107,10 +107,10 @@ public partial class SettingsPanelTools : SettingsPanelBase
     // minimum confidence; the long wording wraps into a tall block there:
     private string GetConfidenceLevelName(ConfidenceLevel confidenceLevel) => confidenceLevel is ConfidenceLevel.NONE
         ? this.T("No minimum")
-        : confidenceLevel.GetName();
+        : confidenceLevel.Name;
 
     private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item) =>
-        $"background-color: {GetMinimumProviderConfidence(item).GetColor(this.SettingsManager)};";
+        $"background-color: {GetMinimumProviderConfidence(item).GetBackgroundColor(this.SettingsManager)};";
 
     private bool IsToolConfidenceManaged() =>
         ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var meta) && meta.IsLocked;

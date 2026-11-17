@@ -26,11 +26,16 @@ public sealed class ChatDraft
 {
     private readonly Lock stateLock = new();
 
+    //
+    // The setters are internal only for reading the JSON, since its source generation reaches no private
+    // setter. Everything else changes the draft through the methods below, which hold the lock.
+    //
+
     /// <summary>
     /// The text of the message.
     /// </summary>
     [JsonInclude]
-    public string Text { get; private set; } = string.Empty;
+    public string Text { get; internal set; } = string.Empty;
 
     /// <summary>
     /// The files attached to the message, the transcripts of audio and video files included.
@@ -40,7 +45,7 @@ public sealed class ChatDraft
     /// transcript is still a transcript after the chat was loaded again.
     /// </remarks>
     [JsonInclude]
-    public IReadOnlyList<FileAttachment> FileAttachments { get; private set; } = [];
+    public IReadOnlyList<FileAttachment> FileAttachments { get; internal set; } = [];
 
     /// <summary>
     /// The texts a preview read of the attached files, which sending takes along instead of reading the files again.
@@ -53,7 +58,7 @@ public sealed class ChatDraft
     /// store holds the texts themselves.
     /// </remarks>
     [JsonInclude]
-    public IReadOnlyList<PreviewedText> PreviewedTexts { get; private set; } = [];
+    public IReadOnlyList<PreviewedText> PreviewedTexts { get; internal set; } = [];
 
     /// <summary>
     /// Whether the draft holds neither text nor attachments.

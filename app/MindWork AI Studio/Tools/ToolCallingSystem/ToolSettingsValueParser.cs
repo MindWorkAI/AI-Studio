@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace AIStudio.Tools.ToolCallingSystem;
 
 internal static class ToolSettingsValueParser
@@ -7,7 +9,7 @@ internal static class ToolSettingsValueParser
         if (!settingsValues.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
             return null;
 
-        return int.TryParse(value, out var parsedValue) && parsedValue > 0 ? parsedValue : null;
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue) && parsedValue > 0 ? parsedValue : null;
     }
 
     public static bool TryReadOptionalPositiveInt(
@@ -23,7 +25,7 @@ internal static class ToolSettingsValueParser
         if (!settingsValues.TryGetValue(key, out var rawValue) || string.IsNullOrWhiteSpace(rawValue))
             return true;
 
-        if (int.TryParse(rawValue, out var parsedValue) && parsedValue > 0)
+        if (int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue) && parsedValue > 0)
         {
             value = parsedValue;
             return true;

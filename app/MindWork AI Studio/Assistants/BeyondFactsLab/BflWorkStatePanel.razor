@@ -1,0 +1,115 @@
+@inherits MSGComponentBase
+
+<MudText Typo="Typo.h6" Class="mt-6 mb-1">@T("Work state")</MudText>
+<MudText Typo="Typo.body2" Class="mb-3">@TA("The work state records what this step yielded. The lab writes a draft from the conversation, which you check and edit. Once you confirm it, the lab builds on it in the later steps. You can change it afterward.")</MudText>
+
+@if (this.WorkState is not { } workState)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+        @TA("AI Studio cannot open the work state of this step. Its file may be damaged, or a newer version of AI Studio stored it. AI Studio leaves the file unchanged.")
+    </MudAlert>
+}
+else
+{
+    @switch (this.Status)
+    {
+        case BflWorkStateStatus.CONFIRMED when workState.Confirmed is { } confirmed:
+            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                @string.Format(Culture, TA("You confirmed this work state on {0}. The lab builds on it in the later steps."), confirmed.ConfirmedAtUtc.ToLocalTime().ToString("g", Culture))
+            </MudAlert>
+            break;
+
+        case BflWorkStateStatus.DETAILS_CHANGED:
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                @TA("You changed your details in this step since you confirmed the work state. Please check whether it still fits, and confirm it again.")
+            </MudAlert>
+            break;
+
+        case BflWorkStateStatus.OUTDATED:
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                @TA("The work state of an earlier step changed since you confirmed this one. Please check whether it still fits, and confirm it again.")
+            </MudAlert>
+            break;
+    }
+
+    @if (this.IsGenerating)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1"/>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+            <MudText Typo="Typo.caption">@T("The lab writes the work state from the conversation")</MudText>
+            <MudButton Size="Size.Small" StartIcon="@AppIcons.STOP" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
+        </MudStack>
+    }
+
+    @if (workState.Draft is { } draft)
+    {
+        <div class="border-dashed border rounded-lg pa-3 mb-3">
+            <MudText Typo="Typo.subtitle2" Class="mb-2">@T("Draft, not confirmed yet")</MudText>
+            <MudStack Spacing="3">
+                @foreach (var section in this.Sections)
+                {
+                    <MudTextField @key="section.Key"
+                                  T="string"
+                                  Value="@draft.GetValueOrDefault(section.Key, string.Empty)"
+                                  ValueChanged="@(value => this.SetDraftAsync(section.Key, value))"
+                                  Label="@section.Title"
+                                  Disabled="@this.IsBusy"
+                                  Variant="Variant.Outlined"
+                                  Lines="2"
+                                  Sizing="InputSizing.Auto"
+                                  MaxLines="12"/>
+                }
+            </MudStack>
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CONFIRM" OnClick="@this.ConfirmDraftAsync" Disabled="@this.IsBusy">@T("Confirm")</MudButton>
+                <MudButton StartIcon="@AppIcons.DELETE" OnClick="@this.DiscardDraftAsync" Disabled="@this.IsBusy">@T("Discard draft")</MudButton>
+            </MudStack>
+        </div>
+    }
+    else if (workState.Confirmed is { } confirmed)
+    {
+        <MudPaper Outlined="true" Class="pa-3 mb-3">
+            <MudText Typo="Typo.subtitle2" Class="mb-2">@TA("Work state confirmed by you")</MudText>
+            @foreach (var section in this.Sections.Where(section => !string.IsNullOrWhiteSpace(confirmed.Sections.GetValueOrDefault(section.Key))))
+            {
+                <MudText @key="section.Key" Typo="Typo.body2" Class="mt-2"><strong>@section.Title</strong></MudText>
+                <MudMarkdown Value="@confirmed.Sections[section.Key]" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+            }
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-3">
+                @if (this.Status is BflWorkStateStatus.OUTDATED or BflWorkStateStatus.DETAILS_CHANGED)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CONFIRM" OnClick="@this.ConfirmAgainAsync" Disabled="@this.IsBusy">@T("Confirm again")</MudButton>
+                }
+                <MudButton StartIcon="@AppIcons.EDIT" OnClick="@this.EditAsync" Disabled="@this.IsBusy">@T("Edit")</MudButton>
+                <MudButton StartIcon="@AppIcons.WITHDRAW" OnClick="@this.WithdrawAsync" Disabled="@this.IsBusy">@T("Withdraw")</MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+
+    <MudButton Variant="@(workState.Draft is null && workState.Confirmed is null ? Variant.Filled : Variant.Outlined)"
+               Color="Color.Primary"
+               StartIcon="@AppIcons.GENERATE"
+               OnClick="@this.GenerateAsync"
+               Disabled="@(this.IsBusy || this.ProviderIssue is not null)">
+        @(workState.Draft is null && workState.Confirmed is null ? T("Create work state") : T("Create anew"))
+    </MudButton>
+
+    @if (this.VisibleSuggestions.Count > 0)
+    {
+        <MudText Typo="Typo.h6" Class="mt-6 mb-1">@TA("Suggestions for your details")</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3">@TA("The lab found values for empty fields of your details. Take over what fits; your details stay as they are until then.")</MudText>
+        <MudStack Spacing="2">
+            @foreach (var (field, value) in this.VisibleSuggestions)
+            {
+                <MudPaper @key="field.Id" Outlined="true" Class="pa-3">
+                    <MudText Typo="Typo.subtitle2">@field.Label</MudText>
+                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@TextOf(field, value)</MudText>
+                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-2">
+                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CONFIRM" OnClick="@(() => this.TakeOverSuggestionAsync(field, value))" Disabled="@this.IsBusy">@T("Take over")</MudButton>
+                        <MudButton Size="Size.Small" StartIcon="@AppIcons.CLOSE" OnClick="@(() => this.DismissSuggestionAsync(field))" Disabled="@this.IsBusy">@T("Dismiss")</MudButton>
+                    </MudStack>
+                </MudPaper>
+            }
+        </MudStack>
+    }
+}

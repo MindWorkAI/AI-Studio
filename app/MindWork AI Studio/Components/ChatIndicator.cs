@@ -26,18 +26,24 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
     public ChatIndicatorBadge Badge { get; init; }
 
     /// <summary>
-    /// Whether the search found words in the chat, which the list shows with the sign of the search, see
-    /// SearchFoundIcon, rather than with <see cref="this.Icon"/>.
+    /// Whether the list shows the sign of the search, see SearchFoundIcon, rather than <see cref="this.Icon"/>:
+    /// the magnifier in the search's own color, which no color of MudBlazor names.
     /// </summary>
-    public bool IsFoundBySearch { get; init; }
+    public bool ShowsSearchSign { get; init; }
 
-    public static readonly ChatIndicator PLAIN = new(AppIcons.CHAT_BUBBLE_OUTLINED, IsSpinning: false, Color.Inherit, IsStatus: false);
+    public static readonly ChatIndicator PLAIN = new(AppIcons.CHAT_IN_LIST, IsSpinning: false, Color.Inherit, IsStatus: false);
 
     /// <summary>
-    /// A chat whose messages, attached files, or sources hold words of the search: the magnifier on a disc
-    /// of the search's yellow. Its name may hold the words as well, which its marked words show.
+    /// A chat whose messages, attached files, or sources hold words of the search: the sign of the search.
+    /// Its name may hold the words as well, which its marked words show.
     /// </summary>
-    public static readonly ChatIndicator FOUND_IN_CHAT = new(Icons.Material.Outlined.Search, IsSpinning: false, Color.Inherit, IsStatus: true) { IsFoundBySearch = true };
+    public static readonly ChatIndicator FOUND_IN_CHAT = new(AppIcons.FOUND_BY_SEARCH, IsSpinning: false, Color.Inherit, IsStatus: true) { ShowsSearchSign = true };
+
+    /// <summary>
+    /// A chat found inside whose answer or transcript failed: the magnifier with an exclamation point in its
+    /// lens, in the color of the failure, as a failed chat shows its bubble with one outside of a search.
+    /// </summary>
+    public static readonly ChatIndicator FOUND_IN_CHAT_WITH_FAILED_WORK = new(AppIcons.FOUND_BY_SEARCH_WITH_FAILED_WORK, IsSpinning: false, Color.Error, IsStatus: true);
 
     /// <summary>
     /// What the icon of a chat shows whose messages, attached files, or sources hold words of the search,
@@ -45,18 +51,16 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
     /// </summary>
     /// <remarks>
     /// The search comes first while it runs: it is what the user looks for right now. What needs their
-    /// attention stays visible as the badge, though: work going on, and work which failed. Everything else,
-    /// such as an unread answer, shows again once the search ends.
+    /// attention stays visible, though: work which failed puts an exclamation point into the magnifier, and
+    /// work going on shows as its badge, since there is no magnifier with a spinner. Everything else, such
+    /// as an unread answer, shows again once the search ends.
     /// </remarks>
     /// <param name="state">What the icon of the chat would show without the search.</param>
-    public static ChatIndicator FoundInChat(ChatIndicator state) => FOUND_IN_CHAT with
+    public static ChatIndicator FoundInChat(ChatIndicator state) => state switch
     {
-        Badge = state switch
-        {
-            { IsSpinning: true } => ChatIndicatorBadge.WORK_GOING_ON,
-            { Color: Color.Error } => ChatIndicatorBadge.FAILED,
-            _ => ChatIndicatorBadge.NONE,
-        },
+        { IsSpinning: true } => FOUND_IN_CHAT with { Badge = ChatIndicatorBadge.WORK_GOING_ON },
+        { Color: Color.Error } => FOUND_IN_CHAT_WITH_FAILED_WORK,
+        _ => FOUND_IN_CHAT,
     };
 
     private static readonly ChatIndicator ANSWER_GOING_ON = new(string.Empty, IsSpinning: true, Color.Inherit, IsStatus: true);
@@ -70,12 +74,12 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
     /// In the tertiary color, which marks nothing else in the list: the primary color marks the open
     /// chat, and the colors of states tell how a transcript went.
     /// </remarks>
-    public static readonly ChatIndicator ANSWER_UNREAD = new(AppIcons.CHAT_BUBBLE_UNREAD_OUTLINED, IsSpinning: false, Color.Tertiary, IsStatus: true);
+    public static readonly ChatIndicator ANSWER_UNREAD = new(AppIcons.CHAT_WITH_UNREAD_ANSWER, IsSpinning: false, Color.Tertiary, IsStatus: true);
 
     /// <summary>
     /// An answer which failed while the chat was not open, before the user saw it.
     /// </summary>
-    public static readonly ChatIndicator ANSWER_FAILED = new(AppIcons.CHAT_BUBBLE_FAILED_OUTLINED, IsSpinning: false, Color.Error, IsStatus: true);
+    public static readonly ChatIndicator ANSWER_FAILED = new(AppIcons.CHAT_WITH_FAILED_ANSWER, IsSpinning: false, Color.Error, IsStatus: true);
 
     /// <summary>
     /// What each state of a transcript shows.
@@ -89,10 +93,10 @@ internal readonly record struct ChatIndicator(string Icon, bool IsSpinning, Colo
         [MediaImportStatus.QUEUED] = TRANSCRIPT_GOING_ON,
         [MediaImportStatus.RUNNING] = TRANSCRIPT_GOING_ON,
         [MediaImportStatus.CANCELING] = TRANSCRIPT_GOING_ON,
-        [MediaImportStatus.SUCCEEDED] = new(Icons.Material.Outlined.TaskAlt, IsSpinning: false, Color.Success, IsStatus: true),
-        [MediaImportStatus.WARNING] = new(Icons.Material.Outlined.WarningAmber, IsSpinning: false, Color.Warning, IsStatus: true),
-        [MediaImportStatus.FAILED] = new(Icons.Material.Outlined.ErrorOutline, IsSpinning: false, Color.Error, IsStatus: true),
-        [MediaImportStatus.CANCELLED] = new(Icons.Material.Outlined.Cancel, IsSpinning: false, Color.Warning, IsStatus: true),
+        [MediaImportStatus.SUCCEEDED] = new(AppIcons.SUCCESS, IsSpinning: false, Color.Success, IsStatus: true),
+        [MediaImportStatus.WARNING] = new(AppIcons.WARNING, IsSpinning: false, Color.Warning, IsStatus: true),
+        [MediaImportStatus.FAILED] = new(AppIcons.ERROR, IsSpinning: false, Color.Error, IsStatus: true),
+        [MediaImportStatus.CANCELLED] = new(AppIcons.CANCELED, IsSpinning: false, Color.Warning, IsStatus: true),
     };
 
     /// <summary>

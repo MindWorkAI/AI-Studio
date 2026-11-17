@@ -33,10 +33,10 @@ namespace AIStudio.Components
         public Func<string, string?> ValidateSelection { get; set; } = _ => null;
 
         [Parameter]
-        public string OpenIcon { get; set; } = Icons.Material.Filled.ArrowDropDown;
+        public string OpenIcon { get; set; } = AppIcons.EXPAND_MORE;
         
         [Parameter]
-        public string CloseIcon { get; set; } = Icons.Material.Filled.ArrowDropUp;
+        public string CloseIcon { get; set; } = AppIcons.EXPAND_LESS;
         
         [Parameter]
         public Color IconColor { get; set; } = Color.Default;

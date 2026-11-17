@@ -215,31 +215,35 @@ public sealed class QdrantEdgeClientImplementation(
         return client;
     }
 
-    // ReSharper disable NotAccessedPositionalProperty.Local
-    private sealed record EnsureVectorStoreRequest(string StoreName, string DataSourceName, int VectorSize);
+    //
+    // The requests are internal rather than private, so that the JSON context of the runtime can name them. It
+    // generates the contracts they get written with, and a context sees no private type of another class.
+    //
+    // ReSharper disable NotAccessedPositionalProperty.Global
+    internal sealed record EnsureVectorStoreRequest(string StoreName, string DataSourceName, int VectorSize);
 
-    private sealed record CheckVectorStoreRequest(string StoreName);
+    internal sealed record CheckVectorStoreRequest(string StoreName);
 
-    private sealed record InsertEmbeddingRequest(string StoreName, IReadOnlyList<VectorStoragePoint> Points);
+    internal sealed record InsertEmbeddingRequest(string StoreName, IReadOnlyList<VectorStoragePoint> Points);
 
     /// <param name="PointIds">The only points the search may return, or null for the whole store.</param>
-    private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches, IReadOnlyList<string>? PointIds, IReadOnlyList<HiddenChunks> HiddenChunks);
+    internal sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches, IReadOnlyList<string>? PointIds, IReadOnlyList<HiddenChunks> HiddenChunks);
 
-    private sealed record RetrieveVectorsRequest(string StoreName, IReadOnlyList<string> PointIds);
+    internal sealed record RetrieveVectorsRequest(string StoreName, IReadOnlyList<string> PointIds);
 
-    private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath, string ParentFileId, IReadOnlyCollection<string> KeepPointIds);
+    internal sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath, string ParentFileId, IReadOnlyCollection<string> KeepPointIds);
 
-    private sealed record RelocateEmbeddingFileRequest(string StoreName, string ParentFileId, string AbsolutePath, string FileName, string RelativePath, string Fingerprint);
+    internal sealed record RelocateEmbeddingFileRequest(string StoreName, string ParentFileId, string AbsolutePath, string FileName, string RelativePath, string Fingerprint);
 
-    private sealed record OptimizeVectorStoreRequest(string StoreName);
-    
-    private sealed record DeleteVectorStoreRequest(string StoreName);
+    internal sealed record OptimizeVectorStoreRequest(string StoreName);
+
+    internal sealed record DeleteVectorStoreRequest(string StoreName);
 
     /// <summary>
     /// Preparing a backup needs nothing but the request itself.
     /// </summary>
-    private sealed record PrepareBackupRequest;
+    internal sealed record PrepareBackupRequest;
 
-    private sealed record CopyStoreForBackupRequest(string BackupId, string StoreName);
-    // ReSharper restore NotAccessedPositionalProperty.Local
+    internal sealed record CopyStoreForBackupRequest(string BackupId, string StoreName);
+    // ReSharper restore NotAccessedPositionalProperty.Global
 }

@@ -13,7 +13,7 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, new Uri(
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.FIREWORKS.ToSecretId();
+    public override string Id => LLMProviders.FIREWORKS.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Fireworks.ai";

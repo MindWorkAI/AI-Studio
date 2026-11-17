@@ -16,6 +16,8 @@ public static class DataBackupReader
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataBackupReader).Namespace, nameof(DataBackupReader));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(DataBackupReader).Namespace, nameof(DataBackupReader));
+
     /// <summary>
     /// Reads the manifest of a backup, and checks that this version of AI Studio can use the backup.
     /// </summary>
@@ -31,7 +33,7 @@ public static class DataBackupReader
         DataBackupManifest? manifest;
         try
         {
-            await using var manifestStream = manifestEntry.Open();
+            await using var manifestStream = await manifestEntry.OpenAsync(token);
             manifest = await JsonSerializer.DeserializeAsync<DataBackupManifest>(manifestStream, DataBackupFormat.JSON_OPTIONS, token);
         }
         catch (JsonException)
@@ -43,7 +45,7 @@ public static class DataBackupReader
             return new(null, TB("The content list of this backup could not be read."));
 
         if (manifest.FormatVersion > DataBackupFormat.FORMAT_VERSION)
-            return new(null, TB("This backup was made by a newer version of AI Studio. Please update AI Studio first."));
+            return new(null, TA("This backup was made by a newer version of AI Studio. Please update AI Studio first."));
 
         return new(manifest, string.Empty);
     }

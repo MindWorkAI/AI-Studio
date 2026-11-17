@@ -2,11 +2,11 @@
 
 `generate_banner.py` creates `app/MindWork AI Studio/wwwroot/svg/banner.svg`, the banner on the start page of the app and at the top of the repository's README.
 
-The app shows the banner through an `<img>` element, where neither the app's CSS nor its web fonts apply. Therefore, the script converts every text into outlines, so the banner looks the same on Windows, macOS, Linux, and GitHub. The text uses [Inter](https://github.com/rsms/inter) (SIL Open Font License 1.1). The icons are the Material Icons the app itself uses, read from the MudBlazor package of the app (Apache License 2.0).
+The app shows the banner through an `<img>` element, where neither the app's CSS nor its web fonts apply. Therefore, the script converts every text into outlines, so the banner looks the same on Windows, macOS, Linux, and GitHub. The text uses [Inter](https://github.com/rsms/inter) (SIL Open Font License 1.1). The icons are the [Lucide](https://lucide.dev) icons the app itself uses (ISC License, with parts of Feather under the MIT License), read from the Lucide font which the app ships, `app/MindWork AI Studio/wwwroot/fonts/lucide.woff2`, with the code points in `app/SourceGeneratedMappings/Lucide/codepoints.json`. The banner therefore always shows the icons in the version of the app.
 
 ## Setup
 
-You need Python 3 and a build of the app, so NuGet has restored MudBlazor into its package cache. The script reads the MudBlazor version and the target framework from the app's project file.
+You need Python 3. The script needs no build of the app: it reads the Lucide font and its code points straight from the repository.
 
 In this folder, create a virtual environment and install the packages:
 
@@ -40,7 +40,7 @@ On macOS, `qlmanage -t -s 1920 -o <folder> <file>` renders a preview with WebKit
 The content sits at the top of the script:
 
 - `EYEBROW`, `NAME`, and `TAGLINE` form the wordmark on the left.
-- `CHIPS` lists the eight capabilities on the right: two rows of four, where the chips of one column share their width. Pair labels of similar length in a column. The icon is the name of an icon in `Icons.Material.Filled`, ideally the one the app uses for that feature.
+- `CHIPS` lists the eight capabilities on the right: two rows of four, where the chips of one column share their width. Pair labels of similar length in a column. The icon is the name of a Lucide icon as [lucide.dev](https://lucide.dev/icons/) shows it, such as `message-square-text`, ideally the one the app uses for that feature in `app/MindWork AI Studio/Tools/AppIcons.cs`. When a column would show the same icon twice, pick another one for one of them.
 - `LAYOUT` holds positions and sizes, `CREAM` the color of text and icons.
 
 Keep the labels in US English and short. Check the result in a narrow window as well: at 700 pixels, the labels are only about 10 pixels high. On wide windows, the start page crops up to 32 units at the top and the bottom, so text and chips must stay between y = 48 and y = 272.

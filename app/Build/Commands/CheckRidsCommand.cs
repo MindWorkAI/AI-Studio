@@ -1,11 +1,17 @@
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable UnusedType.Global
-// ReSharper disable UnusedMember.Global
 namespace Build.Commands;
 
 public sealed class CheckRidsCommand
 {
-    [Command("check-rids", Description = "Check the RIDs for the current OS")]
+    /// <summary>
+    /// Defines the command "check-rids".
+    /// </summary>
+    public static Command CreateCommand()
+    {
+        var command = new Command("check-rids", "Check the RIDs for the current OS");
+        command.SetAction(_ => new CheckRidsCommand().GetRids());
+        return command;
+    }
+
     public void GetRids()
     {
         if(!Environment.IsWorkingDirectoryValid())

@@ -2,6 +2,6 @@
 
 global using System.Text;
 
-global using Cocona;
+global using System.CommandLine;
 
 global using Environment = Build.Tools.Environment;

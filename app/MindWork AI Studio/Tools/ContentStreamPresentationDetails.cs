@@ -7,8 +7,8 @@ namespace AIStudio.Tools;
 public sealed class ContentStreamPresentationDetails
 {
     [JsonPropertyName("slide_number")] 
-    public int? SlideNumber { get; init; }
+    public int? SlideNumber { get; set; }
 
     [JsonPropertyName("image")] 
-    public ContentStreamPptxImageData? Image { get; init; }
+    public ContentStreamPptxImageData? Image { get; set; }
 }

@@ -2,9 +2,6 @@ using Build.Tools;
 
 using SharedTools;
 
-// ReSharper disable ClassNeverInstantiated.Global
-// ReSharper disable UnusedType.Global
-// ReSharper disable UnusedMember.Global
 namespace Build.Commands;
 
 /// <summary>
@@ -22,7 +19,16 @@ public sealed class VerifyCommand
     /// </summary>
     private const string SIDECAR_PREFIX = "mindworkAIStudioServer-";
 
-    [Command("verify", Description = "Run the quality gate: .NET tests, the trim smoke test, Rust tests, Clippy, and the model sources")]
+    /// <summary>
+    /// Defines the command "verify".
+    /// </summary>
+    public static Command CreateCommand()
+    {
+        var command = new Command("verify", "Run the quality gate: .NET tests, the trim smoke test, Rust tests, Clippy, and the model sources");
+        command.SetAction((_, _) => new VerifyCommand().Verify());
+        return command;
+    }
+
     public async Task<int> Verify()
     {
         if(!Environment.IsWorkingDirectoryValid())
@@ -80,7 +86,8 @@ public sealed class VerifyCommand
     /// <remarks>
     /// Debug builds and the tests are not trimmed, so only a published build shows that the trimmer
     /// removed code which System.Text.Json reaches by reflection. Then AI Studio can neither load nor
-    /// save, e.g., its chats, while everything looks fine during development.
+    /// save, e.g., its chats, while everything looks fine during development. The same holds for
+    /// AngouriMath, which the Mathematics tools compute with.
     /// </remarks>
     /// <returns>The exit code of the publishing, when that failed; otherwise the one of the smoke test.</returns>
     private static async Task<int> RunTrimSmokeTestAsync()
@@ -94,7 +101,16 @@ public sealed class VerifyCommand
 
         var directory = Environment.GetTrimSmokeTestDirectory();
         var publishDirectory = Path.Combine(directory, "bin", "verify");
-        var publishExitCode = await CommandRunner.RunAsync(directory, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --output \"{publishDirectory}\" --nologo");
+
+        //
+        // Publishing leaves the files of an earlier run in place, among them copies of assemblies which the trimmer
+        // now removes completely. The dependency manifest still lists such an assembly, so a leftover copy can be
+        // loaded in its place and hide exactly what the smoke test is there to find:
+        //
+        if (Directory.Exists(publishDirectory))
+            Directory.Delete(publishDirectory, recursive: true);
+
+        var publishExitCode = await CommandRunner.RunAsync(directory, "dotnet", $"publish --configuration release --runtime {rid.MicrosoftRid} --output \"{publishDirectory}\" --nologo");
         if (publishExitCode is not 0)
             return publishExitCode;
 

@@ -28,12 +28,12 @@ public sealed class SlideManager
             //
             
             var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine();
-            contentBuilder.AppendLine($"# Slide {slideNumber}");
+            contentBuilder.AppendLineLF();
+            contentBuilder.AppendLineLF($"# Slide {slideNumber}");
             
             // Add any text content to the slide?
             if(!string.IsNullOrWhiteSpace(content))
-                contentBuilder.AppendLine(content);
+                contentBuilder.AppendLineLF(content);
 
             //
             // Add the text content to the slide:
@@ -78,7 +78,7 @@ public sealed class SlideManager
             if (!string.IsNullOrWhiteSpace(content))
             {
                 var textContent = slide.Content.OfType<SlideTextContent>().First();
-                textContent.Text.AppendLine(content);
+                textContent.Text.AppendLineLF(content);
                 slide.TokenCount = ContentStreamPendingContent.AddTokenCounts(slide.TokenCount, tokenCount);
             }
 
@@ -112,14 +112,14 @@ public sealed class SlideManager
 
             foreach (var text in slide.Content.OfType<SlideTextContent>())
             {
-                content.AppendLine(text.Text.ToString());
-                content.AppendLine();
+                content.AppendLineLF(text.Text.ToString());
+                content.AppendLineLF();
             }
 
             foreach (var image in slide.Content.OfType<SlideImageContent>())
             {
-                content.AppendLine(image.MarkdownImage);
-                content.AppendLine();
+                content.AppendLineLF(image.MarkdownImage);
+                content.AppendLineLF();
             }
         }
 

@@ -23,7 +23,13 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// The language plugin ID to use.
     /// </summary>
     public Guid LanguagePluginId { get; set; } = Guid.Empty;
-    
+
+    /// <summary>
+    /// How the texts address the person in languages with a formal and an informal address, such as German; see
+    /// I18N.AddressForm.
+    /// </summary>
+    public AddressForm AddressForm { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AddressForm, AddressForm.FORMAL);
+
     /// <summary>
     /// The preferred theme to use.
     /// </summary>
@@ -398,7 +404,7 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// <summary>
     /// Settings for indexing local data sources.
     /// </summary>
-    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new(x => x.App.DataSourceIndexing);
+    public DataDataSourceIndexing DataSourceIndexing { get; set; } = new(x => x.App.DataSourceIndexing);
 
     /// <summary>
     /// List of assistants that should be hidden from the UI.

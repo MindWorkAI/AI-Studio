@@ -54,7 +54,7 @@ public sealed class PromptInjectionGuardService(
         {
             logger.LogError("Could not check {SourceKind} '{SourceLabel}' for prompt injections. The content is used unchanged.", source.Kind, source.Label);
             await MessageBus.INSTANCE.SendWarning(new(
-                Icons.Material.Filled.GppMaybe,
+                AppIcons.SECURITY_WARNING,
                 string.Format(TB("AI Studio could not check '{0}' for prompt injections. The content is used as it is."), source.NotificationLabel)));
 
             return text;
@@ -106,7 +106,7 @@ public sealed class PromptInjectionGuardService(
             var sources = texts.Select(x => x.Source).Distinct().ToList();
             logger.LogError("Could not check {SourceCount} content source(s) for prompt injections. The content is used unchanged. Sources: {SourceLabels}", sources.Count, string.Join(", ", sources.Select(x => $"{x.Kind} '{x.Label}'")));
             await MessageBus.INSTANCE.SendWarning(new(
-                Icons.Material.Filled.GppMaybe,
+                AppIcons.SECURITY_WARNING,
                 sources.Count is 1
                     ? string.Format(TB("AI Studio could not check '{0}' for prompt injections. The content is used as it is."), sources[0].NotificationLabel)
                     : string.Format(TB("AI Studio could not check {0} sources for prompt injections. The content is used as it is."), sources.Count)));
@@ -293,7 +293,7 @@ public sealed class PromptInjectionGuardService(
             results.Count);
 
         await MessageBus.INSTANCE.SendWarning(new(
-            Icons.Material.Filled.GppMaybe,
+            AppIcons.SECURITY_WARNING,
             results.Count is 1
                 ? string.Format(TB("AI Studio removed suspicious instructions from '{0}' before using it."), results[0].Source.NotificationLabel)
                 : string.Format(TB("AI Studio removed suspicious instructions from {0} sources before using them."), results.Count)));

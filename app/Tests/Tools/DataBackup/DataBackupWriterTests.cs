@@ -54,6 +54,7 @@ public sealed class DataBackupWriterTests
         this.WriteDataFile("plugins/.lock", string.Empty);
         this.WriteDataFile("tokenizers/openai-gpt-6/tokenizer.json", "{}");
         this.WriteDataFile("visualBriefings/briefing/manifest.json", "{}");
+        this.WriteDataFile("beyondFactsLab/preparation/project.json", "{}");
         this.WriteDataFile("media-staging/operation/transcript.md", "temporary");
         this.WriteDataFile("databases/sqlite/rag-index.sqlite3", "the index while AI Studio writes to it");
         this.WriteDataFile("databases/provenance/provenance.sqlite3", "the provenance store while AI Studio writes to it");
@@ -91,6 +92,7 @@ public sealed class DataBackupWriterTests
             "data/plugins/my-assistant/.hidden.lua",
             "data/tokenizers/openai-gpt-6/tokenizer.json",
             "data/visualBriefings/briefing/manifest.json",
+            "data/beyondFactsLab/preparation/project.json",
             "data/databases/provenance/provenance.sqlite3",
             "data/databases/sqlite/rag-index.sqlite3",
             "data/databases/vector_database/stores/store_1/segments/segment",

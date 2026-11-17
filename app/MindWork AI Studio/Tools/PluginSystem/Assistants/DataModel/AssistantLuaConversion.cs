@@ -282,14 +282,14 @@ internal static class AssistantLuaConversion
         var indent = new string(' ', depth * 2);
         var childIndent = new string(' ', (depth + 1) * 2);
         var builder = new System.Text.StringBuilder();
-        builder.AppendLine("{");
+        builder.AppendLineLF("{");
 
         foreach (var entry in table)
         {
             builder.Append(childIndent);
             builder.Append(FormatLuaValue(entry.Key));
             builder.Append(" = ");
-            builder.AppendLine(FormatLuaValue(entry.Value, depth + 1));
+            builder.AppendLineLF(FormatLuaValue(entry.Value, depth + 1));
         }
 
         builder.Append(indent);

@@ -16,15 +16,15 @@ internal sealed record StaanSearchRequest
     /// What to search for. Staan rejects a query longer than 400 characters.
     /// </summary>
     [JsonPropertyName("q")]
-    public required string Query { get; init; }
+    public required string Query { get; set; }
 
     /// <summary>
     /// The market to search in. Staan offers de-de, en-us, and fr-fr, and defaults to fr-fr.
     /// </summary>
-    public string? Market { get; init; }
+    public string? Market { get; set; }
 
     /// <summary>
     /// Where in the result list to start, in steps of ten up to 30, or null for the first page.
     /// </summary>
-    public int? Offset { get; init; }
+    public int? Offset { get; set; }
 }

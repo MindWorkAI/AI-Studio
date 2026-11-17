@@ -145,6 +145,7 @@ public sealed class FileExclusionsTests
     [TestCase("Windows 11.pvm")]
     [TestCase("__MACOSX")]
     [TestCase("$RECYCLE.BIN")]
+    [TestCase("OneNote_RecycleBin")]
     public void TheDefaultListExcludesTheseFolders(string folderName)
     {
         var folderPath = Path.Combine(Path.GetTempPath(), "test-data", folderName);

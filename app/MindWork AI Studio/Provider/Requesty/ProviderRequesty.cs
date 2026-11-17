@@ -15,7 +15,7 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.REQUESTY.ToSecretId();
+    public override string Id => LLMProviders.REQUESTY.SecretId;
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Requesty";

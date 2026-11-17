@@ -14,9 +14,4 @@ internal enum ChatIndicatorBadge
     /// A small spinner: an answer is being written, or a transcript made.
     /// </summary>
     WORK_GOING_ON,
-
-    /// <summary>
-    /// A small red exclamation mark: an answer or a transcript failed.
-    /// </summary>
-    FAILED,
 }

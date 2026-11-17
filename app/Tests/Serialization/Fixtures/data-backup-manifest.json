@@ -1,0 +1,21 @@
+{
+  "format_version": 41,
+  "app_version": "AppVersion sample 2",
+  "settings_version": "SettingsVersion sample 3",
+  "created_at_utc": "2026-10-29T12:34:15+01:00",
+  "source_data_directory": "SourceDataDirectory sample 5",
+  "source_config_directory": "SourceConfigDirectory sample 6",
+  "includes_data_source_indexes": true,
+  "entries": [
+    {
+      "name": "Name sample 7",
+      "size": 4000000008,
+      "sha256": "Sha256 sample 9"
+    },
+    {
+      "name": "Name sample 10",
+      "size": 4000000011,
+      "sha256": "Sha256 sample 12"
+    }
+  ]
+}

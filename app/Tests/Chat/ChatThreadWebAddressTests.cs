@@ -4,6 +4,7 @@ using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tools;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Web;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -76,6 +77,123 @@ public sealed class ChatThreadWebAddressTests
         thread.RuntimeWebAddressesFromTools.Add(WebAddresses.CreateRequestKey(new Uri("https://example.org/newsletter")));
 
         Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/newsletter")), Is.True);
+    }
+
+    [Test]
+    public void AnAddressAToolReturnedForAnAnswerOutlastsARestart()
+    {
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
+        var thread = Thread(
+            Block(ChatRole.USER, "What does the newsletter link to?", 1),
+            new ContentBlock { Time = START.AddMinutes(2), ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
+
+        var loaded = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS), WorkspaceBehaviour.JSON_OPTIONS)!;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(loaded.IsWebAddressGivenToTheModel(new Uri("https://example.org/program")), Is.True, "A tool returned it, so the model neither made it up nor wrote anything of the chat into it.");
+            Assert.That(loaded.IsWebAddressGivenToTheModel(new Uri("https://example.org/program?mail=secret")), Is.False, "Only the address the tool returned counts.");
+        }
+    }
+
+    [Test]
+    public void AnAnswerKeepsOnlyTheAddressesALaterMessageShows()
+    {
+        var answer = new ContentText
+        {
+            Text = "The newsletter links to the program at https://example.org/program and nothing else.",
+            Sources = [new Source("Speakers", "https://example.org/speakers", SourceOrigin.TOOL)],
+            ToolInvocations =
+            [
+                new ToolInvocationTrace { Order = 1, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.SUCCESS, WasExecuted = true, Arguments = new() { ["url"] = "https://example.org/newsletter" }, ArgumentsJson = """{"url":"https://example.org/newsletter"}""" },
+                new ToolInvocationTrace { Order = 2, ToolId = "read_web_page", Status = ToolInvocationTraceStatus.BLOCKED, Arguments = new() { ["url"] = "https://example.org/blocked" }, ArgumentsJson = """{"url":"https://example.org/blocked"}""" },
+            ],
+        };
+
+        answer.KeepWebAddressesFromTools(new[] { "program", "speakers", "newsletter", "blocked", "imprint" }.Select(Key));
+        answer.EndToolRun();
+
+        Assert.That(answer.WebAddressesFromTools, Is.EquivalentTo(new[] { "program", "speakers", "newsletter" }.Select(Key)), "In the text, as a source, and as the argument of a call which ran. A link the model no longer sees would only make the chat grow.");
+    }
+
+    [Test]
+    public void TheAddressesOfARunningAnswerAreNotStored()
+    {
+        var answer = new ContentText { Text = "Let me read https://example.org/program first." };
+        answer.KeepWebAddressesFromTools([Key("program")]);
+
+        // A chat is saved while its answer is still being written, and would hold every link of every page read until then:
+        var stored = JsonSerializer.Serialize(Thread(new ContentBlock { Time = START, ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI }), WorkspaceBehaviour.JSON_OPTIONS);
+        var loaded = JsonSerializer.Deserialize<ChatThread>(stored, WorkspaceBehaviour.JSON_OPTIONS)!;
+
+        Assert.That(((ContentText)loaded.Blocks.Single().Content!).WebAddressesFromTools, Is.Empty);
+    }
+
+    [Test]
+    public void EndingTheRunOnceMoreKeepsWhatTheFirstEndKept()
+    {
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
+
+        // Whoever ends a request ends the tool run as well, after the answer did:
+        answer.EndToolRun();
+
+        Assert.That(answer.WebAddressesFromTools, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void AnAddressAToolReturnedForADeletedAnswerIsNoLongerGiven()
+    {
+        // A chat opened anew, whose runtime set is empty, so only what the answers store counts:
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
+        var thread = Thread(
+            Block(ChatRole.USER, "What does the newsletter link to?", 1),
+            new ContentBlock { Time = START.AddMinutes(2), ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
+
+        thread.Remove(answer);
+
+        Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/program")), Is.False);
+    }
+
+    [Test]
+    public void AnAnswerGeneratedAnewForgetsTheAddressesOfItsEarlierToolRun()
+    {
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
+        var thread = Thread(
+            Block(ChatRole.USER, "What does the newsletter link to?", 1),
+            new ContentBlock { Time = START.AddMinutes(2), ContentType = ContentType.TEXT, Content = answer, Role = ChatRole.AI });
+
+        answer.BeginToolRun();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(answer.WebAddressesFromTools, Is.Empty);
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/program")), Is.False, "Only the tools of the run which wrote the answer count for it.");
+        }
+    }
+
+    [Test]
+    public void ACopyOfAnAnswerKeepsItsAddressesApart()
+    {
+        var answer = Answer("The newsletter links to the program at https://example.org/program and nothing else.", "https://example.org/program");
+
+        var copy = (ContentText)answer.DeepClone();
+        copy.WebAddressesFromTools.Add(WebAddresses.CreateRequestKey(new Uri("https://example.org/speakers")));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(copy.WebAddressesFromTools, Does.Contain(WebAddresses.CreateRequestKey(new Uri("https://example.org/program"))), "A tool returned it in the conversation the copy continues.");
+            Assert.That(answer.WebAddressesFromTools, Has.Count.EqualTo(1), "What the copy learns must not reach the answer it was copied from.");
+        }
+    }
+
+    [Test]
+    public void AnAddressAToolReturnedForAMessageOfTheUserIsNotGiven()
+    {
+        // Only answers of the model are filled by the tool calling loop. A message of the user holding the set came from elsewhere:
+        var message = new ContentText { Text = "Hello.", WebAddressesFromTools = [WebAddresses.CreateRequestKey(new Uri("https://example.org/chosen"))] };
+        var thread = Thread(new ContentBlock { Time = START, ContentType = ContentType.TEXT, Content = message, Role = ChatRole.USER });
+
+        Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/chosen")), Is.False);
     }
 
     [Test]
@@ -194,4 +312,19 @@ public sealed class ChatThreadWebAddressTests
         Role = role,
         HideFromUser = hidden,
     };
+
+    /// <summary>
+    /// An answer whose tools returned some addresses, after its request ended.
+    /// </summary>
+    /// <param name="text">The text of the answer.</param>
+    /// <param name="returnedAddresses">What the tools returned.</param>
+    private static ContentText Answer(string text, params string[] returnedAddresses)
+    {
+        var answer = new ContentText { Text = text };
+        answer.KeepWebAddressesFromTools(returnedAddresses.Select(address => WebAddresses.CreateRequestKey(new Uri(address))));
+        answer.EndToolRun();
+        return answer;
+    }
+
+    private static string Key(string path) => WebAddresses.CreateRequestKey(new Uri($"https://example.org/{path}"));
 }

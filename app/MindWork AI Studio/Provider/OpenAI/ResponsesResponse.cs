@@ -17,18 +17,18 @@ public sealed record ResponsesResponse
     /// </remarks>
     private static readonly HashSet<string> OUTPUT_ITEMS_LEAVING_THE_INPUT_ALONE = ["message", "reasoning", "function_call"];
 
-    public string Id { get; init; } = string.Empty;
+    public string Id { get; set; } = string.Empty;
 
-    public string Model { get; init; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
 
-    public string? OutputText { get; init; }
+    public string? OutputText { get; set; }
 
-    public IList<JsonElement> Output { get; init; } = [];
+    public IList<JsonElement> Output { get; set; } = [];
 
     /// <summary>
     /// What OpenAI says the response cost. Only the completed response carries it.
     /// </summary>
-    public ResponsesUsage? Usage { get; init; }
+    public ResponsesUsage? Usage { get; set; }
 
     /// <summary>
     /// States what the request of this response carried, as far as it can be believed.

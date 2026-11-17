@@ -10,8 +10,8 @@
             @if (this.ShowAttachedDocumentState && this.hasLoadedFileContent)
             {
                 <MudTooltip Text="@this.FileLoadedTooltip()">
-                    <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
-                        <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
+                    <MudBadge Icon="@AppIcons.SUCCESS" Color="Color.Success" Overlap="true">
+                        <MudButton StartIcon="@AppIcons.DOCUMENT" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
                             @this.ButtonText
                         </MudButton>
                     </MudBadge>
@@ -19,7 +19,7 @@
             }
             else
             {
-                <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
+                <MudButton StartIcon="@AppIcons.DOCUMENT" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
                     @this.ButtonText
                 </MudButton>
             }
@@ -43,8 +43,8 @@ else
         @if (this.ShowAttachedDocumentState && this.hasLoadedFileContent)
         {
             <MudTooltip Text="@this.FileLoadedTooltip()">
-                <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
-                    <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
+                <MudBadge Icon="@AppIcons.SUCCESS" Color="Color.Success" Overlap="true">
+                    <MudButton StartIcon="@AppIcons.DOCUMENT" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
                         @this.ButtonText
                     </MudButton>
                 </MudBadge>
@@ -52,7 +52,7 @@ else
         }
         else
         {
-            <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
+            <MudButton StartIcon="@AppIcons.DOCUMENT" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
                 @this.ButtonText
             </MudButton>
         }

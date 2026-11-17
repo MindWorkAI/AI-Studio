@@ -25,7 +25,7 @@ public sealed class AssistantPluginAuditService(AssistantAuditAgent auditAgent)
             AuditProviderName = provider == Settings.Provider.NONE
                 ? string.Empty
                 : provider.InstanceName,
-            Level = AssistantAuditLevelExtensions.Parse(result.Level),
+            Level = AssistantAuditLevel.ParseOrUnknown(result.Level),
             Summary = result.Summary,
             Confidence = result.Confidence,
             PromptPreview = promptPreview,

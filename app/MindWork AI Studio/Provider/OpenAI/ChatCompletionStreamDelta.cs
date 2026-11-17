@@ -16,7 +16,7 @@ public sealed record ChatCompletionStreamDelta
     /// The content as it arrived: a string for most providers, a list of parts for some.
     /// </summary>
     [JsonPropertyName("content")]
-    public JsonElement? RawContent { get; init; }
+    public JsonElement? RawContent { get; set; }
 
     /// <summary>
     /// The text of this fragment, whichever shape it arrived in.
@@ -27,10 +27,10 @@ public sealed record ChatCompletionStreamDelta
     /// <summary>
     /// The reasoning text some providers stream next to the answer.
     /// </summary>
-    public string? ReasoningContent { get; init; }
+    public string? ReasoningContent { get; set; }
 
     /// <summary>
     /// The fragments of the tool calls the model is asking for.
     /// </summary>
-    public IList<ChatCompletionToolCallDelta?>? ToolCalls { get; init; }
+    public IList<ChatCompletionToolCallDelta?>? ToolCalls { get; set; }
 }

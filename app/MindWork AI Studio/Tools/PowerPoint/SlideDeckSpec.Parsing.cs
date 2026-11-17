@@ -7,7 +7,7 @@ namespace AIStudio.Tools.PowerPoint;
 
 internal sealed partial record SlideDeckSpec
 {
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true,
@@ -15,7 +15,8 @@ internal sealed partial record SlideDeckSpec
         AllowTrailingCommas = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
         MaxDepth = 16,
-    };
+        TypeInfoResolver = SlideDeckJsonContext.Default,
+    }.AsReadOnly();
 
     /// <summary>
     /// The deepest list level a paragraph may have; PowerPoint knows nine, starting at 0.
@@ -158,17 +159,18 @@ internal sealed partial record SlideDeckSpec
     private static string Clean(string? text) => text?.Trim() ?? string.Empty;
 
     //
-    // What the model writes, before anything is checked. Every value may be missing or null.
+    // What the model writes, before anything is checked. Every value may be missing or null. Internal
+    // rather than private, so that the JSON context of the deck can name them:
     //
 
-    private sealed class DeckDto
+    internal sealed class DeckDto
     {
         public string? Title { get; set; }
 
         public List<SlideDto?>? Slides { get; set; }
     }
 
-    private sealed class SlideDto
+    internal sealed class SlideDto
     {
         public int? TemplateSlide { get; set; }
 
@@ -191,7 +193,7 @@ internal sealed partial record SlideDeckSpec
         public JsonElement? Remove { get; set; }
     }
 
-    private sealed class TableDto
+    internal sealed class TableDto
     {
         public List<JsonElement>? Headers { get; set; }
 

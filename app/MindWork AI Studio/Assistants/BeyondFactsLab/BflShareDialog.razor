@@ -1,0 +1,127 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        @if (this.AfterCompletion)
+        {
+            <MudText Typo="Typo.h5" Class="mb-2">@TA("Thank you for preparing with the lab!")</MudText>
+        }
+
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @TA("Would you like to share your session with the research team of the BeyondFacts Lab, so that it can develop the lab further? Before you share it, AI Studio removes the personal details it recognizes: links, e-mail addresses, paths, phone numbers, and the names and terms below. It follows fixed rules and may miss something, so please check the preview before you send it.")
+        </MudJustifiedText>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @TA("The file holds your details, your confirmed work states, your conversations, and the materials you confirmed. It never holds the name of your preparation, your material, the research on the web, or the date, the place, and the web page of the event.")
+        </MudJustifiedText>
+
+        @* Placeholders until the TUM provides its notice on data protection, like the address in BflShareMail: this notice, and in the next one, the promise on how the research institution stores the data. *@
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@AppIcons.PRIVACY" Dense="true" Class="mb-2">
+            @TA("For research purposes, your data will be evaluated and analyzed in pseudonymized form.")
+        </MudAlert>
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Icon="@AppIcons.EMAIL" Dense="true" Class="mb-4">
+            @TA("Your mail program sends the mail from your own address, so the research team sees who sends it. AI Studio anonymizes only the content of the file. The research institution stores your pseudonymized data so that nobody can link it to you or to your sender address.")
+        </MudAlert>
+
+        @if (this.isLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
+        }
+        else if (this.source is null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
+                @TA("AI Studio cannot open this preparation. Its files may be damaged, or a newer version of AI Studio stored them. AI Studio leaves the files unchanged.")
+            </MudAlert>
+        }
+        else
+        {
+            <div class="border-dashed border rounded-lg pa-3 mb-4">
+                <MudText Typo="Typo.h6" Class="mb-1">@T("What AI Studio removes")</MudText>
+                <MudJustifiedText Typo="Typo.body2" Class="mb-2">
+                    @TA("Names count only when they stand here. The lab suggests the names of other participants it knows; check them, and add your own name and everything else which points to you or to the event.")
+                </MudJustifiedText>
+                <MudTextField T="string" @bind-Value="@this.ownName" Label="@TA("Your name")" Variant="Variant.Outlined" Class="mb-3"/>
+                <MudTextField T="string" @bind-Value="@this.otherNames" Label="@T("Names of other people, one per line")" Variant="Variant.Outlined" Lines="4" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3"/>
+                <MudTextField T="string" @bind-Value="@this.terms" Label="@T("Further terms, one per line")" HelperText="@TA("E.g., your institution, the name of the event, or a place.")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3"/>
+                <MudTextSwitch @bind-Value="@this.includePersonalDisclosures"
+                               Color="Color.Primary"
+                               Label="@T("Include personal disclosures?")"
+                               LabelOn="@(string.Format(Culture, TA("Yes, the file holds your personal involvement and the conversation of '{0}'"), BflStep.VALUES_AND_PERSPECTIVES.Title))"
+                               LabelOff="@(string.Format(Culture, TA("No, the file leaves out your personal involvement and the conversation of '{0}'"), BflStep.VALUES_AND_PERSPECTIVES.Title))"/>
+                <MudButton Variant="@(this.preview is null ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" StartIcon="@AppIcons.PREVIEW" OnClick="@this.CreatePreviewAsync">
+                    @(this.preview is null ? T("Create preview") : T("Create preview anew"))
+                </MudButton>
+            </div>
+
+            @if (this.preview is { } anonymization)
+            {
+                <MudText Typo="Typo.h6" Class="mb-1">@T("Preview")</MudText>
+                <MudJustifiedText Typo="Typo.body2" Class="mb-2">
+                    @TA("Check the preview and change it where needed. AI Studio anonymizes your changes once more when you leave the field.")
+                </MudJustifiedText>
+                <MudTextField T="string"
+                              Value="@anonymization.Text"
+                              ValueChanged="@this.PreviewChanged"
+                              Label="@T("Session to share")"
+                              Variant="Variant.Outlined"
+                              Lines="16"
+                              Sizing="InputSizing.Auto"
+                              MaxLines="30"
+                              Class="mb-3"/>
+
+                <MudExpansionPanels Class="mb-4">
+                    <MudExpansionPanel Class="border-solid border rounded-lg">
+                        <TitleContent>
+                            <div class="d-flex align-center">
+                                <MudIcon Icon="@AppIcons.ANONYMIZED" Class="mr-3"/>
+                                <MudText Typo="Typo.subtitle1">@string.Format(Culture, T("What AI Studio replaced ({0})"), anonymization.Replacements.Sum(replacement => replacement.Count))</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            @if (anonymization.Replacements.Count is 0)
+                            {
+                                <MudText Typo="Typo.body2">@T("Nothing was replaced.")</MudText>
+                            }
+                            else
+                            {
+                                <MudSimpleTable Dense="@true" Hover="@true">
+                                    <thead>
+                                        <tr>
+                                            <th>@T("Placeholder")</th>
+                                            <th>@T("Replaced")</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var group in anonymization.Replacements.GroupBy(replacement => replacement.Placeholder))
+                                        {
+                                            <tr @key="group.Key">
+                                                <td>@group.Key</td>
+                                                <td>@string.Join(", ", group.Select(replacement => string.Format(Culture, T("{0} ({1}×)"), replacement.Original, replacement.Count)))</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                            }
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+
+                <MudText Typo="Typo.h6" Class="mb-1">@T("Send it")</MudText>
+                <MudJustifiedText Typo="Typo.body2" Class="mb-2">
+                    @TA("First, export the session as a file. Then prepare the mail to the research team, attach the file in your mail program, and send it.")
+                </MudJustifiedText>
+                <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.EXPORT" OnClick="@this.ExportAsync" Disabled="@this.isExporting">
+                        @T("Create export")
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.EMAIL" Href="@this.MailUri" Target="_blank">
+                        @T("Prepare the mail to the research team")
+                    </MudButton>
+                </MudStack>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @(this.AfterCompletion && this.preview is null ? T("Not now") : T("Close"))
+        </MudButton>
+    </DialogActions>
+</MudDialog>

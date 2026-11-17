@@ -19,9 +19,9 @@ public static class SettingsPanes
     /// </summary>
     public static readonly IReadOnlyList<SettingsPane> ALL =
     [
-        new(SettingsPath.CHAT, () => TB("Chat"), Icons.Material.Filled.ChatBubble, Color.Primary, typeof(SettingsPaneChat)),
-        new(SettingsPath.CHAT_TEMPLATES, () => TB("Chat templates"), Icons.Material.Filled.RateReview, Color.Primary, typeof(SettingsPaneChatTemplates)),
-        new(SettingsPath.WORKSPACES, () => TB("Workspaces"), Icons.Material.Filled.Folder, Color.Info, typeof(SettingsPaneWorkspaces)),
+        new(SettingsPath.CHAT, () => TB("Chat"), AppIcons.CHAT_SETTINGS, Color.Primary, typeof(SettingsPaneChat)),
+        new(SettingsPath.CHAT_TEMPLATES, () => TB("Chat templates"), AppIcons.CHAT_TEMPLATE, Color.Primary, typeof(SettingsPaneChatTemplates)),
+        new(SettingsPath.WORKSPACES, () => TB("Workspaces"), AppIcons.WORKSPACE_SETTINGS, Color.Info, typeof(SettingsPaneWorkspaces)),
     ];
 
     /// <summary>

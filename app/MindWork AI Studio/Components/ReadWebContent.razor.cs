@@ -168,7 +168,7 @@ public partial class ReadWebContent : MSGComponentBase
                 // and without a word they would take the raw markdown -- navigation, cookie banner
                 // and advertising included -- for the cleaned result.
                 //
-                await this.MessageBus.SendError(new(Icons.Material.Filled.SettingsSuggest, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
+                await this.MessageBus.SendError(new(AppIcons.AGENT, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
             }
 
             if (this.PreselectContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
@@ -219,7 +219,7 @@ public partial class ReadWebContent : MSGComponentBase
             // PDF rather than a page, a host that does not answer, a server refusing the request.
             //
             this.Logger.LogWarning(exception, "Could not load the web content from '{ProvidedUrl}'.", this.URL);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.CloudOff, string.Format(this.T("The content of '{0}' could not be loaded: {1}"), this.URL, exception.Message)));
+            await this.MessageBus.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(this.T("The content of '{0}' could not be loaded: {1}"), this.URL, exception.Message)));
         }
 
         this.Content = markdown;
@@ -280,23 +280,23 @@ public partial class ReadWebContent : MSGComponentBase
                 return null;
 
             if(this.ProviderSettings == AIStudio.Settings.Provider.NONE)
-                return T("The content cleaner uses the model of this assistant. Please select one below.");
+                return TA("The content cleaner uses the model of this assistant. Please select one below.");
 
-            return T("The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.");
+            return TA("The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.");
         }
     }
 
     private string? ValidateURL(string url)
     {
         if(string.IsNullOrWhiteSpace(url))
-            return T("Please provide a URL to load the content from.");
+            return TA("Please provide a URL to load the content from.");
 
         var urlParsingResult = Uri.TryCreate(url, UriKind.Absolute, out var uriResult);
         if(!urlParsingResult)
-            return T("Please provide a valid URL.");
+            return TA("Please provide a valid URL.");
 
         if(uriResult is not { Scheme: "http" or "https" })
-            return T("Please provide a valid HTTP or HTTPS URL.");
+            return TA("Please provide a valid HTTP or HTTPS URL.");
 
         return null;
     }

@@ -45,7 +45,7 @@
             }
             @if (this.CanCreate)
             {
-                <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary" Icon="@Icons.Material.Filled.Add" Class="collection-section-new" OnClick="@(() => this.OnCreate.InvokeAsync())">
+                <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary" Icon="@AppIcons.ADD" Class="collection-section-new" OnClick="@(() => this.OnCreate.InvokeAsync())">
                     @this.CreateText
                 </MudChip>
             }

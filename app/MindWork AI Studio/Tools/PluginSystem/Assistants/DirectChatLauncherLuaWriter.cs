@@ -95,71 +95,71 @@ public static class DirectChatLauncherLuaWriter
     {
         var builder = new StringBuilder();
 
-        builder.AppendLine("--[[");
-        builder.AppendLine("  This direct chat launcher is maintained by AI Studio: its settings dialog rewrites this");
-        builder.AppendLine("  file as a whole. Editing it by hand works, but the next change made through the dialog");
-        builder.AppendLine("  replaces everything below, including comments and formatting.");
-        builder.AppendLine("]]");
-        builder.AppendLine();
+        builder.AppendLineLF("--[[");
+        builder.AppendLineLF("  This direct chat launcher is maintained by AI Studio: its settings dialog rewrites this");
+        builder.AppendLineLF("  file as a whole. Editing it by hand works, but the next change made through the dialog");
+        builder.AppendLineLF("  replaces everything below, including comments and formatting.");
+        builder.AppendLineLF("]]");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The ID for this plugin:");
-        builder.AppendLine($"ID = \"{plugin.Id}\"");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The ID for this plugin:");
+        builder.AppendLineLF($"ID = \"{plugin.Id}\"");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The name of the plugin:");
-        builder.AppendLine($"NAME = \"{Escape(definition.PluginName)}\"");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The name of the plugin:");
+        builder.AppendLineLF($"NAME = \"{Escape(definition.PluginName)}\"");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The description of the plugin:");
-        builder.AppendLine($"DESCRIPTION = \"{Escape(definition.Description)}\"");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The description of the plugin:");
+        builder.AppendLineLF($"DESCRIPTION = \"{Escape(definition.Description)}\"");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The version of the plugin:");
-        builder.AppendLine($"VERSION = \"{plugin.Version}\"");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The version of the plugin:");
+        builder.AppendLineLF($"VERSION = \"{plugin.Version}\"");
+        builder.AppendLineLF();
 
         if (plugin.LastChanged is { } lastChanged)
         {
-            builder.AppendLine("-- When this plugin was last changed, in UTC, formatted as YYYY-MM-DDTHH:MM:SSZ. Optional.");
-            builder.AppendLine($"LAST_CHANGED = \"{PluginBase.FormatLastChanged(lastChanged)}\"");
-            builder.AppendLine();
+            builder.AppendLineLF("-- When this plugin was last changed, in UTC, formatted as YYYY-MM-DDTHH:MM:SSZ. Optional.");
+            builder.AppendLineLF($"LAST_CHANGED = \"{PluginBase.FormatLastChanged(lastChanged)}\"");
+            builder.AppendLineLF();
         }
 
-        builder.AppendLine("-- The type of the plugin:");
-        builder.AppendLine($"TYPE = \"{nameof(PluginType.ASSISTANT)}\"");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The type of the plugin:");
+        builder.AppendLineLF($"TYPE = \"{nameof(PluginType.ASSISTANT)}\"");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The authors of the plugin:");
-        builder.AppendLine($"AUTHORS = {WriteStringList(plugin.Authors, FALLBACK_AUTHOR)}");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The authors of the plugin:");
+        builder.AppendLineLF($"AUTHORS = {WriteStringList(plugin.Authors, FALLBACK_AUTHOR)}");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The support contact for the plugin:");
-        builder.AppendLine($"SUPPORT_CONTACT = \"{Escape(ValueOrFallback(plugin.SupportContact, FALLBACK_SUPPORT_CONTACT))}\"");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The support contact for the plugin:");
+        builder.AppendLineLF($"SUPPORT_CONTACT = \"{Escape(ValueOrFallback(plugin.SupportContact, FALLBACK_SUPPORT_CONTACT))}\"");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The source URL for the plugin:");
-        builder.AppendLine($"SOURCE_URL = \"{Escape(ValueOrFallback(plugin.SourceURL, FALLBACK_SOURCE_URL))}\"");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The source URL for the plugin:");
+        builder.AppendLineLF($"SOURCE_URL = \"{Escape(ValueOrFallback(plugin.SourceURL, FALLBACK_SOURCE_URL))}\"");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The categories for the plugin:");
-        builder.AppendLine($"CATEGORIES = {WriteEnumList(plugin.Categories, FALLBACK_CATEGORY)}");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The categories for the plugin:");
+        builder.AppendLineLF($"CATEGORIES = {WriteEnumList(plugin.Categories, FALLBACK_CATEGORY)}");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The target groups for the plugin:");
-        builder.AppendLine($"TARGET_GROUPS = {WriteEnumList(plugin.TargetGroups, FALLBACK_TARGET_GROUP)}");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The target groups for the plugin:");
+        builder.AppendLineLF($"TARGET_GROUPS = {WriteEnumList(plugin.TargetGroups, FALLBACK_TARGET_GROUP)}");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- The flag for whether the plugin is maintained:");
-        builder.AppendLine($"IS_MAINTAINED = {WriteBoolean(plugin.IsMaintained)}");
-        builder.AppendLine();
+        builder.AppendLineLF("-- The flag for whether the plugin is maintained:");
+        builder.AppendLineLF($"IS_MAINTAINED = {WriteBoolean(plugin.IsMaintained)}");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- When the plugin is deprecated, this message will be shown to users:");
-        builder.AppendLine($"DEPRECATION_MESSAGE = \"{Escape(plugin.DeprecationMessage)}\"");
-        builder.AppendLine();
+        builder.AppendLineLF("-- When the plugin is deprecated, this message will be shown to users:");
+        builder.AppendLineLF($"DEPRECATION_MESSAGE = \"{Escape(plugin.DeprecationMessage)}\"");
+        builder.AppendLineLF();
 
-        builder.AppendLine("-- Enterprise-managed assistants cannot be revised with AI. Keep false for locally managed plugins:");
-        builder.AppendLine("DEPLOYED_USING_CONFIG_SERVER = false");
-        builder.AppendLine();
+        builder.AppendLineLF("-- Enterprise-managed assistants cannot be revised with AI. Keep false for locally managed plugins:");
+        builder.AppendLineLF("DEPLOYED_USING_CONFIG_SERVER = false");
+        builder.AppendLineLF();
 
         //
         // This metadata marks assistants the Builder created and must not appear on manually
@@ -167,26 +167,26 @@ public static class DirectChatLauncherLuaWriter
         //
         if (plugin.IsAssistantBuilderGenerated)
         {
-            builder.AppendLine("-- This assistant was created by the AI Studio Assistant Builder:");
-            builder.AppendLine("AI_STUDIO_ASSISTANT_BUILDER = {Generated = true, SchemaVersion = 1}");
-            builder.AppendLine();
+            builder.AppendLineLF("-- This assistant was created by the AI Studio Assistant Builder:");
+            builder.AppendLineLF("AI_STUDIO_ASSISTANT_BUILDER = {Generated = true, SchemaVersion = 1}");
+            builder.AppendLineLF();
         }
 
-        builder.AppendLine("-- The tile opens a chat directly, hence it needs no system prompt, no submit text, and no UI:");
-        builder.AppendLine("ASSISTANT = {");
-        builder.AppendLine($"    [\"Title\"] = \"{Escape(definition.Title)}\",");
-        builder.AppendLine($"    [\"Description\"] = \"{Escape(definition.Description)}\",");
+        builder.AppendLineLF("-- The tile opens a chat directly, hence it needs no system prompt, no submit text, and no UI:");
+        builder.AppendLineLF("ASSISTANT = {");
+        builder.AppendLineLF($"    [\"Title\"] = \"{Escape(definition.Title)}\",");
+        builder.AppendLineLF($"    [\"Description\"] = \"{Escape(definition.Description)}\",");
         //
         // The behavior follows from the workspace rather than being tracked next to it. A launcher
         // without one has no name to write, and the plugin loader rejects a WorkspaceName there, so
         // the field is left out the same way the optional IDs below are:
         //
         if (definition.Launch.OpensTemporaryChat)
-            builder.AppendLine($"    [\"LaunchBehavior\"] = \"{nameof(AssistantPluginLaunchBehavior.OPEN_TEMPORARY_CHAT)}\",");
+            builder.AppendLineLF($"    [\"LaunchBehavior\"] = \"{nameof(AssistantPluginLaunchBehavior.OPEN_TEMPORARY_CHAT)}\",");
         else
         {
-            builder.AppendLine($"    [\"LaunchBehavior\"] = \"{nameof(AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME)}\",");
-            builder.AppendLine($"    [\"WorkspaceName\"] = \"{Escape(definition.Launch.WorkspaceName.Trim())}\",");
+            builder.AppendLineLF($"    [\"LaunchBehavior\"] = \"{nameof(AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME)}\",");
+            builder.AppendLineLF($"    [\"WorkspaceName\"] = \"{Escape(definition.Launch.WorkspaceName.Trim())}\",");
         }
 
         //
@@ -194,30 +194,30 @@ public static class DirectChatLauncherLuaWriter
         // profile or no chat template. An empty provider GUID has no such meaning and is invalid:
         //
         if (definition.Launch.ProviderId is { } providerId && providerId != Guid.Empty)
-            builder.AppendLine($"    [\"ProviderId\"] = \"{providerId}\",");
+            builder.AppendLineLF($"    [\"ProviderId\"] = \"{providerId}\",");
 
         if (definition.Launch.ProfileId is { } profileId)
-            builder.AppendLine($"    [\"ProfileId\"] = \"{profileId}\",");
+            builder.AppendLineLF($"    [\"ProfileId\"] = \"{profileId}\",");
 
         if (definition.Launch.ChatTemplateId is { } chatTemplateId)
-            builder.AppendLine($"    [\"ChatTemplateId\"] = \"{chatTemplateId}\",");
+            builder.AppendLineLF($"    [\"ChatTemplateId\"] = \"{chatTemplateId}\",");
 
         if (definition.Launch.DataSourceIds is { Count: > 0 } dataSourceIds)
         {
-            builder.AppendLine("    [\"DataSourceIds\"] = {");
+            builder.AppendLineLF("    [\"DataSourceIds\"] = {");
             foreach (var dataSourceId in dataSourceIds)
-                builder.AppendLine($"        \"{dataSourceId}\",");
+                builder.AppendLineLF($"        \"{dataSourceId}\",");
 
-            builder.AppendLine("    },");
+            builder.AppendLineLF("    },");
         }
 
         if (definition.Launch.ToolIds is { Count: > 0 } toolIds)
         {
-            builder.AppendLine("    [\"ToolIds\"] = {");
+            builder.AppendLineLF("    [\"ToolIds\"] = {");
             foreach (var toolId in toolIds)
-                builder.AppendLine($"        {LuaTools.ToLuaStringLiteral(toolId)},");
+                builder.AppendLineLF($"        {LuaTools.ToLuaStringLiteral(toolId)},");
 
-            builder.AppendLine("    },");
+            builder.AppendLineLF("    },");
         }
 
         builder.Append('}');

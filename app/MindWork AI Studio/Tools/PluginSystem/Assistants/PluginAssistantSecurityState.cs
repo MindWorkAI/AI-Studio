@@ -46,18 +46,18 @@ public sealed class PluginAssistantSecurityState
     public bool CanStartAssistant { get; init; }
     public string AuditLabel { get; init; } = string.Empty;
     public Color AuditColor { get; init; } = Color.Info;
-    public string AuditIcon { get; init; } = MudBlazor.Icons.Material.Filled.HelpOutline;
+    public string AuditIcon { get; init; } = AppIcons.UNKNOWN;
     public string AvailabilityLabel { get; init; } = string.Empty;
     public Color AvailabilityColor { get; init; } = Color.Info;
-    public string AvailabilityIcon { get; init; } = MudBlazor.Icons.Material.Filled.Lock;
+    public string AvailabilityIcon { get; init; } = AppIcons.LOCK;
     public string StatusLabel { get; init; } = string.Empty;
     public string SourceLabel { get; init; } = string.Empty;
     public Color SourceColor { get; init; } = Color.Info;
-    public string SourceIcon { get; init; } = MudBlazor.Icons.Material.Filled.Info;
+    public string SourceIcon { get; init; } = AppIcons.INFO;
     public string Headline { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public Color StatusColor { get; init; } = Color.Info;
-    public string StatusIcon { get; init; } = MudBlazor.Icons.Material.Filled.Lock;
+    public string StatusIcon { get; init; } = AppIcons.LOCK;
     public string ActionLabel { get; init; } = string.Empty;
-    public string BadgeIcon { get; init; } = MudBlazor.Icons.Material.Outlined.Shield;
+    public string BadgeIcon { get; init; } = AppIcons.SECURITY;
 }

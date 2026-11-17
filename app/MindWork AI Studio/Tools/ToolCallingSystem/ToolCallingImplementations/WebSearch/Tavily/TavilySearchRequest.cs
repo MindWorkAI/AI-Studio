@@ -10,35 +10,35 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.
 /// </remarks>
 internal sealed record TavilySearchRequest
 {
-    public required string Query { get; init; }
+    public required string Query { get; set; }
 
     /// <summary>
     /// How thoroughly to search. A basic search costs one credit, an advanced one costs two.
     /// </summary>
-    public required string SearchDepth { get; init; }
+    public required string SearchDepth { get; set; }
 
     /// <summary>
     /// The most hits to return, at most 20.
     /// </summary>
-    public int? MaxResults { get; init; }
+    public int? MaxResults { get; set; }
 
     /// <summary>
     /// How far back to look: day, week, month, or year, or null for no restriction.
     /// </summary>
-    public string? TimeRange { get; init; }
+    public string? TimeRange { get; set; }
 
     /// <summary>
     /// The language to search in, as an ISO 639-1 code, or null for no restriction.
     /// </summary>
-    public string? Language { get; init; }
+    public string? Language { get; set; }
 
     /// <summary>
     /// Whether the language is a requirement rather than a preference. Needs the language field.
     /// </summary>
-    public bool? FilterByLanguage { get; init; }
+    public bool? FilterByLanguage { get; set; }
 
     /// <summary>
     /// Whether to filter explicit results or null to leave the decision to Tavily.
     /// </summary>
-    public bool? SafeSearch { get; init; }
+    public bool? SafeSearch { get; set; }
 }

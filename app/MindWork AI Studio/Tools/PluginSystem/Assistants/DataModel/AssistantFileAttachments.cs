@@ -57,7 +57,7 @@ internal sealed class AssistantFileAttachment : StatefulAssistantComponentBase
         var builder = new StringBuilder();
 
         foreach (var attachment in fileState.DocumentPaths.OrderBy(static attachment => attachment.FilePath, StringComparer.Ordinal))
-            builder.AppendLine(attachment.FilePath);
+            builder.AppendLineLF(attachment.FilePath);
 
         return this.BuildAuditPromptBlock(builder.ToString());
     }

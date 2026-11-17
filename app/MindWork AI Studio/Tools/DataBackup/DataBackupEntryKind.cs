@@ -42,6 +42,11 @@ public enum DataBackupEntryKind
     VISUAL_BRIEFINGS,
 
     /// <summary>
+    /// The preparations of the BeyondFacts Lab.
+    /// </summary>
+    BEYOND_FACTS_LAB,
+
+    /// <summary>
     /// The SQLite index of the data sources: which files are embedded, and their text chunks.
     /// </summary>
     DATA_SOURCE_INDEX,

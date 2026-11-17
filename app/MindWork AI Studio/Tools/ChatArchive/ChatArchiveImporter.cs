@@ -70,7 +70,7 @@ public static class ChatArchiveImporter
     {
         try
         {
-            using var archive = ZipFile.OpenRead(archivePath);
+            await using var archive = await ZipFile.OpenReadAsync(archivePath, token);
             var manifestResult = await DataBackupReader.ReadManifestAsync(archive, token);
             if (manifestResult.Manifest is not { } manifest)
                 return new(false, new(), manifestResult.Issue);
@@ -114,7 +114,7 @@ public static class ChatArchiveImporter
         try
         {
             var manifest = preview.Manifest;
-            using var archive = ZipFile.OpenRead(archivePath);
+            await using var archive = await ZipFile.OpenReadAsync(archivePath, token);
             var entriesByChat = GroupEntriesByChat(archive);
             var provenance = await ExtractProvenanceStoreAsync(archive, provenanceStore, provenanceDirectory, token);
 
@@ -243,7 +243,7 @@ public static class ChatArchiveImporter
     /// <param name="token">The cancellation token.</param>
     private static async Task ExtractEntryAsync(ZipArchiveEntry entry, string destinationPath, CancellationToken token)
     {
-        await using var entryStream = entry.Open();
+        await using var entryStream = await entry.OpenAsync(token);
         await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan);
         await entryStream.CopyToAsync(fileStream, token);
     }
@@ -446,7 +446,7 @@ public static class ChatArchiveImporter
 
     private static async Task<string> ReadTextAsync(ZipArchiveEntry entry, CancellationToken token)
     {
-        using var reader = new StreamReader(entry.Open());
+        using var reader = new StreamReader(await entry.OpenAsync(token));
         return (await reader.ReadToEndAsync(token)).Trim();
     }
 
@@ -550,7 +550,7 @@ public static class ChatArchiveImporter
             }
 
             ChatThread? thread;
-            await using (var threadStream = threadEntry.Entry.Open())
+            await using (var threadStream = await threadEntry.Entry.OpenAsync(token))
                 thread = await JsonSerializer.DeserializeAsync<ChatThread>(threadStream, WorkspaceBehaviour.JSON_OPTIONS, token);
 
             if (thread is null)

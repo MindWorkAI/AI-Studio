@@ -2,7 +2,13 @@ namespace AIStudio.Tools;
 
 public static class EncryptedTextExtensions
 {
-    public static async Task<EncryptedText> Encrypt(this string data, Encryption encryption) => await encryption.Encrypt(data);
+    extension(string data)
+    {
+        public async Task<EncryptedText> Encrypt(Encryption encryption) => await encryption.Encrypt(data);
+    }
 
-    public static async Task<string> Decrypt(this EncryptedText encryptedText, Encryption encryption) => await encryption.Decrypt(encryptedText);
+    extension(EncryptedText encryptedText)
+    {
+        public async Task<string> Decrypt(Encryption encryption) => await encryption.Decrypt(encryptedText);
+    }
 }

@@ -1,0 +1,107 @@
+{
+  "artifactVersion": 41,
+  "contractVersion": 42,
+  "artifactId": "00000000-0000-4000-8000-000000000003",
+  "createdAtUtc": "2026-10-29T12:34:15+01:00",
+  "payloadHash": "payloadHash sample 5",
+  "sections": [
+    {
+      "sectionId": "sectionId sample 6",
+      "role": "EXECUTIVE_SUMMARY",
+      "titleSlotId": "titleSlotId sample 7",
+      "summarySlotId": "summarySlotId sample 8",
+      "components": [
+        {
+          "componentId": "componentId sample 9",
+          "kind": "METRIC",
+          "evidenceIds": [
+            "evidenceIds sample 10",
+            "evidenceIds sample 11"
+          ],
+          "slots": [
+            {
+              "slotId": "slotId sample 12",
+              "role": "TITLE"
+            },
+            {
+              "slotId": "slotId sample 13",
+              "role": "TITLE"
+            }
+          ],
+          "assetId": "assetId sample 14",
+          "timelineOrientation": "VERTICAL"
+        },
+        {
+          "componentId": "componentId sample 15",
+          "kind": "METRIC",
+          "evidenceIds": [
+            "evidenceIds sample 16",
+            "evidenceIds sample 17"
+          ],
+          "slots": [
+            {
+              "slotId": "slotId sample 18",
+              "role": "TITLE"
+            },
+            {
+              "slotId": "slotId sample 19",
+              "role": "TITLE"
+            }
+          ],
+          "assetId": "assetId sample 20",
+          "timelineOrientation": "VERTICAL"
+        }
+      ]
+    },
+    {
+      "sectionId": "sectionId sample 21",
+      "role": "EXECUTIVE_SUMMARY",
+      "titleSlotId": "titleSlotId sample 22",
+      "summarySlotId": "summarySlotId sample 23",
+      "components": [
+        {
+          "componentId": "componentId sample 24",
+          "kind": "METRIC",
+          "evidenceIds": [
+            "evidenceIds sample 25",
+            "evidenceIds sample 26"
+          ],
+          "slots": [
+            {
+              "slotId": "slotId sample 27",
+              "role": "TITLE"
+            },
+            {
+              "slotId": "slotId sample 28",
+              "role": "TITLE"
+            }
+          ],
+          "assetId": "assetId sample 29",
+          "timelineOrientation": "VERTICAL"
+        },
+        {
+          "componentId": "componentId sample 30",
+          "kind": "METRIC",
+          "evidenceIds": [
+            "evidenceIds sample 31",
+            "evidenceIds sample 32"
+          ],
+          "slots": [
+            {
+              "slotId": "slotId sample 33",
+              "role": "TITLE"
+            },
+            {
+              "slotId": "slotId sample 34",
+              "role": "TITLE"
+            }
+          ],
+          "assetId": "assetId sample 35",
+          "timelineOrientation": "VERTICAL"
+        }
+      ]
+    }
+  ],
+  "structuralSignature": "structuralSignature sample 36",
+  "model": "model sample 37"
+}

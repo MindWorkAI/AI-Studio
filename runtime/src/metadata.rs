@@ -3,6 +3,13 @@ use std::sync::Mutex;
 
 pub static META_DATA: Lazy<Mutex<Option<MetaData>>> = Lazy::new(|| Mutex::new(None));
 
+/// The Rust compiler which built the runtime, e.g., "1.99.1 (commit 58cf8f9c3)".
+///
+/// The build script asks the compiler itself. Line 6 of metadata.txt names
+/// only the one our pipeline is supposed to use, while other builds, such
+/// as the Flatpak, bring their own compiler.
+pub const RUST_VERSION: &str = env!("AI_STUDIO_RUST_VERSION");
+
 #[derive(Clone)]
 pub struct MetaData {
     pub app_version: String,
@@ -34,7 +41,9 @@ impl MetaData {
         let build_number = metadata_lines.next().unwrap();
         let dotnet_sdk_version = metadata_lines.next().unwrap();
         let dotnet_version = metadata_lines.next().unwrap();
-        let rust_version = metadata_lines.next().unwrap();
+
+        // Skip the Rust compiler of the pipeline, see RUST_VERSION:
+        metadata_lines.next().unwrap();
         let mud_blazor_version = metadata_lines.next().unwrap();
         let tauri_version = metadata_lines.next().unwrap();
         let app_commit_hash = metadata_lines.next().unwrap();
@@ -51,7 +60,7 @@ impl MetaData {
             dotnet_sdk_version: dotnet_sdk_version.to_string(),
             dotnet_version: dotnet_version.to_string(),
             mud_blazor_version: mud_blazor_version.to_string(),
-            rust_version: rust_version.to_string(),
+            rust_version: RUST_VERSION.to_string(),
             tauri_version: tauri_version.to_string(),
             pdfium_version: pdfium_version.to_string(),
             vector_store_version: vector_store_version.to_string(),

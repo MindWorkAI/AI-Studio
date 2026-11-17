@@ -52,7 +52,7 @@ public sealed class VisualBriefingManifest
     /// than in the settings, which the editor replaces with every save. A briefing nothing was sent to, or one
     /// written before this property existed, demands nothing.
     /// </remarks>
-    public ChatRestrictions Restrictions { get; init; } = ChatRestrictions.NONE;
+    public ChatRestrictions Restrictions { get; set; } = ChatRestrictions.NONE;
 
     /// <summary>
     /// Defines <c>Sources</c> for the visual briefing feature.

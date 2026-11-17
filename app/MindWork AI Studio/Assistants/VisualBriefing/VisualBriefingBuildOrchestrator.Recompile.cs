@@ -121,21 +121,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             var validationDataProperties = compiled.Data.EnumerateObject()
                 .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
             
-            validationDataProperties["_mwai"] = JsonSerializer.SerializeToElement(new
-            {
-                schemaVersion = VisualBriefingVersions.SCHEMA,
-                runtimeVersion = VisualBriefingVersions.RUNTIME,
-                aiStudioVersion = "validation",
-                assets = content.AssetPlan.ToDictionary(asset => asset.AssetId, _ => "data:image/png;base64,AA==", StringComparer.Ordinal),
-                footer = new
-                {
-                    createdWith = "validation",
-                    models = "validation",
-                    createdAt = "validation",
-                    authors = "validation",
-                    protection = "validation",
-                },
-            }, VisualBriefingJson.Canonical);
+            validationDataProperties["_mwai"] = JsonSerializer.SerializeToElement(VisualBriefingProtectedData.ForValidation(content.AssetPlan), VisualBriefingJson.Canonical);
             
             VisualBriefingCompilerInvariant.Guard(
                 VisualBriefingBuildStage.COMPILATION,

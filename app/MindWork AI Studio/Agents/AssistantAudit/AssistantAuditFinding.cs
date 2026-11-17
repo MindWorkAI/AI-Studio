@@ -13,11 +13,11 @@ public sealed class AssistantAuditFinding
     /// </summary>
     #pragma warning restore MWAIS0005
     [JsonIgnore]
-    public AssistantAuditLevel Severity { get; private init; } = AssistantAuditLevel.UNKNOWN;
+    public AssistantAuditLevel Severity { get; private set; } = AssistantAuditLevel.UNKNOWN;
 
 
     /// <summary>
-    /// Gets or initializes the JSON-facing severity label used by the audit model response.
+    /// Gets or sets the JSON-facing severity label used by the audit model response.
     /// </summary>
     [JsonPropertyName("severity")]
     public string SeverityText
@@ -30,7 +30,7 @@ public sealed class AssistantAuditFinding
             _ => "unknown",
         };
         
-        init => this.Severity = value.Trim().ToLowerInvariant() switch
+        set => this.Severity = value.Trim().ToLowerInvariant() switch
         {
             "critical" => AssistantAuditLevel.DANGEROUS,
             "medium" => AssistantAuditLevel.CAUTION,
@@ -39,7 +39,7 @@ public sealed class AssistantAuditFinding
         };
     }
 
-    public string Category { get; init; } = string.Empty;
-    public string Location { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
 }

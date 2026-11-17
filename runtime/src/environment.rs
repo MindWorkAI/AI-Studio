@@ -1,3 +1,4 @@
+use crate::metadata::RUST_VERSION;
 use axum::http::StatusCode;
 use axum::Json;
 use log::{debug, error, info, warn};
@@ -126,6 +127,9 @@ pub struct RuntimeInfo {
     pub executable_path: String,
     pub linux_package_type: LinuxPackageType,
     pub installation_kind: InstallationKind,
+
+    /// The Rust compiler which built the runtime, see `metadata::RUST_VERSION`.
+    pub rust_version: String,
 }
 
 pub async fn get_runtime_info() -> Json<RuntimeInfo> {
@@ -138,6 +142,7 @@ pub async fn get_runtime_info() -> Json<RuntimeInfo> {
             .unwrap_or_default(),
         linux_package_type: detect_linux_package_type(),
         installation_kind: installation_kind(),
+        rust_version: RUST_VERSION.to_string(),
     })
 }
 
@@ -1419,7 +1424,7 @@ fn digits_of_hyphenated_guid(value: &str) -> Option<String> {
 mod tests {
     use super::{
         canonical_enterprise_config_id, directory_is_writable, enterprise_env_key_suffix_ignoring_case,
-        enterprise_environment_key_name, enterprise_policy_file_slot_suffix,
+        enterprise_environment_key_name, enterprise_policy_file_slot_suffix, get_runtime_info,
         has_managed_installation_marker,
         is_windows_machine_wide_installation, is_windows_per_user_installation,
         load_external_http_custom_root_certificate_policy_from_directories,
@@ -1430,7 +1435,7 @@ mod tests {
         EnterpriseConfig, EnterpriseSourceData, EnterpriseSourceValue, EnterpriseSourceValues,
         ExternalHttpCustomRootCertificatePolicy, InstallationKind, LinuxPackageType,
         ENTERPRISE_ENV_CONFIG_ID_PREFIX, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX,
-        MANAGED_INSTALLATION_MARKER_FILE_NAME,
+        MANAGED_INSTALLATION_MARKER_FILE_NAME, RUST_VERSION,
     };
     use std::collections::HashMap;
     use std::fs;
@@ -1471,6 +1476,23 @@ mod tests {
         ] {
             assert_eq!(serde_json::to_string(&kind).unwrap(), expected);
         }
+    }
+
+    /// The information page of the app shows the Rust compiler which built the runtime. The
+    /// app reads it as `rust_version`, in the form of metadata.txt, which the build script
+    /// keeps: the version as the compiler names it, and the short hash of its commit.
+    #[tokio::test]
+    async fn runtime_info_names_the_rust_compiler_which_built_the_runtime() {
+        let runtime_info = get_runtime_info().await.0;
+        assert_eq!(serde_json::to_value(&runtime_info).unwrap()["rust_version"], RUST_VERSION);
+
+        let (version, commit) = RUST_VERSION
+            .strip_suffix(')')
+            .and_then(|rest| rest.split_once(" (commit "))
+            .unwrap_or_else(|| panic!("'{RUST_VERSION}' does not read '<version> (commit <hash>)'"));
+
+        assert!(version.starts_with(|character: char| character.is_ascii_digit()), "'{version}' is no version of the compiler");
+        assert!(!commit.is_empty() && commit.chars().all(|character| character.is_ascii_hexdigit()), "'{commit}' is no commit hash");
     }
 
     fn enterprise_config(

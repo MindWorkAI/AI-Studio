@@ -1,0 +1,8 @@
+{
+  "outcome": "REFUSED",
+  "detail": "Detail sample 1",
+  "prepared_at_utc": "PreparedAtUtc sample 2",
+  "backup_created_at_utc": "BackupCreatedAtUtc sample 3",
+  "backup_app_version": "BackupAppVersion sample 4",
+  "finished_at_utc": "FinishedAtUtc sample 5"
+}

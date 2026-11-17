@@ -9,7 +9,7 @@
 
         <MudExpansionPanels>
             
-            <ExpansionPanel HeaderText="@T("Financial Support")" IsExpanded="@true" HeaderIcon="@Icons.Material.Filled.AttachMoney">
+            <ExpansionPanel HeaderText="@T("Financial Support")" IsExpanded="@true" HeaderIcon="@AppIcons.FINANCIAL_SUPPORT">
                 <div class="border-solid border-2 rounded-lg pa-3 mb-6">
                     <MudText Typo="Typo.h4" Class="mb-2">
                         @T("Our Titans")
@@ -18,28 +18,29 @@
                         @T("In this section, we highlight the titan supporters of MindWork AI Studio. Titans are prestigious companies that provide significant support to our mission.")
                     </MudText>
                     <MudText Typo="Typo.body1" Style="text-align: justify; hyphens: auto;" Class="mb-3">
-                        @T("For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.")
+                        @TA("For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.")
                     </MudText>
                     
                     <MudList T="string" Class="mb-3">
                         <Titan Name="@T("German Aerospace Center (DLR)")" Type="SupporterType.ORGANIZATION" URL="https://www.dlr.de/" ImageSrc="svg/titans/DLR.svg" Acknowledgment="@T("We would like to thank the DLR for its courage in supporting MindWork AI Studio at an early stage. The DLR not only uses AI Studio in various projects but also supports its further development with personnel resources.")"/>
                     </MudList>
                     
-                    <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
-                        @T("Become one of our titans")
+                    <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@AppIcons.BUSINESS_SUPPORTER" Variant="Variant.Filled" Target="_blank">
+                        @TA("Become one of our titans")
                     </MudButton>
                 </div>
 
+                @* Two columns from the breakpoint md on; in a narrower window, the boxes follow each other. *@
                 <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
-                    <MudItem Class="pa-0 pr-2" xs="6">
+                    <MudItem Class="pa-0 pr-md-2" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
-                                <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" class="mr-2"/>
+                                <MudIcon Icon="@AppIcons.PEOPLE" Size="Size.Large" class="mr-2"/>
                                 @T("Individual Contributors")
                             </MudText>
 
-                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Target="_blank">
-                                @T("Become a contributor")
+                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@AppIcons.PEOPLE" Variant="Variant.Filled" Target="_blank">
+                                @TA("Become a contributor")
                             </MudButton>
 
                             <MudText Typo="Typo.h6" Class="mt-8">
@@ -60,28 +61,29 @@
                         </MudPaper>
                     </MudItem>
 
-                    <MudItem xs="6" Class="pa-0 pl-2">
+                    <MudItem Class="pa-0 pl-md-2 mt-4 mt-md-0" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
-                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" class="mr-2"/>
+                                <MudIcon Icon="@AppIcons.BUSINESS_SUPPORTER" Size="Size.Large" class="mr-2"/>
                                 @T("Business Contributors")
                             </MudText>
 
-                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
-                                @T("Become a contributor")
+                            <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@AppIcons.BUSINESS_SUPPORTER" Variant="Variant.Filled" Target="_blank">
+                                @TA("Become a contributor")
                             </MudButton>
                         </MudPaper>
                     </MudItem>
                 </MudGrid>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderText="@T("Content Contributors")" HeaderIcon="@Icons.Material.Filled.Code">
+            <ExpansionPanel HeaderText="@T("Content Contributors")" HeaderIcon="@AppIcons.CONTRIBUTORS">
 
+                @* Two columns from the breakpoint md on; in a narrower window, the boxes follow each other. *@
                 <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
-                    <MudItem Class="pa-0 pr-2" xs="6">
+                    <MudItem Class="pa-0 pr-md-2" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
-                                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" class="mr-2"/>
+                                <MudIcon Icon="@AppIcons.CODE" Size="Size.Large" class="mr-2"/>
                                 @T("Code Contributions")
                             </MudText>
 
@@ -99,19 +101,32 @@
                                 <Supporter Name="prodmanpd" Type="SupporterType.INDIVIDUAL" URL="https://github.com/prodmanpd" Acknowledgment="@T("Thank you, Prodman, for bringing LiteLLM to AI Studio as a new provider.")"/>
                                 <Supporter Name="Thibaultjaigu" Type="SupporterType.INDIVIDUAL" URL="https://github.com/Thibaultjaigu" Acknowledgment="@T("Thanks, Thibault, for bringing Requesty to AI Studio as a new provider.")"/>
                                 <Supporter Name="ericcurtin" Type="SupporterType.INDIVIDUAL" URL="https://github.com/ericcurtin" Acknowledgment="@T("Thanks, Eric, for bringing llmman to AI Studio as a new option for self-hosted models.")"/>
+                                <Supporter Name="carstenbauer" Type="SupporterType.INDIVIDUAL" URL="https://github.com/carstenbauer" Acknowledgment="@T("Thank you, Carsten, for fixing the first build after a fresh clone of AI Studio.")"/>
                             </MudList>
                         </MudPaper>
                     </MudItem>
 
-                    <MudItem Class="pa-0 pr-2" xs="6">
+                    <MudItem Class="pa-0 pl-md-2 mt-4 mt-md-0" xs="12" md="6">
                         <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-start">
-                                <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" class="mr-2"/>
+                                <MudIcon Icon="@AppIcons.CONTRIBUTION_DESIGN_AND_DOCS" Size="Size.Large" class="mr-2"/>
                                 @T("Moderation, Design, Wiki, and Documentation")
                             </MudText>
 
                             <MudList T="string">
                                 <Supporter Name="KeSah001" Type="SupporterType.INDIVIDUAL" URL="https://github.com/KeSah001" Acknowledgment="@T("Thank you very much, Kerstin, for creating the Wiki, for advising us on ERI with real use cases, and for your work on version 2 of the ERI protocol.")"/>
+                            </MudList>
+                        </MudPaper>
+
+                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3 mt-4">
+                            <MudText Typo="Typo.h4" Class="mb-3 d-flex align-start">
+                                <MudIcon Icon="@AppIcons.IDEA" Size="Size.Large" class="mr-2"/>
+                                @T("Ideas, Expertise, and Concepts")
+                            </MudText>
+
+                            <MudList T="string">
+                                <Supporter Name="Drew Nelson" Type="SupporterType.INDIVIDUAL" Acknowledgment="@T("Thank you, Drew, for the idea of learning about one cognitive bias every day, so that we become more aware of our own biases step by step. The Bias of the Day assistant is built on it.")"/>
+                                <Supporter Name="Lara Wüster" Type="SupporterType.INDIVIDUAL" URL="https://www.pm.mh.tum.de/ethics/institut/team/lara-wuester/" Acknowledgment="@T("Thank you, Lara, for the concept and the content of the BeyondFacts Lab and for the expertise you put into it, so that researchers can prepare for challenging appearances.")"/>
                             </MudList>
                         </MudPaper>
                     </MudItem>

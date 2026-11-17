@@ -1,0 +1,15 @@
+{
+  "approved_assistant_draft": "# Assistant Draft\n## Name\nMeeting \u0022Notes\u0022 Summary\n## Description\nSummarizes \u003Cnotes\u003E of any Gr\u00F6\u00DFe.",
+  "review_notes": "Keep the title short.",
+  "chat_launch": {
+    "workspace_name": "Workspace \u003CGr\u00F6\u00DFe\u003E",
+    "provider_id": "provider id sample",
+    "profile_id": "00000000-0000-0000-0000-000000000000",
+    "chat_template_id": null,
+    "data_source_ids": [
+      "data source 1",
+      "data source 2"
+    ],
+    "tool_ids": null
+  }
+}

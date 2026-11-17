@@ -21,6 +21,13 @@ and whoever runs it: loading, starting, checking an import, and the assistant bu
 - `PluginModuleLoadingTests` checks both sides: what plugins must load, and what they must not reach. Run
   it after every change to the runtime, the module loader, or the opened libraries.
 
+## Assistant plugins
+
+Every prompt text an assistant plugin brings, its `SystemPrompt` as well as its `CustomChatSystemPrompt`, goes
+through `PluginAssistants.BuildSecureSystemPrompt` and into the security audit of `AssistantAuditAgent`. A new
+field which reaches a model as a prompt needs both, and its documentation in `Plugins/assistants/README.md` and in
+the template `Plugins/assistants/plugin.lua`: the Assistant Builder reads both files as its source of truth.
+
 ## Configuration plugins
 
 Plugins can configure:

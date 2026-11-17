@@ -327,12 +327,12 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
 
                 // Once per kind of failure and pass, not once per document or step:
                 if (context.Pass.TryMarkReported(providerFailure.FailureReason))
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, providerFailure.UserMessage));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, providerFailure.UserMessage));
 
                 break;
             }
 
-            case FileExtractionException extractionFailure when extractionFailure.Code.IsPermanentIndexingFailure():
+            case FileExtractionException extractionFailure when extractionFailure.Code.IsPermanentIndexingFailure:
             {
                 //
                 // The document itself is why this failed, so trying it again changes nothing until

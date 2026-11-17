@@ -100,13 +100,13 @@ public partial class VisualBriefingAssistant
 
         var parameters = new DialogParameters<SingleInputDialog>
         {
-            { dialog => dialog.Message, T("Enter a new name for this visual briefing.") },
+            { dialog => dialog.Message, TA("Enter a new name for this visual briefing.") },
             { dialog => dialog.InputHeaderText, T("Briefing name") },
             { dialog => dialog.UserInput, this.editor.Name },
             { dialog => dialog.ConfirmText, T("Rename") },
             { dialog => dialog.ConfirmColor, Color.Info },
             { dialog => dialog.AllowEmptyInput, false },
-            { dialog => dialog.EmptyInputErrorMessage, T("Please enter a briefing name.") },
+            { dialog => dialog.EmptyInputErrorMessage, TA("Please enter a briefing name.") },
         };
 
         var reference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename visual briefing"), parameters, DialogOptions.FULLSCREEN);
@@ -131,7 +131,7 @@ public partial class VisualBriefingAssistant
             parameters.Add(dialog => dialog.Message, string.Format(T("Permanently delete the visual briefing '{0}' and all of its versions and transcripts?"), this.selectedProject.Name));
         else
         {
-            var reportingWarning = T("This visual briefing cannot currently be opened. Consider reporting the problem in the [MindWork AI Studio issue tracker](https://github.com/MindWorkAI/AI-Studio), because a future update may make the briefing accessible again.");
+            var reportingWarning = TA("This visual briefing cannot currently be opened. Consider reporting the problem in the [MindWork AI Studio issue tracker](https://github.com/MindWorkAI/AI-Studio), because a future update may make the briefing accessible again.");
             var deletionWarning = T("Permanently delete this visual briefing and all of its versions and transcripts?");
             parameters.Add(dialog => dialog.MarkdownBody, $"{reportingWarning}\n\n{deletionWarning}");
         }
@@ -166,7 +166,7 @@ public partial class VisualBriefingAssistant
         var path = await this.Store.GetProjectDirectoryPathAsync(this.selectedProject.BriefingId);
         if (string.IsNullOrWhiteSpace(path))
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The visual briefing project folder is not available.")));
+            await this.MessageBus.SendWarning(new(AppIcons.FOLDER_OPEN, T("The visual briefing project folder is not available.")));
             return;
         }
 
@@ -178,18 +178,18 @@ public partial class VisualBriefingAssistant
         catch (Exception exception)
         {
             this.Logger.LogWarning(exception, "Could not open the visual briefing project folder. BriefingId={BriefingId}", this.selectedProject.BriefingId);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the visual briefing project folder.")));
+            await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, T("Could not open the visual briefing project folder.")));
             return;
         }
 
         if (response.Success)
         {
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Folder, T("Opened the visual briefing project folder.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.FOLDER_OPEN, T("Opened the visual briefing project folder.")));
             return;
         }
 
         var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the visual briefing project folder: {0}"), issue)));
+        await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, string.Format(T("Could not open the visual briefing project folder: {0}"), issue)));
     }
 
     /// <summary>
@@ -382,16 +382,15 @@ public partial class VisualBriefingAssistant
     /// The fingerprint is serialized from exactly the values that SaveCurrentAsync
     /// hands to the store. That is deliberate: a handwritten field list would silently stop
     /// auto-saving whenever a new setting is added and someone forgets to list it here. Sources are
-    /// projected into a named shape because <c>System.Text.Json</c> ignores tuple fields and would
+    /// projected into a named record because <c>System.Text.Json</c> ignores tuple fields and would
     /// otherwise serialize every source list into the same empty object.
     /// </remarks>
     /// <returns>The fingerprint of the current editor state.</returns>
     private string BuildPersistenceFingerprint() => JsonSerializer.Serialize(
-        new
-        {
+        new VisualBriefingPersistenceFingerprint(
             this.editor.Name,
             this.editor.Author,
-            Settings = this.editor.ToSettings(),
-            Sources = this.editor.ToSources().Select(source => new { source.Path, source.Kind }).ToArray(),
-        }, VisualBriefingJson.Canonical);
+            this.editor.ToSettings(),
+            [.. this.editor.ToSources().Select(source => new VisualBriefingSourceFingerprint(source.Path, source.Kind))]),
+        VisualBriefingJson.Canonical);
 }

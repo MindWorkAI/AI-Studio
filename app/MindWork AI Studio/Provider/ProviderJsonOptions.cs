@@ -21,7 +21,7 @@ public static class ProviderJsonOptions
     /// <summary>
     /// The shared options.
     /// </summary>
-    public static readonly JsonSerializerOptions OPTIONS = new()
+    public static readonly JsonSerializerOptions OPTIONS = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         Converters =
@@ -33,6 +33,7 @@ public static class ProviderJsonOptions
             new SubContentImageSourceConverter(),
             new SubContentImageUrlConverter(),
         },
-        AllowTrailingCommas = false
-    };
+        AllowTrailingCommas = false,
+        TypeInfoResolver = ProviderJsonContext.Default,
+    }.AsReadOnly();
 }

@@ -159,7 +159,7 @@ public sealed partial class ToolSettingsService
             // dictionary rather than this tool's entry. A comment says the same thing without
             // overwriting anything:
             //
-            lua.AppendLine($"-- The whole table is locked unless you set CONFIG[\"SETTINGS\"][\"{MINIMUM_CONFIDENCE}.AllowUserOverride\"] = true");
+            lua.AppendLineLF($"-- The whole table is locked unless you set CONFIG[\"SETTINGS\"][\"{MINIMUM_CONFIDENCE}.AllowUserOverride\"] = true");
         }
 
         return new(LuaCode: lua.ToString());
@@ -177,9 +177,9 @@ public sealed partial class ToolSettingsService
 
         var table = $"CONFIG[\"SETTINGS\"][\"{settingName}\"]";
         if (lua.Length > 0)
-            lua.AppendLine();
-        lua.AppendLine($"{table} = {table} or {{}}");
+            lua.AppendLineLF();
+        lua.AppendLineLF($"{table} = {table} or {{}}");
         foreach (var (key, value) in values)
-            lua.AppendLine($"{table}[\"{LuaTools.EscapeLuaString(key)}\"] = \"{LuaTools.EscapeLuaString(value)}\"");
+            lua.AppendLineLF($"{table}[\"{LuaTools.EscapeLuaString(key)}\"] = \"{LuaTools.EscapeLuaString(value)}\"");
     }
 }

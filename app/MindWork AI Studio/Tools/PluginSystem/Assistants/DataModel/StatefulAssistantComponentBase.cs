@@ -18,13 +18,13 @@ public abstract class StatefulAssistantComponentBase : NamedAssistantComponentBa
         var builder = new StringBuilder();
         var fieldName = this.Type.ToString().ToLowerInvariant();
         
-        builder.AppendLine($"[{fieldName}]");
-        builder.Append("name: ").AppendLine(this.Name);
-        builder.AppendLine("context:");
-        builder.AppendLine(!string.IsNullOrEmpty(this.UserPrompt) ? this.UserPrompt : "<not provided>");
-        builder.AppendLine("value:");
-        builder.AppendLine(!string.IsNullOrEmpty(value) ? value : "<empty>");
-        builder.Append($"[/{fieldName}]").AppendLine().AppendLine();
+        builder.AppendLineLF($"[{fieldName}]");
+        builder.Append("name: ").AppendLineLF(this.Name);
+        builder.AppendLineLF("context:");
+        builder.AppendLineLF(!string.IsNullOrEmpty(this.UserPrompt) ? this.UserPrompt : "<not provided>");
+        builder.AppendLineLF("value:");
+        builder.AppendLineLF(!string.IsNullOrEmpty(value) ? value : "<empty>");
+        builder.Append($"[/{fieldName}]").AppendLineLF().AppendLineLF();
         return builder.ToString();
     }
 }

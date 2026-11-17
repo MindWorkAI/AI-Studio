@@ -188,7 +188,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
                 this.dataPassword = this.storedPassword;
             }
             else
-                this.dataSecretStorageIssue = string.Format(T("Failed to load the password from the operating system. The message was: {0}. You might ignore this message and provide the password again."), requestedSecret.Issue);
+                this.dataSecretStorageIssue = string.Format(TA("Failed to load the password from the operating system. The message was: {0}. You might ignore this message and provide the password again."), requestedSecret.Issue);
 
             var indexStore = await this.DatabaseClientProvider.GetIndexStoreAsync();
             this.authFailure = await indexStore.GetMailboxAuthFailureAsync(this.dataId, CancellationToken.None);
@@ -304,7 +304,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private bool IsAddingNotAllowed => !this.IsEditing && !this.SettingsManager.ConfigurationData.App.AllowUserToAddMailbox;
 
     private string? ValidateOrganizationProvider(string providerKey) => this.AllowsOnlyOrganizationMailServers && this.organizationProviders.All(provider => GetProviderKey(provider) != providerKey)
-        ? T("Please choose one of the mail servers of your organization.")
+        ? TA("Please choose one of the mail servers of your organization.")
         : null;
 
     /// <summary>
@@ -332,14 +332,14 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
 
     private string AuthFailureText => this.authFailure is null
         ? string.Empty
-        : string.Format(T("Signing in to this mailbox failed on {0}. Presumably your password changed. AI Studio does not try again on its own, so that your account is not locked. Enter your new password below and save it, or test the connection."), this.authFailure.FailedAtUtc.ToLocalTime().ToString("g", I18N.I.Culture));
+        : string.Format(TA("Signing in to this mailbox failed on {0}. Presumably your password changed. AI Studio does not try again on its own, so that your account is not locked. Enter your new password below and save it, or test the connection."), this.authFailure.FailedAtUtc.ToLocalTime().ToString("g", I18N.I.Culture));
 
     private string RootFolderText => string.IsNullOrEmpty(this.dataRootFolder) ? T("Whole mailbox") : this.dataRootFolder;
 
     // Without a root folder, the sent mails and the drafts belong to the whole mailbox anyway:
     private bool HasRootFolder => !string.IsNullOrEmpty(this.dataRootFolder);
 
-    private string ConfidenceLevelText => this.dataConfidenceLevel is ConfidenceLevel.NONE ? string.Empty : this.dataConfidenceLevel.GetName();
+    private string ConfidenceLevelText => this.dataConfidenceLevel is ConfidenceLevel.NONE ? string.Empty : this.dataConfidenceLevel.Name;
 
     private OutboundDataRestriction MinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction;
 
@@ -353,7 +353,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             if (this.testedSettings != this.CurrentSettings)
                 return this.RequiresConnectionTest ? T("Not tested yet.") : string.Empty;
 
-            return this.testFailure is { } failure ? failure.GetDescription() : T("Connection successful.");
+            return this.testFailure is { } failure ? failure.Description : T("Connection successful.");
         }
     }
 
@@ -362,8 +362,8 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         : this.testFailure is null ? Color.Success : Color.Error;
 
     private string TestResultIcon => this.testedSettings != this.CurrentSettings
-        ? Icons.Material.Outlined.HourglassEmpty
-        : this.testFailure is null ? Icons.Material.Outlined.CheckCircle : Icons.Material.Outlined.Error;
+        ? AppIcons.PENDING
+        : this.testFailure is null ? AppIcons.SUCCESS : AppIcons.ERROR;
 
     private EmbeddingProvider? SelectedEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
         .FirstOrDefault(x => x.Id == this.dataEmbeddingId);
@@ -493,7 +493,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         // Who switches the encryption usually means the port that comes with it, unless they
         // entered a port of their own:
         //
-        if (this.dataPort == this.dataTransportSecurity.GetUsualPort() && transportSecurity.GetUsualPort() is { } usualPort)
+        if (this.dataPort == this.dataTransportSecurity.UsualPort && transportSecurity.UsualPort is { } usualPort)
             this.dataPort = usualPort;
 
         this.dataTransportSecurity = transportSecurity;
@@ -565,7 +565,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             serverAnswer = e.InnerException?.Message ?? string.Empty;
             this.folderIssue = e.Failure is MailboxConnectionFailure.SERVER_ERROR
                 ? T("The server did not create the folder. Perhaps a folder of this name exists already.")
-                : e.Failure.GetDescription();
+                : e.Failure.Description;
 
             this.Logger.LogWarning($"Creating a folder in the mailbox '{this.dataId}' failed: {e.Failure} ({e.InnerException?.GetType().Name ?? "no inner exception"}).");
             return null;
@@ -577,7 +577,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         }
         catch (OperationCanceledException)
         {
-            this.folderIssue = MailboxConnectionFailure.NETWORK_UNAVAILABLE.GetDescription();
+            this.folderIssue = MailboxConnectionFailure.NETWORK_UNAVAILABLE.Description;
             return null;
         }
         finally
@@ -653,7 +653,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             var storeResponse = await this.RustService.SetSecret(mailbox, this.dataPassword, SecretStoreType.DATA_SOURCE);
             if (!storeResponse.Success)
             {
-                this.dataSecretStorageIssue = string.Format(T("Failed to store the password in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
+                this.dataSecretStorageIssue = string.Format(TA("Failed to store the password in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.ValidateAsync();
                 return;
             }
@@ -697,7 +697,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             return null;
 
         if (maxChunkTokenLength < 1)
-            return T("Please enter a token limit of at least 1.");
+            return TA("Please enter a token limit of at least 1.");
 
         var providerMaxChunkTokenLength = this.ProviderMaxChunkTokenLength;
         if (maxChunkTokenLength > providerMaxChunkTokenLength)
@@ -712,7 +712,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             return null;
 
         if (chunkOverlapTokenLength < 0)
-            return T("Please enter 0 or a positive overlap length.");
+            return TA("Please enter 0 or a positive overlap length.");
 
         var effectiveMaxChunkTokenLength = this.dataMaxChunkTokenLength > 0
             ? this.dataMaxChunkTokenLength

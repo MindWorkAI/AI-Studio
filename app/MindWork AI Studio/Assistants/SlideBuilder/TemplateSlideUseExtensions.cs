@@ -6,12 +6,15 @@ internal static class TemplateSlideUseExtensions
 {
     private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(TemplateSlideUseExtensions).Namespace, nameof(TemplateSlideUseExtensions));
 
-    public static string Name(this TemplateSlideUse use) => use switch
+    extension(TemplateSlideUse use)
     {
-        TemplateSlideUse.OMIT => TB("Leave out"),
-        TemplateSlideUse.KEEP => TB("Keep unchanged"),
-        TemplateSlideUse.EDIT => TB("Let the LLM edit it"),
+        public string Name => use switch
+        {
+            TemplateSlideUse.OMIT => TB("Leave out"),
+            TemplateSlideUse.KEEP => TB("Keep unchanged"),
+            TemplateSlideUse.EDIT => TB("Let the LLM edit it"),
 
-        _ => TB("Leave out"),
-    };
+            _ => TB("Leave out"),
+        };
+    }
 }

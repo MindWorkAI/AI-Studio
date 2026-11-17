@@ -37,7 +37,7 @@ public partial class EnumSelection<T> : EnumSelectionBase where T : struct, Enum
     public Func<string, string?> ValidateOther { get; set; } = _ => null;
     
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.ArrowDropDown;
+    public string Icon { get; set; } = AppIcons.EXPAND_MORE;
 
     /// <summary>
     /// Gets or sets whether the selection controls are disabled.

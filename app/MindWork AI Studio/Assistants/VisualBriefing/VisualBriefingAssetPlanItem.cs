@@ -13,17 +13,17 @@ public sealed class VisualBriefingAssetPlanItem
     /// Gets or sets the stable visual asset identifier.
     /// </summary>
     [JsonRequired]
-    public string AssetId { get; init; } = string.Empty;
+    public string AssetId { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the model's visual description for presentation decisions.
     /// </summary>
     [JsonRequired]
-    public string Description { get; init; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the target-language text alternative.
     /// </summary>
     [JsonRequired]
-    public string AltText { get; init; } = string.Empty;
+    public string AltText { get; set; } = string.Empty;
 }

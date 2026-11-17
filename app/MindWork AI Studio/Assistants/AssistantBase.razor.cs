@@ -164,7 +164,26 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
     }
 
+    /// <summary>
+    /// The thread with which a chat continues the conversation of this assistant.
+    /// </summary>
+    /// <remarks>
+    /// It decides what the chat holds, not its system prompt: SendToAssistant sets that afterward from
+    /// ChatSystemPrompt, whichever thread an assistant builds here.
+    /// </remarks>
     protected virtual ChatThread ConvertToChatThread => this.CreateSendToChatThread();
+
+    /// <summary>
+    /// Which system prompt a chat gets which continues the conversation of this assistant: the default prompt
+    /// of AI Studio, the prompt of this assistant, or a prompt this assistant writes for the chat.
+    /// </summary>
+    /// <remarks>
+    /// There is no default on purpose, so that every assistant decides this itself. Its own prompt may
+    /// forbid follow-up questions or demand JSON, and the default prompt of AI Studio knows nothing about its
+    /// role and its settings. An assistant which starts no chat from its conversation chooses the default
+    /// prompt of AI Studio.
+    /// </remarks>
+    protected abstract ChatSystemPromptChoice ChatSystemPrompt { get; }
 
     /// <summary>
     /// Takes over a text which another assistant or a chat sent to this assistant.
@@ -188,6 +207,18 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// They stay until the form is reset, which removes the text as well.
     /// </remarks>
     private ChatRestrictions transferredRestrictions = ChatRestrictions.NONE;
+
+    /// <summary>
+    /// The prompt this assistant wrote for a chat which continues its conversation, built when that
+    /// conversation started; null when the assistant chose no prompt of its own or ran no conversation yet.
+    /// </summary>
+    /// <remarks>
+    /// It follows the settings of the run, not the form as it is when the user sends the result on: the
+    /// user may have changed the form since, e.g., the target language, without running the assistant
+    /// again. The prompt of the assistant itself comes from its thread for the same reason, see
+    /// WithChatSystemPrompt.
+    /// </remarks>
+    private string? customChatSystemPromptOfRun;
 
     /// <summary>
     /// What everything this assistant holds demands: the text sent to it and what its current thread read.
@@ -281,7 +312,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.formChangeTimer.Elapsed += (_, _) =>
         {
             this.formChangeTimer.Stop();
-            this.InvokeAsync(this.OnFormChange).Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
+            this.InvokeAsync(this.OnFormChange).Observe($"{nameof(AssistantBase<>)}: handling a form change");
         };
         
         this.MightPreselectValues();
@@ -321,7 +352,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     #endregion
 
-    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<TSettings>).Namespace, nameof(AssistantBase<TSettings>));
+    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
+
+    /// <summary>
+    /// Gets a text of this base class which addresses the reader; the collector files it under AssistantBase, not
+    /// under the assistant which derives from it.
+    /// </summary>
+    private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
 
     private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
 
@@ -330,11 +367,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
         if(provider.UsedLLMProvider == LLMProviders.NONE)
-            return this.TB("Please select a provider.");
+            return this.TA("Please select a provider.");
 
         // A provider which nothing else rules out may still be kept from the text sent here, because of where it came from:
         if (!this.transferredRestrictions.IsLLMProviderAllowed(provider) && ChatRestrictions.NONE.IsLLMProviderAllowed(provider))
-            return this.TB("This provider may not see the text sent to this assistant, because of where the text came from. Please select another provider.");
+            return this.TA("This provider may not see the text sent to this assistant, because of where the text came from. Please select another provider.");
 
         return null;
     }
@@ -394,14 +431,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             sessionStatus = AssistantSessionStatus.FAILED;
             errorMessage = e.UserMessage;
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, e.UserMessage));
         }
         catch (Exception e)
         {
             sessionStatus = AssistantSessionStatus.FAILED;
             errorMessage = e.Message;
             this.Logger.LogError(e, "The assistant session '{AssistantTitle}' failed.", this.Title);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(this.TB("The assistant failed. The message is: '{0}'"), e.Message)));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ANSWER_STREAM, string.Format(this.TB("The assistant failed. The message is: '{0}'"), e.Message)));
         }
         finally
         {
@@ -470,7 +507,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         Array.Resize(ref this.InputIssues, this.InputIssues.Length + 1);
         this.InputIssues[^1] = issue;
         this.InputIsValid = false;
-        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering an added input issue");
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<>)}: rendering an added input issue");
     }
     
     /// <summary>
@@ -480,7 +517,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         this.InputIssues = [];
         this.InputIsValid = true;
-        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering cleared input issues");
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<>)}: rendering cleared input issues");
     }
 
     protected void CreateChatThread()
@@ -498,6 +535,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
 
         this.AssignRuntimeIdentity(this.ChatThread);
+        this.RememberCustomChatSystemPrompt();
     }
 
     protected Guid CreateChatThread(Guid workspaceId, string name)
@@ -516,8 +554,15 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
         
         this.AssignRuntimeIdentity(this.ChatThread);
+        this.RememberCustomChatSystemPrompt();
         return chatId;
     }
+
+    /// <summary>
+    /// Builds the prompt this assistant writes for a chat which continues its conversation, when it chose
+    /// one, from the settings of the run which starts now.
+    /// </summary>
+    private void RememberCustomChatSystemPrompt() => this.customChatSystemPromptOfRun = this.ChatSystemPrompt is { Source: ChatSystemPromptSource.CUSTOM } choice ? choice.BuildCustomPrompt() : null;
 
     /// <summary>
     /// Sets who runs the given thread: this assistant's component and, for an assistant plugin, its name.
@@ -730,7 +775,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         catch (ProviderRequestException e)
         {
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, e.UserMessage));
 
             if (this.ResultingContentBlock is not null && string.IsNullOrWhiteSpace(aiText.Text))
             {
@@ -831,10 +876,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         var originalChatThread = this.ChatThread ?? new ChatThread();
         if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
-            return originalChatThread with
-            {
-                SystemPrompt = SystemPrompts.DEFAULT,
-            };
+            return originalChatThread;
 
         var transferredBlocks = originalChatThread.Blocks
             .Select(block => block.Role is ChatRole.USER
@@ -845,8 +887,41 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         transferredBlocks.Insert(0, this.CreateSendToChatPrompt(originalChatThread.Blocks));
         return originalChatThread with
         {
-            SystemPrompt = SystemPrompts.DEFAULT,
             Blocks = transferredBlocks,
+        };
+    }
+
+    /// <summary>
+    /// Gives a chat which continues the conversation of this assistant the system prompt this assistant
+    /// chose in ChatSystemPrompt, together with where it comes from.
+    /// </summary>
+    /// <remarks>
+    /// The prompt of this assistant is the one its conversation ran with, and a prompt it wrote for the
+    /// chat is the one built when that conversation started: the form may have changed since. Only a
+    /// conversation restored without that prompt gets one built now. A prompt which turns out empty is a mistake of the assistant; the chat then gets the default prompt
+    /// of AI Studio rather than none at all.
+    /// </remarks>
+    /// <param name="chatThread">The thread of the chat, which this assistant built in ConvertToChatThread.</param>
+    /// <returns>A copy of the thread with the system prompt of the chat.</returns>
+    private ChatThread WithChatSystemPrompt(ChatThread chatThread)
+    {
+        var choice = this.ChatSystemPrompt;
+        var promptOfAssistant = this.ChatThread?.SystemPrompt is { } threadPrompt && !string.IsNullOrWhiteSpace(threadPrompt) ? threadPrompt : this.SystemPrompt;
+        var prompt = choice.Source is ChatSystemPromptSource.CUSTOM && this.customChatSystemPromptOfRun is { } promptOfRun ? promptOfRun : choice.CreatePrompt(promptOfAssistant);
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            this.Logger.LogError("The system prompt which the assistant '{Component}' chose for the chat ({Source}) is empty. The chat gets the default prompt of AI Studio instead.", this.Component, choice.Source);
+            return chatThread with { SystemPrompt = SystemPrompts.DEFAULT, SystemPromptOrigin = null };
+        }
+
+        return chatThread with
+        {
+            SystemPrompt = prompt,
+            SystemPromptOrigin = choice.Source is ChatSystemPromptSource.AI_STUDIO_DEFAULT ? null : new ChatSystemPromptOrigin
+            {
+                Source = choice.Source,
+                AssistantName = this.Title,
+            },
         };
     }
 
@@ -912,8 +987,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         // The chat starts from the conversation of this assistant, unless it only takes the text for the next message:
         if (destination is Tools.Components.CHAT && !sendToButton.SendToChatAsInput)
         {
-            var convertedChatThread = this.ConvertToChatThread;
-            convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
+            var convertedChatThread = this.WithChatSystemPrompt(this.ConvertToChatThread with { SelectedProvider = this.ProviderSettings.Id });
 
             //
             // The chat holds what this assistant held, whichever thread the assistant builds it from: some
@@ -949,6 +1023,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         // The text sent here is gone with the form, and what it demanded goes with it:
         this.transferredRestrictions = ChatRestrictions.NONE;
+        this.customChatSystemPromptOfRun = null;
         this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);
@@ -1009,7 +1084,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             {
                 await this.ConsumeMediaOutcomeAsync();
                 this.StateHasChanged();
-            }).Observe($"{nameof(AssistantBase<TSettings>)}: consuming a media import outcome");
+            }).Observe($"{nameof(AssistantBase<>)}: consuming a media import outcome");
     }
 
     /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
@@ -1021,23 +1096,23 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         if (outcome.Failures.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
         else if (outcome.Status is MediaImportStatus.FAILED)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.TB("The media file could not be transcribed.")));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, this.TB("The media file could not be transcribed.")));
         }
 
         if (outcome.Warnings.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
 
         if (outcome.Status is MediaImportStatus.CANCELLED)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.TB("The media transcription was canceled.")));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, this.TB("The media transcription was canceled.")));
         }
     }
 
@@ -1194,6 +1269,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         state.Set(IS_PROCESSING_STATE_KEY, this.IsProcessing);
         state.Set(SELECTED_TOOL_IDS_STATE_KEY, this.SelectedToolIds);
         state.Set(TRANSFERRED_RESTRICTIONS_STATE_KEY, this.transferredRestrictions);
+        state.Set(CUSTOM_CHAT_SYSTEM_PROMPT_STATE_KEY, this.customChatSystemPromptOfRun);
         this.CaptureCustomAssistantSessionState(state);
 
         return state.ToDictionary();
@@ -1223,6 +1299,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
         reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(value));
         reader.Restore(TRANSFERRED_RESTRICTIONS_STATE_KEY, value => this.transferredRestrictions = value);
+        reader.Restore(CUSTOM_CHAT_SYSTEM_PROMPT_STATE_KEY, value => this.customChatSystemPromptOfRun = value);
         this.RestoreCustomAssistantSessionState(reader);
     }
 

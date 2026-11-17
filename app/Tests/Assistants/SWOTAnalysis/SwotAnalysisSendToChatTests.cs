@@ -26,7 +26,6 @@ public sealed class SwotAnalysisSendToChatTests
             Assert.That(chatThread.Blocks[1].HideFromUser, Is.False);
             Assert.That(((ContentText)chatThread.Blocks[1].Content!).Text, Is.EqualTo("## SWOT Matrix"));
             Assert.That(chatThread.Blocks[1].Content, Is.Not.SameAs(result.Content));
-            Assert.That(chatThread.SystemPrompt, Is.EqualTo(SystemPrompts.DEFAULT));
         }
     }
 

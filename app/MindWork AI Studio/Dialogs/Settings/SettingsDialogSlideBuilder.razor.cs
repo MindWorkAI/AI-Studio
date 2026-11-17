@@ -112,7 +112,7 @@ public partial class SettingsDialogSlideBuilder : SettingsDialogBase
     /// </summary>
     private static List<ConfigurationSelectData<TemplateSlideUse>> UseOptionsOf(TemplateSlide slide) => Enum.GetValues<TemplateSlideUse>()
         .Where(use => use is not TemplateSlideUse.EDIT || slide.IsEditable)
-        .Select(use => new ConfigurationSelectData<TemplateSlideUse>(use.Name(), use))
+        .Select(use => new ConfigurationSelectData<TemplateSlideUse>(use.Name, use))
         .ToList();
 
     /// <summary>

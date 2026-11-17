@@ -121,7 +121,7 @@ public sealed class SourceCodeLanguagesTests
     [Test]
     public void NoAliasNamesAFormatOfItsOwn()
     {
-        // FileExportFormatExtensions.TryFromCodeFenceLanguage is asked first, so such an entry would never be found:
-        Assert.That(SourceCodeLanguages.Aliases.Where(alias => FileExportFormatExtensions.TryFromCodeFenceLanguage(alias, out _)), Is.Empty);
+        // FileExportFormat.TryFromCodeFenceLanguage is asked first, so such an entry would never be found:
+        Assert.That(SourceCodeLanguages.Aliases.Where(alias => FileExportFormat.TryFromCodeFenceLanguage(alias, out _)), Is.Empty);
     }
 }

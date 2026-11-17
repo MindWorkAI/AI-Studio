@@ -56,7 +56,7 @@ public sealed class SemanticSearchToolResultTests
     [Test]
     public void ADataSourceWhichCouldNotBeSearchedSaysSo()
     {
-        var result = SemanticSearchTool.DescribeResult(INTRANET, RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] }, 0, 0);
+        var result = SemanticSearchTool.DescribeResult(new(INTRANET, 0, false, [RetrievalGap.NOT_SEARCHED]));
 
         using (Assert.EnterMultipleScope())
         {
@@ -66,23 +66,23 @@ public sealed class SemanticSearchToolResultTests
     }
 
     [Test]
-    public void PassagesLeftOutForTheBudgetAreCountedWithAWayOut()
+    public void PassagesWhichDidNotFitIntoASearchOfSeveralDataSourcesAreCountedWithAWayOut()
     {
-        var result = SemanticSearchTool.DescribeResult(HANDBOOK, RetrievalPage.EMPTY with { HasMore = true }, 4, 3);
+        var result = SemanticSearchTool.DescribeResult(new(HANDBOOK, 4, true, [], 3));
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result["result_count"]!.GetValue<int>(), Is.EqualTo(4), "Only the passages which reached the model count as results.");
             Assert.That(result["has_more"]!.GetValue<bool>(), Is.True);
             Assert.That(Issues(result), Has.Count.EqualTo(1));
-            Assert.That(Issues(result).FirstOrDefault(), Does.StartWith("3 further passages").And.Contain("narrower query"), "The model has to learn how many are missing, and how to get to them.");
+            Assert.That(Issues(result).FirstOrDefault(), Does.StartWith("3 further passages").And.Contain("alone, starting at page 1"), "The model has to learn how many are missing, and that a further page of this search would not bring them up.");
         }
     }
 
     [Test]
     public void ACompleteSearchReportsNoIssues()
     {
-        var result = SemanticSearchTool.DescribeResult(MINUTES, RetrievalPage.EMPTY, 0, 0);
+        var result = SemanticSearchTool.DescribeResult(new(MINUTES, 0, false, []));
 
         using (Assert.EnterMultipleScope())
         {

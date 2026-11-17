@@ -12,20 +12,20 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger<DataDocumentAnalysisPolicy>();
 
     /// <inheritdoc />
-    public override string Id { get; init; } = string.Empty;
+    public override string Id { get; set; } = string.Empty;
     
     /// <inheritdoc />
-    public override uint Num { get; init; }
+    public override uint Num { get; set; }
     
     /// <inheritdoc />
     public override string Name
     {
         get => this.PolicyName;
-        init => this.PolicyName = value;
+        set => this.PolicyName = value;
     }
     
     /// <inheritdoc />
-    public override bool IsEnterpriseConfiguration { get; init; }
+    public override bool IsEnterpriseConfiguration { get; set; }
     
     /// <summary>
     /// The name of the document analysis policy.
@@ -43,7 +43,7 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     public bool IsProtected { get; set; }
     
     /// <inheritdoc />
-    public override Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
+    public override Guid EnterpriseConfigurationPluginId { get; set; } = Guid.Empty;
 
     /// <summary>
     /// The rules for the document analysis policy.
@@ -86,7 +86,9 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     /// <summary>
     /// Hide the policy definition section in the UI?
     /// If true, the policy definition panel will be hidden and only the document selection will be shown.
-    /// This is useful for enterprise configurations where users should not see or modify the policy details.
+    /// This is useful for enterprise configurations where users would find the policy details overwhelming.
+    /// It keeps the assistant simple, not the policy a secret: a chat which continues an analysis gets the
+    /// whole policy as its system prompt.
     /// </summary>
     public bool HidePolicyDefinition { get; set; }
 

@@ -1,0 +1,58 @@
+Reconcile these preliminary results of the four SWOT categories. Then write the overall assessment
+and the prioritized actions.
+
+<analysis-goal>
+Decide whether the company should grow to a new Größe.
+</analysis-goal>
+
+<analysis-focus>
+No additional analysis focus was provided.
+</analysis-focus>
+
+<category-results>
+{
+  "strengths": {
+    "empty_message": "",
+    "findings": [
+      {
+        "factor_id": "S1",
+        "summary": "A loyal \u0022core\u0022 team",
+        "explanation": "The team stayed together for years."
+      },
+      {
+        "factor_id": "S2",
+        "summary": "Low costs",
+        "explanation": "Costs are \u003C10 %\u003E below the market."
+      }
+    ]
+  },
+  "weaknesses": {
+    "empty_message": "",
+    "findings": [
+      {
+        "factor_id": "W1",
+        "summary": "Small Gr\u00F6\u00DFe",
+        "explanation": "The company has only twelve employees."
+      }
+    ]
+  },
+  "opportunities": {
+    "empty_message": "The sources name no external opportunities.",
+    "findings": []
+  },
+  "threats": {
+    "empty_message": "",
+    "findings": [
+      {
+        "factor_id": "T1",
+        "summary": "New competitors",
+        "explanation": "Two competitors entered the market."
+      }
+    ]
+  }
+}
+</category-results>
+
+<shared-research>
+The market grew by 8 % in the "last" year.
+</shared-research>

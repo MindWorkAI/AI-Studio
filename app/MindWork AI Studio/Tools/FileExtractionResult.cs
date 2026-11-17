@@ -21,8 +21,6 @@ public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome
     private static readonly int[] NO_FAILED_PAGES = [];
     private static readonly PromptInjectionFinding[] NO_FINDINGS = [];
 
-    private readonly IReadOnlyList<PromptInjectionFinding>? promptInjectionFindings;
-
     /// <summary>
     /// The prompt-injection attempts the runtime filtered out of the content, if any.
     /// </summary>
@@ -33,8 +31,8 @@ public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome
     /// </remarks>
     public IReadOnlyList<PromptInjectionFinding> PromptInjectionFindings
     {
-        get => this.promptInjectionFindings ?? NO_FINDINGS;
-        init => this.promptInjectionFindings = value;
+        get => field ?? NO_FINDINGS;
+        init;
     }
 
     /// <summary>
@@ -47,6 +45,15 @@ public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome
     /// Gets a value indicating whether prompt injections were filtered out of the content.
     /// </summary>
     public bool HasFilteredPromptInjections => this.PromptInjectionRedactedCount > 0;
+
+    /// <summary>
+    /// Gets a value indicating whether the content holds only the beginning of the file, because the caller limited
+    /// how many characters it keeps.
+    /// </summary>
+    /// <remarks>
+    /// Not a failure either: the beginning is intact, and the caller asked for no more of it.
+    /// </remarks>
+    public bool IsShortened { get; init; }
 
     public static FileExtractionResult Success(string content, string? detectedFormat = null) => new(FileExtractionOutcome.SUCCESS, content, FileExtractionErrorCode.NONE, null, NO_FAILED_PAGES, detectedFormat);
 

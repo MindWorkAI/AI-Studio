@@ -1,0 +1,100 @@
+{
+  "buildVersion": 41,
+  "buildId": "00000000-0000-4000-8000-000000000002",
+  "operationId": "00000000-0000-4000-8000-000000000003",
+  "briefingId": "00000000-0000-4000-8000-000000000004",
+  "mode": "CHANGE_DESIGN",
+  "parentRevisionId": "00000000-0000-4000-8000-000000000005",
+  "instruction": "instruction sample 6",
+  "status": "COMPLETED",
+  "stages": [
+    {
+      "stage": "EVIDENCE",
+      "status": "RUNNING",
+      "inputFingerprint": "inputFingerprint sample 7",
+      "startedAtUtc": "2026-10-29T12:38:15+01:00",
+      "finishedAtUtc": "2026-10-29T12:39:15+01:00",
+      "attempts": 50,
+      "outputHash": "outputHash sample 11",
+      "failure": {
+        "code": "PROVIDER_NOT_SELECTED",
+        "stage": "EVIDENCE",
+        "userMessage": "userMessage sample 12",
+        "technicalDetails": "technicalDetails sample 13",
+        "validationRule": "JSON_INVALID",
+        "structuredResponse": {
+          "issueKind": "EMPTY_RESPONSE",
+          "envelope": "MARKDOWN_JSON_BLOCK",
+          "candidateIndex": 54,
+          "candidateCount": 55,
+          "jsonPath": "/samples/jsonPath-16.txt",
+          "lineNumber": 4000000017,
+          "bytePositionInLine": 4000000018,
+          "fieldName": "fieldName sample 19",
+          "expected": "expected sample 20"
+        }
+      }
+    },
+    {
+      "stage": "EVIDENCE",
+      "status": "RUNNING",
+      "inputFingerprint": "inputFingerprint sample 21",
+      "startedAtUtc": "2026-10-29T12:52:15+01:00",
+      "finishedAtUtc": "2026-10-29T12:53:15+01:00",
+      "attempts": 64,
+      "outputHash": "outputHash sample 25",
+      "failure": {
+        "code": "PROVIDER_NOT_SELECTED",
+        "stage": "EVIDENCE",
+        "userMessage": "userMessage sample 26",
+        "technicalDetails": "technicalDetails sample 27",
+        "validationRule": "JSON_INVALID",
+        "structuredResponse": {
+          "issueKind": "EMPTY_RESPONSE",
+          "envelope": "MARKDOWN_JSON_BLOCK",
+          "candidateIndex": 68,
+          "candidateCount": 69,
+          "jsonPath": "/samples/jsonPath-30.txt",
+          "lineNumber": 4000000031,
+          "bytePositionInLine": 4000000032,
+          "fieldName": "fieldName sample 33",
+          "expected": "expected sample 34"
+        }
+      }
+    }
+  ],
+  "contentArtifactId": "00000000-0000-4000-8000-000000000035",
+  "evidenceArtifactId": "00000000-0000-4000-8000-000000000036",
+  "planArtifactId": "00000000-0000-4000-8000-000000000037",
+  "presentationArtifactId": "00000000-0000-4000-8000-000000000038",
+  "revisionId": "00000000-0000-4000-8000-000000000039",
+  "committedRevisionId": "00000000-0000-4000-8000-000000000040",
+  "inputFingerprint": "inputFingerprint sample 41",
+  "sourceFingerprint": "sourceFingerprint sample 42",
+  "contentContractVersion": 83,
+  "evidenceContractVersion": 84,
+  "planContractVersion": 85,
+  "designContractVersion": 86,
+  "providerFamily": "providerFamily sample 47",
+  "model": "model sample 48",
+  "createdAtUtc": "2026-10-29T13:19:15+01:00",
+  "updatedAtUtc": "2026-10-29T13:20:15+01:00",
+  "failure": {
+    "code": "PROVIDER_NOT_SELECTED",
+    "stage": "EVIDENCE",
+    "userMessage": "userMessage sample 51",
+    "technicalDetails": "technicalDetails sample 52",
+    "validationRule": "JSON_INVALID",
+    "structuredResponse": {
+      "issueKind": "EMPTY_RESPONSE",
+      "envelope": "MARKDOWN_JSON_BLOCK",
+      "candidateIndex": 43,
+      "candidateCount": 44,
+      "jsonPath": "/samples/jsonPath-55.txt",
+      "lineNumber": 4000000056,
+      "bytePositionInLine": 4000000057,
+      "fieldName": "fieldName sample 58",
+      "expected": "expected sample 59"
+    }
+  }
+}

@@ -152,12 +152,12 @@ internal static class SwotAnalysisModerationResponseParser
     /// <returns>The first issue, or an empty string.</returns>
     private static string FindIssue(SwotAnalysisCategory category, SwotModeratedCategory moderatedCategory, HashSet<string> factorIds)
     {
-        var name = category.JsonName();
+        var name = category.JsonName;
         var listIssue = FindListIssue(name, moderatedCategory.Findings.Count, moderatedCategory.EmptyMessage);
         if (listIssue.Length > 0)
             return listIssue;
 
-        var prefix = category.FactorIdPrefix();
+        var prefix = category.FactorIdPrefix;
         for (var index = 0; index < moderatedCategory.Findings.Count; index++)
         {
             var finding = moderatedCategory.Findings[index];

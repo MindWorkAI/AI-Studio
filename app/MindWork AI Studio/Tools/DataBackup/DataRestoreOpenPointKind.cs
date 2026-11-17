@@ -48,6 +48,11 @@ public enum DataRestoreOpenPointKind
     BATCH_PROCESSING_PATH_NOT_FOUND,
 
     /// <summary>
+    /// The prompt guide which the Prompt Optimizer preselects does not exist on this computer.
+    /// </summary>
+    PROMPT_OPTIMIZER_GUIDE_NOT_FOUND,
+
+    /// <summary>
     /// The file with custom root certificates does not exist on this computer.
     /// </summary>
     CERTIFICATE_BUNDLE_NOT_FOUND,
