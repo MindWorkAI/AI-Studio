@@ -1,11 +1,15 @@
 @if (this.HasVisibleAssistant)
 {
     <MudText Typo="Typo.h4" Class="@this.HeaderClass">
-        @this.Title
+        @this.Category.Name
     </MudText>
 }
 <CascadingValue Value="this" IsFixed="@true">
     <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="@this.StackClass">
         @this.ChildContent
+        @foreach (var plugin in this.Plugins)
+        {
+            <AssistantPluginBlock @key="@plugin.Id" Plugin="@plugin"/>
+        }
     </MudStack>
 </CascadingValue>

@@ -2,24 +2,22 @@ using AIStudio.Components;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
-using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Pages;
 
 public partial class Assistants : MSGComponentBase
 {
+    private static readonly AssistantCategoryKey COMMON = new(PluginCategory.COMMON);
+    private static readonly AssistantCategoryKey BUSINESS = new(PluginCategory.BUSINESS);
+    private static readonly AssistantCategoryKey EDUCATION = new(PluginCategory.EDUCATION);
+    private static readonly AssistantCategoryKey SOFTWARE_DEVELOPMENT = new(PluginCategory.SOFTWARE_DEVELOPMENT);
+
     private bool isAutoAuditing;
 
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
 
-    [Inject]
-    private NavigationManager NavigationManager { get; init; } = null!;
-
-    [Inject]
-    private DirectChatService DirectChatService { get; init; } = null!;
-    
     protected override async Task OnInitializedAsync()
     {
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
@@ -36,6 +34,15 @@ public partial class Assistants : MSGComponentBase
         PluginFactory.RunningPlugins.OfType<PluginAssistants>()
             .Where(plugin => this.SettingsManager.IsPluginEnabled(plugin))
             .ToList();
+
+    /// <summary>
+    /// Groups the enabled assistant plugins into the sections of the page.
+    /// </summary>
+    /// <remarks>
+    /// The page asks for the sections once per rendering, so that the plugins and their order stay the
+    /// same within one rendering.
+    /// </remarks>
+    private IReadOnlyList<AssistantPageSection<PluginAssistants>> CreateSections() => AssistantPageSections.Build(this.AssistantPlugins, plugin => plugin.AssistantTitle);
 
     private async Task TryAutoAuditAssistantsAsync()
     {
@@ -86,29 +93,6 @@ public partial class Assistants : MSGComponentBase
             audits[existingIndex] = audit;
         else
             audits.Add(audit);
-    }
-
-    private async Task StartAssistantPluginAsync(PluginAssistants assistantPlugin)
-    {
-        var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
-        if (!securityState.CanStartAssistant)
-            return;
-
-        if (!assistantPlugin.StartsChatDirectly)
-        {
-            this.NavigationManager.NavigateTo($"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}");
-            return;
-        }
-
-        var result = await this.DirectChatService.TryCreateAssistantChatAsync(assistantPlugin);
-        if (result.Request is null)
-        {
-            await this.MessageBus.SendError(new(AppIcons.ERROR, result.ErrorMessage));
-            return;
-        }
-
-        MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT, result.Request);
-        this.NavigationManager.NavigateTo(Routes.CHAT);
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default

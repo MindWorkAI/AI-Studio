@@ -1,3 +1,6 @@
+using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.PluginSystem.Assistants;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -8,17 +11,24 @@ namespace AIStudio.Components;
 /// <remarks>
 /// The heading is derived from the assistant blocks inside this category: it is rendered only when
 /// at least one of them is visible. Thus, hiding assistants by configuration can never leave an
-/// empty category heading behind.
+/// empty category heading behind. The built-in assistants of the category come as child content,
+/// followed by the assistant plugins which name this category.
 /// </remarks>
 public partial class AssistantCategoryBlock : ComponentBase
 {
     private readonly HashSet<IAssistantCategoryMember> members = [];
 
     /// <summary>
-    /// The heading of this category.
+    /// The category of this block. Its name is the heading.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public AssistantCategoryKey Category { get; set; } = null!;
+
+    /// <summary>
+    /// The assistant plugins which name this category, in the order to show them.
     /// </summary>
     [Parameter]
-    public string Title { get; set; } = string.Empty;
+    public IReadOnlyList<PluginAssistants> Plugins { get; set; } = [];
 
     /// <summary>
     /// The CSS classes used for the heading.
