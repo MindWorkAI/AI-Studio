@@ -17,7 +17,7 @@ public sealed class AssistantPageSectionsTests
     [Test]
     public void APluginWithCoreAppearsUnderGeneral()
     {
-        var sections = Build(new FakePlugin("Old builder assistant", [PluginCategory.CORE]));
+        var sections = Build(new FakeAssistantPlugin("Old builder assistant", [PluginCategory.CORE]));
 
         Assert.That(sections.Select(section => section.Category), Is.EqualTo(new[] { new AssistantCategoryKey(PluginCategory.COMMON) }));
     }
@@ -25,7 +25,7 @@ public sealed class AssistantPageSectionsTests
     [Test]
     public void APluginAppearsUnderEachOfItsCategories()
     {
-        var plugin = new FakePlugin("Market research", [PluginCategory.BUSINESS, PluginCategory.SCIENCE]);
+        var plugin = new FakeAssistantPlugin("Market research", [PluginCategory.BUSINESS, PluginCategory.SCIENCE]);
         var sections = Build(plugin);
 
         using (Assert.EnterMultipleScope())
@@ -38,7 +38,7 @@ public sealed class AssistantPageSectionsTests
     [Test]
     public void APluginAppearsOncePerSection()
     {
-        var plugin = new FakePlugin("Everyday helper", [PluginCategory.CORE, PluginCategory.COMMON]);
+        var plugin = new FakeAssistantPlugin("Everyday helper", [PluginCategory.CORE, PluginCategory.COMMON]);
         var sections = Build(plugin);
 
         using (Assert.EnterMultipleScope())
@@ -51,8 +51,8 @@ public sealed class AssistantPageSectionsTests
     [Test]
     public void CustomCategoriesWhichDifferOnlyInTheirCaseShareOneSection()
     {
-        var first = new FakePlugin("Orbit planner", [PluginCategory.CUSTOM], ["Space Travel"]);
-        var second = new FakePlugin("Launch checklist", [PluginCategory.CUSTOM], ["space travel"]);
+        var first = new FakeAssistantPlugin("Orbit planner", [PluginCategory.CUSTOM], ["Space Travel"]);
+        var second = new FakeAssistantPlugin("Launch checklist", [PluginCategory.CUSTOM], ["space travel"]);
         var sections = Build(first, second);
 
         using (Assert.EnterMultipleScope())
@@ -67,15 +67,15 @@ public sealed class AssistantPageSectionsTests
     public void TheSectionsFollowTheOrderOfThePage()
     {
         var sections = Build(
-            new FakePlugin("Log helper", [PluginCategory.AI_STUDIO_DEVELOPMENT]),
-            new FakePlugin("Orbit planner", [PluginCategory.CUSTOM], ["Space Travel"]),
-            new FakePlugin("Quiz", [PluginCategory.ENTERTAINMENT]),
-            new FakePlugin("Code reviewer", [PluginCategory.SOFTWARE_DEVELOPMENT]),
-            new FakePlugin("Lab notes", [PluginCategory.SCIENCE]),
-            new FakePlugin("Flash cards", [PluginCategory.EDUCATION]),
-            new FakePlugin("Invoice checker", [PluginCategory.BUSINESS]),
-            new FakePlugin("Letter writer", [PluginCategory.COMMON]),
-            new FakePlugin("Deep space notes", [PluginCategory.CUSTOM], ["Deep Space"]));
+            new FakeAssistantPlugin("Log helper", [PluginCategory.AI_STUDIO_DEVELOPMENT]),
+            new FakeAssistantPlugin("Orbit planner", [PluginCategory.CUSTOM], ["Space Travel"]),
+            new FakeAssistantPlugin("Quiz", [PluginCategory.ENTERTAINMENT]),
+            new FakeAssistantPlugin("Code reviewer", [PluginCategory.SOFTWARE_DEVELOPMENT]),
+            new FakeAssistantPlugin("Lab notes", [PluginCategory.SCIENCE]),
+            new FakeAssistantPlugin("Flash cards", [PluginCategory.EDUCATION]),
+            new FakeAssistantPlugin("Invoice checker", [PluginCategory.BUSINESS]),
+            new FakeAssistantPlugin("Letter writer", [PluginCategory.COMMON]),
+            new FakeAssistantPlugin("Deep space notes", [PluginCategory.CUSTOM], ["Deep Space"]));
 
         var expected = new[]
         {
@@ -105,43 +105,5 @@ public sealed class AssistantPageSectionsTests
         }
     }
 
-    private static IReadOnlyList<AssistantPageSection<FakePlugin>> Build(params FakePlugin[] plugins) => AssistantPageSections.Build(plugins, plugin => plugin.Name);
-
-    /// <summary>
-    /// An assistant plugin, reduced to what the sections need.
-    /// </summary>
-    private sealed class FakePlugin(string name, PluginCategory[] categories, string[]? customCategories = null) : IPluginMetadata
-    {
-        public string IconDataUrl => string.Empty;
-
-        public PluginType Type => PluginType.ASSISTANT;
-
-        public Guid Id { get; } = Guid.NewGuid();
-
-        public string Name => name;
-
-        public string Description => string.Empty;
-
-        public PluginVersion Version => new(1, 0, 0);
-
-        public DateTimeOffset? LastChanged => null;
-
-        public string[] Authors => [];
-
-        public string SupportContact => string.Empty;
-
-        public string SourceURL => string.Empty;
-
-        public PluginCategory[] Categories => categories;
-
-        public string[] CustomCategories => customCategories ?? [];
-
-        public PluginTargetGroup[] TargetGroups => [];
-
-        public bool IsMaintained => true;
-
-        public string DeprecationMessage => string.Empty;
-
-        public bool IsInternal => false;
-    }
+    private static IReadOnlyList<AssistantPageSection<FakeAssistantPlugin>> Build(params FakeAssistantPlugin[] plugins) => AssistantPageSections.Build(plugins, plugin => plugin.Name);
 }

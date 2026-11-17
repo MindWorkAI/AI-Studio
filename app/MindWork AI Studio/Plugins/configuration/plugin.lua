@@ -929,6 +929,34 @@ CONFIG["SETTINGS"] = {}
 -- assistant that is supposed to stay hidden, otherwise those become visible too.
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
 
+-- Configure which categories of assistants are disabled. Requires AI Studio v26.11.2 or newer.
+-- Unlike DataApp.HiddenAssistants above, this also covers assistant plugins, e.g., plugins users
+-- imported from the internet. An assistant of a disabled category disappears everywhere: from the
+-- assistants page, from the "Send to" menu, from links, from direct chat launchers, and from the
+-- category selection of the Assistant Builder. Users cannot show it again.
+--
+-- An assistant plugin with several categories stays available while one of its categories is not
+-- disabled. Assistant plugins your organization deployed itself are never disabled by their
+-- categories: a plugin stored below the directory of a configuration plugin, or a plugin which
+-- declares DEPLOYED_USING_CONFIG_SERVER = true and whose code you approved in
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"].
+--
+-- Allowed values are:
+--   COMMON, BUSINESS, EDUCATION, SOFTWARE_DEVELOPMENT, AI_STUDIO_DEVELOPMENT, INDUSTRY,
+--   UTILITY, GAMING, ENTERTAINMENT, SOCIAL, SHOPPING, TRAVEL, HEALTH, FITNESS, FOOD, PARTY,
+--   SPORTS, NEWS, WEATHER, MUSIC, POLITICAL, SCIENCE, TECHNOLOGY, ART, FICTION, WRITING,
+--   CONTENT_CREATION, CUSTOM
+--
+-- COMMON is the category "General"; disabling it disables CORE as well, because both share that
+-- heading. CUSTOM disables every custom category of a plugin. To disable single custom
+-- categories, list their names in DataApp.DisabledCustomAssistantCategories instead; the names
+-- are compared without regard to case.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces these lists
+-- completely, just like DataApp.HiddenAssistants.
+-- CONFIG["SETTINGS"]["DataApp.DisabledAssistantCategories"] = { "ENTERTAINMENT", "GAMING" }
+-- CONFIG["SETTINGS"]["DataApp.DisabledCustomAssistantCategories"] = { "Fun & Games" }
+
 -- Configure organization defaults for the Visual Briefing Assistant.
 -- The assistant turns documents, images, audio, and video into a self-contained interactive
 -- briefing. All settings below are defaults for new briefings; users can change them per briefing.

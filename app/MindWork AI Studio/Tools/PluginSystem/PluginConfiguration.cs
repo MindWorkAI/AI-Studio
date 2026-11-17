@@ -334,6 +334,10 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: hide some assistants?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HiddenAssistants, this.Id, settingsTable, dryRun);
 
+        // Config: disable some categories of assistants, built-in ones and plugins alike?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.DisabledAssistantCategories, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.DisabledCustomAssistantCategories, this.Id, settingsTable, dryRun);
+
         // Config: prohibit some providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProhibitedProviders, this.Id, settingsTable, dryRun);
         

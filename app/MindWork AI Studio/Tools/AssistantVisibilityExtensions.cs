@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
 
@@ -41,6 +42,17 @@ public static class AssistantVisibilityExtensions
                     LOGGER.LogWarning("Assistant '{AssistantName}' is visible because no component is specified.", assistantName);
             
                 return true;
+            }
+
+            // Your organization may disable whole categories of assistants. Plugins bring their categories
+            // along, so AssistantCategoryRules.IsAssistantPluginAvailable checks them instead:
+            var category = component.Category;
+            if (category is not PluginCategory.NONE && settingsManager.ConfigurationData.App.IsAssistantCategoryDisabled(new AssistantCategoryKey(category)))
+            {
+                if(withLogging)
+                    LOGGER.LogInformation("Assistant '{AssistantName}' is not visible because your organization disabled its category '{Category}'.", assistantName, category);
+
+                return false;
             }
 
             // Dynamic assistants are controlled through plugin activation and their security state.

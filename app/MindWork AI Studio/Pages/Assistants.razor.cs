@@ -32,7 +32,7 @@ public partial class Assistants : MSGComponentBase
 
     private IReadOnlyCollection<PluginAssistants> AssistantPlugins =>
         PluginFactory.RunningPlugins.OfType<PluginAssistants>()
-            .Where(plugin => this.SettingsManager.IsPluginEnabled(plugin))
+            .Where(plugin => this.SettingsManager.IsAssistantPluginAvailable(plugin))
             .ToList();
 
     /// <summary>
