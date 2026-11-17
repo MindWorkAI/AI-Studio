@@ -109,14 +109,14 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     private static readonly AssistantSessionStateKey<string> ANALYSIS_GOAL_STATE_KEY = new(nameof(analysisGoal));
     private static readonly AssistantSessionStateKey<string> IMPORTANT_ASPECTS_STATE_KEY = new(nameof(importantAspects));
     private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> CONTEXT_MATERIALS_STATE_KEY = new(nameof(contextMaterials));
-    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
+    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
     private static readonly AssistantSessionStateKey<SwotAnalysisResult?> ANALYSIS_RESULT_STATE_KEY = new(nameof(analysisResult));
     private static readonly AssistantSessionStateKey<Dictionary<SwotAnalysisCategory, SwotCategoryAnalysisProgress>> CATEGORY_ANALYSIS_PROGRESS_STATE_KEY = new(nameof(categoryAnalysisProgress));
-    private static readonly AssistantSessionStateKey<bool> IS_GATHERING_SHARED_RESEARCH_STATE_KEY = new(nameof(isGatheringSharedResearch));
-    private static readonly AssistantSessionStateKey<bool> IS_MODERATING_ANALYSIS_STATE_KEY = new(nameof(isModeratingAnalysis));
-    private static readonly AssistantSessionStateKey<bool> IS_REPAIRING_MODERATION_STATE_KEY = new(nameof(isRepairingModeration));
+    private static readonly AssistantSessionStateKey<bool> IS_GATHERING_SHARED_RESEARCH_STATE_KEY = new(nameof(isGatheringSharedResearch), isKeptOutOfDrafts: true);
+    private static readonly AssistantSessionStateKey<bool> IS_MODERATING_ANALYSIS_STATE_KEY = new(nameof(isModeratingAnalysis), isKeptOutOfDrafts: true);
+    private static readonly AssistantSessionStateKey<bool> IS_REPAIRING_MODERATION_STATE_KEY = new(nameof(isRepairingModeration), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<string> SHARED_RESEARCH_CONTEXT_STATE_KEY = new(nameof(sharedResearchContext));
 
     /// <inheritdoc />

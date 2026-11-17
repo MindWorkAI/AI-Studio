@@ -138,7 +138,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string? formalTranslationOfText;
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
-    private static readonly AssistantSessionStateKey<bool> IS_LOADING_STATE_KEY = new(nameof(isLoading));
+    private static readonly AssistantSessionStateKey<bool> IS_LOADING_STATE_KEY = new(nameof(isLoading), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<string> LOADING_ISSUE_STATE_KEY = new(nameof(loadingIssue));
     private static readonly AssistantSessionStateKey<bool> LOCALIZATION_POSSIBLE_STATE_KEY = new(nameof(localizationPossible));
     private static readonly AssistantSessionStateKey<string> SEARCH_STRING_STATE_KEY = new(nameof(searchString));

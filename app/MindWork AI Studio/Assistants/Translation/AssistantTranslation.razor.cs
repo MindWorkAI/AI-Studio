@@ -107,7 +107,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
     private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
     private static readonly AssistantSessionStateKey<bool> LIVE_TRANSLATION_STATE_KEY = new(nameof(liveTranslation));
-    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
+    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<string> WEB_CONTENT_URL_STATE_KEY = new(nameof(webContentURL));
     private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
     private static readonly AssistantSessionStateKey<string> INPUT_TEXT_LAST_TRANSLATION_STATE_KEY = new(nameof(inputTextLastTranslation));

@@ -89,6 +89,11 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     private readonly ConcurrentDictionary<AssistantSessionKey, AssistantSessionState> sessions = new();
 
     /// <summary>
+    /// Stores one draft per session key, see <see cref="SaveDraft"/>.
+    /// </summary>
+    private readonly ConcurrentDictionary<AssistantSessionKey, AssistantSessionSnapshot> drafts = new();
+
+    /// <summary>
     /// Gets whether at least one assistant session is still active.
     /// </summary>
     public bool HasActiveSessions => this.sessions.Values.Any(session => session.Status is AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING);
@@ -141,6 +146,47 @@ public sealed class AssistantSessionService(MessageBus messageBus)
 
         return ((ICollection<KeyValuePair<AssistantSessionKey, AssistantSessionState>>)this.sessions).Remove(new(key, session)) ? snapshot : null;
     }
+
+    /// <summary>
+    /// Stores what an assistant holds when the user leaves it, so that it is there again when the user comes back.
+    /// </summary>
+    /// <remarks>
+    /// A draft is no run: neither <see cref="GetSnapshots"/> nor <see cref="HasActiveSessions"/> sees it, so
+    /// the assistant overview shows no status for it, and AI Studio may close without asking. It lives in
+    /// memory only, until AI Studio closes, the user resets the assistant, or a text is sent to it. A newer
+    /// draft replaces the older one. A draft holds everything its assistant captures, such as the chat
+    /// thread, attached files, or the results of a batch, so there is at most one per assistant.
+    /// </remarks>
+    /// <param name="key">The assistant session key.</param>
+    /// <param name="title">The user-visible assistant title.</param>
+    /// <param name="chatThread">The assistant chat thread, if one exists.</param>
+    /// <param name="state">The assistant component state.</param>
+    public void SaveDraft(AssistantSessionKey key, string title, ChatThread? chatThread, Dictionary<string, IAssistantSessionSnapshotField> state)
+    {
+        var now = DateTimeOffset.Now;
+        this.drafts[key] = new()
+        {
+            SessionId = Guid.NewGuid(),
+            Key = key,
+            Title = title,
+            Status = AssistantSessionStatus.NONE,
+            StartedAt = now,
+            UpdatedAt = now,
+            ChatThread = chatThread,
+            State = new Dictionary<string, IAssistantSessionSnapshotField>(state, StringComparer.Ordinal),
+        };
+    }
+
+    /// <summary>
+    /// Tries to get and remove the draft of an assistant.
+    /// </summary>
+    /// <remarks>
+    /// The assistant takes its draft once it opens and keeps it until the user leaves it again, which
+    /// stores a new draft. So a draft never lives in two places.
+    /// </remarks>
+    /// <param name="key">The assistant session key to look up and remove.</param>
+    /// <returns>The removed draft, or <c>null</c> when there is none.</returns>
+    public AssistantSessionSnapshot? TryTakeDraft(AssistantSessionKey key) => this.drafts.TryRemove(key, out var draft) ? draft : null;
 
     /// <summary>
     /// Starts a new assistant session when no active session exists for the key.
@@ -279,11 +325,12 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     }
 
     /// <summary>
-    /// Clears an inactive assistant session.
+    /// Clears an inactive assistant session and the draft of the assistant.
     /// </summary>
     /// <param name="key">The assistant session key to clear.</param>
     public async Task ClearAsync(AssistantSessionKey key)
     {
+        this.drafts.TryRemove(key, out _);
         if (!this.sessions.TryGetValue(key, out var session))
             return;
 
@@ -304,11 +351,14 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     }
 
     /// <summary>
-    /// Clears all inactive sessions for a component.
+    /// Clears all inactive sessions and all drafts for a component.
     /// </summary>
-    /// <param name="component">The component whose inactive sessions should be cleared.</param>
+    /// <param name="component">The component whose inactive sessions and drafts should be cleared.</param>
     public async Task ClearInactiveSessionsForComponentAsync(Components component)
     {
+        foreach (var draftKey in this.drafts.Keys.Where(key => key.Component == component))
+            this.drafts.TryRemove(draftKey, out _);
+
         var matchingKeys = this.sessions
             .Where(pair => pair.Key.Component == component && pair.Value.Status is not AssistantSessionStatus.RUNNING and not AssistantSessionStatus.CANCELING)
             .Select(pair => pair.Key)

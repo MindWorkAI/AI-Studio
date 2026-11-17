@@ -487,7 +487,7 @@ public partial class AssistantModelComparison : AssistantBaseCore<SettingsDialog
 
     private static readonly AssistantSessionStateKey<string> INPUT_CONTEXT_STATE_KEY = new(nameof(inputContext));
     private static readonly AssistantSessionStateKey<string> INPUT_QUESTION_STATE_KEY = new(nameof(inputQuestion));
-    private static readonly AssistantSessionStateKey<bool> IS_COMPARING_STATE_KEY = new(nameof(isComparing));
+    private static readonly AssistantSessionStateKey<bool> IS_COMPARING_STATE_KEY = new(nameof(isComparing), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<int> RUN_COUNT_STATE_KEY = new(nameof(runCount));
     private static readonly AssistantSessionStateKey<ModelComparisonBatch?> BATCH_STATE_KEY = new(nameof(batch));
     private static readonly AssistantSessionStateKey<AIStudio.Settings.Provider> SECOND_PROVIDER_STATE_KEY = new(nameof(secondProvider));

@@ -7,10 +7,21 @@ namespace AIStudio.Tools.AssistantSessions;
 /// </summary>
 /// <param name="fields">The captured snapshot fields.</param>
 /// <param name="assistantTitle">The user-visible assistant title.</param>
-public sealed class AssistantSessionStateReader(IReadOnlyDictionary<string, IAssistantSessionSnapshotField> fields, string assistantTitle)
+/// <param name="isDraft">Whether the fields come from a draft, which an assistant stored when the user left it, rather than from a run. A draft restores no field whose key is kept out of drafts, see <see cref="AssistantSessionStateKey{T}.IsKeptOutOfDrafts"/>.</param>
+public sealed class AssistantSessionStateReader(IReadOnlyDictionary<string, IAssistantSessionSnapshotField> fields, string assistantTitle, bool isDraft = false)
 {
     private static readonly ILogger<AssistantSessionStateReader> LOG = Program.LOGGER_FACTORY.CreateLogger<AssistantSessionStateReader>();
-    
+
+    /// <summary>
+    /// Gets whether the fields come from a draft rather than from a run.
+    /// </summary>
+    /// <remarks>
+    /// An assistant whose state partly follows from something outside of it, such as a plugin or a policy in
+    /// the settings, asks this to restore from a draft only what the user entered: the rest may have changed
+    /// while the user was elsewhere.
+    /// </remarks>
+    public bool IsDraft => isDraft;
+
     /// <summary>
     /// Restores a typed value when it exists in the snapshot.
     /// </summary>
@@ -94,6 +105,9 @@ public sealed class AssistantSessionStateReader(IReadOnlyDictionary<string, IAss
     private bool TryRead<T>(AssistantSessionStateKey<T> key, out T? value)
     {
         value = default;
+        if (isDraft && key.IsKeptOutOfDrafts)
+            return false;
+
         if (!fields.TryGetValue(key.Name, out var field))
             return false;
 

@@ -89,8 +89,8 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<PluginAssistants?> ASSISTANT_PLUGIN_STATE_KEY = new(nameof(assistantPlugin));
     private static readonly AssistantSessionStateKey<AssistantState> ASSISTANT_STATE_STATE_KEY = new(nameof(assistantState));
     private static readonly AssistantSessionStateKey<Dictionary<string, string>> IMAGE_CACHE_STATE_KEY = new(nameof(imageCache));
-    private static readonly AssistantSessionStateKey<HashSet<string>> EXECUTING_BUTTON_ACTIONS_STATE_KEY = new(nameof(executingButtonActions));
-    private static readonly AssistantSessionStateKey<HashSet<string>> EXECUTING_SWITCH_ACTIONS_STATE_KEY = new(nameof(executingSwitchActions));
+    private static readonly AssistantSessionStateKey<HashSet<string>> EXECUTING_BUTTON_ACTIONS_STATE_KEY = new(nameof(executingButtonActions), isKeptOutOfDrafts: true);
+    private static readonly AssistantSessionStateKey<HashSet<string>> EXECUTING_SWITCH_ACTIONS_STATE_KEY = new(nameof(executingSwitchActions), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<string> PLUGIN_PATH_STATE_KEY = new(nameof(pluginPath));
     private static readonly AssistantSessionStateKey<PluginAssistantAudit?> AUDIT_STATE_KEY = new(nameof(audit));
     private static readonly AssistantSessionStateKey<string> SECURITY_MESSAGE_STATE_KEY = new(nameof(securityMessage));
@@ -124,6 +124,12 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     /// <inheritdoc />
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
+        if (state.IsDraft)
+        {
+            this.RestoreDraftState(state);
+            return;
+        }
+
         state.Restore(TITLE_STATE_KEY, value => this.title = value);
         state.Restore(DESCRIPTION_STATE_KEY, value => this.description = value);
         state.Restore(SYSTEM_PROMPT_STATE_KEY, value => this.systemPrompt = value);
@@ -141,6 +147,35 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         state.Restore(SECURITY_MESSAGE_STATE_KEY, value => this.securityMessage = value);
         state.Restore(IS_SECURITY_BLOCKED_STATE_KEY, value => this.isSecurityBlocked = value);
         state.Restore(SHARES_ASSISTANT_NAME_STATE_KEY, value => this.sharesAssistantName = value);
+    }
+
+    /// <summary>
+    /// Restores from a draft what the user entered into the form.
+    /// </summary>
+    /// <remarks>
+    /// Everything else follows from the plugin as it is now, see OnInitialized: while the user was elsewhere,
+    /// the plugin may have changed, or the organization may have withdrawn its approval. A draft therefore
+    /// brings back neither the plugin, its audit, its security state, nor its system prompt, so that a
+    /// blocked assistant stays blocked. What the user entered comes back only into the same version of a
+    /// plugin which may start: the components of another version may differ, and a blocked assistant shows
+    /// no form.
+    /// </remarks>
+    /// <param name="draft">The reader of the draft.</param>
+    private void RestoreDraftState(AssistantSessionStateReader draft)
+    {
+        if (this.isSecurityBlocked || this.assistantPlugin is not { } currentPlugin)
+            return;
+
+        PluginAssistants? pluginOfDraft = null;
+        draft.Restore(ASSISTANT_PLUGIN_STATE_KEY, value => pluginOfDraft = value);
+        if (pluginOfDraft is null || pluginOfDraft.Id != currentPlugin.Id)
+            return;
+
+        if (!ReferenceEquals(pluginOfDraft, currentPlugin) && !string.Equals(pluginOfDraft.ComputeAuditHash(), currentPlugin.ComputeAuditHash(), StringComparison.Ordinal))
+            return;
+
+        draft.Restore(ASSISTANT_STATE_STATE_KEY, value => this.assistantState.CopyFrom(value));
+        draft.RestoreDictionary(IMAGE_CACHE_STATE_KEY, this.imageCache);
     }
 
     #region Implementation of AssistantBase
