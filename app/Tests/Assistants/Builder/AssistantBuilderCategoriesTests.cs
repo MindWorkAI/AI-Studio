@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using AIStudio.Assistants.Builder;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 using AIStudio.Tools.PluginSystem;
 
@@ -49,9 +50,42 @@ public sealed class AssistantBuilderCategoriesTests
     [Test]
     public void ThePromptListsEveryOfferedKey()
     {
-        var lines = AssistantBuilderCategories.ListForPrompt().Split('\n');
+        var lines = AssistantBuilderCategories.ListForPrompt(new DataApp()).Split('\n');
 
         Assert.That(lines.Select(line => line.Split(':')[0].TrimStart('-', ' ')), Is.EqualTo(AssistantBuilderCategories.Offered.Select(category => Enum.GetName(category))));
+    }
+
+    [Test]
+    public void TheBuilderLeavesOutWhatYourOrganizationDisabled()
+    {
+        var app = new DataApp { DisabledAssistantCategories = [PluginCategory.ENTERTAINMENT, PluginCategory.CORE, PluginCategory.CUSTOM] };
+        var offered = AssistantBuilderCategories.OfferedUnder(app);
+        var listedKeys = AssistantBuilderCategories.ListForPrompt(app).Split('\n').Select(line => line.Split(':')[0].TrimStart('-', ' '));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(offered, Does.Not.Contain(PluginCategory.ENTERTAINMENT));
+            Assert.That(offered, Does.Not.Contain(PluginCategory.COMMON), "CORE and COMMON are one category.");
+            Assert.That(offered, Does.Contain(PluginCategory.BUSINESS));
+            Assert.That(listedKeys, Is.EqualTo(offered.Select(category => Enum.GetName(category))), "The model must not choose a disabled category either.");
+            Assert.That(AssistantBuilderCategories.IsCustomOfferedUnder(app), Is.False);
+            Assert.That(AssistantBuilderCategories.IsCustomOfferedUnder(new DataApp()), Is.True);
+        }
+    }
+
+    [Test]
+    public void EveryDisabledCategoryOfAnAssistantIsFound()
+    {
+        var app = new DataApp
+        {
+            DisabledAssistantCategories = [PluginCategory.ENTERTAINMENT],
+            DisabledCustomAssistantCategories = ["fun & games"],
+        };
+
+        var disabled = AssistantBuilderCategories.FindDisabled(app, [PluginCategory.ENTERTAINMENT, PluginCategory.BUSINESS, PluginCategory.CUSTOM], ["Fun & Games", "Space Travel"]);
+
+        Assert.That(disabled, Is.EqualTo(new[] { new AssistantCategoryKey(PluginCategory.ENTERTAINMENT), new AssistantCategoryKey(PluginCategory.CUSTOM, "Fun & Games") }),
+            "The builder refuses a disabled category even when another one is free: the user would build something the organization does not want.");
     }
 
     [Test]

@@ -45,9 +45,20 @@ public sealed record AssistantCategoryKey
     /// </remarks>
     /// <param name="plugin">The plugin in question.</param>
     /// <returns>The categories of the plugin, in the order the plugin names them.</returns>
-    public static IReadOnlyList<AssistantCategoryKey> AllOf(IPluginMetadata plugin) => plugin.Categories
+    public static IReadOnlyList<AssistantCategoryKey> AllOf(IPluginMetadata plugin) => AllOf(plugin.Categories, plugin.CustomCategories);
+
+    /// <summary>
+    /// Gets the categories which CATEGORIES and CUSTOM_CATEGORIES name together.
+    /// </summary>
+    /// <remarks>
+    /// For categories which are not loaded yet, e.g., those of a model answer. See the overload for a plugin.
+    /// </remarks>
+    /// <param name="categories">The categories of AI Studio.</param>
+    /// <param name="customCategories">The names of the custom categories.</param>
+    /// <returns>The categories, each once, in the order they are named.</returns>
+    public static IReadOnlyList<AssistantCategoryKey> AllOf(IEnumerable<PluginCategory> categories, IEnumerable<string> customCategories) => categories
         .SelectMany(category => category is PluginCategory.CUSTOM
-            ? plugin.CustomCategories.Select(name => new AssistantCategoryKey(PluginCategory.CUSTOM, name))
+            ? customCategories.Select(name => new AssistantCategoryKey(PluginCategory.CUSTOM, name))
             : [new AssistantCategoryKey(category)])
         .Distinct()
         .ToList();

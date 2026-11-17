@@ -334,7 +334,8 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         state.Restore(IS_AUDITING_PLUGIN_STATE_KEY, value => this.isAuditingPlugin = value);
         state.Restore(IS_ENABLING_PLUGIN_STATE_KEY, value => this.isEnablingPlugin = value);
         state.Restore(ASSISTANT_DESCRIPTION_STATE_KEY, value => this.assistantDescription = value);
-        state.Restore(SELECTED_CATEGORY_STATE_KEY, value => this.selectedCategory = value);
+        // A category your organization disabled meanwhile goes back to the choice of the model:
+        state.Restore(SELECTED_CATEGORY_STATE_KEY, value => this.selectedCategory = this.OfferedCategories.Contains(value) ? value : PluginCategory.NONE);
         state.Restore(CUSTOM_CATEGORY_STATE_KEY, value => this.customCategory = value);
         state.Restore(ASSISTANT_NAME_STATE_KEY, value => this.assistantName = value);
         state.Restore(TYPICAL_INPUT_STATE_KEY, value => this.typicalInput = value);
@@ -376,9 +377,19 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     /// <summary>
     /// The choices of the category field: leaving it to the model, the categories of AI Studio in the
-    /// order of the assistants page, and a custom category last.
+    /// order of the assistants page, and a custom category last. Categories your organization disabled
+    /// are missing.
     /// </summary>
-    private IReadOnlyList<PluginCategory> OfferedCategories => [PluginCategory.NONE, ..AssistantBuilderCategories.Offered, PluginCategory.CUSTOM];
+    private IReadOnlyList<PluginCategory> OfferedCategories
+    {
+        get
+        {
+            var app = this.SettingsManager.ConfigurationData.App;
+            return AssistantBuilderCategories.IsCustomOfferedUnder(app)
+                ? [PluginCategory.NONE, ..AssistantBuilderCategories.OfferedUnder(app), PluginCategory.CUSTOM]
+                : [PluginCategory.NONE, ..AssistantBuilderCategories.OfferedUnder(app)];
+        }
+    }
 
     private string NameOfCategory(PluginCategory category) => category switch
     {
@@ -390,8 +401,14 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private string? ValidateCustomCategory(string category)
     {
-        if(this.selectedCategory is PluginCategory.CUSTOM && string.IsNullOrWhiteSpace(category))
+        if (this.selectedCategory is not PluginCategory.CUSTOM)
+            return null;
+
+        if(string.IsNullOrWhiteSpace(category))
             return TA("Please provide a custom category.");
+
+        if (this.SettingsManager.ConfigurationData.App.IsAssistantCategoryDisabled(new AssistantCategoryKey(PluginCategory.CUSTOM, category)))
+            return TA("Your organization disabled this category. Please choose another one.");
 
         return null;
     }

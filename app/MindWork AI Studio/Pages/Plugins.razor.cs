@@ -57,7 +57,7 @@ public partial class Plugins : MSGComponentBase
                 if (pluginMeta.IsInternal)
                     return GROUP_INTERNAL;
                 
-                return this.SettingsManager.IsPluginEnabled(pluginMeta)
+                return this.IsPluginWorking(pluginMeta)
                     ? GROUP_ENABLED
                     : GROUP_DISABLED;
             }
@@ -82,7 +82,7 @@ public partial class Plugins : MSGComponentBase
         // activation is decided live, but it would leave the settings in a state which claims the
         // opposite of what the user sees:
         //
-        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id) || this.IsDisabledByItsCategories(pluginMeta))
             return;
 
         if (this.SettingsManager.IsPluginEnabled(pluginMeta))
@@ -172,10 +172,28 @@ public partial class Plugins : MSGComponentBase
         return dialogResult is not null && !dialogResult.Canceled;
     }
     
+    /// <summary>
+    /// Whether your organization disabled this assistant plugin through its categories.
+    /// </summary>
+    private bool IsDisabledByItsCategories(IPluginMetadata pluginMeta) =>
+        pluginMeta.Type is PluginType.ASSISTANT &&
+        this.TryGetAssistantPlugin(pluginMeta.Id) is { } assistantPlugin &&
+        this.SettingsManager.IsDisabledByItsCategories(assistantPlugin);
+
+    /// <summary>
+    /// Whether a plugin works: it is enabled, and your organization did not disable it through its categories.
+    /// </summary>
+    /// <remarks>
+    /// The switch shows this instead of the stored activation. The activation stays stored, so the plugin
+    /// works again as soon as your organization enables one of its categories again.
+    /// </remarks>
+    private bool IsPluginWorking(IPluginMetadata pluginMeta) => this.SettingsManager.IsPluginEnabled(pluginMeta) && !this.IsDisabledByItsCategories(pluginMeta);
+
     private bool IsActivationSwitchDisabled(IPluginMetadata pluginMeta, bool isEnabled)
     {
-        // An assistant plugin your organization requires to stay enabled has no switch to offer:
-        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+        // An assistant plugin your organization requires to stay enabled, or disabled through its
+        // categories, has no switch to offer:
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id) || this.IsDisabledByItsCategories(pluginMeta))
             return true;
 
         if (isEnabled || pluginMeta.Type is not PluginType.ASSISTANT)
@@ -193,6 +211,14 @@ public partial class Plugins : MSGComponentBase
     {
         if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
             return this.TA("Your organization requires this assistant to stay enabled");
+
+        if (this.IsDisabledByItsCategories(pluginMeta))
+        {
+            var categoryNames = AssistantCategoryKey.AllOf(pluginMeta).Select(category => category.Name).ToList();
+            return categoryNames.Count == 1
+                ? string.Format(this.TA("Your organization disabled the category '{0}' of this assistant"), categoryNames[0])
+                : string.Format(this.TA("Your organization disabled the categories '{0}' of this assistant"), string.Join("', '", categoryNames));
+        }
 
         if (isEnabled)
             return this.T("Disable plugin");

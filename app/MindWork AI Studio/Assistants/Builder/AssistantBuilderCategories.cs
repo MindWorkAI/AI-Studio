@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 
@@ -29,6 +30,40 @@ public static class AssistantBuilderCategories
         .ToList();
 
     /// <summary>
+    /// Gets the categories of AI Studio the builder offers under the rules of your organization, in the
+    /// order of the assistants page.
+    /// </summary>
+    /// <param name="app">The app settings which hold the categories your organization disabled.</param>
+    /// <returns>The offered categories without the ones your organization disabled.</returns>
+    public static IReadOnlyList<PluginCategory> OfferedUnder(DataApp app) => Offered
+        .Where(category => !app.IsAssistantCategoryDisabled(new AssistantCategoryKey(category)))
+        .ToList();
+
+    /// <summary>
+    /// Whether the builder offers custom categories under the rules of your organization.
+    /// </summary>
+    /// <param name="app">The app settings which hold the categories your organization disabled.</param>
+    /// <returns>False when your organization disabled CUSTOM, i.e., every custom category.</returns>
+    public static bool IsCustomOfferedUnder(DataApp app) => !app.DisabledAssistantCategories.Contains(PluginCategory.CUSTOM);
+
+    /// <summary>
+    /// Finds the categories of a new or revised assistant which your organization disabled.
+    /// </summary>
+    /// <remarks>
+    /// The builder creates no assistant with a disabled category, even when another category would
+    /// keep it available on the assistants page: the user would build something the organization
+    /// does not want on its devices.
+    /// </remarks>
+    /// <param name="app">The app settings which hold the categories your organization disabled.</param>
+    /// <param name="categories">The categories of the assistant.</param>
+    /// <param name="customCategories">The names of its custom categories.</param>
+    /// <returns>The disabled categories, each once, or an empty list.</returns>
+    public static IReadOnlyList<AssistantCategoryKey> FindDisabled(DataApp app, IEnumerable<PluginCategory> categories, IEnumerable<string> customCategories) =>
+        AssistantCategoryKey.AllOf(categories, customCategories)
+            .Where(category => app.IsAssistantCategoryDisabled(category))
+            .ToList();
+
+    /// <summary>
     /// Writes a category the way the draft names it.
     /// </summary>
     /// <param name="category">The selected category, or NONE when the user left the choice to the model.</param>
@@ -43,10 +78,11 @@ public static class AssistantBuilderCategories
     };
 
     /// <summary>
-    /// Lists the categories for a prompt: one line per key, with the name users read.
+    /// Lists the categories a model may choose from: one line per key, with the name users read.
     /// </summary>
-    /// <returns>The list of the offered categories as Markdown.</returns>
-    public static string ListForPrompt() => string.Join('\n', Offered.Select(category => $"- {Enum.GetName(category)}: {category.Name}"));
+    /// <param name="app">The app settings which hold the categories your organization disabled.</param>
+    /// <returns>The list of the offered categories as Markdown, without the ones your organization disabled.</returns>
+    public static string ListForPrompt(DataApp app) => string.Join('\n', OfferedUnder(app).Select(category => $"- {Enum.GetName(category)}: {category.Name}"));
 
     /// <summary>
     /// Reads the categories a model names for a plugin, and refuses anything else than what the plugin

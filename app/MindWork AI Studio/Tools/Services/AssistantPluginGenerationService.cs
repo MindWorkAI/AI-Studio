@@ -3,6 +3,8 @@ using System.Text.Json;
 using AIStudio.Assistants.Builder;
 using AIStudio.Chat;
 using AIStudio.Provider;
+using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.ToolCallingSystem;
@@ -10,7 +12,7 @@ using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Tools.Services;
 
-public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, ILogger<AssistantPluginGenerationService> logger)
+public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, SettingsManager settingsManager, ILogger<AssistantPluginGenerationService> logger)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantPluginGenerationService).Namespace, nameof(AssistantPluginGenerationService));
 
@@ -58,7 +60,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         if (string.IsNullOrWhiteSpace(context))
             return DraftFailure(TA("The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."));
 
-        var prompt = BuildAssistantDraftPrompt(request, context);
+        var prompt = BuildAssistantDraftPrompt(request, context, settingsManager.ConfigurationData.App);
         var markdown = await this.GenerateTextAsync(provider, prompt, TB("Assistant Draft"), BuildDraftSystemPrompt(), token);
         if (string.IsNullOrWhiteSpace(markdown))
             return DraftFailure(TB("The draft model did not return a usable answer."));
@@ -124,6 +126,9 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         if (!ResponseCategoriesMatchPlugin(parsedResponse.Plugin, generatedAssistant))
             return InitialFailure(TB("The categories of the generated assistant do not match the generated plugin."));
 
+        if (this.DescribeDisabledCategories(generatedAssistant.Categories, generatedAssistant.CustomCategories) is { Length: > 0 } disabledCategoriesIssue)
+            return InitialFailure(disabledCategoriesIssue);
+
         if (this.FindUnknownToolIds(generatedAssistant) is { Count: > 0 } unknownToolIds)
             return InitialFailure(string.Format(TA("The generated assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
 
@@ -156,6 +161,9 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         // The answer was checked while parsing, so reading it again cannot fail:
         AssistantBuilderCategories.TryRead(texts.Categories, texts.CustomCategories, out var categories, out var customCategories);
+        if (this.DescribeDisabledCategories(categories, customCategories) is { Length: > 0 } disabledCategoriesIssue)
+            return InitialFailure(disabledCategoriesIssue);
+
         var metadata = new DirectChatLauncherPluginMetadata(
             request.PluginId,
             DEFAULT_VERSION,
@@ -249,6 +257,9 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         if (!ResponseCategoriesMatchPlugin(parsedResponse.Plugin, revisedAssistant))
             return RevisionFailure(TB("The categories of the revised assistant do not match the revised plugin."));
+
+        if (this.DescribeDisabledCategories(revisedAssistant.Categories, revisedAssistant.CustomCategories) is { Length: > 0 } disabledCategoriesIssue)
+            return RevisionFailure(disabledCategoriesIssue);
 
         if (this.FindUnknownToolIds(revisedAssistant, plugin) is { Count: > 0 } unknownToolIds)
             return RevisionFailure(string.Format(TA("The revised assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
@@ -500,7 +511,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
                  """;
     }
 
-    private static string BuildAssistantDraftPrompt(AssistantPluginDraftGenerationRequest request, string context)
+    private static string BuildAssistantDraftPrompt(AssistantPluginDraftGenerationRequest request, string context, DataApp app)
     {
         var draftSections = request.ChatLaunch is null
             ? $$"""
@@ -604,7 +615,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
           {{typeRequirements}}
 
           Categories:
-          {{AssistantBuilderCategories.ListForPrompt()}}
+          {{AssistantBuilderCategories.ListForPrompt(app)}}
           """;
     }
 
@@ -861,6 +872,29 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         metadata is not null &&
         AssistantBuilderCategories.TryRead(metadata.Categories, metadata.CustomCategories, out var categories, out var customCategories) &&
         AssistantBuilderCategories.MatchPlugin(assistant, categories, customCategories);
+
+    /// <summary>
+    /// Describes the categories of a new or revised assistant which your organization disabled.
+    /// </summary>
+    /// <remarks>
+    /// The draft offers the model only the categories which are not disabled, but the user may edit the
+    /// draft, and a revision keeps the categories a plugin had before. See
+    /// <see cref="AssistantBuilderCategories.FindDisabled"/>.
+    /// </remarks>
+    /// <param name="categories">The categories of the assistant.</param>
+    /// <param name="customCategories">The names of its custom categories.</param>
+    /// <returns>The message for the user, or an empty string when your organization disabled none of the categories.</returns>
+    private string DescribeDisabledCategories(IEnumerable<PluginCategory> categories, IEnumerable<string> customCategories)
+    {
+        var disabledCategories = AssistantBuilderCategories.FindDisabled(settingsManager.ConfigurationData.App, categories, customCategories);
+        return disabledCategories.Count switch
+        {
+            0 => string.Empty,
+            1 => string.Format(TA("Your organization disabled the category '{0}'. Please choose another category for your assistant."), disabledCategories[0].Name),
+
+            _ => string.Format(TA("Your organization disabled the categories '{0}'. Please choose other categories for your assistant."), string.Join("', '", disabledCategories.Select(category => category.Name))),
+        };
+    }
 
     private static bool ResponseMetadataMatchesPlugin(AssistantBuilderAssistantMetadata? metadata, PluginAssistants assistant)
     {
