@@ -181,6 +181,17 @@ lets a model work on its text segment by segment and writes a new document of th
 everything but the text stays as it was. The formats and the work with the model live in
 `app/MindWork AI Studio/Tools/DocumentSegments/`.
 
+An assistant which works on a document as well as on a text derives from `DocumentAssistantBase` in
+`app/MindWork AI Studio/Assistants/`, as the Translation assistant does. The base asks at the start what to work
+on, switches between both, runs the document through the segments, and offers to save the new document. The
+assistant brings only its prompts, the texts which name what it does, and its fields for a text.
+
+- **Overrides call the base.** `ResetForm`, `CaptureCustomAssistantSessionState`, and
+  `RestoreCustomAssistantSessionState` of such an assistant call the base, which keeps the mode and the document.
+  A text sent to it goes into `ApplyTextLaunchPayloadToText`, after the base switched to the text.
+- **Texts of the base use `TB()`.** `T()` takes the key from the type at runtime, which is the derived assistant,
+  while the I18N collector files the text under the base.
+
 **Area guide:** `app/MindWork AI Studio/Tools/DocumentSegments/AGENTS.md`, with how such a document comes
 about and the rules which are easy to break.
 

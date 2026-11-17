@@ -9,4 +9,5 @@ namespace AIStudio.Components;
 /// <param name="Icon">The icon of the option.</param>
 /// <param name="Title">The short name of the option.</param>
 /// <param name="Description">What the assistant does with this option.</param>
-public readonly record struct AssistantModeOption(AssistantContentMode Mode, string Icon, string Title, string Description);
+/// <param name="SwitchTooltip">The tooltip of the button which switches to this option while the assistant works on the other one.</param>
+public readonly record struct AssistantModeOption(AssistantContentMode Mode, string Icon, string Title, string Description, string SwitchTooltip);
