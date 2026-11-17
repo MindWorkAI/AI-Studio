@@ -185,21 +185,7 @@ public partial class AssistantGrammarSpelling : DocumentAssistantBase<SettingsDi
     /// Names the language whose rules the prompts apply.
     /// </summary>
     /// <param name="sourceLanguage">How the prompt names the language of the text, when the user chose none.</param>
-    private string SystemPromptLanguage(string sourceLanguage = "the source language")
-    {
-        var lang = this.selectedTargetLanguage switch
-        {
-            CommonLanguages.AS_IS => sourceLanguage,
-            CommonLanguages.OTHER => this.customTargetLanguage,
-
-            _ =>$"{this.selectedTargetLanguage.Name}",
-        };
-
-        if (string.IsNullOrWhiteSpace(lang))
-            return sourceLanguage;
-
-        return lang;
-    }
+    private string SystemPromptLanguage(string sourceLanguage = "the source language") => this.selectedTargetLanguage.PromptRulesLanguage(this.customTargetLanguage, sourceLanguage);
 
     private async Task ProofreadText()
     {
