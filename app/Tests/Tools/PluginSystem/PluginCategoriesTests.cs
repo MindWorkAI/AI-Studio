@@ -45,6 +45,21 @@ public sealed class PluginCategoriesTests
     }
 
     [Test]
+    public async Task ASingleCustomCategoryIsRead()
+    {
+        using var plugin = await LoadModelPlugin("""
+            CATEGORIES = {"CUSTOM"}
+            CUSTOM_CATEGORIES = {"Space Travel"}
+            """);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(plugin.IsValid, Is.True, string.Join(" ", plugin.Issues));
+            Assert.That(plugin.CustomCategories, Is.EqualTo(new[] { "Space Travel" }));
+        }
+    }
+
+    [Test]
     public async Task NamesWhichDifferOnlyInTheirCaseAreMerged()
     {
         using var plugin = await LoadModelPlugin("""

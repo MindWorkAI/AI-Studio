@@ -495,10 +495,14 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
             return false;
         }
 
+        //
+        // We read the table by its length rather than by GetArraySpan: the span may hold empty slots
+        // beyond the last entry, which would read as names which are no text:
+        //
         var names = new List<string>();
-        foreach (var luaName in customCategoriesTable.GetArraySpan())
+        for (var index = 1; index <= customCategoriesTable.ArrayLength; index++)
         {
-            if (!luaName.TryRead<string>(out var name) || string.IsNullOrWhiteSpace(name))
+            if (!customCategoriesTable[index].TryRead<string>(out var name) || string.IsNullOrWhiteSpace(name))
             {
                 message = TB("The table CUSTOM_CATEGORIES contains an empty name or a value which is not a text.");
                 return false;
