@@ -90,14 +90,17 @@
                 </MudTooltip>
             }
 
-            <MudTooltip Text="@T("Start a new chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton Icon="@AppIcons.NEW_CHAT" OnClick="@(() => this.StartNewChat(useSameWorkspace: false))"/>
-            </MudTooltip>
-
-            @if (!string.IsNullOrWhiteSpace(this.currentWorkspaceName))
+            @* One button for a new chat, which follows the open chat: its next chat goes into the same workspace, or outside of workspaces. Other places offer the workspace tree. While the open chat is the new chat of its place, the button would only open it again, so it stays disabled until the first message, as the other buttons of the toolbar do when they cannot act. *@
+            @if (string.IsNullOrWhiteSpace(this.currentWorkspaceName))
+            {
+                <MudTooltip Text="@T("Start a new chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@AppIcons.NEW_CHAT" Disabled="@this.IsNewChat" OnClick="@(() => this.StartNewChat(useSameWorkspace: false))"/>
+                </MudTooltip>
+            }
+            else
             {
                 <MudTooltip Text="@this.TooltipAddChatToWorkspace" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@AppIcons.NEW_CHAT_IN_WORKSPACE" OnClick="@(() => this.StartNewChat(useSameWorkspace: true))"/>
+                    <MudIconButton Icon="@AppIcons.NEW_CHAT_IN_WORKSPACE" Disabled="@this.IsNewChat" OnClick="@(() => this.StartNewChat(useSameWorkspace: true))"/>
                 </MudTooltip>
             }
 

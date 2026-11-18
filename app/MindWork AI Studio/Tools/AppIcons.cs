@@ -752,8 +752,8 @@ public static class AppIcons
     /// <summary>Marks the new chat of a place in the list of the sidebar while its message is still being written.</summary>
     public const string NEW_CHAT_IN_LIST = LucideIcons.MESSAGE_SQUARE_MORE;
 
-    /// <summary>Starts a new chat in the workspace whose row or menu shows the button. The row names the workspace, so the plus says enough there; elsewhere, NEW_CHAT_IN_WORKSPACE says which.</summary>
-    public const string NEW_CHAT_IN_THIS_WORKSPACE = LucideIcons.PLUS;
+    /// <summary>Starts a new chat in the place whose row, title, or menu shows the button: a workspace, or the chats outside of workspaces. The row or title names the place, so the plus says enough there, as ADD_WORKSPACE adds a workspace on the title of the workspaces; elsewhere, NEW_CHAT_IN_WORKSPACE says which.</summary>
+    public const string NEW_CHAT_IN_THIS_PLACE = LucideIcons.PLUS;
 
     /// <summary>Starts a new chat in the workspace of the open chat, where nothing around the button names the workspace, such as in the toolbar of the composer: the pen of NEW_CHAT in a folder.</summary>
     public const string NEW_CHAT_IN_WORKSPACE = LucideIcons.FOLDER_PEN;

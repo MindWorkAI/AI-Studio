@@ -1588,7 +1588,7 @@ public partial class ChatComponent : MSGComponentBase
     /// </remarks>
     private Task FollowComposerAsync() => this.followingComposer = this.FollowComposerAfterAsync(this.followingComposer);
 
-    /// <inheritdoc cref="FollowComposerAsync"/>
+    /// <inheritdoc cref="this.FollowComposerAsync"/>
     /// <param name="previousChange">The change before, which failed or not: whoever made it heard about a failure.</param>
     private async Task FollowComposerAfterAsync(Task previousChange)
     {
@@ -2583,16 +2583,17 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// Starts a new chat in the given workspace, on behalf of the workspace tree.
+    /// Starts a new chat in the given workspace or outside of workspaces, on behalf of the workspace
+    /// tree.
     /// </summary>
     /// <remarks>
-    /// The chat starts just like one from the button for a new chat in the workspace: the user is
-    /// asked about unsaved changes, and the chat gets its chat template with the data sources, tools,
-    /// and example conversation the template asks for.
+    /// The chat starts just like one from the button of the toolbar: the user is asked about unsaved
+    /// changes, and the chat gets its chat template with the data sources, tools, and example
+    /// conversation the template asks for.
     /// </remarks>
-    /// <param name="workspaceId">The ID of the workspace.</param>
-    public Task StartNewChatInWorkspaceAsync(Guid workspaceId) => workspaceId == Guid.Empty
-        ? Task.CompletedTask
+    /// <param name="workspaceId">The ID of the workspace, or Guid.Empty for a chat outside of workspaces.</param>
+    public Task StartNewChatInPlaceAsync(Guid workspaceId) => workspaceId == Guid.Empty
+        ? this.StartNewChat(useSameWorkspace: false)
         : this.StartNewChat(targetWorkspaceId: workspaceId);
 
     /// <summary>

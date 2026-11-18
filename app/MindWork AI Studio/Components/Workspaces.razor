@@ -21,7 +21,7 @@ else
         @if (this.areWorkspacesShown)
         {
             <div class="workspace-section-start" @ref="@this.workspacesSectionStart"></div>
-            @this.RenderSectionHeader(T("Workspaces"), this.IsWorkspacesSectionCollapsed, this.IsWorkspaceOfCurrentChatListed, this.ToggleWorkspacesSectionAsync, () => this.workspacesSectionStart, isSecond: false, canAddWorkspace: true)
+            @this.RenderSectionHeader(T("Workspaces"), this.IsWorkspacesSectionCollapsed, this.IsWorkspaceOfCurrentChatListed, this.ToggleWorkspacesSectionAsync, () => this.workspacesSectionStart, isSecond: false, titleButton: this.AddWorkspaceButton)
 
             @if (!this.IsWorkspacesSectionCollapsed)
             {
@@ -45,7 +45,7 @@ else
 
         <div class="workspace-section-start" @ref="@this.temporaryChatsSectionStart"></div>
         @* Chats outside of workspaces disappear only while the user chose to store them temporarily, so the section says what they are, not what happens to them: *@
-        @this.RenderSectionHeader(T("Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: this.areWorkspacesShown, canAddWorkspace: false)
+        @this.RenderSectionHeader(T("Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: this.areWorkspacesShown, titleButton: this.NewChatOutsideWorkspacesButton)
 
         @if (!this.IsTemporaryChatsSectionCollapsed)
         {
@@ -70,7 +70,8 @@ else
 
 @code {
     /// <summary>
-    /// The title of a section, with the button which collapses the section next to it.
+    /// The title of a section, with the button which collapses the section next to it, and at its end
+    /// the button which adds to the section.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -89,7 +90,8 @@ else
     /// results of a search cannot be collapsed, so they have no button.
     /// </para>
     /// </remarks>
-    private RenderFragment RenderSectionHeader(string title, bool isCollapsed, bool containsCurrentChat, Func<Task> toggle, Func<ElementReference> sectionStart, bool isSecond, bool canAddWorkspace) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Spacing="0" Class="@GetSectionHeaderClasses(isSecond)">
+    /// <param name="titleButton">The button which adds to the section, see AddWorkspaceButton and NewChatOutsideWorkspacesButton. The results of a search show without it.</param>
+    private RenderFragment RenderSectionHeader(string title, bool isCollapsed, bool containsCurrentChat, Func<Task> toggle, Func<ElementReference> sectionStart, bool isSecond, RenderFragment titleButton) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Spacing="0" Class="@GetSectionHeaderClasses(isSecond)">
         @if (this.isShowingSearchResults)
         {
             <MudText Typo="Typo.button" Class="px-2 py-1 mud-text-secondary">
@@ -105,14 +107,26 @@ else
                 </MudText>
                 <MudIconButton Icon="@GetSectionChevron(isCollapsed)" Color="@(isMarked ? Color.Primary : Color.Default)" aria-label="@title" aria-expanded="@(isCollapsed ? "false" : "true")" OnClick="@toggle"/>
             </div>
-            @if (canAddWorkspace)
-            {
-                <MudTooltip Text="@T("Add workspace")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@AppIcons.ADD_WORKSPACE" aria-label="@T("Add workspace")" OnClick="@this.AddWorkspaceAsync"/>
-                </MudTooltip>
-            }
+            @titleButton
         }
     </MudStack>;
+
+    /// <summary>
+    /// The button on the title of the workspaces, which adds a workspace.
+    /// </summary>
+    private RenderFragment AddWorkspaceButton => @<MudTooltip Text="@T("Add workspace")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+        <MudIconButton Icon="@AppIcons.ADD_WORKSPACE" aria-label="@T("Add workspace")" OnClick="@this.AddWorkspaceAsync"/>
+    </MudTooltip>;
+
+    /// <summary>
+    /// The button on the title of the chats outside of workspaces, which starts a new chat there, with
+    /// the plus the row of a workspace shows for a new chat in that workspace: every place which holds
+    /// chats offers its new chat alike, while the pen of New chat stays with the button for a new chat
+    /// in general.
+    /// </summary>
+    private RenderFragment NewChatOutsideWorkspacesButton => @<MudTooltip Text="@T("Start a new chat")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+        <MudIconButton Icon="@AppIcons.NEW_CHAT_IN_THIS_PLACE" aria-label="@T("Start a new chat")" OnClick="@(() => this.StartNewChatRequested.InvokeAsync(Guid.Empty))"/>
+    </MudTooltip>;
 
     /// <summary>
     /// A workspace, followed by its chats while it is expanded.
@@ -147,13 +161,13 @@ else
                     @if (this.CanChatsGoIntoWorkspaces)
                     {
                         <MudTooltip Text="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                            <MudIconButton Icon="@AppIcons.NEW_CHAT_IN_THIS_WORKSPACE" aria-label="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
+                            <MudIconButton Icon="@AppIcons.NEW_CHAT_IN_THIS_PLACE" aria-label="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
                         </MudTooltip>
                     }
                     <CompactMenu Icon="@AppIcons.MORE_OPTIONS" AriaLabel="@T("Workspace options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(workspace.WorkspaceId, isOpen))">
                         @if (this.CanChatsGoIntoWorkspaces)
                         {
-                            <MudMenuItem Icon="@AppIcons.NEW_CHAT_IN_THIS_WORKSPACE" Label="@T("Start a new chat")" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
+                            <MudMenuItem Icon="@AppIcons.NEW_CHAT_IN_THIS_PLACE" Label="@T("Start a new chat")" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
                         }
                         <MudMenuItem Icon="@AppIcons.RENAME" Label="@T("Rename")" OnClick="@(() => this.RenameWorkspaceAsync(workspace.WorkspacePath))"/>
                         <MudDivider/>

@@ -41,7 +41,8 @@ public partial class Workspaces : MSGComponentBase
     public EventCallback<ChatThread> CurrentChatThreadChanged { get; set; }
 
     /// <summary>
-    /// Asks the page to start a new chat in the workspace with the given ID.
+    /// Asks the page to start a new chat in the workspace with the given ID, or outside of workspaces for
+    /// Guid.Empty.
     /// </summary>
     /// <remarks>
     /// The page hands the request to its chat component. A message on the bus would not do: the bus
@@ -1005,7 +1006,7 @@ public partial class Workspaces : MSGComponentBase
     /// </summary>
     /// <param name="chats">The stored chats of the place, in their order, see WorkspaceTreeChat.InListOrder.</param>
     /// <param name="workspaceId">The workspace of the chats, or <see cref="Guid.Empty"/> for the chats outside of workspaces.</param>
-    /// <param name="neverSavedChat">The open chat which was never saved, see <see cref="GetNeverSavedChat"/>.</param>
+    /// <param name="neverSavedChat">The open chat which was never saved, see <see cref="this.GetNeverSavedChat"/>.</param>
     private IReadOnlyList<WorkspaceTreeChat> ChatsOfPlace(IReadOnlyList<WorkspaceTreeChat> chats, Guid workspaceId, WorkspaceTreeChat? neverSavedChat)
     {
         var chatInMemory = this.GetChatInMemory(workspaceId);

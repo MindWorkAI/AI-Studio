@@ -40,7 +40,7 @@
                         @this.RenderWorkspaceSidebarHeader(canHide: this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR, canClose: false)
                     </HeaderContent>
                     <ChildContent>
-                        <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInWorkspace" SaveState="@this.chatSaveState" SaveChatRequested="@this.SaveCurrentChat"/>
+                        <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInPlace" SaveState="@this.chatSaveState" SaveChatRequested="@this.SaveCurrentChat"/>
                     </ChildContent>
                 </InnerScrolling>
                 <div class="chat-sidebar-handle" role="separator" aria-orientation="vertical" @ref="this.sidebarHandle"></div>
@@ -108,7 +108,7 @@
                 @this.RenderWorkspaceSidebarHeader(canHide: false, canClose: true)
             </MudDrawerHeader>
             <MudDrawerContainer>
-                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInWorkspace" SaveState="@this.chatSaveState" SaveChatRequested="@this.SaveCurrentChat"/>
+                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" Search="@this.workspaceSearch" StartNewChatRequested="@this.StartNewChatInPlace" SaveState="@this.chatSaveState" SaveChatRequested="@this.SaveCurrentChat"/>
             </MudDrawerContainer>
         </MudDrawer>
     }

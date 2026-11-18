@@ -189,27 +189,27 @@ public partial class Chat : MSGComponentBase
     }
 
     /// <summary>
-    /// Starts a new chat in a workspace, when the workspace tree asks for one.
+    /// Starts a new chat in a workspace or outside of workspaces, when the workspace tree asks for one.
     /// </summary>
     /// <remarks>
     /// The page reads its reference to the chat component only now, when the user clicked. The chat
     /// component is created anew whenever the workspace sidebar is shown or hidden, so a reference
     /// taken earlier could point to one which is gone.
     /// </remarks>
-    /// <param name="workspaceId">The ID of the workspace.</param>
-    private async Task StartNewChatInWorkspace(Guid workspaceId)
+    /// <param name="workspaceId">The ID of the workspace, or Guid.Empty for a chat outside of workspaces.</param>
+    private async Task StartNewChatInPlace(Guid workspaceId)
     {
         if (this.chatComponent is null)
             return;
 
-        await this.chatComponent.StartNewChatInWorkspaceAsync(workspaceId);
+        await this.chatComponent.StartNewChatInPlaceAsync(workspaceId);
     }
 
     /// <summary>
     /// Saves the open chat, when the workspace sidebar asks for it.
     /// </summary>
     /// <remarks>
-    /// Like <see cref="this.StartNewChatInWorkspace"/>, this reads the reference to the chat component only
+    /// Like <see cref="this.StartNewChatInPlace"/>, this reads the reference to the chat component only
     /// when the user clicked.
     /// </remarks>
     private async Task SaveCurrentChat()
