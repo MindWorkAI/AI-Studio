@@ -699,15 +699,14 @@ tr:has(> .provider-group-header) .mud-icon-button {
 /*
  * One source below an answer per row. The title takes the free width and wraps, however long the
  * name of the document is, while the buttons stay at the right edge, one column below the other.
- * The whole row lights up under the mouse, so a button is clearly part of its row. The Markdown
- * styles force every list item to stay one with !important, so the row names their classes to
- * outweigh them.
+ * The whole row lights up under the mouse, so a button is clearly part of its row; its corners stay
+ * square, as those of every other row of the app. The Markdown styles force every list item to stay
+ * one with !important, so the row names their classes to outweigh them.
  */
 .mud-markdown-body li.source-entry {
     display: flex !important;
     align-items: center;
     gap: 0.5rem;
-    border-radius: var(--mud-default-borderradius);
 }
 
 .source-entry:hover {

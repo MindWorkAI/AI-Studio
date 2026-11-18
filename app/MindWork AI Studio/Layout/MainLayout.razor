@@ -115,3 +115,18 @@
         .mud-error-text .lucide, .lucide.mud-error-text { color: var(--mud-palette-error-lighten) !important; }
     </style>
 }
+else
+{
+    @*
+        Under the mouse, MudBlazor lights up list rows, menu entries, and buttons with 6% black, and table rows with
+        4%; the rows of app.css take the same gray. On many monitors, neither shows in light mode, so every hover of
+        the app takes 8% black from here. The palette offers no value for this gray alone: its HoverOpacity also
+        sets the tints of selected items, of the active navigation link, and of alerts, which stay as they are:
+    *@
+    <style>
+        :root {
+            --mud-palette-action-default-hover: rgba(0,0,0,0.08);
+            --mud-palette-table-hover: var(--mud-palette-action-default-hover);
+        }
+    </style>
+}
