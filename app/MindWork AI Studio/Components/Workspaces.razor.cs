@@ -433,9 +433,10 @@ public partial class Workspaces : MSGComponentBase
     /// of sight; it opens no workspace for it, though, so that nothing moves while the user types. Then
     /// the field learns how many results there are.
     /// </remarks>
-    /// <param name="snapshot">What the search found.</param>
+    /// <param name="snapshot">What the search found in the stored chats.</param>
+    /// <param name="chatsInMemory">What the search found in the chats the list knows from memory, which takes the place of what it found in their stored state, see SearchChatsInMemoryAsync.</param>
     /// <param name="terms">The words of the search.</param>
-    private void ShowSearchResults(WorkspaceSearchSnapshot snapshot, IReadOnlyList<string> terms)
+    private void ShowSearchResults(WorkspaceSearchSnapshot snapshot, IReadOnlyList<(Guid ChatId, WorkspaceSearchResult? Result)> chatsInMemory, IReadOnlyList<string> terms)
     {
         this.isShowingSearchResults = true;
         this.searchTerms = terms;
@@ -455,6 +456,13 @@ public partial class Workspaces : MSGComponentBase
 
         foreach (var result in snapshot.TemporaryChats)
             this.AddSearchResult(result);
+
+        foreach (var (chatId, result) in chatsInMemory)
+        {
+            this.ForgetSearchResult(chatId);
+            if (result is { } resultInMemory)
+                this.AddSearchResult(resultInMemory);
+        }
 
         var results = this.GetSearchResultsInOrder();
         if (this.currentSearchResultId is not { } current || !results.Contains(current))
@@ -480,6 +488,58 @@ public partial class Workspaces : MSGComponentBase
     }
 
     /// <summary>
+    /// Takes back what the search found in a chat, such as in its stored state, which what it holds in
+    /// memory replaces.
+    /// </summary>
+    private void ForgetSearchResult(Guid chatId)
+    {
+        this.searchResultChatIds.Remove(chatId);
+        this.chatPassages.Remove(chatId);
+        this.nameMatchedChatIds.Remove(chatId);
+    }
+
+    /// <summary>
+    /// Searches the chats the list knows from memory rather than from the disk, by the same rule as the
+    /// stored ones: the chat each place keeps in memory, see ChatsInMemory, and the open chat, whose
+    /// stored state may be older than what it holds now, or which was never saved.
+    /// </summary>
+    /// <param name="searchText">What the user typed.</param>
+    /// <param name="includeThreadContents">Whether to search the content of the chats as well, not only their names.</param>
+    /// <returns>For every such chat, what the search found in it, or null when it does not hold the words.</returns>
+    private async Task<List<(Guid ChatId, WorkspaceSearchResult? Result)>> SearchChatsInMemoryAsync(string searchText, bool includeThreadContents)
+    {
+        var chats = new List<(WorkspaceTreeChat Row, ChatThread Thread)>();
+        foreach (var place in this.workspaces.Select(workspace => workspace.WorkspaceId).Prepend(Guid.Empty))
+            if (this.GetChatInMemory(place) is { } row && this.ChatsInMemory.Find(place) is { } thread)
+                chats.Add((row, thread));
+
+        if (this.CurrentChatThread is { } openChat && chats.All(chat => chat.Row.ChatId != openChat.ChatId) && this.FindRowOfOpenChat() is { } openRow)
+            chats.Add((openRow with { Name = openChat.Name }, openChat));
+
+        var results = new List<(Guid ChatId, WorkspaceSearchResult? Result)>();
+        foreach (var (row, thread) in chats)
+            results.Add((row.ChatId, await WorkspaceBehaviour.SearchChatInMemoryAsync(row, thread, searchText, includeThreadContents)));
+
+        return results;
+    }
+
+    /// <summary>
+    /// The row of the open chat in the list: the one which stands in for it while it was never saved, or
+    /// its stored row. Null while the list does not show it, e.g., while its workspace's chats are not loaded.
+    /// </summary>
+    private WorkspaceTreeChat? FindRowOfOpenChat()
+    {
+        if (this.GetNeverSavedChat() is { } neverSavedChat)
+            return neverSavedChat;
+
+        foreach (var chat in this.workspaces.SelectMany(workspace => workspace.Chats).Concat(this.temporaryChats))
+            if (this.IsCurrentChat(chat))
+                return chat;
+
+        return null;
+    }
+
+    /// <summary>
     /// Takes the marks of a search from the list, which shows all workspaces and chats as before.
     /// </summary>
     private void ClearSearchResults()
@@ -499,19 +559,21 @@ public partial class Workspaces : MSGComponentBase
     /// <summary>
     /// The results of the search in the order the list shows them: each workspace found by its name,
     /// followed by the chats of the workspace which count as results, and then the disappearing chats.
+    /// The chats of a place come as the list shows them, with those from memory, see ChatsOfPlace.
     /// </summary>
     private List<Guid> GetSearchResultsInOrder()
     {
+        var neverSavedChat = this.GetNeverSavedChat();
         var results = new List<Guid>();
         foreach (var workspace in this.workspaces)
         {
             if (this.nameMatchedWorkspaceIds.Contains(workspace.WorkspaceId))
                 results.Add(workspace.WorkspaceId);
 
-            results.AddRange(workspace.Chats.Where(chat => this.searchResultChatIds.Contains(chat.ChatId)).Select(chat => chat.ChatId));
+            results.AddRange(this.ChatsOfPlace(workspace.Chats, workspace.WorkspaceId, neverSavedChat).Where(chat => this.searchResultChatIds.Contains(chat.ChatId)).Select(chat => chat.ChatId));
         }
 
-        results.AddRange(this.temporaryChats.Where(chat => this.searchResultChatIds.Contains(chat.ChatId)).Select(chat => chat.ChatId));
+        results.AddRange(this.ChatsOfPlace(this.temporaryChats, Guid.Empty, neverSavedChat).Where(chat => this.searchResultChatIds.Contains(chat.ChatId)).Select(chat => chat.ChatId));
         return results;
     }
 
@@ -521,9 +583,9 @@ public partial class Workspaces : MSGComponentBase
     private IReadOnlyList<string> GetTermsToMark(bool isResult) => isResult && this.isShowingSearchResults ? this.searchTerms : [];
 
     /// <summary>
-    /// How many of the results of the search lie in the chats of the given workspace.
+    /// How many of the results of the search lie in the chats of the given workspace, those from memory included.
     /// </summary>
-    private int CountSearchResultsIn(WorkspaceTreeWorkspace workspace) => workspace.Chats.Count(chat => this.searchResultChatIds.Contains(chat.ChatId));
+    private int CountSearchResultsIn(WorkspaceTreeWorkspace workspace) => this.ChatsOfPlace(workspace.Chats, workspace.WorkspaceId, this.GetNeverSavedChat()).Count(chat => this.searchResultChatIds.Contains(chat.ChatId));
 
     /// <summary>
     /// Tells the field how many results the search has, which of them is the current one, and why the
@@ -1285,7 +1347,11 @@ public partial class Workspaces : MSGComponentBase
             if (IsOutdated())
                 return;
 
-            this.ShowSearchResults(nameMatches, terms);
+            //
+            // The chats from memory are searched after the stored ones, so that what they hold now
+            // takes the place of their stored state:
+            //
+            this.ShowSearchResults(nameMatches, await this.SearchChatsInMemoryAsync(text, includeThreadContents: false), terms);
             await this.SafeStateHasChanged();
 
             if (isTyping)
@@ -1296,7 +1362,7 @@ public partial class Workspaces : MSGComponentBase
             if (IsOutdated())
                 return;
 
-            this.ShowSearchResults(allMatches, terms);
+            this.ShowSearchResults(allMatches, await this.SearchChatsInMemoryAsync(text, includeThreadContents: true), terms);
         }
         catch (OperationCanceledException)
         {
@@ -1306,7 +1372,7 @@ public partial class Workspaces : MSGComponentBase
         {
             this.Logger.LogWarning(ex, "Failed while searching workspace chats.");
             if (!IsOutdated())
-                this.ShowSearchResults(new([], []), terms);
+                this.ShowSearchResults(new([], []), [], terms);
         }
         finally
         {

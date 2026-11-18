@@ -402,24 +402,49 @@ public static partial class WorkspaceBehaviour
         foreach (var chat in chats)
         {
             token.ThrowIfCancellationRequested();
-
-            var missingTerms = SearchText.MissingTerms(chat.Name, terms);
-            if (missingTerms.Count == 0)
-            {
-                var alsoInMessages = includeThreadContents ? await FindTermsInThreadAsync(chat, terms, requireAll: false, token) : null;
-                results.Add(new(chat, NameMatched: true, alsoInMessages));
-                continue;
-            }
-
-            if (!includeThreadContents)
-                continue;
-
-            var passage = await FindTermsInThreadAsync(chat, missingTerms, requireAll: true, token);
-            if (passage is not null)
-                results.Add(new(chat, NameMatched: false, passage));
+            if (await SearchChatAsync(chat, terms, includeThreadContents, (words, requireAll) => FindTermsInThreadAsync(chat, words, requireAll, token)) is { } result)
+                results.Add(result);
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Finds the given words in a chat the list knows from memory rather than from the disk: one which
+    /// lives in memory only, see ChatsInMemory, or the open chat, whose stored state may be older than
+    /// what it holds now. The same rule holds as for the stored chats, see <see cref="SearchWorkspaceChatsAsync"/>.
+    /// </summary>
+    /// <param name="chat">The row of the chat in the list, whose name counts.</param>
+    /// <param name="thread">What the chat holds now.</param>
+    /// <param name="searchText">What the user typed.</param>
+    /// <param name="includeThreadContents">Whether to search the content of the chat as well, not only its name.</param>
+    /// <returns>The result, or null when the chat does not hold the words.</returns>
+    public static Task<WorkspaceSearchResult?> SearchChatInMemoryAsync(WorkspaceTreeChat chat, ChatThread thread, string searchText, bool includeThreadContents)
+    {
+        var terms = SearchText.ParseTerms(searchText);
+        return terms.Count == 0
+            ? Task.FromResult<WorkspaceSearchResult?>(null)
+            : SearchChatAsync(chat, terms, includeThreadContents, (words, requireAll) => Task.FromResult(FindTermsInThread(thread, words, requireAll)));
+    }
+
+    /// <summary>
+    /// Finds the words in one chat: in its own name, and, when asked for, in its content, see
+    /// <see cref="SearchChatsAsync"/>.
+    /// </summary>
+    /// <param name="chat">The chat, whose name counts.</param>
+    /// <param name="terms">The words to find.</param>
+    /// <param name="includeThreadContents">Whether to search the content as well.</param>
+    /// <param name="findInContent">Finds the given words in the content of the chat, all of them or any one, from wherever the chat is kept.</param>
+    private static async Task<WorkspaceSearchResult?> SearchChatAsync(WorkspaceTreeChat chat, IReadOnlyList<string> terms, bool includeThreadContents, Func<IReadOnlyList<string>, bool, Task<ChatSearchPassage?>> findInContent)
+    {
+        var missingTerms = SearchText.MissingTerms(chat.Name, terms);
+        if (missingTerms.Count == 0)
+            return new WorkspaceSearchResult(chat, NameMatched: true, includeThreadContents ? await findInContent(terms, false) : null);
+
+        if (!includeThreadContents)
+            return null;
+
+        return await findInContent(missingTerms, true) is { } passage ? new WorkspaceSearchResult(chat, NameMatched: false, passage) : null;
     }
 
     private static async Task UpdateCacheAfterChatStored(Guid workspaceId, Guid chatId, string chatDirectory, string chatName, DateTimeOffset lastEditTime, bool isNewChat)
