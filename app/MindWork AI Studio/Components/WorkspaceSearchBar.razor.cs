@@ -8,7 +8,8 @@ namespace AIStudio.Components;
 /// </summary>
 /// <remarks>
 /// It stays in place while the list below scrolls. It counts the results which the list marks, and
-/// its arrows step from one result to the next. The line below tells where the search found the
+/// its arrows step from one result to the next, in the same yellow row as the find row of the open
+/// chat, see SearchStepRow. The line below, inside the yellow, tells where the search found the
 /// current result. It shows a progress line while the list searches inside the chats.
 /// </remarks>
 public partial class WorkspaceSearchBar : MSGComponentBase
@@ -29,26 +30,26 @@ public partial class WorkspaceSearchBar : MSGComponentBase
     #endregion
 
     /// <summary>
-    /// Counts the results in the list, which the words "in list" set apart from the matches in the open chat.
+    /// Counts the results in the list. The block sits in the list, so it needs no words to set it apart
+    /// from the matches in the open chat, which the find row of the chat counts.
     /// </summary>
     private string ResultText => this.Search.ResultCount == 0
-        ? T("None in list")
-        : string.Format(T("{0}/{1} in list"), this.Search.CurrentResult, this.Search.ResultCount);
+        ? T("No results")
+        : string.Format(T("Result {0} of {1}"), this.Search.CurrentResult, this.Search.ResultCount);
 
     /// <summary>
     /// The line below the count: where the search found the current result.
     /// </summary>
     /// <remarks>
-    /// It explains the marks of the list, above all the magnifier of a chat which holds the words
-    /// inside, which shows here too. It names the place only, so it fits a narrow sidebar; the passage
-    /// shows in its tooltip, and in the tooltip of the chat in the list.
+    /// It explains the marks of the list, above all the magnifier of a chat which holds the words in its
+    /// content. It tells only the name or the content, so it fits a narrow sidebar; where exactly the
+    /// content holds the words, the passage in its tooltip shows, as does the tooltip of the chat in the list.
     /// </remarks>
     private string ReasonText => this.Search.CurrentReason.Kind switch
     {
-        WorkspaceSearchReasonKind.WORKSPACE_NAME => T("Found in the name of the workspace"),
-        WorkspaceSearchReasonKind.CHAT_NAME => T("Found in the name of the chat"),
-        WorkspaceSearchReasonKind.IN_CHAT => this.Search.CurrentReason.Passage.Label(isAlso: false),
-        WorkspaceSearchReasonKind.ALSO_IN_CHAT => this.Search.CurrentReason.Passage.Label(isAlso: true),
+        WorkspaceSearchReasonKind.NAME => T("Found in its name"),
+        WorkspaceSearchReasonKind.CONTENT => T("Found in its content"),
+        WorkspaceSearchReasonKind.NAME_AND_CONTENT => T("Found in its name and content"),
 
         _ when this.Search.IsSearchingContents => T("Searching inside the chats …"),
 

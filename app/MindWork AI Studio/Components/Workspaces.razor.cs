@@ -151,7 +151,7 @@ public partial class Workspaces : MSGComponentBase
     private readonly HashSet<Guid> searchResultChatIds = [];
 
     /// <summary>
-    /// For the chats which hold words of the search in their messages, attached files, or sources, where
+    /// For the chats which hold words of the search in their messages, sent or not, attached files, or sources, where
     /// they hold the first one, which shows when the pointer rests on the chat.
     /// </summary>
     private readonly Dictionary<Guid, ChatSearchPassage> chatPassages = [];
@@ -544,12 +544,12 @@ public partial class Workspaces : MSGComponentBase
             return WorkspaceSearchReason.NONE;
 
         if (this.nameMatchedWorkspaceIds.Contains(current))
-            return new(WorkspaceSearchReasonKind.WORKSPACE_NAME);
+            return new(WorkspaceSearchReasonKind.NAME);
 
         if (this.chatPassages.TryGetValue(current, out var passage))
-            return new(this.nameMatchedChatIds.Contains(current) ? WorkspaceSearchReasonKind.ALSO_IN_CHAT : WorkspaceSearchReasonKind.IN_CHAT, passage);
+            return new(this.nameMatchedChatIds.Contains(current) ? WorkspaceSearchReasonKind.NAME_AND_CONTENT : WorkspaceSearchReasonKind.CONTENT, passage);
 
-        return new(WorkspaceSearchReasonKind.CHAT_NAME);
+        return new(WorkspaceSearchReasonKind.NAME);
     }
 
     /// <summary>

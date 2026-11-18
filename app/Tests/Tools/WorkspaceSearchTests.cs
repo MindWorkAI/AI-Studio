@@ -9,9 +9,9 @@ namespace AIStudio.Tests.Tools;
 /// </summary>
 /// <remarks>
 /// Workspaces and chats are found each on their own. The words of a search may be spread over a chat's
-/// own name and what the user sees of the chat: the text of its messages, the names of its attached
-/// files, and the titles and addresses of its sources. The sidebar shows where the chat holds them, so
-/// the search has to say which of these it was.
+/// own name and what the user sees of the chat: the text of its messages, sent or not, the names of its
+/// attached files, and the titles and addresses of its sources. The sidebar shows where the chat holds
+/// them, so the search has to say which of these it was.
 /// </remarks>
 [TestFixture]
 [NonParallelizable]
@@ -68,11 +68,19 @@ public sealed class WorkspaceSearchTests
         },
     };
 
-    private async Task<Guid> StoreChatAsync(string workspaceName, string chatName, params ContentBlock[] blocks)
+    private Task<Guid> StoreChatAsync(string workspaceName, string chatName, params ContentBlock[] blocks) => this.StoreChatAsync(workspaceName, chatName, isNewChat: false, unsentText: null, unsentFile: null, blocks);
+
+    /// <summary>
+    /// Stores a chat with a message the user has not sent yet, as the chat keeps it in its draft.
+    /// </summary>
+    private async Task<Guid> StoreChatAsync(string workspaceName, string chatName, bool isNewChat, string? unsentText, FileAttachment? unsentFile, params ContentBlock[] blocks)
     {
         var workspace = await WorkspaceBehaviour.TryCreateWorkspaceAsync(workspaceName);
         var workspaceId = workspace.Success ? workspace.Workspace.WorkspaceId : await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync(workspaceName);
-        var chat = new ChatThread { WorkspaceId = workspaceId, ChatId = Guid.NewGuid(), Name = chatName, Blocks = [..blocks] };
+        var chat = new ChatThread { WorkspaceId = workspaceId, ChatId = Guid.NewGuid(), Name = chatName, IsNewChat = isNewChat, Blocks = [..blocks] };
+        chat.Draft.SetText(unsentText);
+        if (unsentFile is not null)
+            chat.Draft.AddAttachments([unsentFile]);
 
         Assert.That(await WorkspaceBehaviour.StoreChatAsync(chat), Is.True, "The chat could not be stored.");
         return chat.ChatId;
@@ -183,5 +191,45 @@ public sealed class WorkspaceSearchTests
         var result = await FindAsync("secret", chatId);
 
         Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public async Task ANewChatIsFoundByItsUnsentMessage()
+    {
+        //
+        // A new chat is named after the beginning of its message, so a word further back is in the
+        // message only:
+        //
+        var chatId = await this.StoreChatAsync("Projects", "Please compare the numbers", isNewChat: true, unsentText: "Please compare the numbers with the budget of last year.", unsentFile: null);
+
+        var result = await FindAsync("budget", chatId);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result?.NameMatched, Is.False);
+            Assert.That(result?.Passage?.Kind, Is.EqualTo(ChatSearchPassageKind.MESSAGE), "The unsent message counts as one of the messages.");
+            Assert.That(result?.Passage?.Text, Does.Contain("budget of last year"));
+        }
+    }
+
+    [Test]
+    public async Task TheUnsentMessageComesAfterTheSentOnes()
+    {
+        var chatId = await this.StoreChatAsync("Projects", "Planning", isNewChat: false, unsentText: "And what about the budget?", unsentFile: null, Message(ChatRole.AI, "The budget looks fine."));
+
+        var result = await FindAsync("budget", chatId);
+
+        Assert.That(result?.Passage?.Text, Does.Contain("looks fine"), "The passage comes from the first message which holds the word, as the chat shows its messages.");
+    }
+
+    [Test]
+    public async Task AFileAttachedToTheUnsentMessageCounts()
+    {
+        var file = new FileAttachment(FileAttachmentType.DOCUMENT, "budget-2026.xlsx", Path.Combine(this.testDirectory, "budget-2026.xlsx"), 1024);
+        var chatId = await this.StoreChatAsync("Projects", "Planning", isNewChat: true, unsentText: "Please check this.", unsentFile: file);
+
+        var result = await FindAsync("budget", chatId);
+
+        Assert.That(result?.Passage, Is.EqualTo(new ChatSearchPassage(ChatSearchPassageKind.ATTACHED_FILE, "budget-2026.xlsx")));
     }
 }

@@ -29,7 +29,7 @@
 
         @if (this.Search is not null)
         {
-            <ChatFindBar Search="@this.Search" ChatId="@(this.ChatThread?.ChatId ?? Guid.Empty)" Messages="@(() => this.messagesElement)"/>
+            <ChatFindBar Search="@this.Search" ChatId="@(this.ChatThread?.ChatId ?? Guid.Empty)" Messages="@(() => this.messagesElement)" UnsentMessageFieldId="@CHAT_INPUT_ID"/>
         }
     </HeaderContent>
     <ChildContent>

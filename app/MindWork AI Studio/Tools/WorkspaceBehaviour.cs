@@ -282,10 +282,13 @@ public static partial class WorkspaceBehaviour
     }
 
     /// <summary>
-    /// Looks for the given words in what the user sees of a thread: the text of its messages, the names
-    /// of the files attached to them, and the titles and addresses of their sources.
+    /// Looks for the given words in what the user sees of a thread: the text of its messages and of the
+    /// message not sent yet, the names of the files attached to them, and the titles and addresses of
+    /// their sources.
     /// </summary>
     /// <remarks>
+    /// The message not sent yet counts as one of the messages, the last one, as the chat shows it below
+    /// the others: a new chat holds nothing else, and its name is just the beginning of that message.
     /// The words may be spread over all of these. What shows where they are prefers the text of a
     /// message, which tells the most, over the name of a file and the title of a source; of each kind
     /// it comes from the first place, in the order the chat shows its messages.
@@ -320,6 +323,15 @@ public static partial class WorkspaceBehaviour
                     sourcePassage ??= new(ChatSearchPassageKind.SOURCE, titleAndAddress);
             }
         }
+
+        // The message the user has not sent yet, the last one, which shows below the others, in the composer:
+        var unsentText = thread.Draft.Text;
+        if (!string.IsNullOrWhiteSpace(unsentText) && FindTerms(unsentText) is { Count: > 0 } wordsInUnsentText)
+            messagePassage ??= new(ChatSearchPassageKind.MESSAGE, SearchText.FindPassage(unsentText, wordsInUnsentText));
+
+        foreach (var file in thread.Draft.FileAttachments)
+            if (FindTerms(file.FileName).Count > 0)
+                filePassage ??= new(ChatSearchPassageKind.ATTACHED_FILE, file.FileName);
 
         var isFound = requireAll ? matchedTerms.Count == terms.Count : matchedTerms.Count > 0;
         return isFound ? messagePassage ?? filePassage ?? sourcePassage : null;
@@ -374,7 +386,7 @@ public static partial class WorkspaceBehaviour
 
     /// <summary>
     /// Finds the chats which hold the given words, in their own names or, when asked for, inside: in their
-    /// messages, the names of their attached files, and their sources.
+    /// messages, sent or not, the names of their attached files, and their sources.
     /// </summary>
     /// <remarks>
     /// When the insides are searched, a chat found by its name gets a passage too, as soon as it holds
@@ -587,8 +599,9 @@ public static partial class WorkspaceBehaviour
     /// </summary>
     /// <remarks>
     /// Workspaces and chats are found each on their own. A workspace is found when its name holds all
-    /// words. A chat is found when they are spread over its own name and what it holds: its messages, the
-    /// names of its attached files, and its sources. The name of its workspace does not count for it.
+    /// words. A chat is found when they are spread over its own name and what it holds: its messages, sent
+    /// or not, the names of its attached files, and its sources. The name of its workspace does not count
+    /// for it.
     /// </remarks>
     /// <param name="searchText">What the user typed.</param>
     /// <param name="includeThreadContents">Whether to search the messages too, which have to be read from the disk.</param>

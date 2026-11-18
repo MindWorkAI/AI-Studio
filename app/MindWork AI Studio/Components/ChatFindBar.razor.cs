@@ -4,7 +4,8 @@ namespace AIStudio.Components;
 
 /// <summary>
 /// Finds the words of the chat search in the open chat: it marks every match in the messages, counts
-/// them, and steps from one to the next.
+/// them together with those in the message being written, and steps from one to the next, in the row
+/// the list of workspaces shows its results in as well, see SearchStepRow.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -37,6 +38,14 @@ public partial class ChatFindBar : MSGComponentBase
     /// </summary>
     [Parameter]
     public Func<ElementReference>? Messages { get; set; }
+
+    /// <summary>
+    /// The ID of the field in which the user writes the next message. Its text belongs to the chat as
+    /// much as the sent messages, as for the search of the list, so its matches count as well; the
+    /// current one shows as the selection of the field, which cannot show highlights.
+    /// </summary>
+    [Parameter]
+    public string? UnsentMessageFieldId { get; set; }
 
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
@@ -146,7 +155,7 @@ public partial class ChatFindBar : MSGComponentBase
             }
 
             this.dotNetReference ??= DotNetObjectReference.Create(this);
-            var result = await this.JsRuntime.InvokeAsync<int[]>("setChatFind", messages, terms, this.dotNetReference);
+            var result = await this.JsRuntime.InvokeAsync<int[]>("setChatFind", messages, terms, this.dotNetReference, this.UnsentMessageFieldId);
             this.SetMatches(result[0], result[1]);
         }
         catch (JSDisconnectedException)

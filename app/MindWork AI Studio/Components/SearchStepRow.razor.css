@@ -1,0 +1,27 @@
+/*
+ * A row in the yellow of the search, see app.css, so that it stands out as long as the search runs:
+ * the faint yellow behind it and a bar of the full yellow on its left, as the current result in the
+ * list of workspaces carries, with the rounding of the app's controls. What the caller puts below the
+ * row may place a line of progress at its bottom edge, which is why it is positioned.
+ */
+.search-step-row {
+    position: relative;
+    padding: 2px 4px 2px 10px;
+    border-radius: var(--mud-default-borderradius);
+    background-color: var(--chat-search-highlight-faint);
+    box-shadow: inset 3px 0 0 var(--chat-search-highlight-strong);
+}
+
+.search-step-row-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-step-row-main ::deep .search-step-row-text {
+    flex-grow: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

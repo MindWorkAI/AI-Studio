@@ -281,14 +281,20 @@ window.watchSidebarResize = function (handle, sidebar, dotNetReference) {
     })
 }
 
-// Finding the words of the chat search in the messages of the open chat. The CSS Custom Highlight API
-// paints the matches as ranges, without changing the DOM, which Blazor renders and expects unchanged.
+// Finding the words of the chat search in the messages of the open chat, and in the message the user is
+// writing. The CSS Custom Highlight API paints the matches as ranges, without changing the DOM, which
+// Blazor renders and expects unchanged.
 // The colors are the ones of the chat search in app.css. One find per messages element; the state
 // lives here, and .NET learns the number of matches and which one is the current one.
 const chatFindStates = new WeakMap()
 
 const escapeForRegExp = function (text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Every match of any of the words, ignoring case:
+const chatFindPattern = function (terms) {
+    return new RegExp(terms.map(escapeForRegExp).join('|'), 'giu')
 }
 
 // Every match of any of the words in what the user sees of the messages below the root, as ranges.
@@ -330,9 +336,8 @@ const findChatMatches = function (root, terms) {
         return [nodes[low].node, position - nodes[low].start]
     }
 
-    const pattern = new RegExp(terms.map(escapeForRegExp).join('|'), 'giu')
     const ranges = []
-    for (const match of text.matchAll(pattern)) {
+    for (const match of text.matchAll(chatFindPattern(terms))) {
         if (match[0].length === 0)
             continue
 
@@ -345,6 +350,28 @@ const findChatMatches = function (root, terms) {
     }
 
     return ranges
+}
+
+// Every match of any of the words in the message the user is writing, as positions in the text of its
+// field. That message belongs to the chat as much as the sent ones, as for the search of the sidebar,
+// and it shows below them. A field cannot show highlights, so its current match shows as the selection
+// of the field, see revealChatMatch.
+const findFieldMatches = function (fieldId, terms) {
+    const field = fieldId ? document.getElementById(fieldId) : null
+    if (!field || typeof field.value !== 'string' || terms.length === 0)
+        return []
+
+    const matches = []
+    for (const match of field.value.matchAll(chatFindPattern(terms)))
+        if (match[0].length > 0)
+            matches.push({ start: match.index, end: match.index + match[0].length })
+
+    return matches
+}
+
+// The matches of the messages come first, then those of the message being written, as the chat shows them:
+const chatMatchCount = function (state) {
+    return state.ranges.length + state.fieldMatches.length
 }
 
 const paintChatMatches = function (state) {
@@ -360,55 +387,82 @@ const paintChatMatches = function (state) {
 }
 
 // Scrolls the current match into the middle of the chat: smoothly when the user stepped to it, at
-// once when a chat opened, so that nothing else scrolling at the same time can stop it halfway.
+// once when a chat opened, so that nothing else scrolling at the same time can stop it halfway. A match
+// in the message being written gets selected in its field, which always shows below the chat.
 const revealChatMatch = function (state, isSmooth) {
+    if (state.current >= state.ranges.length) {
+        const match = state.fieldMatches[state.current - state.ranges.length]
+        const field = document.getElementById(state.fieldId)
+        if (match && field) {
+            field.focus({ preventScroll: true })
+            field.setSelectionRange(match.start, match.end)
+        }
+
+        return
+    }
+
     state.ranges[state.current]?.startContainer.parentElement?.scrollIntoView({ block: 'center', behavior: isSmooth ? 'smooth' : 'auto' })
 }
 
 // How many matches there are, and which one is the current one, counted from 0, or -1:
 const chatFindResult = function (state) {
-    return [state.ranges.length, state.current]
+    return [chatMatchCount(state), state.current]
 }
 
-// Finds the words in the messages below the root and marks them. The chat stays where it is, so it
-// does not jump while the user types; the arrows go to a match, and a chat which opens shows its last
-// match, see positionOpenedChat. Keeps the marks current while the messages change, such as while an
-// answer is written, and tells .NET about the new numbers then.
-window.setChatFind = function (root, terms, dotNetReference) {
+// Finds the words in the messages below the root, and in the message being written in the field with
+// the given ID, and marks them. The chat stays where it is, so it does not jump while the user types;
+// the arrows go to a match, and a chat which opens shows its last match, see positionOpenedChat. Keeps
+// the marks current while the messages change, such as while an answer is written, and while the user
+// writes, and tells .NET about the new numbers then.
+window.setChatFind = function (root, terms, dotNetReference, fieldId) {
     if (!root)
         return [0, -1]
 
     let state = chatFindStates.get(root)
     if (!state) {
-        state = { terms: [], ranges: [], current: -1, observer: null, isUpdateScheduled: false }
+        state = { terms: [], ranges: [], fieldMatches: [], fieldId: null, current: -1, observer: null, onInput: null, isUpdateScheduled: false }
         chatFindStates.set(root, state)
 
         const update = function () {
             state.isUpdateScheduled = false
             const [count, current] = chatFindResult(state)
             state.ranges = findChatMatches(root, state.terms)
-            if (state.current >= state.ranges.length)
-                state.current = state.ranges.length - 1
+            state.fieldMatches = findFieldMatches(state.fieldId, state.terms)
+            if (state.current >= chatMatchCount(state))
+                state.current = chatMatchCount(state) - 1
 
             paintChatMatches(state)
-            if (state.ranges.length !== count || state.current !== current)
-                state.dotNetReference?.invokeMethodAsync('MatchesChangedAsync', state.ranges.length, state.current).catch(() => {})
+            const [newCount, newCurrent] = chatFindResult(state)
+            if (newCount !== count || newCurrent !== current)
+                state.dotNetReference?.invokeMethodAsync('MatchesChangedAsync', newCount, newCurrent).catch(() => {})
         }
 
-        state.observer = new MutationObserver(function () {
+        const scheduleUpdate = function () {
             if (state.isUpdateScheduled)
                 return
 
             state.isUpdateScheduled = true
             requestAnimationFrame(update)
-        })
+        }
 
+        state.observer = new MutationObserver(scheduleUpdate)
         state.observer.observe(root, { subtree: true, childList: true, characterData: true })
+
+        // Typing changes no element, only the value of the field, which the observer does not see. The
+        // field may be rendered anew, so the document listens for it:
+        state.onInput = function (event) {
+            if (state.fieldId && event.target?.id === state.fieldId)
+                scheduleUpdate()
+        }
+
+        document.addEventListener('input', state.onInput, true)
     }
 
     state.terms = terms
+    state.fieldId = fieldId ?? null
     state.dotNetReference = dotNetReference
     state.ranges = findChatMatches(root, terms)
+    state.fieldMatches = findFieldMatches(state.fieldId, terms)
     state.current = -1
     paintChatMatches(state)
     return chatFindResult(state)
@@ -418,10 +472,10 @@ window.setChatFind = function (root, terms, dotNetReference) {
 // and scrolls it into view. Without a current match, the next one is the first, the previous one the last.
 window.stepChatFind = function (root, direction) {
     const state = root ? chatFindStates.get(root) : null
-    if (!state || state.ranges.length === 0)
+    if (!state || chatMatchCount(state) === 0)
         return [0, -1]
 
-    const count = state.ranges.length
+    const count = chatMatchCount(state)
     state.current = state.current < 0
         ? (direction > 0 ? 0 : count - 1)
         : (state.current + direction + count) % count
@@ -431,10 +485,13 @@ window.stepChatFind = function (root, direction) {
     return chatFindResult(state)
 }
 
-// Takes the marks away and stops watching the messages.
+// Takes the marks away and stops watching the messages and the field.
 window.clearChatFind = function (root) {
     const state = root ? chatFindStates.get(root) : null
     state?.observer?.disconnect()
+    if (state?.onInput)
+        document.removeEventListener('input', state.onInput, true)
+
     if (root)
         chatFindStates.delete(root)
 
@@ -484,14 +541,19 @@ window.positionOpenedChat = function (root, showNewest) {
 
         // Finds anew rather than trusting the last update of the search, which waits for the next frame:
         const state = chatFindStates.get(root)
-        if (state)
+        if (state) {
             state.ranges = findChatMatches(root, state.terms)
+            state.fieldMatches = findFieldMatches(state.fieldId, state.terms)
+        }
 
+        // The last match in the messages, not one in the message being written, which would take the
+        // focus into its field:
         if (state && state.ranges.length > 0) {
             state.current = state.ranges.length - 1
             paintChatMatches(state)
             revealChatMatch(state, false)
-            state.dotNetReference?.invokeMethodAsync('MatchesChangedAsync', state.ranges.length, state.current).catch(() => {})
+            const [count, current] = chatFindResult(state)
+            state.dotNetReference?.invokeMethodAsync('MatchesChangedAsync', count, current).catch(() => {})
         } else if (showNewest) {
             scrollingBox.scrollTop = scrollingBox.scrollHeight
         }

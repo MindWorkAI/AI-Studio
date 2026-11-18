@@ -27,9 +27,13 @@ public partial class WorkspaceSearchField : MSGComponentBase
 
     private string Placeholder => this.IsListSearched ? T("Search chats") : T("Search this chat");
 
+    /// <summary>
+    /// What the search covers, which also tells what the content of a chat is, as the results of the list
+    /// name it: its messages, the one being written included, the names of its attached files, and its sources.
+    /// </summary>
     private string CoverageText => this.IsListSearched
-        ? T("Searches the names of chats and workspaces, their messages, and the names of attached files and sources.")
-        : T("Searches the messages of the open chat.");
+        ? T("Searches the names of chats and workspaces, and the content of the chats: their messages, attached files, and sources.")
+        : T("Searches the content of the open chat: its messages and their sources.");
 
     private void TextChanged(string? text) => this.Search.SetText(text);
 

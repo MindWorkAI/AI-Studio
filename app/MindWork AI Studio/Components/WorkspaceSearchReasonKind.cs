@@ -3,6 +3,11 @@ namespace AIStudio.Components;
 /// <summary>
 /// Where the search found the words of a result, see <see cref="WorkspaceSearchReason"/>.
 /// </summary>
+/// <remarks>
+/// Only the name and the content count apart, which is all the line below the count of the results
+/// tells. Where exactly the content holds the words, in a message, sent or not, the name of an
+/// attached file, or a source, shows in its tooltip, which shows the passage itself.
+/// </remarks>
 public enum WorkspaceSearchReasonKind
 {
     /// <summary>
@@ -11,23 +16,18 @@ public enum WorkspaceSearchReasonKind
     NONE,
 
     /// <summary>
-    /// The result is a workspace whose name holds all words.
+    /// The result is a workspace or a chat whose own name holds all words.
     /// </summary>
-    WORKSPACE_NAME,
+    NAME,
 
     /// <summary>
-    /// The result is a chat whose own name holds all words.
+    /// The result is a chat whose content holds the words its name lacks: its messages, sent or not, the
+    /// names of its attached files, or its sources.
     /// </summary>
-    CHAT_NAME,
+    CONTENT,
 
     /// <summary>
-    /// The result is a chat whose messages, attached files, or sources hold the words its name lacks.
+    /// The result is a chat found by its name, whose content holds words of the search as well.
     /// </summary>
-    IN_CHAT,
-
-    /// <summary>
-    /// The result is a chat found by its name, whose messages, attached files, or sources hold words of
-    /// the search as well.
-    /// </summary>
-    ALSO_IN_CHAT,
+    NAME_AND_CONTENT,
 }

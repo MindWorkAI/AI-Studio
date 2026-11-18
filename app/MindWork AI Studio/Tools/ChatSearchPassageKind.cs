@@ -6,7 +6,7 @@ namespace AIStudio.Tools;
 public enum ChatSearchPassageKind
 {
     /// <summary>
-    /// In the text of one of its messages.
+    /// In the text of one of its messages, the one the user has not sent yet included.
     /// </summary>
     MESSAGE,
 

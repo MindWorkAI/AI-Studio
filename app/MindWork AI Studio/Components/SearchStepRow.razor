@@ -1,0 +1,17 @@
+@inherits MSGComponentBase
+
+<div class="@this.Classes" style="@this.Style">
+    <div class="search-step-row-main">
+        <SearchFoundIcon/>
+        <MudText Typo="Typo.body2" Class="search-step-row-text">
+            @this.Text
+        </MudText>
+        <MudTooltip Text="@this.PreviousLabel" Placement="Placement.Bottom" RootClass="flex-shrink-0">
+            <MudIconButton Icon="@AppIcons.PREVIOUS_RESULT" Size="Size.Small" Disabled="@(!this.CanStep)" aria-label="@this.PreviousLabel" OnClick="@(() => this.StepRequested.InvokeAsync(-1))"/>
+        </MudTooltip>
+        <MudTooltip Text="@this.NextLabel" Placement="Placement.Bottom" RootClass="flex-shrink-0">
+            <MudIconButton Icon="@AppIcons.NEXT_RESULT" Size="Size.Small" Disabled="@(!this.CanStep)" aria-label="@this.NextLabel" OnClick="@(() => this.StepRequested.InvokeAsync(1))"/>
+        </MudTooltip>
+    </div>
+    @this.ChildContent
+</div>

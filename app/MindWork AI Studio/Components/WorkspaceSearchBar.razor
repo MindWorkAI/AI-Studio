@@ -1,31 +1,17 @@
 @inherits MSGComponentBase
 
-@* Only while the field holds words: before, the list has no results to count. The progress line takes
-   the room of the padding below the line of the reason, so the bar keeps its height when the progress
-   line shows up and goes. *@
+@* Only while the field holds words: before, the list has no results to count. The block keeps the
+   inset of the rows of the list. *@
 @if (!string.IsNullOrWhiteSpace(this.Search.Text))
 {
-    <div class="workspace-search-bar pl-4 pr-2 pt-1 pb-2" style="position: relative;">
-        <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Wrap="Wrap.NoWrap" Spacing="1">
-            <MudText Typo="Typo.body2" Class="text-no-wrap">
-                @this.ResultText
-            </MudText>
-            <MudTooltip Text="@T("Previous result in the list")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
-                <MudIconButton Icon="@AppIcons.PREVIOUS_RESULT" Size="Size.Small" Disabled="@(this.Search.ResultCount == 0)" aria-label="@T("Previous result in the list")" OnClick="@(() => this.Search.Step(-1))"/>
-            </MudTooltip>
-            <MudTooltip Text="@T("Next result in the list")" Placement="Placement.Bottom" RootClass="flex-shrink-0">
-                <MudIconButton Icon="@AppIcons.NEXT_RESULT" Size="Size.Small" Disabled="@(this.Search.ResultCount == 0)" aria-label="@T("Next result in the list")" OnClick="@(() => this.Search.Step(1))"/>
-            </MudTooltip>
-        </MudStack>
+    <SearchStepRow Text="@this.ResultText" CanStep="@(this.Search.ResultCount > 0)" PreviousLabel="@T("Previous result in the list")" NextLabel="@T("Next result in the list")" StepRequested="@this.Search.Step" Style="margin: 6px 6px 4px;">
 
-        @* Where the search found the current result. One short line of fixed height, so the list below
-           never moves when its text changes. The passage itself shows in the tooltip, where there is room
-           for it: *@
+        @* Where the search found the current result, below the count it belongs to. One short line of
+           fixed height, so the list below never moves when its text changes. The passage itself shows
+           in the tooltip, where there is room for it: *@
         <div class="workspace-search-reason mud-text-secondary">
-            @if (this.Search.CurrentReason.IsInChat)
+            @if (this.Search.CurrentReason.IsInContent)
             {
-                <SearchFoundIcon/>
-
                 @* The tooltip gives what the line has no room for, like the tooltip of a found chat: *@
                 <MudTooltip Placement="Placement.Bottom" Delay="@ChatSearchPassageView.TOOLTIP_DELAY" RootStyle="display: flex; min-width: 0;">
                     <ChildContent>
@@ -43,9 +29,12 @@
                 <span class="workspace-search-reason-text">@this.ReasonText</span>
             }
         </div>
+
+        @* At the bottom edge of the block, below the line, so the block keeps its height when the
+           progress shows up and goes: *@
         @if (this.Search.IsSearchingContents)
         {
-            <MudProgressLinear Indeterminate="@true" Color="Color.Primary" Size="Size.Small" Style="position: absolute; left: 8px; right: 8px; bottom: 2px; width: auto;"/>
+            <MudProgressLinear Indeterminate="@true" Color="Color.Primary" Size="Size.Small" Style="position: absolute; left: 8px; right: 8px; bottom: 1px; width: auto;"/>
         }
-    </div>
+    </SearchStepRow>
 }

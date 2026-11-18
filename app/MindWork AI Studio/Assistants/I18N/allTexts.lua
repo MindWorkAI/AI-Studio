@@ -10516,11 +10516,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T701874671"] = "Delete Worksp
 -- Next result in the list
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1018901165"] = "Next result in the list"
 
--- None in list
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1739405746"] = "None in list"
-
 -- No chat or workspace holds all of these words
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1746933036"] = "No chat or workspace holds all of these words"
+
+-- Result {0} of {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1776008712"] = "Result {0} of {1}"
+
+-- Found in its content
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1896064873"] = "Found in its content"
 
 -- No chat or workspace holds this word
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2296834106"] = "No chat or workspace holds this word"
@@ -10528,17 +10531,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2296834106"] = "No c
 -- Searching inside the chats …
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2601633055"] = "Searching inside the chats …"
 
--- Found in the name of the chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T4123347636"] = "Found in the name of the chat"
+-- No results
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T3712452028"] = "No results"
 
--- {0}/{1} in list
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T55151488"] = "{0}/{1} in list"
+-- Found in its name and content
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T3821713019"] = "Found in its name and content"
+
+-- Found in its name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T535434327"] = "Found in its name"
 
 -- Previous result in the list
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T604854253"] = "Previous result in the list"
-
--- Found in the name of the workspace
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T651470427"] = "Found in the name of the workspace"
 
 -- Search this chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T1129852775"] = "Search this chat"
@@ -10546,14 +10549,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T1129852775"] = "Se
 -- Search chats
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T1615077202"] = "Search chats"
 
+-- Searches the names of chats and workspaces, and the content of the chats: their messages, attached files, and sources.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T2566490671"] = "Searches the names of chats and workspaces, and the content of the chats: their messages, attached files, and sources."
+
 -- Put words in quotes to find an exact phrase
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T2598527810"] = "Put words in quotes to find an exact phrase"
 
--- Searches the messages of the open chat.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T2938663812"] = "Searches the messages of the open chat."
-
--- Searches the names of chats and workspaces, their messages, and the names of attached files and sources.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T3297609252"] = "Searches the names of chats and workspaces, their messages, and the names of attached files and sources."
+-- Searches the content of the open chat: its messages and their sources.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T806385864"] = "Searches the content of the open chat: its messages and their sources."
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTDRAFTDIALOG::T3267849393"] = "Edit"
@@ -18486,24 +18489,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATARCHIVE::CHATARCHIVEIMPORTER::T3123318432"
 
 -- Imported workspace
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATARCHIVE::CHATARCHIVEIMPORTER::T722364324"] = "Imported workspace"
-
--- Found in its name and in a source
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T188293899"] = "Found in its name and in a source"
-
--- Found in one of its sources
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T2147359535"] = "Found in one of its sources"
-
--- Found in its messages
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T3108260760"] = "Found in its messages"
-
--- Found in the name of an attached file
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T3431587698"] = "Found in the name of an attached file"
-
--- Found in its name and its messages
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T3907694920"] = "Found in its name and its messages"
-
--- Found in its name and in an attached file
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATSEARCHPASSAGEEXTENSIONS::T4101235486"] = "Found in its name and in an attached file"
 
 -- Spanish (Spain)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T1269145091"] = "Spanish (Spain)"
