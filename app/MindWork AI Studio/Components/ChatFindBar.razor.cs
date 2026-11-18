@@ -21,7 +21,7 @@ namespace AIStudio.Components;
 public partial class ChatFindBar : MSGComponentBase
 {
     /// <summary>
-    /// The search of the sidebar, whose words this chat looks for.
+    /// The search of the chat page, whose words this chat looks for.
     /// </summary>
     [Parameter]
     public WorkspaceSearch? Search { get; set; }

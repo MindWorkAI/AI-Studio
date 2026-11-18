@@ -188,6 +188,9 @@ public static class AppIcons
     /// <summary>Marks something as blocked, such as a provider prohibited by the organization or a plugin below the required security level.</summary>
     public const string BLOCKED = LucideIcons.BAN;
 
+    /// <summary>Separates the parts of a path which leads to a place, such as the workspace and the chat at the top of the open chat.</summary>
+    public const string BREADCRUMB_SEPARATOR = LucideIcons.CHEVRON_RIGHT;
+
     /// <summary>Opens a dialog to choose a file or a folder.</summary>
     public const string BROWSE = LucideIcons.FOLDER_SEARCH;
 
@@ -541,9 +544,6 @@ public static class AppIcons
 
     /// <summary>Marks something hidden or switched off, such as a hidden secret, hidden files, or a tool nobody can use.</summary>
     public const string HIDDEN = LucideIcons.EYE_OFF;
-
-    /// <summary>Hides a search field, such as the search of the workspaces.</summary>
-    public const string HIDE_SEARCH = LucideIcons.SEARCH_SLASH;
 
     /// <summary>Hides the sidebar, such as the workspaces.</summary>
     public const string HIDE_SIDEBAR = LucideIcons.PANEL_LEFT_CLOSE;
@@ -1255,9 +1255,6 @@ public static class AppIcons
 
     /// <summary>Marks a workspace that groups chats, such as in the workspace tree or the workspace selection.</summary>
     public const string WORKSPACE = LucideIcons.FOLDER;
-
-    /// <summary>Shows your workspaces with their chats.</summary>
-    public const string WORKSPACES = LucideIcons.FOLDER_TREE;
 
     /// <summary>Marks a collapsed workspace in the list of the sidebar.</summary>
     public const string WORKSPACE_COLLAPSED = LucideIcons.FOLDER;

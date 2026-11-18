@@ -5,13 +5,35 @@
 
 <InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" MinWidth="36em" Style="height: 100%">
     <HeaderContent>
+        @* Where the open chat is, at the top of the chat: its workspace, or the chats outside of
+           workspaces, and its own name, which follows the message being written into a new chat. *@
+        <MudStack Row="@true" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1" Class="px-1" Style="height: 40px; min-width: 0;">
+            @if (!string.IsNullOrWhiteSpace(this.BreadcrumbPlace))
+            {
+                <MudText Typo="Typo.body1" Class="mud-text-secondary flex-shrink-0" Style="@BREADCRUMB_PLACE_STYLE">
+                    @this.BreadcrumbPlace
+                </MudText>
+                <MudIcon Icon="@AppIcons.BREADCRUMB_SEPARATOR" Size="Size.Small" Class="flex-shrink-0" Style="color: var(--mud-palette-text-disabled);"/>
+            }
+            <MudText Typo="Typo.body1" Style="@BREADCRUMB_CHAT_STYLE">
+                @this.BreadcrumbChatName
+            </MudText>
+        </MudStack>
+
+        @* The provider of the chat, which cannot change while an answer is being written: another
+           provider would not reach the answer, which keeps the one it started with, but the chat
+           would show the other one meanwhile. *@
+        <CascadingValue Value="Components.CHAT">
+            <ProviderSelection ProviderSettings="@this.Provider" ProviderSettingsChanged="@this.SelectProviderAsync" Disabled="@this.IsCurrentChatStreaming"/>
+        </CascadingValue>
+
         @if (this.Search is not null)
         {
             <ChatFindBar Search="@this.Search" ChatId="@(this.ChatThread?.ChatId ?? Guid.Empty)" Messages="@(() => this.messagesElement)"/>
         }
     </HeaderContent>
     <ChildContent>
-        @* The element around the messages is where the search of the sidebar finds its words, see ChatFindBar: *@
+        @* The element around the messages is where the search of the page finds its words, see ChatFindBar: *@
         <div @ref="@this.messagesElement">
             @if (this.ChatThread is not null)
             {
@@ -73,16 +95,6 @@
                 Style="@this.UserInputStyle"/>
         </MudElement>
         <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey; gap: 2px;">
-            
-            @if (
-                this.SettingsManager.ConfigurationData.Workspace.IsChatListShown
-                && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_OVERLAY)
-            {
-                <MudTooltip Text="@TA("Show your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@AppIcons.WORKSPACES" OnClick="@(() => this.ToggleWorkspaceOverlay())"/>
-                </MudTooltip>
-            }
-
             @if (this.ChatStorage is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY)
             {
                 <MudTooltip Text="@T("Save chat")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">

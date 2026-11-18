@@ -21,7 +21,7 @@ else
         @if (this.areWorkspacesShown)
         {
             <div class="workspace-section-start" @ref="@this.workspacesSectionStart"></div>
-            @this.RenderSectionHeader(T("Workspaces"), this.IsWorkspacesSectionCollapsed, this.IsWorkspaceOfCurrentChatListed, this.ToggleWorkspacesSectionAsync, () => this.workspacesSectionStart, isSecond: false, titleButton: this.AddWorkspaceButton)
+            @this.RenderSectionHeader(T("Workspaces"), this.IsWorkspacesSectionCollapsed, this.IsWorkspaceOfCurrentChatListed, this.ToggleWorkspacesSectionAsync, () => this.workspacesSectionStart, isSecond: false, titleButtons: this.WorkspacesTitleButtons)
 
             @if (!this.IsWorkspacesSectionCollapsed)
             {
@@ -45,7 +45,7 @@ else
 
         <div class="workspace-section-start" @ref="@this.temporaryChatsSectionStart"></div>
         @* Chats outside of workspaces disappear only while the user chose to store them temporarily, so the section says what they are, not what happens to them: *@
-        @this.RenderSectionHeader(T("Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: this.areWorkspacesShown, titleButton: this.NewChatOutsideWorkspacesButton)
+        @this.RenderSectionHeader(T("Chats"), this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync, () => this.temporaryChatsSectionStart, isSecond: this.areWorkspacesShown, titleButtons: this.NewChatOutsideWorkspacesButton)
 
         @if (!this.IsTemporaryChatsSectionCollapsed)
         {
@@ -71,7 +71,7 @@ else
 @code {
     /// <summary>
     /// The title of a section, with the button which collapses the section next to it, and at its end
-    /// the button which adds to the section.
+    /// the buttons of the section.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -89,9 +89,13 @@ else
     /// While the section hides the open chat, its title carries the mark of the open chat. The
     /// results of a search cannot be collapsed, so they have no button.
     /// </para>
+    /// <para>
+    /// The buttons of the section show while the pointer is over the title, or the keyboard is in it,
+    /// as the buttons of a row do, see Workspaces.razor.css. So the list stays calm.
+    /// </para>
     /// </remarks>
-    /// <param name="titleButton">The button which adds to the section, see AddWorkspaceButton and NewChatOutsideWorkspacesButton. The results of a search show without it.</param>
-    private RenderFragment RenderSectionHeader(string title, bool isCollapsed, bool containsCurrentChat, Func<Task> toggle, Func<ElementReference> sectionStart, bool isSecond, RenderFragment titleButton) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Spacing="0" Class="@GetSectionHeaderClasses(isSecond)">
+    /// <param name="titleButtons">The buttons of the section, see WorkspacesTitleButtons and NewChatOutsideWorkspacesButton. The results of a search show without them.</param>
+    private RenderFragment RenderSectionHeader(string title, bool isCollapsed, bool containsCurrentChat, Func<Task> toggle, Func<ElementReference> sectionStart, bool isSecond, RenderFragment titleButtons) => @<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Spacing="0" Class="@GetSectionHeaderClasses(isSecond)">
         @if (this.isShowingSearchResults)
         {
             <MudText Typo="Typo.button" Class="px-2 py-1 mud-text-secondary">
@@ -107,16 +111,24 @@ else
                 </MudText>
                 <MudIconButton Icon="@GetSectionChevron(isCollapsed)" Color="@(isMarked ? Color.Primary : Color.Default)" aria-label="@title" aria-expanded="@(isCollapsed ? "false" : "true")" OnClick="@toggle"/>
             </div>
-            @titleButton
+            <div class="workspace-item-actions flex-shrink-0">
+                @titleButtons
+            </div>
         }
     </MudStack>;
 
     /// <summary>
-    /// The button on the title of the workspaces, which adds a workspace.
+    /// The buttons on the title of the workspaces: the one which reads the workspaces from the disk
+    /// anew, e.g., after another program changed them, and the one which adds a workspace.
     /// </summary>
-    private RenderFragment AddWorkspaceButton => @<MudTooltip Text="@T("Add workspace")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-        <MudIconButton Icon="@AppIcons.ADD_WORKSPACE" aria-label="@T("Add workspace")" OnClick="@this.AddWorkspaceAsync"/>
-    </MudTooltip>;
+    private RenderFragment WorkspacesTitleButtons => @<text>
+        <MudTooltip Text="@TA("Reload your workspaces")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+            <MudIconButton Icon="@AppIcons.REFRESH" aria-label="@TA("Reload your workspaces")" OnClick="@this.ForceRefreshFromDiskAsync"/>
+        </MudTooltip>
+        <MudTooltip Text="@T("Add workspace")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+            <MudIconButton Icon="@AppIcons.ADD_WORKSPACE" aria-label="@T("Add workspace")" OnClick="@this.AddWorkspaceAsync"/>
+        </MudTooltip>
+    </text>;
 
     /// <summary>
     /// The button on the title of the chats outside of workspaces, which starts a new chat there, with

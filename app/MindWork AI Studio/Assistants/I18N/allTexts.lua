@@ -7063,6 +7063,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3045856778"] = "Move Chat
 -- {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3244065777"] = "{0} tokens"
 
+-- New chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3395183389"] = "New chat"
+
 -- plus {0} image(s), which cannot be counted
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3619858297"] = "plus {0} image(s), which cannot be counted"
 
@@ -7087,11 +7090,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Start new
 -- {0} of {1} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3996190985"] = "{0} of {1} tokens"
 
+-- Empty chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4019509364"] = "Empty chat"
+
 -- Show all files attached to this chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4183453875"] = "Show all files attached to this chat"
 
 -- Heading
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4231005109"] = "Heading"
+
+-- Chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4258277800"] = "Chats"
 
 -- Your message holds the transcript of an audio or video file. Clearing the message deletes the transcript, which would have to be made anew. Do you want to clear your message?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T458230939"] = "Your message holds the transcript of an audio or video file. Clearing the message deletes the transcript, which would have to be made anew. Do you want to clear your message?"
@@ -7113,12 +7122,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Move the c
 
 -- Move the chat to a workspace, or to another if it is already in one.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754::INFORMAL"] = "Move the chat to a workspace, or to another if it is already in one."
-
--- Show your workspaces
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Show your workspaces"
-
--- Show your workspaces
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375::INFORMAL"] = "Show your workspaces"
 
 -- Clear your message and its attachments
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T783125807"] = "Clear your message and its attachments"
@@ -10381,6 +10384,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1586005241"] = "Add workspac
 -- Start a new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1840064668"] = "Start a new chat in workspace '{0}'"
 
+-- Reload your workspaces
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T194629703"] = "Reload your workspaces"
+
+-- Reload your workspaces
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T194629703::INFORMAL"] = "Reload your workspaces"
+
 -- Please name your workspace:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T201482774"] = "Please name your workspace:"
 
@@ -10507,9 +10516,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T701874671"] = "Delete Worksp
 -- Next result in the list
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1018901165"] = "Next result in the list"
 
--- Search chats
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1615077202"] = "Search chats"
-
 -- None in list
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1739405746"] = "None in list"
 
@@ -10519,14 +10525,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T1746933036"] = "No c
 -- No chat or workspace holds this word
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2296834106"] = "No chat or workspace holds this word"
 
--- Put words in quotes to find an exact phrase
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2598527810"] = "Put words in quotes to find an exact phrase"
-
 -- Searching inside the chats …
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T2601633055"] = "Searching inside the chats …"
-
--- Searches the names of chats and workspaces, their messages, and the names of attached files and sources.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T3297609252"] = "Searches the names of chats and workspaces, their messages, and the names of attached files and sources."
 
 -- Found in the name of the chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T4123347636"] = "Found in the name of the chat"
@@ -10539,6 +10539,21 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T604854253"] = "Previ
 
 -- Found in the name of the workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHBAR::T651470427"] = "Found in the name of the workspace"
+
+-- Search this chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T1129852775"] = "Search this chat"
+
+-- Search chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T1615077202"] = "Search chats"
+
+-- Put words in quotes to find an exact phrase
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T2598527810"] = "Put words in quotes to find an exact phrase"
+
+-- Searches the messages of the open chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T2938663812"] = "Searches the messages of the open chat."
+
+-- Searches the names of chats and workspaces, their messages, and the names of attached files and sources.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACESEARCHFIELD::T3297609252"] = "Searches the names of chats and workspaces, their messages, and the names of attached files and sources."
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTDRAFTDIALOG::T3267849393"] = "Edit"
@@ -16282,53 +16297,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T943132958"] = "Turn texts and doc
 -- Turn texts and documents into slides, also as a PowerPoint file in the design of your template.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T943132958::INFORMAL"] = "Turn texts and documents into slides, also as a PowerPoint file in the design of your template."
 
--- Options for your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1668416121"] = "Options for your workspaces"
-
--- Options for your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1668416121::INFORMAL"] = "Options for your workspaces"
-
--- Reload your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T194629703"] = "Reload your workspaces"
-
--- Reload your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T194629703::INFORMAL"] = "Reload your workspaces"
-
--- Close the search
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T216507668"] = "Close the search"
-
 -- Hide your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2351468526"] = "Hide your workspaces"
 
 -- Hide your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2351468526::INFORMAL"] = "Hide your workspaces"
 
--- Search your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3059773282"] = "Search your workspaces"
-
--- Search your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3059773282::INFORMAL"] = "Search your workspaces"
-
--- Configure your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3586092784"] = "Configure your workspaces"
-
--- Configure your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3586092784::INFORMAL"] = "Configure your workspaces"
-
--- Your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3745240468"] = "Your workspaces"
-
--- Your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3745240468::INFORMAL"] = "Your workspaces"
-
 -- Show the chat options
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T4132756393"] = "Show the chat options"
-
--- Chat
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T578410699"] = "Chat"
-
--- Chat in Workspace
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T582100343"] = "Chat in Workspace"
 
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T733672375"] = "Show your workspaces"
@@ -18006,9 +17982,6 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1095779033
 
 -- Check every day
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1112287590"] = "Check every day"
-
--- Toggle the overlay: the chat uses all the space, workspaces are temporarily shown
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1114668646"] = "Toggle the overlay: the chat uses all the space, workspaces are temporarily shown"
 
 -- Sidebar is always visible: show the workspaces next to the chat all the time
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1149606444"] = "Sidebar is always visible: show the workspaces next to the chat all the time"

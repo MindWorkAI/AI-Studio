@@ -1,0 +1,31 @@
+@inherits MSGComponentBase
+
+@* The field takes a fixed width at the end of the bar, as the search fields of other apps do, but
+   gives way on a narrow window. The tooltip tells what the search covers, which the field has no room
+   for. It shows only while the pointer rests on the field, not while the user types in it: it would
+   cover the chat below. *@
+<div style="width: 22rem; min-width: 0; flex-shrink: 1;">
+    <MudTooltip Placement="Placement.Bottom" Delay="@ChatSearchPassageView.TOOLTIP_DELAY" ShowOnFocus="@false" RootStyle="width: 100%;">
+        <ChildContent>
+            <MudTextField T="string"
+                          Text="@this.Search.Text"
+                          TextChanged="@this.TextChanged"
+                          OnKeyDown="@this.KeyDown"
+                          Placeholder="@this.Placeholder"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Typo="Typo.body1"
+                          Immediate="@true"
+                          Clearable="@true"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@AppIcons.SEARCH"
+                          Class="mt-0"/>
+        </ChildContent>
+        <TooltipContent>
+            <div style="@ChatSearchPassageView.TOOLTIP_CONTENT_STYLE">
+                <div>@this.CoverageText</div>
+                <div>@T("Put words in quotes to find an exact phrase")</div>
+            </div>
+        </TooltipContent>
+    </MudTooltip>
+</div>

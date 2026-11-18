@@ -53,8 +53,8 @@ public partial class Workspaces : MSGComponentBase
     public EventCallback<Guid> StartNewChatRequested { get; set; }
 
     /// <summary>
-    /// The search, whose field sits in the header of the sidebar. While it holds a text, the list shows
-    /// the chats it found instead of all workspaces and chats.
+    /// The search, whose field sits in the bar above the list and the chat. While it holds a text, the
+    /// list marks what it found, and its results show at the top of the sidebar, see WorkspaceSearchBar.
     /// </summary>
     [Parameter]
     public WorkspaceSearch? Search { get; set; }
@@ -1354,7 +1354,10 @@ public partial class Workspaces : MSGComponentBase
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
-    public async Task ForceRefreshFromDiskAsync()
+    /// <summary>
+    /// Reads the workspaces and their chats from the disk anew, e.g., after another program changed them.
+    /// </summary>
+    private async Task ForceRefreshFromDiskAsync()
     {
         if (this.prefetchCancellationTokenSource is not null)
         {

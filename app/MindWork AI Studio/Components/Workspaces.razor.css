@@ -42,7 +42,8 @@
  * title also sticks to the bottom while its section still lies below the visible part of the list:
  * the first title is the first thing in the list and never lies below. A title has a fixed height for
  * that: its padding of 8 pixels and a button of 32. It covers the rows scrolling beneath it with the
- * background of the list, which the drawer of the chat page sets to its own.
+ * background of the list: the one of the page, unless whatever holds the list sets
+ * --workspace-list-background to its own.
  *
  * A row scrolled into view, such as the open chat, stops below both titles at the top, and above the
  * second one at the bottom, instead of behind them.
@@ -61,7 +62,6 @@
  * sidebar wide enough for the titles we ship, see Chat.razor.css. A longer one, in another language or
  * a sidebar narrowed some other way, ends with an ellipsis, and its buttons keep their size.
  */
-.workspace-list ::deep .workspace-section-header > .mud-tooltip-root,
 .workspace-list ::deep .workspace-section-toggle .mud-icon-button {
     flex-shrink: 0;
 }
@@ -254,10 +254,13 @@
 /*
  * Of the rows which carry the mark of the open chat, only the chat itself shows its buttons. A
  * collapsed workspace which carries the mark in its place shows them on hover, like every other one.
+ * The title of a section shows its buttons in the same way.
  */
 .workspace-list ::deep .mud-list-item:hover .workspace-item-actions,
 .workspace-list ::deep .mud-list-item:focus-visible .workspace-item-actions,
 .workspace-list ::deep .mud-list-item:has(:focus-visible) .workspace-item-actions,
+.workspace-list ::deep .workspace-section-header:hover .workspace-item-actions,
+.workspace-list ::deep .workspace-section-header:has(:focus-visible) .workspace-item-actions,
 .workspace-list ::deep .workspace-chat.is-current .workspace-item-actions,
 .workspace-list ::deep .is-menu-open .workspace-item-actions {
     display: flex;

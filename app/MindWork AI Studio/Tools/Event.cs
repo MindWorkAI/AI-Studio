@@ -198,11 +198,6 @@ public enum Event
     WORKSPACE_LOADED_CHAT_CHANGED,
 
     /// <summary>
-    /// Requests the chat workspace overlay to be toggled.
-    /// </summary>
-    WORKSPACE_TOGGLE_OVERLAY,
-
-    /// <summary>
     /// Notifies receivers that a workspace was renamed.
     /// </summary>
     WORKSPACE_RENAMED,

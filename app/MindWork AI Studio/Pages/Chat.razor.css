@@ -1,5 +1,38 @@
 /*
- * The workspace sidebar and the chat side by side. The columns take the height left below the header
+ * The bar above the list and the chat. The same room above and below its buttons keeps the outline of
+ * the search field off the edge of the window. Its toggle stands right above the icons of the list: a
+ * row of the list puts its icon 16 pixels behind the border of 1, while a button puts its icon 12
+ * pixels in, which leaves 5 to go.
+ */
+.chat-header-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    min-height: 48px;
+    padding: 8px 0 8px 5px;
+}
+
+/*
+ * The chat starts with a line, which sets it apart from the bar above, as the top bar of an app is.
+ * The line belongs to the chat, not to the bar: beside the list, it continues the top of the frame of
+ * the list at the same height, without running into its rounded corner; with the list hidden, the chat
+ * and so its line span the whole width.
+ *
+ * The column may get narrower than what the chat holds: otherwise it would never be narrower than the
+ * widest line in the chat, such as a long line of code, and push the list out of the window, while
+ * the find row scrolled the columns sideways to reach a match. The chat keeps its own least width,
+ * see ChatComponent, so a window too narrow for both cuts the chat off as before.
+ */
+.chat-column {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+/*
+ * The workspace sidebar and the chat side by side. The columns take the height left below the bar
  * of the page.
  */
 .chat-columns {

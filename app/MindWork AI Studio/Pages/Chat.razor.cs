@@ -26,28 +26,14 @@ public partial class Chat : MSGComponentBase
 
     private ChatThread? chatThread;
     private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
-
-    /// <summary>
-    /// Whether an answer is being written for the open chat, as the chat component last told.
-    /// </summary>
-    /// <remarks>
-    /// The provider selection is locked meanwhile. Another provider would not reach the answer, which
-    /// keeps the one it started with, but the chat would show the other one while the answer is still
-    /// being written.
-    /// </remarks>
-    private bool isAnswerBeingWritten;
-
-    private bool workspaceOverlayVisible;
-    private bool workspaceSearchVisible;
     private readonly WorkspaceSearch workspaceSearch = new();
-    private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
     private ChatComponent? chatComponent;
     private readonly ChatComposerState composerState = new();
 
     /// <summary>
     /// Whether the open chat holds changes the user did not save yet, which the chat component tells the
-    /// workspace sidebar. The page keeps it, since both are created anew whenever the sidebar shows up again.
+    /// workspace sidebar. The page keeps it, since the sidebar is created anew whenever it shows up again.
     /// </summary>
     private readonly ChatSaveState chatSaveState = new();
 
@@ -65,7 +51,7 @@ public partial class Chat : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.WORKSPACE_TOGGLE_OVERLAY, Event.CONFIGURATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         await base.OnInitializedAsync();
     }
 
@@ -107,11 +93,16 @@ public partial class Chat : MSGComponentBase
 
     #endregion
     
+    /// <summary>
+    /// Whether the bar offers to show and hide the list: whenever the list has something to show, unless
+    /// the user wants to see it all the time.
+    /// </summary>
+    private bool IsSidebarToggleShown => this.SettingsManager.ConfigurationData.Workspace.IsChatListShown
+                                         && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR;
+
     private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? AppIcons.HIDE_SIDEBAR : AppIcons.SHOW_SIDEBAR;
 
-    private string WorkspaceSearchIcon => this.workspaceSearchVisible ? AppIcons.HIDE_SEARCH : AppIcons.SEARCH;
-
-    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Close the search") : TA("Search your workspaces");
+    private string WorkspaceSidebarToggleTooltip => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? TA("Hide your workspaces") : TA("Show your workspaces");
 
     /// <summary>
     /// Whether the sidebar shows beside the chat. It shows whenever it has something to list, the stored
@@ -147,54 +138,14 @@ public partial class Chat : MSGComponentBase
         await this.SettingsManager.StoreSettings();
     }
 
-    private void ToggleWorkspacesOverlay()
-    {
-        this.workspaceOverlayVisible = !this.workspaceOverlayVisible;
-        this.StateHasChanged();
-    }
-
-    private void UpdateWorkspaceName(string workspaceName)
-    {
-        this.currentWorkspaceName = workspaceName;
-        this.StateHasChanged();
-    }
-
     private Task OpenChatSettingsDialog() => SettingsWindow.OpenAsync(this.DialogService, SettingsPath.CHAT);
-
-    private Task OpenWorkspacesSettingsDialog() => SettingsWindow.OpenAsync(this.DialogService, SettingsPath.WORKSPACES);
-
-    private async Task RefreshWorkspaces()
-    {
-        if (this.workspaces is null)
-            return;
-
-        await this.workspaces.ForceRefreshFromDiskAsync();
-    }
-
-    private void ToggleWorkspaceSearch()
-    {
-        if (this.workspaceSearchVisible)
-            this.CloseWorkspaceSearch();
-        else
-            this.workspaceSearchVisible = true;
-    }
-
-    /// <summary>
-    /// Closes the search of the workspaces, after which the list shows all workspaces and chats again.
-    /// </summary>
-    private void CloseWorkspaceSearch()
-    {
-        this.workspaceSearchVisible = false;
-        this.workspaceSearch.SetText(string.Empty);
-    }
 
     /// <summary>
     /// Starts a new chat in a workspace or outside of workspaces, when the workspace tree asks for one.
     /// </summary>
     /// <remarks>
-    /// The page reads its reference to the chat component only now, when the user clicked. The chat
-    /// component is created anew whenever the workspace sidebar is shown or hidden, so a reference
-    /// taken earlier could point to one which is gone.
+    /// The page reads its reference to the chat component only now, when the user clicked, since the
+    /// reference arrives only once the chat component rendered.
     /// </remarks>
     /// <param name="workspaceId">The ID of the workspace, or Guid.Empty for a chat outside of workspaces.</param>
     private async Task StartNewChatInPlace(Guid workspaceId)
@@ -234,10 +185,6 @@ public partial class Chat : MSGComponentBase
     {
         switch (triggeredEvent)
         {
-            case Event.WORKSPACE_TOGGLE_OVERLAY:
-                this.ToggleWorkspacesOverlay();
-                break;
-
             //
             // Whether chats are stored and whether workspaces are used decide whether the sidebar shows,
             // and the user may change both in the settings window while the chat page lies behind it:

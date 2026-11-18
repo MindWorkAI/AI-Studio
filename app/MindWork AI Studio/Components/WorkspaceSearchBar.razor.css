@@ -1,5 +1,13 @@
 /*
- * The line below the field, which tells why the search found the current result. It always takes the
+ * The results of the search sit above the list, with a line between them, as the toolbar of a list
+ * does.
+ */
+.workspace-search-bar {
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+/*
+ * The line below the count, which tells why the search found the current result. It always takes the
  * height of one line of small text and cuts what is longer, so the list below never moves.
  */
 .workspace-search-reason {

@@ -29,7 +29,18 @@ public partial class ChatComponent : MSGComponentBase
     private const string MARKDOWN_ITALIC = "italic";
     private const string MARKDOWN_HEADING = "heading";
     private const string MARKDOWN_BULLET_LIST = "bullet_list";
-    
+
+    /// <summary>
+    /// The place at the top of the chat ends with an ellipsis before it takes more than its share, so
+    /// that the name of the chat stays readable beside a long name of a workspace.
+    /// </summary>
+    private const string BREADCRUMB_PLACE_STYLE = "max-width: 40%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
+
+    /// <summary>
+    /// The name of the open chat at the top of the chat, in one line which ends with an ellipsis.
+    /// </summary>
+    private const string BREADCRUMB_CHAT_STYLE = "min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
+
     [Parameter]
     public ChatThread? ChatThread { get; set; }
     
@@ -42,20 +53,6 @@ public partial class ChatComponent : MSGComponentBase
     [Parameter]
     public EventCallback<AIStudio.Settings.Provider> ProviderChanged { get; set; }
 
-    /// <summary>
-    /// Tells whether an answer is being written for the open chat, whenever that changes.
-    /// </summary>
-    /// <remarks>
-    /// For the parts of the chat page outside this component, such as the provider selection. The AI
-    /// job reports every part of an answer, and this component renders after each report. The page
-    /// learns only when an answer starts or ends, see OnAfterRenderAsync.
-    /// </remarks>
-    [Parameter]
-    public EventCallback<bool> IsAnswerBeingWrittenChanged { get; set; }
-    
-    [Parameter]
-    public Action<string> WorkspaceName { get; set; } = _ => { };
-    
     [Parameter]
     public Workspaces? Workspaces { get; set; }
 
@@ -191,7 +188,6 @@ public partial class ChatComponent : MSGComponentBase
     private bool autoSaveEnabled;
     private HashSet<string> selectedToolIds = [];
     private bool previousInputForbidden = true;
-    private bool announcedAnswerBeingWritten;
     private Guid lastSeenChatId = Guid.Empty;
     private AIStudio.Settings.Provider lastSeenProvider = AIStudio.Settings.Provider.NONE;
     private string currentWorkspaceName = string.Empty;
@@ -265,6 +261,33 @@ public partial class ChatComponent : MSGComponentBase
     /// see ChatThread.IsNewChat.
     /// </summary>
     private bool IsNewChat => this.ChatThread is null || this.ChatThread.IsNewChat;
+
+    /// <summary>
+    /// Where the open chat is, at the top of the chat: the name of its workspace, or the chats outside of
+    /// workspaces, as the list calls them. Empty while there is no list, since chats are not stored.
+    /// </summary>
+    private string BreadcrumbPlace => !string.IsNullOrWhiteSpace(this.currentWorkspaceName)
+        ? this.currentWorkspaceName
+        : this.SettingsManager.ConfigurationData.Workspace.IsChatListShown ? T("Chats") : string.Empty;
+
+    /// <summary>
+    /// The name of the open chat at the top of the chat, as the list shows it: a new chat is named after
+    /// the message being written into it.
+    /// </summary>
+    private string BreadcrumbChatName => this.ChatThread is { Name: var name } && !string.IsNullOrWhiteSpace(name)
+        ? name
+        : this.IsNewChat ? T("New chat") : T("Empty chat");
+
+    /// <summary>
+    /// Takes the provider the user chose above the chat, and tells the page, which keeps it for the
+    /// chats to come.
+    /// </summary>
+    /// <param name="provider">The provider the user chose.</param>
+    private async Task SelectProviderAsync(AIStudio.Settings.Provider provider)
+    {
+        this.Provider = provider;
+        await this.ProviderChanged.InvokeAsync(provider);
+    }
 
     /// <summary>
     /// What follows changes of the composer: every change waits for the one before, and sending waits for all of them.
@@ -567,8 +590,8 @@ public partial class ChatComponent : MSGComponentBase
 
         //
         // Otherwise, the page opens the new chat of the chats outside of workspaces, with whatever the
-        // user put into it before. Not when this component appears anew while the page keeps the open
-        // chat, e.g., after the sidebar was shown or hidden, and not for a chat an assistant sent here:
+        // user put into it before. Not when the page holds an open chat already, and not for a chat an
+        // assistant sent here:
         //
         else if (deferredRequest is null && this.ChatThread is null && !this.ComposerState.HasUserDraft)
             await this.ReopenChatOfPlaceAsync(Guid.Empty);
@@ -697,20 +720,6 @@ public partial class ChatComponent : MSGComponentBase
         this.previousInputForbidden = inputForbidden;
 
         //
-        // The page hears about an answer starting or ending here rather than with every report of the
-        // AI job, since a render of the page redraws the workspace tree. This component renders after
-        // every such report and after another chat was opened, so the page never misses a change. The
-        // first render reports in any case: the page may still hold what another instance of this
-        // component told it, e.g., before the workspaces were shown or hidden.
-        //
-        var isAnswerBeingWritten = this.IsCurrentChatStreaming;
-        if (firstRender || isAnswerBeingWritten != this.announcedAnswerBeingWritten)
-        {
-            this.announcedAnswerBeingWritten = isAnswerBeingWritten;
-            await this.IsAnswerBeingWrittenChanged.InvokeAsync(isAnswerBeingWritten);
-        }
-
-        //
         // Everything which can move the token count also renders this component: the selections in
         // the toolbar, the attachments and the composer all travel through an event callback whose
         // receiver is this component, and the streamed answer arrives as a message which already
@@ -745,9 +754,8 @@ public partial class ChatComponent : MSGComponentBase
         var workspaceId = this.ChatThread?.WorkspaceId ?? Guid.Empty;
 
         //
-        // The first chat of this component is no chat being left. The component appears anew, e.g.,
-        // whenever the workspace sidebar is shown or hidden, while the page keeps the chat and the
-        // composer:
+        // The first chat of this component is no chat being left, also when the page holds the chat and
+        // the composer already:
         //
         var isFirstChat = !this.hasAppliedChatParameter;
         this.hasAppliedChatParameter = true;
@@ -830,26 +838,31 @@ public partial class ChatComponent : MSGComponentBase
 
         this.currentChatThreadId = chatThreadId;
         this.currentWorkspaceId = workspaceId;
-        this.PublishWorkspaceNameIfChanged(loadedWorkspaceName);
+        this.ShowWorkspaceNameIfChanged(loadedWorkspaceName);
     }
 
     private void ClearWorkspaceHeaderState()
     {
         this.currentChatThreadId = Guid.Empty;
         this.currentWorkspaceId = Guid.Empty;
-        this.PublishWorkspaceNameIfChanged(string.Empty);
+        this.ShowWorkspaceNameIfChanged(string.Empty);
     }
 
-    private void PublishWorkspaceNameIfChanged(string workspaceName)
+    /// <summary>
+    /// Shows the name of the workspace of the open chat at the top of the chat, see BreadcrumbPlace.
+    /// </summary>
+    /// <remarks>
+    /// The name may arrive after the render which opened the chat, since it is read from the disk, or
+    /// after the user renamed the workspace, so the chat renders again when it changed.
+    /// </remarks>
+    /// <param name="workspaceName">The name, or an empty one for a chat outside of workspaces.</param>
+    private void ShowWorkspaceNameIfChanged(string workspaceName)
     {
-        // Only notify the parent when the name actually changed to prevent
-        // an infinite render loop: WorkspaceName -> UpdateWorkspaceName ->
-        // StateHasChanged -> re-render -> OnParametersSetAsync -> WorkspaceName -> ...
         if (this.currentWorkspaceName == workspaceName)
             return;
 
         this.currentWorkspaceName = workspaceName;
-        this.WorkspaceName(this.currentWorkspaceName);
+        this.StateHasChanged();
     }
 
     private async Task RefreshRenamedWorkspaceHeaderAsync(Guid workspaceId)
@@ -872,7 +885,7 @@ public partial class ChatComponent : MSGComponentBase
 
         this.currentChatThreadId = chatThreadId;
         this.currentWorkspaceId = workspaceId;
-        this.PublishWorkspaceNameIfChanged(loadedWorkspaceName);
+        this.ShowWorkspaceNameIfChanged(loadedWorkspaceName);
     }
 
     /// <summary>
@@ -2500,8 +2513,7 @@ public partial class ChatComponent : MSGComponentBase
     /// answer being written counts as an unsaved change then.<br/><br/>
     ///
     /// Called only where the user leaves a chat: opening another one, starting a new one, or leaving the
-    /// chat page. Never when this component goes away, since the page creates it anew, e.g., whenever the
-    /// workspace sidebar is shown or hidden, while the chat stays.
+    /// chat page. Never merely because this component goes away, which says nothing about the chat.
     /// </remarks>
     /// <param name="chatId">The chat being left.</param>
     /// <param name="workspaceId">The workspace the chat lies in, which decides how it is stored.</param>
@@ -3081,11 +3093,6 @@ public partial class ChatComponent : MSGComponentBase
         }
     }
 
-    private async Task ToggleWorkspaceOverlay()
-    {
-        await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_TOGGLE_OVERLAY);
-    }
-    
     /// <summary>
     /// Sends the text of a message of this chat to an assistant, or into a new chat.
     /// </summary>

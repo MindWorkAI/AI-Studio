@@ -126,7 +126,6 @@ public static class ConfigurationSelectDataFactory
     
     public static IEnumerable<ConfigurationSelectData<WorkspaceDisplayBehavior>> GetWorkspaceDisplayBehaviorData()
     {
-        yield return new(TB("Toggle the overlay: the chat uses all the space, workspaces are temporarily shown"), WorkspaceDisplayBehavior.TOGGLE_OVERLAY);
         yield return new(TB("Toggle the sidebar: show the workspaces next to the chat when desired"), WorkspaceDisplayBehavior.TOGGLE_SIDEBAR);
         yield return new(TB("Sidebar is always visible: show the workspaces next to the chat all the time"), WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
     }

@@ -1,14 +1,16 @@
 namespace AIStudio.Components;
 
 /// <summary>
-/// The search of the workspace sidebar, which its field in the header of the sidebar and the list
-/// below share: the text the user typed, how many results the list marks and which one is the current
-/// one, and whether the list still searches the messages of the chats.
+/// The search of the chat page, which its field in the bar above the list and the chat, the list,
+/// the results at the top of the sidebar, and the find row of the open chat share: the text the user
+/// typed, how many results the list marks and which one is the current one, and whether the list still
+/// searches the messages of the chats.
 /// </summary>
 /// <remarks>
-/// The chat page owns the search and hands it to both, which talk through it. A text passed through
-/// the page would have the page render anew with every key the user types, the open chat included.
-/// The search also outlives the list, which the page creates anew whenever the sidebar shows up again.
+/// The chat page owns the search and hands it to all of them, which talk through it. A text passed
+/// through the page would have the page render anew with every key the user types, the open chat
+/// included. The search also outlives the list, which the page creates anew whenever the sidebar shows
+/// up again.
 /// </remarks>
 public sealed class WorkspaceSearch
 {
