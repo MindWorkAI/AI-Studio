@@ -42,6 +42,21 @@ public sealed class BatchProcessingFileResult
     public bool IsFolder => this.MemberFiles.Count > 0;
 
     /// <summary>
+    /// For a row or column of a table, its values, which the model gets instead of a file; null otherwise.
+    /// </summary>
+    /// <remarks>
+    /// FilePath then names the table, while FileName and RelativePath name the row or column, e.g.,
+    /// "customers.xlsx, Sheet1, row 5". The values were read through the runtime when the run started,
+    /// so they passed its filter for prompt injections.
+    /// </remarks>
+    public string? TableEntryText { get; init; }
+
+    /// <summary>
+    /// Whether this is a row or column of a table.
+    /// </summary>
+    public bool IsTableEntry => this.TableEntryText is not null;
+
+    /// <summary>
     /// The processing state of the file.
     /// </summary>
     public BatchProcessingFileStatus Status { get; set; } = BatchProcessingFileStatus.QUEUED;

@@ -65,9 +65,10 @@ public partial class AssistantBatchProcessing
             var fileResult = new BatchProcessingFileResult
             {
                 FilePath = unit.Path,
-                FileName = Path.GetFileName(unit.Path),
+                FileName = unit.TableEntryText is null ? Path.GetFileName(unit.Path) : relativePath,
                 RelativePath = relativePath,
                 MemberFiles = unit.MemberFiles,
+                TableEntryText = unit.TableEntryText,
             };
 
             var canRestore = this.CanRestoreFromPreviousRun(relativePath, resolvedOutputDirectory, previousLog, previousResults, out var logEntry);
@@ -283,9 +284,15 @@ public partial class AssistantBatchProcessing
                 //
                 var resultText = this.DisclosureService.AddDisclosureToMarkdown(aiAnswer);
                 //
-                // A subfolder keeps its whole name, e.g., 'Case 2026.11' becomes 'Case 2026.11_result.md':
+                // A subfolder keeps its whole name, e.g., 'Case 2026.11' becomes 'Case 2026.11_result.md'.
+                // A row or column of a table is named after it, e.g., 'customers.xlsx, Sheet1, row 5_result.md':
                 //
-                var resultStem = fileResult.IsFolder ? fileResult.FileName : Path.GetFileNameWithoutExtension(fileResult.FileName);
+                var resultStem = fileResult switch
+                {
+                    { IsTableEntry: true } => ToFileNameStem(fileResult.FileName),
+                    { IsFolder: true } => fileResult.FileName,
+                    _ => Path.GetFileNameWithoutExtension(fileResult.FileName),
+                };
                 var resultFilePath = Path.Join(resolvedOutputDirectory, this.CreateResultFileName(resultStem));
                 if (this.resultFileFormat.UsesPandoc)
                 {
@@ -311,6 +318,15 @@ public partial class AssistantBatchProcessing
         }
         else
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.DONE, string.Empty);
+    }
+
+    /// <summary>
+    /// Replaces the characters a file name must not hold, such as those a sheet name may contain.
+    /// </summary>
+    private static string ToFileNameStem(string name)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        return string.Concat(name.Select(character => invalidCharacters.Contains(character) ? '_' : character));
     }
 
     private void FinishFileResult(BatchProcessingFileResult fileResult, BatchProcessingFileStatus status, string message, Exception? exception = null)

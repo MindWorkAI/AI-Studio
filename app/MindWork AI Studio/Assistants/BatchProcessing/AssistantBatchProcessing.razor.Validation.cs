@@ -74,7 +74,7 @@ public partial class AssistantBatchProcessing
     private string ResolveOutputDirectory()
     {
         if (string.IsNullOrWhiteSpace(this.outputDirectory))
-            return Path.Join(this.inputDirectory, DEFAULT_OUTPUT_DIRECTORY_NAME);
+            return Path.Join(this.InputBaseDirectory, DEFAULT_OUTPUT_DIRECTORY_NAME);
 
         return this.outputDirectory;
     }
@@ -137,7 +137,7 @@ public partial class AssistantBatchProcessing
         // them, so the user sees the message next to the list. Only the editor knows about an invalid
         // draft, since it passes on valid lists only:
         //
-        if (this.exclusionEditor is { IsValid: false })
+        if (this.inputKind is BatchProcessingInputKind.FOLDER && this.exclusionEditor is { IsValid: false })
             this.showExpertSettings = true;
 
         var instructionIssue = this.ValidateInstructionSource();
@@ -151,6 +151,33 @@ public partial class AssistantBatchProcessing
             return null;
 
         var resolvedOutputDirectory = this.ResolveOutputDirectory();
+        var units = this.inputKind is BatchProcessingInputKind.TABLE
+            ? await this.FindTableUnitsAsync()
+            : this.FindFolderUnits(resolvedOutputDirectory);
+
+        if (units is null)
+            return null;
+
+        try
+        {
+            Directory.CreateDirectory(resolvedOutputDirectory);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError(e, "Was not able to create the batch output folder '{OutputDirectory}'.", resolvedOutputDirectory);
+            this.AddInputIssue(string.Format(T("Was not able to create the output folder: {0}"), e.Message));
+            return null;
+        }
+
+        return (resolvedOutputDirectory, units);
+    }
+
+    /// <summary>
+    /// Finds the documents of the input folder and groups them into the units of the run.
+    /// </summary>
+    /// <returns>The units, or <c>null</c> when the run must not start.</returns>
+    private IReadOnlyList<BatchProcessingUnit>? FindFolderUnits(string resolvedOutputDirectory)
+    {
         IReadOnlyList<string> files;
         try
         {
@@ -189,20 +216,9 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
-        try
-        {
-            Directory.CreateDirectory(resolvedOutputDirectory);
-        }
-        catch (Exception e)
-        {
-            this.Logger.LogError(e, "Was not able to create the batch output folder '{OutputDirectory}'.", resolvedOutputDirectory);
-            this.AddInputIssue(string.Format(T("Was not able to create the output folder: {0}"), e.Message));
-            return null;
-        }
-
         //
         // Without subfolders, every file lies directly in the input folder and is a unit of its own:
         //
-        return (resolvedOutputDirectory, BatchProcessingUnit.Group(this.inputDirectory, files));
+        return BatchProcessingUnit.Group(this.inputDirectory, files);
     }
 }

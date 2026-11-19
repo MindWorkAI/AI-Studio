@@ -148,7 +148,7 @@ internal static class BatchProcessingExcel
     /// <summary>
     /// The name of a column, e.g., A for the first and AA for the 27th.
     /// </summary>
-    private static string ColumnName(int columnIndex)
+    internal static string ColumnName(int columnIndex)
     {
         var name = string.Empty;
         for (var number = columnIndex + 1; number > 0; number = (number - 1) / 26)

@@ -72,6 +72,8 @@ public partial class AssistantBatchProcessing
                 A DOCUMENT may also be a folder of several files, which are given to you one after
                 another, and images among them are attached to the request. Then, process all files
                 of the folder together as one DOCUMENT and give one answer for the whole folder.
+                A DOCUMENT may also be one row or one column of a table. Then, its values are given to
+                you line by line, each after the heading of its column or row.
 
                 # Scope and precedence
                 Use only information explicitly contained in the DOCUMENT and the instructions.
@@ -124,6 +126,23 @@ public partial class AssistantBatchProcessing
                 the folder. Together, they form one DOCUMENT.
 
                 {mergedContent}
+                """;
+    }
+
+    private static string BuildTableUserPrompt(string entryName, BatchProcessingTableDirection direction, string values)
+    {
+        var description = direction is BatchProcessingTableDirection.ROWS
+            ? "The DOCUMENT is this row of a table. Each line gives the heading of a column, followed by the value of this row in that column."
+            : "The DOCUMENT is this column of a table. Each line gives the heading of a row, followed by the value of this column in that row.";
+
+        return $"""
+                # DOCUMENT
+                Table entry: {entryName}
+                {description}
+                Content:
+                ```
+                {values}
+                ```
                 """;
     }
 
@@ -191,11 +210,13 @@ public partial class AssistantBatchProcessing
         };
 
         this.AssignRuntimeIdentity(chatThread);
-        var userPrompt = fileResult.IsFolder
-            ? new ContentText { Text = BuildFolderUserPrompt(fileResult.FileName, input.Text), FileAttachments = [..input.Images] }
-            : input.Images.Count is 0
-                ? new ContentText { Text = BuildUserPrompt(fileResult.FileName, input.Text) }
-                : new ContentText { Text = BuildImageUserPrompt(fileResult.FileName), FileAttachments = [..input.Images] };
+        var userPrompt = fileResult switch
+        {
+            { IsTableEntry: true } => new ContentText { Text = BuildTableUserPrompt(fileResult.FileName, this.tableDirection, input.Text) },
+            { IsFolder: true } => new ContentText { Text = BuildFolderUserPrompt(fileResult.FileName, input.Text), FileAttachments = [..input.Images] },
+            _ when input.Images.Count is 0 => new ContentText { Text = BuildUserPrompt(fileResult.FileName, input.Text) },
+            _ => new ContentText { Text = BuildImageUserPrompt(fileResult.FileName), FileAttachments = [..input.Images] },
+        };
 
         chatThread.Blocks.Add(new ContentBlock
         {

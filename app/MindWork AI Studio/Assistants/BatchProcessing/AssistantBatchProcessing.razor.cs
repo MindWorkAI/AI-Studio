@@ -108,6 +108,13 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.ApplyPolicyPreselection();
     }
 
+    private BatchProcessingInputKind inputKind = BatchProcessingInputKind.FOLDER;
+    private string tableFilePath = string.Empty;
+    private BatchProcessingTableDirection tableDirection = BatchProcessingTableDirection.ROWS;
+    private string tableSheetName = string.Empty;
+    private List<string> tableSheetNames = [];
+    private string tableLoadIssue = string.Empty;
+    private bool isLoadingTableSheets;
     private string inputDirectory = string.Empty;
     private string outputDirectory = string.Empty;
     private string filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
@@ -204,6 +211,17 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private void ApplyFormDefaults()
     {
         var settings = this.SettingsManager.ConfigurationData.BatchProcessing;
+
+        //
+        // A table is picked for one run, so the settings hold no default for it:
+        //
+        this.inputKind = BatchProcessingInputKind.FOLDER;
+        this.tableFilePath = string.Empty;
+        this.tableDirection = BatchProcessingTableDirection.ROWS;
+        this.tableSheetName = string.Empty;
+        this.tableSheetNames = [];
+        this.tableLoadIssue = string.Empty;
+
         if (!settings.PreselectOptions)
         {
             this.inputDirectory = string.Empty;

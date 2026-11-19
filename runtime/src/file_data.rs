@@ -1,4 +1,5 @@
 ﻿use std::cmp::min;
+use std::borrow::Cow;
 use std::collections::VecDeque;
 use std::convert::Infallible;
 use crate::pandoc::PandocProcessBuilder;
@@ -1320,6 +1321,20 @@ fn classify_presentation_error(error: &PresentationError) -> ExtractionErrorCode
     }
 }
 
+/// Writes one cell as a field of a CSV row, quoted as RFC 4180 says when its text needs it.
+///
+/// Without the quotes, a cell holding a comma or a line break would read as several cells, and
+/// whoever reads the rows apart again, such as the batch processing assistant, would shift every
+/// cell after it. A cell starting with three backticks is quoted as well: alone in a row, it would
+/// read as the fence which ends the sheet.
+fn csv_field(cell: &str) -> Cow<'_, str> {
+    if cell.contains([',', '"', '\n', '\r']) || cell.starts_with("```") {
+        Cow::Owned(format!("\"{}\"", cell.replace('"', "\"\"")))
+    } else {
+        Cow::Borrowed(cell)
+    }
+}
+
 async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
     let path = file_path.to_owned();
     let (tx, rx) = mpsc::channel(10);
@@ -1388,7 +1403,7 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                 // holds nothing. The fences around each sheet are left out for the same reason.
                 //
                 number_of_characters += cells.iter().map(|cell| readable_character_count(cell)).sum::<usize>();
-                let content = cells.join(",");
+                let content = cells.iter().map(|cell| csv_field(cell)).collect::<Vec<_>>().join(",");
 
                 if tx.blocking_send(Ok(Chunk::new(
                     content,
@@ -2115,6 +2130,17 @@ mod tests {
     use super::*;
     use crate::prompt_injection::sanitize_text;
     use axum::response::IntoResponse;
+
+    #[test]
+    fn a_cell_is_quoted_only_when_its_text_needs_it() {
+        assert_eq!(csv_field("plain text"), "plain text");
+        assert_eq!(csv_field(""), "");
+        assert_eq!(csv_field("Smith, John"), "\"Smith, John\"");
+        assert_eq!(csv_field("say \"hi\""), "\"say \"\"hi\"\"\"");
+        assert_eq!(csv_field("two\nlines"), "\"two\nlines\"");
+        assert_eq!(csv_field("```"), "\"```\"");
+        assert_eq!(csv_field("a ``` b"), "a ``` b");
+    }
 
     /// Base64 image data must never reach the prompt-injection filter. It is not prose, and
     /// the filter's encoded-carrier scan would treat a photo as one enormous carrier and

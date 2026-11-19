@@ -1082,6 +1082,15 @@ public static class AppIcons
     /// <summary>Marks a chat message from the system role, such as the system prompt.</summary>
     public const string SYSTEM_ROLE = LucideIcons.COG;
 
+    /// <summary>Marks whether a batch run goes through the rows or the columns of a table.</summary>
+    public const string TABLE_DIRECTION = LucideIcons.ROWS_3;
+
+    /// <summary>Marks a table as the input of a batch run, whose rows or columns are its documents.</summary>
+    public const string TABLE_INPUT = LucideIcons.TABLE;
+
+    /// <summary>Marks a sheet of a workbook, such as the one a batch run goes through.</summary>
+    public const string TABLE_SHEET = LucideIcons.SHEET;
+
     /// <summary>Marks disappearing chats, which AI Studio deletes after a while.</summary>
     public const string TEMPORARY_CHAT = LucideIcons.CLOCK_FADING;
 

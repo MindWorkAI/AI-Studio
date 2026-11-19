@@ -6,6 +6,12 @@ namespace AIStudio.Assistants.BatchProcessing;
 
 public partial class AssistantBatchProcessing
 {
+    private static readonly AssistantSessionStateKey<BatchProcessingInputKind> INPUT_KIND_STATE_KEY = new(nameof(inputKind));
+    private static readonly AssistantSessionStateKey<string> TABLE_FILE_PATH_STATE_KEY = new(nameof(tableFilePath));
+    private static readonly AssistantSessionStateKey<BatchProcessingTableDirection> TABLE_DIRECTION_STATE_KEY = new(nameof(tableDirection));
+    private static readonly AssistantSessionStateKey<string> TABLE_SHEET_NAME_STATE_KEY = new(nameof(tableSheetName));
+    private static readonly AssistantSessionStateKey<List<string>> TABLE_SHEET_NAMES_STATE_KEY = new(nameof(tableSheetNames));
+    private static readonly AssistantSessionStateKey<string> TABLE_LOAD_ISSUE_STATE_KEY = new(nameof(tableLoadIssue));
     private static readonly AssistantSessionStateKey<string> INPUT_DIRECTORY_STATE_KEY = new(nameof(inputDirectory));
     private static readonly AssistantSessionStateKey<string> OUTPUT_DIRECTORY_STATE_KEY = new(nameof(outputDirectory));
     private static readonly AssistantSessionStateKey<string> FILE_PATTERNS_STATE_KEY = new(nameof(filePatterns));
@@ -41,6 +47,12 @@ public partial class AssistantBatchProcessing
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
     {
+        state.Set(INPUT_KIND_STATE_KEY, this.inputKind);
+        state.Set(TABLE_FILE_PATH_STATE_KEY, this.tableFilePath);
+        state.Set(TABLE_DIRECTION_STATE_KEY, this.tableDirection);
+        state.Set(TABLE_SHEET_NAME_STATE_KEY, this.tableSheetName);
+        state.SetList(TABLE_SHEET_NAMES_STATE_KEY, this.tableSheetNames);
+        state.Set(TABLE_LOAD_ISSUE_STATE_KEY, this.tableLoadIssue);
         state.Set(INPUT_DIRECTORY_STATE_KEY, this.inputDirectory);
         state.Set(OUTPUT_DIRECTORY_STATE_KEY, this.outputDirectory);
         state.Set(FILE_PATTERNS_STATE_KEY, this.filePatterns);
@@ -77,6 +89,12 @@ public partial class AssistantBatchProcessing
     /// <inheritdoc />
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
+        state.Restore(INPUT_KIND_STATE_KEY, value => this.inputKind = value);
+        state.Restore(TABLE_FILE_PATH_STATE_KEY, value => this.tableFilePath = value);
+        state.Restore(TABLE_DIRECTION_STATE_KEY, value => this.tableDirection = value);
+        state.Restore(TABLE_SHEET_NAME_STATE_KEY, value => this.tableSheetName = value);
+        state.Restore(TABLE_SHEET_NAMES_STATE_KEY, values => this.tableSheetNames = [..values]);
+        state.Restore(TABLE_LOAD_ISSUE_STATE_KEY, value => this.tableLoadIssue = value);
         state.Restore(INPUT_DIRECTORY_STATE_KEY, value => this.inputDirectory = value);
         state.Restore(OUTPUT_DIRECTORY_STATE_KEY, value => this.outputDirectory = value);
         state.Restore(FILE_PATTERNS_STATE_KEY, value => this.filePatterns = value);
@@ -122,6 +140,7 @@ public partial class AssistantBatchProcessing
             FileName = source.FileName,
             RelativePath = source.RelativePath,
             MemberFiles = source.MemberFiles,
+            TableEntryText = source.TableEntryText,
             Status = source.Status,
             Message = source.Message,
             ResultText = source.ResultText,

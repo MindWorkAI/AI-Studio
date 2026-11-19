@@ -11,7 +11,11 @@ namespace AIStudio.Assistants.BatchProcessing;
 /// <param name="Path">The full path of the file or the subfolder.</param>
 /// <param name="RelativePath">The path relative to the input folder, i.e., the name of the file or subfolder.</param>
 /// <param name="MemberFiles">The selected files of a subfolder, sorted by path; empty for a file.</param>
-internal sealed record BatchProcessingUnit(string Path, string RelativePath, IReadOnlyList<string> MemberFiles)
+/// <param name="TableEntryText">
+/// For a row or column of a table, its values, which the model gets instead of a file; null for a file
+/// or a subfolder. Path is then the table, and RelativePath names the row or column, cf. BatchProcessingTable.
+/// </param>
+internal sealed record BatchProcessingUnit(string Path, string RelativePath, IReadOnlyList<string> MemberFiles, string? TableEntryText = null)
 {
     /// <summary>
     /// Whether this unit is a subfolder whose files are merged.

@@ -15,7 +15,7 @@ public static class BatchProcessingCsv
     /// We parse the file ourselves instead of splitting lines, because quoted
     /// fields may contain the separator and line breaks.
     /// </remarks>
-    private static List<List<string>> Parse(string content, char separator)
+    internal static List<List<string>> Parse(string content, char separator)
     {
         var rows = new List<List<string>>();
         var fields = new List<string>();
@@ -146,6 +146,33 @@ public static class BatchProcessingCsv
 
         throw new InvalidDataException("Was not able to detect the CSV separator.");
     }
+
+    /// <summary>
+    /// Parses a CSV text of unknown origin, such as a table the user picked as the input of a batch run.
+    /// </summary>
+    /// <remarks>
+    /// Takes the separator among the usual ones which splits the first record into the most fields.
+    /// A text in which none of them occurs is one column.
+    /// </remarks>
+    public static List<List<string>> ParseWithLikelySeparator(string content)
+    {
+        var firstRecord = ReadFirstRecord(content);
+        var bestSeparator = ',';
+        var bestNumFields = 1;
+        foreach (var separator in LIKELY_SEPARATORS)
+        {
+            var header = Parse(firstRecord, separator);
+            if (header.Count is 1 && header[0].Count > bestNumFields)
+            {
+                bestSeparator = separator;
+                bestNumFields = header[0].Count;
+            }
+        }
+
+        return Parse(content, bestSeparator);
+    }
+
+    private static readonly char[] LIKELY_SEPARATORS = [';', ',', '\t', '|'];
 
     private static string ReadFirstRecord(string content)
     {

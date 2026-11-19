@@ -24,6 +24,12 @@ public partial class AssistantBatchProcessing
     /// <returns>The input for the model, or <c>null</c> when the file already got its final status.</returns>
     private async Task<BatchInput?> LoadInputContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
+        //
+        // The values of a row or column were read with the whole table when the run started:
+        //
+        if (fileResult.TableEntryText is { } tableEntryText)
+            return new BatchInput(tableEntryText, []);
+
         if (fileResult.IsFolder)
             return await this.LoadFolderContentAsync(fileResult, token);
 
