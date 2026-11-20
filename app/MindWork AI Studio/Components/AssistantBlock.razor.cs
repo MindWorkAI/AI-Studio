@@ -2,6 +2,7 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -62,7 +63,10 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     /// Gets or sets the assistant category this block belongs to, if any.
     /// </summary>
     [CascadingParameter]
-    public AssistantCategoryBlock? Category { get; set; }
+    public AssistantCategoryBlock? CategoryBlock { get; set; }
+
+    [Inject]
+    private ILogger<AssistantBlock<TSettings>> Logger { get; init; } = null!;
 
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
@@ -160,8 +164,28 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        this.Category?.RegisterAssistant(this);
+        this.CategoryBlock?.RegisterAssistant(this);
+        this.WarnAboutAnotherCategory();
         await base.OnInitializedAsync();
+    }
+
+    /// <summary>
+    /// Reports a built-in assistant which the page shows in another section than its category.
+    /// </summary>
+    /// <remarks>
+    /// The category of a built-in assistant is stated in code, see Components.Category, and everything
+    /// which offers assistants outside the assistants page relies on it. The page, though, places the
+    /// assistant by its markup. Should both ever differ, a user would find the assistant in one category
+    /// and lose it with another one, so we make sure that a developer notices it.
+    /// </remarks>
+    private void WarnAboutAnotherCategory()
+    {
+        var category = this.Component.Category;
+        if (category is PluginCategory.NONE || this.CategoryBlock is null)
+            return;
+
+        if (new AssistantCategoryKey(category) != this.CategoryBlock.Category)
+            this.Logger.LogError("The assistants page shows the assistant '{Component}' under the category '{PageCategory}', but its category is '{Category}'. Please move it into the section of its category.", this.Component, this.CategoryBlock.Category.Category, category);
     }
 
     private void OnMediaImportStateChanged(MediaImportOwner owner)
@@ -173,7 +197,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
-        this.Category?.UnregisterAssistant(this);
+        this.CategoryBlock?.UnregisterAssistant(this);
         base.DisposeResources();
     }
 

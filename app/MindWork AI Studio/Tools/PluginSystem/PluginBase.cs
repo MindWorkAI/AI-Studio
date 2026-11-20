@@ -1,5 +1,7 @@
 using System.Globalization;
 
+using AIStudio.Settings;
+
 using Lua;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -74,7 +76,10 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
     
     /// <inheritdoc />
     public PluginCategory[] Categories { get; } = [];
-    
+
+    /// <inheritdoc />
+    public string[] CustomCategories { get; } = [];
+
     /// <inheritdoc />
     public PluginTargetGroup[] TargetGroups { get; } = [];
     
@@ -168,10 +173,16 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
             issues.Add(issue);
         
         if(this.TryInitCategories(out issue, out var categories))
+        {
             this.Categories = categories;
+            if(this.TryInitCustomCategories(categories, out issue, out var customCategories))
+                this.CustomCategories = customCategories;
+            else
+                issues.Add(issue);
+        }
         else if(this is not NoPlugin)
             issues.Add(issue);
-        
+
         if(this.TryInitTargetGroups(out issue, out var targetGroups))
             this.TargetGroups = targetGroups;
         else if(this is not NoPlugin)
@@ -432,10 +443,14 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
             return false;
         }
         
+        //
+        // Only the names of categories count. Enum.TryParse would also take a number such as "1", or
+        // "BUSINESS, SCIENCE" as a combination of both, and turn them into some category nobody named:
+        //
         var categoryList = new List<PluginCategory>();
         foreach(var luaCategory in categoriesTable.GetArraySpan())
             if(luaCategory.TryRead<string>(out var categoryName))
-                if(Enum.TryParse<PluginCategory>(categoryName, out var category) && category != PluginCategory.NONE)
+                if(PluginCategory.TryParseName(categoryName, out var category) && category != PluginCategory.NONE)
                     categoryList.Add(category);
         
         categories = categoryList.ToArray();
@@ -444,7 +459,79 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
             message = string.Format(TB("The table CATEGORIES is empty. At least one category is necessary. Valid categories are: {0}."), CommonTools.GetAllEnumValues(PluginCategory.NONE));
             return false;
         }
-        
+
+        message = string.Empty;
+        return true;
+    }
+
+    /// <summary>
+    /// Tries to read the names of the categories the plugin names itself.
+    /// </summary>
+    /// <remarks>
+    /// The table CUSTOM_CATEGORIES belongs to the category CUSTOM, in both directions: CUSTOM without
+    /// a name could not be shown anywhere, and names without CUSTOM would be a category the plugin did
+    /// not declare. Either way, the plugin is invalid, so that its authors notice it right away.
+    /// Names are trimmed, and a name which differs from an earlier one only in its case is dropped,
+    /// because both would end up under the same heading anyway.
+    /// </remarks>
+    /// <param name="categories">The categories the plugin declared in CATEGORIES.</param>
+    /// <param name="message">The error message, when the names could not be read.</param>
+    /// <param name="customCategories">The read names, or an empty array without CUSTOM.</param>
+    /// <returns>True, when the names could be read successfully.</returns>
+    private bool TryInitCustomCategories(PluginCategory[] categories, out string message, out string[] customCategories)
+    {
+        customCategories = [];
+        var isCustomDeclared = categories.Contains(PluginCategory.CUSTOM);
+        var customCategoriesValue = this.State.Environment["CUSTOM_CATEGORIES"];
+        if (customCategoriesValue.Type is LuaValueType.Nil)
+        {
+            if (isCustomDeclared)
+            {
+                message = TB("The category CUSTOM requires the table CUSTOM_CATEGORIES with at least one name.");
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
+        }
+
+        if (!customCategoriesValue.TryRead<LuaTable>(out var customCategoriesTable))
+        {
+            message = TB("The table CUSTOM_CATEGORIES is using an invalid syntax. It must be a table of names.");
+            return false;
+        }
+
+        //
+        // We read the table by its length rather than by GetArraySpan: the span may hold empty slots
+        // beyond the last entry, which would read as names which are no text:
+        //
+        var names = new List<string>();
+        for (var index = 1; index <= customCategoriesTable.ArrayLength; index++)
+        {
+            if (!customCategoriesTable[index].TryRead<string>(out var name) || string.IsNullOrWhiteSpace(name))
+            {
+                message = TB("The table CUSTOM_CATEGORIES contains an empty name or a value which is not a text.");
+                return false;
+            }
+
+            name = name.Trim();
+            if (!names.Contains(name, StringComparer.OrdinalIgnoreCase))
+                names.Add(name);
+        }
+
+        if (isCustomDeclared && names.Count == 0)
+        {
+            message = TB("The category CUSTOM requires the table CUSTOM_CATEGORIES with at least one name.");
+            return false;
+        }
+
+        if (!isCustomDeclared && names.Count > 0)
+        {
+            message = TB("The table CUSTOM_CATEGORIES requires the category CUSTOM in the table CATEGORIES.");
+            return false;
+        }
+
+        customCategories = names.ToArray();
         message = string.Empty;
         return true;
     }
@@ -464,10 +551,11 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
             return false;
         }
 
+        // Only the names of target groups count, as for the categories:
         var targetGroupList = new List<PluginTargetGroup>();
         foreach(var luaTargetGroup in targetGroupsTable.GetArraySpan())
             if(luaTargetGroup.TryRead<string>(out var targetGroupName))
-                if(Enum.TryParse<PluginTargetGroup>(targetGroupName, out var targetGroup) && targetGroup != PluginTargetGroup.NONE)
+                if(PluginTargetGroup.TryParseName(targetGroupName, out var targetGroup) && targetGroup != PluginTargetGroup.NONE)
                     targetGroupList.Add(targetGroup);
         
         targetGroups = targetGroupList.ToArray();

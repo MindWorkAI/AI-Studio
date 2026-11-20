@@ -30,7 +30,10 @@ public partial class PluginInfoDialog : MSGComponentBase
 
     private string AuthorsText => this.Plugin.Authors.Length > 0 ? string.Join(", ", this.Plugin.Authors) : this.T("No authors specified");
 
-    private string CategoriesText => this.Plugin.Categories.Length > 0 ? string.Join(", ", this.Plugin.Categories.Select(category => category.Name)) : this.T("No categories specified");
+    /// <summary>
+    /// The categories of the plugin, with the names it gives its custom categories in place of CUSTOM.
+    /// </summary>
+    private string CategoriesText => this.Plugin.Categories.Length > 0 ? string.Join(", ", this.Plugin.Categories.SelectMany(category => category is PluginCategory.CUSTOM ? this.Plugin.CustomCategories : [category.Name])) : this.T("No categories specified");
 
     private string TargetGroupsText => this.Plugin.TargetGroups.Length > 0 ? string.Join(", ", this.Plugin.TargetGroups.Select(targetGroup => targetGroup.Name)) : this.T("No target groups specified");
 

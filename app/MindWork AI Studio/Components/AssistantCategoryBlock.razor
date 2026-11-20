@@ -1,11 +1,19 @@
-@if (this.HasVisibleAssistant)
+@if (!this.IsHidden)
 {
-    <MudText Typo="Typo.h4" Class="@this.HeaderClass">
-        @this.Title
-    </MudText>
+    if (this.HasVisibleAssistant)
+    {
+        <AssistantCategoryHeader Category="@this.Category" IsCollapsed="@this.IsCollapsed" OnToggleCollapsed="@this.ToggleCollapsedAsync" OnHide="@this.HideAsync" Class="@this.HeaderClass"/>
+    }
+
+    <CascadingValue Value="this" IsFixed="@true">
+        <div class="@this.CollapseClass">
+            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="@this.StackClass">
+                @this.ChildContent
+                @foreach (var plugin in this.Plugins)
+                {
+                    <AssistantPluginBlock @key="@plugin.Id" Plugin="@plugin"/>
+                }
+            </MudStack>
+        </div>
+    </CascadingValue>
 }
-<CascadingValue Value="this" IsFixed="@true">
-    <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="@this.StackClass">
-        @this.ChildContent
-    </MudStack>
-</CascadingValue>

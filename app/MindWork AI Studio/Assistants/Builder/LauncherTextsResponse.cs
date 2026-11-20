@@ -12,7 +12,7 @@ namespace AIStudio.Assistants.Builder;
 /// </remarks>
 internal sealed class LauncherTextsResponse
 {
-    public const string SCHEMA_VERSION_VALUE = "assistant_builder_launcher_texts_v1";
+    public const string SCHEMA_VERSION_VALUE = "assistant_builder_launcher_texts_v2";
 
     /// <summary>
     /// How the answer of the model is read.
@@ -47,6 +47,16 @@ internal sealed class LauncherTextsResponse
     /// The short description, used for both the plugin and the tile.
     /// </summary>
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The keys of the categories, taken from the approved draft.
+    /// </summary>
+    public string[] Categories { get; set; } = [];
+
+    /// <summary>
+    /// The names of the custom categories, when the categories contain CUSTOM.
+    /// </summary>
+    public string[] CustomCategories { get; set; } = [];
 
     public static bool TryParse(string modelResponse, out LauncherTextsResponse response, out LuaResponseParseError error, out string technicalDetails)
     {
@@ -90,6 +100,12 @@ internal sealed class LauncherTextsResponse
             string.IsNullOrWhiteSpace(parsed.Description))
         {
             error = LuaResponseParseError.INCOMPLETE_ASSISTANT_METADATA;
+            return false;
+        }
+
+        if (!AssistantBuilderCategories.TryRead(parsed.Categories, parsed.CustomCategories, out _, out _))
+        {
+            error = LuaResponseParseError.INVALID_CATEGORIES;
             return false;
         }
 

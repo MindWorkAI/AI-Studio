@@ -410,4 +410,25 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// List of assistants that should be hidden from the UI.
     /// </summary>
     public HashSet<ConfigurableAssistant> HiddenAssistants { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HiddenAssistants, []);
+
+    /// <summary>
+    /// The categories of assistants your organization disabled.
+    /// </summary>
+    /// <remarks>
+    /// Only a configuration plugin fills this. Unlike HiddenAssistants, it covers assistant plugins as
+    /// well, e.g., entertainment plugins on the devices of an organization. Ask AssistantCategoryRules
+    /// instead of reading it: CORE counts as COMMON there, CUSTOM stands for every custom category, a
+    /// plugin with several categories stays available while one of them is free, and a plugin your
+    /// organization deployed itself is never disabled by its categories.
+    /// </remarks>
+    public HashSet<PluginCategory> DisabledAssistantCategories { get; set; } = ManagedConfiguration.Register(configSelection, n => n.DisabledAssistantCategories, []);
+
+    /// <summary>
+    /// The custom categories of assistant plugins your organization disabled, by their names.
+    /// </summary>
+    /// <remarks>
+    /// Only a configuration plugin fills this. The names are compared without regard to case, like the
+    /// headings of the assistants page. See DisabledAssistantCategories.
+    /// </remarks>
+    public HashSet<string> DisabledCustomAssistantCategories { get; set; } = ManagedConfiguration.Register(configSelection, n => n.DisabledCustomAssistantCategories, []);
 }
