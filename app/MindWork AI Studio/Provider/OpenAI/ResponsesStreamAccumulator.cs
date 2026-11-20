@@ -106,8 +106,10 @@ public sealed class ResponsesStreamAccumulator
             return null;
 
         //
-        // No closing event came, so the round is put back together from the items which did.
-        // Reasoning items are among them, which is what the next request needs to continue.
+        // No closing event came, although the provider closed the stream: some gateways never send
+        // it. So the round is put back together from the items which did come. Reasoning items are
+        // among them, which is what the next request needs to continue. A stream which was cut off
+        // never gets here: its adapter ends the round before, cf. ServerSentEventStreamEnd.
         //
         return new ResponsesResponse
         {

@@ -101,7 +101,9 @@ public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, ILis
     /// </returns>
     /// <remarks>
     /// The end of the stream is the end of the message. There is nothing else to wait for: a
-    /// "[DONE]" is not sent by every gateway, and a finish reason not by every one either.
+    /// "[DONE]" is not sent by every gateway, and a finish reason not by every one either. That
+    /// holds for a stream which the provider closed only. A stream which was cut off never gets
+    /// here: its adapter ends the round before, cf. <see cref="ServerSentEventStreamEnd"/>.
     /// </remarks>
     public ChatCompletionResponseMessage? Build()
     {
