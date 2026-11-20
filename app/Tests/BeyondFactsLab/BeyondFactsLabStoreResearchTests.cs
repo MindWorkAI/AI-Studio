@@ -70,7 +70,7 @@ public sealed class BeyondFactsLabStoreResearchTests
             Assert.That(loaded.CreatedAtUtc, Is.EqualTo(research.CreatedAtUtc));
             Assert.That(all.Keys, Is.EquivalentTo(new[] { BflResearchTopic.PARTICIPANTS }));
             Assert.That(changed.ModifiedAtUtc, Is.GreaterThanOrEqualTo(created.ModifiedAtUtc));
-            Assert.That(File.Exists(Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, created.ProjectId.ToString("D"), "steps", "05-strategy", "research", "participants.json")), Is.True);
+            Assert.That(File.Exists(Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, created.ProjectId.ToString("D"), "steps", "strategy", "research", "participants.json")), Is.True);
         }
     }
 
@@ -137,7 +137,7 @@ public sealed class BeyondFactsLabStoreResearchTests
 
     private async Task<string> WriteResearchFileAsync(Guid projectId, string fileName, string content)
     {
-        var directory = Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, projectId.ToString("D"), "steps", "05-strategy", "research");
+        var directory = Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, projectId.ToString("D"), "steps", "strategy", "research");
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, fileName);
         await File.WriteAllTextAsync(path, content);

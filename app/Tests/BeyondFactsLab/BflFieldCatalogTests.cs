@@ -26,7 +26,7 @@ public sealed class BflFieldCatalogTests
     {
         Assert.That(BflStep.All.Select(step => step.FolderName), Is.EqualTo(new[]
         {
-            "01-framework", "02-knowledge", "03-goals", "04-values", "05-strategy", "06-test", "07-results",
+            "framework", "knowledge", "goals", "values", "strategy", "test", "results",
         }));
     }
 

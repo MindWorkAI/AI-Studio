@@ -9,7 +9,7 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// new version of AI Studio.
 /// </summary>
 /// <remarks>
-/// The folder mirrors the files of the lab below Assistants/BeyondFactsLab, e.g., Prompts/steps/02-knowledge.md, so
+/// The folder mirrors the files of the lab below Assistants/BeyondFactsLab, e.g., Prompts/steps/knowledge.md, so
 /// that every name stays unique. Only the files of BflPromptLibrary.AllPaths count; the lab leaves any other file in
 /// the folder alone, and an empty file replaces nothing. The files are instructions of the person, who chose to use
 /// them, so they bypass the prompt injection filter like the prompts which come with the app.

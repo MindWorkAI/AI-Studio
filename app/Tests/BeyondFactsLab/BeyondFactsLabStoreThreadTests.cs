@@ -59,7 +59,7 @@ public sealed class BeyondFactsLabStoreThreadTests
             Assert.That(loaded.Blocks, Has.Count.EqualTo(1));
             Assert.That(((ContentText)loaded.Blocks[0].Content!).Text, Is.EqualTo("Worauf beruht meine Expertise?"));
             Assert.That(changed!.ModifiedAtUtc, Is.GreaterThan(created.ModifiedAtUtc), "A conversation is work on the preparation.");
-            Assert.That(File.Exists(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "02-knowledge", "thread.json")), Is.True);
+            Assert.That(File.Exists(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "knowledge", "thread.json")), Is.True);
         }
     }
 
@@ -95,8 +95,8 @@ public sealed class BeyondFactsLabStoreThreadTests
         var framework = new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
         await store.SaveThreadAsync(strategy, BflThreadFactory.Create(strategy));
         var stepsDirectory = Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps");
-        Directory.CreateDirectory(Path.Combine(stepsDirectory, "01-framework"));
-        File.Copy(Path.Combine(stepsDirectory, "05-strategy", "thread.json"), Path.Combine(stepsDirectory, "01-framework", "thread.json"));
+        Directory.CreateDirectory(Path.Combine(stepsDirectory, "framework"));
+        File.Copy(Path.Combine(stepsDirectory, "strategy", "thread.json"), Path.Combine(stepsDirectory, "framework", "thread.json"));
 
         using (Assert.EnterMultipleScope())
         {
@@ -111,7 +111,7 @@ public sealed class BeyondFactsLabStoreThreadTests
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
         var location = new BflStepThreadLocation(created.ProjectId, BflStep.FRAMEWORK);
-        var path = Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "01-framework", "thread.json");
+        var path = Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "framework", "thread.json");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         await File.WriteAllTextAsync(path, "{ damaged");
 

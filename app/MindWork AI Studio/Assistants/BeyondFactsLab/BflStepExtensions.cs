@@ -52,21 +52,22 @@ public static class BflStepExtensions
         };
 
         /// <summary>
-        /// Gets the name of the folder in which a preparation keeps the files of the step.
+        /// Gets the name of the folder in which a preparation keeps the files of the step. The prompt of the step
+        /// and the ID of its chat follow from this name as well.
         /// </summary>
         /// <remarks>
-        /// The number keeps the folders in the order of the steps for people who look into the data folder.
-        /// These names are stored on disk, so they never change.
+        /// The names are stored on disk, so they never change. They carry no number: the order of the steps comes
+        /// from BflStep alone, so that a step can move or a new one can join without touching any stored file.
         /// </remarks>
         public string FolderName => step switch
         {
-            BflStep.FRAMEWORK => "01-framework",
-            BflStep.KNOWLEDGE => "02-knowledge",
-            BflStep.GOALS_AND_ROLE => "03-goals",
-            BflStep.VALUES_AND_PERSPECTIVES => "04-values",
-            BflStep.STRATEGY => "05-strategy",
-            BflStep.TEST_SITUATION => "06-test",
-            BflStep.RESULTS => "07-results",
+            BflStep.FRAMEWORK => "framework",
+            BflStep.KNOWLEDGE => "knowledge",
+            BflStep.GOALS_AND_ROLE => "goals",
+            BflStep.VALUES_AND_PERSPECTIVES => "values",
+            BflStep.STRATEGY => "strategy",
+            BflStep.TEST_SITUATION => "test",
+            BflStep.RESULTS => "results",
 
             _ => throw new ArgumentOutOfRangeException(nameof(step), step, "The step has no folder."),
         };

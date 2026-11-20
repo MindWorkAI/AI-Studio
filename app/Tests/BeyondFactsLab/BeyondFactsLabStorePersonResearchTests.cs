@@ -200,7 +200,7 @@ public sealed class BeyondFactsLabStorePersonResearchTests
         return path;
     }
 
-    private string PersonDirectory(Guid projectId) => Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, projectId.ToString("D"), "steps", "05-strategy", "research", "participants");
+    private string PersonDirectory(Guid projectId) => Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, projectId.ToString("D"), "steps", "strategy", "research", "participants");
 
     private BeyondFactsLabStore CreateStore() => new(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.dataDirectory });
 }
