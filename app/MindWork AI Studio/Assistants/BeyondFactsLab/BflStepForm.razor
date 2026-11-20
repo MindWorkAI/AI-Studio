@@ -57,6 +57,7 @@ else if (this.HasPublicDetails)
                                           HelperText="@field.Hint"
                                           MaxLength="@field.Kind.MaxLength"
                                           Validation="@this.ValidationOf(field)"
+                                          DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS"
                                           Disabled="@this.Disabled"
                                           Adornment="@AdornmentOf(field)"
                                           AdornmentIcon="@PUBLIC_DETAIL_ICON"
