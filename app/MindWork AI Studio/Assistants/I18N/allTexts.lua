@@ -8146,23 +8146,38 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "The resul
 -- Expand this category
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T1750778093"] = "Expand this category"
 
+-- The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2720183235"] = "The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the \"Send to ...\" menu."
+
+-- The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2720183235::INFORMAL"] = "The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the \"Send to ...\" menu."
+
+-- The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2725056496"] = "The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the \"Send to ...\" menu."
+
+-- The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2725056496::INFORMAL"] = "The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the \"Send to ...\" menu."
+
+-- You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2970234687"] = "You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens."
+
+-- You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2970234687::INFORMAL"] = "You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens."
+
+-- Hide the category '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T3025364089"] = "Hide the category '{0}'?"
+
 -- Hide this category
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T3438455681"] = "Hide this category"
 
+-- If you only want a better overview, click the heading of the category instead: that collapses it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T815674974"] = "If you only want a better overview, click the heading of the category instead: that collapses it."
+
+-- If you only want a better overview, click the heading of the category instead: that collapses it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T815674974::INFORMAL"] = "If you only want a better overview, click the heading of the category instead: that collapses it."
+
 -- Collapse this category
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T941766518"] = "Collapse this category"
-
--- You can re-enable the hidden categories in the assistant settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHIDDENMESSAGE::T3305057171"] = "You can re-enable the hidden categories in the assistant settings."
-
--- You can re-enable the hidden categories in the assistant settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHIDDENMESSAGE::T3305057171::INFORMAL"] = "You can re-enable the hidden categories in the assistant settings."
-
--- Open the assistant settings
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHIDDENMESSAGE::T3745279719"] = "Open the assistant settings"
-
--- Assistant Settings
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHIDDENMESSAGE::T4124037832"] = "Assistant Settings"
 
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Show or hide the detailed security information."
