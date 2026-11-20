@@ -5,8 +5,9 @@
    to be aimed at the one it belongs to. *@
 <ReadFileContent Text="@T("Load the prompt from file")" @bind-FileContent="@this.inputPrompt" EnableDragDrop="true"/>
 <MudTextField T="string"
-              @bind-Text="@this.inputPrompt"
+              @bind-Value="@this.inputPrompt"
               Validation="@this.ValidateInputPrompt"
+              DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS"
               AdornmentIcon="@AppIcons.ASSISTANT_PROMPT_OPTIMIZER"
               Adornment="Adornment.Start"
               Label="@T("Prompt or prompt description")"

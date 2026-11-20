@@ -59,6 +59,7 @@
                                           Label="@T("Value")"
                                           MaxLength="@BflCardSort.MAX_NAME_LENGTH"
                                           Validation="@this.NameValidation"
+                                          DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS"
                                           Disabled="@this.Disabled"
                                           Variant="Variant.Outlined"
                                           Style="flex: 1 1 0;"/>
