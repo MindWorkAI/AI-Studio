@@ -336,7 +336,7 @@ public sealed class BeyondFactsLabStoreTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(File.Exists(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "01-framework", "form.json")), Is.True);
+            Assert.That(File.Exists(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "framework", "form.json")), Is.True);
             Assert.That(loaded.Get(BflFieldCatalog.FORMAT), Is.EqualTo("Panel discussion"));
             Assert.That(changed.ModifiedAtUtc, Is.GreaterThan(created.ModifiedAtUtc));
             Assert.That((await store.LoadAsync(created.ProjectId))!.ModifiedAtUtc, Is.EqualTo(changed.ModifiedAtUtc));
@@ -374,7 +374,7 @@ public sealed class BeyondFactsLabStoreTests
         form.Set(BflFieldCatalog.CORE_THESES, "Thesis");
 
         await store.SaveFormAsync(created.ProjectId, BflStep.KNOWLEDGE, form);
-        var json = await File.ReadAllTextAsync(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "02-knowledge", "form.json"));
+        var json = await File.ReadAllTextAsync(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "knowledge", "form.json"));
 
         Assert.That(json, Does.Not.Contain("cardSort"));
     }
@@ -384,7 +384,7 @@ public sealed class BeyondFactsLabStoreTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        await this.WriteFormFileAsync(created.ProjectId, "04-values", """{ "schemaVersion": 1, "values": { "values_and_concerns": "Text" } }""");
+        await this.WriteFormFileAsync(created.ProjectId, "values", """{ "schemaVersion": 1, "values": { "values_and_concerns": "Text" } }""");
 
         var form = await store.LoadFormAsync(created.ProjectId, BflStep.VALUES_AND_PERSPECTIVES);
 
@@ -400,7 +400,7 @@ public sealed class BeyondFactsLabStoreTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        await this.WriteFormFileAsync(created.ProjectId, "04-values", """{ "schemaVersion": 2, "values": {}, "cardSort": { "categories": {}, "ownValues": [ null ], "focus": [] } }""");
+        await this.WriteFormFileAsync(created.ProjectId, "values", """{ "schemaVersion": 2, "values": {}, "cardSort": { "categories": {}, "ownValues": [ null ], "focus": [] } }""");
 
         await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadFormAsync(created.ProjectId, BflStep.VALUES_AND_PERSPECTIVES));
     }
@@ -413,7 +413,7 @@ public sealed class BeyondFactsLabStoreTests
         var form = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.PANEL_DISCUSSION, People = ["Eva Klein", "Frank Ott"] } };
 
         await store.SaveFormAsync(created.ProjectId, BflStep.TEST_SITUATION, form);
-        var json = await File.ReadAllTextAsync(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "06-test", "form.json"));
+        var json = await File.ReadAllTextAsync(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "test", "form.json"));
         var loaded = (await this.CreateStore().LoadFormAsync(created.ProjectId, BflStep.TEST_SITUATION)).Simulation;
 
         using (Assert.EnterMultipleScope())
@@ -430,7 +430,7 @@ public sealed class BeyondFactsLabStoreTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        await this.WriteFormFileAsync(created.ProjectId, "06-test", """{ "schemaVersion": 2, "values": { "test_notes": "Text" } }""");
+        await this.WriteFormFileAsync(created.ProjectId, "test", """{ "schemaVersion": 2, "values": { "test_notes": "Text" } }""");
 
         var form = await store.LoadFormAsync(created.ProjectId, BflStep.TEST_SITUATION);
 
@@ -448,7 +448,7 @@ public sealed class BeyondFactsLabStoreTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        await this.WriteFormFileAsync(created.ProjectId, "06-test", json);
+        await this.WriteFormFileAsync(created.ProjectId, "test", json);
 
         await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadFormAsync(created.ProjectId, BflStep.TEST_SITUATION));
     }
@@ -474,7 +474,7 @@ public sealed class BeyondFactsLabStoreTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var formPath = await this.WriteFormFileAsync(created.ProjectId, "02-knowledge", """{ "schemaVersion": 1, "values": { "field_of_a_newer_version": "kept" } }""");
+        var formPath = await this.WriteFormFileAsync(created.ProjectId, "knowledge", """{ "schemaVersion": 1, "values": { "field_of_a_newer_version": "kept" } }""");
 
         var form = await store.LoadFormAsync(created.ProjectId, BflStep.KNOWLEDGE);
         form.Set(BflFieldCatalog.CORE_THESES, "Thesis");
@@ -494,7 +494,7 @@ public sealed class BeyondFactsLabStoreTests
         const string DAMAGED = "{ \"values\": ";
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var formPath = await this.WriteFormFileAsync(created.ProjectId, "01-framework", DAMAGED);
+        var formPath = await this.WriteFormFileAsync(created.ProjectId, "framework", DAMAGED);
 
         var forms = await store.LoadFormsAsync(created.ProjectId);
 
@@ -514,7 +514,7 @@ public sealed class BeyondFactsLabStoreTests
         const string NEWER = """{ "schemaVersion": 4, "values": {} }""";
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var formPath = await this.WriteFormFileAsync(created.ProjectId, "05-strategy", NEWER);
+        var formPath = await this.WriteFormFileAsync(created.ProjectId, "strategy", NEWER);
 
         using (Assert.EnterMultipleScope())
         {

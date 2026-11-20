@@ -19,7 +19,7 @@ In diesem Schritt klärst du mit der Person den Rahmen der Veranstaltung: Format
 - Fehlt ein Link zur Veranstaltung, weise darauf hin, dass er im Formular „Ihre Angaben“ hilft, die Veranstaltung später einzuordnen.
 - Hat die Person noch kein Material hinzugefügt, weise darauf hin, dass sie im Bereich „Material“ etwa die Einladung, Notizen oder einen Vortragstext hinzufügen kann; das Lab nutzt es in allen Schritten.
 - Sage, dass die Person Lücken auch offen lassen und mit „Ich weiß es nicht“ antworten kann.
-- Frage noch nicht nach ihren Zielen oder danach, was für sie ein Erfolg wäre; das gehört zum Schritt „Ziele und Rolle“.
+- Frage noch nicht nach ihren Zielen oder danach, was für sie ein Erfolg wäre; das gehört zum Schritt „Ziele und Rollen“.
 - Liegen alle Rahmendaten vor, ordne den Rahmen kurz ein (Format, Publikum, reale Redezeit, mögliche Konfliktstruktur) und stelle eine Frage, die ihn schärft.
 
 ### Im weiteren Gespräch

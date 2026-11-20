@@ -15,9 +15,9 @@ public sealed class BflThreadTests
     [Test]
     public void TheIdOfAChatFollowsFromItsPlace()
     {
-        // Computed independently, from SHA-256 over "beyondfacts-lab/thread/<project>/05-strategy". A stored chat keeps
-        // its ID, so this value never changes:
-        var expected = Guid.Parse("a6e33c75-66c3-8ac8-bae2-8b6a90fb6f19");
+        // Computed independently, from SHA-256 over "beyondfacts-lab/thread/<project>/strategy". A stored chat keeps its
+        // ID, so this value never changes:
+        var expected = Guid.Parse("319d17ef-d388-8f3b-8c3f-f46aab5e4fac");
 
         using (Assert.EnterMultipleScope())
         {
@@ -75,8 +75,8 @@ public sealed class BflThreadTests
             Assert.That(first, Is.EqualTo(second));
             Assert.That(first.GetHashCode(), Is.EqualTo(second.GetHashCode()));
             Assert.That(first, Is.Not.EqualTo(new BflStepThreadLocation(PROJECT_ID, BflStep.FRAMEWORK)));
-            Assert.That(first.Key, Is.EqualTo($"{PROJECT_ID:D}/05-strategy"));
-            Assert.That(first.ChatName, Is.EqualTo("05-strategy"));
+            Assert.That(first.Key, Is.EqualTo($"{PROJECT_ID:D}/strategy"));
+            Assert.That(first.ChatName, Is.EqualTo("strategy"));
         }
     }
 

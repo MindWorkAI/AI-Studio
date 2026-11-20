@@ -1203,6 +1203,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 -- The event is not public. Therefore, the lab does not research it on the web.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLEVENTVISIBILITY::T2308862256"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht im Web zu ihr."
 
+-- In your own words, with the suggestions below, or still open: the chat sharpens your goals and roles with you.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1063404761"] = "Ob in eigenen Worten, mit den Vorschlägen unten oder noch ganz offen: Im Chat schärfen Sie gemeinsam mit der KI Ihre Ziele und Rollen."
+
+-- In your own words, with the suggestions below, or still open: the chat sharpens your goals and roles with you.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1063404761::INFORMAL"] = "Ob in eigenen Worten, mit den Vorschlägen unten oder noch ganz offen: Im Chat schärfst du gemeinsam mit der KI deine Ziele und Rollen."
+
 -- Moderate the discussion
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1131866893"] = "Diskussion moderieren"
 
@@ -1404,12 +1410,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T881586300
 -- E.g., the venue and the city, or online
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T916990010"] = "Z. B. der Veranstaltungsort und die Stadt oder online"
 
--- In your own words, with the suggestions below, or still open: the chat sharpens your goal and role with you.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T917276711"] = "Ob in eigenen Worten, mit den Vorschlägen unten oder noch ganz offen: Im Chat schärfen Sie gemeinsam mit der KI Ihr Ziel und Ihre Rolle."
-
--- In your own words, with the suggestions below, or still open: the chat sharpens your goal and role with you.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T917276711::INFORMAL"] = "Ob in eigenen Worten, mit den Vorschlägen unten oder noch ganz offen: Im Chat schärfst du gemeinsam mit der KI dein Ziel und deine Rolle."
-
 -- Topic of your contribution or your specific assignment
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T932670647"] = "Thema Ihres Beitrags oder Ihr konkreter Auftrag"
 
@@ -1479,6 +1479,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266
 -- Plan about 30 to 60 minutes for a preparation. You can pause at any time: AI Studio saves your details and conversations, and you continue where you left off.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266933::INFORMAL"] = "Plane für eine Vorbereitung etwa 30 bis 60 Minuten ein. Du kannst jederzeit unterbrechen: AI Studio speichert deine Angaben und Gespräche, und du machst später dort weiter, wo du aufgehört hast."
 
+-- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your roles, your strategy, or a round of critical questions. You can always say that you do not know.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1776665173"] = "Lassen Sie das Lab das Gespräch eines Schritts beginnen, oder schreiben Sie zuerst und sagen Sie, wobei Sie Unterstützung möchten, etwa bei Ihren Rollen, Ihrer Strategie oder mit einer Runde kritischer Fragen. Sie können jederzeit „Ich weiß es nicht“ antworten."
+
+-- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your roles, your strategy, or a round of critical questions. You can always say that you do not know.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1776665173::INFORMAL"] = "Lass das Lab das Gespräch eines Schritts beginnen, oder schreib zuerst und sag, wobei du Unterstützung möchtest, etwa bei deinen Rollen, deiner Strategie oder mit einer Runde kritischer Fragen. Du kannst jederzeit „Ich weiß es nicht“ antworten."
+
 -- Value card sort
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T194927200"] = "Werte-Sortierung"
 
@@ -1526,12 +1532,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811
 
 -- Simulated participants
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3371128229"] = "Simulierte Teilnehmende"
-
--- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3499941356"] = "Lassen Sie das Lab das Gespräch eines Schritts beginnen, oder schreiben Sie zuerst und sagen Sie, wobei Sie Unterstützung möchten, etwa bei Ihrer Rolle, Ihrer Strategie oder mit einer Runde kritischer Fragen. Sie können jederzeit „Ich weiß es nicht“ antworten."
-
--- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3499941356::INFORMAL"] = "Lass das Lab das Gespräch eines Schritts beginnen, oder schreib zuerst und sag, wobei du Unterstützung möchtest, etwa bei deiner Rolle, deiner Strategie oder mit einer Runde kritischer Fragen. Du kannst jederzeit „Ich weiß es nicht“ antworten."
 
 -- How to proceed
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3627201124"] = "So geht es"
@@ -1587,12 +1587,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036
 -- The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036922::INFORMAL"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung, die das Formular mit einem Symbol kennzeichnet. Deine übrigen Angaben, dein Material, deine Arbeitsstände und deine Gespräche bleiben in deiner Vorbereitung und erreichen nie eine Suche. Die Gespräche der Schritte suchen selbst nie im Web, sondern lesen nur Webseiten, deren Adressen darin stehen, z. B. den Link zur Veranstaltung."
 
--- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your role, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T551596393"] = "Das Lab ist ein Reflexions- und Trainingswerkzeug für Forschende und alle, die Wissenschaft kommunizieren. Es hilft Ihnen, einen herausfordernden öffentlichen Auftritt vorzubereiten, etwa einen Vortrag, eine Podiumsdiskussion, ein Interview oder eine Anhörung: nicht nur inhaltlich, sondern auch strategisch und ethisch. Sie klären Ihre Ziele und Ihre Rolle, machen wissenschaftliche Unsicherheiten und Wertannahmen sichtbar, reflektieren das Framing und üben den Umgang mit kritischen Fragen."
-
--- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your role, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T551596393::INFORMAL"] = "Das Lab ist ein Reflexions- und Trainingswerkzeug für Forschende und alle, die Wissenschaft kommunizieren. Es hilft dir, einen herausfordernden öffentlichen Auftritt vorzubereiten, etwa einen Vortrag, eine Podiumsdiskussion, ein Interview oder eine Anhörung: nicht nur inhaltlich, sondern auch strategisch und ethisch. Du klärst deine Ziele und deine Rolle, machst wissenschaftliche Unsicherheiten und Wertannahmen sichtbar, reflektierst das Framing und übst den Umgang mit kritischen Fragen."
-
 -- The strategy fits your real speaking time and focuses on a few key messages.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T571189717"] = "Die Strategie passt zu Ihrer realen Redezeit und beschränkt sich auf wenige Kernbotschaften."
 
@@ -1613,6 +1607,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T7801220
 
 -- The knowledge base of the lab is a guide on science in public debates by Lara Wüster from the Technical University of Munich (TUM).
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T799477590"] = "Die Wissensbasis des Labs ist ein Leitfaden von Lara Wüster von der Technischen Universität München (TUM) über Wissenschaft im öffentlichen Diskurs."
+
+-- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your roles, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T804216196"] = "Das Lab ist ein Reflexions- und Trainingswerkzeug für Forschende und alle, die Wissenschaft kommunizieren. Es hilft Ihnen, einen herausfordernden öffentlichen Auftritt vorzubereiten, etwa einen Vortrag, eine Podiumsdiskussion, ein Interview oder eine Anhörung: nicht nur inhaltlich, sondern auch strategisch und ethisch. Sie klären Ihre Ziele und Ihre Rollen, machen wissenschaftliche Unsicherheiten und Wertannahmen sichtbar, reflektieren das Framing und üben den Umgang mit kritischen Fragen."
+
+-- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your roles, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T804216196::INFORMAL"] = "Das Lab ist ein Reflexions- und Trainingswerkzeug für Forschende und alle, die Wissenschaft kommunizieren. Es hilft dir, einen herausfordernden öffentlichen Auftritt vorzubereiten, etwa einen Vortrag, eine Podiumsdiskussion, ein Interview oder eine Anhörung: nicht nur inhaltlich, sondern auch strategisch und ethisch. Du klärst deine Ziele und deine Rollen, machst wissenschaftliche Unsicherheiten und Wertannahmen sichtbar, reflektierst das Framing und übst den Umgang mit kritischen Fragen."
 
 -- Image of {0} × {1} pixels, added on {2}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1012777859"] = "Bild mit {0} × {1} Pixeln, hinzugefügt am {2}"
@@ -1880,6 +1880,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXT
 
 -- How the person argues in speeches, interviews, and discussions.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T851469643"] = "Wie die Person in Reden, Interviews und Diskussionen argumentiert."
+
+-- These files in the test folder replace no prompt of the lab, perhaps because a prompt has a new name in this version: {0}. In the options of the lab, 'Copy the built-in prompts into the test folder' adds each prompt under its current name. Move your changes there, and delete the old files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1477753864"] = "Diese Dateien im Testordner ersetzen keinen Prompt des Labs, vielleicht weil ein Prompt in dieser Version einen neuen Namen hat: {0}. In den Optionen des Labs legt „Mitgelieferte Prompts in den Testordner kopieren“ jeden Prompt unter seinem aktuellen Namen an. Übertragen Sie Ihre Änderungen dorthin und löschen Sie die alten Dateien."
+
+-- These files in the test folder replace no prompt of the lab, perhaps because a prompt has a new name in this version: {0}. In the options of the lab, 'Copy the built-in prompts into the test folder' adds each prompt under its current name. Move your changes there, and delete the old files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1477753864::INFORMAL"] = "Diese Dateien im Testordner ersetzen keinen Prompt des Labs, vielleicht weil ein Prompt in dieser Version einen neuen Namen hat: {0}. In den Optionen des Labs legt „Mitgelieferte Prompts in den Testordner kopieren“ jeden Prompt unter seinem aktuellen Namen an. Übertrage deine Änderungen dorthin und lösche die alten Dateien."
 
 -- The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1719028521"] = "Das Lab verwendet derzeit experimentelle Anweisungen aus seinem Testordner. Sie können sie in den Optionen des Labs deaktivieren."
@@ -2664,6 +2670,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T11478
 -- Event details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T135387869"] = "Rahmendaten"
 
+-- What you want to achieve, and in which roles you speak.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1558326745"] = "Was Sie erreichen möchten und in welchen Rollen Sie sprechen."
+
+-- What you want to achieve, and in which roles you speak.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1558326745::INFORMAL"] = "Was du erreichen möchtest und in welchen Rollen du sprichst."
+
 -- What the event is about, for whom, and what you were asked to contribute.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T158292580"] = "Worum es bei der Veranstaltung geht, für wen sie gedacht ist und was Sie beitragen sollen."
 
@@ -2682,20 +2694,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T26621
 -- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618::INFORMAL"] = "Wie du Evidenz, Wertabwägungen und offene Fragen vermittelst. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte."
 
--- Goals and role
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2988481290"] = "Ziele und Rolle"
-
 -- What matters to you, what touches you, and what moves others.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3022557767"] = "Was Ihnen wichtig ist, was Sie berührt und was andere bewegt."
 
 -- What matters to you, what touches you, and what moves others.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3022557767::INFORMAL"] = "Was dir wichtig ist, was dich berührt und was andere bewegt."
-
--- What you want to achieve, and in which role you speak.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3052319680"] = "Was Sie erreichen möchten und in welcher Rolle Sie sprechen."
-
--- What you want to achieve, and in which role you speak.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3052319680::INFORMAL"] = "Was du erreichen möchtest und in welcher Rolle du sprichst."
 
 -- Strategy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3205650756"] = "Strategie"
@@ -2708,6 +2711,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T35957
 
 -- Results and materials
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3602322182"] = "Ergebnisse und Materialien"
+
+-- Goals and roles
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3797204859"] = "Ziele und Rollen"
 
 -- Values and perspectives
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T494574525"] = "Werte und Perspektiven"
@@ -2949,6 +2955,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T77919
 -- Controversies in the field
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1036905365"] = "Kontroversen im Fach"
 
+-- Roles
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1048039038"] = "Rollen"
+
 -- Hardest questions and approaches to answers
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1149889718"] = "Schwierigste Fragen und Antwortansätze"
 
@@ -2987,9 +2996,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS:
 
 -- Changed
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2311397435"] = "Verändert"
-
--- Role
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2418769465"] = "Rolle"
 
 -- Value conflicts and trade-offs
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T257229999"] = "Wertkonflikte und Abwägungen"

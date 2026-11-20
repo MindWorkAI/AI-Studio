@@ -220,6 +220,57 @@ public sealed class BflPromptOverridesTests
     }
 
     [Test]
+    public async Task TheLabNamesTheMarkdownFilesWhichReplaceNoPrompt()
+    {
+        await this.WriteAsync(BflPromptLibrary.CORE_PATH, "Ein neuer Kern.");
+        Directory.CreateDirectory(Path.Combine(this.directory, "Prompts", "steps"));
+        Directory.CreateDirectory(Path.Combine(this.directory, ".git"));
+        await File.WriteAllTextAsync(Path.Combine(this.directory, "Prompts", "steps", "02-knowledge.md"), "Ein Schritt unter seinem alten Namen.");
+        await File.WriteAllTextAsync(Path.Combine(this.directory, "core.md"), "Ein Kern am falschen Ort.");
+        await File.WriteAllTextAsync(Path.Combine(this.directory, "notes.txt"), "Notizen der Person.");
+        await File.WriteAllTextAsync(Path.Combine(this.directory, ".draft.md"), "Ein versteckter Entwurf.");
+        await File.WriteAllTextAsync(Path.Combine(this.directory, ".git", "description.md"), "Eine Datei der Versionsverwaltung.");
+
+        var unknown = BflPromptOverrides.FindUnknown(this.directory);
+
+        Assert.That(unknown, Is.EqualTo(new[] { "Prompts/steps/02-knowledge.md", "core.md" }));
+    }
+
+    [Test]
+    public async Task ACopyOfEveryPromptLeavesNoFileUnknown()
+    {
+        await BflPromptOverrides.CopyBuiltInAsync(this.directory);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflPromptOverrides.FindUnknown(this.directory), Is.Empty);
+            Assert.That(BflPromptOverrides.FindUnknown(Path.Combine(this.directory, "missing")), Is.Empty, "A missing folder holds no file.");
+        }
+    }
+
+    [Test]
+    public async Task TheLabNamesUnknownFilesOnlyWhileTheSettingAllowsPromptOverrides()
+    {
+        var settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);
+        var store = new BeyondFactsLabStore(NullLogger<BeyondFactsLabStore>.Instance, new BflStorageOptions { DataDirectory = this.directory });
+        var service = new BflConversationService(store, null!, settingsManager, null!, null!, NullLogger<BflConversationService>.Instance);
+        Directory.CreateDirectory(Path.Combine(store.PromptOverridesDirectory, "Prompts", "steps"));
+        await File.WriteAllTextAsync(Path.Combine(store.PromptOverridesDirectory, "Prompts", "steps", "03-goals.md"), "Ein Schritt unter seinem alten Namen.");
+
+        settingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides = true;
+        var allowed = service.FindUnknownPromptOverrides();
+
+        settingsManager.ConfigurationData.BeyondFactsLab.AllowPromptOverrides = false;
+        var switchedOff = service.FindUnknownPromptOverrides();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(allowed, Is.EqualTo(new[] { "Prompts/steps/03-goals.md" }));
+            Assert.That(switchedOff, Is.Empty, "Without the setting, the lab reads nothing from the folder.");
+        }
+    }
+
+    [Test]
     public async Task ACopyWithOtherLineBreaksReplacesNothing()
     {
         var path = BflPromptLibrary.StepPath(BflStep.FRAMEWORK);

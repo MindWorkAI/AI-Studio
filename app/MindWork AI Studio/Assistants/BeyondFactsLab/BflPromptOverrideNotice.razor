@@ -6,3 +6,10 @@
         @TA("The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab.")
     </MudAlert>
 }
+
+@if (this.unknownFiles.Count > 0)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="@this.Class">
+        @string.Format(TA("These files in the test folder replace no prompt of the lab, perhaps because a prompt has a new name in this version: {0}. In the options of the lab, 'Copy the built-in prompts into the test folder' adds each prompt under its current name. Move your changes there, and delete the old files."), string.Join(", ", this.unknownFiles))
+    </MudAlert>
+}

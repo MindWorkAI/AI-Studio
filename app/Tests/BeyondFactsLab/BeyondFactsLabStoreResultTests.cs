@@ -68,6 +68,20 @@ public sealed class BeyondFactsLabStoreResultTests
     }
 
     [Test]
+    public async Task AResultNamesTheStepsOfItsWorkStatesByTheirNames()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var result = new BflResult { Draft = new BflResultVersion { Text = "# Positionsblatt", WorkStateRevisions = { [BflStep.GOALS_AND_ROLE] = 3 } } };
+
+        await store.SaveResultAsync(created.ProjectId, BflResultKind.POSITION_PAPER, result);
+        var json = await File.ReadAllTextAsync(Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, created.ProjectId.ToString("D"), "results", "position-paper.json"));
+
+        // The files store no position of a step, so that the steps may change their order:
+        Assert.That(json, Does.Contain("\"GOALS_AND_ROLE\""));
+    }
+
+    [Test]
     public async Task ADamagedResultIsNeitherOpenedNorOverwritten()
     {
         const string DAMAGED = "{ \"draft\": ";
