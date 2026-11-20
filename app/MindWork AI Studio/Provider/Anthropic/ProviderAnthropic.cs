@@ -96,7 +96,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
         if (toolExecutor is not null && runnableTools.Count > 0)
         {
             var adapter = new AnthropicToolCallingAdapter(chatModel, [..messages], systemPrompt, maxTokens, apiParameters, runnableTools,
-                (requestDto, requestToken) => this.StreamMessagesRequest(requestDto, requestedSecret, requestToken));
+                (requestDto, streamEnd, requestToken) => this.StreamMessagesRequest(requestDto, requestedSecret, streamEnd, requestToken));
 
             var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
             var loopContext = new ToolCallingLoopContext
@@ -161,7 +161,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     /// classification come from the shared stream reader, which the tool rounds used to go
     /// without; reading the events is the adapter's business.
     /// </remarks>
-    private IAsyncEnumerable<ServerSentEvent> StreamMessagesRequest(ChatRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    private IAsyncEnumerable<ServerSentEvent> StreamMessagesRequest(ChatRequest requestDto, RequestedSecret requestedSecret, ServerSentEventStreamEnd streamEnd, CancellationToken token)
     {
         async Task<HttpRequestMessage> RequestBuilder()
         {
@@ -172,7 +172,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             return request;
         }
 
-        return this.ReadServerSentEventsAsync("Anthropic", "messages call", RequestBuilder, token);
+        return this.ReadServerSentEventsAsync("Anthropic", "messages call", RequestBuilder, streamEnd, token);
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

@@ -207,7 +207,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 baseInput,
                 additionalApiParameters,
                 runnableTools,
-                (requestDto, requestToken) => this.StreamResponsesRequest(requestDto, requestedSecret, requestToken));
+                (requestDto, streamEnd, requestToken) => this.StreamResponsesRequest(requestDto, requestedSecret, streamEnd, requestToken));
 
             var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
             var loopContext = new ToolCallingLoopContext
@@ -296,9 +296,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
     /// classification come from the shared stream reader, which the tool calling rounds used to
     /// go without; reading the events is the adapter's business.
     /// </remarks>
-    private IAsyncEnumerable<ServerSentEvent> StreamResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    private IAsyncEnumerable<ServerSentEvent> StreamResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, ServerSentEventStreamEnd streamEnd, CancellationToken token)
     {
-        return this.ReadServerSentEventsAsync("OpenAI", "responses call", RequestBuilder, token);
+        return this.ReadServerSentEventsAsync("OpenAI", "responses call", RequestBuilder, streamEnd, token);
 
         async Task<HttpRequestMessage> RequestBuilder()
         {
