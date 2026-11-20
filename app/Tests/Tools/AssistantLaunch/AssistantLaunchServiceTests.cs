@@ -1,5 +1,7 @@
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 using AIStudio.Tools.AssistantLaunch;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tests.Tools.AssistantLaunch;
 
@@ -53,6 +55,30 @@ public sealed class AssistantLaunchServiceTests
     {
         var destinations = AssistantLaunchService.SelectDestinations(AIStudio.Tools.Components.CHAT, destination => destination is not AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT);
         Assert.That(destinations, Does.Not.Contain(AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT));
+    }
+
+    [TestCase(false, AssistantOfferBehavior.KEEP_OFFERING, AssistantOfferBehavior.TREAT_AS_ABSENT, ExpectedResult = true, TestName = "ACollapsedCategoryKeepsItsAssistantsByDefault")]
+    [TestCase(true, AssistantOfferBehavior.KEEP_OFFERING, AssistantOfferBehavior.TREAT_AS_ABSENT, ExpectedResult = false, TestName = "AHiddenCategoryDropsItsAssistantsByDefault")]
+    [TestCase(false, AssistantOfferBehavior.TREAT_AS_ABSENT, AssistantOfferBehavior.KEEP_OFFERING, ExpectedResult = false, TestName = "ACollapsedCategoryDropsItsAssistantsWhenTheUserSaysSo")]
+    [TestCase(true, AssistantOfferBehavior.TREAT_AS_ABSENT, AssistantOfferBehavior.KEEP_OFFERING, ExpectedResult = true, TestName = "AHiddenCategoryKeepsItsAssistantsWhenTheUserSaysSo")]
+    public bool TheMenuFollowsTheOptionsForCollapsedAndHiddenCategories(bool isHidden, AssistantOfferBehavior collapsedCategoryAssistants, AssistantOfferBehavior hiddenCategoryAssistants)
+    {
+        var page = new DataAssistantsPage
+        {
+            CollapsedCategoryAssistants = collapsedCategoryAssistants,
+            HiddenCategoryAssistants = hiddenCategoryAssistants
+        };
+
+        var business = new AssistantCategoryKey(PluginCategory.BUSINESS);
+        if (isHidden)
+            page.SetCategoryHidden(business, true);
+        else
+            page.SetCategoryCollapsed(business, true);
+
+        var destinations = AssistantLaunchService.SelectDestinations(AIStudio.Tools.Components.CHAT, page.IsOfferingAssistant);
+
+        Assert.That(destinations, Does.Contain(AIStudio.Tools.Components.TRANSLATION_ASSISTANT), "An assistant of another category stays in any case.");
+        return destinations.Contains(AIStudio.Tools.Components.EMAIL_ASSISTANT);
     }
 
     [Test]

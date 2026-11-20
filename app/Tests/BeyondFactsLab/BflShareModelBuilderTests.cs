@@ -170,6 +170,34 @@ public sealed class BflShareModelBuilderTests
     }
 
     [Test]
+    public void TheNumberOfThePeopleResearchedInDepthAppears()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Build(researchedPeople: 3), Does.Contain("- **People researched in depth:** 3\n"));
+            Assert.That(Build(), Does.Contain("- **People researched in depth:** 0\n"));
+        }
+    }
+
+    [Test]
+    public void TheSimulationAppearsWithItsModeAndTheNumberOfPeopleButNoNames()
+    {
+        var research = new BflPersonResearch { Name = "Eva Klein" };
+        research.Set(BflPersonResearchStage.POSITIONS, new BflResearch { Text = "Positionen", CreatedAtUtc = NOW });
+        var simulation = new BflEffectiveSimulation(BflSimulationMode.PANEL_DISCUSSION, [new BflSimulatedPerson(new() { Name = "Eva Klein" }, research)]);
+
+        var withPeople = Build(simulation: simulation);
+        var generic = Build();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(withPeople, Does.Contain($"- **Simulation in the test situation:** {BflSimulationMode.PANEL_DISCUSSION.Title} (1 simulated)\n"));
+            Assert.That(withPeople, Does.Not.Contain("Eva Klein"));
+            Assert.That(generic, Does.Contain($"- **Simulation in the test situation:** {BflSimulationMode.GENERIC.Title}\n"));
+        }
+    }
+
+    [Test]
     public void EveryStepAppearsInItsOrder()
     {
         var session = Build();
@@ -195,17 +223,52 @@ public sealed class BflShareModelBuilderTests
         Assert.That(Build(forms: forms, conversations: conversations), Does.Not.Contain("\r"));
     }
 
-    private static string Build(Dictionary<BflStep, BflStepFormData>? forms = null, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, IReadOnlyDictionary<BflResultKind, BflResult>? results = null, IReadOnlyDictionary<BflStep, IReadOnlyList<BflConversationMessage>>? conversations = null, IReadOnlyList<BflMaterial>? materials = null, IReadOnlyCollection<BflResearchTopic>? researchTopics = null, bool includePersonalDisclosures = false) => BflShareModelBuilder.Build(new BflShareInput(
+    [Test]
+    public async Task TheCardSortIsSharedWithTheNamesThePersonSaw()
+    {
+        var deck = await BflValueDeck.LoadAsync(CultureInfo.GetCultureInfo("en"));
+        var forms = Forms();
+        var cardSort = new BflCardSort();
+        cardSort.Sort("honesty", BflValueCategory.ESPECIALLY_IMPORTANT);
+        var curiosity = cardSort.AddOwnValue("Curiosity", "Ask questions")!;
+        cardSort.ChooseFocus(["honesty", curiosity.Id]);
+        forms[BflStep.VALUES_AND_PERSPECTIVES].CardSort = cardSort;
+
+        var session = Build(forms: forms, valueDeck: deck);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(session, Does.Contain("**Card sort:**\n\n- **Honesty:** Especially important\n"));
+            Assert.That(session, Does.Contain($"- **Safety:** {BflValueCategory.NONE.Title}\n"));
+            Assert.That(session, Does.Contain("- **Own values:** Curiosity (Ask questions)\n"));
+            Assert.That(session, Does.Contain("- **To look at more closely:** Honesty, Curiosity\n"));
+        }
+    }
+
+    [Test]
+    public async Task AnUntouchedCardSortIsNotShared()
+    {
+        var deck = await BflValueDeck.LoadAsync(CultureInfo.GetCultureInfo("en"));
+        var forms = Forms();
+        forms[BflStep.VALUES_AND_PERSPECTIVES].CardSort = new();
+
+        Assert.That(Build(forms: forms, valueDeck: deck), Does.Not.Contain("Card sort"));
+    }
+
+    private static string Build(Dictionary<BflStep, BflStepFormData>? forms = null, IReadOnlyDictionary<BflStep, BflWorkState>? workStates = null, IReadOnlyDictionary<BflResultKind, BflResult>? results = null, IReadOnlyDictionary<BflStep, IReadOnlyList<BflConversationMessage>>? conversations = null, IReadOnlyList<BflMaterial>? materials = null, IReadOnlyCollection<BflResearchTopic>? researchTopics = null, int researchedPeople = 0, bool includePersonalDisclosures = false, BflValueDeck? valueDeck = null, BflEffectiveSimulation? simulation = null) => BflShareModelBuilder.Build(new BflShareInput(
         forms ?? Forms(),
         workStates ?? new Dictionary<BflStep, BflWorkState>(),
         results ?? new Dictionary<BflResultKind, BflResult>(),
         conversations ?? new Dictionary<BflStep, IReadOnlyList<BflConversationMessage>>(),
         materials ?? [],
         researchTopics ?? [],
+        researchedPeople,
         includePersonalDisclosures,
         "26.11.2",
         NOW,
-        CultureInfo.InvariantCulture));
+        CultureInfo.InvariantCulture,
+        valueDeck,
+        simulation));
 
     private static Dictionary<BflStep, BflStepFormData> Forms() => BflStep.All.ToDictionary(step => step, _ => new BflStepFormData());
 

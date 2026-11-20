@@ -1,3 +1,4 @@
+using AIStudio.Chat.Embedded;
 using AIStudio.Models;
 
 namespace AIStudio.Assistants.BeyondFactsLab;
@@ -83,7 +84,7 @@ public static class BflMaterialBudget
         if (!contextWindow.IsKnown)
             return CHARACTERS_WITHOUT_A_KNOWN_CONTEXT_WINDOW;
 
-        var freeTokens = (long)contextWindow.DefaultTokens - BflTokenBudget.RESERVE_TOKENS - (long)Math.Max(0, sentImages) * TOKENS_PER_IMAGE;
+        var freeTokens = (long)contextWindow.DefaultTokens - EmbeddedChatTokenBudget.RESERVE_TOKENS - (long)Math.Max(0, sentImages) * TOKENS_PER_IMAGE;
         var freeCharacters = freeTokens * CHARACTERS_PER_TOKEN - promptCharacters;
         return (int)Math.Clamp((long)(freeCharacters * SHARE_OF_THE_FREE_CONTEXT), 0, MAX_CHARACTERS);
     }

@@ -334,6 +334,14 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: hide some assistants?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HiddenAssistants, this.Id, settingsTable, dryRun);
 
+        // Config: disable some categories of assistants, built-in ones and plugins alike?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.DisabledAssistantCategories, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.DisabledCustomAssistantCategories, this.Id, settingsTable, dryRun);
+
+        // Config: what happens to the assistants of categories users collapsed or hid?
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantsPage, x => x.CollapsedCategoryAssistants, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantsPage, x => x.HiddenCategoryAssistants, this.Id, settingsTable, dryRun);
+
         // Config: prohibit some providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProhibitedProviders, this.Id, settingsTable, dryRun);
         
@@ -523,6 +531,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.AllowPromptOverrides, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BeyondFactsLab, x => x.OrganizationRules, this.Id, settingsTable, dryRun, convert: text => this.CheckBeyondFactsLabRules(text, dryRun));
 
         // Config: Model Comparison defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.ModelComparison, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
@@ -581,6 +590,25 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             return resolvedPath;
 
         LOG.LogWarning($"The configuration plugin '{this.Name}' names the folder '{path}', which cannot be used: {issue}");
+        return null;
+    }
+
+    /// <summary>
+    /// Checks the notes this plugin sets for public appearances in the BeyondFacts Lab: with LF line breaks, without
+    /// spaces around them, and no longer than the lab takes.
+    /// </summary>
+    /// <param name="text">The notes as the plugin wrote them.</param>
+    /// <param name="dryRun">Whether this is the dry run, which comes before the actual one and reports nothing.</param>
+    /// <returns>The notes to store, or null when they are too long, which leaves the lab without notes of this plugin.</returns>
+    private string? CheckBeyondFactsLabRules(string text, bool dryRun)
+    {
+        var rules = text.ReplaceLineEndings("\n").Trim();
+        if (rules.Length <= DataBeyondFactsLab.ORGANIZATION_RULES_MAX_CHARACTERS)
+            return rules;
+
+        if (!dryRun)
+            LOG.LogWarning("The configuration plugin '{PluginName}' sets notes of {Characters} characters for the BeyondFacts Lab, which takes at most {MaxCharacters}. Ignoring them.", this.Name, rules.Length, DataBeyondFactsLab.ORGANIZATION_RULES_MAX_CHARACTERS);
+
         return null;
     }
 

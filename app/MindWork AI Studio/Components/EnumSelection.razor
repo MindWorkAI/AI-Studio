@@ -3,7 +3,7 @@
 
 <MudStack Row="@true" Class="mb-3">
     <MudSelect T="@T" Value="@this.Value" ValueChanged="@this.SelectionChanged" AdornmentIcon="@this.Icon" Adornment="Adornment.Start" IconSize="@this.IconSize" Label="@this.Label" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateSelection" Disabled="@this.Disabled">
-        @foreach (var value in Enum.GetValues<T>())
+        @foreach (var value in this.OfferedValues)
         {
             <MudSelectItem Value="@value">
                 @this.NameFunc(value)

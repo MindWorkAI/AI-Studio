@@ -73,8 +73,8 @@ public sealed class BflPromptLibraryTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(BflPromptComposer.Compose(new(core, "Leitfaden", "Schritt", "Anrede"), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch"), Does.Not.Contain("{{"));
-            Assert.That(BflPromptComposer.ComposeOnboarding(new(onboarding, "Anrede"), "Deutsch"), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.Compose(new(core, "Leitfaden", "Schritt", "Anrede", "Vorgaben"), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch"), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.ComposeOnboarding(new(onboarding, "Anrede", "Vorgaben"), "Deutsch"), Does.Not.Contain("{{"));
             Assert.That(BflPromptComposer.ComposeWorkStateRequest(workState, BflStep.FRAMEWORK, new BflStepFormData()), Does.Not.Contain("{{"));
             Assert.That(BflPromptComposer.ComposeResultRequest(result, new Dictionary<BflStep, BflWorkState>()), Does.Not.Contain("{{"));
             Assert.That(BflPromptComposer.ComposeResearch(new(research, "Auftrag"), [], "Deutsch"), Does.Not.Contain("{{"));
@@ -101,6 +101,13 @@ public sealed class BflPromptLibraryTests
         var longestStep = 0;
         foreach (var step in BflStep.All)
             longestStep = Math.Max(longestStep, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.StepPath(step))).Length);
+
+        // The step "Test situation" carries the simulation of people from the research as well:
+        var longestSimulation = 0;
+        foreach (var mode in BflSimulationMode.All)
+            longestSimulation = Math.Max(longestSimulation, (await BflPromptLibrary.LoadPartsAsync(BflStep.TEST_SITUATION, AddressForm.FORMAL, simulation: mode)).Simulation.Length);
+
+        longestStep = Math.Max(longestStep, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.StepPath(BflStep.TEST_SITUATION))).Length + longestSimulation + 2);
 
         var longestAddress = 0;
         foreach (var addressForm in Enum.GetValues<AddressForm>())

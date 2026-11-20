@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Chat.Embedded;
+using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
@@ -7,6 +8,8 @@ using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
@@ -18,7 +21,8 @@ namespace AIStudio.Components;
 /// The chat itself lives in EmbeddedChatService, so an answer goes on while the user looks elsewhere; this component
 /// shows it and renders whenever the service says it changed. What a request carries beside the conversation, such as
 /// the system prompt and the tools, the assistant decides through PrepareAsync. The count of tokens leaves out the
-/// context window of the model on purpose: it would tell models apart which the user compares without knowing them.
+/// context window of the model by default: it would tell models apart which the user compares without knowing them.
+/// An assistant whose requests carry long instructions shows it, see ShowsContextWindow.
 /// </remarks>
 public partial class EmbeddedChat : MSGComponentBase
 {
@@ -56,7 +60,7 @@ public partial class EmbeddedChat : MSGComponentBase
     /// Gets or sets how a request is readied before the message goes in, see EmbeddedChatRequest.PrepareAsync.
     /// </summary>
     [Parameter]
-    public Func<ChatThread, Task<bool>> PrepareAsync { get; set; } = _ => Task.FromResult(true);
+    public Func<ChatThread, Task<EmbeddedChatPreparation>> PrepareAsync { get; set; } = _ => Task.FromResult(EmbeddedChatPreparation.READY);
 
     /// <summary>
     /// Gets or sets whether messages to the user leave out which provider and which model answer.
@@ -69,6 +73,47 @@ public partial class EmbeddedChat : MSGComponentBase
     /// </summary>
     [Parameter]
     public bool IsReadOnly { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the user may start the conversation over, which deletes it. A chat which this version cannot
+    /// open then offers that as well.
+    /// </summary>
+    [Parameter]
+    public bool AllowsReset { get; set; }
+
+    /// <summary>
+    /// Gets or sets the question before the conversation starts over, e.g., which names what stays as it is; a general
+    /// question when left out.
+    /// </summary>
+    [Parameter]
+    public string? ResetQuestion { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the count of tokens shows how much of the context window of the model the conversation
+    /// fills: it warns when most of it is used, and the chat sends no more when the next message and its answer would
+    /// not fit anymore, see EmbeddedChatTokenBudget. Leave it out where the user must not tell the models apart.
+    /// </summary>
+    [Parameter]
+    public bool ShowsContextWindow { get; set; }
+
+    /// <summary>
+    /// Gets or sets how the count of tokens gets the system prompt of the next request, for an assistant which puts it
+    /// together anew for every request in PrepareAsync; null as its result means it cannot be known now, and the count
+    /// stays unknown. Without it, the count takes the system prompt the chat stores, which is the one of its last
+    /// request.
+    /// </summary>
+    /// <remarks>
+    /// It must not fail: whatever goes wrong, sending reports anyway.
+    /// </remarks>
+    [Parameter]
+    public Func<Task<string?>>? SystemPromptForCountAsync { get; set; }
+
+    /// <summary>
+    /// Gets or sets a number which changes whenever what the next request carries beside the conversation changed,
+    /// e.g., material of the assistant in its system prompt; the chat counts its tokens again then.
+    /// </summary>
+    [Parameter]
+    public int ContextVersion { get; set; }
 
     /// <summary>
     /// Gets or sets whether the user may attach files to a message.
@@ -95,6 +140,20 @@ public partial class EmbeddedChat : MSGComponentBase
     public ContentText? OpeningMessage { get; set; }
 
     /// <summary>
+    /// Gets or sets a request which lets the model open the conversation, e.g., by asking for what it needs. While the
+    /// chat holds no message the user sees, it offers a button which sends the request; the user does not see the
+    /// request, and may write first instead. Leave OpeningMessage out with it.
+    /// </summary>
+    [Parameter]
+    public string? StartRequest { get; set; }
+
+    /// <summary>
+    /// Gets or sets a heading above the chat, or nothing where the place of the chat names it already.
+    /// </summary>
+    [Parameter]
+    public string? Heading { get; set; }
+
+    /// <summary>
     /// Gets or sets why the provider cannot answer, or null when it can.
     /// </summary>
     [Parameter]
@@ -112,11 +171,24 @@ public partial class EmbeddedChat : MSGComponentBase
     [Parameter]
     public string ExportFileName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets a message the user sends with one click once the model has answered, such as asking for the
+    /// evaluation at the end of an exercise; null for none.
+    /// </summary>
+    [Parameter]
+    public EmbeddedChatQuickMessage? QuickMessage { get; set; }
+
     [Inject]
     private EmbeddedChatService ChatService { get; init; } = null!;
 
     [Inject]
     private ConversationTokenCounter TokenCounter { get; init; } = null!;
+
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private ILogger<EmbeddedChat> Logger { get; init; } = null!;
 
     /// <summary>
     /// Ends a count when the component goes away.
@@ -124,8 +196,13 @@ public partial class EmbeddedChat : MSGComponentBase
     private readonly CancellationTokenSource countCancellation = new();
 
     /// <summary>
-    /// The token of countCancellation, taken while the source still lives, see BflChat.
+    /// The token of countCancellation, taken while the source still lives.
     /// </summary>
+    /// <remarks>
+    /// A count goes on after an await, when the component may have gone away meanwhile, e.g., because the user moved on
+    /// to another step of an assistant. The source is disposed by then and refuses to hand out its token; the token
+    /// taken before still tells that the count was cancelled.
+    /// </remarks>
     private CancellationToken countToken;
 
     /// <summary>
@@ -137,6 +214,12 @@ public partial class EmbeddedChat : MSGComponentBase
     /// The provider the tokens were counted for, to count again when the parent chooses another one.
     /// </summary>
     private string countedProviderId = string.Empty;
+
+    /// <summary>
+    /// The version of what a request carries beside the conversation which the tokens were counted for, see
+    /// ContextVersion.
+    /// </summary>
+    private int countedContextVersion;
 
     /// <summary>
     /// The chat shown, or null while it loads.
@@ -170,9 +253,13 @@ public partial class EmbeddedChat : MSGComponentBase
 
     private bool IsRunning => this.conversation?.IsRunning ?? false;
 
-    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null;
+    private EmbeddedChatTokenBudgetState Budget => this.ShowsContextWindow ? EmbeddedChatTokenBudget.Of(this.tokens) : EmbeddedChatTokenBudgetState.UNKNOWN;
+
+    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null && this.Budget is not EmbeddedChatTokenBudgetState.FULL;
 
     private bool CanSendMessage => this.CanSend && !string.IsNullOrWhiteSpace(this.userInput);
+
+    private bool CanReset => this.AllowsReset && !this.IsReadOnly;
 
     #region Overrides of MSGComponentBase
 
@@ -196,7 +283,7 @@ public partial class EmbeddedChat : MSGComponentBase
             this.conversation = await this.ChatService.GetAsync(this.Store, this.Component, this.ChatId, this.CreateThread);
             await this.RecountAsync();
         }
-        else if (this.countedProviderId != this.Provider.Id)
+        else if (this.countedProviderId != this.Provider.Id || this.countedContextVersion != this.ContextVersion)
             await this.RecountAsync();
 
         // Not awaited: the answer arrives through ConversationChanged, and the parameters of the next render must not wait for it.
@@ -239,12 +326,14 @@ public partial class EmbeddedChat : MSGComponentBase
     /// Counts what the conversation carries so far, while no answer runs.
     /// </summary>
     /// <remarks>
-    /// The system prompt counts as the chat stores it: what PrepareAsync adds for a request is not known before. The
-    /// count is therefore an estimate, and the message being written is left out.
+    /// The system prompt counts as SystemPromptForCountAsync gives it, otherwise as the chat stores it: what
+    /// PrepareAsync adds for a request is not known before then. The count is therefore an estimate, and the message
+    /// being written is left out.
     /// </remarks>
     private async Task RecountAsync()
     {
         this.countedProviderId = this.Provider.Id;
+        this.countedContextVersion = this.ContextVersion;
         if (this.IsReadOnly || this.conversation is not { Thread: { } thread, IsRunning: false } || this.ProviderIssue is not null || this.Provider.UsedLLMProvider is LLMProviders.NONE)
         {
             this.tokens = ConversationTokens.UNAVAILABLE;
@@ -253,7 +342,14 @@ public partial class EmbeddedChat : MSGComponentBase
 
         try
         {
-            var parts = ConversationParts.Of(thread, thread.SystemPrompt, string.Empty, null, false, null);
+            var systemPrompt = this.SystemPromptForCountAsync is { } systemPromptForCountAsync ? await systemPromptForCountAsync() : thread.SystemPrompt;
+            if (systemPrompt is null)
+            {
+                this.tokens = ConversationTokens.UNAVAILABLE;
+                return;
+            }
+
+            var parts = ConversationParts.Of(thread, systemPrompt, string.Empty, null, false, null);
             this.tokens = await this.TokenCounter.CountAsync(this.Provider, parts, thread.ReportedHistoryFor(this.Provider.Model), this.countToken);
         }
         catch (OperationCanceledException)
@@ -263,11 +359,58 @@ public partial class EmbeddedChat : MSGComponentBase
     }
 
     /// <summary>
-    /// Gets about how many tokens the conversation carries, or null when nothing could be counted.
+    /// Gets about how many tokens the conversation carries, with how full the context of the model is when the chat shows
+    /// it, or null when nothing could be counted.
     /// </summary>
-    private string? TokenText => this.tokens.IsKnown
-        ? string.Format(T("approx. {0} tokens"), TokenAmount.Format(this.tokens.Tokens, Tools.PluginSystem.I18N.I.Culture))
-        : null;
+    private string? TokenText
+    {
+        get
+        {
+            if (!this.tokens.IsKnown)
+                return null;
+
+            var culture = Tools.PluginSystem.I18N.I.Culture;
+            var counted = TokenAmount.Format(this.tokens.Tokens, culture);
+            if (!this.ShowsContextWindow)
+                return string.Format(T("approx. {0} tokens"), counted);
+
+            if (!this.tokens.Window.IsKnown)
+                return string.Format(T("approx. {0} tokens; the context window of this model is unknown"), counted);
+
+            var window = TokenAmount.Format(this.tokens.Window.DefaultTokens, culture);
+            var budget = string.Format(this.tokens.IsEstimate && !this.tokens.HistoryIsReported ? T("approx. {0} of {1} tokens") : T("{0} of {1} tokens"), counted, window);
+            return this.Budget switch
+            {
+                EmbeddedChatTokenBudgetState.FULL => $"{budget}. {this.FullContextText}",
+                EmbeddedChatTokenBudgetState.WARNING => $"{budget}. {this.NearlyFullContextText}",
+                _ => budget
+            };
+        }
+    }
+
+    /// <summary>
+    /// Gets what the user can do once the conversation fills the context of the model.
+    /// </summary>
+    private string FullContextText => this.CanReset
+        ? TA("This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.")
+        : TA("This conversation fills the context window of the model. Choose a provider whose model reads more at once.");
+
+    /// <summary>
+    /// Gets the warning once the conversation fills most of the context of the model.
+    /// </summary>
+    private string NearlyFullContextText => this.CanReset
+        ? TA("This conversation fills most of the context window of the model. Soon, you will have to start it over.")
+        : T("This conversation fills most of the context window of the model.");
+
+    /// <summary>
+    /// Gets the classes of the message field; like on the chat page, they colour its helper text with the tokens.
+    /// </summary>
+    private string InputClass => this.Budget switch
+    {
+        EmbeddedChatTokenBudgetState.FULL => "mt-2 token-budget-exceeded",
+        EmbeddedChatTokenBudgetState.WARNING => "mt-2 token-budget-nearly-full",
+        _ => "mt-2"
+    };
 
     private Task AttachmentsChanged(HashSet<FileAttachment> changedAttachments)
     {
@@ -287,6 +430,27 @@ public partial class EmbeddedChat : MSGComponentBase
         this.userInput = string.Empty;
         this.attachments = [];
         await this.ChatService.SendAsync(this.ChatId, this.RequestOf(message));
+    }
+
+    /// <summary>
+    /// Sends the message of the button, see QuickMessage, as if the user had written it. What the user typed meanwhile
+    /// stays in the field.
+    /// </summary>
+    private async Task SendQuickMessageAsync()
+    {
+        if (this.QuickMessage is not { } quickMessage || !this.CanSend)
+            return;
+
+        await this.ChatService.SendAsync(this.ChatId, this.RequestOf(new ContentText { Text = quickMessage.Message }));
+    }
+
+    /// <summary>
+    /// Lets the model open the conversation, see StartRequest.
+    /// </summary>
+    private async Task StartAsync()
+    {
+        if (this.CanSend && !string.IsNullOrWhiteSpace(this.StartRequest))
+            await this.ChatService.SendAsync(this.ChatId, this.RequestOf(new ContentText { Text = this.StartRequest }) with { IsHidden = true });
     }
 
     /// <summary>
@@ -333,4 +497,30 @@ public partial class EmbeddedChat : MSGComponentBase
     /// Stops the answer the model writes.
     /// </summary>
     private Task CancelAsync() => this.ChatService.CancelAsync(this.ChatId);
+
+    /// <summary>
+    /// Deletes the conversation after asking, so that it starts over.
+    /// </summary>
+    private async Task ResetAsync()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { dialog => dialog.Message, this.ResetQuestion ?? TA("Delete this conversation and start it over?") }
+        };
+
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Start over"), parameters, DialogOptions.FULLSCREEN);
+        var result = await reference.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        try
+        {
+            await this.ChatService.ResetAsync(this.ChatId, this.CreateThread);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            this.Logger.LogError(exception, "Could not delete the embedded chat '{ChatId}'.", this.ChatId);
+            await this.MessageBus.SendError(new(AppIcons.DELETE, TA("AI Studio could not delete this conversation. Please try again.")));
+        }
+    }
 }

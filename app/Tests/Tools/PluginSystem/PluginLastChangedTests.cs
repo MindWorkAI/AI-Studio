@@ -116,7 +116,7 @@ public sealed class PluginLastChangedTests
         """);
 
     private static DirectChatLauncherPluginMetadata CreateLauncherMetadata(DateTimeOffset? lastChanged) => new(PLUGIN_ID, "1.0.0", lastChanged, ["MindWork AI"], "MindWork AI",
-        "https://github.com/MindWorkAI/AI-Studio", [PluginCategory.CORE], [PluginTargetGroup.EVERYONE], IsMaintained: true, DeprecationMessage: string.Empty, IsAssistantBuilderGenerated: false);
+        "https://github.com/MindWorkAI/AI-Studio", [PluginCategory.CORE], [], [PluginTargetGroup.EVERYONE], IsMaintained: true, DeprecationMessage: string.Empty, IsAssistantBuilderGenerated: false);
 
     private static DirectChatLauncherDefinition CreateLauncherDefinition() => new("Launcher for the tests", "Launcher for the tests", "Opens a disappearing chat.", new AssistantChatLaunchConfiguration(string.Empty, null, null, null, null, null));
 }

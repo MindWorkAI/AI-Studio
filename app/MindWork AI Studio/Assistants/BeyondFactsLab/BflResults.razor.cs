@@ -128,6 +128,15 @@ public partial class BflResults : MSGComponentBase
     /// </summary>
     private IReadOnlyList<BflStep> MissingSteps => [.. BflStep.All.Where(step => this.WorkStates.GetValueOrDefault(step)?.Confirmed is null)];
 
+    /// <summary>
+    /// Gets the text of a result as the person reads and exports it: the open points and next steps end with the
+    /// guidelines of the organization, see BflOrganizationRules.AddTo.
+    /// </summary>
+    /// <param name="kind">The kind of result.</param>
+    /// <param name="text">The text of the result, as stored.</param>
+    /// <returns>The text to show or export.</returns>
+    private string Shown(BflResultKind kind, string text) => BflOrganizationRules.AddTo(kind, text, this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules, TA("Guidelines from your organization"));
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
@@ -377,9 +386,9 @@ public partial class BflResults : MSGComponentBase
         try
         {
             if (format.UsesPandoc)
-                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.DisclosureService, kind.Title, format, new ContentText { Text = confirmed.Text }, fileName);
+                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.DisclosureService, kind.Title, format, new ContentText { Text = this.Shown(kind, confirmed.Text) }, fileName);
             else
-                await PlainFileExport.ToFile(this.RustService, kind.Title, format, this.DisclosureService.AddDisclosureToMarkdown(confirmed.Text), fileName);
+                await PlainFileExport.ToFile(this.RustService, kind.Title, format, this.DisclosureService.AddDisclosureToMarkdown(this.Shown(kind, confirmed.Text)), fileName);
         }
         catch (ArgumentOutOfRangeException exception)
         {

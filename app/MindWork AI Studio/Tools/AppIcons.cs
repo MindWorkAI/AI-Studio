@@ -212,6 +212,9 @@ public static class AppIcons
     /// <summary>Marks an operation that was canceled, such as an assistant run or a media import.</summary>
     public const string CANCELED = LucideIcons.CIRCLE_SLASH;
 
+    /// <summary>Marks a round of a card sort whose values the person sorted all, such as in the BeyondFacts Lab.</summary>
+    public const string CARD_SORT_ROUND_DONE = LucideIcons.CIRCLE_CHECK;
+
     /// <summary>Marks the category of an item, such as an assistant.</summary>
     public const string CATEGORY = LucideIcons.SHAPES;
 
@@ -409,6 +412,9 @@ public static class AppIcons
 
     /// <summary>Enables an item, such as an installed assistant plugin, or shows that it is enabled.</summary>
     public const string ENABLE = LucideIcons.TOGGLE_RIGHT;
+
+    /// <summary>Ends an exercise and asks for its evaluation, such as in the test situation of the BeyondFacts Lab.</summary>
+    public const string END_EXERCISE = LucideIcons.FLAG;
 
     /// <summary>Stands for encrypting a connection, such as the transport security of a mailbox.</summary>
     public const string ENCRYPTION = LucideIcons.LOCK_KEYHOLE;
@@ -806,6 +812,9 @@ public static class AppIcons
     /// <summary>Stands for what comes out of an assistant, such as the expected output or the output mode.</summary>
     public const string OUTPUT = LucideIcons.LOG_OUT;
 
+    /// <summary>Marks the values a person adds to a card sort because its deck misses them, such as in the BeyondFacts Lab.</summary>
+    public const string OWN_VALUES = LucideIcons.HEART_PLUS;
+
     /// <summary>Marks Pandoc, the document converter that AI Studio uses.</summary>
     public const string PANDOC = LucideIcons.FILE_COG;
 
@@ -829,6 +838,9 @@ public static class AppIcons
 
     /// <summary>Stands for a group of people, such as the authors of a plugin or individual contributors.</summary>
     public const string PEOPLE = LucideIcons.USERS;
+
+    /// <summary>Marks the research on single people on the web, such as the other participants of an event.</summary>
+    public const string PERSON_RESEARCH = LucideIcons.USER_SEARCH;
 
     /// <summary>Stands for a picture library, a folder of pictures to choose from.</summary>
     public const string PICTURE_LIBRARY = LucideIcons.IMAGES;
@@ -944,6 +956,9 @@ public static class AppIcons
     /// <summary>Reports that an item replaced another one, such as a newly selected prompt guide file.</summary>
     public const string REPLACE = LucideIcons.ARROW_LEFT_RIGHT;
 
+    /// <summary>Marks a research which stopped before all of its stages were done.</summary>
+    public const string RESEARCH_INCOMPLETE = LucideIcons.CIRCLE_DOT_DASHED;
+
     /// <summary>Resets something to its start, such as an assistant's inputs, a conversation, or a history.</summary>
     public const string RESET = LucideIcons.ROTATE_CCW;
 
@@ -1030,6 +1045,9 @@ public static class AppIcons
 
     /// <summary>Warns about a possible security risk, such as suspected prompt injections or an assistant plugin that needs an audit.</summary>
     public const string SECURITY_WARNING = LucideIcons.SHIELD_EXCLAMATION_POINT;
+
+    /// <summary>Lets the AI suggest a selection which the user checks, such as whom of a long list to research.</summary>
+    public const string SELECTION_SUGGESTION = LucideIcons.WAND_SPARKLES;
 
     /// <summary>Stands for the semantic search tool, which searches the data sources by meaning.</summary>
     public const string SEMANTIC_SEARCH = LucideIcons.TEXT_SEARCH;
@@ -1195,6 +1213,9 @@ public static class AppIcons
 
     /// <summary>Moves a result back into the input field so that you can work on it again.</summary>
     public const string USE_AS_INPUT = LucideIcons.TEXT_CURSOR_INPUT;
+
+    /// <summary>Marks the values a person chooses to look at more closely, such as after the card sort of the BeyondFacts Lab.</summary>
+    public const string VALUE_FOCUS = LucideIcons.FOCUS;
 
     /// <summary>Marks a list value, such as in the metadata of an assistant plugin.</summary>
     public const string VALUE_LIST = LucideIcons.LIST;

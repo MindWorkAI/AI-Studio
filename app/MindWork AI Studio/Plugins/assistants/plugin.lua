@@ -37,8 +37,14 @@ SUPPORT_CONTACT = "<IT Department of Company Name>"
 -- The source URL for the plugin:
 SOURCE_URL = "<Any internal Git repository>"
 
--- The categories for the plugin:
-CATEGORIES = { "CORE" }
+-- The categories for the plugin. The assistants page shows the assistant under each of them,
+-- e.g., COMMON for "General" or BUSINESS for "Business". See "Categories" in README.md for all keys.
+-- Requires AI Studio v26.11.2 or newer; older versions do not know COMMON:
+CATEGORIES = { "COMMON" }
+
+-- Your own categories, when none of AI Studio fits. They need CUSTOM in CATEGORIES:
+-- CATEGORIES = { "CUSTOM" }
+-- CUSTOM_CATEGORIES = { "<Name of your category>" }
 
 -- The target groups for the plugin:
 TARGET_GROUPS = { "EVERYONE" }

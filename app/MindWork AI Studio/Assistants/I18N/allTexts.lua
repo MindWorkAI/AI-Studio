@@ -1045,6 +1045,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 -- Details missing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T506453229"] = "Details missing"
 
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T661725016"] = "Guidelines from your organization"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T661725016::INFORMAL"] = "Guidelines from your organization"
+
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T724820205"] = "Outdated"
 
@@ -1056,6 +1062,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 
 -- The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T916994259::INFORMAL"] = "The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'."
+
+-- Your organization has set these guidelines for public appearances. The conversations of the steps know them as well, and the material '{0}' ends with them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T951943350"] = "Your organization has set these guidelines for public appearances. The conversations of the steps know them as well, and the material '{0}' ends with them."
+
+-- Your organization has set these guidelines for public appearances. The conversations of the steps know them as well, and the material '{0}' ends with them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T951943350::INFORMAL"] = "Your organization has set these guidelines for public appearances. The conversations of the steps know them as well, and the material '{0}' ends with them."
 
 -- Your preparations
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T972511272"] = "Your preparations"
@@ -1087,20 +1099,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T586836727
 -- Phone number
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T987655160"] = "Phone number"
 
--- Stop
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T1266644741"] = "Stop"
-
--- approx. {0} of {1} tokens
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T1992478915"] = "approx. {0} of {1} tokens"
-
 -- Delete this conversation and start it over?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2055072982"] = "Delete this conversation and start it over?"
 
 -- Delete this conversation and start it over?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2055072982::INFORMAL"] = "Delete this conversation and start it over?"
 
--- Start the conversation
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2172806379"] = "Start the conversation"
+-- This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2124231889"] = "This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between."
+
+-- This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2124231889::INFORMAL"] = "This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between."
 
 -- The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2610371636"] = "The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first."
@@ -1111,32 +1120,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2610371636::INF
 -- Conversation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2640583206"] = "Conversation"
 
--- Export message
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T274919936"] = "Export message"
-
 -- Tell the lab what you are preparing for. It tells you whether it fits your task and how to work with it. You can also let the lab begin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2858940496"] = "Tell the lab what you are preparing for. It tells you whether it fits your task and how to work with it. You can also let the lab begin."
 
 -- Tell the lab what you are preparing for. It tells you whether it fits your task and how to work with it. You can also let the lab begin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2858940496::INFORMAL"] = "Tell the lab what you are preparing for. It tells you whether it fits your task and how to work with it. You can also let the lab begin."
 
--- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2927156281"] = "AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it."
-
--- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2927156281::INFORMAL"] = "AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it."
-
--- approx. {0} tokens; the context window of this model is unknown
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T357466604"] = "approx. {0} tokens; the context window of this model is unknown"
-
 -- Is the lab right for my task?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3584565592"] = "Is the lab right for my task?"
-
--- Your message
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3642105949"] = "Your message"
-
--- Your message
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3642105949::INFORMAL"] = "Your message"
 
 -- Delete the conversation of this step and start it over? Your details stay as they are.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112"] = "Delete the conversation of this step and start it over? Your details stay as they are."
@@ -1144,32 +1135,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112"] = 
 -- Delete the conversation of this step and start it over? Your details stay as they are.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112::INFORMAL"] = "Delete the conversation of this step and start it over? Your details stay as they are."
 
--- AI Studio could not delete this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3757008686"] = "AI Studio could not delete this conversation. Please try again."
+-- End and evaluate the exercise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3886921817"] = "End and evaluate the exercise"
 
--- AI Studio could not delete this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3757008686::INFORMAL"] = "AI Studio could not delete this conversation. Please try again."
-
--- {0} of {1} tokens
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3996190985"] = "{0} of {1} tokens"
-
--- Send
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T4069397711"] = "Send"
-
--- Start over
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T606705767"] = "Start over"
-
--- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T962106497"] = "This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once."
-
--- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T962106497::INFORMAL"] = "This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once."
-
--- This conversation fills most of the context window of the model. Soon, you will have to start it over.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295"] = "This conversation fills most of the context window of the model. Soon, you will have to start it over."
-
--- This conversation fills most of the context window of the model. Soon, you will have to start it over.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295::INFORMAL"] = "This conversation fills most of the context window of the model. Soon, you will have to start it over."
+-- I would like to end the exercise now and get its evaluation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T4175512580"] = "I would like to end the exercise now and get its evaluation."
 
 -- Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T281612290"] = "Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps."
@@ -1210,6 +1180,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 -- The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2261674511::INFORMAL"] = "The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug."
 
+-- The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2312257399"] = "The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider."
+
+-- The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2312257399::INFORMAL"] = "The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider."
+
 -- The model of the selected provider reads too little at once for the lab. Please select another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3132723417"] = "The model of the selected provider reads too little at once for the lab. Please select another provider."
 
@@ -1221,12 +1197,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 
 -- The selected provider may not see your preparation. Please select another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3133264313::INFORMAL"] = "The selected provider may not see your preparation. Please select another provider."
-
--- AI Studio could not save this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884"] = "AI Studio could not save this conversation. Please try again."
-
--- AI Studio could not save this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884::INFORMAL"] = "AI Studio could not save this conversation. Please try again."
 
 -- The event is not public. Therefore, the lab does not research it on the web.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLEVENTVISIBILITY::T2308862256"] = "The event is not public. Therefore, the lab does not research it on the web."
@@ -1453,6 +1423,15 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T974131333
 -- Demanding
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T985014450"] = "Demanding"
 
+-- What touches me
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFORMSECTIONEXTENSIONS::T1464216834"] = "What touches me"
+
+-- What moves others
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFORMSECTIONEXTENSIONS::T4052141584"] = "What moves others"
+
+-- What matters to me
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFORMSECTIONEXTENSIONS::T840264968"] = "What matters to me"
+
 -- If you state in the event details that the event is not public, the lab never researches it on the web.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1053099788"] = "If you state in the event details that the event is not public, the lab never researches it on the web."
 
@@ -1477,6 +1456,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652
 -- In the last step, let the lab create your materials from your confirmed work states: a reflection folder, a position paper, a conversation guide, questions and answers, and your open points. You check, edit, and confirm each of them, and then export it as a document.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652635::INFORMAL"] = "In the last step, let the lab create your materials from your confirmed work states: a reflection folder, a position paper, a conversation guide, questions and answers, and your open points. You check, edit, and confirm each of them, and then export it as a document."
 
+-- In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1320373512"] = "In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much."
+
+-- In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1320373512::INFORMAL"] = "In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much."
+
 -- Research on the web
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1322369504"] = "Research on the web"
 
@@ -1491,6 +1476,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266
 
 -- Plan about 30 to 60 minutes for a preparation. You can pause at any time: AI Studio saves your details and conversations, and you continue where you left off.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266933::INFORMAL"] = "Plan about 30 to 60 minutes for a preparation. You can pause at any time: AI Studio saves your details and conversations, and you continue where you left off."
+
+-- Value card sort
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T194927200"] = "Value card sort"
 
 -- Work through the seven steps, in any order you like. Each step has the form 'Your details' and a conversation of its own.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2001857602"] = "Work through the seven steps, in any order you like. Each step has the form 'Your details' and a conversation of its own."
@@ -1507,6 +1495,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2242659
 -- Sharing with the research team
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2278322216"] = "Sharing with the research team"
 
+-- From the list of participants, you choose whom the lab researches in depth; for a long list, the lab suggests whom. For this suggestion, it uses your details of the first three steps, but searches nothing, and only names from the list go on into the research. For each person you choose, research agents look into the profile, the public positions on the topic, and how the person argues in public, one stage after the other. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found. They look only for public, professional information, keep summaries with sources, and create no personality profiles.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2303061552"] = "From the list of participants, you choose whom the lab researches in depth; for a long list, the lab suggests whom. For this suggestion, it uses your details of the first three steps, but searches nothing, and only names from the list go on into the research. For each person you choose, research agents look into the profile, the public positions on the topic, and how the person argues in public, one stage after the other. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found. They look only for public, professional information, keep summaries with sources, and create no personality profiles."
+
+-- From the list of participants, you choose whom the lab researches in depth; for a long list, the lab suggests whom. For this suggestion, it uses your details of the first three steps, but searches nothing, and only names from the list go on into the research. For each person you choose, research agents look into the profile, the public positions on the topic, and how the person argues in public, one stage after the other. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found. They look only for public, professional information, keep summaries with sources, and create no personality profiles.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2303061552::INFORMAL"] = "From the list of participants, you choose whom the lab researches in depth; for a long list, the lab suggests whom. For this suggestion, it uses your details of the first three steps, but searches nothing, and only names from the list go on into the research. For each person you choose, research agents look into the profile, the public positions on the topic, and how the person argues in public, one stage after the other. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found. They look only for public, professional information, keep summaries with sources, and create no personality profiles."
+
 -- How to recognize good results
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2310692629"] = "How to recognize good results"
 
@@ -1521,6 +1515,15 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2980837
 
 -- What the lab does not do
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2988041082"] = "What the lab does not do"
+
+-- In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819"] = "In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality."
+
+-- In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819::INFORMAL"] = "In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality."
+
+-- Simulated participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3371128229"] = "Simulated participants"
 
 -- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3499941356"] = "Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know."
@@ -1542,6 +1545,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675
 
 -- In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476::INFORMAL"] = "In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time."
+
+-- Your organization has set guidelines for public appearances, which you find above your preparations. The conversations of the steps know them as information, and the material '{0}' ends with them. They add to the rules of the lab: where they contradict them, the rules of the lab apply, and the conversation points that out. Sharing with the research team leaves them out, since they would reveal your organization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3771709114"] = "Your organization has set guidelines for public appearances, which you find above your preparations. The conversations of the steps know them as information, and the material '{0}' ends with them. They add to the rules of the lab: where they contradict them, the rules of the lab apply, and the conversation points that out. Sharing with the research team leaves them out, since they would reveal your organization."
+
+-- Your organization has set guidelines for public appearances, which you find above your preparations. The conversations of the steps know them as information, and the material '{0}' ends with them. They add to the rules of the lab: where they contradict them, the rules of the lab apply, and the conversation points that out. Sharing with the research team leaves them out, since they would reveal your organization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3771709114::INFORMAL"] = "Your organization has set guidelines for public appearances, which you find above your preparations. The conversations of the steps know them as information, and the material '{0}' ends with them. They add to the rules of the lab: where they contradict them, the rules of the lab apply, and the conversation points that out. Sharing with the research team leaves them out, since they would reveal your organization."
 
 -- Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3813171730"] = "Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one."
@@ -1587,6 +1596,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T5711897
 
 -- The strategy fits your real speaking time and focuses on a few key messages.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T571189717::INFORMAL"] = "The strategy fits your real speaking time and focuses on a few key messages."
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T661725016"] = "Guidelines from your organization"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T661725016::INFORMAL"] = "Guidelines from your organization"
 
 -- Fill in what you know. Fields may stay empty: the lab shows which key details are missing and asks for them in the conversation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T780122078"] = "Fill in what you know. Fields may stay empty: the lab shows which key details are missing and asks for them in the conversation."
@@ -1744,6 +1759,126 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLONBOARDING::T180931232
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLONBOARDING::T1809312323::INFORMAL"] = "Please select a provider."
 
+-- Not researched yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1044513948"] = "Not researched yet"
+
+-- Entry in the list of participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1109522258"] = "Entry in the list of participants"
+
+-- Stop
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1266644741"] = "Stop"
+
+-- Suggest a selection
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1456767192"] = "Suggest a selection"
+
+-- This research stopped before all of its stages were done.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1487695030"] = "This research stopped before all of its stages were done."
+
+-- Incomplete
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1753679941"] = "Incomplete"
+
+-- Waiting for a free agent
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1819938491"] = "Waiting for a free agent"
+
+-- The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1894639302"] = "The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'."
+
+-- The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1894639302::INFORMAL"] = "The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'."
+
+-- Research this person
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1965641637"] = "Research this person"
+
+-- Once the research on the participants found a list of people, you can choose here whom the lab researches in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2316008723"] = "Once the research on the participants found a list of people, you can choose here whom the lab researches in depth."
+
+-- Once the research on the participants found a list of people, you can choose here whom the lab researches in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2316008723::INFORMAL"] = "Once the research on the participants found a list of people, you can choose here whom the lab researches in depth."
+
+-- Researching: {0} ({1} of {2})
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2602375879"] = "Researching: {0} ({1} of {2})"
+
+-- Researched on {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2673061400"] = "Researched on {0}"
+
+-- The lab suggests whom to research in depth
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2980501067"] = "The lab suggests whom to research in depth"
+
+-- Research on individual participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3316090314"] = "Research on individual participants"
+
+-- The lab suggested this selection because the list is long. Check it and change it as you like.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3618922246"] = "The lab suggested this selection because the list is long. Check it and change it as you like."
+
+-- The lab suggested this selection because the list is long. Check it and change it as you like.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3618922246::INFORMAL"] = "The lab suggested this selection because the list is long. Check it and change it as you like."
+
+-- If your own name is on the list, leave it unchosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3650529419"] = "If your own name is on the list, leave it unchosen."
+
+-- If your own name is on the list, leave it unchosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3650529419::INFORMAL"] = "If your own name is on the list, leave it unchosen."
+
+-- Research the chosen people
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3779011682"] = "Research the chosen people"
+
+-- The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3821144196"] = "The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research."
+
+-- The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3821144196::INFORMAL"] = "The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research."
+
+-- Each person takes up to {0} research agents, one after the other. At most {1} agents work at once; the others wait.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3858018313"] = "Each person takes up to {0} research agents, one after the other. At most {1} agents work at once; the others wait."
+
+-- {0} of {1} people chosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T4020182292"] = "{0} of {1} people chosen."
+
+-- The public details changed since this research. You can research this person again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T533597841"] = "The public details changed since this research. You can research this person again."
+
+-- The public details changed since this research. You can research this person again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T533597841::INFORMAL"] = "The public details changed since this research. You can research this person again."
+
+-- AI Studio could not store the selection. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T697052960"] = "AI Studio could not store the selection. Please try again."
+
+-- AI Studio could not store the selection. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T697052960::INFORMAL"] = "AI Studio could not store the selection. Please try again."
+
+-- Outdated
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T724820205"] = "Outdated"
+
+-- Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T804175385"] = "Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found."
+
+-- Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T804175385::INFORMAL"] = "Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found."
+
+-- The agents look only for public, professional information and public statements on the topic. They keep summaries with sources, no full texts, create no personality profiles, and judge nobody.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T829595766"] = "The agents look only for public, professional information and public statements on the topic. They keep summaries with sources, no full texts, create no personality profiles, and judge nobody."
+
+-- Research this person again
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T832975261"] = "Research this person again"
+
+-- Public appearances
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T2628455507"] = "Public appearances"
+
+-- Who the person is: their function, professional career, and education.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T2713760319"] = "Who the person is: their function, professional career, and education."
+
+-- Profile
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T3440849550"] = "Profile"
+
+-- Positions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T3879692315"] = "Positions"
+
+-- What the person has said in public on the topic of the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T686625291"] = "What the person has said in public on the topic of the event."
+
+-- How the person argues in speeches, interviews, and discussions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T851469643"] = "How the person argues in speeches, interviews, and discussions."
+
 -- The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1719028521"] = "The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab."
 
@@ -1864,9 +1999,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T219706
 -- Research this topic
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2205528655"] = "Research this topic"
 
--- Web pages opened
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2410802222"] = "Web pages opened"
-
 -- Researched on {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2673061400"] = "Researched on {0}"
 
@@ -1897,17 +2029,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T365593
 -- Start the research
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3771505473"] = "Start the research"
 
--- Queries sent to the web search
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3846014079"] = "Queries sent to the web search"
-
 -- The agent researches this topic
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3855362913"] = "The agent researches this topic"
 
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T724820205"] = "Outdated"
-
--- None
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T810547195"] = "None"
 
 -- The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T946307726"] = "The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search."
@@ -1933,17 +2059,38 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T26144
 -- The research ended without a result. Please try again, or try another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T2614499564::INFORMAL"] = "The research ended without a result. Please try again, or try another provider."
 
+-- The lab could not suggest whom to research in depth. Please choose the people yourself.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T291406796"] = "The lab could not suggest whom to research in depth. Please choose the people yourself."
+
+-- The lab could not suggest whom to research in depth. Please choose the people yourself.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T291406796::INFORMAL"] = "The lab could not suggest whom to research in depth. Please choose the people yourself."
+
 -- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850"] = "Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."
 
 -- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850::INFORMAL"] = "Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."
 
+-- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743"] = "The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider."
+
+-- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743::INFORMAL"] = "The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider."
+
+-- This person is no longer on the list of participants, so the lab does not research them. Please research the participants again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T980791662"] = "This person is no longer on the list of participants, so the lab does not research them. Please research the participants again."
+
+-- This person is no longer on the list of participants, so the lab does not research them. Please research the participants again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T980791662::INFORMAL"] = "This person is no longer on the list of participants, so the lab does not research them. Please research the participants again."
+
 -- Participants
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T1161681831"] = "Participants"
 
 -- How the topic is discussed in public: positions, points of dispute, and the framing of others.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T2464060444"] = "How the topic is discussed in public: positions, points of dispute, and the framing of others."
+
+-- Who else speaks or moderates, and in which role. From this list, the lab can research individual people in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3185511242"] = "Who else speaks or moderates, and in which role. From this list, the lab can research individual people in depth."
 
 -- Organizer, format and schedule, moderation, and earlier editions of the event.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3694495177"] = "Organizer, format and schedule, moderation, and earlier editions of the event."
@@ -1954,8 +2101,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSION
 -- The event
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T4207163500"] = "The event"
 
--- Who else speaks or moderates, in which role, and which public positions they have taken on the topic.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T821312467"] = "Who else speaks or moderates, in which role, and which public positions they have taken on the topic."
+-- Web pages opened
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTRACE::T2410802222"] = "Web pages opened"
+
+-- Queries sent to the web search
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTRACE::T3846014079"] = "Queries sent to the web search"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTRACE::T810547195"] = "None"
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTGENERATOR::T1150375027"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
@@ -2146,6 +2299,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3926195314"]
 -- Include personal disclosures?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3989412584"] = "Include personal disclosures?"
 
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T661725016"] = "Guidelines from your organization"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T661725016::INFORMAL"] = "Guidelines from your organization"
+
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T724820205"] = "Outdated"
 
@@ -2311,6 +2470,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMAIL::T3622173728
 -- No confirmed work state.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1085223273"] = "No confirmed work state."
 
+-- Card sort
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T116016553"] = "Card sort"
+
 -- No conversation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1296316689"] = "No conversation."
 
@@ -2365,26 +2527,137 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T34
 -- About this session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3460157970"] = "About this session"
 
+-- {0} ({1} simulated)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3642066273"] = "{0} ({1} simulated)"
+
+-- Own values
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3651870515"] = "Own values"
+
 -- BeyondFacts Lab: a shared session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3731741448"] = "BeyondFacts Lab: a shared session"
+
+-- To look at more closely
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3757621498"] = "To look at more closely"
+
+-- Simulation in the test situation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3853316258"] = "Simulation in the test situation"
 
 -- Left out, as it may contain personal disclosures.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3986361996"] = "Left out, as it may contain personal disclosures."
 
+-- People researched in depth
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T530575216"] = "People researched in depth"
+
 -- Version of AI Studio
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T728223168"] = "Version of AI Studio"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T810547195"] = "None"
+
+-- Choose the person:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1010486410"] = "Choose the person:"
+
+-- Choose the person:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1010486410::INFORMAL"] = "Choose the person:"
+
+-- Simulation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1315724598"] = "Simulation"
+
+-- The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1539984278"] = "The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included."
+
+-- The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1539984278::INFORMAL"] = "The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included."
+
+-- Whom the lab simulates
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2077651045"] = "Whom the lab simulates"
+
+-- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2331929951"] = "Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts."
+
+-- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2331929951::INFORMAL"] = "Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts."
+
+-- Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3164792878"] = "Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'."
+
+-- Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3164792878::INFORMAL"] = "Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'."
+
+-- The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T333129936"] = "The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing."
+
+-- The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T333129936::INFORMAL"] = "The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing."
+
+-- Choose up to {0} people:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3459621859"] = "Choose up to {0} people:"
+
+-- Choose up to {0} people:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3459621859::INFORMAL"] = "Choose up to {0} people:"
+
+-- The research on these people takes about {0} of the {1} tokens the model reads at once.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3676628527"] = "The research on these people takes about {0} of the {1} tokens the model reads at once."
+
+-- The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T379468702"] = "The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts."
+
+-- The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T379468702::INFORMAL"] = "The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts."
+
+-- In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T48225341"] = "In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation."
+
+-- In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T48225341::INFORMAL"] = "In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation."
+
+-- Choose at least one person. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T962950702"] = "Choose at least one person. Until then, the lab simulates generic counterparts."
+
+-- Choose at least one person. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T962950702::INFORMAL"] = "Choose at least one person. Until then, the lab simulates generic counterparts."
+
+-- Generic counterparts, no specific person
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1003594062"] = "Generic counterparts, no specific person"
+
+-- The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1554315843"] = "The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1554315843::INFORMAL"] = "The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- Panel discussion with up to three people
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T181962038"] = "Panel discussion with up to three people"
+
+-- The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T2141818378"] = "The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T2141818378::INFORMAL"] = "The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T254330793"] = "The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T254330793::INFORMAL"] = "The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise."
+
+-- Press conference with up to five people
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T296774835"] = "Press conference with up to five people"
+
+-- The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3641426213"] = "The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback."
+
+-- The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3641426213::INFORMAL"] = "The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback."
+
+-- One person from the research
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3898849536"] = "One person from the research"
 
 -- Test situation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1049923473"] = "Test situation"
 
 -- Knowledge and uncertainty
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1147870258"] = "Knowledge and uncertainty"
-
--- How you convey evidence, trade-offs between values, and open questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1290723890"] = "How you convey evidence, trade-offs between values, and open questions."
-
--- How you convey evidence, trade-offs between values, and open questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1290723890::INFORMAL"] = "How you convey evidence, trade-offs between values, and open questions."
 
 -- Event details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T135387869"] = "Event details"
@@ -2400,6 +2673,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T25243
 
 -- You can fill in single fields or start right away in the chat.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2524378548::INFORMAL"] = "You can fill in single fields or start right away in the chat."
+
+-- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618"] = "How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step."
+
+-- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618::INFORMAL"] = "How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step."
 
 -- Goals and role
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2988481290"] = "Goals and role"
@@ -2419,6 +2698,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T30523
 -- Strategy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3205650756"] = "Strategy"
 
+-- Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3595750805"] = "Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth."
+
+-- Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3595750805::INFORMAL"] = "Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth."
+
 -- Results and materials
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3602322182"] = "Results and materials"
 
@@ -2430,12 +2715,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T51769
 
 -- What you take away from your preparation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T517692701::INFORMAL"] = "What you take away from your preparation."
-
--- Play through critical questions and opposing positions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T573043138"] = "Play through critical questions and opposing positions."
-
--- Play through critical questions and opposing positions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T573043138::INFORMAL"] = "Play through critical questions and opposing positions."
 
 -- What you know for sure, what is uncertain, and where your expertise ends.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T762525208"] = "What you know for sure, what is uncertain, and where your expertise ends."
@@ -2475,6 +2754,84 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288:
 
 -- Public detail: the research of the lab receives it
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3459633363"] = "Public detail: the research of the lab receives it"
+
+-- {0} of at most {1} values chosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2016759665"] = "{0} of at most {1} values chosen."
+
+-- Please enter a name, or remove the value.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524"] = "Please enter a name, or remove the value."
+
+-- Please enter a name, or remove the value.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524::INFORMAL"] = "Please enter a name, or remove the value."
+
+-- You have added {0} values of your own, as many as the card sort takes.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734"] = "You have added {0} values of your own, as many as the card sort takes."
+
+-- You have added {0} values of your own, as many as the card sort takes.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734::INFORMAL"] = "You have added {0} values of your own, as many as the card sort takes."
+
+-- Look more closely
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2616202800"] = "Look more closely"
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2646845972"] = "Add"
+
+-- What it means to you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372"] = "What it means to you"
+
+-- What it means to you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372::INFORMAL"] = "What it means to you"
+
+-- Value
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3511155050"] = "Value"
+
+-- AI Studio cannot show the card sort, because its values are missing or damaged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3585110184"] = "AI Studio cannot show the card sort, because its values are missing or damaged."
+
+-- Based on: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3634031667"] = "Based on: {0}"
+
+-- Own values
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3651870515"] = "Own values"
+
+-- Round {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3695292997"] = "Round {0}"
+
+-- Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772"] = "Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality."
+
+-- Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772::INFORMAL"] = "Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality."
+
+-- Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849"] = "Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking."
+
+-- Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849::INFORMAL"] = "Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking."
+
+-- Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460"] = "Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely."
+
+-- Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460::INFORMAL"] = "Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely."
+
+-- New value
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T840803648"] = "New value"
+
+-- Not sorted yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2675795693"] = "Not sorted yet"
+
+-- Unclear
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2886397187"] = "Unclear"
+
+-- Less important for this occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2929600398"] = "Less important for this occasion"
+
+-- Also important
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T3500243228"] = "Also important"
+
+-- Especially important
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T3612865466"] = "Especially important"
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T1150375027"] = "The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."
@@ -2803,6 +3160,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1696631610"] 
 -- (Optional) Output language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1821434787"] = "(Optional) Output language"
 
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1849229205"] = "Other"
+
 -- The installed assistant could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1889523922"] = "The installed assistant could not be loaded."
 
@@ -2974,8 +3334,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4004589285::I
 -- Assistant updated.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T40397082"] = "Assistant updated."
 
+-- Let the model choose
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4061595525"] = "Let the model choose"
+
 -- Allow AI Studio profiles
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4155351992"] = "Allow AI Studio profiles"
+
+-- Your organization disabled this category. Please choose another one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4162610995"] = "Your organization disabled this category. Please choose another one."
+
+-- Your organization disabled this category. Please choose another one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4162610995::INFORMAL"] = "Your organization disabled this category. Please choose another one."
 
 -- Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4185028924"] = "Issue: {0}"
@@ -3066,6 +3435,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::
 
 -- The model returned an empty JSON object.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2410202327"] = "The model returned an empty JSON object."
+
+-- The model's answer names a category AI Studio does not know, or a custom category without its name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2704199301"] = "The model's answer names a category AI Studio does not know, or a custom category without its name."
 
 -- The model returned an unusable JSON response.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2967613975"] = "The model returned an unusable JSON response."
@@ -7771,6 +8143,42 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3571008422::INFORMAL"] =
 -- The result is ready.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "The result is ready."
 
+-- Expand this category
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T1750778093"] = "Expand this category"
+
+-- The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2720183235"] = "The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the \"Send to ...\" menu."
+
+-- The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2720183235::INFORMAL"] = "The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the \"Send to ...\" menu."
+
+-- The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2725056496"] = "The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the \"Send to ...\" menu."
+
+-- The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2725056496::INFORMAL"] = "The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the \"Send to ...\" menu."
+
+-- You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2970234687"] = "You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens."
+
+-- You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2970234687::INFORMAL"] = "You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens."
+
+-- Hide the category '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T3025364089"] = "Hide the category '{0}'?"
+
+-- Hide this category
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T3438455681"] = "Hide this category"
+
+-- If you only want a better overview, click the heading of the category instead: that collapses it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T815674974"] = "If you only want a better overview, click the heading of the category instead: that collapses it."
+
+-- If you only want a better overview, click the heading of the category instead: that collapses it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T815674974::INFORMAL"] = "If you only want a better overview, click the heading of the category instead: that collapses it."
+
+-- Collapse this category
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T941766518"] = "Collapse this category"
+
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Show or hide the detailed security information."
 
@@ -9157,14 +9565,41 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 -- Change what this tile opens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Change what this tile opens"
 
+-- This conversation fills the context window of the model. Choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T103248473"] = "This conversation fills the context window of the model. Choose a provider whose model reads more at once."
+
+-- This conversation fills the context window of the model. Choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T103248473::INFORMAL"] = "This conversation fills the context window of the model. Choose a provider whose model reads more at once."
+
 -- Stop
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1266644741"] = "Stop"
 
 -- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1561705002"] = "AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it."
 
+-- approx. {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1992478915"] = "approx. {0} of {1} tokens"
+
+-- Delete this conversation and start it over?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982"] = "Delete this conversation and start it over?"
+
+-- Delete this conversation and start it over?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982::INFORMAL"] = "Delete this conversation and start it over?"
+
+-- Start the conversation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2172806379"] = "Start the conversation"
+
 -- Export message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T274919936"] = "Export message"
+
+-- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281"] = "AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it."
+
+-- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281::INFORMAL"] = "AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it."
+
+-- approx. {0} tokens; the context window of this model is unknown
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T357466604"] = "approx. {0} tokens; the context window of this model is unknown"
 
 -- Your message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949"] = "Your message"
@@ -9172,11 +9607,38 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949"] = "Your messa
 -- Your message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949::INFORMAL"] = "Your message"
 
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3757008686"] = "AI Studio could not delete this conversation. Please try again."
+
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3757008686::INFORMAL"] = "AI Studio could not delete this conversation. Please try again."
+
+-- {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3996190985"] = "{0} of {1} tokens"
+
 -- Send
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4069397711"] = "Send"
 
+-- This conversation fills most of the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4195068513"] = "This conversation fills most of the context window of the model."
+
+-- Start over
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T606705767"] = "Start over"
+
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T857715435"] = "approx. {0} tokens"
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T962106497"] = "This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once."
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T962106497::INFORMAL"] = "This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T991103295"] = "This conversation fills most of the context window of the model. Soon, you will have to start it over."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T991103295::INFORMAL"] = "This conversation fills most of the context window of the model. Soon, you will have to start it over."
 
 -- Copy the path: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1140628382"] = "Copy the path: {0}"
@@ -15088,6 +15550,48 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T4
 -- The language in which the assistants you build answer.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T42126731::INFORMAL"] = "The language in which the assistants you build answer."
 
+-- There are no categories to show or hide right now.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2279201345"] = "There are no categories to show or hide right now."
+
+-- Hiding a category says that you do not need its assistants. Choose whether AI Studio still offers them elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2321353169"] = "Hiding a category says that you do not need its assistants. Choose whether AI Studio still offers them elsewhere, e.g., in the \"Send to ...\" menu."
+
+-- Hiding a category says that you do not need its assistants. Choose whether AI Studio still offers them elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2321353169::INFORMAL"] = "Hiding a category says that you do not need its assistants. Choose whether AI Studio still offers them elsewhere, e.g., in the \"Send to ...\" menu."
+
+-- What should happen to assistants of categories you hid?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2813197614"] = "What should happen to assistants of categories you hid?"
+
+-- What should happen to assistants of categories you hid?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2813197614::INFORMAL"] = "What should happen to assistants of categories you hid?"
+
+-- What should happen to assistants of categories you collapsed?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2994249650"] = "What should happen to assistants of categories you collapsed?"
+
+-- What should happen to assistants of categories you collapsed?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2994249650::INFORMAL"] = "What should happen to assistants of categories you collapsed?"
+
+-- The category is hidden
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T3228924424"] = "The category is hidden"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T3448155331"] = "Close"
+
+-- The category is shown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T3595686409"] = "The category is shown"
+
+-- Categories
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T4034259341"] = "Categories"
+
+-- Assistant Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T4124037832"] = "Assistant Settings"
+
+-- Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786145170"] = "Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the \"Send to ...\" menu."
+
+-- Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786145170::INFORMAL"] = "Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the \"Send to ...\" menu."
+
 -- Default minimum pause between files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1008440099"] = "Default minimum pause between files"
 
@@ -17266,17 +17770,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1271524187"] = "Analyze a documen
 -- Analyze a document regarding defined rules and extract key information.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1271524187::INFORMAL"] = "Analyze a document regarding defined rules and extract key information."
 
--- Business
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T131837803"] = "Business"
-
 -- Legal Check
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1348190638"] = "Legal Check"
 
 -- Identify strengths, weaknesses, opportunities, threats, and practical next steps from provided information.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1356376259"] = "Identify strengths, weaknesses, opportunities, threats, and practical next steps from provided information."
-
--- General
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1432485131"] = "General"
 
 -- Grammar & Spelling
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1514925962"] = "Grammar & Spelling"
@@ -17362,17 +17860,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2770149758"] = "Document Analysis
 -- Visual Briefing Assistant
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T277804139"] = "Visual Briefing Assistant"
 
--- AI Studio Development
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2830810750"] = "AI Studio Development"
-
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254"] = "Generate a job posting for a given job description."
 
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254::INFORMAL"] = "Generate a job posting for a given job description."
-
--- Installed Assistants
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T295232966"] = "Installed Assistants"
 
 -- My Tasks
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3011450657"] = "My Tasks"
@@ -17389,14 +17881,17 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311775455::INFORMAL"] = "The auto
 -- Translate AI Studio text content into other languages
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3181803840"] = "Translate AI Studio text content into other languages"
 
--- Software Engineering
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3260960011"] = "Software Engineering"
-
 -- Assistant Builder
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3303547904"] = "Assistant Builder"
 
 -- Rewrite & Improve
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3309133329"] = "Rewrite & Improve"
+
+-- You hid all categories. You can show them again in the assistant settings, which the gear next to the heading opens.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3608690820"] = "You hid all categories. You can show them again in the assistant settings, which the gear next to the heading opens."
+
+-- You hid all categories. You can show them again in the assistant settings, which the gear next to the heading opens.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3608690820::INFORMAL"] = "You hid all categories. You can show them again in the assistant settings, which the gear next to the heading opens."
 
 -- Icon Finder
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3693102312"] = "Icon Finder"
@@ -17406,6 +17901,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3733831260"] = "Generate your own
 
 -- Generate your own assistants.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3733831260::INFORMAL"] = "Generate your own assistants."
+
+-- Open the assistant settings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3745279719"] = "Open the assistant settings"
 
 -- Generate an ERI server to integrate business systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3756213118"] = "Generate an ERI server to integrate business systems."
@@ -17439,6 +17937,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537"] = "Ask a question ab
 
 -- Ask a question about a legal document.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537::INFORMAL"] = "Ask a question about a legal document."
+
+-- Assistant Settings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4124037832"] = "Assistant Settings"
 
 -- Log Viewer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4130241777"] = "Log Viewer"
@@ -17475,9 +17976,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T892147062"] = "View and filter AI
 
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Localization"
-
--- Learning & Reflecting
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T912918956"] = "Learning & Reflecting"
 
 -- Turn texts and documents into slides, also as a PowerPoint file in the design of your template.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T943132958"] = "Turn texts and documents into slides, also as a PowerPoint file in the design of your template."
@@ -18625,6 +19123,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2430906247::INFORMAL"] = "{0} Do you
 -- The tile '{0}' has been updated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "The tile '{0}' has been updated."
 
+-- Your organization disabled all categories of this assistant: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2444737585"] = "Your organization disabled all categories of this assistant: {0}"
+
+-- Your organization disabled all categories of this assistant: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2444737585::INFORMAL"] = "Your organization disabled all categories of this assistant: {0}"
+
 -- Share dialog not available
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2445896850"] = "Share dialog not available"
 
@@ -18717,6 +19221,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T659549952"] = "The plugin archive wa
 
 -- An error occurred while exporting the plugin.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T759681732"] = "An error occurred while exporting the plugin."
+
+-- Your organization disabled the category '{0}' of this assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T798759833"] = "Your organization disabled the category '{0}' of this assistant"
+
+-- Your organization disabled the category '{0}' of this assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T798759833::INFORMAL"] = "Your organization disabled the category '{0}' of this assistant"
 
 -- The plugin could not be imported: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T837269472"] = "The plugin could not be imported: {0}"
@@ -19228,6 +19738,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1245257804
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1258653480"] = "Settings"
 
+-- Keep offering me the assistants, e.g., in the "Send to ..." menu
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1289869768"] = "Keep offering me the assistants, e.g., in the \"Send to ...\" menu"
+
 -- No key is sending the input
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1311973034"] = "No key is sending the input"
 
@@ -19257,6 +19770,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1874928511
 
 -- Always expand navigation
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1991359958"] = "Always expand navigation"
+
+-- Treat the assistants as if they did not exist, e.g., not in the "Send to ..." menu
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2049952564"] = "Treat the assistants as if they did not exist, e.g., not in the \"Send to ...\" menu"
 
 -- Show also experimental features: these are experimental; expect bugs, missing features, many changes
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2091731959"] = "Show also experimental features: these are experimental; expect bugs, missing features, many changes"
@@ -19644,39 +20160,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T373499115"] = "Your dat
 
 -- Your data sources could not be used. This answer was created without them.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T373499115::INFORMAL"] = "Your data sources could not be used. This answer was created without them."
-
--- Software Development
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1025369409"] = "Software Development"
-
--- Business
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T131837803"] = "Business"
-
--- General
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1432485131"] = "General"
-
--- Other
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1849229205"] = "Other"
-
--- Please select the assistant category
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2552974770"] = "Please select the assistant category"
-
--- Please select the assistant category
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2552974770::INFORMAL"] = "Please select the assistant category"
-
--- AI Studio Development
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2830810750"] = "AI Studio Development"
-
--- Productivity
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2887181245"] = "Productivity"
-
--- Scientific
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T3802462536"] = "Scientific"
-
--- Select the assistant category
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T4193824894"] = "Select the assistant category"
-
--- Learning & Reflecting
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T912918956"] = "Learning & Reflecting"
 
 -- This assistant is already running. AI Studio opens the running session instead.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTLAUNCH::ASSISTANTLAUNCHSERVICE::T2575715765"] = "This assistant is already running. AI Studio opens the running session instead."
@@ -21154,6 +21637,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T949
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "The table AUTHORS does not exist or is using an invalid syntax."
 
+-- The table CUSTOM_CATEGORIES is using an invalid syntax. It must be a table of names.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T131394700"] = "The table CUSTOM_CATEGORIES is using an invalid syntax. It must be a table of names."
+
 -- The field NAME does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1340447036"] = "The field NAME does not exist or is not a valid string."
 
@@ -21184,6 +21670,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2262604281"] = "The
 -- The field DESCRIPTION does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T229488255"] = "The field DESCRIPTION does not exist or is not a valid string."
 
+-- The table CUSTOM_CATEGORIES requires the category CUSTOM in the table CATEGORIES.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2426905758"] = "The table CUSTOM_CATEGORIES requires the category CUSTOM in the table CATEGORIES."
+
+-- The category CUSTOM requires the table CUSTOM_CATEGORIES with at least one name.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2515975321"] = "The category CUSTOM requires the table CUSTOM_CATEGORIES with at least one name."
+
 -- The field VERSION is not a valid version number. The version number must be formatted as string in the major.minor.patch format (X.X.X).
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2538827536"] = "The field VERSION is not a valid version number. The version number must be formatted as string in the major.minor.patch format (X.X.X)."
 
@@ -21204,6 +21696,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3667396132"] = "The
 
 -- The field NAME is empty. The name must be a non-empty string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3763759727"] = "The field NAME is empty. The name must be a non-empty string."
+
+-- The table CUSTOM_CATEGORIES contains an empty name or a value which is not a text.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T4089014619"] = "The table CUSTOM_CATEGORIES contains an empty name or a value which is not a text."
 
 -- The field SUPPORT_CONTACT does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T4189964941"] = "The field SUPPORT_CONTACT does not exist or is not a valid string."
@@ -21235,6 +21730,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T10253
 -- Business
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T131837803"] = "Business"
 
+-- General
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1432485131"] = "General"
+
 -- Music
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1481252212"] = "Music"
 
@@ -21243,6 +21741,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T15858
 
 -- Weather
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1726658099"] = "Weather"
+
+-- Custom category
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1885949922"] = "Custom category"
 
 -- Industry
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T208409567"] = "Industry"
@@ -21265,6 +21766,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T25870
 -- Shopping
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2704337693"] = "Shopping"
 
+-- AI Studio Development
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2830810750"] = "AI Studio Development"
+
 -- Fitness
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2892517655"] = "Fitness"
 
@@ -21279,9 +21783,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T34217
 
 -- Entertainment
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T3562575449"] = "Entertainment"
-
--- Education
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T379048501"] = "Education"
 
 -- AI Studio Core
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T4005865962"] = "AI Studio Core"
@@ -21306,6 +21807,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T85056
 
 -- Science
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T904504157"] = "Science"
+
+-- Learning & Reflecting
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T912918956"] = "Learning & Reflecting"
 
 -- Content Creation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T914642375"] = "Content Creation"
@@ -22711,8 +23215,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1
 -- The revision model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1411545143"] = "The revision model did not return a usable answer."
 
+-- Your organization disabled these categories of your assistant: {0}. Please choose other categories.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1647997085"] = "Your organization disabled these categories of your assistant: {0}. Please choose other categories."
+
+-- Your organization disabled these categories of your assistant: {0}. Please choose other categories.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1647997085::INFORMAL"] = "Your organization disabled these categories of your assistant: {0}. Please choose other categories."
+
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1725856265"] = "Description"
+
+-- The categories of the revised assistant do not match the revised plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1778095727"] = "The categories of the revised assistant do not match the revised plugin."
 
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1809312323"] = "Please select a provider."
@@ -22764,6 +23277,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3
 
 -- Assistant Plugin Revision
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3245954919"] = "Assistant Plugin Revision"
+
+-- Your organization disabled the category '{0}'. Please choose another category for your assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3254953496"] = "Your organization disabled the category '{0}'. Please choose another category for your assistant."
+
+-- Your organization disabled the category '{0}'. Please choose another category for your assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3254953496::INFORMAL"] = "Your organization disabled the category '{0}'. Please choose another category for your assistant."
 
 -- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3278037634"] = "The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."
@@ -22830,6 +23349,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4
 
 -- The draft model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4183375977"] = "The draft model did not return a usable answer."
+
+-- The categories of the generated assistant do not match the generated plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4224887725"] = "The categories of the generated assistant do not match the generated plugin."
 
 -- The Assistant Builder response schema could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4235833611"] = "The Assistant Builder response schema could not be loaded."
@@ -22974,6 +23496,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2466659933"] = "
 
 -- The assistant chat launcher references data source '{0}', but that data source does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T289191545"] = "The assistant chat launcher references data source '{0}', but that data source does not exist."
+
+-- Your organization disabled the categories of this assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2988562427"] = "Your organization disabled the categories of this assistant."
+
+-- Your organization disabled the categories of this assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2988562427::INFORMAL"] = "Your organization disabled the categories of this assistant."
 
 -- The chat template '{0}' selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3082876173"] = "The chat template '{0}' selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created."
@@ -23550,6 +24078,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGE
 
 -- The tool calling request failed with status code {0}. See the logs for details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3117779001::INFORMAL"] = "The tool calling request failed with status code {0}. See the logs for details."
+
+-- The model did not return a final answer after completing the available tool calls.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3613099681"] = "The model did not return a final answer after completing the available tool calls."
+
+-- The model completed the tool call but did not return a final answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T54566803"] = "The model completed the tool call but did not return a final answer."
 
 -- General
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T1432485131"] = "General"

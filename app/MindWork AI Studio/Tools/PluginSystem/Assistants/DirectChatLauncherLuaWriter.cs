@@ -35,7 +35,7 @@ public static class DirectChatLauncherLuaWriter
     private const string FALLBACK_AUTHOR = "MindWork AI - Assistant Builder";
     private const string FALLBACK_SUPPORT_CONTACT = "mailto:info@mindwork.ai";
     private const string FALLBACK_SOURCE_URL = "https://github.com/MindWorkAI/AI-Studio";
-    private const string FALLBACK_CATEGORY = nameof(PluginCategory.CORE);
+    private const string FALLBACK_CATEGORY = nameof(PluginCategory.COMMON);
     private const string FALLBACK_TARGET_GROUP = nameof(PluginTargetGroup.EVERYONE);
 
     //
@@ -141,9 +141,22 @@ public static class DirectChatLauncherLuaWriter
         builder.AppendLineLF($"SOURCE_URL = \"{Escape(ValueOrFallback(plugin.SourceURL, FALLBACK_SOURCE_URL))}\"");
         builder.AppendLineLF();
 
+        //
+        // CUSTOM needs its names, and the loader refuses it without them. A defective launcher which
+        // lost its names thus keeps its other categories, or falls back like any other:
+        //
+        var customCategories = plugin.CustomCategories.Where(name => !string.IsNullOrWhiteSpace(name)).ToList();
+        var categories = customCategories.Count > 0 ? plugin.Categories : plugin.Categories.Where(category => category is not PluginCategory.CUSTOM).ToList();
         builder.AppendLineLF("-- The categories for the plugin:");
-        builder.AppendLineLF($"CATEGORIES = {WriteEnumList(plugin.Categories, FALLBACK_CATEGORY)}");
+        builder.AppendLineLF($"CATEGORIES = {WriteEnumList(categories, FALLBACK_CATEGORY)}");
         builder.AppendLineLF();
+
+        if (customCategories.Count > 0 && categories.Contains(PluginCategory.CUSTOM))
+        {
+            builder.AppendLineLF("-- The names of the custom categories for the plugin:");
+            builder.AppendLineLF($"CUSTOM_CATEGORIES = {WriteStringList(customCategories, string.Empty)}");
+            builder.AppendLineLF();
+        }
 
         builder.AppendLineLF("-- The target groups for the plugin:");
         builder.AppendLineLF($"TARGET_GROUPS = {WriteEnumList(plugin.TargetGroups, FALLBACK_TARGET_GROUP)}");

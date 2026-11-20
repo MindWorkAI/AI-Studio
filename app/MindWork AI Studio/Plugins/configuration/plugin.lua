@@ -929,6 +929,51 @@ CONFIG["SETTINGS"] = {}
 -- assistant that is supposed to stay hidden, otherwise those become visible too.
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
 
+-- Configure which categories of assistants are disabled. Requires AI Studio v26.11.2 or newer.
+-- Unlike DataApp.HiddenAssistants above, this also covers assistant plugins, e.g., plugins users
+-- imported from the internet. An assistant of a disabled category disappears everywhere: from the
+-- assistants page, from the "Send to" menu, from links, from direct chat launchers, and from the
+-- category selection of the Assistant Builder. Users cannot show it again.
+--
+-- An assistant plugin with several categories stays available while one of its categories is not
+-- disabled. Assistant plugins your organization deployed itself are never disabled by their
+-- categories: a plugin stored below the directory of a configuration plugin, or a plugin which
+-- declares DEPLOYED_USING_CONFIG_SERVER = true and whose code you approved in
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"].
+--
+-- Allowed values are:
+--   COMMON, BUSINESS, EDUCATION, SOFTWARE_DEVELOPMENT, AI_STUDIO_DEVELOPMENT, INDUSTRY,
+--   UTILITY, GAMING, ENTERTAINMENT, SOCIAL, SHOPPING, TRAVEL, HEALTH, FITNESS, FOOD, PARTY,
+--   SPORTS, NEWS, WEATHER, MUSIC, POLITICAL, SCIENCE, TECHNOLOGY, ART, FICTION, WRITING,
+--   CONTENT_CREATION, CUSTOM
+--
+-- COMMON is the category "General"; disabling it disables CORE as well, because both share that
+-- heading. CUSTOM disables every custom category of a plugin. To disable single custom
+-- categories, list their names in DataApp.DisabledCustomAssistantCategories instead; the names
+-- are compared without regard to case.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces these lists
+-- completely, just like DataApp.HiddenAssistants.
+-- CONFIG["SETTINGS"]["DataApp.DisabledAssistantCategories"] = { "ENTERTAINMENT", "GAMING" }
+-- CONFIG["SETTINGS"]["DataApp.DisabledCustomAssistantCategories"] = { "Fun & Games" }
+
+-- Users may collapse categories on the assistants page, and hide categories they do not need.
+-- Both are their own choices, which your organization cannot preset. You can preset, though,
+-- what happens to the assistants of such categories outside of the assistants page, e.g., in
+-- the "Send to ..." menu. Requires AI Studio v26.11.2 or newer. Allowed values are:
+--   KEEP_OFFERING: AI Studio keeps offering the assistants.
+--   TREAT_AS_ABSENT: AI Studio treats the assistants as if they did not exist.
+--
+-- For collapsed categories; the default is KEEP_OFFERING:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.CollapsedCategoryAssistants"] = "TREAT_AS_ABSENT"
+--
+-- For hidden categories; the default is TREAT_AS_ABSENT:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.HiddenCategoryAssistants"] = "TREAT_AS_ABSENT"
+--
+-- Allow users to change these options even though your organization set them above:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.CollapsedCategoryAssistants.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantsPage.HiddenCategoryAssistants.AllowUserOverride"] = true
+
 -- Configure organization defaults for the Visual Briefing Assistant.
 -- The assistant turns documents, images, audio, and video into a self-contained interactive
 -- briefing. All settings below are defaults for new briefings; users can change them per briefing.
@@ -1009,6 +1054,18 @@ CONFIG["SETTINGS"] = {}
 -- and the lab shows a banner while one of them replaces a prompt. Set it to false and lock it to keep
 -- users with the prompts which come with AI Studio.
 -- CONFIG["SETTINGS"]["DataBeyondFactsLab.AllowPromptOverrides"] = false
+--
+-- Configure the notes of your organization for public appearances, e.g., to contact the press office
+-- before every public event. The lab shows them word for word in a panel of their own, and the chats of
+-- the steps receive them along with the first message, as information from the organization. They do not
+-- replace the rules of the lab: where they contradict them, the rules of the lab apply, and the chat
+-- points out the contradiction. The material "Open points and next steps" ends with them as well. Markdown
+-- is allowed, with at most 2000 characters; the lab ignores longer notes. The options of the lab offer no
+-- field for them, so only a configuration plugin sets them.
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.OrganizationRules"] = [[
+-- - Before every public event, contact the press office: press@example.org
+-- - Speak on behalf of the institute only after consulting your head of department.
+-- ]]
 
 -- Configure defaults for the Model Comparison assistant.
 -- Preselection must be enabled for the remaining Model Comparison settings to take effect.

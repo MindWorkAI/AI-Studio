@@ -26,6 +26,12 @@ public sealed class InMemoryEmbeddedChatStore : IEmbeddedChatStore
     /// <param name="chatId">The ID of the chat.</param>
     public IReadOnlyList<ContentBlock> StoredBlocks(Guid chatId) => this.threads.TryGetValue(chatId, out var thread) ? thread.Blocks : [];
 
+    /// <summary>
+    /// Tells whether a chat is stored.
+    /// </summary>
+    /// <param name="chatId">The ID of the chat.</param>
+    public bool IsStored(Guid chatId) => this.threads.ContainsKey(chatId);
+
     /// <inheritdoc />
     public Task<ChatThread?> LoadThreadAsync(Guid chatId, CancellationToken token = default)
     {
@@ -41,6 +47,13 @@ public sealed class InMemoryEmbeddedChatStore : IEmbeddedChatStore
         // A copy of the list, so that what the chat adds later does not change what was stored:
         this.threads[thread.ChatId] = thread with { Blocks = [.. thread.Blocks] };
         this.SaveCount++;
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task DeleteThreadAsync(Guid chatId, CancellationToken token = default)
+    {
+        this.threads.Remove(chatId);
         return Task.CompletedTask;
     }
 }

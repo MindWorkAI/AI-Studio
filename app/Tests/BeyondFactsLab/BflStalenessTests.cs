@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+
 using AIStudio.Assistants.BeyondFactsLab;
 
 namespace AIStudio.Tests.BeyondFactsLab;
@@ -165,6 +168,102 @@ public sealed class BflStalenessTests
         second.Set(BflFieldCatalog.UNCERTAINTIES, "Text");
 
         Assert.That(BflStaleness.FingerprintOf(first), Is.Not.EqualTo(BflStaleness.FingerprintOf(second)));
+    }
+
+    [Test]
+    public void WithoutACardSortTheFingerprintStaysAsItWasBeforeTheCardSort()
+    {
+        var withoutCardSort = new BflStepFormData();
+        withoutCardSort.Set(BflFieldCatalog.VALUES_AND_CONCERNS, "Text");
+        var withEmptyCardSort = new BflStepFormData { CardSort = new() };
+        withEmptyCardSort.Set(BflFieldCatalog.VALUES_AND_CONCERNS, "Text");
+
+        // How the lab computed the fingerprint of this form before it had a card sort:
+        var before = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes($"{BflFieldCatalog.VALUES_AND_CONCERNS}\0Text\0")));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflStaleness.FingerprintOf(withoutCardSort), Is.EqualTo(before));
+            Assert.That(BflStaleness.FingerprintOf(withEmptyCardSort), Is.EqualTo(before));
+        }
+    }
+
+    [Test]
+    public void TheFingerprintCountsTheCardSort()
+    {
+        var empty = new BflStepFormData();
+        var sorted = new BflStepFormData { CardSort = new() };
+        sorted.CardSort.Sort("honesty", BflValueCategory.ESPECIALLY_IMPORTANT);
+        var sortedOtherwise = new BflStepFormData { CardSort = new() };
+        sortedOtherwise.CardSort.Sort("honesty", BflValueCategory.UNCLEAR);
+        var withOwnValue = new BflStepFormData { CardSort = new() };
+        withOwnValue.CardSort.AddOwnValue("Curiosity", string.Empty);
+
+        var fingerprints = new[] { empty, sorted, sortedOtherwise, withOwnValue }.Select(BflStaleness.FingerprintOf).ToList();
+
+        Assert.That(fingerprints, Is.Unique);
+    }
+
+    [Test]
+    public void TheOrderOfTheValuesToLookAtMoreCloselyIsNoChange()
+    {
+        var first = new BflStepFormData { CardSort = new() { Focus = ["honesty", "openness"] } };
+        var second = new BflStepFormData { CardSort = new() { Focus = ["openness", "honesty"] } };
+
+        Assert.That(BflStaleness.FingerprintOf(first), Is.EqualTo(BflStaleness.FingerprintOf(second)));
+    }
+
+    [Test]
+    public void WithGenericCounterpartsTheFingerprintStaysAsItWasBeforeTheSimulation()
+    {
+        var withoutSimulation = new BflStepFormData();
+        withoutSimulation.Set(BflFieldCatalog.TEST_NOTES, "Text");
+        var generic = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.GENERIC, People = ["Eva Klein"] } };
+        generic.Set(BflFieldCatalog.TEST_NOTES, "Text");
+
+        // How the lab computed the fingerprint of this form before it simulated people:
+        var before = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes($"{BflFieldCatalog.TEST_NOTES}\0Text\0")));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflStaleness.FingerprintOf(withoutSimulation), Is.EqualTo(before));
+            Assert.That(BflStaleness.FingerprintOf(generic), Is.EqualTo(before));
+        }
+    }
+
+    [Test]
+    public void TheFingerprintCountsTheModeAndThePeopleOfTheSimulation()
+    {
+        var empty = new BflStepFormData();
+        var single = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.SINGLE_PERSON, People = ["Eva Klein"] } };
+        var panel = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.PANEL_DISCUSSION, People = ["Eva Klein"] } };
+        var otherPerson = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.SINGLE_PERSON, People = ["Frank Ott"] } };
+
+        var fingerprints = new[] { empty, single, panel, otherPerson }.Select(BflStaleness.FingerprintOf).ToList();
+
+        Assert.That(fingerprints, Is.Unique);
+    }
+
+    [Test]
+    public void TheOrderAndTheSpellingOfTheSimulatedPeopleIsNoChange()
+    {
+        var first = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.PANEL_DISCUSSION, People = ["Eva Klein", "Frank Ott"] } };
+        var second = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.PANEL_DISCUSSION, People = ["frank  ott", "Eva Klein"] } };
+
+        Assert.That(BflStaleness.FingerprintOf(first), Is.EqualTo(BflStaleness.FingerprintOf(second)));
+    }
+
+    [Test]
+    public void AChangedCardSortWeighsLikeChangedDetails()
+    {
+        var form = new BflStepFormData();
+        var workStates = new Dictionary<BflStep, BflWorkState>();
+        Confirm(workStates, BflStep.VALUES_AND_PERSPECTIVES, form);
+
+        form.CardSort = new();
+        form.CardSort.Sort("openness", BflValueCategory.ALSO_IMPORTANT);
+
+        Assert.That(BflStaleness.Of(BflStep.VALUES_AND_PERSPECTIVES, workStates, Forms((BflStep.VALUES_AND_PERSPECTIVES, form))), Is.EqualTo(BflWorkStateStatus.DETAILS_CHANGED));
     }
 
     [Test]

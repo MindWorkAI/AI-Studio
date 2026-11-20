@@ -74,6 +74,35 @@ public sealed class BflFieldCatalogTests
     }
 
     [Test]
+    public void TheValuesStepShowsTheThreeSectionsOfLarasDialogueLogicInTheirOrder()
+    {
+        var sections = BflFieldCatalog.ForStep(BflStep.VALUES_AND_PERSPECTIVES).Select(field => field.Section).Distinct();
+
+        Assert.That(sections, Is.EqualTo(new[] { BflFormSection.WHAT_MATTERS_TO_ME, BflFormSection.WHAT_TOUCHES_ME, BflFormSection.WHAT_MOVES_OTHERS }));
+    }
+
+    [Test]
+    public void TheFieldsOfASectionFollowEachOtherAndHaveAHeading()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            foreach (var step in BflStep.All)
+            {
+                var sections = BflFieldCatalog.ForStep(step).Select(field => field.Section).ToList();
+                var runs = sections.Where((section, index) => index == 0 || sections[index - 1] != section).ToList();
+                Assert.That(runs, Is.Unique, $"The fields of a section of {step} do not follow each other.");
+                Assert.That(runs.Where(section => section is not BflFormSection.NONE).Select(section => section.Title), Has.None.Empty, $"A section of {step} has no heading.");
+            }
+        }
+    }
+
+    [Test]
+    public void OnlyTheSectionAboutWhatMattersHoldsTheCardSort()
+    {
+        Assert.That(Enum.GetValues<BflFormSection>().Where(section => section.HasCardSort), Is.EqualTo(new[] { BflFormSection.WHAT_MATTERS_TO_ME }));
+    }
+
+    [Test]
     public void EveryStepHasAFormWithATitleAndADescription()
     {
         using (Assert.EnterMultipleScope())

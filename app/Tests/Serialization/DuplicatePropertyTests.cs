@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.Builder;
 using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Tools.ERIClient;
@@ -25,6 +26,7 @@ public sealed class DuplicatePropertyTests
         yield return new TestCaseData(LauncherTextsResponse.JSON_OPTIONS).SetName("The texts the Assistant Builder writes for a chat launcher");
         yield return new TestCaseData(VisualBriefingJson.Canonical).SetName("The answers of the model for a visual briefing");
         yield return new TestCaseData(ERIClientBase.JSON_OPTIONS).SetName("The answers of ERI servers");
+        yield return new TestCaseData(BflModelAnswerJson.OPTIONS).SetName("The answers of the model for the BeyondFacts Lab");
     }
 
     [TestCaseSource(nameof(OptionsForAnswersFromOutside))]

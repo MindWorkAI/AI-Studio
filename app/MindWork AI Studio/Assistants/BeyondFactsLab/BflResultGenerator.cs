@@ -94,7 +94,7 @@ public sealed class BflResultGenerator(BeyondFactsLabStore store, BflConversatio
             sessionId = (await sessionService.TryBeginAsync(sessionKey, Tools.Components.BEYOND_FACTS_LAB_ASSISTANT.Name, cancellation, null, new(StringComparer.Ordinal))).SessionId;
             await this.NotifyAsync(location);
 
-            var text = BflResultText.Read(await BflHiddenRequest.AskAsync(hidden, provider, request, requestMaterial.Images, cancellation.Token));
+            var text = BflResultText.Read(await BflHiddenRequest.AskAsync(hidden, provider, request, requestMaterial.Images, requestMaterial.OrganizationRules, cancellation.Token));
             if (cancellation.IsCancellationRequested)
             {
                 status = AssistantSessionStatus.CANCELED;

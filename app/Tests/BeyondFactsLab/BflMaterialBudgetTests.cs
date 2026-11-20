@@ -1,4 +1,5 @@
 using AIStudio.Assistants.BeyondFactsLab;
+using AIStudio.Chat.Embedded;
 using AIStudio.Models;
 
 namespace AIStudio.Tests.BeyondFactsLab;
@@ -14,7 +15,7 @@ public sealed class BflMaterialBudgetTests
     {
         var characters = BflMaterialBudget.CharactersFor(ContextWindow.Of(128_000), 90_000);
 
-        Assert.That(characters, Is.EqualTo(((128_000 - BflTokenBudget.RESERVE_TOKENS) * 4 - 90_000) / 2));
+        Assert.That(characters, Is.EqualTo(((128_000 - EmbeddedChatTokenBudget.RESERVE_TOKENS) * 4 - 90_000) / 2));
     }
 
     [Test]
@@ -22,7 +23,7 @@ public sealed class BflMaterialBudgetTests
     {
         var characters = BflMaterialBudget.CharactersFor(ContextWindow.Of(128_000), 90_000, sentImages: 2);
 
-        Assert.That(characters, Is.EqualTo(((128_000 - BflTokenBudget.RESERVE_TOKENS - 2 * BflMaterialBudget.TOKENS_PER_IMAGE) * 4 - 90_000) / 2));
+        Assert.That(characters, Is.EqualTo(((128_000 - EmbeddedChatTokenBudget.RESERVE_TOKENS - 2 * BflMaterialBudget.TOKENS_PER_IMAGE) * 4 - 90_000) / 2));
     }
 
     [Test]

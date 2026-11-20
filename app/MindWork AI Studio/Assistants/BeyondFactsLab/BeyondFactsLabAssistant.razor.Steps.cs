@@ -24,6 +24,14 @@ public partial class BeyondFactsLabAssistant
     private int ActiveStepIndex => (int)this.activeStep;
 
     /// <summary>
+    /// Gets a number which changes whenever the person chooses others to simulate in the step "Test situation", whose
+    /// research the prompt of its conversation carries, so that the conversation counts its tokens anew.
+    /// </summary>
+    private int ChatDetailsVersion => this.activeStep is BflStep.TEST_SITUATION && this.forms.GetValueOrDefault(BflStep.TEST_SITUATION)?.Simulation is { } simulation
+        ? HashCode.Combine(simulation.Mode, string.Join('\n', simulation.People))
+        : 0;
+
+    /// <summary>
     /// Shows a preparation with its forms, at the step the person looked at last.
     /// </summary>
     /// <param name="project">The preparation, or null to show none.</param>

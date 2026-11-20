@@ -8,7 +8,7 @@
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @TA("You can enter text, use one or more documents or images, or use both. At least one of these options is required.")
 </MudJustifiedText>
-<MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" Sizing="InputSizing.Fixed" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" @bind-Value="@this.inputContent" Validation="@this.ValidatingContext" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" Adornment="Adornment.Start" Lines="6" MaxLines="12" Sizing="InputSizing.Fixed" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 @* Side by side where the window is wide enough; each column ends with its zone, so both zones line up below explanations of different length: *@
 <MudGrid Class="mt-1">
@@ -54,7 +54,7 @@
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @TA("Please enter a title for the presentation. This will help the LLM to select more relevant content.")
 </MudJustifiedText>
-<MudTextField T="string" @bind-Text="@this.inputTitle" Validation="@this.ValidatingTitle" Adornment="Adornment.Start" Label="@T("Presentation title")" Variant="Variant.Outlined" Class="mb-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" @bind-Value="@this.inputTitle" Validation="@this.ValidatingTitle" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" Adornment="Adornment.Start" Label="@T("Presentation title")" Variant="Variant.Outlined" Class="mb-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudText Typo="Typo.h6"  Class="mb-1 mt-3"> @T("Important Aspects")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">

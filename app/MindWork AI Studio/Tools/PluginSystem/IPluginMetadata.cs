@@ -61,7 +61,15 @@ public interface IPluginMetadata
     /// The categories of this plugin.
     /// </summary>
     public PluginCategory[] Categories { get; }
-    
+
+    /// <summary>
+    /// The names of the categories this plugin names itself, when its categories contain CUSTOM.
+    /// </summary>
+    /// <remarks>
+    /// These names come in the language of the plugin's authors, so AI Studio shows them as they are.
+    /// </remarks>
+    public string[] CustomCategories { get; }
+
     /// <summary>
     /// The target groups of this plugin.
     /// </summary>

@@ -1047,6 +1047,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 -- Details missing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T506453229"] = "Angaben fehlen"
 
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T661725016"] = "Vorgaben Ihrer Organisation"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T661725016::INFORMAL"] = "Vorgaben deiner Organisation"
+
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T724820205"] = "Veraltet"
 
@@ -1058,6 +1064,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::
 
 -- The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T916994259::INFORMAL"] = "Das Lab hat die Recherche im Web noch nicht gestartet. Übernimm oder verwirf zuerst den Vorschlag unter dem Arbeitsstand, ob die Veranstaltung öffentlich ist. Danach kannst du die Recherche im Schritt „{0}“ starten."
+
+-- Your organization has set these guidelines for public appearances. The conversations of the steps know them as well, and the material '{0}' ends with them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T951943350"] = "Ihre Organisation hat diese Vorgaben für öffentliche Auftritte festgelegt. Auch die Gespräche der Schritte kennen sie, und das Material „{0}“ endet mit ihnen."
+
+-- Your organization has set these guidelines for public appearances. The conversations of the steps know them as well, and the material '{0}' ends with them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T951943350::INFORMAL"] = "Deine Organisation hat diese Vorgaben für öffentliche Auftritte festgelegt. Auch die Gespräche der Schritte kennen sie, und das Material „{0}“ endet mit ihnen."
 
 -- Your preparations
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BEYONDFACTSLABASSISTANT::T972511272"] = "Ihre Vorbereitungen"
@@ -1089,20 +1101,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T586836727
 -- Phone number
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLANONYMIZER::T987655160"] = "Telefonnummer"
 
--- Stop
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T1266644741"] = "Stoppen"
-
--- approx. {0} of {1} tokens
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T1992478915"] = "ca. {0} von {1} Token"
-
 -- Delete this conversation and start it over?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2055072982"] = "Dieses Gespräch löschen und neu beginnen?"
 
 -- Delete this conversation and start it over?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2055072982::INFORMAL"] = "Dieses Gespräch löschen und neu beginnen?"
 
--- Start the conversation
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2172806379"] = "Gespräch beginnen"
+-- This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2124231889"] = "Diese Schaltfläche beendet die Übung, und das Lab wertet sie aus. Simuliert das Lab Personen, gibt es erst dann Feedback; schreiben Sie „Pause“, um zwischendurch kurzes Feedback zu erhalten."
+
+-- This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2124231889::INFORMAL"] = "Diese Schaltfläche beendet die Übung, und das Lab wertet sie aus. Simuliert das Lab Personen, gibt es erst dann Feedback; schreib „Pause“, um zwischendurch kurzes Feedback zu erhalten."
 
 -- The lab opens the conversation of this step with what your details already say, and asks for what is missing. You can also write first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2610371636"] = "Das Lab eröffnet das Gespräch dieses Schritts mit dem, was Ihre Angaben schon sagen, und fragt nach dem, was fehlt. Sie können auch zuerst schreiben."
@@ -1113,32 +1122,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2610371636::INF
 -- Conversation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2640583206"] = "Gespräch"
 
--- Export message
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T274919936"] = "Nachricht exportieren"
-
 -- Tell the lab what you are preparing for. It tells you whether it fits your task and how to work with it. You can also let the lab begin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2858940496"] = "Erzählen Sie dem Lab, worauf Sie sich vorbereiten. Es sagt Ihnen, ob es zu Ihrer Aufgabe passt und wie Sie damit arbeiten. Sie können das Lab auch beginnen lassen."
 
 -- Tell the lab what you are preparing for. It tells you whether it fits your task and how to work with it. You can also let the lab begin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2858940496::INFORMAL"] = "Erzähl dem Lab, worauf du dich vorbereitest. Es sagt dir, ob es zu deiner Aufgabe passt und wie du damit arbeitest. Du kannst das Lab auch beginnen lassen."
 
--- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2927156281"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Sie können das Gespräch neu beginnen; dabei wird es gelöscht."
-
--- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T2927156281::INFORMAL"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Du kannst das Gespräch neu beginnen; dabei wird es gelöscht."
-
--- approx. {0} tokens; the context window of this model is unknown
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T357466604"] = "ca. {0} Token; das Kontextfenster dieses Modells ist unbekannt"
-
 -- Is the lab right for my task?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3584565592"] = "Passt das Lab zu meiner Aufgabe?"
-
--- Your message
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3642105949"] = "Ihre Nachricht"
-
--- Your message
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3642105949::INFORMAL"] = "Deine Nachricht"
 
 -- Delete the conversation of this step and start it over? Your details stay as they are.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112"] = "Das Gespräch dieses Schritts löschen und neu beginnen? Ihre Angaben bleiben unverändert."
@@ -1146,32 +1137,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112"] = 
 -- Delete the conversation of this step and start it over? Your details stay as they are.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3734341112::INFORMAL"] = "Das Gespräch dieses Schritts löschen und neu beginnen? Deine Angaben bleiben unverändert."
 
--- AI Studio could not delete this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3757008686"] = "AI Studio konnte dieses Gespräch nicht löschen. Bitte versuchen Sie es erneut."
+-- End and evaluate the exercise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3886921817"] = "Übung beenden und auswerten"
 
--- AI Studio could not delete this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3757008686::INFORMAL"] = "AI Studio konnte dieses Gespräch nicht löschen. Bitte versuche es erneut."
-
--- {0} of {1} tokens
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T3996190985"] = "{0} von {1} Token"
-
--- Send
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T4069397711"] = "Senden"
-
--- Start over
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T606705767"] = "Neu beginnen"
-
--- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T962106497"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beginnen Sie es neu, oder wählen Sie einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
-
--- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T962106497::INFORMAL"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beginne es neu, oder wähle einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
-
--- This conversation fills most of the context window of the model. Soon, you will have to start it over.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Bald müssen Sie es neu beginnen."
-
--- This conversation fills most of the context window of the model. Soon, you will have to start it over.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T991103295::INFORMAL"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Bald musst du es neu beginnen."
+-- I would like to end the exercise now and get its evaluation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCHAT::T4175512580"] = "Ich möchte die Übung jetzt beenden und ihre Auswertung erhalten."
 
 -- Once you confirm the work state of a step, it appears here, and the lab builds on it in the later steps.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONFIRMEDWORKSTATES::T281612290"] = "Sobald Sie den Arbeitsstand eines Schritts bestätigen, erscheint er hier, und das Lab baut in den späteren Schritten darauf auf."
@@ -1212,6 +1182,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 -- The BeyondFacts Lab could not put together its instructions for the model. Please report this as a bug.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2261674511::INFORMAL"] = "Das BeyondFacts Lab konnte die Anweisungen für das Modell nicht zusammenstellen. Bitte melde dies als Fehler."
 
+-- The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2312257399"] = "Das Modell des ausgewählten Anbieters verarbeitet wahrscheinlich zu wenig auf einmal für die Personen, die Sie für die Simulation gewählt haben. Bitte wählen Sie weniger Personen oder einen anderen Anbieter aus."
+
+-- The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T2312257399::INFORMAL"] = "Das Modell des ausgewählten Anbieters verarbeitet wahrscheinlich zu wenig auf einmal für die Personen, die du für die Simulation gewählt hast. Bitte wähle weniger Personen oder einen anderen Anbieter aus."
+
 -- The model of the selected provider reads too little at once for the lab. Please select another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3132723417"] = "Das Modell des ausgewählten Anbieters verarbeitet zu wenig auf einmal für das Lab. Bitte wählen Sie einen anderen Anbieter aus."
 
@@ -1223,12 +1199,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 
 -- The selected provider may not see your preparation. Please select another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T3133264313::INFORMAL"] = "Der ausgewählte Anbieter darf deine Vorbereitung nicht sehen. Bitte wähle einen anderen Anbieter aus."
-
--- AI Studio could not save this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884"] = "AI Studio konnte dieses Gespräch nicht speichern. Bitte versuchen Sie es erneut."
-
--- AI Studio could not save this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T463511884::INFORMAL"] = "AI Studio konnte dieses Gespräch nicht speichern. Bitte versuche es erneut."
 
 -- The event is not public. Therefore, the lab does not research it on the web.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLEVENTVISIBILITY::T2308862256"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht im Web zu ihr."
@@ -1455,6 +1425,15 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T974131333
 -- Demanding
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T985014450"] = "Anspruchsvoll"
 
+-- What touches me
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFORMSECTIONEXTENSIONS::T1464216834"] = "Was mich berührt"
+
+-- What moves others
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFORMSECTIONEXTENSIONS::T4052141584"] = "Was andere bewegt"
+
+-- What matters to me
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFORMSECTIONEXTENSIONS::T840264968"] = "Was mir wichtig ist"
+
 -- If you state in the event details that the event is not public, the lab never researches it on the web.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1053099788"] = "Wenn Sie in den Rahmendaten angeben, dass die Veranstaltung nicht öffentlich ist, recherchiert das Lab nie im Web zu ihr."
 
@@ -1479,6 +1458,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652
 -- In the last step, let the lab create your materials from your confirmed work states: a reflection folder, a position paper, a conversation guide, questions and answers, and your open points. You check, edit, and confirm each of them, and then export it as a document.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1266652635::INFORMAL"] = "Lass im letzten Schritt das Lab aus deinen bestätigten Arbeitsständen deine Materialien erstellen: eine Reflexionsmappe, ein Positionsblatt, einen Gesprächsleitfaden, Fragen und Antwortansätze sowie deine offenen Punkte. Du prüfst, bearbeitest und bestätigst jedes davon und exportierst es dann als Dokument."
 
+-- In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1320373512"] = "Im Schritt „{0}“ simuliert das Lab generische Gegenüber und gibt Ihnen nach jeder Antwort Feedback. Unter „Simulation“ können Sie das Lab stattdessen Teilnehmende simulieren lassen, die es genauer recherchiert hat: eine Person, eine Podiumsdiskussion mit bis zu drei oder eine Pressekonferenz mit bis zu fünf Personen. Das Lab lässt sie nur mit den Positionen argumentieren, die ihre Recherche belegt, erfindet keine Zitate und kennzeichnet jeden ihrer Beiträge als Simulation. Eine solche Simulation läuft, bis Sie sie mit „Übung beenden und auswerten“ beenden; dann erhalten Sie Feedback zur ganzen Übung, und mit „Pause“ erhalten Sie zwischendurch kurzes Feedback. Die Recherche zu jeder Person braucht Platz im Kontextfenster des Modells, und das Lab zeigt Ihnen, wie viel."
+
+-- In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1320373512::INFORMAL"] = "Im Schritt „{0}“ simuliert das Lab generische Gegenüber und gibt dir nach jeder Antwort Feedback. Unter „Simulation“ kannst du das Lab stattdessen Teilnehmende simulieren lassen, die es genauer recherchiert hat: eine Person, eine Podiumsdiskussion mit bis zu drei oder eine Pressekonferenz mit bis zu fünf Personen. Das Lab lässt sie nur mit den Positionen argumentieren, die ihre Recherche belegt, erfindet keine Zitate und kennzeichnet jeden ihrer Beiträge als Simulation. Eine solche Simulation läuft, bis du sie mit „Übung beenden und auswerten“ beendest; dann erhältst du Feedback zur ganzen Übung, und mit „Pause“ erhältst du zwischendurch kurzes Feedback. Die Recherche zu jeder Person braucht Platz im Kontextfenster des Modells, und das Lab zeigt dir, wie viel."
+
 -- Research on the web
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1322369504"] = "Recherche im Web"
 
@@ -1493,6 +1478,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266
 
 -- Plan about 30 to 60 minutes for a preparation. You can pause at any time: AI Studio saves your details and conversations, and you continue where you left off.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266933::INFORMAL"] = "Plane für eine Vorbereitung etwa 30 bis 60 Minuten ein. Du kannst jederzeit unterbrechen: AI Studio speichert deine Angaben und Gespräche, und du machst später dort weiter, wo du aufgehört hast."
+
+-- Value card sort
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T194927200"] = "Werte-Sortierung"
 
 -- Work through the seven steps, in any order you like. Each step has the form 'Your details' and a conversation of its own.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2001857602"] = "Bearbeiten Sie die sieben Schritte in beliebiger Reihenfolge. Jeder Schritt hat das Formular „Ihre Angaben“ und ein eigenes Gespräch."
@@ -1509,6 +1497,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2242659
 -- Sharing with the research team
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2278322216"] = "Teilen mit dem Forschungsteam"
 
+-- From the list of participants, you choose whom the lab researches in depth; for a long list, the lab suggests whom. For this suggestion, it uses your details of the first three steps, but searches nothing, and only names from the list go on into the research. For each person you choose, research agents look into the profile, the public positions on the topic, and how the person argues in public, one stage after the other. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found. They look only for public, professional information, keep summaries with sources, and create no personality profiles.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2303061552"] = "Aus der Liste der Teilnehmenden wählen Sie, wen das Lab genauer recherchiert; bei einer langen Liste schlägt das Lab eine Auswahl vor. Für diesen Vorschlag nutzt es Ihre Angaben der ersten drei Schritte, sucht aber nichts, und nur Namen aus der Liste gehen weiter in die Recherche. Für jede Person, die Sie wählen, recherchieren Agenten nacheinander das Profil, die öffentlichen Positionen zum Thema und wie die Person öffentlich argumentiert. Die Agenten erhalten nur den Namen und den Listeneintrag der Person, die öffentlichen Angaben zur Veranstaltung und die Ergebnisse der früheren Stufen. Sie suchen nur öffentliche, berufliche Angaben, halten Zusammenfassungen mit Quellen fest und erstellen keine Persönlichkeitsprofile."
+
+-- From the list of participants, you choose whom the lab researches in depth; for a long list, the lab suggests whom. For this suggestion, it uses your details of the first three steps, but searches nothing, and only names from the list go on into the research. For each person you choose, research agents look into the profile, the public positions on the topic, and how the person argues in public, one stage after the other. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found. They look only for public, professional information, keep summaries with sources, and create no personality profiles.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2303061552::INFORMAL"] = "Aus der Liste der Teilnehmenden wählst du, wen das Lab genauer recherchiert; bei einer langen Liste schlägt das Lab eine Auswahl vor. Für diesen Vorschlag nutzt es deine Angaben der ersten drei Schritte, sucht aber nichts, und nur Namen aus der Liste gehen weiter in die Recherche. Für jede Person, die du wählst, recherchieren Agenten nacheinander das Profil, die öffentlichen Positionen zum Thema und wie die Person öffentlich argumentiert. Die Agenten erhalten nur den Namen und den Listeneintrag der Person, die öffentlichen Angaben zur Veranstaltung und die Ergebnisse der früheren Stufen. Sie suchen nur öffentliche, berufliche Angaben, halten Zusammenfassungen mit Quellen fest und erstellen keine Persönlichkeitsprofile."
+
 -- How to recognize good results
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2310692629"] = "Gute Ergebnisse erkennen"
 
@@ -1523,6 +1517,15 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2980837
 
 -- What the lab does not do
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T2988041082"] = "Was das Lab nicht tut"
+
+-- In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819"] = "Im Schritt „{0}“ können Sie zwölf Werte in drei Runden danach sortieren, wie wichtig sie Ihnen für diesen Anlass sind. Sie können eigene Werte ergänzen und zwei oder drei Werte auswählen, die Sie genauer betrachten möchten. Das Gespräch dieses Schritts kennt Ihre Werte-Sortierung und baut darauf auf; die späteren Schritte erfahren über seinen bestätigten Arbeitsstand, was Sie daraus mitnehmen. Die Werte-Sortierung ist freiwillig und kein validierter Werte- oder Persönlichkeitstest."
+
+-- In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811819::INFORMAL"] = "Im Schritt „{0}“ kannst du zwölf Werte in drei Runden danach sortieren, wie wichtig sie dir für diesen Anlass sind. Du kannst eigene Werte ergänzen und zwei oder drei Werte auswählen, die du genauer betrachten möchtest. Das Gespräch dieses Schritts kennt deine Werte-Sortierung und baut darauf auf; die späteren Schritte erfahren über seinen bestätigten Arbeitsstand, was du daraus mitnimmst. Die Werte-Sortierung ist freiwillig und kein validierter Werte- oder Persönlichkeitstest."
+
+-- Simulated participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3371128229"] = "Simulierte Teilnehmende"
 
 -- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3499941356"] = "Lassen Sie das Lab das Gespräch eines Schritts beginnen, oder schreiben Sie zuerst und sagen Sie, wobei Sie Unterstützung möchten, etwa bei Ihrer Rolle, Ihrer Strategie oder mit einer Runde kritischer Fragen. Sie können jederzeit „Ich weiß es nicht“ antworten."
@@ -1544,6 +1547,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675
 
 -- In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3757675476::INFORMAL"] = "Im Schritt „{0}“ recherchieren Agenten des Labs zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte über ihr Thema, jeweils ein eigener Agent. Die Agenten starten von selbst, sobald du die Rahmendaten bestätigst, sofern die Websuche in AI Studio eingerichtet ist. Du kannst sie jederzeit erneut starten."
+
+-- Your organization has set guidelines for public appearances, which you find above your preparations. The conversations of the steps know them as information, and the material '{0}' ends with them. They add to the rules of the lab: where they contradict them, the rules of the lab apply, and the conversation points that out. Sharing with the research team leaves them out, since they would reveal your organization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3771709114"] = "Ihre Organisation hat Vorgaben für öffentliche Auftritte festgelegt, die Sie über Ihren Vorbereitungen finden. Die Gespräche der Schritte kennen sie zur Information, und das Material „{0}“ endet mit ihnen. Sie ergänzen die Regeln des Labs: Widersprechen sie ihnen, gelten die Regeln des Labs, und das Gespräch weist darauf hin. Das Teilen mit dem Forschungsteam lässt sie weg, da sie Ihre Organisation verraten würden."
+
+-- Your organization has set guidelines for public appearances, which you find above your preparations. The conversations of the steps know them as information, and the material '{0}' ends with them. They add to the rules of the lab: where they contradict them, the rules of the lab apply, and the conversation points that out. Sharing with the research team leaves them out, since they would reveal your organization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3771709114::INFORMAL"] = "Deine Organisation hat Vorgaben für öffentliche Auftritte festgelegt, die du über deinen Vorbereitungen findest. Die Gespräche der Schritte kennen sie zur Information, und das Material „{0}“ endet mit ihnen. Sie ergänzen die Regeln des Labs: Widersprechen sie ihnen, gelten die Regeln des Labs, und das Gespräch weist darauf hin. Das Teilen mit dem Forschungsteam lässt sie weg, da sie deine Organisation verraten würden."
 
 -- Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3813171730"] = "Ist ein Schritt weitgehend geklärt, lassen Sie das Lab unter dem Gespräch seinen Arbeitsstand erstellen. Sie prüfen und bearbeiten ihn, und sobald Sie ihn bestätigen, bauen die späteren Schritte darauf auf. Außerdem schlägt das Lab Werte für leere Felder in „Ihre Angaben“ vor, die Sie einzeln übernehmen."
@@ -1589,6 +1598,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T5711897
 
 -- The strategy fits your real speaking time and focuses on a few key messages.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T571189717::INFORMAL"] = "Die Strategie passt zu deiner realen Redezeit und beschränkt sich auf wenige Kernbotschaften."
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T661725016"] = "Vorgaben Ihrer Organisation"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T661725016::INFORMAL"] = "Vorgaben deiner Organisation"
 
 -- Fill in what you know. Fields may stay empty: the lab shows which key details are missing and asks for them in the conversation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T780122078"] = "Tragen Sie ein, was Sie wissen. Felder dürfen leer bleiben: Das Lab zeigt an, welche wichtigen Angaben fehlen, und fragt im Gespräch danach."
@@ -1746,6 +1761,126 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLONBOARDING::T180931232
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLONBOARDING::T1809312323::INFORMAL"] = "Bitte wähle einen Anbieter aus."
 
+-- Not researched yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1044513948"] = "Noch nicht recherchiert"
+
+-- Entry in the list of participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1109522258"] = "Eintrag in der Liste der Teilnehmenden"
+
+-- Stop
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1266644741"] = "Stoppen"
+
+-- Suggest a selection
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1456767192"] = "Auswahl vorschlagen"
+
+-- This research stopped before all of its stages were done.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1487695030"] = "Diese Recherche endete, bevor alle Stufen fertig waren."
+
+-- Incomplete
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1753679941"] = "Unvollständig"
+
+-- Waiting for a free agent
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1819938491"] = "Wartet auf einen freien Agenten"
+
+-- The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1894639302"] = "Die Recherche zu den Teilnehmenden hat keine Liste von Personen gefunden. Recherchieren Sie das Thema „{0}“ erneut, oder tragen Sie zuerst die Namen, die Sie kennen, im Schritt „{1}“ ein."
+
+-- The research on the participants found no list of people. Research the topic '{0}' again, or first enter the names you know in the step '{1}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1894639302::INFORMAL"] = "Die Recherche zu den Teilnehmenden hat keine Liste von Personen gefunden. Recherchiere das Thema „{0}“ erneut, oder trage zuerst die Namen, die du kennst, im Schritt „{1}“ ein."
+
+-- Research this person
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T1965641637"] = "Diese Person recherchieren"
+
+-- Once the research on the participants found a list of people, you can choose here whom the lab researches in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2316008723"] = "Sobald die Recherche zu den Teilnehmenden eine Liste von Personen gefunden hat, wählen Sie hier, wen das Lab genauer recherchiert."
+
+-- Once the research on the participants found a list of people, you can choose here whom the lab researches in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2316008723::INFORMAL"] = "Sobald die Recherche zu den Teilnehmenden eine Liste von Personen gefunden hat, wählst du hier, wen das Lab genauer recherchiert."
+
+-- Researching: {0} ({1} of {2})
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2602375879"] = "Recherche läuft: {0} ({1} von {2})"
+
+-- Researched on {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2673061400"] = "Recherchiert am {0}"
+
+-- The lab suggests whom to research in depth
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T2980501067"] = "Das Lab schlägt vor, wen es genauer recherchiert"
+
+-- Research on individual participants
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3316090314"] = "Recherche zu einzelnen Teilnehmenden"
+
+-- The lab suggested this selection because the list is long. Check it and change it as you like.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3618922246"] = "Das Lab hat diese Auswahl vorgeschlagen, weil die Liste lang ist. Prüfen Sie sie, und ändern Sie sie, wie Sie möchten."
+
+-- The lab suggested this selection because the list is long. Check it and change it as you like.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3618922246::INFORMAL"] = "Das Lab hat diese Auswahl vorgeschlagen, weil die Liste lang ist. Prüfe sie, und ändere sie, wie du möchtest."
+
+-- If your own name is on the list, leave it unchosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3650529419"] = "Steht Ihr eigener Name in der Liste, wählen Sie ihn nicht."
+
+-- If your own name is on the list, leave it unchosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3650529419::INFORMAL"] = "Steht dein eigener Name in der Liste, wähle ihn nicht."
+
+-- Research the chosen people
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3779011682"] = "Gewählte Personen recherchieren"
+
+-- The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3821144196"] = "Die Liste ist lang, deshalb ist noch niemand gewählt. Wählen Sie die Personen selbst, oder lassen Sie das Lab eine Auswahl vorschlagen."
+
+-- The list is long, so nobody is chosen yet. Choose the people yourself, or let the lab suggest whom to research.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3821144196::INFORMAL"] = "Die Liste ist lang, deshalb ist noch niemand gewählt. Wähle die Personen selbst, oder lass das Lab eine Auswahl vorschlagen."
+
+-- Each person takes up to {0} research agents, one after the other. At most {1} agents work at once; the others wait.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T3858018313"] = "Je Person arbeiten bis zu {0} Recherche-Agenten nacheinander. Höchstens {1} Agenten arbeiten gleichzeitig; die übrigen warten."
+
+-- {0} of {1} people chosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T4020182292"] = "{0} von {1} Personen gewählt."
+
+-- The public details changed since this research. You can research this person again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T533597841"] = "Die öffentlichen Angaben haben sich seit dieser Recherche geändert. Sie können diese Person erneut recherchieren."
+
+-- The public details changed since this research. You can research this person again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T533597841::INFORMAL"] = "Die öffentlichen Angaben haben sich seit dieser Recherche geändert. Du kannst diese Person erneut recherchieren."
+
+-- AI Studio could not store the selection. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T697052960"] = "AI Studio konnte die Auswahl nicht speichern. Bitte versuchen Sie es erneut."
+
+-- AI Studio could not store the selection. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T697052960::INFORMAL"] = "AI Studio konnte die Auswahl nicht speichern. Bitte versuche es erneut."
+
+-- Outdated
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T724820205"] = "Veraltet"
+
+-- Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T804175385"] = "Wählen Sie, wen von den Teilnehmenden das Lab genauer recherchieren soll. Für jede Person arbeiten drei Recherche-Agenten nacheinander: Profil, Positionen zum Thema und öffentliche Auftritte. Die Agenten erhalten nur den Namen und den Listeneintrag der Person, die öffentlichen Angaben zur Veranstaltung und die Ergebnisse der früheren Stufen."
+
+-- Choose whom of the participants the lab should research in depth. For each person, three research agents work one after the other: profile, positions on the topic, and public appearances. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T804175385::INFORMAL"] = "Wähle, wen von den Teilnehmenden das Lab genauer recherchieren soll. Für jede Person arbeiten drei Recherche-Agenten nacheinander: Profil, Positionen zum Thema und öffentliche Auftritte. Die Agenten erhalten nur den Namen und den Listeneintrag der Person, die öffentlichen Angaben zur Veranstaltung und die Ergebnisse der früheren Stufen."
+
+-- The agents look only for public, professional information and public statements on the topic. They keep summaries with sources, no full texts, create no personality profiles, and judge nobody.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T829595766"] = "Die Agenten suchen nur öffentliche, berufliche Angaben und öffentliche Aussagen zum Thema. Sie halten Zusammenfassungen mit Quellen fest statt vollständiger Texte, erstellen keine Persönlichkeitsprofile und bewerten niemanden."
+
+-- Research this person again
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHPANEL::T832975261"] = "Diese Person erneut recherchieren"
+
+-- Public appearances
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T2628455507"] = "Öffentliche Auftritte"
+
+-- Who the person is: their function, professional career, and education.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T2713760319"] = "Wer die Person ist: ihre Funktion, ihr beruflicher Werdegang und ihre Ausbildung."
+
+-- Profile
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T3440849550"] = "Profil"
+
+-- Positions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T3879692315"] = "Positionen"
+
+-- What the person has said in public on the topic of the event.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T686625291"] = "Was die Person öffentlich zum Thema der Veranstaltung gesagt hat."
+
+-- How the person argues in speeches, interviews, and discussions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T851469643"] = "Wie die Person in Reden, Interviews und Diskussionen argumentiert."
+
 -- The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1719028521"] = "Das Lab verwendet derzeit experimentelle Anweisungen aus seinem Testordner. Sie können sie in den Optionen des Labs deaktivieren."
 
@@ -1866,9 +2001,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T219706
 -- Research this topic
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2205528655"] = "Dieses Thema recherchieren"
 
--- Web pages opened
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2410802222"] = "Geöffnete Webseiten"
-
 -- Researched on {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T2673061400"] = "Recherchiert am {0}"
 
@@ -1899,17 +2031,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T365593
 -- Start the research
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3771505473"] = "Recherche starten"
 
--- Queries sent to the web search
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3846014079"] = "Suchanfragen an die Websuche"
-
 -- The agent researches this topic
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T3855362913"] = "Der Agent recherchiert dieses Thema"
 
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T724820205"] = "Veraltet"
-
--- None
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T810547195"] = "Keine"
 
 -- The research agents receive only the public details about the event. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHPANEL::T946307726"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung. Ihre übrigen Angaben, Ihr Material, Ihre Arbeitsstände und Ihre Gespräche bleiben in Ihrer Vorbereitung und erreichen nie eine Suche."
@@ -1935,17 +2061,38 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T26144
 -- The research ended without a result. Please try again, or try another provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T2614499564::INFORMAL"] = "Die Recherche endete ohne Ergebnis. Bitte versuche es erneut oder wähle einen anderen Anbieter."
 
+-- The lab could not suggest whom to research in depth. Please choose the people yourself.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T291406796"] = "Das Lab konnte keine Auswahl für die genauere Recherche vorschlagen. Bitte wählen Sie die Personen selbst."
+
+-- The lab could not suggest whom to research in depth. Please choose the people yourself.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T291406796::INFORMAL"] = "Das Lab konnte keine Auswahl für die genauere Recherche vorschlagen. Bitte wähle die Personen selbst."
+
 -- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850"] = "Bitte geben Sie zuerst im Schritt „{0}“ öffentliche Angaben zur Veranstaltung ein, z. B. ihr Thema oder ihren Link. Die Recherche erhält nur diese Angaben."
 
 -- Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T313317850::INFORMAL"] = "Bitte gib zuerst im Schritt „{0}“ öffentliche Angaben zur Veranstaltung ein, z. B. ihr Thema oder ihren Link. Die Recherche erhält nur diese Angaben."
 
+-- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743"] = "Der Recherche-Agent hat seine Suchanfragen und Seiten aufgebraucht, bevor er ein Ergebnis geschrieben hat. Bitte versuchen Sie es erneut oder wählen Sie einen anderen Anbieter."
+
+-- The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T3511168743::INFORMAL"] = "Der Recherche-Agent hat seine Suchanfragen und Seiten aufgebraucht, bevor er ein Ergebnis geschrieben hat. Bitte versuche es erneut oder wähle einen anderen Anbieter."
+
+-- This person is no longer on the list of participants, so the lab does not research them. Please research the participants again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T980791662"] = "Diese Person steht nicht mehr in der Liste der Teilnehmenden, deshalb recherchiert das Lab sie nicht. Bitte recherchieren Sie die Teilnehmenden erneut."
+
+-- This person is no longer on the list of participants, so the lab does not research them. Please research the participants again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHRUNNER::T980791662::INFORMAL"] = "Diese Person steht nicht mehr in der Liste der Teilnehmenden, deshalb recherchiert das Lab sie nicht. Bitte recherchiere die Teilnehmenden erneut."
+
 -- Participants
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T1161681831"] = "Teilnehmende"
 
 -- How the topic is discussed in public: positions, points of dispute, and the framing of others.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T2464060444"] = "Wie die Öffentlichkeit das Thema diskutiert: Positionen, Streitpunkte und das Framing anderer."
+
+-- Who else speaks or moderates, and in which role. From this list, the lab can research individual people in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3185511242"] = "Wer sonst noch spricht oder moderiert und in welcher Rolle. Aus dieser Liste kann das Lab einzelne Personen genauer recherchieren."
 
 -- Organizer, format and schedule, moderation, and earlier editions of the event.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T3694495177"] = "Veranstalter, Format und Zeitplan, Moderation sowie frühere Ausgaben der Veranstaltung."
@@ -1956,8 +2103,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSION
 -- The event
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T4207163500"] = "Die Veranstaltung"
 
--- Who else speaks or moderates, in which role, and which public positions they have taken on the topic.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTOPICEXTENSIONS::T821312467"] = "Wer sonst noch spricht oder moderiert, in welcher Rolle, und welche öffentlichen Positionen diese Personen zum Thema vertreten haben."
+-- Web pages opened
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTRACE::T2410802222"] = "Geöffnete Webseiten"
+
+-- Queries sent to the web search
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTRACE::T3846014079"] = "Suchanfragen an die Websuche"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESEARCHTRACE::T810547195"] = "Keine"
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTGENERATOR::T1150375027"] = "Die Datei „{0}“ im Testordner des BeyondFacts Labs enthält den Platzhalter „{1}“, den das Lab in dieser Datei nicht ausfüllt. Bitte korrigieren Sie die Datei und versuchen Sie es erneut."
@@ -2148,6 +2301,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3926195314"]
 -- Include personal disclosures?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T3989412584"] = "Persönliche Angaben aufnehmen?"
 
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T661725016"] = "Vorgaben Ihrer Organisation"
+
+-- Guidelines from your organization
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T661725016::INFORMAL"] = "Vorgaben deiner Organisation"
+
 -- Outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLRESULTS::T724820205"] = "Veraltet"
 
@@ -2313,6 +2472,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMAIL::T3622173728
 -- No confirmed work state.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1085223273"] = "Kein bestätigter Arbeitsstand."
 
+-- Card sort
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T116016553"] = "Werte-Sortierung"
+
 -- No conversation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T1296316689"] = "Kein Gespräch."
 
@@ -2367,26 +2529,137 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T34
 -- About this session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3460157970"] = "Über diese Sitzung"
 
+-- {0} ({1} simulated)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3642066273"] = "{0} ({1} simuliert)"
+
+-- Own values
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3651870515"] = "Eigene Werte"
+
 -- BeyondFacts Lab: a shared session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3731741448"] = "BeyondFacts Lab: eine geteilte Sitzung"
+
+-- To look at more closely
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3757621498"] = "Genauer betrachten"
+
+-- Simulation in the test situation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3853316258"] = "Simulation in der Testsituation"
 
 -- Left out, as it may contain personal disclosures.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T3986361996"] = "Ausgelassen, da es persönliche Angaben enthalten kann."
 
+-- People researched in depth
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T530575216"] = "Genauer recherchierte Personen"
+
 -- Version of AI Studio
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T728223168"] = "Version von AI Studio"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSHAREMODELBUILDER::T810547195"] = "Keine"
+
+-- Choose the person:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1010486410"] = "Wählen Sie die Person aus:"
+
+-- Choose the person:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1010486410::INFORMAL"] = "Wähle die Person aus:"
+
+-- Simulation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1315724598"] = "Simulation"
+
+-- The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1539984278"] = "Die Recherche zu den Personen, die Sie gewählt haben, umfasst etwa {0} Token. AI Studio weiß nicht, wie viel das Modell des ausgewählten Anbieters auf einmal verarbeitet; daher kann das Lab nicht sagen, ob das passt. Unter dem Gespräch sehen Sie, wie viele Token es belegt, die Recherche eingeschlossen."
+
+-- The research on the people you chose takes about {0} tokens. AI Studio does not know how much the model of the selected provider reads at once, so the lab cannot tell whether that fits. Below the conversation, you see how many tokens it takes, the research included.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T1539984278::INFORMAL"] = "Die Recherche zu den Personen, die du gewählt hast, umfasst etwa {0} Token. AI Studio weiß nicht, wie viel das Modell des ausgewählten Anbieters auf einmal verarbeitet; daher kann das Lab nicht sagen, ob das passt. Unter dem Gespräch siehst du, wie viele Token es belegt, die Recherche eingeschlossen."
+
+-- Whom the lab simulates
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2077651045"] = "Wen das Lab simuliert"
+
+-- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2331929951"] = "Noch kann das Lab niemanden simulieren. Lassen Sie es im Schritt „{0}“ einzelne Teilnehmende recherchieren; hier erscheinen alle, deren öffentliche Positionen die Recherche belegt. Bis dahin simuliert das Lab generische Gegenüber."
+
+-- Nobody can be simulated yet. In the step '{0}', let the lab research single participants; everyone whose public positions the research documents appears here. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T2331929951::INFORMAL"] = "Noch kann das Lab niemanden simulieren. Lass es im Schritt „{0}“ einzelne Teilnehmende recherchieren; hier erscheinen alle, deren öffentliche Positionen die Recherche belegt. Bis dahin simuliert das Lab generische Gegenüber."
+
+-- Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3164792878"] = "Wählen können Sie nur Personen, deren öffentliche Positionen die Recherche belegt. Lassen Sie das Lab im Schritt „{0}“ weitere Teilnehmende recherchieren."
+
+-- Only people whose public positions the research documents can be chosen. Let the lab research more of them in the step '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3164792878::INFORMAL"] = "Wählen kannst du nur Personen, deren öffentliche Positionen die Recherche belegt. Lass das Lab im Schritt „{0}“ weitere Teilnehmende recherchieren."
+
+-- The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T333129936"] = "Die Recherche zu den Personen, die Sie gewählt haben, umfasst etwa {0} Token. Das Modell des ausgewählten Anbieters verarbeitet {1} Token auf einmal; neben dem Lab, Ihrem Material und dem Gespräch reicht das wahrscheinlich nicht. Wählen Sie weniger Personen oder einen anderen Anbieter aus; bis dahin sendet das Gespräch nichts."
+
+-- The research on the people you chose takes about {0} tokens. The model of the selected provider reads {1} tokens at once, which is likely too little for the lab, your material, and the conversation besides. Choose fewer people or another provider; until then, the conversation sends nothing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T333129936::INFORMAL"] = "Die Recherche zu den Personen, die du gewählt hast, umfasst etwa {0} Token. Das Modell des ausgewählten Anbieters verarbeitet {1} Token auf einmal; neben dem Lab, deinem Material und dem Gespräch reicht das wahrscheinlich nicht. Wähle weniger Personen oder einen anderen Anbieter aus; bis dahin sendet das Gespräch nichts."
+
+-- Choose up to {0} people:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3459621859"] = "Wählen Sie bis zu {0} Personen aus:"
+
+-- Choose up to {0} people:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3459621859::INFORMAL"] = "Wähle bis zu {0} Personen aus:"
+
+-- The research on these people takes about {0} of the {1} tokens the model reads at once.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T3676628527"] = "Die Recherche zu diesen Personen umfasst etwa {0} der {1} Token, die das Modell auf einmal verarbeitet."
+
+-- The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T379468702"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht zu ihren Teilnehmenden und kann nur generische Gegenüber simulieren."
+
+-- The event is not public. Therefore, the lab does not research its participants, and it can simulate only generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T379468702::INFORMAL"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht zu ihren Teilnehmenden und kann nur generische Gegenüber simulieren."
+
+-- In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T48225341"] = "In dieser Übung simuliert das Lab {0}, auf Grundlage von Zusammenfassungen öffentlicher Quellen. Was das Lab die simulierten Personen sagen lässt, haben sie nie gesagt, und das Lab kennzeichnet jeden ihrer Beiträge als Simulation."
+
+-- In this exercise, the lab simulates {0}, based on summaries of public sources. The simulated people never said what the lab lets them say, and the lab marks each of their contributions as a simulation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T48225341::INFORMAL"] = "In dieser Übung simuliert das Lab {0}, auf Grundlage von Zusammenfassungen öffentlicher Quellen. Was das Lab die simulierten Personen sagen lässt, haben sie nie gesagt, und das Lab kennzeichnet jeden ihrer Beiträge als Simulation."
+
+-- Choose at least one person. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T962950702"] = "Wählen Sie mindestens eine Person aus. Bis dahin simuliert das Lab generische Gegenüber."
+
+-- Choose at least one person. Until then, the lab simulates generic counterparts.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONCHOICE::T962950702::INFORMAL"] = "Wähle mindestens eine Person aus. Bis dahin simuliert das Lab generische Gegenüber."
+
+-- Generic counterparts, no specific person
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1003594062"] = "Generische Gegenüber, keine konkrete Person"
+
+-- The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1554315843"] = "Das Lab simuliert eine Podiumsdiskussion mit bis zu drei Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt eine Moderation, falls niemand von ihnen moderiert. Die Simulation läuft, bis Sie sie beenden; dann erhalten Sie Feedback zur ganzen Übung."
+
+-- The lab simulates a panel discussion with up to three participants, each in their role at the event, and adds a moderation if none of them moderates. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T1554315843::INFORMAL"] = "Das Lab simuliert eine Podiumsdiskussion mit bis zu drei Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt eine Moderation, falls niemand von ihnen moderiert. Die Simulation läuft, bis du sie beendest; dann erhältst du Feedback zur ganzen Übung."
+
+-- Panel discussion with up to three people
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T181962038"] = "Podiumsdiskussion mit bis zu drei Personen"
+
+-- The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T2141818378"] = "Das Lab simuliert eine Pressekonferenz mit bis zu fünf Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt Fragen der Presse, falls niemand von ihnen welche stellt. Die Simulation läuft, bis Sie sie beenden; dann erhalten Sie Feedback zur ganzen Übung."
+
+-- The lab simulates a press conference with up to five participants, each in their role at the event, and adds questions from the press if none of them asks any. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T2141818378::INFORMAL"] = "Das Lab simuliert eine Pressekonferenz mit bis zu fünf Teilnehmenden, jeweils in ihrer Rolle bei der Veranstaltung, und ergänzt Fragen der Presse, falls niemand von ihnen welche stellt. Die Simulation läuft, bis du sie beendest; dann erhältst du Feedback zur ganzen Übung."
+
+-- The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T254330793"] = "Das Lab simuliert eine teilnehmende Person in ihrer Rolle bei der Veranstaltung, auf Grundlage der Recherche zu ihr. Die Simulation läuft, bis Sie sie beenden; dann erhalten Sie Feedback zur ganzen Übung."
+
+-- The lab simulates one participant in their role at the event, based on the research on them. The simulation runs until you end it; then you get feedback on the whole exercise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T254330793::INFORMAL"] = "Das Lab simuliert eine teilnehmende Person in ihrer Rolle bei der Veranstaltung, auf Grundlage der Recherche zu ihr. Die Simulation läuft, bis du sie beendest; dann erhältst du Feedback zur ganzen Übung."
+
+-- Press conference with up to five people
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T296774835"] = "Pressekonferenz mit bis zu fünf Personen"
+
+-- The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3641426213"] = "Das Lab stellt kritische Fragen, wie sie bei der Veranstaltung fallen könnten, ohne eine bestimmte Person zu simulieren. Nach jeder Antwort erhalten Sie Feedback."
+
+-- The lab asks critical questions as they could come up at the event, without simulating a specific person. After every answer, you get feedback.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3641426213::INFORMAL"] = "Das Lab stellt kritische Fragen, wie sie bei der Veranstaltung fallen könnten, ohne eine bestimmte Person zu simulieren. Nach jeder Antwort erhältst du Feedback."
+
+-- One person from the research
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSIMULATIONMODEEXTENSIONS::T3898849536"] = "Eine Person aus der Recherche"
 
 -- Test situation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1049923473"] = "Testsituation"
 
 -- Knowledge and uncertainty
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1147870258"] = "Wissen und Unsicherheit"
-
--- How you convey evidence, trade-offs between values, and open questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1290723890"] = "Wie Sie Evidenz, Wertabwägungen und offene Fragen vermitteln."
-
--- How you convey evidence, trade-offs between values, and open questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1290723890::INFORMAL"] = "Wie du Evidenz, Wertabwägungen und offene Fragen vermittelst."
 
 -- Event details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T135387869"] = "Rahmendaten"
@@ -2402,6 +2675,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T25243
 
 -- You can fill in single fields or start right away in the chat.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2524378548::INFORMAL"] = "Du kannst einzelne Felder ausfüllen oder direkt im Chat beginnen."
+
+-- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618"] = "Wie Sie Evidenz, Wertabwägungen und offene Fragen vermitteln. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte."
+
+-- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618::INFORMAL"] = "Wie du Evidenz, Wertabwägungen und offene Fragen vermittelst. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte."
 
 -- Goals and role
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2988481290"] = "Ziele und Rolle"
@@ -2421,6 +2700,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T30523
 -- Strategy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3205650756"] = "Strategie"
 
+-- Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3595750805"] = "Kritische Nachfragen und Gegenpositionen durchspielen, mit generischen Gegenübern oder mit Teilnehmenden, die das Lab genauer recherchiert hat."
+
+-- Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3595750805::INFORMAL"] = "Kritische Nachfragen und Gegenpositionen durchspielen, mit generischen Gegenübern oder mit Teilnehmenden, die das Lab genauer recherchiert hat."
+
 -- Results and materials
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3602322182"] = "Ergebnisse und Materialien"
 
@@ -2432,12 +2717,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T51769
 
 -- What you take away from your preparation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T517692701::INFORMAL"] = "Was du aus deiner Vorbereitung mitnimmst."
-
--- Play through critical questions and opposing positions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T573043138"] = "Kritische Nachfragen und Gegenpositionen durchspielen."
-
--- Play through critical questions and opposing positions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T573043138::INFORMAL"] = "Kritische Nachfragen und Gegenpositionen durchspielen."
 
 -- What you know for sure, what is uncertain, and where your expertise ends.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T762525208"] = "Was Sie sicher wissen, was unsicher ist und wo Ihre Expertise endet."
@@ -2477,6 +2756,84 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3011046288:
 
 -- Public detail: the research of the lab receives it
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPFORM::T3459633363"] = "Öffentliche Angabe: Die Recherche des Labs erhält sie"
+
+-- {0} of at most {1} values chosen.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2016759665"] = "{0} von höchstens {1} Werten ausgewählt."
+
+-- Please enter a name, or remove the value.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524"] = "Bitte geben Sie einen Namen ein oder entfernen Sie den Wert."
+
+-- Please enter a name, or remove the value.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2083996524::INFORMAL"] = "Bitte gib einen Namen ein oder entferne den Wert."
+
+-- You have added {0} values of your own, as many as the card sort takes.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734"] = "Sie haben {0} eigene Werte hinzugefügt, so viele, wie die Werte-Sortierung aufnimmt."
+
+-- You have added {0} values of your own, as many as the card sort takes.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2105692734::INFORMAL"] = "Du hast {0} eigene Werte hinzugefügt, so viele, wie die Werte-Sortierung aufnimmt."
+
+-- Look more closely
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2616202800"] = "Genauer betrachten"
+
+-- Add
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T2646845972"] = "Hinzufügen"
+
+-- What it means to you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372"] = "Was er für Sie bedeutet"
+
+-- What it means to you
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T32862372::INFORMAL"] = "Was er für dich bedeutet"
+
+-- Value
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3511155050"] = "Wert"
+
+-- AI Studio cannot show the card sort, because its values are missing or damaged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3585110184"] = "AI Studio kann die Werte-Sortierung nicht anzeigen, weil ihre Werte fehlen oder beschädigt sind."
+
+-- Based on: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3634031667"] = "Basierend auf: {0}"
+
+-- Own values
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3651870515"] = "Eigene Werte"
+
+-- Round {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3695292997"] = "Runde {0}"
+
+-- Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772"] = "Ordnen Sie jeden Wert danach ein, wie wichtig er Ihnen für diesen Anlass ist. Ein Wert, den Sie nicht einordnen, bleibt offen und gilt nicht als weniger wichtig. Ergänzen Sie anschließend fehlende Werte und wählen Sie zwei oder drei Werte aus, die Sie im Gespräch genauer betrachten möchten. Alles ist freiwillig und bleibt änderbar; Sie können diesen Schritt auch ohne Werte-Sortierung abschließen. Die Werte-Sortierung ist kein validierter Werte- oder Persönlichkeitstest."
+
+-- Sort each value by how important it is to you for this occasion. A value you do not sort stays open; it does not count as less important. Then add values you miss, and choose two or three values to look at more closely in the conversation. Everything is voluntary and stays changeable, and you can finish this step without the card sort. It is no validated test of values or personality.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T3913548772::INFORMAL"] = "Ordne jeden Wert danach ein, wie wichtig er dir für diesen Anlass ist. Ein Wert, den du nicht einordnest, bleibt offen und gilt nicht als weniger wichtig. Ergänze anschließend fehlende Werte und wähle zwei oder drei Werte aus, die du im Gespräch genauer betrachten möchtest. Alles ist freiwillig und bleibt änderbar; du kannst diesen Schritt auch ohne Werte-Sortierung abschließen. Die Werte-Sortierung ist kein validierter Werte- oder Persönlichkeitstest."
+
+-- Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849"] = "Welche zwei oder drei Werte möchten Sie für diesen Anlass genauer betrachten? Das Gespräch fragt dann, was diese Werte für Ihren Beitrag bedeuten und wo sie unterschiedliche Handlungen nahelegen könnten. Ihre Auswahl ist keine Rangfolge."
+
+-- Which two or three values would you like to look at more closely for this occasion? The conversation then asks what they mean for your contribution and where they might pull in different directions. Your choice is no ranking.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T4047838849::INFORMAL"] = "Welche zwei oder drei Werte möchtest du für diesen Anlass genauer betrachten? Das Gespräch fragt dann, was diese Werte für deinen Beitrag bedeuten und wo sie unterschiedliche Handlungen nahelegen könnten. Deine Auswahl ist keine Rangfolge."
+
+-- Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460"] = "Welcher wichtige Wert fehlt Ihnen? Fügen Sie ihn hinzu und geben Sie an, was er für Sie bedeutet. Sie können auch eigene Werte auswählen, die Sie genauer betrachten möchten."
+
+-- Which important value do you miss? Add it with what it means to you. You can also choose your own values to look at more closely.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T508946460::INFORMAL"] = "Welcher wichtige Wert fehlt dir? Füge ihn hinzu und gib an, was er für dich bedeutet. Du kannst auch eigene Werte auswählen, die du genauer betrachten möchtest."
+
+-- New value
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECARDSORT::T840803648"] = "Neuer Wert"
+
+-- Not sorted yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2675795693"] = "Noch nicht zugeordnet"
+
+-- Unclear
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2886397187"] = "Unklar"
+
+-- Less important for this occasion
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T2929600398"] = "Weniger wichtig für diesen Anlass"
+
+-- Also important
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T3500243228"] = "Auch wichtig"
+
+-- Especially important
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLVALUECATEGORYEXTENSIONS::T3612865466"] = "Besonders wichtig"
 
 -- The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEGENERATOR::T1150375027"] = "Die Datei „{0}“ im Testordner des BeyondFacts Labs enthält den Platzhalter „{1}“, den das Lab in dieser Datei nicht ausfüllt. Bitte korrigieren Sie die Datei und versuchen Sie es erneut."
@@ -2805,6 +3162,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1696631610"] 
 -- (Optional) Output language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1821434787"] = "Ausgabesprache (optional)"
 
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1849229205"] = "Sonstiges"
+
 -- The installed assistant could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1889523922"] = "Der installierte Assistent konnte nicht geladen werden."
 
@@ -2976,8 +3336,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4004589285::I
 -- Assistant updated.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T40397082"] = "Assistent aktualisiert."
 
+-- Let the model choose
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4061595525"] = "Das Modell entscheiden lassen"
+
 -- Allow AI Studio profiles
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4155351992"] = "AI-Studio-Profile zulassen"
+
+-- Your organization disabled this category. Please choose another one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4162610995"] = "Ihre Organisation hat diese Kategorie deaktiviert. Bitte wählen Sie eine andere aus."
+
+-- Your organization disabled this category. Please choose another one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4162610995::INFORMAL"] = "Deine Organisation hat diese Kategorie deaktiviert. Bitte wähle eine andere aus."
 
 -- Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4185028924"] = "Problem: {0}"
@@ -3068,6 +3437,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::
 
 -- The model returned an empty JSON object.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2410202327"] = "Das Modell hat ein leeres JSON-Objekt zurückgegeben."
+
+-- The model's answer names a category AI Studio does not know, or a custom category without its name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2704199301"] = "Die Antwort des Modells nennt eine Kategorie, die AI Studio nicht kennt, oder eine eigene Kategorie ohne Namen."
 
 -- The model returned an unusable JSON response.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2967613975"] = "Das Modell hat eine unbrauchbare JSON-Antwort zurückgegeben."
@@ -7696,10 +8068,10 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T713722424"] = "AI Studio konnte d
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T713722424::INFORMAL"] = "AI Studio konnte die Inhalte, die die KI erhalten hat, nicht getrennt von deinem Chat speichern. Diese bleiben im Chat selbst, sodass du sie weiterhin lesen kannst."
 
 -- The selected provider may not see this conversation. Please select another provider.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T1132710328"] = "Der ausgewählte Anbieter darf diese Unterhaltung nicht sehen. Bitte wählen Sie einen anderen Anbieter aus."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T1132710328"] = "Der ausgewählte Anbieter darf dieses Gespräch nicht sehen. Bitte wählen Sie einen anderen Anbieter aus."
 
 -- The selected provider may not see this conversation. Please select another provider.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T1132710328::INFORMAL"] = "Der ausgewählte Anbieter darf diese Unterhaltung nicht sehen. Bitte wähle einen anderen Anbieter aus."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T1132710328::INFORMAL"] = "Der ausgewählte Anbieter darf dieses Gespräch nicht sehen. Bitte wähle einen anderen Anbieter aus."
 
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T1809312323"] = "Bitte wählen Sie einen Anbieter aus."
@@ -7708,10 +8080,10 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T1809312323"] = 
 UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T1809312323::INFORMAL"] = "Bitte wähle einen Anbieter aus."
 
 -- AI Studio could not save this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T463511884"] = "AI Studio konnte diese Unterhaltung nicht speichern. Bitte versuchen Sie es erneut."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T463511884"] = "AI Studio konnte dieses Gespräch nicht speichern. Bitte versuchen Sie es erneut."
 
 -- AI Studio could not save this conversation. Please try again.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T463511884::INFORMAL"] = "AI Studio konnte diese Unterhaltung nicht speichern. Bitte versuche es erneut."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::EMBEDDED::EMBEDDEDCHATSERVICE::T463511884::INFORMAL"] = "AI Studio konnte dieses Gespräch nicht speichern. Bitte versuche es erneut."
 
 -- The local image file does not exist. Skipping the image.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::IMAGESOURCEEXTENSIONS::T255679918"] = "Die lokale Bilddatei existiert nicht. Das Bild wird übersprungen."
@@ -7772,6 +8144,42 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3571008422::INFORMAL"] =
 
 -- The result is ready.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "Das Ergebnis ist fertig."
+
+-- Expand this category
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T1750778093"] = "Diese Kategorie ausklappen"
+
+-- The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2720183235"] = "Die Seite „Assistenten“ zeigt diese Kategorie künftig nicht mehr an. Außerdem behandelt AI Studio die zugehörigen Assistenten so, als wären sie nicht vorhanden; sie erscheinen z. B. nicht im Menü „Senden an …“."
+
+-- The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2720183235::INFORMAL"] = "Die Seite „Assistenten“ zeigt diese Kategorie künftig nicht mehr an. Außerdem behandelt AI Studio die zugehörigen Assistenten so, als wären sie nicht vorhanden; sie erscheinen z. B. nicht im Menü „Senden an …“."
+
+-- The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2725056496"] = "Die Seite „Assistenten“ zeigt diese Kategorie künftig nicht mehr an. AI Studio bietet die zugehörigen Assistenten weiterhin an anderer Stelle an, z. B. im Menü „Senden an …“."
+
+-- The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2725056496::INFORMAL"] = "Die Seite „Assistenten“ zeigt diese Kategorie künftig nicht mehr an. AI Studio bietet die zugehörigen Assistenten weiterhin an anderer Stelle an, z. B. im Menü „Senden an …“."
+
+-- You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2970234687"] = "Sie können die Kategorie jederzeit in den Assistenten-Einstellungen wieder einblenden. Diese öffnen Sie über das Zahnradsymbol neben der Seitenüberschrift."
+
+-- You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2970234687::INFORMAL"] = "Du kannst die Kategorie jederzeit in den Assistenten-Einstellungen wieder einblenden. Diese öffnest du über das Zahnradsymbol neben der Seitenüberschrift."
+
+-- Hide the category '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T3025364089"] = "Kategorie „{0}“ ausblenden?"
+
+-- Hide this category
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T3438455681"] = "Diese Kategorie ausblenden"
+
+-- If you only want a better overview, click the heading of the category instead: that collapses it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T815674974"] = "Wenn Sie nur einen besseren Überblick möchten, klicken Sie stattdessen auf die Überschrift der Kategorie: Das klappt sie ein."
+
+-- If you only want a better overview, click the heading of the category instead: that collapses it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T815674974::INFORMAL"] = "Wenn du nur einen besseren Überblick möchtest, klicke stattdessen auf die Überschrift der Kategorie: Das klappt sie ein."
+
+-- Collapse this category
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T941766518"] = "Diese Kategorie einklappen"
 
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Detaillierte Sicherheitsinformationen anzeigen oder ausblenden."
@@ -9159,14 +9567,41 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 -- Change what this tile opens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Ändern, was diese Kachel öffnet"
 
+-- This conversation fills the context window of the model. Choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T103248473"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Wählen Sie einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
+
+-- This conversation fills the context window of the model. Choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T103248473::INFORMAL"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Wähle einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
+
 -- Stop
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1266644741"] = "Stoppen"
 
 -- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1561705002"] = "AI Studio kann diese Unterhaltung nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1561705002"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert."
+
+-- approx. {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1992478915"] = "ca. {0} von {1} Token"
+
+-- Delete this conversation and start it over?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982"] = "Dieses Gespräch löschen und neu beginnen?"
+
+-- Delete this conversation and start it over?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982::INFORMAL"] = "Dieses Gespräch löschen und neu beginnen?"
+
+-- Start the conversation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2172806379"] = "Gespräch beginnen"
 
 -- Export message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T274919936"] = "Nachricht exportieren"
+
+-- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Sie können das Gespräch neu beginnen; dabei wird es gelöscht."
+
+-- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281::INFORMAL"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Du kannst das Gespräch neu beginnen; dabei wird es gelöscht."
+
+-- approx. {0} tokens; the context window of this model is unknown
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T357466604"] = "ca. {0} Token; das Kontextfenster dieses Modells ist unbekannt"
 
 -- Your message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949"] = "Ihre Nachricht"
@@ -9174,11 +9609,38 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949"] = "Ihre Nachr
 -- Your message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949::INFORMAL"] = "Deine Nachricht"
 
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3757008686"] = "AI Studio konnte dieses Gespräch nicht löschen. Bitte versuchen Sie es erneut."
+
+-- AI Studio could not delete this conversation. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3757008686::INFORMAL"] = "AI Studio konnte dieses Gespräch nicht löschen. Bitte versuche es erneut."
+
+-- {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3996190985"] = "{0} von {1} Token"
+
 -- Send
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4069397711"] = "Senden"
 
+-- This conversation fills most of the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4195068513"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells."
+
+-- Start over
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T606705767"] = "Neu beginnen"
+
 -- approx. {0} tokens
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T857715435"] = "ca. {0} Tokens"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T857715435"] = "ca. {0} Token"
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T962106497"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beginnen Sie es neu, oder wählen Sie einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
+
+-- This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T962106497::INFORMAL"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beginne es neu, oder wähle einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T991103295"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Bald müssen Sie es neu beginnen."
+
+-- This conversation fills most of the context window of the model. Soon, you will have to start it over.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T991103295::INFORMAL"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Bald musst du es neu beginnen."
 
 -- Copy the path: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T1140628382"] = "Pfad kopieren: {0}"
@@ -15090,6 +15552,48 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T4
 -- The language in which the assistants you build answer.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T42126731::INFORMAL"] = "Die Sprache, in der die von dir erstellten Assistenten antworten."
 
+-- There are no categories to show or hide right now.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2279201345"] = "Derzeit gibt es keine Kategorien zum Ein- oder Ausblenden."
+
+-- Hiding a category says that you do not need its assistants. Choose whether AI Studio still offers them elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2321353169"] = "Das Ausblenden einer Kategorie bedeutet, dass Sie die Assistenten dieser Kategorie nicht benötigen. Wählen Sie aus, ob AI Studio sie weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
+
+-- Hiding a category says that you do not need its assistants. Choose whether AI Studio still offers them elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2321353169::INFORMAL"] = "Das Ausblenden einer Kategorie bedeutet, dass du die Assistenten dieser Kategorie nicht benötigst. Wähle aus, ob AI Studio sie weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
+
+-- What should happen to assistants of categories you hid?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2813197614"] = "Was soll mit den Assistenten aus Kategorien geschehen, die Sie ausgeblendet haben?"
+
+-- What should happen to assistants of categories you hid?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2813197614::INFORMAL"] = "Was soll mit den Assistenten aus Kategorien geschehen, die du ausgeblendet hast?"
+
+-- What should happen to assistants of categories you collapsed?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2994249650"] = "Was soll mit den Assistenten aus Kategorien geschehen, die Sie eingeklappt haben?"
+
+-- What should happen to assistants of categories you collapsed?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2994249650::INFORMAL"] = "Was soll mit den Assistenten aus Kategorien geschehen, die du eingeklappt hast?"
+
+-- The category is hidden
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T3228924424"] = "Die Kategorie ist ausgeblendet."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T3448155331"] = "Schließen"
+
+-- The category is shown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T3595686409"] = "Die Kategorie wird angezeigt."
+
+-- Categories
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T4034259341"] = "Kategorien"
+
+-- Assistant Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T4124037832"] = "Assistenten-Einstellungen"
+
+-- Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786145170"] = "Durch das Einklappen einer Kategorie bleibt die Assistentenseite übersichtlich. Legen Sie fest, ob AI Studio ihre Assistenten weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
+
+-- Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786145170::INFORMAL"] = "Durch das Einklappen einer Kategorie bleibt die Assistentenseite übersichtlich. Leg fest, ob AI Studio ihre Assistenten weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
+
 -- Default minimum pause between files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1008440099"] = "Standardmäßige Mindestpause zwischen Dateien"
 
@@ -17268,17 +17772,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1271524187"] = "Analysieren Sie e
 -- Analyze a document regarding defined rules and extract key information.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1271524187::INFORMAL"] = "Analysiere ein Dokument hinsichtlich festgelegter Regeln und extrahiere wichtige Informationen."
 
--- Business
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T131837803"] = "Business"
-
 -- Legal Check
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1348190638"] = "Rechtliche Prüfung"
 
 -- Identify strengths, weaknesses, opportunities, threats, and practical next steps from provided information.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1356376259"] = "Stärken, Schwächen, Chancen, Risiken und praktische nächste Schritte aus den bereitgestellten Informationen identifizieren."
-
--- General
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1432485131"] = "Allgemein"
 
 -- Grammar & Spelling
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1514925962"] = "Grammatik & Rechtschreibung"
@@ -17364,17 +17862,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2770149758"] = "Dokumentenanalyse
 -- Visual Briefing Assistant
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T277804139"] = "Assistent für visuelle Briefings"
 
--- AI Studio Development
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2830810750"] = "AI-Studio-Entwicklung"
-
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254"] = "Erstellen Sie eine Stellenanzeige anhand einer vorgegebenen Stellenbeschreibung."
 
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254::INFORMAL"] = "Erstelle eine Stellenanzeige anhand einer vorgegebenen Stellenbeschreibung."
-
--- Installed Assistants
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T295232966"] = "Installierte Assistenten"
 
 -- My Tasks
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3011450657"] = "Meine Aufgaben"
@@ -17391,14 +17883,17 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311775455::INFORMAL"] = "Die auto
 -- Translate AI Studio text content into other languages
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3181803840"] = "Textinhalte von AI Studio in andere Sprachen übersetzen."
 
--- Software Engineering
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3260960011"] = "Software-Entwicklung"
-
 -- Assistant Builder
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3303547904"] = "Assistenten-Builder"
 
 -- Rewrite & Improve
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3309133329"] = "Umformulieren & Verbessern"
+
+-- You hid all categories. You can show them again in the assistant settings, which the gear next to the heading opens.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3608690820"] = "Sie haben alle Kategorien ausgeblendet. Sie können sie in den Assistenten-Einstellungen wieder einblenden, die das Zahnradsymbol neben der Überschrift öffnet."
+
+-- You hid all categories. You can show them again in the assistant settings, which the gear next to the heading opens.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3608690820::INFORMAL"] = "Du hast alle Kategorien ausgeblendet. Du kannst sie in den Assistenten-Einstellungen wieder einblenden, die das Zahnradsymbol neben der Überschrift öffnet."
 
 -- Icon Finder
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3693102312"] = "Icon Finder"
@@ -17408,6 +17903,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3733831260"] = "Erstellen Sie Ihr
 
 -- Generate your own assistants.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3733831260::INFORMAL"] = "Erstelle deine eigenen Assistenten."
+
+-- Open the assistant settings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3745279719"] = "Assistenten-Einstellungen öffnen"
 
 -- Generate an ERI server to integrate business systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3756213118"] = "Erstellen Sie einen ERI-Server zur Integration von Geschäftssystemen."
@@ -17441,6 +17939,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537"] = "Stellen Sie Frage
 
 -- Ask a question about a legal document.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537::INFORMAL"] = "Stelle Fragen zu einem juristischen Dokument."
+
+-- Assistant Settings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4124037832"] = "Assistenten-Einstellungen"
 
 -- Log Viewer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4130241777"] = "Protokollanzeige"
@@ -17477,9 +17978,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T892147062"] = "AI-Studio-Protokol
 
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Lokalisierung"
-
--- Learning & Reflecting
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T912918956"] = "Lernen & Reflektieren"
 
 -- Turn texts and documents into slides, also as a PowerPoint file in the design of your template.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T943132958"] = "Verwandeln Sie Texte und Dokumente in Folien, auch als PowerPoint-Datei im Design Ihrer Vorlage."
@@ -18627,6 +19125,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2430906247::INFORMAL"] = "{0} Möcht
 -- The tile '{0}' has been updated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "Die Kachel „{0}“ wurde aktualisiert."
 
+-- Your organization disabled all categories of this assistant: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2444737585"] = "Ihre Organisation hat alle Kategorien dieses Assistenten deaktiviert: {0}."
+
+-- Your organization disabled all categories of this assistant: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2444737585::INFORMAL"] = "Deine Organisation hat alle Kategorien dieses Assistenten deaktiviert: {0}."
+
 -- Share dialog not available
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2445896850"] = "Dialog zum Teilen nicht verfügbar"
 
@@ -18719,6 +19223,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T659549952"] = "Das Plugin-Archiv wur
 
 -- An error occurred while exporting the plugin.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T759681732"] = "Beim Exportieren des Plugins ist ein Fehler aufgetreten."
+
+-- Your organization disabled the category '{0}' of this assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T798759833"] = "Ihre Organisation hat die Kategorie „{0}“ dieses Assistenten deaktiviert."
+
+-- Your organization disabled the category '{0}' of this assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T798759833::INFORMAL"] = "Deine Organisation hat die Kategorie „{0}“ dieses Assistenten deaktiviert."
 
 -- The plugin could not be imported: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T837269472"] = "Das Plugin konnte nicht importiert werden: {0}"
@@ -19230,6 +19740,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1245257804
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1258653480"] = "Einstellungen"
 
+-- Keep offering me the assistants, e.g., in the "Send to ..." menu
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1289869768"] = "Biete mir die Assistenten weiterhin an, z. B. im Menü „Senden an …“"
+
 -- No key is sending the input
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1311973034"] = "Keine Taste sendet die Eingabe; Sie müssen auf die Schaltfläche klicken, um zu senden"
 
@@ -19259,6 +19772,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1874928511
 
 -- Always expand navigation
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1991359958"] = "Navigationsleiste immer ausklappen"
+
+-- Treat the assistants as if they did not exist, e.g., not in the "Send to ..." menu
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2049952564"] = "Behandle die Assistenten so, als wären sie nicht vorhanden, z. B. nicht im Menü „Senden an …“"
 
 -- Show also experimental features: these are experimental; expect bugs, missing features, many changes
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2091731959"] = "Auch experimentelle Funktionen anzeigen: Diese Funktionen sind experimentell; Fehler, fehlende Funktionen und viele Änderungen sind zu erwarten"
@@ -19646,39 +20162,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T373499115"] = "Ihre Dat
 
 -- Your data sources could not be used. This answer was created without them.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T373499115::INFORMAL"] = "Deine Datenquellen konnten nicht verwendet werden. Diese Antwort wurde ohne sie erstellt."
-
--- Software Development
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1025369409"] = "Softwareentwicklung"
-
--- Business
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T131837803"] = "Business"
-
--- General
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1432485131"] = "Allgemein"
-
--- Other
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1849229205"] = "Sonstiges"
-
--- Please select the assistant category
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2552974770"] = "Bitte wählen Sie die Assistentenkategorie aus"
-
--- Please select the assistant category
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2552974770::INFORMAL"] = "Bitte wähle die Assistentenkategorie aus"
-
--- AI Studio Development
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2830810750"] = "AI-Studio-Entwicklung"
-
--- Productivity
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2887181245"] = "Produktivität"
-
--- Scientific
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T3802462536"] = "Wissenschaftlich"
-
--- Select the assistant category
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T4193824894"] = "Assistentenkategorie auswählen"
-
--- Learning & Reflecting
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T912918956"] = "Lernen & Reflektieren"
 
 -- This assistant is already running. AI Studio opens the running session instead.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTLAUNCH::ASSISTANTLAUNCHSERVICE::T2575715765"] = "Dieser Assistent läuft bereits. AI Studio öffnet stattdessen die laufende Sitzung."
@@ -21156,6 +21639,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T949
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."
 
+-- The table CUSTOM_CATEGORIES is using an invalid syntax. It must be a table of names.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T131394700"] = "Die Tabelle CUSTOM_CATEGORIES verwendet eine ungültige Syntax. Sie muss eine Tabelle mit Namen sein."
+
 -- The field NAME does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1340447036"] = "Das Feld NAME existiert nicht oder ist keine gültige Zeichenkette."
 
@@ -21186,6 +21672,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2262604281"] = "Das
 -- The field DESCRIPTION does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T229488255"] = "Das Feld DESCRIPTION existiert nicht oder ist keine gültige Zeichenkette."
 
+-- The table CUSTOM_CATEGORIES requires the category CUSTOM in the table CATEGORIES.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2426905758"] = "Die Tabelle CUSTOM_CATEGORIES benötigt die Kategorie CUSTOM in der Tabelle CATEGORIES."
+
+-- The category CUSTOM requires the table CUSTOM_CATEGORIES with at least one name.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2515975321"] = "Die Kategorie CUSTOM erfordert die Tabelle CUSTOM_CATEGORIES mit mindestens einem Namen."
+
 -- The field VERSION is not a valid version number. The version number must be formatted as string in the major.minor.patch format (X.X.X).
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2538827536"] = "Das Feld VERSION ist keine gültige Versionsnummer. Die Versionsnummer muss als Zeichenkette im Format Hauptversion.Nebenversion.Patch (X.X.X) angegeben werden."
 
@@ -21206,6 +21698,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3667396132"] = "Die
 
 -- The field NAME is empty. The name must be a non-empty string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3763759727"] = "Das Feld NAME ist leer. Der Name darf nicht leer sein."
+
+-- The table CUSTOM_CATEGORIES contains an empty name or a value which is not a text.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T4089014619"] = "Die Tabelle CUSTOM_CATEGORIES enthält einen leeren Namen oder einen Wert, der kein Text ist."
 
 -- The field SUPPORT_CONTACT does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T4189964941"] = "Das Feld SUPPORT_CONTACT existiert nicht oder ist keine gültige Zeichenkette."
@@ -21237,6 +21732,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T10253
 -- Business
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T131837803"] = "Business"
 
+-- General
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1432485131"] = "Allgemein"
+
 -- Music
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1481252212"] = "Musik"
 
@@ -21245,6 +21743,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T15858
 
 -- Weather
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1726658099"] = "Wetter"
+
+-- Custom category
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1885949922"] = "Eigene Kategorie"
 
 -- Industry
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T208409567"] = "Industrie"
@@ -21267,6 +21768,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T25870
 -- Shopping
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2704337693"] = "Einkaufen"
 
+-- AI Studio Development
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2830810750"] = "AI-Studio-Entwicklung"
+
 -- Fitness
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2892517655"] = "Fitness"
 
@@ -21281,9 +21785,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T34217
 
 -- Entertainment
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T3562575449"] = "Unterhaltung"
-
--- Education
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T379048501"] = "Bildung"
 
 -- AI Studio Core
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T4005865962"] = "AI-Studio-Kern"
@@ -21308,6 +21809,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T85056
 
 -- Science
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T904504157"] = "Wissenschaft"
+
+-- Learning & Reflecting
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T912918956"] = "Lernen & Reflektieren"
 
 -- Content Creation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T914642375"] = "Inhalte erstellen"
@@ -22713,8 +23217,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1
 -- The revision model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1411545143"] = "Das Überarbeitungsmodell hat keine brauchbare Antwort zurückgegeben."
 
+-- Your organization disabled these categories of your assistant: {0}. Please choose other categories.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1647997085"] = "Ihre Organisation hat diese Kategorien Ihres Assistenten deaktiviert: {0}. Bitte wählen Sie andere Kategorien aus."
+
+-- Your organization disabled these categories of your assistant: {0}. Please choose other categories.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1647997085::INFORMAL"] = "Deine Organisation hat diese Kategorien deines Assistenten deaktiviert: {0}. Bitte wähle andere Kategorien aus."
+
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1725856265"] = "Beschreibung"
+
+-- The categories of the revised assistant do not match the revised plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1778095727"] = "Die Kategorien des überarbeiteten Assistenten stimmen nicht mit denen des überarbeiteten Plugins überein."
 
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1809312323"] = "Bitte wählen Sie einen Anbieter aus."
@@ -22766,6 +23279,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3
 
 -- Assistant Plugin Revision
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3245954919"] = "Revision des Assistenten-Plugins"
+
+-- Your organization disabled the category '{0}'. Please choose another category for your assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3254953496"] = "Ihre Organisation hat die Kategorie „{0}“ deaktiviert. Bitte wählen Sie eine andere Kategorie für Ihren Assistenten aus."
+
+-- Your organization disabled the category '{0}'. Please choose another category for your assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3254953496::INFORMAL"] = "Deine Organisation hat die Kategorie „{0}“ deaktiviert. Bitte wähle eine andere Kategorie für deinen Assistenten aus."
 
 -- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3278037634"] = "Der Assistenten-Builder konnte das Plugin-Manifest nicht lesen und kann Ihren Assistenten daher derzeit nicht sicher erstellen."
@@ -22832,6 +23351,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4
 
 -- The draft model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4183375977"] = "Das Entwurfsmodell hat keine brauchbare Antwort zurückgegeben."
+
+-- The categories of the generated assistant do not match the generated plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4224887725"] = "Die Kategorien des generierten Assistenten stimmen nicht mit denen des generierten Plugins überein."
 
 -- The Assistant Builder response schema could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4235833611"] = "Das Antwortschema des Assistenten-Builders konnte nicht geladen werden."
@@ -22976,6 +23498,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2466659933"] = "
 
 -- The assistant chat launcher references data source '{0}', but that data source does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T289191545"] = "Der Chat-Schnellstart-Assistent verweist auf die Datenquelle „{0}“, aber diese Datenquelle existiert nicht."
+
+-- Your organization disabled the categories of this assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2988562427"] = "Ihre Organisation hat die Kategorien dieses Assistenten deaktiviert."
+
+-- Your organization disabled the categories of this assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2988562427::INFORMAL"] = "Deine Organisation hat die Kategorien dieses Assistenten deaktiviert."
 
 -- The chat template '{0}' selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3082876173"] = "Die Chat-Vorlage „{0}“ wählt Datenquellen aus, aber für Chats ist kein Anbieter verfügbar. Bitte wählen Sie zuerst einen Standardanbieter für Chats aus. Es wurde kein Chat erstellt."
@@ -23552,6 +24080,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGE
 
 -- The tool calling request failed with status code {0}. See the logs for details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3117779001::INFORMAL"] = "Die Anfrage zum Aufruf des Werkzeugs ist mit dem Statuscode {0} fehlgeschlagen. Weitere Details findest du in den Protokollen."
+
+-- The model did not return a final answer after completing the available tool calls.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3613099681"] = "Das Modell hat nach den verfügbaren Werkzeugaufrufen keine abschließende Antwort gegeben."
+
+-- The model completed the tool call but did not return a final answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T54566803"] = "Das Modell hat den Werkzeugaufruf abgeschlossen, aber keine abschließende Antwort gegeben."
 
 -- General
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T1432485131"] = "Allgemein"

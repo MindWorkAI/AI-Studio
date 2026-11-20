@@ -12,7 +12,7 @@ namespace AIStudio.Tests.BeyondFactsLab;
 [TestFixture]
 public sealed class BflWorkStatePromptTests
 {
-    private static readonly BflPromptParts PARTS = new("{{WORK_STATES}}", "Leitfaden", "Schritt", "Anrede");
+    private static readonly BflPromptParts PARTS = new("{{WORK_STATES}}", "Leitfaden", "Schritt", "Anrede", string.Empty);
 
     private static readonly DateTimeOffset NOW = new(2026, 11, 10, 9, 0, 0, TimeSpan.Zero);
 

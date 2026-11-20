@@ -165,6 +165,11 @@ public sealed class Data
 
     public DataChat Chat { get; set; } = new(x => x.Chat);
 
+    /// <summary>
+    /// Gets the settings of the assistants page: collapsed and hidden categories.
+    /// </summary>
+    public DataAssistantsPage AssistantsPage { get; set; } = new(x => x.AssistantsPage);
+
     public DataWorkspace Workspace { get; set; } = new();
 
     public DataIconFinder IconFinder { get; set; } = new();

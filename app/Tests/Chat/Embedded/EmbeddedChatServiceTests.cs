@@ -130,7 +130,7 @@ public sealed class EmbeddedChatServiceTests
         var service = this.CreateService(Answer("An answer."));
 
         var conversation = await service.GetAsync(store, COMPONENT, chatId, () => new ChatThread());
-        var sent = await service.SendAsync(chatId, this.Request("A question.") with { PrepareAsync = _ => Task.FromResult(false) });
+        var sent = await service.SendAsync(chatId, this.Request("A question.") with { PrepareAsync = _ => Task.FromResult(EmbeddedChatPreparation.REFUSED) });
 
         using (Assert.EnterMultipleScope())
         {
@@ -202,7 +202,8 @@ public sealed class EmbeddedChatServiceTests
 
         await service.GetAsync(store, COMPONENT, chatId, () => new ChatThread());
         var extraBlock = new ContentBlock { Role = ChatRole.USER, ContentType = ContentType.TEXT, Content = new ContentText { Text = "An image description." } };
-        await service.SendAsync(chatId, this.Request("A question.") with { ThreadForRequest = thread => thread with { Blocks = [extraBlock, .. thread.Blocks] } });
+        var preparation = EmbeddedChatPreparation.READY with { ThreadForRequest = thread => thread with { Blocks = [extraBlock, .. thread.Blocks] } };
+        await service.SendAsync(chatId, this.Request("A question.") with { PrepareAsync = _ => Task.FromResult(preparation) });
 
         using (Assert.EnterMultipleScope())
         {
@@ -226,6 +227,83 @@ public sealed class EmbeddedChatServiceTests
             Assert.That(conversation.UserMessageCount, Is.Zero);
             Assert.That(conversation.HasVisibleMessages, Is.True, "The answer is visible.");
         }
+    }
+
+    [Test]
+    public async Task StartingOverDeletesTheConversationAndKeepsTheIdOfTheChat()
+    {
+        var store = new InMemoryEmbeddedChatStore();
+        var chatId = Guid.NewGuid();
+        var service = this.CreateService(Answer("An answer."));
+
+        var conversation = await service.GetAsync(store, COMPONENT, chatId, () => new ChatThread());
+        await service.SendAsync(chatId, this.Request("A question."));
+        var reset = await service.ResetAsync(chatId, () => new ChatThread { Name = "Started over" });
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(reset, Is.True);
+            Assert.That(store.IsStored(chatId), Is.False, "The stored conversation is gone.");
+            Assert.That(conversation.Thread!.Blocks, Is.Empty);
+            Assert.That(conversation.Thread.ChatId, Is.EqualTo(chatId));
+            Assert.That(conversation.Thread.Name, Is.EqualTo("Started over"), "The new conversation starts as a new chat does.");
+        }
+    }
+
+    [Test]
+    public async Task AConversationDoesNotStartOverWhileTheModelAnswers()
+    {
+        var store = new InMemoryEmbeddedChatStore();
+        var chatId = Guid.NewGuid();
+        var answering = new TaskCompletionSource();
+        var release = new TaskCompletionSource();
+        var service = this.CreateService(async (_, answer, _, _) =>
+        {
+            answering.SetResult();
+            await release.Task;
+            answer.Text = "An answer.";
+        });
+
+        var conversation = await service.GetAsync(store, COMPONENT, chatId, () => new ChatThread());
+        var sending = service.SendAsync(chatId, this.Request("A question."));
+        await answering.Task;
+
+        var reset = await service.ResetAsync(chatId, () => new ChatThread());
+        release.SetResult();
+        await sending;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(reset, Is.False);
+            Assert.That(conversation.Thread!.Blocks, Has.Count.EqualTo(2), "The question and its answer stay.");
+            Assert.That(store.IsStored(chatId), Is.True);
+        }
+    }
+
+    [Test]
+    public async Task AChatThisVersionCannotOpenBecomesAvailableWhenItStartsOver()
+    {
+        var store = new InMemoryEmbeddedChatStore { CannotOpen = true };
+        var chatId = Guid.NewGuid();
+        var service = this.CreateService(Answer("An answer."));
+
+        var conversation = await service.GetAsync(store, COMPONENT, chatId, () => new ChatThread());
+        var wasAvailable = conversation.IsAvailable;
+        var reset = await service.ResetAsync(chatId, () => new ChatThread());
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(wasAvailable, Is.False);
+            Assert.That(reset, Is.True);
+            Assert.That(conversation.IsAvailable, Is.True);
+        }
+    }
+
+    [Test]
+    public async Task AChatWhichWasNeverLoadedDoesNotStartOver()
+    {
+        var service = this.CreateService(Answer("An answer."));
+        Assert.That(await service.ResetAsync(Guid.NewGuid(), () => new ChatThread()), Is.False);
     }
 
     private EmbeddedChatService CreateService(Func<EmbeddedChatRequest, ContentText, ChatThread, CancellationToken, Task> answerAsync) => new(this.settingsManager, new AssistantSessionService(MessageBus.INSTANCE), MessageBus.INSTANCE, NullLogger<EmbeddedChatService>.Instance, answerAsync);

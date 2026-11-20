@@ -134,7 +134,8 @@ public sealed class EmbeddedChatService(SettingsManager settingsManager, Assista
         var status = AssistantSessionStatus.FAILED;
         try
         {
-            if (!await request.PrepareAsync(thread) || !await this.CheckProviderAsync(conversation, thread, request.Provider))
+            var preparation = await request.PrepareAsync(thread);
+            if (!preparation.IsReady || !await this.CheckProviderAsync(conversation, thread, request.Provider))
                 return false;
 
             thread.RuntimeComponent = conversation.Component;
@@ -177,7 +178,7 @@ public sealed class EmbeddedChatService(SettingsManager settingsManager, Assista
             sessionId = (await sessionService.TryBeginAsync(sessionKey, conversation.Component.Name, cancellation, thread, new(StringComparer.Ordinal))).SessionId;
             await this.NotifyAsync(chatId);
 
-            await this.answerAsync(request, answer, request.ThreadForRequest(thread), cancellation.Token);
+            await this.answerAsync(request, answer, preparation.ThreadForRequest(thread), cancellation.Token);
             status = cancellation.IsCancellationRequested ? AssistantSessionStatus.CANCELED : AssistantSessionStatus.COMPLETED;
         }
         catch (OperationCanceledException)
@@ -213,6 +214,40 @@ public sealed class EmbeddedChatService(SettingsManager settingsManager, Assista
     public Task CancelAsync(Guid chatId) => this.conversations.TryGetValue(chatId, out var conversation)
         ? sessionService.CancelAsync(SessionKey(conversation))
         : Task.CompletedTask;
+
+    /// <summary>
+    /// Deletes the conversation of a chat, so that it starts over, e.g., because the user asked for it.
+    /// </summary>
+    /// <remarks>
+    /// Works for a chat which this version cannot open as well; it becomes available again. The new conversation keeps
+    /// the ID of the chat, so what the old one received goes now; otherwise, it would wait for the cleanup at the next
+    /// start.
+    /// </remarks>
+    /// <param name="chatId">The ID of a chat which GetAsync loaded before.</param>
+    /// <param name="createThread">Creates the thread of the new conversation; it gets the ID of the chat.</param>
+    /// <returns>False while the model answers in the chat, or when it was not loaded.</returns>
+    /// <exception cref="IOException">The stored chat could not be deleted; the conversation stays as it is.</exception>
+    /// <exception cref="UnauthorizedAccessException">The stored chat could not be deleted; the conversation stays as it is.</exception>
+    public async Task<bool> ResetAsync(Guid chatId, Func<ChatThread> createThread)
+    {
+        if (!this.conversations.TryGetValue(chatId, out var conversation))
+            return false;
+
+        lock (this.runningLock)
+        {
+            if (conversation.IsRunning)
+                return false;
+        }
+
+        await conversation.Store.DeleteThreadAsync(chatId);
+        var thread = createThread();
+        thread.ChatId = chatId;
+        conversation.Thread = thread;
+
+        await ChatProvenance.ForgetChatsAsync([chatId]);
+        await this.NotifyAsync(chatId);
+        return true;
+    }
 
     /// <summary>
     /// Stops the answer of a chat and forgets the chat, e.g., because the user deleted what it belonged to.

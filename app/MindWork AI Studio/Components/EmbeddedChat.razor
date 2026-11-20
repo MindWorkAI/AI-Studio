@@ -1,21 +1,45 @@
 @using AIStudio.Chat
+@using AIStudio.Chat.Embedded
 @inherits MSGComponentBase
 
+@if (!string.IsNullOrWhiteSpace(this.Heading))
+{
+    <MudText Typo="Typo.h6" Class="mt-6 mb-2">@this.Heading</MudText>
+}
 @if (this.conversation is null)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3"/>
 }
 else if (this.conversation.Thread is not { } thread)
 {
-    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
-        @T("AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.")
-    </MudAlert>
+    @if (this.CanReset)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
+            @TA("AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.")
+        </MudAlert>
+        <MudButton StartIcon="@AppIcons.RESET" Color="Color.Error" OnClick="@this.ResetAsync">@T("Start over")</MudButton>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3">
+            @T("AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.")
+        </MudAlert>
+    }
 }
 else
 {
     @if (!this.conversation.HasVisibleMessages && !this.IsRunning && !string.IsNullOrWhiteSpace(this.Introduction))
     {
         <MudText Typo="Typo.body2" Class="mb-3">@this.Introduction</MudText>
+    }
+
+    @if (!this.IsReadOnly && EmbeddedChatOpening.OffersStart(this.StartRequest, this.conversation))
+    {
+        <div class="mb-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.CHAT" OnClick="@this.StartAsync" Disabled="@(!this.CanSend)">
+                @T("Start the conversation")
+            </MudButton>
+        </div>
     }
 
     @foreach (var block in thread.Blocks)
@@ -50,7 +74,7 @@ else
                       OnKeyUp="@this.InputKeyEventAsync"
                       UserAttributes="@this.inputAttributes"
                       HelperText="@this.TokenText"
-                      Class="mt-2"
+                      Class="@this.InputClass"
                       Disabled="@(!this.CanSend)"/>
 
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
@@ -58,10 +82,22 @@ else
             {
                 <AttachDocuments Name="File Attachments" DocumentPaths="@this.attachments" DocumentPathsChanged="@this.AttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" AllowedFileTypes="@this.AllowedFileTypes" Disabled="@(!this.CanSend)"/>
             }
+            @if (this.QuickMessage is { } quickMessage && this.conversation.HasAnswer)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@quickMessage.Icon" OnClick="@this.SendQuickMessageAsync" Disabled="@(!this.CanSend)">@quickMessage.Label</MudButton>
+            }
             @if (this.IsRunning)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@AppIcons.STOP" OnClick="@this.CancelAsync">@T("Stop")</MudButton>
             }
+            @if (this.CanReset && this.conversation.HasVisibleMessages)
+            {
+                <MudButton StartIcon="@AppIcons.RESET" OnClick="@this.ResetAsync" Disabled="@this.IsRunning">@T("Start over")</MudButton>
+            }
         </MudStack>
+        @if (this.QuickMessage is { Hint.Length: > 0 } hintedMessage && this.conversation.HasAnswer)
+        {
+            <MudText Typo="Typo.caption" Class="d-block mt-1">@hintedMessage.Hint</MudText>
+        }
     }
 }

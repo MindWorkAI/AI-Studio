@@ -16,6 +16,10 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
 
     public async Task<DirectChatStartResult> TryCreateAssistantChatAsync(PluginAssistants assistantPlugin)
     {
+        // Every way to a launcher leads through here, the one from the Assistant Builder included:
+        if (settingsManager.IsDisabledByItsCategories(assistantPlugin))
+            return new(null, TA("Your organization disabled the categories of this assistant."));
+
         if (assistantPlugin.ChatLaunchConfiguration is not { } launchConfiguration)
             return new(null, TB("The assistant plugin does not contain a valid chat launch configuration."));
 

@@ -1,0 +1,37 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@AppIcons.SETTINGS" Class="mr-2" />
+            @T("Assistant Settings")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <ConfigurationSelect OptionDescription="@TA("What should happen to assistants of categories you collapsed?")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.AssistantsPage.CollapsedCategoryAssistants)" Data="@ConfigurationSelectDataFactory.GetAssistantOfferBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.AssistantsPage.CollapsedCategoryAssistants = selectedValue)" OptionHelp="@this.CollapsedCategoriesHelp" IsLocked="() => ManagedConfiguration.TryGet(x => x.AssistantsPage, x => x.CollapsedCategoryAssistants, out var meta) && meta.IsLocked"/>
+        <ConfigurationSelect OptionDescription="@TA("What should happen to assistants of categories you hid?")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.AssistantsPage.HiddenCategoryAssistants)" Data="@ConfigurationSelectDataFactory.GetAssistantOfferBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.AssistantsPage.HiddenCategoryAssistants = selectedValue)" OptionHelp="@this.HiddenCategoriesHelp" IsLocked="() => ManagedConfiguration.TryGet(x => x.AssistantsPage, x => x.HiddenCategoryAssistants, out var meta) && meta.IsLocked"/>
+
+        <MudText Typo="Typo.h6" Class="mt-6 mb-2">
+            @T("Categories")
+        </MudText>
+        @if (this.Categories.Count == 0)
+        {
+            <MudText Typo="Typo.body1">
+                @T("There are no categories to show or hide right now.")
+            </MudText>
+        }
+        else
+        {
+            @foreach (var category in this.Categories)
+            {
+                <ConfigurationOption @key="@category" OptionDescription="@category.Name" LabelOn="@T("The category is shown")" LabelOff="@T("The category is hidden")" State="@(() => !this.SettingsManager.ConfigurationData.AssistantsPage.IsCategoryHidden(category))" StateUpdate="@(isShown => this.SettingsManager.ConfigurationData.AssistantsPage.SetCategoryHidden(category, !isShown))"/>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
