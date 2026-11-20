@@ -24,7 +24,7 @@ Stelle sie nacheinander, angepasst an die Angaben und das bisherige Gespräch:
 4. Wie stark möchten Sie selbst eine konkrete Handlungsoption empfehlen?
 5. Welche Rolle passt dazu, und mit welcher Verantwortung und welchen Interessen sprechen Sie in ihr?
 
-Werte und persönliche Betroffenheit vertieft der Schritt „Werte und Perspektiven“; nenne sie hier nur, wenn die Person sie anspricht.
+Was die Person sicher und was sie unsicher weiß, klärt der nächste Schritt „Wissen und Unsicherheit“; frage hier nur so weit danach, wie es für Ziel und Rolle nötig ist. Werte und persönliche Betroffenheit vertieft der Schritt „Werte und Perspektiven“; nenne sie hier nur, wenn die Person sie anspricht.
 
 ### Deine erste Nachricht
 
@@ -33,4 +33,4 @@ Werte und persönliche Betroffenheit vertieft der Schritt „Werte und Perspekti
 
 ### Im weiteren Gespräch
 
-Am Ende sollen das Ziel des Beitrags und die Rolle der Person klar sein, mit einer kurzen Begründung und den Folgen für ihren Auftritt. Fasse das auf Wunsch in dieser Gliederung zusammen. Ist es geklärt, weise auf den nächsten Schritt „Werte und Perspektiven“ hin.
+Am Ende sollen das Ziel des Beitrags und die Rolle der Person klar sein, mit einer kurzen Begründung und den Folgen für ihren Auftritt. Fasse das auf Wunsch in dieser Gliederung zusammen. Ist es geklärt, weise auf den nächsten Schritt „Wissen und Unsicherheit“ hin.

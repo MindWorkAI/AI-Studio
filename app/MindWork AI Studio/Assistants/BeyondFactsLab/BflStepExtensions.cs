@@ -15,8 +15,8 @@ public static class BflStepExtensions
         public string Title => step switch
         {
             BflStep.FRAMEWORK => TB("Event details"),
-            BflStep.KNOWLEDGE => TB("Knowledge and uncertainty"),
             BflStep.GOALS_AND_ROLE => TB("Goals and role"),
+            BflStep.KNOWLEDGE => TB("Knowledge and uncertainty"),
             BflStep.VALUES_AND_PERSPECTIVES => TB("Values and perspectives"),
             BflStep.STRATEGY => TB("Strategy"),
             BflStep.TEST_SITUATION => TB("Test situation"),
@@ -31,8 +31,8 @@ public static class BflStepExtensions
         public string Description => step switch
         {
             BflStep.FRAMEWORK => TA("What the event is about, for whom, and what you were asked to contribute."),
-            BflStep.KNOWLEDGE => TA("What you know for sure, what is uncertain, and where your expertise ends."),
             BflStep.GOALS_AND_ROLE => TA("What you want to achieve, and in which role you speak."),
+            BflStep.KNOWLEDGE => TA("What you know for sure, what is uncertain, and where your expertise ends."),
             BflStep.VALUES_AND_PERSPECTIVES => TA("What matters to you, what touches you, and what moves others."),
             BflStep.STRATEGY => TA("How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step."),
             BflStep.TEST_SITUATION => TA("Play through critical questions and opposing positions, with generic counterparts or with participants whom the lab researched in depth."),
@@ -62,8 +62,8 @@ public static class BflStepExtensions
         public string FolderName => step switch
         {
             BflStep.FRAMEWORK => "framework",
-            BflStep.KNOWLEDGE => "knowledge",
             BflStep.GOALS_AND_ROLE => "goals",
+            BflStep.KNOWLEDGE => "knowledge",
             BflStep.VALUES_AND_PERSPECTIVES => "values",
             BflStep.STRATEGY => "strategy",
             BflStep.TEST_SITUATION => "test",

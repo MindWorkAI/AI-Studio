@@ -179,8 +179,9 @@ public static class BflPromptComposer
     /// </summary>
     /// <remarks>
     /// Unlike a research, it knows the details of the preparation, since the people who matter most depend on the
-    /// contribution of the person. Only the details of the first three steps count, about the event, the knowledge,
-    /// and the goal and role of the person, and nothing the person confided. The request has no tools, and the lab
+    /// contribution of the person. Only the details of the steps about the event, the goal and role of the person,
+    /// and their knowledge count, named one by one so that a step which moves changes nothing here, and nothing the
+    /// person confided. The request has no tools, and the lab
     /// accepts nothing but names from the list as its answer, see BflParticipantSelectionCheck, so that none of the
     /// details reaches a search.
     /// </remarks>
@@ -191,7 +192,7 @@ public static class BflPromptComposer
     /// <exception cref="FormatException">The prompt has a placeholder without a value.</exception>
     public static string ComposeParticipantSelection(string template, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyList<BflParticipant> participants)
     {
-        var earlierForms = forms.Where(form => form.Key < BflStep.VALUES_AND_PERSPECTIVES).ToDictionary(form => form.Key, form => form.Value);
+        var contributionForms = forms.Where(form => form.Key is BflStep.FRAMEWORK or BflStep.GOALS_AND_ROLE or BflStep.KNOWLEDGE).ToDictionary(form => form.Key, form => form.Value);
         var list = string.Join($"{LINE_BREAK}{LINE_BREAK}", participants.Select(participant => participant.Entry.Trim().Length is 0
             ? $"### {participant.Name}"
             : $"### {participant.Name}{LINE_BREAK}{participant.Entry.Trim()}"));
@@ -199,7 +200,7 @@ public static class BflPromptComposer
         return BflPromptTemplate.Fill(template, new Dictionary<string, string>(StringComparer.Ordinal)
         {
             [BflPromptTemplate.SELECTION_SIZE] = BflParticipantSelection.MAX_SUGGESTED_PEOPLE.ToString(CultureInfo.InvariantCulture),
-            [BflPromptTemplate.DETAILS] = Details(BflStep.STRATEGY, earlierForms, null, BflEffectiveSimulation.GENERIC),
+            [BflPromptTemplate.DETAILS] = Details(BflStep.STRATEGY, contributionForms, null, BflEffectiveSimulation.GENERIC),
             [BflPromptTemplate.PARTICIPANTS] = list.Length is 0 ? "Die Liste ist leer." : list
         }).ReplaceLineEndings(LINE_BREAK.ToString());
     }

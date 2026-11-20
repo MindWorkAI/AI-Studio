@@ -31,8 +31,8 @@ Für schnelle Texte wie eine Pressemitteilung passen der Chat von AI Studio oder
 - Die Person legt mit „Neue Vorbereitung“ eine Vorbereitung an, für jede Veranstaltung eine eigene.
 - Eine Vorbereitung hat sieben Schritte:
   1. „Rahmendaten“: worum es bei der Veranstaltung geht, für wen, und was der Auftrag der Person ist.
-  2. „Wissen und Unsicherheit“: was sie sicher weiß, was unsicher ist und wo ihre Expertise endet.
-  3. „Ziele und Rolle“: was sie erreichen will und in welcher Rolle sie spricht.
+  2. „Ziele und Rolle“: was sie erreichen will und in welcher Rolle sie spricht.
+  3. „Wissen und Unsicherheit“: was sie sicher weiß, was unsicher ist und wo ihre Expertise endet.
   4. „Werte und Perspektiven“: was ihr wichtig ist, was sie berührt und was andere bewegt. Dazu gehört eine freiwillige Werte-Sortierung: zwölf Werte in drei Runden, eigene Werte und die Auswahl von zwei oder drei Werten, die das Gespräch genauer betrachtet. Sie ist kein validierter Werte- oder Persönlichkeitstest.
   5. „Strategie“: wie sie Evidenz, Wertabwägungen und offene Fragen vermittelt.
   6. „Testsituation“: kritische Nachfragen und Gegenpositionen durchspielen, mit generischen Gegenübern oder mit Teilnehmenden, die das Lab genauer recherchiert hat.

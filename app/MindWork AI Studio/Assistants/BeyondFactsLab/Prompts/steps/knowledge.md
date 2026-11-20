@@ -34,4 +34,4 @@ Hat die Person Material hinzugefügt, etwa ein Paper, einen Vortragstext oder No
 
 ### Im weiteren Gespräch
 
-Am Ende soll für die Person klar sein, was sie sicher und was sie unsicher weiß: gesicherte Aussagen, Unsicherheiten und Grenzen, Schwachstellen und mögliche Kritikpunkte ihrer Arbeit, Kontroversen im Fach, die Grenze ihrer Expertise und ein bis zwei mögliche Kernbotschaften. Fasse das auf Wunsch in dieser Gliederung zusammen. Ist es geklärt, weise auf den nächsten Schritt „Ziele und Rolle“ hin.
+Am Ende soll für die Person klar sein, was sie sicher und was sie unsicher weiß: gesicherte Aussagen, Unsicherheiten und Grenzen, Schwachstellen und mögliche Kritikpunkte ihrer Arbeit, Kontroversen im Fach, die Grenze ihrer Expertise und ein bis zwei mögliche Kernbotschaften. Fasse das auf Wunsch in dieser Gliederung zusammen. Ist es geklärt, weise auf den nächsten Schritt „Werte und Perspektiven“ hin.

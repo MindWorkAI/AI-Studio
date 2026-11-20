@@ -17,7 +17,7 @@ public sealed class BflFieldCatalogTests
     {
         Assert.That(BflStep.All.Select(step => step.ToString()), Is.EqualTo(new[]
         {
-            "FRAMEWORK", "KNOWLEDGE", "GOALS_AND_ROLE", "VALUES_AND_PERSPECTIVES", "STRATEGY", "TEST_SITUATION", "RESULTS",
+            "FRAMEWORK", "GOALS_AND_ROLE", "KNOWLEDGE", "VALUES_AND_PERSPECTIVES", "STRATEGY", "TEST_SITUATION", "RESULTS",
         }));
     }
 
@@ -26,7 +26,7 @@ public sealed class BflFieldCatalogTests
     {
         Assert.That(BflStep.All.Select(step => step.FolderName), Is.EqualTo(new[]
         {
-            "framework", "knowledge", "goals", "values", "strategy", "test", "results",
+            "framework", "goals", "knowledge", "values", "strategy", "test", "results",
         }));
     }
 
@@ -36,8 +36,8 @@ public sealed class BflFieldCatalogTests
         Assert.That(BflFieldCatalog.FIELDS.Select(field => field.Id), Is.EqualTo(new[]
         {
             "format", "event_topic", "audience", "event_visibility", "contribution_topic", "event_date", "event_location", "event_duration", "contribution_duration", "other_participants", "event_link",
-            "contribution_summary", "core_theses", "uncertainties", "material_notes",
             "goals", "goal_directions",
+            "contribution_summary", "core_theses", "uncertainties", "material_notes",
             "values_and_concerns", "personal_concern", "other_perspectives",
             "communication_worries",
             "question_type", "difficulty", "test_notes",

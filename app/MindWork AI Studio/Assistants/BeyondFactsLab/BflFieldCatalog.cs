@@ -22,15 +22,15 @@ public static class BflFieldCatalog
     public const string OTHER_PARTICIPANTS = "other_participants";
     public const string EVENT_LINK = "event_link";
 
+    // Goals and role:
+    public const string GOALS = "goals";
+    public const string GOAL_DIRECTIONS = "goal_directions";
+
     // Knowledge and uncertainty:
     public const string CONTRIBUTION_SUMMARY = "contribution_summary";
     public const string CORE_THESES = "core_theses";
     public const string UNCERTAINTIES = "uncertainties";
     public const string MATERIAL_NOTES = "material_notes";
-
-    // Goals and role:
-    public const string GOALS = "goals";
-    public const string GOAL_DIRECTIONS = "goal_directions";
 
     // Values and perspectives:
     public const string VALUES_AND_CONCERNS = "values_and_concerns";
@@ -98,16 +98,16 @@ public static class BflFieldCatalog
         new(OTHER_PARTICIPANTS, BflStep.FRAMEWORK, BflFieldKind.MULTI_LINE) { IsSharedWithResearch = true, NameRole = BflNameRole.PARTICIPANTS },
         new(EVENT_LINK, BflStep.FRAMEWORK, BflFieldKind.LINK) { IsSharedWithResearch = true, IdentifiesEvent = true },
 
-        new(CONTRIBUTION_SUMMARY, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE) { IsKeyDetail = true },
-        new(CORE_THESES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
-        new(UNCERTAINTIES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
-        new(MATERIAL_NOTES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
-
         new(GOALS, BflStep.GOALS_AND_ROLE, BflFieldKind.MULTI_LINE),
         new(GOAL_DIRECTIONS, BflStep.GOALS_AND_ROLE, BflFieldKind.MULTI_CHOICE)
         {
             Options = [new(GOAL_INFORM), new(GOAL_MODERATE), new(GOAL_TAKE_POSITION), new(GOAL_RAISE_AWARENESS), new(GOAL_SHOW_OPTIONS), new(GOAL_INFLUENCE_POLICY)],
         },
+
+        new(CONTRIBUTION_SUMMARY, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE) { IsKeyDetail = true },
+        new(CORE_THESES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
+        new(UNCERTAINTIES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
+        new(MATERIAL_NOTES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
 
         new(VALUES_AND_CONCERNS, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { Section = BflFormSection.WHAT_MATTERS_TO_ME },
         new(PERSONAL_CONCERN, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { IsPersonalDisclosure = true, Section = BflFormSection.WHAT_TOUCHES_ME },
