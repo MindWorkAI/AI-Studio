@@ -179,7 +179,7 @@ public static class BflPromptComposer
     /// </summary>
     /// <remarks>
     /// Unlike a research, it knows the details of the preparation, since the people who matter most depend on the
-    /// contribution of the person. Only the details of the steps about the event, the goal and role of the person,
+    /// contribution of the person. Only the details of the steps about the event, the goal and roles of the person,
     /// and their knowledge count, named one by one so that a step which moves changes nothing here, and nothing the
     /// person confided. The request has no tools, and the lab
     /// accepts nothing but names from the list as its answer, see BflParticipantSelectionCheck, so that none of the

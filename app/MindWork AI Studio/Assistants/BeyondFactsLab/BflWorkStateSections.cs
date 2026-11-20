@@ -27,9 +27,9 @@ public static class BflWorkStateSections
         new(OPEN_POINTS, BflStep.FRAMEWORK, "Offene Punkte, die die Person noch klären oder recherchieren möchte."),
 
         new("GOAL", BflStep.GOALS_AND_ROLE, "Was die Person mit ihrem Beitrag erreichen möchte."),
-        new("ROLE", BflStep.GOALS_AND_ROLE, "In welcher Rolle sie spricht, etwa nach Pielke, mit welcher Verantwortung und welchen Interessen."),
-        new("REASONS", BflStep.GOALS_AND_ROLE, "Eine kurze Begründung für Ziel und Rolle."),
-        new("CONSEQUENCES", BflStep.GOALS_AND_ROLE, "Folgen von Ziel und Rolle für ihren Auftritt."),
+        new("ROLE", BflStep.GOALS_AND_ROLE, "In welchen Rollen sie spricht, etwa nach Pielke, mit welcher Verantwortung und welchen Interessen."),
+        new("REASONS", BflStep.GOALS_AND_ROLE, "Eine kurze Begründung für Ziel und Rollen."),
+        new("CONSEQUENCES", BflStep.GOALS_AND_ROLE, "Folgen von Ziel und Rollen für ihren Auftritt."),
         new(OPEN_POINTS, BflStep.GOALS_AND_ROLE, "Offene Punkte."),
 
         new("ESTABLISHED", BflStep.KNOWLEDGE, "Gesicherte Aussagen der Person und worauf sie beruhen."),

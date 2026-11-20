@@ -15,7 +15,7 @@ public static class BflStepExtensions
         public string Title => step switch
         {
             BflStep.FRAMEWORK => TB("Event details"),
-            BflStep.GOALS_AND_ROLE => TB("Goals and role"),
+            BflStep.GOALS_AND_ROLE => TB("Goals and roles"),
             BflStep.KNOWLEDGE => TB("Knowledge and uncertainty"),
             BflStep.VALUES_AND_PERSPECTIVES => TB("Values and perspectives"),
             BflStep.STRATEGY => TB("Strategy"),
@@ -31,7 +31,7 @@ public static class BflStepExtensions
         public string Description => step switch
         {
             BflStep.FRAMEWORK => TA("What the event is about, for whom, and what you were asked to contribute."),
-            BflStep.GOALS_AND_ROLE => TA("What you want to achieve, and in which role you speak."),
+            BflStep.GOALS_AND_ROLE => TA("What you want to achieve, and in which roles you speak."),
             BflStep.KNOWLEDGE => TA("What you know for sure, what is uncertain, and where your expertise ends."),
             BflStep.VALUES_AND_PERSPECTIVES => TA("What matters to you, what touches you, and what moves others."),
             BflStep.STRATEGY => TA("How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step."),

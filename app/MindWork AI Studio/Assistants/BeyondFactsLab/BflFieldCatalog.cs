@@ -22,7 +22,7 @@ public static class BflFieldCatalog
     public const string OTHER_PARTICIPANTS = "other_participants";
     public const string EVENT_LINK = "event_link";
 
-    // Goals and role:
+    // Goals and roles:
     public const string GOALS = "goals";
     public const string GOAL_DIRECTIONS = "goal_directions";
 

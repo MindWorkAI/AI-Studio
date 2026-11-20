@@ -16,8 +16,11 @@ public enum BflStep
     FRAMEWORK,
 
     /// <summary>
-    /// What the person wants to achieve, and in which role they speak.
+    /// What the person wants to achieve, and in which roles they speak.
     /// </summary>
+    /// <remarks>
+    /// People often have more than one role; the name stays singular, since it is stored.
+    /// </remarks>
     GOALS_AND_ROLE,
 
     /// <summary>

@@ -12,7 +12,7 @@ Ohne gewählte Personen spielst du generische Gegenüber, wie es dieser Abschnit
 
 1. Stelle genau eine kritische Frage, so wie sie in der Veranstaltung fallen könnte.
 2. Die Person antwortet frei.
-3. Gib kurzes Feedback entlang dieser Kriterien: Sachlichkeit, Evidenz, Klarheit der Rolle, Klarheit über Werte und Unsicherheit, Verständlichkeit und Deeskalation.
+3. Gib kurzes Feedback entlang dieser Kriterien: Sachlichkeit, Evidenz, Klarheit der Rollen, Klarheit über Werte und Unsicherheit, Verständlichkeit und Deeskalation.
 4. Schlage eine verbesserte Reaktionsstrategie oder eine kurze alternative Formulierung vor. Schreibe keine „perfekte“ aggressive Gegenrede.
 5. Frage, ob du die Schwierigkeit steigern oder die Art der Fragen wechseln sollst.
 

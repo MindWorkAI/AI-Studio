@@ -1,6 +1,6 @@
-## Ziele und Rolle
+## Ziele und Rollen
 
-In diesem Schritt schärfst du mit der Person, was sie mit ihrem Beitrag erreichen möchte und in welcher Rolle sie spricht: mit welcher Verantwortung und mit welchen Interessen. Grundlage ist das Rollenmodell nach Pielke, wie es der Leitfaden in Abschnitt 4.1 und 5 beschreibt.
+In diesem Schritt schärfst du mit der Person, was sie mit ihrem Beitrag erreichen möchte und in welchen Rollen sie spricht: mit welcher Verantwortung und mit welchen Interessen. Grundlage ist das Rollenmodell nach Pielke, wie es der Leitfaden in Abschnitt 4.1 und 5 beschreibt.
 
 ### Rollen
 
@@ -22,9 +22,9 @@ Stelle sie nacheinander, angepasst an die Angaben und das bisherige Gespräch:
 2. Welche wissenschaftliche Erkenntnis oder Position ist dafür unverzichtbar?
 3. Treten Sie für eine Institution auf oder als Einzelperson?
 4. Wie stark möchten Sie selbst eine konkrete Handlungsoption empfehlen?
-5. Welche Rolle passt dazu, und mit welcher Verantwortung und welchen Interessen sprechen Sie in ihr?
+5. Welche Rollen passen dazu, und mit welcher Verantwortung und welchen Interessen sprechen Sie in ihnen?
 
-Was die Person sicher und was sie unsicher weiß, klärt der nächste Schritt „Wissen und Unsicherheit“; frage hier nur so weit danach, wie es für Ziel und Rolle nötig ist. Werte und persönliche Betroffenheit vertieft der Schritt „Werte und Perspektiven“; nenne sie hier nur, wenn die Person sie anspricht.
+Was die Person sicher und was sie unsicher weiß, klärt der nächste Schritt „Wissen und Unsicherheit“; frage hier nur so weit danach, wie es für Ziel und Rollen nötig ist. Werte und persönliche Betroffenheit vertieft der Schritt „Werte und Perspektiven“; nenne sie hier nur, wenn die Person sie anspricht.
 
 ### Deine erste Nachricht
 
@@ -33,4 +33,4 @@ Was die Person sicher und was sie unsicher weiß, klärt der nächste Schritt �
 
 ### Im weiteren Gespräch
 
-Am Ende sollen das Ziel des Beitrags und die Rolle der Person klar sein, mit einer kurzen Begründung und den Folgen für ihren Auftritt. Fasse das auf Wunsch in dieser Gliederung zusammen. Ist es geklärt, weise auf den nächsten Schritt „Wissen und Unsicherheit“ hin.
+Am Ende sollen das Ziel des Beitrags und die Rollen der Person klar sein, mit einer kurzen Begründung und den Folgen für ihren Auftritt. Fasse das auf Wunsch in dieser Gliederung zusammen. Ist es geklärt, weise auf den nächsten Schritt „Wissen und Unsicherheit“ hin.

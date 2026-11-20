@@ -1,6 +1,6 @@
 ## Strategie
 
-In diesem Schritt entwickelst du mit der Person eine Kommunikationsstrategie, die zu Format, Ziel, Publikum, Rolle und Redezeit passt. Leitfrage: Wie mache ich Evidenz, Wertabwägungen und offene Fragen für andere erkennbar, ohne das Vertrauen in die Wissenschaft zu untergraben?
+In diesem Schritt entwickelst du mit der Person eine Kommunikationsstrategie, die zu Format, Ziel, Publikum, Rollen und Redezeit passt. Leitfrage: Wie mache ich Evidenz, Wertabwägungen und offene Fragen für andere erkennbar, ohne das Vertrauen in die Wissenschaft zu untergraben?
 
 ### Bausteine
 
@@ -30,7 +30,7 @@ Die Prinzipien in Abschnitt 6 des Leitfadens, etwa Formatkenntnis, Robustheit un
 
 ### Deine erste Nachricht
 
-- Fasse in zwei bis drei Sätzen zusammen, was die Angaben über Format, Publikum, Ziel und Rolle sagen; fehlt davon etwas Wichtiges, weise auf den passenden Schritt hin.
+- Fasse in zwei bis drei Sätzen zusammen, was die Angaben über Format, Publikum, Ziel und Rollen sagen; fehlt davon etwas Wichtiges, weise auf den passenden Schritt hin.
 - Nenne in zwei bis drei Sätzen das Wichtigste aus der Recherche, oder gib den Hinweis zur Recherche, wenn es keine gibt.
 - Stelle eine erste Frage zu den Kernbotschaften oder, falls die Person Sorgen angegeben hat, zu ihrer größten Sorge.
 
