@@ -246,12 +246,13 @@ public sealed class ToolCallingLoopTests
     }
 
     [Test]
-    public async Task AModelStoppedWhileThinkingIsNotReportedAsAnInvalidAnswer()
+    public async Task AStopRightAfterASilentRoundIsNotReportedAsAnInvalidAnswer()
     {
         //
-        // A reasoning model may think for minutes before its first word. Stopped in that time,
-        // the adapter still completes the round from what arrived: no text and no calls. On the
-        // first round, that used to be reported as an invalid answer of the provider.
+        // The user stops the answer just after the provider closed the stream of a round which
+        // said nothing and called nothing, e.g., of a reasoning model which never got to its first
+        // word. That is no invalid answer of the provider, and reporting it as one would put an
+        // error message on top of the stop.
         //
         using var cancellation = new CancellationTokenSource();
         var adapter = new ScriptedAdapter([Completed(string.Empty)])
@@ -267,6 +268,11 @@ public sealed class ToolCallingLoopTests
     [Test]
     public async Task AToolCallWhichArrivedBeforeTheStopDoesNotRun()
     {
+        //
+        // The model asked for a tool, and the user stopped the answer before the tool ran. Running
+        // it anyway would act on behalf of an answer nobody waits for any longer, e.g., search the
+        // web with the question of the chat, and then ask the model for a round of its own.
+        //
         using var cancellation = new CancellationTokenSource();
         var adapter = new ScriptedAdapter(
             [Completed(string.Empty, [Call("call-1")])],
@@ -280,7 +286,8 @@ public sealed class ToolCallingLoopTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(adapter.Recordings, Is.Empty, "Nothing is recorded and nothing is run once the user said stop.");
-            Assert.That(written, Is.Empty, "And no further round is asked for.");
+            Assert.That(adapter.RequestedRounds, Is.EqualTo(1), "No further round is asked for.");
+            Assert.That(written, Is.Empty, "And nothing is written on behalf of the stop.");
         }
     }
 
@@ -401,13 +408,19 @@ public sealed class ToolCallingLoopTests
         /// What the loop recorded, in the order it did.
         /// </summary>
         public List<string> Recordings { get; } = [];
-        
+
+        /// <summary>
+        /// How many rounds the loop asked for.
+        /// </summary>
+        public int RequestedRounds { get; private set; }
+
         /// <inheritdoc />
         public IReadOnlyList<string> RecordedRequestTexts => [];
-        
+
         /// <inheritdoc />
         public async IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, [EnumeratorCancellation] CancellationToken token = default)
         {
+            this.RequestedRounds++;
             await Task.Yield();
             if (this.remainingRounds.Count is 0)
                 yield break;
