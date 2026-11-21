@@ -194,7 +194,7 @@ public partial class ReadWebContent : MSGComponentBase
                     // and without a word they would take the raw markdown -- navigation, cookie banner
                     // and advertising included -- for the cleaned result.
                     //
-                    await this.MessageBus.SendError(new(AppIcons.AGENT, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
+                    await this.MessageBus.SendError(new(AppIcons.AI_OPERATION, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
                 }
                 else
                 {
@@ -206,7 +206,7 @@ public partial class ReadWebContent : MSGComponentBase
                     var result = await this.TextContentCleaning.RunAsync(request, new(choice.Provider));
                     markdown = result.Markdown;
                     if (!result.IsCleaned)
-                        await this.MessageBus.SendWarning(new(AppIcons.AGENT, T("The content was loaded, but not cleaned: the model of the content cleaner gave no answer.")));
+                        await this.MessageBus.SendWarning(new(AppIcons.AI_OPERATION, T("The content was loaded, but not cleaned: the model of the content cleaner gave no answer.")));
 
                     this.processStep = this.process[ReadWebContentSteps.DONE];
                     this.AgentIsRunning = false;

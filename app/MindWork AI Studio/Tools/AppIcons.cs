@@ -26,20 +26,11 @@ public static class AppIcons
     /// <summary>Shows or hides advanced or expert settings.</summary>
     public const string ADVANCED_SETTINGS = LucideIcons.SLIDERS_HORIZONTAL;
 
-    /// <summary>Marks an AI agent that works in the background, such as the security audit agent or the content cleaner when it has no usable provider.</summary>
-    public const string AGENT = LucideIcons.BOT;
-
-    /// <summary>Marks the agent that cleans text content, such as removing navigation and ads from a loaded web page.</summary>
-    public const string AGENT_CONTENT_CLEANER = LucideIcons.BRUSH_CLEANING;
-
-    /// <summary>Marks the agent that selects the data sources for a request.</summary>
-    public const string AGENT_DATA_SOURCE_SELECTION = LucideIcons.LIST_CHECKS;
-
-    /// <summary>Marks the agent that validates retrieval contexts.</summary>
-    public const string AGENT_RETRIEVAL_CONTEXT_VALIDATION = LucideIcons.LIST_CHECKS;
-
     /// <summary>Marks the AI, such as its role in a chat.</summary>
     public const string AI = LucideIcons.SPARKLES;
+
+    /// <summary>Marks a task which AI Studio hands to a model on its own, such as the security audit or the text content cleaner, e.g., when it has no usable provider.</summary>
+    public const string AI_OPERATION = LucideIcons.BOT;
 
     /// <summary>Marks the data sources that the AI selected for a question.</summary>
     public const string AI_SELECTED_DATA_SOURCES = LucideIcons.LIST_FILTER;
@@ -346,6 +337,9 @@ public static class AppIcons
 
     /// <summary>Shows that the data sources need no attention, because nothing is indexing and nothing failed.</summary>
     public const string DATA_SOURCES_UP_TO_DATE = LucideIcons.DATABASE_CHECK;
+
+    /// <summary>Marks the task in which a model selects the data sources for a request.</summary>
+    public const string DATA_SOURCE_SELECTION = LucideIcons.LIST_CHECKS;
 
     /// <summary>Marks a single value in a data tree, such as a JSON value or another value of a plugin.</summary>
     public const string DATA_VALUE = LucideIcons.VARIABLE;
@@ -983,6 +977,9 @@ public static class AppIcons
     /// <summary>Transcribes an audio or video source again.</summary>
     public const string RETRANSCRIBE = LucideIcons.AUDIO_LINES;
 
+    /// <summary>Marks the task in which a model validates the retrieval contexts for a request.</summary>
+    public const string RETRIEVAL_CONTEXT_VALIDATION = LucideIcons.LIST_CHECKS;
+
     /// <summary>Reports that a data source could not be searched, so the search results are incomplete.</summary>
     public const string RETRIEVAL_GAP = LucideIcons.SEARCH_EXCLAMATION_POINT;
 
@@ -1156,6 +1153,9 @@ public static class AppIcons
 
     /// <summary>Marks the choice of how complex a text should be.</summary>
     public const string TEXT_COMPLEXITY = LucideIcons.LAYERS;
+
+    /// <summary>Marks the task which cleans text content, such as removing navigation and ads from a loaded web page.</summary>
+    public const string TEXT_CONTENT_CLEANER = LucideIcons.BRUSH_CLEANING;
 
     /// <summary>Marks a single-line text input, such as the text component of an assistant plugin.</summary>
     public const string TEXT_INPUT = LucideIcons.TEXT_CURSOR_INPUT;

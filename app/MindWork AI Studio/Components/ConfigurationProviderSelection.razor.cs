@@ -49,13 +49,23 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
     [Parameter]
     public string? NoPreselectionText { get; set; }
 
+    /// <summary>
+    /// The text of the empty entry, which says what happens without a preselected provider, or null for "Use app default".
+    /// </summary>
+    /// <remarks>
+    /// Set it where the empty entry falls back on something else than the provider of the whole app, e.g., on the
+    /// model of the chat.
+    /// </remarks>
+    [Parameter]
+    public string? EmptySelectionText { get; set; }
+
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
         if (this.NoPreselectionText is not null)
             yield return new(this.NoPreselectionText, AIStudio.Settings.Provider.NONE.Id);
 
         if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
-            yield return new(T("Use app default"), string.Empty);
+            yield return new(this.EmptySelectionText ?? T("Use app default"), string.Empty);
 
         //
         // Filter the providers based on the minimum confidence level of this component, the enforced

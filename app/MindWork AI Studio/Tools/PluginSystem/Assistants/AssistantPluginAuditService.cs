@@ -31,7 +31,7 @@ public sealed class AssistantPluginAuditService(PluginAuditOperation auditOperat
         else
         {
             var issue = GetRelevantIssue(choice);
-            await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, GetMissingProviderMessage(issue)));
+            await MessageBus.INSTANCE.SendError(new (AppIcons.AI_OPERATION, GetMissingProviderMessage(issue)));
             result = new PluginAuditResult
             {
                 Level = nameof(PluginAuditLevel.UNKNOWN),
