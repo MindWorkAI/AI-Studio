@@ -207,7 +207,7 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
             if (audit.Level is PluginAuditLevel.UNKNOWN)
                 return audit;
 
-            UpsertAudit(this.SettingsManager.ConfigurationData.AssistantPluginAudits, audit);
+            AssistantPluginAuditService.UpsertAudit(this.SettingsManager, audit);
             await this.SettingsManager.StoreSettings();
             return audit;
         }
@@ -231,15 +231,6 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
         availablePlugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } &&
         !string.IsNullOrWhiteSpace(availablePlugin.LocalPath) &&
         assistantPlugin is { IsInternal: false, IsManagedByConfigServer: false };
-
-    private static void UpsertAudit(IList<PluginAssistantAudit> audits, PluginAssistantAudit audit)
-    {
-        var existingIndex = audits.ToList().FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
-    }
 
     private static bool AreSamePath(string left, string right)
     {
