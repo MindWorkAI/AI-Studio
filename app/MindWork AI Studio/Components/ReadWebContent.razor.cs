@@ -1,5 +1,7 @@
-using AIStudio.Agents;
-using AIStudio.Chat;
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.TextContentCleaning;
+using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
 
@@ -25,7 +27,10 @@ public partial class ReadWebContent : MSGComponentBase
     private ILogger<ReadWebContent> Logger { get; init; } = null!;
 
     [Inject]
-    private AgentTextContentCleaner AgentTextContentCleaner { get; init; } = null!;
+    private TextContentCleaningOperation TextContentCleaning { get; init; } = null!;
+
+    [Inject]
+    private AIOperationProviderResolver ProviderResolver { get; init; } = null!;
 
     [Inject]
     private PromptInjectionGuardService PromptInjectionGuardService { get; init; } = null!;
@@ -74,15 +79,15 @@ public partial class ReadWebContent : MSGComponentBase
     private ProcessStepValue processStep;
 
     /// <summary>
-    /// The model the content cleaner runs with.
+    /// The model the content cleaner would run with, and why others were not chosen.
     /// </summary>
     /// <remarks>
     /// This is a resolved value, not a chosen one: the reader has no model selection of its own,
-    /// it takes what the assistant around it uses, unless a dedicated one for the cleaner or an
-    /// app-wide default takes precedence. Because the assistant's model can change at any moment,
-    /// this is resolved again on every render instead of being remembered from the first one.
+    /// it takes what the assistant around it uses, unless a dedicated one for the cleaner takes
+    /// precedence, or the app-wide default fills in. Because the assistant's model can change at any
+    /// moment, this is resolved again on every render instead of being remembered from the first one.
     /// </remarks>
-    private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
+    private AIOperationProviderChoice cleanerChoice = new(AIStudio.Settings.Provider.NONE, AIOperationProviderIssue.NOT_SET, AIOperationProviderIssue.NOT_SET);
 
     #region Overrides of ComponentBase
 
@@ -130,7 +135,24 @@ public partial class ReadWebContent : MSGComponentBase
     /// parameter, and a parameter arrives whenever the parent renders. Resolving only once would
     /// leave the cleaner with whatever was set the first time this component was built.
     /// </remarks>
-    private void ResolveProvider() => this.providerSettings = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_TEXT_CONTENT_CLEANER, this.ProviderSettings.Id, true);
+    private void ResolveProvider() => this.cleanerChoice = this.ProviderResolver.Preview(TextContentCleaningOperation.GetProviderSettings(this.SettingsManager), ConfidenceLevel.NONE, GetCleanerProviderOptions(this.SettingsManager, this.ProviderSettings));
+
+    /// <summary>
+    /// What the reader adds to the choice of the provider for the content cleaner.
+    /// </summary>
+    /// <remarks>
+    /// Without a model of its own, the cleaner falls back on the model of the assistant, and then on
+    /// the app-wide default. Its minimum confidence applies to both of them: a model somebody picked
+    /// for the assistant has to clear the bar of the cleaner before the cleaner uses it.
+    /// </remarks>
+    /// <param name="settingsManager">The settings, for the app-wide default.</param>
+    /// <param name="assistantProvider">The model of the assistant around the reader.</param>
+    /// <returns>The options for the provider resolver.</returns>
+    internal static AIOperationProviderOptions GetCleanerProviderOptions(SettingsManager settingsManager, AIStudio.Settings.Provider assistantProvider) => new()
+    {
+        FallbackProviderIds = [assistantProvider.Id, settingsManager.AppDefaultProviderId],
+        OwnMinimumConfidenceAppliesToFallbacks = true,
+    };
 
     private async Task LoadFromWeb()
     {
@@ -161,46 +183,36 @@ public partial class ReadWebContent : MSGComponentBase
             markdown = retrievedPage.ExtractedPage.Markdown;
             markdown = await this.PromptInjectionGuardService.SanitizeAsync(markdown, PromptInjectionSource.WebContent(this.URL));
             
-            if (this.PreselectContentCleanerAgent && this.providerSettings == AIStudio.Settings.Provider.NONE)
+            if (this.PreselectContentCleanerAgent)
             {
-                //
-                // Say that the cleaning did not happen. The user asked for it, the page arrives,
-                // and without a word they would take the raw markdown -- navigation, cookie banner
-                // and advertising included -- for the cleaned result.
-                //
-                await this.MessageBus.SendError(new(AppIcons.AGENT, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
-            }
+                var request = new TextContentCleaningRequest(markdown, this.URL);
+                var choice = this.ProviderResolver.Resolve(this.TextContentCleaning, request, TextContentCleaningOperation.GetProviderSettings(this.SettingsManager), GetCleanerProviderOptions(this.SettingsManager, this.ProviderSettings));
+                if (!choice.HasProvider)
+                {
+                    //
+                    // Say that the cleaning did not happen. The user asked for it, the page arrives,
+                    // and without a word they would take the raw markdown -- navigation, cookie banner
+                    // and advertising included -- for the cleaned result.
+                    //
+                    await this.MessageBus.SendError(new(AppIcons.AGENT, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
+                }
+                else
+                {
+                    this.processStep = this.process[ReadWebContentSteps.CLEANING];
+                    this.AgentIsRunning = true;
+                    await this.AgentIsRunningChanged.InvokeAsync(this.AgentIsRunning);
+                    this.StateHasChanged();
 
-            if (this.PreselectContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
-            {
-                this.AgentTextContentCleaner.ProviderSettings = this.providerSettings;
-                var additionalData = new Dictionary<string, string>
-                {
-                    { "sourceURL", this.URL },
-                };
-            
-                this.processStep = this.process[ReadWebContentSteps.CLEANING];
-                this.AgentIsRunning = true;
-                await this.AgentIsRunningChanged.InvokeAsync(this.AgentIsRunning);
-                this.StateHasChanged();
-            
-                var contentBlock = await this.AgentTextContentCleaner.ProcessInput(new ContentBlock
-                {
-                    Time = DateTimeOffset.UtcNow,
-                    ContentType = ContentType.TEXT,
-                    Role = ChatRole.USER,
-                    Content = new ContentText
-                    {
-                        Text = markdown,
-                    },
-                }, additionalData);
-            
-                markdown = contentBlock.Content is ContentText text ? text.Text : markdown;
-            
-                this.processStep = this.process[ReadWebContentSteps.DONE];
-                this.AgentIsRunning = false;
-                await this.AgentIsRunningChanged.InvokeAsync(this.AgentIsRunning);
-                this.StateHasChanged();
+                    var result = await this.TextContentCleaning.RunAsync(request, new(choice.Provider));
+                    markdown = result.Markdown;
+                    if (!result.IsCleaned)
+                        await this.MessageBus.SendWarning(new(AppIcons.AGENT, T("The content was loaded, but not cleaned: the model of the content cleaner gave no answer.")));
+
+                    this.processStep = this.process[ReadWebContentSteps.DONE];
+                    this.AgentIsRunning = false;
+                    await this.AgentIsRunningChanged.InvokeAsync(this.AgentIsRunning);
+                    this.StateHasChanged();
+                }
             }
         }
         catch (Exception exception)
@@ -269,20 +281,24 @@ public partial class ReadWebContent : MSGComponentBase
     /// This is a hint, not a validation: the cleaner is an option of the reader, and an option
     /// nobody can use yet must not keep the assistant around it from running. It is also stated
     /// rather than remembered, so that choosing a model below makes it disappear at once.
-    /// The two causes lead to different places, which is why they are told apart: either no model
-    /// was chosen at all, or the chosen one is not trusted enough for this agent.
+    /// The causes lead to different places, which is why they are told apart: no model was chosen
+    /// at all, the organization does not allow the chosen one, or it is not trusted enough for the
+    /// cleaner. The reason comes from the choice itself, where the first named fallback is the model
+    /// of the assistant, or the app-wide default when the assistant has none.
     /// </remarks>
     private string? ContentCleanerHint
     {
         get
         {
-            if(!this.PreselectContentCleanerAgent || this.providerSettings != AIStudio.Settings.Provider.NONE)
+            if(!this.PreselectContentCleanerAgent || this.cleanerChoice.HasProvider)
                 return null;
 
-            if(this.ProviderSettings == AIStudio.Settings.Provider.NONE)
-                return TA("The content cleaner uses the model of this assistant. Please select one below.");
-
-            return TA("The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.");
+            return this.cleanerChoice.FallbackIssue switch
+            {
+                AIOperationProviderIssue.NOT_SET => TA("The content cleaner uses the model of this assistant. Please select one below."),
+                AIOperationProviderIssue.PROHIBITED => TA("Your organization does not allow the selected model. Please select another model, or configure an eligible one in the app settings."),
+                _ => TA("The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings."),
+            };
         }
     }
 
