@@ -32,6 +32,13 @@
                 </MudJustifiedText>
             }
 
+            @if (this.CompressionIssue is { } compressionIssue)
+            {
+                <MudJustifiedText Typo="Typo.body1">
+                    @compressionIssue
+                </MudJustifiedText>
+            }
+
             @if (this.CanCompress && this.Subject is ContextWindowFullSubject.EMBEDDED_CHAT)
             {
                 <MudJustifiedText Typo="Typo.body1">

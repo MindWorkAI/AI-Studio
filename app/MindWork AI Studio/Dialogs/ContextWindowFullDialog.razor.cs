@@ -104,6 +104,23 @@ public partial class ContextWindowFullDialog : MSGComponentBase
     /// </summary>
     private bool CanCompress => this.Offer is ChatCompressionOffer.OFFERED;
 
+    /// <summary>
+    /// Why the dialog does not offer to compress, where the place compresses but it would not help; null otherwise.
+    /// </summary>
+    /// <remarks>
+    /// The user guide recommends compressing a long chat, so a notice which leaves it out says why. In the chat of an
+    /// assistant, the instructions of the assistant stay as well, and they are often the larger part.
+    /// </remarks>
+    private string? CompressionIssue => this.Offer switch
+    {
+        ChatCompressionOffer.WINDOW_TOO_SMALL => string.Format(T("Compressing is not possible with the selected model, since it needs a context window of at least {0} tokens."), ChatCompressionService.MIN_CONTEXT_WINDOW.ToString("N0", I18N.I.Culture)),
+        ChatCompressionOffer.MESSAGE_TOO_LONG => TA("Compressing would not help, since your message alone nearly fills the context window of the model."),
+        ChatCompressionOffer.NOTHING_TO_SUMMARIZE => TA("Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI."),
+        ChatCompressionOffer.KEEPS_TOO_MUCH when this.Subject is ContextWindowFullSubject.EMBEDDED_CHAT => TA("Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model."),
+        ChatCompressionOffer.KEEPS_TOO_MUCH => TA("Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model."),
+        _ => null,
+    };
+
     private void Cancel() => this.MudDialog.Cancel();
 
     private void SendAnyway() => this.MudDialog.Close(DialogResult.Ok(ContextWindowFullDecision.SEND_ANYWAY));
