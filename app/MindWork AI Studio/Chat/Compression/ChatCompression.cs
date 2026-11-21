@@ -1,6 +1,7 @@
 using System.Globalization;
 
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Chat.Compression;
 
@@ -50,7 +51,11 @@ public static class ChatCompression
     ///
     /// What described the last request of the compressed chat is reset, as after a rollback: the data
     /// retrieved for it and the data sources an agent picked. The restrictions only tighten, by those
-    /// the summary brings along, see AssistantLaunchService.CreateTextPayloadAsync.
+    /// the summary brings along, see AssistantLaunchService.CreateTextPayloadAsync.<br/><br/>
+    ///
+    /// The last answer keeps what AI Studio noted about its tool calls and sources. The web addresses
+    /// the tools returned for the summarized answers move to it, as far as the summary names them, see
+    /// WebAddressesFromToolsNamedIn.
     /// </remarks>
     /// <param name="continuation">The copy of the compressed chat, not stored yet.</param>
     /// <param name="exampleConversationLength">How many blocks the example conversation of the chat template holds, 0 without a template.</param>
@@ -83,12 +88,12 @@ public static class ChatCompression
             };
         }
 
-        //
-        // What the provider reported about the last answer was for the request of the compressed
-        // chat, see ChatThread.ReportedHistoryFor:
-        //
         if (plan.LastAnswer.Content is ContentText lastAnswer)
+        {
+            // What the provider reported about the last answer was for the request of the compressed chat, see ChatThread.ReportedHistoryFor:
             lastAnswer.ReportedUsage = null;
+            lastAnswer.WebAddressesFromTools.UnionWith(WebAddressesFromToolsNamedIn(plan.ToSummarize, summaryMessage));
+        }
 
         continuation.Blocks = [..plan.Preamble, summary, plan.LastAnswer];
         if (plan.PendingQuestion is { } pendingQuestion)
@@ -101,6 +106,38 @@ public static class ChatCompression
         continuation.AISelectedDataSources = [];
         continuation.RequireRestrictions(summaryRestrictions);
         continuation.SelectedProvider = providerId;
+    }
+
+    /// <summary>
+    /// The web addresses the tools returned for the summarized answers which the summary still names, as request keys.
+    /// </summary>
+    /// <remarks>
+    /// Each answer keeps the addresses its tools returned and a later message still shows the model,
+    /// so that the model may read such a page again while its free address choice is off, see
+    /// ContentText.WebAddressesFromTools. The summarized answers are gone from the new chat, and their
+    /// addresses with them. Those the summary names are still shown to the model, so the rule which
+    /// kept them holds for them in the new chat as well. Any other address in the summary stays one a
+    /// model wrote, see ChatThread.WebAddressesWrittenByModels.
+    /// </remarks>
+    /// <param name="summarized">The blocks the summary replaces.</param>
+    /// <param name="summaryMessage">The text of the message which holds the summary, see SummaryMessage.</param>
+    /// <returns>The request keys, see WebAddresses.CreateRequestKey.</returns>
+    internal static IEnumerable<string> WebAddressesFromToolsNamedIn(IEnumerable<ContentBlock> summarized, string summaryMessage)
+    {
+        var named = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var address in WebAddresses.Find(summaryMessage))
+        {
+            if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                named.Add(requestKey);
+        }
+
+        return summarized
+            .Where(block => block.Role is ChatRole.AI)
+            .Select(block => block.Content)
+            .OfType<ContentText>()
+            .SelectMany(answer => answer.WebAddressesFromTools)
+            .Where(named.Contains)
+            .Distinct(StringComparer.Ordinal);
     }
 
     /// <summary>

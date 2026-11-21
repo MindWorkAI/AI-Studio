@@ -4,6 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Chat.Compression;
 
@@ -301,7 +302,12 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     /// The images stay out, see SummarizeAsync; the rendered message names them. Reading works on a
     /// copy of each message, so the chat stays untouched. What the filter takes out of the
     /// documents is reported once for all of them, as for a request of the chat, see
-    /// ListContentBlockExtensions.BuildMessagesAsync.
+    /// ListContentBlockExtensions.BuildMessagesAsync.<br/><br/>
+    ///
+    /// An earlier answer of the AI starts with the note of AI Studio about the tools it called and
+    /// the sources it used, as in every request of the chat, see ToolCallHistoryNote.TextForModel.
+    /// The results of those calls are not stored, so the note is all the summary can learn about
+    /// which pages the AI read and which searches it ran.
     /// </remarks>
     /// <param name="blocks">The messages to summarize.</param>
     /// <param name="token">Ends the reading between two messages.</param>
@@ -328,7 +334,7 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
                 FileAttachments = [..text.FileAttachments.Where(attachment => !attachment.IsImage)],
             };
 
-            texts[block] = await withoutImages.PrepareTextContentForAI(reportingScope);
+            texts[block] = ToolCallHistoryNote.TextForModel(block, await withoutImages.PrepareTextContentForAI(reportingScope));
         }
 
         return texts;

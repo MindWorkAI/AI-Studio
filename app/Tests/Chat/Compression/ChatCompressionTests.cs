@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Chat.Compression;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Tests.Chat.Compression;
 
@@ -107,6 +108,30 @@ public sealed class ChatCompressionTests
             Assert.That(((ContentText)lastAnswer.Content!).ReportedUsage, Is.Null, "What the provider reported was for the request of the compressed chat, which held far more.");
             Assert.That(chat.AugmentedData, Is.Empty, "The retrieved data belonged to the last request of the compressed chat.");
             Assert.That(chat.SelectedProvider, Is.EqualTo("provider-1"), "The new chat continues with the provider which wrote the summary.");
+        }
+    }
+
+    [Test]
+    public void TheAddressesToolsFoundStayGivenWhileTheSummaryNamesThem()
+    {
+        var named = RequestKey("https://example.org/report");
+        var forgotten = RequestKey("https://example.org/other");
+        var firstAnswer = Block(ChatRole.AI, "First answer", 2);
+        ((ContentText)firstAnswer.Content!).WebAddressesFromTools = new([named, forgotten], StringComparer.Ordinal);
+
+        var chat = Chat(
+            Block(ChatRole.USER, "First question", 1),
+            firstAnswer,
+            Block(ChatRole.USER, "Second question", 3),
+            Block(ChatRole.AI, "Second answer", 4));
+
+        ChatCompression.TurnIntoContinuation(chat, 0, "The AI read https://example.org/report.", ChatRestrictions.NONE, "provider-1");
+
+        var lastAnswer = (ContentText)chat.Blocks.OrderBy(block => block.Time).Last().Content!;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(lastAnswer.WebAddressesFromTools, Does.Contain(named), "The summary still shows the page, so the model may read it again, as it could in the compressed chat.");
+            Assert.That(lastAnswer.WebAddressesFromTools, Does.Not.Contain(forgotten), "Nothing in the new chat shows the page anymore, so it counts no more than before compressing.");
         }
     }
 
@@ -230,4 +255,6 @@ public sealed class ChatCompressionTests
     };
 
     private static string[] Texts(ChatThread chat) => chat.Blocks.OrderBy(block => block.Time).Select(block => ((ContentText)block.Content!).Text).ToArray();
+
+    private static string RequestKey(string address) => WebAddresses.TryCreateRequestKey(address, out var requestKey) ? requestKey : throw new ArgumentException($"No web address: {address}");
 }
