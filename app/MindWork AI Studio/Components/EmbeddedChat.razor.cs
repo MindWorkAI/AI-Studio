@@ -24,7 +24,8 @@ namespace AIStudio.Components;
 /// shows it and renders whenever the service says it changed. What a request carries beside the conversation, such as
 /// the system prompt and the tools, the assistant decides through PrepareAsync. The count of tokens leaves out the
 /// context window of the model by default: it would tell models apart which the user compares without knowing them.
-/// An assistant whose requests carry long instructions shows it, see ShowsContextWindow.
+/// An assistant whose requests carry long instructions shows it, see ShowsContextWindow. Either way, the chat sends no
+/// message which no longer fits.
 /// </remarks>
 public partial class EmbeddedChat : MSGComponentBase
 {
@@ -93,16 +94,21 @@ public partial class EmbeddedChat : MSGComponentBase
     /// <summary>
     /// Gets or sets whether the count of tokens shows how much of the context window of the model the conversation
     /// fills: it warns when most of it is used, and before sending a message which nearly fills the window, the chat
-    /// asks what to do; it sends no message after which the next answer would not fit anymore, see
-    /// EmbeddedChatTokenBudget.NoticeBeforeSending. Leave it out where the user must not tell the models apart.
+    /// asks what to do. Leave it out where the user must not tell the models apart.
     /// </summary>
+    /// <remarks>
+    /// Either way, the chat sends no message after which the next answer would not fit anymore, see
+    /// EmbeddedChatTokenBudget.NoticeBeforeSending. Where it hides the window, it only says that the conversation is
+    /// full, see FullContextHint.
+    /// </remarks>
     [Parameter]
     public bool ShowsContextWindow { get; set; }
 
     /// <summary>
     /// Gets or sets whether the chat offers to compress its conversation once it nearly fills the context window, in
-    /// the notice before sending, see ShowsContextWindow. The summary then takes the place of the earlier messages,
-    /// since the chat has no workspace to keep them in, see ChatCompressionTarget.SAME_CHAT.
+    /// the notice before sending; only together with ShowsContextWindow, since the notice names the window. The summary
+    /// then takes the place of the earlier messages, since the chat has no workspace to keep them in, see
+    /// ChatCompressionTarget.SAME_CHAT.
     /// </summary>
     /// <remarks>
     /// No button offers it otherwise: the earlier messages are gone afterward, so the chat offers it only when the
@@ -110,6 +116,13 @@ public partial class EmbeddedChat : MSGComponentBase
     /// </remarks>
     [Parameter]
     public bool AllowsCompression { get; set; }
+
+    /// <summary>
+    /// Gets or sets what the chat says once its conversation fills the context window of the model, in place of its own
+    /// advice, e.g., where the assistant offers another way on; null for the advice of the chat.
+    /// </summary>
+    [Parameter]
+    public string? FullContextHint { get; set; }
 
     /// <summary>
     /// Gets or sets how the count of tokens gets the system prompt of the next request, for an assistant which puts it
@@ -279,13 +292,26 @@ public partial class EmbeddedChat : MSGComponentBase
 
     private bool IsRunning => this.conversation?.IsRunning ?? false;
 
-    private EmbeddedChatTokenBudgetState Budget => this.ShowsContextWindow ? EmbeddedChatTokenBudget.Of(this.tokens) : EmbeddedChatTokenBudgetState.UNKNOWN;
+    /// <summary>
+    /// How much room the conversation leaves in the context window, as far as the chat shows it, see
+    /// EmbeddedChatTokenBudget.Shown.
+    /// </summary>
+    private EmbeddedChatTokenBudgetState Budget => EmbeddedChatTokenBudget.Shown(this.tokens, this.ShowsContextWindow);
 
     /// <summary>
-    /// Whether the user may send a message. A full context window does not stop it: sending asks what to do then, see
-    /// ConfirmContextWindowAsync.
+    /// Whether the chat offers to compress the conversation, see AllowsCompression.
     /// </summary>
-    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && !this.isCompressing && this.ProviderIssue is null;
+    private bool OffersCompression => this.AllowsCompression && this.ShowsContextWindow;
+
+    /// <summary>
+    /// Whether the user may send a message. Where the chat shows the context window, a full one does not stop it:
+    /// sending asks what to do then, see ConfirmContextWindowAsync. Where it hides the window, nothing could be asked,
+    /// so a full conversation takes no more messages.
+    /// </summary>
+    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false }
+                            && !this.isCompressing
+                            && this.ProviderIssue is null
+                            && (this.ShowsContextWindow || this.Budget is not EmbeddedChatTokenBudgetState.FULL);
 
     private bool CanSendMessage => this.CanSend && !string.IsNullOrWhiteSpace(this.userInput);
 
@@ -402,7 +428,10 @@ public partial class EmbeddedChat : MSGComponentBase
             var culture = Tools.PluginSystem.I18N.I.Culture;
             var counted = TokenAmount.Format(this.tokens.Tokens, culture);
             if (!this.ShowsContextWindow)
-                return string.Format(T("approx. {0} tokens"), counted);
+            {
+                var approximately = string.Format(T("approx. {0} tokens"), counted);
+                return this.Budget is EmbeddedChatTokenBudgetState.FULL ? $"{approximately}. {this.FullContextText}" : approximately;
+            }
 
             if (!this.tokens.Window.IsKnown)
                 return string.Format(T("approx. {0} tokens; the context window of this model is unknown"), counted);
@@ -425,7 +454,10 @@ public partial class EmbeddedChat : MSGComponentBase
     {
         get
         {
-            if (this.AllowsCompression)
+            if (this.FullContextHint is { } hint)
+                return hint;
+
+            if (this.OffersCompression)
                 return TA("This conversation fills the context window of the model. When you send your next message, AI Studio offers to compress the conversation.");
 
             return this.CanReset
@@ -441,7 +473,7 @@ public partial class EmbeddedChat : MSGComponentBase
     {
         get
         {
-            if (this.AllowsCompression)
+            if (this.OffersCompression)
                 return T("This conversation fills most of the context window of the model. Once it is nearly full, AI Studio offers to compress it.");
 
             return this.CanReset
@@ -503,24 +535,30 @@ public partial class EmbeddedChat : MSGComponentBase
     /// conversation when the user wants to.
     /// </summary>
     /// <remarks>
-    /// Only where the chat shows the context window, see ShowsContextWindow: the notice names the window, which would
-    /// tell apart models the user must not know. The count of the conversation leaves out the message being written,
-    /// see RecountAsync, so the message is counted on its own here. A message after which the next answer would no
-    /// longer fit is not sent at all, see EmbeddedChatTokenBudget.NoticeBeforeSending. Compressing is offered where
-    /// the chat allows it and where it makes room for the message, see ChatCompressionService.MakesRoomFor; the message
-    /// stays in the field then, and the user sends it afterward.
+    /// The count of the conversation leaves out the message being written, see RecountAsync, so the message is counted
+    /// on its own here. A message after which the next answer would no longer fit is not sent at all, see
+    /// EmbeddedChatTokenBudget.NoticeBeforeSending. Where the chat hides the context window, see ShowsContextWindow,
+    /// that is all it says: the dialog names the window, which would tell apart models the user must not know.
+    /// Compressing is offered where the chat allows it and where it makes room for the message, see
+    /// ChatCompressionService.MakesRoomFor; the message stays in the field then, and the user sends it afterward.
     /// </remarks>
     /// <param name="message">The text of the message about to be sent.</param>
     /// <returns>True when the message is to be sent.</returns>
     private async Task<bool> ConfirmContextWindowAsync(string message)
     {
-        if (this.Budget is EmbeddedChatTokenBudgetState.UNKNOWN || this.conversation?.Thread is not { } thread)
+        if (EmbeddedChatTokenBudget.Of(this.tokens) is EmbeddedChatTokenBudgetState.UNKNOWN || this.conversation?.Thread is not { } thread)
             return true;
 
         var tokensWithMessage = this.tokens with { DraftTokens = await this.CountMessageAsync(message) };
-        var notice = EmbeddedChatTokenBudget.NoticeBeforeSending(tokensWithMessage);
+        var notice = EmbeddedChatTokenBudget.NoticeBeforeSending(tokensWithMessage, this.ShowsContextWindow);
         if (notice is EmbeddedChatSendNotice.NONE)
             return true;
+
+        if (!this.ShowsContextWindow)
+        {
+            await this.MessageBus.SendWarning(new(AppIcons.CONTEXT_WINDOW, TA("Together with this conversation, your message no longer fits into the context window of the model. Shorten your message, or remove some of its files.")));
+            return false;
+        }
 
         var canCompress = this.AllowsCompression && thread.IsLLMProviderAllowed(this.Provider) && ChatCompressionService.MakesRoomFor(thread, 0, tokensWithMessage.Window, tokensWithMessage.DraftTokens);
         switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, canCompress, canSendAnyway: notice is EmbeddedChatSendNotice.NEARLY_FULL))
