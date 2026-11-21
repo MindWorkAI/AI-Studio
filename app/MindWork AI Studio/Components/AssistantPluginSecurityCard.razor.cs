@@ -70,7 +70,7 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
             return;
 
         if (auditResult.Audit is not null)
-            UpsertAudit(this.SettingsManager.ConfigurationData.AssistantPluginAudits, auditResult.Audit);
+            AssistantPluginAuditService.UpsertAudit(this.SettingsManager, auditResult.Audit);
 
         if (auditResult.ActivatePlugin && !this.SettingsManager.ConfigurationData.EnabledPlugins.Contains(this.Plugin.Id))
             this.SettingsManager.ConfigurationData.EnabledPlugins.Add(this.Plugin.Id);
@@ -94,15 +94,6 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
     private void ToggleDetails() => this.showDetails = !this.showDetails;
 
     private void ToggleMetadata() => this.showMetadata = !this.showMetadata;
-
-    private static void UpsertAudit(List<PluginAssistantAudit> audits, PluginAssistantAudit audit)
-    {
-        var existingIndex = audits.FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
-    }
     
     private string FormatFileTimestamp(DateTime timestamp) => CommonTools.FormatTimestampToGeneral(timestamp, this.currentCultureInfo);
 

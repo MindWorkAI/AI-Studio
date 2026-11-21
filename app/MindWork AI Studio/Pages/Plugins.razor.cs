@@ -143,7 +143,7 @@ public partial class Plugins : MSGComponentBase
             return;
 
         if (auditResult.Audit is not null)
-            this.UpsertAuditCard(auditResult.Audit);
+            AssistantPluginAuditService.UpsertAudit(this.SettingsManager, auditResult.Audit);
 
         if (auditResult.ActivatePlugin)
             this.SettingsManager.ConfigurationData.EnabledPlugins.Add(pluginId);
@@ -575,7 +575,7 @@ public partial class Plugins : MSGComponentBase
                 return;
 
             foreach (var audit in audits)
-                this.UpsertAuditCard(audit);
+                AssistantPluginAuditService.UpsertAudit(this.SettingsManager, audit);
 
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
@@ -585,16 +585,6 @@ public partial class Plugins : MSGComponentBase
             this.isAutoAuditing = false;
             await this.InvokeAsync(this.StateHasChanged);
         }
-    }
-
-    private void UpsertAuditCard(PluginAssistantAudit audit)
-    {
-        var audits = this.SettingsManager.ConfigurationData.AssistantPluginAudits;
-        var existingIndex = audits.FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
     }
 
     #region Overrides of MSGComponentBase

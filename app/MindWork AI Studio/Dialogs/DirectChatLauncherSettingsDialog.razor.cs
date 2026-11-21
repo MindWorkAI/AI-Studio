@@ -234,7 +234,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
             if (audit.Level is PluginAuditLevel.UNKNOWN)
                 return audit;
 
-            UpsertAudit(this.SettingsManager.ConfigurationData.AssistantPluginAudits, audit);
+            AssistantPluginAuditService.UpsertAudit(this.SettingsManager, audit);
             await this.SettingsManager.StoreSettings();
             return audit;
         }
@@ -253,15 +253,6 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
     private void Cancel() => this.MudDialog.Cancel();
 
     private static Guid? ParseOptionalGuid(string value) => Guid.TryParse(value, out var parsed) ? parsed : null;
-
-    private static void UpsertAudit(IList<PluginAssistantAudit> audits, PluginAssistantAudit audit)
-    {
-        var existingIndex = audits.ToList().FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
-    }
 
     private static bool AreSamePath(string left, string right)
     {

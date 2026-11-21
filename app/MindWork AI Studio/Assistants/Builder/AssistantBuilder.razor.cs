@@ -750,7 +750,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
                 return;
             }
 
-            this.UpsertAudit(this.pluginAudit);
+            AssistantPluginAuditService.UpsertAudit(this.SettingsManager, this.pluginAudit);
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendSuccess(new(
                 this.pluginAudit.Level.Icon,
@@ -847,16 +847,6 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     }
 
     private static PluginAssistants? ResolveAssistantPlugin(Guid pluginId) => PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(plugin => plugin.Id == pluginId);
-
-    private void UpsertAudit(PluginAssistantAudit audit)
-    {
-        var audits = this.SettingsManager.ConfigurationData.AssistantPluginAudits;
-        var existingIndex = audits.FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
-    }
 
     private void FailInstallStep(BuilderInstallStep installStep, string issue)
     {
