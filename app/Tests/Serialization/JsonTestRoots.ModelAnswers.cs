@@ -25,7 +25,7 @@ public static partial class JsonTestRoots
 
         // The AI operations, which select data sources, check retrieved passages, and audit assistant plugins:
         yield return Case(new(typeof(List<SelectedDataSource>), AIOperationsJson.OPTIONS));
-        yield return Case(new(typeof(RetrievalContextValidationResult), AIOperationsJson.OPTIONS));
+        yield return Case(new(typeof(RetrievalContextValidationAnswer), AIOperationsJson.OPTIONS));
         yield return Case(new(typeof(PluginAuditResult), AIOperationsJson.OPTIONS));
 
         // The Assistant Builder, for assistant plugins and for direct chat launchers:

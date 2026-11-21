@@ -11,6 +11,6 @@ namespace AIStudio.AIOperations;
 /// </summary>
 [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(List<SelectedDataSource>))]
-[JsonSerializable(typeof(RetrievalContextValidationResult))]
+[JsonSerializable(typeof(RetrievalContextValidationAnswer))]
 [JsonSerializable(typeof(PluginAuditResult))]
 internal sealed partial class AIOperationsJsonContext : JsonSerializerContext;

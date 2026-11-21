@@ -112,7 +112,7 @@ public sealed class RetrievalContextValidationOperation(ILogger<RetrievalContext
         if (string.IsNullOrWhiteSpace(lastPromptContent))
         {
             this.Logger.LogWarning("The last prompt is empty. The AI cannot validate the retrieval contexts.");
-            return request.RetrievalContexts.Select(retrievalContext => new RetrievalContextValidationResult(false, "The last prompt was empty.", 1.0f, retrievalContext)).ToList();
+            return request.RetrievalContexts.Select(retrievalContext => RetrievalContextValidationResult.NotAnswered(retrievalContext, "The last prompt was empty.")).ToList();
         }
 
         var settings = this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation;
@@ -172,7 +172,7 @@ public sealed class RetrievalContextValidationOperation(ILogger<RetrievalContext
             // too long:
             //
             if (token.IsCancellationRequested)
-                return new(false, "The validation was canceled.", 1.0f, retrievalContext);
+                return RetrievalContextValidationResult.NotAnswered(retrievalContext, "The validation was canceled.");
 
             //
             // The model reads the passage exactly as the chat model would, filtered once for both,
@@ -200,27 +200,53 @@ public sealed class RetrievalContextValidationOperation(ILogger<RetrievalContext
 
             var answer = await this.AskAsync(request, context, systemPrompt, userPrompt, token);
             if (answer is null)
-                return new(false, "The AI did not return a response.", 1.0f, retrievalContext);
+            {
+                this.Logger.LogWarning("The AI did not return a response to the validation of a retrieval context.");
+                return RetrievalContextValidationResult.NotAnswered(retrievalContext, "The AI did not return a response.");
+            }
 
-            //
-            // We know how bad models may be at writing JSON without surrounding text, so we expect
-            // the worst and extract the JSON object from the text:
-            //
-            var json = ModelAnswerJson.ExtractObject(answer);
-            try
-            {
-                var result = JsonSerializer.Deserialize<RetrievalContextValidationResult>(json, AIOperationsJson.OPTIONS);
-                return result with { RetrievalContext = retrievalContext };
-            }
-            catch
-            {
-                this.Logger.LogWarning("The AI answered with an invalid or unexpected JSON format.");
-                return new(false, "The AI answered with an invalid or unexpected JSON format.", 1.0f, retrievalContext);
-            }
+            var result = ReadAnswer(answer, retrievalContext);
+            if (!result.IsAnswered)
+                this.Logger.LogWarning($"The AI gave no usable answer to the validation of a retrieval context: {result.Reason}");
+
+            return result;
         }
         finally
         {
             semaphore.Release();
         }
+    }
+
+    /// <summary>
+    /// Reads what a model answered about one retrieval context.
+    /// </summary>
+    /// <remarks>
+    /// We know how bad models may be at writing JSON without surrounding text, so we expect the worst and
+    /// extract the JSON object from the text. The answer counts only when it holds a decision and a confidence
+    /// between 0 and 1. Anything else is no usable answer, rather than being read as something the model did
+    /// not say: a missing decision would otherwise become false and drop a passage nobody judged.
+    /// </remarks>
+    /// <param name="answer">The whole answer of the model.</param>
+    /// <param name="retrievalContext">The retrieval context the model judged.</param>
+    /// <returns>The result, with IsAnswered being false when the answer is not usable.</returns>
+    internal static RetrievalContextValidationResult ReadAnswer(string answer, PreparedRetrievalContext retrievalContext)
+    {
+        RetrievalContextValidationAnswer judgment;
+        try
+        {
+            judgment = JsonSerializer.Deserialize<RetrievalContextValidationAnswer>(ModelAnswerJson.ExtractObject(answer), AIOperationsJson.OPTIONS);
+        }
+        catch (JsonException)
+        {
+            return RetrievalContextValidationResult.NotAnswered(retrievalContext, "The AI answered with an invalid or unexpected JSON format.");
+        }
+
+        if (judgment.Decision is not { } decision)
+            return RetrievalContextValidationResult.NotAnswered(retrievalContext, "The AI answered without a decision.");
+
+        if (judgment.Confidence is not { } confidence || confidence is not (>= 0f and <= 1f))
+            return RetrievalContextValidationResult.NotAnswered(retrievalContext, "The AI answered without a confidence between 0 and 1.");
+
+        return new(retrievalContext, true, decision, judgment.Reason ?? string.Empty, confidence);
     }
 }

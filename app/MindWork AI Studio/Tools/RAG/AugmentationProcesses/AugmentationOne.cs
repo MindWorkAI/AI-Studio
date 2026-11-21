@@ -77,11 +77,19 @@ public sealed class AugmentationOne : IAugmentationProcess
                         //
                         // Now, filter the retrieval contexts to the most relevant ones:
                         //
-                        var targetWindow = validationResults.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING);
-                        var threshold = validationResults.GetConfidenceThreshold(targetWindow);
+                        var validated = KeepFittingPassages(validationResults);
+                        usedContexts = validated.Contexts;
+                        LOGGER.LogInformation($"The check of which passages fit kept {validated.Contexts.Count:###,###,###,##0} of {validationResults.Count:###,###,###,##0} retrieved contexts: {validated.NumUnchecked:###,###,###,##0} without a usable judgment, {validated.NumBelowThreshold:###,###,###,##0} below the confidence threshold of {validated.Threshold:0.00}.");
 
-                        // Filter the retrieval contexts:
-                        usedContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
+                        //
+                        // The user switched this check on. When it failed for every passage, the answer
+                        // rests on unfiltered passages, just as when the check throws:
+                        //
+                        if (validated.IsUnchecked)
+                        {
+                            LOGGER.LogWarning("Retrieval context validation got no usable answer for any context. Continuing augmentation with all retrieved contexts.");
+                            await WarnThatTheCheckFailedAsync();
+                        }
                     }
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -96,7 +104,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                     // The user switched this check on. Continuing without it silently would hide
                     // that the answer rests on unfiltered passages:
                     //
-                    await MessageBus.INSTANCE.SendWarning(new(AppIcons.PASSAGE_RELEVANCE_CHECK, TA("The check of which passages fit your question failed. This answer uses all passages that were found.")));
+                    await WarnThatTheCheckFailedAsync();
                 }
             }
             else
@@ -133,6 +141,33 @@ public sealed class AugmentationOne : IAugmentationProcess
     }
 
     #endregion
+
+    /// <summary>
+    /// Keeps the passages which the check of which passages fit the user prompt let through.
+    /// </summary>
+    /// <remarks>
+    /// A passage whose check failed stays: the failure says nothing about the passage, neither that it fits nor
+    /// that it does not. It does not count for the threshold either, which only the judged passages decide, so
+    /// that a failed check moves the line for none of them.
+    /// </remarks>
+    /// <param name="validationResults">The results of the check, one for each passage.</param>
+    /// <returns>The passages left, in the order of the results, and why the others were left out.</returns>
+    internal static ValidatedPassages KeepFittingPassages(IReadOnlyList<RetrievalContextValidationResult> validationResults)
+    {
+        var judged = validationResults.Where(result => result.IsAnswered).ToList();
+
+        //
+        // Without a judged passage, there is no threshold to find; asking for one would only log a warning:
+        //
+        var threshold = judged.Count is 0 ? 0f : judged.GetConfidenceThreshold(judged.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING));
+        var contexts = validationResults.Where(result => !result.IsAnswered || result.Confidence >= threshold).Select(result => result.RetrievalContext).ToList();
+        return new(contexts, judged.Count, validationResults.Count - judged.Count, judged.Count(result => result.Confidence < threshold), threshold);
+    }
+
+    /// <summary>
+    /// Tells the user that the check of which passages fit failed, so that the answer uses all passages found.
+    /// </summary>
+    private static Task WarnThatTheCheckFailedAsync() => MessageBus.INSTANCE.SendWarning(new(AppIcons.PASSAGE_RELEVANCE_CHECK, TA("The check of which passages fit your question failed. This answer uses all passages that were found.")));
 
     /// <summary>
     /// Writes what the model reads along with the user prompt: the passages which fit, and how many did not.
