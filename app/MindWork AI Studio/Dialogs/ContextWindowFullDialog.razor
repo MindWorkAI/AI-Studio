@@ -6,11 +6,11 @@
             <MudText Typo="Typo.body1">
                 @if (this.IsWindowExceeded)
                 {
-                    @(string.Format(TA("Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation."), this.ChatTokens, this.WindowTokens))
+                    @(string.Format(TA("Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation."), this.Tokens, this.WindowTokens))
                 }
                 else
                 {
-                    @(string.Format(TA("Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit."), this.ChatTokens, this.WindowTokens))
+                    @(string.Format(TA("Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit."), this.Tokens, this.WindowTokens))
                 }
             </MudText>
 

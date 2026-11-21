@@ -6,7 +6,12 @@ namespace AIStudio.Dialogs;
 public enum ContextWindowFullDecision
 {
     /// <summary>
-    /// Compress the chat first. The message goes along into the new chat, where the user sends it.
+    /// Send nothing. The message stays where it is, so the user can change it.
+    /// </summary>
+    CANCEL,
+
+    /// <summary>
+    /// Compress the chat first. The message goes along, and the user sends it afterward.
     /// </summary>
     COMPRESS,
 

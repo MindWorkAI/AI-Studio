@@ -106,6 +106,36 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     internal static bool IsTooLong(int summaryTokens, int tokensForTheSummary) => tokensForTheSummary > 0 && summaryTokens > tokensForTheSummary * SUMMARY_TOLERANCE;
 
     /// <summary>
+    /// Whether compressing a chat makes room for the message about to be sent, so that the notice before sending may offer it.
+    /// </summary>
+    /// <remarks>
+    /// The model has to be large enough for a summary, see CanSummarizeWith, and the chat needs
+    /// something to summarize besides the last exchange, see ChatCompressionPlan.Of. The message
+    /// goes along unchanged and is sent after compressing, so compressing helps only when that
+    /// message leaves room for the summary below the share from which AI Studio asks before sending,
+    /// see ConversationTokens.SHARE_TO_ASK_BEFORE_SENDING. The last exchange is not counted, since
+    /// that would take a count of its own. Whether the place which asks allows compressing at all,
+    /// e.g., with workspaces switched off, is left to that place.
+    /// </remarks>
+    /// <param name="chat">The chat to compress.</param>
+    /// <param name="exampleConversationLength">How many blocks the example conversation of the chat template holds, 0 without a template.</param>
+    /// <param name="window">The context window of the model which would write the summary.</param>
+    /// <param name="messageTokens">How many tokens the message about to be sent takes.</param>
+    /// <returns>True when compressing would leave room for the message.</returns>
+    public static bool MakesRoomFor(ChatThread chat, int exampleConversationLength, ContextWindow window, int messageTokens)
+    {
+        if (!window.IsKnown || !CanSummarizeWith(window))
+            return false;
+
+        var windowTokens = window.DefaultTokens;
+        if (messageTokens + TokensForTheSummary(windowTokens) >= windowTokens * ConversationTokens.SHARE_TO_ASK_BEFORE_SENDING)
+            return false;
+
+        // The message is in the input field, so an unanswered last message is summarized rather than taken along:
+        return ChatCompressionPlan.Of(chat, exampleConversationLength, draftIsEmpty: false) is not null;
+    }
+
+    /// <summary>
     /// Asks the AI for a summary of the messages the plan names.
     /// </summary>
     /// <remarks>

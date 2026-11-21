@@ -142,15 +142,6 @@ public partial class ChatComponent : MSGComponentBase
     private const double WINDOW_NEARLY_FULL = 0.8d;
 
     /// <summary>
-    /// How much of the window the message about to be sent must fill before the chat asks first, see ConfirmContextWindowAsync.
-    /// </summary>
-    /// <remarks>
-    /// Not only once the window overflows: most models count their answer into the window, so the
-    /// last few percent leave little room for it, and the next message would no longer fit.
-    /// </remarks>
-    private const double WINDOW_FULL_ENOUGH_TO_ASK = 0.95d;
-
-    /// <summary>
     /// How long the token count stays quiet after it ran, while nothing is being written.
     /// </summary>
     /// <remarks>
@@ -933,17 +924,6 @@ public partial class ChatComponent : MSGComponentBase
     private string UserInputClass => $"{(this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? "confidence-border" : string.Empty)} {this.TokenBudgetClass}".Trim();
 
     /// <summary>
-    /// How much of the model's context window the conversation already takes.
-    /// </summary>
-    /// <remarks>
-    /// Zero whenever nobody wrote the window down. There is then nothing to be full of, and a share
-    /// of an unknown total would be a number made up on the spot.
-    /// </remarks>
-    private double TokenBudgetFill => this.conversationTokens is { IsKnown: true, Window.IsKnown: true }
-        ? (double) this.conversationTokens.Tokens / this.conversationTokens.Window.DefaultTokens
-        : 0d;
-
-    /// <summary>
     /// What the number under the input field is coloured with, if anything.
     /// </summary>
     /// <remarks>
@@ -963,10 +943,10 @@ public partial class ChatComponent : MSGComponentBase
             // Too many pictures is the same kind of news as a full window: the request will be
             // refused, and for the same reason -- more was put in than the model takes.
             //
-            if (this.conversationTokens.TooManyImages || this.TokenBudgetFill >= 1d)
+            if (this.conversationTokens.TooManyImages || this.conversationTokens.FillShare >= 1d)
                 return "token-budget-exceeded";
 
-            return this.TokenBudgetFill >= WINDOW_NEARLY_FULL ? "token-budget-nearly-full" : string.Empty;
+            return this.conversationTokens.FillShare >= WINDOW_NEARLY_FULL ? "token-budget-nearly-full" : string.Empty;
         }
     }
     
@@ -2382,56 +2362,36 @@ public partial class ChatComponent : MSGComponentBase
     /// Judged by the token count under the input field, the very number the user sees, so no request
     /// is made for it. That count does not cover images, and it knows no window where nobody wrote
     /// one down, e.g., for many self-hosted models; the notice then stays away, just as the number
-    /// keeps its colour. The notice comes from WINDOW_FULL_ENOUGH_TO_ASK on, before the window
-    /// overflows.<br/><br/>
+    /// keeps its colour, see ConversationTokens.AsksBeforeSending.<br/><br/>
     ///
-    /// Compressing is offered only where it could succeed: the model has to be large enough for it,
-    /// and the chat needs something to summarize besides the last exchange, which the new chat keeps
-    /// word for word. The message being written goes along into the new chat unchanged, where the
-    /// user sends it, see CompressCurrentChat. Compressing therefore helps only when that message
-    /// leaves room for the summary; the last exchange is not counted, since that would take a count
-    /// of its own.
+    /// Compressing is offered only where it could succeed, see ChatCompressionService.MakesRoomFor,
+    /// and where this chat allows it, see CanThreadBeCompressed. The message being written goes along
+    /// into the new chat unchanged, where the user sends it, see CompressCurrentChat.
     /// </remarks>
     /// <returns>True when the message is to be sent.</returns>
     private async Task<bool> ConfirmContextWindowAsync()
     {
-        var fill = this.TokenBudgetFill;
-        if (fill < WINDOW_FULL_ENOUGH_TO_ASK)
+        if (!this.conversationTokens.AsksBeforeSending)
             return true;
 
-        var windowTokens = this.conversationTokens.Window.DefaultTokens;
-        var leavesRoomForTheSummary = this.conversationTokens.DraftTokens + ChatCompressionService.TokensForTheSummary(windowTokens) < windowTokens * WINDOW_FULL_ENOUGH_TO_ASK;
-        var canCompress = leavesRoomForTheSummary
-                          && this.CanThreadBeCompressed
-                          && ChatCompressionPlan.Of(this.ChatThread!, this.ExampleConversationLengthOf(this.ChatThread!), draftIsEmpty: false) is not null;
-
-        var isWindowExceeded = fill >= 1d;
-        var dialogParameters = new DialogParameters<ContextWindowFullDialog>
+        var canCompress = this.CanThreadBeCompressed && ChatCompressionService.MakesRoomFor(this.ChatThread!, this.ExampleConversationLengthOf(this.ChatThread!), this.conversationTokens.Window, this.conversationTokens.DraftTokens);
+        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, this.conversationTokens, ContextWindowFullSubject.CHAT, canCompress))
         {
-            { x => x.ChatTokens, TokenAmount.Format(this.conversationTokens.Tokens, this.currentCulture) },
-            { x => x.WindowTokens, TokenAmount.Format(windowTokens, this.currentCulture) },
-            { x => x.IsWindowExceeded, isWindowExceeded },
-            { x => x.CanCompress, canCompress },
-        };
+            case ContextWindowFullDecision.SEND_ANYWAY:
+                return true;
 
-        var title = isWindowExceeded ? T("This chat is too long for the model") : T("This chat nearly fills the context window of the model");
-        var dialogReference = await this.DialogService.ShowAsync<ContextWindowFullDialog>(title, dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not ContextWindowFullDecision decision)
-            return false;
+            case ContextWindowFullDecision.COMPRESS:
+                //
+                // The user meant to send what is in the composer, so it goes along into the new chat,
+                // even the untouched message of a chat template, which compressing leaves behind otherwise:
+                //
+                this.ComposerState.MarkUserDraft();
+                await this.CompressCurrentChat();
+                return false;
 
-        if (decision is ContextWindowFullDecision.COMPRESS)
-        {
-            //
-            // The user meant to send what is in the composer, so it goes along into the new chat,
-            // even the untouched message of a chat template, which compressing leaves behind otherwise:
-            //
-            this.ComposerState.MarkUserDraft();
-            await this.CompressCurrentChat();
-            return false;
+            default:
+                return false;
         }
-
-        return true;
     }
 
     private async Task LoadedChatChanged(bool notifyParent = true)
