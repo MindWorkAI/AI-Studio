@@ -124,10 +124,35 @@ public sealed class RetrievalContextValidationOperation(ILogger<RetrievalContext
         //
         using var semaphore = new SemaphoreSlim(Math.Max(1, numParallelValidations));
         var validationTasks = new List<Task<RetrievalContextValidationResult>>(request.RetrievalContexts.Count);
-        foreach (var retrievalContext in request.RetrievalContexts)
+        try
         {
-            await semaphore.WaitAsync(token);
-            validationTasks.Add(this.ValidateAsync(request, context, lastPromptContent, retrievalContext, semaphore, token));
+            foreach (var retrievalContext in request.RetrievalContexts)
+            {
+                await semaphore.WaitAsync(token);
+                validationTasks.Add(this.ValidateAsync(request, context, lastPromptContent, retrievalContext, semaphore, token));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            //
+            // Each validation releases its slot when it ends, and the semaphore is disposed as soon
+            // as this method returns. The validations already running got the same token and stop
+            // soon; this call waits for them, so that none of them releases a disposed semaphore:
+            //
+            try
+            {
+                await Task.WhenAll(validationTasks);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected: they stop because of the same token.
+            }
+            catch (Exception exception)
+            {
+                this.Logger.LogWarning(exception, "A retrieval context validation failed while the validations were being canceled.");
+            }
+
+            throw;
         }
 
         return await Task.WhenAll(validationTasks);
