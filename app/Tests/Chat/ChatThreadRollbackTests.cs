@@ -1,4 +1,4 @@
-using AIStudio.Agents;
+using AIStudio.AIOperations.DataSourceChoice;
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
@@ -120,7 +120,7 @@ public sealed class ChatThreadRollbackTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(thread.AugmentedData, Is.Empty, "Nobody knows whether the retrieved data belongs to a kept or to a removed message, so it must not reach the next system prompt.");
-            Assert.That(thread.AISelectedDataSources, Is.Empty, "The data sources an agent picked belong to the same retrieval as the data.");
+            Assert.That(thread.AISelectedDataSources, Is.Empty, "The data sources an AI operation picked belong to the same retrieval as the data.");
             Assert.That(thread.DataSourceOptions, Is.SameAs(options), "The data source options are the user's choice, not the result of a message.");
             Assert.That(options.DisableDataSources, Is.False);
             Assert.That(options.AutomaticDataSourceSelection, Is.True);

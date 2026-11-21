@@ -63,7 +63,7 @@ public record ChatTemplate(
     /// <remarks>
     /// Null means the template says nothing, so the chat starts with the data source defaults from
     /// the app settings. Anything else is the template's own answer, and it carries more than a
-    /// list of sources: whether data sources are used at all, whether an agent picks them, and
+    /// list of sources: whether data sources are used at all, whether an AI operation picks them, and
     /// whether the retrieved data is validated.
     /// </remarks>
     public DataSourceOptions? DataSourceOptions { get; set; }
@@ -202,7 +202,7 @@ public record ChatTemplate(
     /// </summary>
     /// <remarks>
     /// The two sides are not equally expressive: a launcher can only ever say "these sources, picked
-    /// by hand", while a chat template carries the whole options and can also say "let an agent pick
+    /// by hand", while a chat template carries the whole options and can also say "let an AI operation pick
     /// them for each message". Mixing them field by field would produce something neither of them
     /// asked for, so the template wins as a whole.
     /// </remarks>

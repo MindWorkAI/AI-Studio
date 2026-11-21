@@ -33,7 +33,7 @@ public static class ComponentsExtensions
         /// <remarks>
         /// This is the single place that maps a built-in assistant to its category. The assistants page
         /// shows the assistant in the section of this category, and whatever offers assistants elsewhere
-        /// asks it, too. Components which are no assistant of their own, such as the chat or the agents,
+        /// asks it, too. Components which are no assistant of their own, such as the chat or the AI operations,
         /// return PluginCategory.NONE.
         /// </remarks>
         /// <value>The category of the assistant.</value>
@@ -223,6 +223,11 @@ public static class ComponentsExtensions
             Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence : default,
             Components.MODEL_COMPARISON_ASSISTANT => settingsManager.ConfigurationData.ModelComparison.PreselectOptions ? settingsManager.ConfigurationData.ModelComparison.MinimumProviderConfidence : default,
 
+            Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.TextContentCleaner.MinimumProviderConfidence : default,
+            Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.ConfigurationData.AgentDataSourceSelection.MinimumProviderConfidence : default,
+            Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.ConfigurationData.AgentRetrievalContextValidation.MinimumProviderConfidence : default,
+            Components.AGENT_ASSISTANT_PLUGIN_AUDIT => settingsManager.ConfigurationData.AssistantPluginAudit.MinimumProviderConfidence,
+
             _ => default,
         };
 
@@ -263,11 +268,7 @@ public static class ComponentsExtensions
             // Dynamic assistants have no dedicated settings yet, so they derive their defaults from the chat:
             Components.DYNAMIC_ASSISTANT or Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Chat.PreselectedProvider) : Settings.Provider.NONE,
 
-            Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider) : Settings.Provider.NONE,
-            Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider) : Settings.Provider.NONE,
-            Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectedAgentProvider) : Settings.Provider.NONE,
-            Components.AGENT_ASSISTANT_PLUGIN_AUDIT => settingsManager.GetProviderById(settingsManager.ConfigurationData.AssistantPluginAudit.PreselectedAgentProvider),
-
+            // The AI operations choose their provider through AIOperationProviderResolver, see AIOperations/AGENTS.md.
             _ => Settings.Provider.NONE,
         };
 

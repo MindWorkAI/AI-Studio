@@ -1,5 +1,4 @@
 using AIStudio.Components;
-using AIStudio.Agents.AssistantAudit;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -96,27 +95,12 @@ public partial class Assistants : MSGComponentBase
 
         try
         {
-            var wasConfigurationChanged = false;
-            var assistantPlugins = PluginFactory.RunningPlugins.OfType<PluginAssistants>().ToList();
-            foreach (var assistantPlugin in assistantPlugins)
-            {
-                var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
-                if (!securityState.RequiresAudit)
-                    continue;
-
-                var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
-                if (audit.Level is AssistantAuditLevel.UNKNOWN)
-                {
-                    await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, string.Format(this.TA("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page."), assistantPlugin.Name)));
-                    continue;
-                }
-
-                this.UpsertAuditCard(audit);
-                wasConfigurationChanged = true;
-            }
-
-            if (!wasConfigurationChanged)
+            var audits = await this.AssistantPluginAuditService.RunAutomaticAuditsAsync();
+            if (audits.Count == 0)
                 return;
+
+            foreach (var audit in audits)
+                this.UpsertAuditCard(audit);
 
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);

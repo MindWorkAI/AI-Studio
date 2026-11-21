@@ -646,15 +646,15 @@ CONFIG["SETTINGS"] = {}
 -- call tools, neither the tools nor semantic_search may be switched off, and the provider has
 -- to meet a minimum confidence you set for semantic_search, see DataTools. Otherwise, AI Studio
 -- searches with every message instead.
--- With SEMANTIC_SEARCH, no agent takes part: DataChat.PreselectedDataSourcesAutomaticSelection
+-- With SEMANTIC_SEARCH, no AI task takes part: DataChat.PreselectedDataSourcesAutomaticSelection
 -- then lets the AI itself choose among all data sources it may use, and
 -- DataChat.PreselectedDataSourcesAutomaticValidation has no effect.
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode"] = "EVERY_MESSAGE"
 
--- Controls whether AI Studio asks an agent to choose data sources:
+-- Controls whether an AI task chooses the data sources:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
 
--- Controls whether retrieved data is validated by an agent:
+-- Controls whether an AI task validates the retrieved data:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation"] = true
 
 -- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
@@ -1605,27 +1605,56 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 
--- Configure the data source selection agent.
--- This agent is used when chat data source options enable AI-based data source selection.
--- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Configure the text content cleaner, an AI task.
+-- It removes navigation, advertisements, and other clutter from web pages which an assistant reads.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
+-- cleaner uses the provider of the assistant, and otherwise the app-wide default provider.
+-- The minimum confidence applies to every provider the cleaner uses, the provider of the assistant
+-- and the app-wide default included. The provider and the minimum confidence apply only while
+-- PreselectAgentOptions is true.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.MinimumProviderConfidence"] = "NONE"
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.MinimumProviderConfidence.AllowUserOverride"] = true
+
+-- Configure the data source selection, an AI task.
+-- It runs when chat data source options enable AI-based data source selection.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
+-- AI task uses the provider of the chat, and otherwise the app-wide default provider.
+-- The minimum confidence applies to every provider the AI task uses, the provider of the chat and the
+-- app-wide default included. The provider and the minimum confidence apply only while
+-- PreselectAgentOptions is true.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions"] = true
 -- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.MinimumProviderConfidence"] = "NONE"
 -- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.MinimumProviderConfidence.AllowUserOverride"] = true
 
--- Configure the retrieval context validation agent.
--- This agent is used when retrieval context validation is enabled globally and chat data source options enable AI-based validation.
--- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Configure the retrieval context validation, an AI task.
+-- It runs when retrieval context validation is enabled globally and chat data source options enable AI-based validation.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
+-- AI task uses the provider of the chat, and otherwise the app-wide default provider.
+-- The minimum confidence applies to every provider the AI task uses, the provider of the chat and the
+-- app-wide default included. The provider and the minimum confidence apply only while
+-- PreselectAgentOptions is true.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.MinimumProviderConfidence"] = "NONE"
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations"] = 3
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.MinimumProviderConfidence.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations.AllowUserOverride"] = true
 
--- Configure assistant plugin security audits.
+-- Configure the security audit of assistant plugins, an AI task.
 --
 -- Configure whether assistant plugins must be audited before users can activate them.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation"] = true
@@ -1635,6 +1664,11 @@ CONFIG["SETTINGS"] = {}
 -- Without a selected audit provider, AI Studio uses the app-wide default provider.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
 --
+-- Configure the minimum confidence of the provider which audits a plugin. It applies to every
+-- provider an audit uses, the app-wide default and the one picked in the audit dialog included.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumProviderConfidence"] = "NONE"
+--
 -- Configure the minimum audit level assistant plugins must meet.
 -- Allowed values are: UNKNOWN, DANGEROUS, CAUTION, SAFE
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel"] = "CAUTION"
@@ -1643,11 +1677,14 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum"] = true
 --
 -- Configure whether new or changed assistant plugins are audited automatically in the background.
+-- Automatic audits need a provider: the dedicated audit provider or the app-wide default. Without
+-- one, AI Studio skips them and tells the user once.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants"] = false
 --
 -- Configure whether users can change assistant plugin audit settings locally.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumProviderConfidence.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants.AllowUserOverride"] = false
@@ -1744,16 +1781,16 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --         -- How the data sources are searched, with the same values and the same fallback
 --         -- as DataChat.PreselectedDataSourcesRetrievalMode: SEMANTIC_SEARCH lets the AI
 --         -- search them itself whenever a question calls for it, EVERY_MESSAGE lets AI Studio
---         -- search them with every message. With SEMANTIC_SEARCH, no agent takes part:
+--         -- search them with every message. With SEMANTIC_SEARCH, no AI task takes part:
 --         -- AutomaticDataSourceSelection then lets the AI itself choose among all data
 --         -- sources it may use, and AutomaticValidation has no effect.
 --         ["RetrievalMode"] = "EVERY_MESSAGE",
 --
---         -- Let an agent choose the fitting data sources for each question. When true,
+--         -- Let an AI task choose the fitting data sources for each question. When true,
 --         -- PreselectedDataSourceIds is not used.
 --         ["AutomaticDataSourceSelection"] = false,
 --
---         -- Let an agent check whether the retrieved data fits the question.
+--         -- Let an AI task check whether the retrieved data fits the question.
 --         ["AutomaticValidation"] = true,
 --
 --         -- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.

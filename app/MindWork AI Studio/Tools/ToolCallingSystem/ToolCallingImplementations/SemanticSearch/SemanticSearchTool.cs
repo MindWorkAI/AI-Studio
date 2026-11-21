@@ -207,9 +207,9 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// </summary>
     /// <remarks>
     /// When the AI selects the data sources, it may search every data source the provider may use:
-    /// the AI which selects is the chat model itself, no agent. Otherwise, it may search those the
+    /// the AI which selects is the chat model itself, no AI operation. Otherwise, it may search those the
     /// user selected, as far as the provider may use them. Only the chat provider counts, since no
-    /// agent takes part, see DataSourceService.GetParticipatingAgents.<br/><br/>
+    /// AI operation takes part, see DataSourceService.GetParticipatingOperations.<br/><br/>
     /// Preparing a request knows the provider by its settings, running a call by the provider
     /// itself. Both ask the same question, so both come here. The classic RAG process asks here as
     /// well while it steps back for this tool, so that it names the unreachable data sources in the

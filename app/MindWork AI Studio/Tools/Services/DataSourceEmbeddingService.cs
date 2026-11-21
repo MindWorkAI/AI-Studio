@@ -1201,7 +1201,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// </summary>
     /// <remarks>
     /// The one place which knows where data sources are kept: in DataSources those which classic
-    /// RAG and the agents see as well, in Mailboxes those which only the mail tools read. Whatever
+    /// RAG and its AI operations see as well, in Mailboxes those which only the mail tools read. Whatever
     /// works through all of them, or looks one up by its id, goes through here.
     /// </remarks>
     /// <returns>The data sources, those from DataSources first.</returns>

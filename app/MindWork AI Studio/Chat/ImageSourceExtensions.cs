@@ -38,7 +38,7 @@ public static class ImageSourceExtensions
         /// </summary>
         /// <remarks>
         /// This is for the images inside the content of a chat, which go to external data sources and
-        /// agents as they are. Attached images, which go to a model, take ModelImageService instead: it
+        /// AI operations as they are. Attached images, which go to a model, take ModelImageService instead: it
         /// scales them down and encodes them anew within the limit of the provider.<br/>
         /// <br/>
         /// The images are directly converted to base64 strings. The maximum

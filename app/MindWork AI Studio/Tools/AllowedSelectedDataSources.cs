@@ -10,7 +10,7 @@ namespace AIStudio.Tools;
 /// The selected data sources are a subset of the allowed data sources.
 ///
 /// The data sources waiting for a re-index are deliberately kept apart from the allowed ones rather
-/// than mixed in. Everything reading the allowed list -- the data source selection agent above all
+/// than mixed in. Everything reading the allowed list -- the data source selection above all
 /// -- takes it to mean "may be used to answer with", and a source whose index is being rebuilt
 /// cannot answer anything. It is listed separately so the user interface can still show it and say
 /// why it is greyed out, instead of letting it vanish without a word.

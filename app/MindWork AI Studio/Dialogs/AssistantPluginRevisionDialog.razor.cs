@@ -1,5 +1,5 @@
 using System.Text;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
@@ -200,11 +200,11 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
         {
             //
             // The provider the user picked for the revision serves as the fallback: it is used only
-            // when nothing is configured for the audit agent, and only when it is trusted enough for
+            // when nothing is configured for the audit, and only when it is trusted enough for
             // an audit. Without it, a revised plugin could not be checked at all here.
             //
-            var audit = await this.AssistantPluginAuditService.RunAuditAsync(updatedPlugin, fallbackProvider: this.providerSettings);
-            if (audit.Level is AssistantAuditLevel.UNKNOWN)
+            var audit = await this.AssistantPluginAuditService.RunAuditAsync(updatedPlugin, providerAtHand: this.providerSettings);
+            if (audit.Level is PluginAuditLevel.UNKNOWN)
                 return audit;
 
             UpsertAudit(this.SettingsManager.ConfigurationData.AssistantPluginAudits, audit);

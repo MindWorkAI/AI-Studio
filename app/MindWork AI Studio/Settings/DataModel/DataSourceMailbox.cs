@@ -10,7 +10,7 @@ namespace AIStudio.Settings.DataModel;
 /// </summary>
 /// <remarks>
 /// Mailboxes are kept in Data.Mailboxes rather than in DataSources, which is why this is no
-/// IDataSource: classic RAG, Semantic Search and the agents never see a mailbox. Only the mail
+/// IDataSource: classic RAG, Semantic Search and the AI operations never see a mailbox. Only the mail
 /// tools read from one.
 /// </remarks>
 public record struct DataSourceMailbox: IIndexedDataSource, ISecretId

@@ -24,7 +24,7 @@ and whoever runs it: loading, starting, checking an import, and the assistant bu
 ## Assistant plugins
 
 Every prompt text an assistant plugin brings, its `SystemPrompt` as well as its `CustomChatSystemPrompt`, goes
-through `PluginAssistants.BuildSecureSystemPrompt` and into the security audit of `AssistantAuditAgent`. A new
+through `PluginAssistants.BuildSecureSystemPrompt` and into the security audit of `PluginAuditOperation`. A new
 field which reaches a model as a prompt needs both, and its documentation in `Plugins/assistants/README.md` and in
 the template `Plugins/assistants/plugin.lua`: the Assistant Builder reads both files as its source of truth.
 

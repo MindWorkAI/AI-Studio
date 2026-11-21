@@ -1070,7 +1070,7 @@ public partial class ChatComponent : MSGComponentBase
     /// <remarks>
     /// As with the tools, a template which carries no options says nothing and leaves the chat
     /// defaults in place. A template which carries them answers more than which sources to search:
-    /// whether data sources are used at all, and whether an agent picks them for each message.
+    /// whether data sources are used at all, and whether an AI operation picks them for each message.
     /// </remarks>
     private DataSourceOptions GetAutomaticDataSourceOptions() =>
         this.currentChatTemplate.DataSourceOptions?.CreateCopy() ?? this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
@@ -2355,7 +2355,7 @@ public partial class ChatComponent : MSGComponentBase
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
 
-            // The new chat forgot which data sources an agent picked for the last request of the old one:
+            // The new chat forgot which data sources an AI operation picked for the last request of the old one:
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(continuation.DataSourceOptions, continuation.AISelectedDataSources);
             this.tokenTracker?.Nudge();
         }

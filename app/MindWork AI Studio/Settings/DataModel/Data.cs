@@ -48,7 +48,7 @@ public sealed class Data
     /// </summary>
     /// <remarks>
     /// A list of its own rather than a part of DataSources: classic RAG, Semantic Search and the
-    /// agents read DataSources, and none of them is meant to see a mailbox. It also keeps the
+    /// AI operations read DataSources, and none of them is meant to see a mailbox. It also keeps the
     /// settings readable for older versions of AI Studio, so the settings version stays the same.
     /// An older version skips a property it does not know, but would fail to read the whole file
     /// over a data source type it does not know. It drops the list, though, the next time it stores
@@ -193,7 +193,7 @@ public sealed class Data
 
     public DataSWOTAnalysis SWOTAnalysis { get; set; } = new();
 
-    public DataTextContentCleaner TextContentCleaner { get; set; } = new();
+    public DataTextContentCleaner TextContentCleaner { get; set; } = new(x => x.TextContentCleaner);
     
     public DataAgentDataSourceSelection AgentDataSourceSelection { get; set; } = new(x => x.AgentDataSourceSelection);
     

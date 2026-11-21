@@ -61,7 +61,7 @@ public sealed class ClassicRagUnreachableTests
     {
         var unreachable = Checked([INTRANET, WIKI]).GetUnreachableOfTheChat(new DataSourceOptions { AutomaticDataSourceSelection = true });
 
-        Assert.That(unreachable, Is.EqualTo(new[] { INTRANET, WIKI }), "The selection agent might have picked any of them.");
+        Assert.That(unreachable, Is.EqualTo(new[] { INTRANET, WIKI }), "The data source selection might have picked any of them.");
     }
 
     [Test]

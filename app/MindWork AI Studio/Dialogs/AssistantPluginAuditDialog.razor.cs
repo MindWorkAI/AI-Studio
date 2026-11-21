@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Reflection;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
@@ -26,6 +27,9 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
+    [Inject]
+    private AIOperationProviderResolver ProviderResolver { get; init; } = null!;
+
     [Parameter] public Guid PluginId { get; set; }
 
     private PluginAssistants? plugin;
@@ -40,7 +44,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private PluginAssistantSecurityState securityState = new();
 
     /// <summary>
-    /// The provider the user picks inside this dialog when nothing is configured for the audit agent.
+    /// The provider the user picks inside this dialog when nothing is configured for the audit.
     /// </summary>
     /// <remarks>
     /// It lives and dies with this dialog and is never written to the settings: an audit is a one-off
@@ -48,19 +52,34 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     /// </remarks>
     private AIStudio.Settings.Provider auditProviderSelection = AIStudio.Settings.Provider.NONE;
 
-    private AIStudio.Settings.Provider CurrentProvider => this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, null, true);
+    /// <summary>
+    /// The provider an audit would run with without a choice in this dialog, and why others were not chosen.
+    /// </summary>
+    private AIOperationProviderChoice ConfiguredChoice => this.ProviderResolver.Preview(PluginAuditOperation.GetProviderSettings(this.SettingsManager), ConfidenceLevel.NONE, AssistantPluginAuditService.GetProviderOptions(this.SettingsManager, null));
 
     /// <summary>
     /// The provider this audit runs with: the configured one, or what the user picked here instead.
     /// </summary>
-    private AIStudio.Settings.Provider EffectiveProvider => this.CurrentProvider == AIStudio.Settings.Provider.NONE
-        ? this.auditProviderSelection
-        : this.CurrentProvider;
+    /// <remarks>
+    /// Chosen as the audit service chooses, so that the dialog never names a provider the audit would refuse.
+    /// </remarks>
+    private AIStudio.Settings.Provider EffectiveProvider => this.ProviderResolver.Preview(PluginAuditOperation.GetProviderSettings(this.SettingsManager), ConfidenceLevel.NONE, AssistantPluginAuditService.GetProviderOptions(this.SettingsManager, this.auditProviderSelection)).Provider;
 
     /// <summary>
-    /// Whether this dialog has to offer a provider, because neither the audit agent nor the app has one.
+    /// Whether this dialog has to offer a provider, because neither the audit nor the app has a usable one.
     /// </summary>
-    private bool NeedsProviderSelection => this.CurrentProvider == AIStudio.Settings.Provider.NONE;
+    private bool NeedsProviderSelection => !this.ConfiguredChoice.HasProvider;
+
+    /// <summary>
+    /// Says why this dialog offers a provider: none is set, or the one set cannot be used.
+    /// </summary>
+    private string ProviderSelectionHint => AssistantPluginAuditService.GetRelevantIssue(this.ConfiguredChoice) switch
+    {
+        AIOperationProviderIssue.NOT_SET => TA("No model is set for security checks, neither for this AI task nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."),
+        AIOperationProviderIssue.MISSING => TA("The model set for security checks no longer exists. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."),
+        AIOperationProviderIssue.PROHIBITED => TA("Your organization does not allow the model set for security checks. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."),
+        _ => TA("The model set for security checks is not trusted enough for them. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."),
+    };
 
     private string ProviderLabel => this.EffectiveProvider == AIStudio.Settings.Provider.NONE
         ? T("No model configured")
@@ -68,7 +87,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private DataAssistantPluginAudit AuditSettings => this.SettingsManager.ConfigurationData.AssistantPluginAudit;
 
-    private AssistantAuditLevel MinimumLevel => this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel;
+    private PluginAuditLevel MinimumLevel => this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel;
 
     private string MinimumLevelLabel => this.MinimumLevel.Name;
 
@@ -87,7 +106,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     /// audits. What the dialog shows the user still reads the raw result: a failed run is precisely
     /// what they need to see.
     /// </remarks>
-    private PluginAssistantAudit? ConclusiveAudit => this.audit is { Level: not AssistantAuditLevel.UNKNOWN } ? this.audit : null;
+    private PluginAssistantAudit? ConclusiveAudit => this.audit is { Level: not PluginAuditLevel.UNKNOWN } ? this.audit : null;
 
     private bool IsAuditBelowMinimum => this.ConclusiveAudit is not null && this.ConclusiveAudit.Level < this.MinimumLevel;
 
@@ -144,10 +163,10 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         {
             //
             // The provider picked here is handed over as the fallback: the audit service uses it only
-            // when nothing is configured for the audit agent, so an organization-wide provider keeps
+            // when nothing is configured for the audit, so an organization-wide provider keeps
             // its precedence.
             //
-            this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin, fallbackProvider: this.auditProviderSelection);
+            this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin, providerAtHand: this.auditProviderSelection);
             this.securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.plugin);
         }
         finally
@@ -212,9 +231,9 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private Severity GetAuditResultSeverity() => this.audit?.Level switch
     {
-        AssistantAuditLevel.DANGEROUS => Severity.Error,
-        AssistantAuditLevel.CAUTION => Severity.Warning,
-        AssistantAuditLevel.SAFE => Severity.Success,
+        PluginAuditLevel.DANGEROUS => Severity.Error,
+        PluginAuditLevel.CAUTION => Severity.Warning,
+        PluginAuditLevel.SAFE => Severity.Success,
         _ => Severity.Normal,
     };
 

@@ -55,7 +55,7 @@ public sealed class DataSourceRequirementsTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(DataSourceRequirements.Of([HANDBOOK, ARCHIVE], [1, 1], OutboundDataRestriction.UNRESTRICTED).OutboundData, Is.EqualTo(expected));
-            Assert.That(DataSourceRequirements.Of([ARCHIVE, HANDBOOK], [1, 1], OutboundDataRestriction.UNRESTRICTED).OutboundData, Is.EqualTo(expected), "An agent may select the data sources in another order.");
+            Assert.That(DataSourceRequirements.Of([ARCHIVE, HANDBOOK], [1, 1], OutboundDataRestriction.UNRESTRICTED).OutboundData, Is.EqualTo(expected), "An AI operation may select the data sources in another order.");
         }
     }
 

@@ -1,9 +1,9 @@
-namespace AIStudio.Agents.AssistantAudit;
+namespace AIStudio.AIOperations.PluginAudit;
 
 /// <summary>
 /// Defines the normalized outcome levels used for assistant plugin security audits.
 /// </summary>
-public enum AssistantAuditLevel
+public enum PluginAuditLevel
 {
     UNKNOWN = 0,
     DANGEROUS = 100,

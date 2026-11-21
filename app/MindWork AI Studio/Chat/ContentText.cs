@@ -200,7 +200,7 @@ public sealed class ContentText : IContent
     {
         try
         {
-            // Most answers, those of the agents among them, received nothing to store, and need no database:
+            // Most answers, those of the AI operations among them, received nothing to store, and need no database:
             if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore))
                 return;
 

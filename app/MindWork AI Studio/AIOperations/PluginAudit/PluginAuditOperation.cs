@@ -1,33 +1,26 @@
 using System.Text;
 using System.Text.Json;
+
 using AIStudio.Assistants;
-using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
-using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
 
-namespace AIStudio.Agents.AssistantAudit;
+namespace AIStudio.AIOperations.PluginAudit;
 
 /// <summary>
-/// Audits dynamic assistant plugins by sending their prompts, component structure, and Lua manifest
-/// to a configured LLM and normalizing the response into a structured audit result.
+/// Audits an assistant plugin by sending its prompts, component structure, and Lua manifest to a model and
+/// normalizing the answer into a structured audit result.
 /// </summary>
-public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILogger<AgentBase> baseLogger, SettingsManager settingsManager, DataSourceService dataSourceService, ToolRegistry toolRegistry, ThreadSafeRandom rng) : AgentBase(baseLogger, settingsManager, dataSourceService, rng)
+public sealed class PluginAuditOperation(ILogger<PluginAuditOperation> logger, SettingsManager settingsManager, ToolRegistry toolRegistry) : AIOperationBase<PluginAuditRequest, PluginAuditResult>(logger, settingsManager)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantAuditAgent).Namespace, nameof(AssistantAuditAgent));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginAuditOperation).Namespace, nameof(PluginAuditOperation));
 
-    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(AssistantAuditAgent).Namespace, nameof(AssistantAuditAgent));
-    
-    protected override Type Type => Type.SYSTEM;
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(PluginAuditOperation).Namespace, nameof(PluginAuditOperation));
 
-    protected override Tools.Components Component => Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT;
-
-    public override string Id => "Assistant Plugin Security Audit";
-
-    protected override string JobDescription =>
+    private const string JOB_DESCRIPTION =
         """
         You are a conservative security auditor for Lua-based assistant plugins in private and enterprise environments.
         The Lua code is parsed into functional assistants that help users with tasks like coding, emails, translations, and other workflows defined by plugin developers.
@@ -101,90 +94,38 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
           and do not limit yourself to literal phrase matching.
         """;
 
-    protected override string SystemPrompt(string additionalData) => string.IsNullOrWhiteSpace(additionalData)
-        ? this.JobDescription
-        : $"{this.JobDescription}\n\n{additionalData}";
-
-    public override AIStudio.Settings.Provider ProviderSettings { get; set; } = AIStudio.Settings.Provider.NONE;
-
-    public override Task<ChatThread> ProcessContext(ChatThread chatThread, IDictionary<string, string> additionalData) => Task.FromResult(chatThread);
-
-    public override async Task<ContentBlock> ProcessInput(ContentBlock input, IDictionary<string, string> additionalData)
-    {
-        if (input.Content is not ContentText text || string.IsNullOrWhiteSpace(text.Text) || text.InitialRemoteWait || text.IsStreaming)
-            return EMPTY_BLOCK;
-
-        var thread = this.CreateChatThread(this.SystemPrompt(string.Empty));
-        var userRequest = AddUserRequest(thread, text.Text);
-        await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
-        return thread.Blocks[^1];
-    }
-
-    public override Task<bool> MadeDecision(ContentBlock input) => Task.FromResult(true);
-
-    public override IReadOnlyCollection<ContentBlock> GetContext() => [];
-
-    public override IReadOnlyCollection<ContentBlock> GetAnswers() => [];
-
     /// <summary>
-    /// Resolves and stores the provider configuration used for assistant plugin audits.
+    /// Reads the provider settings of the operation.
     /// </summary>
-    /// <param name="fallbackProvider">The provider to use when no provider is configured for the audit agent.</param>
-    /// <returns>The configured provider, or Provider.NONE when no audit provider is configured.</returns>
     /// <remarks>
-    /// A fallback is a provider somebody picked for something else: the assistant they were building,
-    /// the revision they asked for, the check they are standing in front of. Whether it may read a
-    /// plugin's source and its Lua files is decided by what this agent requires, not by what it was
-    /// picked under, so it has to clear this agent's confidence bar before it is used. Otherwise a
-    /// provider an organization ruled out for audits would see the very thing it was ruled out for.
+    /// Unlike the other operations, the audit has no switch for its preselection: an organization rolls its
+    /// provider out, and that is what audits run with.
     /// </remarks>
-    public AIStudio.Settings.Provider ResolveProvider(AIStudio.Settings.Provider? fallbackProvider = null)
+    /// <param name="settingsManager">The settings to read.</param>
+    /// <returns>The preferred provider and the minimum confidence.</returns>
+    public static AIOperationProviderSettings GetProviderSettings(SettingsManager settingsManager)
     {
-        var provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, null, true);
-        if (provider == AIStudio.Settings.Provider.NONE && fallbackProvider is { } candidate && this.SettingsManager.IsProviderConfident(candidate, Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT))
-            provider = candidate;
-
-        this.ProviderSettings = provider;
-        return provider;
+        var settings = settingsManager.ConfigurationData.AssistantPluginAudit;
+        return new(settings.PreselectedAgentProvider, settings.MinimumProviderConfidence);
     }
 
+    #region Overrides of AIOperationBase
+
+    /// <inheritdoc />
+    public override string Id => "Assistant Plugin Security Audit";
+
+    /// <inheritdoc />
+    public override Tools.Components Component => Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT;
+
     /// <summary>
-    /// Runs a security audit for the specified assistant plugin and parses the LLM response into a structured result.
+    /// A plugin requires nothing of its own: whoever may audit it is decided by the minimum of the audit.
     /// </summary>
-    /// <param name="plugin">The assistant plugin to audit.</param>
-    /// <param name="fallbackProvider">The provider to use when no provider is configured for the audit agent.</param>
-    /// <param name="token">A cancellation token for prompt generation and the audit request.</param>
-    /// <returns>
-    /// The parsed audit result, or an <c>UNKNOWN</c> result when no provider is configured or the model response cannot be used.
-    /// </returns>
-    public async Task<AssistantAuditResult> AuditAsync(PluginAssistants plugin, Settings.Provider? fallbackProvider = null, CancellationToken token = default)
+    public override ConfidenceLevel GetRequiredConfidence(PluginAuditRequest request) => ConfidenceLevel.NONE;
+
+    /// <inheritdoc />
+    public override async Task<PluginAuditResult> RunAsync(PluginAuditRequest request, AIOperationContext context, CancellationToken token = default)
     {
-        var provider = this.ResolveProvider(fallbackProvider);
-        if (provider == AIStudio.Settings.Provider.NONE)
-        {
-            //
-            // There are two ways to end up here, and they send the user to different places: nobody
-            // named a provider, or the one at hand is not trusted enough for an audit. Saying that
-            // none is configured while one sits right there would send them looking in vain.
-            //
-            var wasFallbackRejected = fallbackProvider is { UsedLLMProvider: not LLMProviders.NONE };
-            var message = wasFallbackRejected
-                ? TA("The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.")
-                : TB("No provider is configured for the Security Audit Agent.");
-
-            await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, message));
-
-            return new AssistantAuditResult
-            {
-                Level = nameof(AssistantAuditLevel.UNKNOWN),
-                Summary = wasFallbackRejected
-                    ? TB("The provider is not trusted enough for security checks.")
-                    : TB("No audit provider is configured."),
-            };
-        }
-
-        logger.LogInformation($"The assistant plugin audit agent uses the provider '{provider.InstanceName}' ({provider.UsedLLMProvider.Name}, confidence={provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.Name}).");
-
+        var plugin = request.Plugin;
         var promptPreview = await plugin.BuildAuditPromptPreviewAsync(token);
         var promptFallbackPreview = plugin.BuildAuditPromptFallbackPreview();
         var luaManifest = FormatLuaManifest(plugin.ReadAllLuaFiles());
@@ -258,64 +199,56 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
                            ```
                            """;
 
-        var response = await this.ProcessInput(new ContentBlock
+        var answer = await this.AskAsync(request, context, JOB_DESCRIPTION, userPrompt, token);
+        if (answer is null)
         {
-            Time = DateTimeOffset.UtcNow,
-            ContentType = ContentType.TEXT,
-            Role = ChatRole.USER,
-            Content = new ContentText
-            {
-                Text = userPrompt,
-            },
-        }, new Dictionary<string, string>());
+            this.Logger.LogWarning("The AI operation for the plugin audit got no usable answer.");
+            await MessageBus.INSTANCE.SendWarning(new (AppIcons.AUDIT_INCOMPLETE, TA("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.")));
 
-        if (response.Content is not ContentText content || string.IsNullOrWhiteSpace(content.Text))
-        {
-            logger.LogWarning($"The assistant plugin audit agent did not return text: {response}");
-            await MessageBus.INSTANCE.SendWarning(new (AppIcons.AUDIT_INCOMPLETE, string.Format(TA("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."))));
-            
-            return new AssistantAuditResult
+            return new PluginAuditResult
             {
-                Level = nameof(AssistantAuditLevel.UNKNOWN),
-                Summary = TB("The audit agent did not return a usable response."),
+                Level = nameof(PluginAuditLevel.UNKNOWN),
+                Summary = TB("The audit did not return a usable response."),
             };
         }
 
-        var json = ModelAnswerJson.ExtractObject(content.Text);
+        var json = ModelAnswerJson.ExtractObject(answer);
         try
         {
-            var result = JsonSerializer.Deserialize<AssistantAuditResult>(json, JSON_SERIALIZER_OPTIONS);
+            var result = JsonSerializer.Deserialize<PluginAuditResult>(json, AIOperationsJson.OPTIONS);
             return result is null
-                ? new AssistantAuditResult
+                ? new PluginAuditResult
                 {
-                    Level = nameof(AssistantAuditLevel.UNKNOWN),
+                    Level = nameof(PluginAuditLevel.UNKNOWN),
                     Summary = TB("The audit result was empty."),
                 }
                 : NormalizeResult(result);
         }
         catch
         {
-            logger.LogWarning($"The assistant plugin audit agent returned invalid JSON: {json}");
-            return new AssistantAuditResult
+            this.Logger.LogWarning($"The AI operation for the plugin audit got invalid JSON: {json}");
+            return new PluginAuditResult
             {
-                Level = nameof(AssistantAuditLevel.UNKNOWN),
-                Summary = TB("The audit agent returned invalid JSON."),
+                Level = nameof(PluginAuditLevel.UNKNOWN),
+                Summary = TB("The audit returned invalid JSON."),
             };
         }
     }
 
+    #endregion
+
     /// <summary>
     /// Normalizes the model output so deterministic policy rules can correct inconsistent level assignments.
     /// </summary>
-    private static AssistantAuditResult NormalizeResult(AssistantAuditResult result)
+    private static PluginAuditResult NormalizeResult(PluginAuditResult result)
     {
         var normalizedFindings = result.Findings;
-        var parsedLevel = AssistantAuditLevel.ParseOrUnknown(result.Level);
+        var parsedLevel = PluginAuditLevel.ParseOrUnknown(result.Level);
         var lowestFindingLevel = GetMostSevereFindingLevel(normalizedFindings);
-        if (lowestFindingLevel != AssistantAuditLevel.UNKNOWN && (parsedLevel == AssistantAuditLevel.UNKNOWN || lowestFindingLevel < parsedLevel))
+        if (lowestFindingLevel != PluginAuditLevel.UNKNOWN && (parsedLevel == PluginAuditLevel.UNKNOWN || lowestFindingLevel < parsedLevel))
             parsedLevel = lowestFindingLevel;
 
-        return new AssistantAuditResult
+        return new PluginAuditResult
         {
             Level = parsedLevel.ToString(),
             Summary = result.Summary,
@@ -383,16 +316,16 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// <summary>
     /// Returns the most severe finding level contained in the result, where DANGEROUS is more severe than CAUTION and SAFE.
     /// </summary>
-    private static AssistantAuditLevel GetMostSevereFindingLevel(IEnumerable<AssistantAuditFinding> findings)
+    private static PluginAuditLevel GetMostSevereFindingLevel(IEnumerable<PluginAuditFinding> findings)
     {
-        var mostSevere = AssistantAuditLevel.UNKNOWN;
+        var mostSevere = PluginAuditLevel.UNKNOWN;
 
         foreach (var finding in findings)
         {
-            if (finding.Severity == AssistantAuditLevel.UNKNOWN)
+            if (finding.Severity == PluginAuditLevel.UNKNOWN)
                 continue;
 
-            if (mostSevere == AssistantAuditLevel.UNKNOWN || finding.Severity < mostSevere)
+            if (mostSevere == PluginAuditLevel.UNKNOWN || finding.Severity < mostSevere)
                 mostSevere = finding.Severity;
         }
 

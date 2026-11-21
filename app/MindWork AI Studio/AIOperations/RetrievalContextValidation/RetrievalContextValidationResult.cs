@@ -1,6 +1,6 @@
 using AIStudio.Tools.RAG;
 
-namespace AIStudio.Agents;
+namespace AIStudio.AIOperations.RetrievalContextValidation;
 
 /// <summary>
 /// Represents the result of a retrieval context validation.

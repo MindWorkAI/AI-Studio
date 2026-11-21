@@ -1,11 +1,11 @@
 using System.Text.Json.Serialization;
 
-namespace AIStudio.Agents.AssistantAudit;
+namespace AIStudio.AIOperations.PluginAudit;
 
 /// <summary>
-/// Represents a single structured security finding produced by the assistant audit agent.
+/// Represents a single structured security finding produced by the security audit of a plugin.
 /// </summary>
-public sealed class AssistantAuditFinding
+public sealed class PluginAuditFinding
 {
     #pragma warning disable MWAIS0005
     /// <summary>
@@ -13,7 +13,7 @@ public sealed class AssistantAuditFinding
     /// </summary>
     #pragma warning restore MWAIS0005
     [JsonIgnore]
-    public AssistantAuditLevel Severity { get; private set; } = AssistantAuditLevel.UNKNOWN;
+    public PluginAuditLevel Severity { get; private set; } = PluginAuditLevel.UNKNOWN;
 
 
     /// <summary>
@@ -24,18 +24,18 @@ public sealed class AssistantAuditFinding
     {
         get => this.Severity switch
         {
-            AssistantAuditLevel.DANGEROUS => "critical",
-            AssistantAuditLevel.CAUTION => "medium",
-            AssistantAuditLevel.SAFE => "low",
+            PluginAuditLevel.DANGEROUS => "critical",
+            PluginAuditLevel.CAUTION => "medium",
+            PluginAuditLevel.SAFE => "low",
             _ => "unknown",
         };
         
         set => this.Severity = value.Trim().ToLowerInvariant() switch
         {
-            "critical" => AssistantAuditLevel.DANGEROUS,
-            "medium" => AssistantAuditLevel.CAUTION,
-            "low" => AssistantAuditLevel.SAFE,
-            _ => AssistantAuditLevel.UNKNOWN,
+            "critical" => PluginAuditLevel.DANGEROUS,
+            "medium" => PluginAuditLevel.CAUTION,
+            "low" => PluginAuditLevel.SAFE,
+            _ => PluginAuditLevel.UNKNOWN,
         };
     }
 
