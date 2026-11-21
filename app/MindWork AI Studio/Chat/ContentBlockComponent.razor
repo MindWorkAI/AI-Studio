@@ -140,11 +140,7 @@
         {
             if (this.Content.IsStreaming)
             {
-                @*
-                    The provider says that the model is reasoning, or chunks arrive without any
-                    text the user may read, as while a model reasons inside think tags.
-                *@
-                @if (this.Content is ContentText { ToolRuntimeStatus.IsRunning: false } streamingText && (streamingText.IsReasoning || string.IsNullOrWhiteSpace(streamingText.Text.RemoveThinkTags())))
+                @if (this.ShowsThinkingStatus)
                 {
                     <MudText Typo="Typo.body2" Class="mb-2">
                         @T("The model is thinking...")

@@ -33,6 +33,16 @@ public sealed class ContentText : IContent
     /// </summary>
     private static readonly TimeSpan MIN_TIME = TimeSpan.FromSeconds(3);
 
+    /// <summary>
+    /// Whether the provider says that the model reasons, from a chunk which said so until the first text after it.
+    /// </summary>
+    private bool isReasoning;
+
+    /// <summary>
+    /// Whether the text holds anything to read besides a think block, see ApplyStreamChunk.
+    /// </summary>
+    private bool hasReadableText;
+
     #region Implementation of IContent
 
     /// <inheritdoc />
@@ -44,13 +54,16 @@ public sealed class ContentText : IContent
     public bool IsStreaming { get; set; }
 
     /// <summary>
-    /// Whether the model is reasoning right now, as far as its provider says so.
+    /// Whether the model thinks right now, as far as the user can tell: its provider says that it reasons, or
+    /// nothing has arrived yet which the user may read, as while a model reasons inside think tags.
     /// </summary>
     /// <remarks>
-    /// Only meaningful while the answer is streaming, see ApplyStreamChunk.
+    /// Only while the answer streams, so that it holds however the stream ends: in this class, in the job service of
+    /// the chat, or without any stream at all. Both parts are decided once per chunk, see ApplyStreamChunk, and not
+    /// with every render of the answer.
     /// </remarks>
     [JsonIgnore]
-    public bool IsReasoning { get; private set; }
+    public bool IsThinking => this.IsStreaming && (this.isReasoning || !this.hasReadableText);
 
     /// <summary>
     /// Tells whether the model ended its turn without an answer, so that the text holds a notice of the app rather
@@ -398,11 +411,16 @@ public sealed class ContentText : IContent
 
         // Reasoning lasts until the first text after it:
         if (chunk.IsReasoning)
-            this.IsReasoning = true;
+            this.isReasoning = true;
         else if (!string.IsNullOrEmpty(chunk.Content))
-            this.IsReasoning = false;
+            this.isReasoning = false;
 
         this.Text += chunk;
+
+        // The text only grows while it streams, so once there is something to read, there always is:
+        if (!this.hasReadableText)
+            this.hasReadableText = this.Text.HasTextBeyondThinkTags;
+
         if (chunk.EndsWithoutAnswer)
             this.EndedWithoutAnswer = true;
 
@@ -544,7 +562,6 @@ public sealed class ContentText : IContent
                     // was stopped, or no content was received):
                     this.InitialRemoteWait = false;
                     this.IsStreaming = false;
-                    this.IsReasoning = false;
                 }
             }, token);
         }

@@ -2,22 +2,26 @@
 
 public static class StringExtensions
 {
+    private const string THINK_OPEN_TAG = "<think>";
+    private const string THINK_CLOSE_TAG = "</think>";
+
     /// <param name="text">The text.</param>
     extension(string text)
     {
-        public string RemoveThinkTags()
-        {
-            const string OPEN_TAG = "<think>";
-            const string CLOSE_TAG = "</think>";
-            if (string.IsNullOrWhiteSpace(text) || !text.StartsWith(OPEN_TAG, StringComparison.Ordinal))
-                return text;
-        
-            var endIndex = text.IndexOf(CLOSE_TAG, StringComparison.Ordinal);
-            if (endIndex == -1)
-                return string.Empty;
-        
-            return text[(endIndex + CLOSE_TAG.Length)..];
-        }
+        /// <summary>
+        /// The text without the think block which a model may open its answer with.
+        /// </summary>
+        /// <returns>The text as it was without such a block, nothing while the block is still open, and otherwise what follows the block.</returns>
+        public string RemoveThinkTags() => AnswerStart(text) is { } start ? text[start..] : string.Empty;
+
+        /// <summary>
+        /// Whether the text holds anything to read besides the think block which a model may open its answer with.
+        /// </summary>
+        /// <remarks>
+        /// Tells what RemoveThinkTags would leave without copying it: the chat asks with every chunk of an answer,
+        /// and a model which thinks out loud writes long texts.
+        /// </remarks>
+        public bool HasTextBeyondThinkTags => AnswerStart(text) is { } start && !text.AsSpan(start).IsWhiteSpace();
 
         /// <summary>
         /// Shortens a text to the given number of characters, and marks the cut with three dots.
@@ -37,5 +41,19 @@ public static class StringExtensions
             var end = char.IsHighSurrogate(text[maxCharacters - 1]) ? maxCharacters - 1 : maxCharacters;
             return string.Concat(text.AsSpan(0, end).TrimEnd(), "...");
         }
+    }
+
+    /// <summary>
+    /// Where the answer starts in a text which a model may open with a think block.
+    /// </summary>
+    /// <param name="text">The text.</param>
+    /// <returns>0 without a think block, the position right behind the block otherwise, and null while the block is still open.</returns>
+    private static int? AnswerStart(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text) || !text.StartsWith(THINK_OPEN_TAG, StringComparison.Ordinal))
+            return 0;
+
+        var endIndex = text.IndexOf(THINK_CLOSE_TAG, StringComparison.Ordinal);
+        return endIndex == -1 ? null : endIndex + THINK_CLOSE_TAG.Length;
     }
 }
