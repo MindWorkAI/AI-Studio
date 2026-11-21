@@ -92,7 +92,7 @@ public partial class ChatCompressionDialog : MSGComponentBase
         _ => T("AI Studio is reading the messages and their files..."),
     };
 
-    private string? ValidateChatName(string? value) => string.IsNullOrWhiteSpace(value) ? T("Please enter a chat name.") : null;
+    private string? ValidateChatName(string? value) => string.IsNullOrWhiteSpace(value) ? TA("Please enter a chat name.") : null;
 
     private async Task HandleChatNameKeyDown(KeyboardEventArgs keyEvent)
     {

@@ -19,6 +19,8 @@ public static class ChatCompression
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatCompression).Namespace, nameof(ChatCompression));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ChatCompression).Namespace, nameof(ChatCompression));
+
     private static readonly TimeSpan REGEX_TIMEOUT = TimeSpan.FromSeconds(1);
 
     /// <summary>
@@ -108,7 +110,7 @@ public static class ChatCompression
     public static string SummaryMessage(string sourceName, string summary)
     {
         var heading = string.Format(TB("Summary of the chat '{0}'"), sourceName);
-        var note = TB("This chat continues the conversation of that chat, which stays as it was. The summary describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.");
+        var note = TA("This chat continues the conversation of that chat, which stays as it was. The summary describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.");
         return $"**{heading}**\n\n{note}\n\n---\n\n{summary.Trim()}";
     }
 
@@ -118,7 +120,7 @@ public static class ChatCompression
     /// <param name="summaryMessage">The text of the message which holds the summary, see SummaryMessage.</param>
     /// <param name="lastMessage">The text of the last message of the user.</param>
     /// <returns>The text of the message.</returns>
-    internal static string WithLastMessage(string summaryMessage, string lastMessage) => $"{summaryMessage}\n\n---\n\n**{TB("Your last message in that chat")}**\n\n{lastMessage}";
+    internal static string WithLastMessage(string summaryMessage, string lastMessage) => $"{summaryMessage}\n\n---\n\n**{TA("Your last message in that chat")}**\n\n{lastMessage}";
 
     /// <summary>
     /// The name of a chat as the summary and the suggested name of its continuation call it.

@@ -25,6 +25,8 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatCompressionService).Namespace, nameof(ChatCompressionService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ChatCompressionService).Namespace, nameof(ChatCompressionService));
+
     /// <summary>
     /// The fewest tokens of messages a part has to hold for a summary to make sense.
     /// </summary>
@@ -115,14 +117,14 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     public async Task<ChatCompressionResult> SummarizeAsync(ChatThread sourceChat, ChatCompressionPlan plan, AIStudio.Settings.Provider provider, string focus, IProgress<ChatCompressionProgress>? progress, CancellationToken token)
     {
         if (provider == AIStudio.Settings.Provider.NONE)
-            return ChatCompressionResult.Failed(TB("Please select a provider first."));
+            return ChatCompressionResult.Failed(TA("Please select a provider first."));
 
         if (!sourceChat.IsLLMProviderAllowed(provider))
-            return ChatCompressionResult.Failed(TB("The selected provider is not allowed in this chat due to data security or confidence-level requirements. Please select a different provider."));
+            return ChatCompressionResult.Failed(TA("The selected provider is not allowed in this chat due to data security or confidence-level requirements. Please select a different provider."));
 
         var window = provider.GetModelProfile().Context;
         if (!CanSummarizeWith(window))
-            return ChatCompressionResult.Failed(TB("The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts."));
+            return ChatCompressionResult.Failed(TA("The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts."));
 
         try
         {
@@ -153,7 +155,7 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
 
             // There has to be room for a part next to a summary so far which takes all the room kept for it, which a long focus may take away:
             if (window.IsKnown && tokensForMessagesAndSummary - tokensForTheSummary < MIN_TOKENS_PER_PART)
-                return ChatCompressionResult.Failed(TB("The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts."));
+                return ChatCompressionResult.Failed(TA("The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts."));
 
             // A word takes more than one token in most languages, so half of the tokens is a safe number of words:
             var maxWords = tokensForTheSummary / 2;
@@ -171,7 +173,7 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
 
                 var tokensPerPart = window.IsKnown ? tokensForMessagesAndSummary - summaryTokens : int.MaxValue;
                 if (tokensPerPart < MIN_TOKENS_PER_PART)
-                    return ChatCompressionResult.Failed(TB("The summary grew too long for the context window of the selected model. Please select a model which takes longer texts."));
+                    return ChatCompressionResult.Failed(TA("The summary grew too long for the context window of the selected model. Please select a model which takes longer texts."));
 
                 var (conversation, nextMessage, nextOffset) = ChatCompressionInput.TakePart(messages, startMessage, startOffset, tokensPerPart);
                 var isLastPart = nextMessage >= messages.Count;
@@ -183,7 +185,7 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
                 token.ThrowIfCancellationRequested();
 
                 if (string.IsNullOrWhiteSpace(summary))
-                    return ChatCompressionResult.Failed(TB("The AI did not write a summary. Please check the messages about the provider, and try again."));
+                    return ChatCompressionResult.Failed(TA("The AI did not write a summary. Please check the messages about the provider, and try again."));
 
                 if (!isLastPart && window.IsKnown)
                     summaryTokens = (await this.CountAsync(provider, summary, token)).Tokens;

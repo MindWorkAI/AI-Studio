@@ -4,7 +4,7 @@
     <DialogContent>
         <MudStack Spacing="3">
             <MudText Typo="Typo.body1">
-                @T("The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.")
+                @TA("The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.")
             </MudText>
 
             <MudText Typo="Typo.body2">
@@ -14,7 +14,7 @@
             @if (this.Plan.PendingQuestion is not null)
             {
                 <MudAlert Severity="Severity.Info" Dense="true">
-                    @T("Your last message has no answer yet. It goes into the input field of the new chat, so you can send it there.")
+                    @TA("Your last message has no answer yet. It goes into the input field of the new chat, so you can send it there.")
                 </MudAlert>
             }
 
