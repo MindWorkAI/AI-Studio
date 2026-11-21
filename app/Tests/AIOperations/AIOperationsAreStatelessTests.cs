@@ -17,6 +17,12 @@ namespace AIStudio.Tests.AIOperations;
 public sealed class AIOperationsAreStatelessTests
 {
     [Test]
+    public void TheOperationsAreFound()
+    {
+        Assert.That(FindOperationTypes().Select(type => type.Name), Is.SupersetOf(new[] { "TextContentCleaningOperation", "DataSourceChoiceOperation" }), "Without the operations, every other test here would pass while checking nothing.");
+    }
+
+    [Test]
     public void NoOperationHasWritableState()
     {
         foreach (var operationType in FindOperationTypes())

@@ -1,4 +1,5 @@
-using AIStudio.Agents;
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.DataSourceChoice;
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
@@ -31,14 +32,38 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
         IReadOnlyList<IDataSource> selectedDataSources = [];
         IReadOnlyList<DataSourceAgentSelected> finalAISelection = [];
         
-        // Get the agent for the data source selection:
-        var selectionAgent = Program.SERVICE_PROVIDER.GetService<AgentDataSourceSelection>()!;
+        var choiceOperation = Program.SERVICE_PROVIDER.GetRequiredService<DataSourceChoiceOperation>();
+        var providerResolver = Program.SERVICE_PROVIDER.GetRequiredService<AIOperationProviderResolver>();
+        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
         var allowedDataSources = dataSources.AllowedDataSources.ToDictionary(ds => ds.Id, StringComparer.Ordinal);
 
         try
         {
-            // Let the AI agent do its work:
-            var aiSelectedDataSources = await selectionAgent.PerformSelectionAsync(provider, lastUserPrompt, chatThread, dataSources, token);
+            //
+            // Which provider chooses? Only one which may see the data sources: the model reads their
+            // descriptions, and what it chooses decides what is searched.
+            //
+            var request = new DataSourceChoiceRequest(chatThread.SystemPrompt, lastUserPrompt, dataSources.AllowedDataSources);
+            var choice = providerResolver.Resolve(choiceOperation, request, DataSourceChoiceOperation.GetProviderSettings(settingsManager), GetChoiceProviderOptions(settingsManager, provider.ConfiguredProviderId, dataSources.AllowedDataSources));
+            if (!choice.HasProvider)
+            {
+                LOGGER.LogWarning($"No provider may select the data sources, which require data security '{dataSources.AllowedDataSources.GetRequiredSecurityPolicy()}' and provider confidence '{dataSources.AllowedDataSources.GetRequiredConfidenceLevel().Name}'. The RAG process is skipped.");
+                proceedWithRAG = false;
+
+                return new(proceedWithRAG, selectedDataSources);
+            }
+
+            // Let the AI do its work:
+            var choiceResult = await choiceOperation.RunAsync(request, new(choice.Provider), token);
+            if (!choiceResult.IsAnswered)
+            {
+                LOGGER.LogWarning("The AI gave no usable answer to the selection of data sources. The RAG process is skipped.");
+                proceedWithRAG = false;
+
+                return new(proceedWithRAG, selectedDataSources);
+            }
+
+            var aiSelectedDataSources = choiceResult.SelectedDataSources.ToList();
 
             // Check if the AI selected any data sources:
             if (aiSelectedDataSources.Count is 0)
@@ -112,4 +137,24 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
     }
 
     #endregion
+
+    /// <summary>
+    /// What the process adds to the choice of the provider which selects the data sources.
+    /// </summary>
+    /// <remarks>
+    /// Besides the fallbacks of the classic RAG process, the provider has to be allowed to see the data
+    /// sources, by their security and by the confidence they require.
+    /// </remarks>
+    /// <param name="settingsManager">The settings.</param>
+    /// <param name="chatProviderId">The ID of the provider of the chat.</param>
+    /// <param name="dataSources">The data sources to choose from.</param>
+    /// <returns>The options for the provider resolver.</returns>
+    internal static AIOperationProviderOptions GetChoiceProviderOptions(SettingsManager settingsManager, string chatProviderId, IReadOnlyList<IDataSource> dataSources)
+    {
+        var requiredDataSecurity = dataSources.GetRequiredSecurityPolicy();
+        var requiredConfidenceLevel = dataSources.GetRequiredConfidenceLevel();
+        return ClassicRagProviderOptions.For(settingsManager, chatProviderId, candidate => candidate.AllowsDataSourceAccess(settingsManager, requiredDataSecurity, requiredConfidenceLevel)
+            ? AIOperationProviderIssue.NONE
+            : AIOperationProviderIssue.NOT_ALLOWED_FOR_CONTENT);
+    }
 }

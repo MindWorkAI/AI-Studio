@@ -1,9 +1,12 @@
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.DataSourceChoice;
 using AIStudio.Assistants.ERI;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.RAG;
 
 namespace AIStudio.Tools.Services;
 
@@ -22,11 +25,13 @@ public sealed class DataSourceService
     private readonly DataSourceEmbeddingService embeddingService;
     private readonly RustService rustService;
     private readonly SettingsManager settingsManager;
+    private readonly AIOperationProviderResolver providerResolver;
     private readonly ILogger<DataSourceService> logger;
 
-    public DataSourceService(SettingsManager settingsManager, ILogger<DataSourceService> logger, RustService rustService, DataSourceEmbeddingService embeddingService)
+    public DataSourceService(SettingsManager settingsManager, AIOperationProviderResolver providerResolver, ILogger<DataSourceService> logger, RustService rustService, DataSourceEmbeddingService embeddingService)
     {
         this.logger = logger;
+        this.providerResolver = providerResolver;
         this.rustService = rustService;
         this.settingsManager = settingsManager;
         this.embeddingService = embeddingService;
@@ -162,9 +167,22 @@ public sealed class DataSourceService
         return agents;
     }
 
+    /// <summary>
+    /// Adds the provider which an agent would run with, chosen as the agent chooses it when it runs.
+    /// </summary>
+    /// <remarks>
+    /// The data sources are what this check decides, so the choice leaves out the check of the data
+    /// sources, which the agent adds when it runs. Should that check refuse the provider counted here,
+    /// the agent falls back on the provider of the chat, which this check counts as well.
+    /// </remarks>
     private void AddAgentProvider(List<ParticipatingProvider> providers, Components component, string currentProviderId, string role)
     {
-        var provider = this.settingsManager.GetPreselectedProvider(component, currentProviderId, true);
+        var provider = component switch
+        {
+            Components.AGENT_DATA_SOURCE_SELECTION => this.providerResolver.Preview(DataSourceChoiceOperation.GetProviderSettings(this.settingsManager), ConfidenceLevel.NONE, ClassicRagProviderOptions.For(this.settingsManager, currentProviderId)).Provider,
+            _ => this.settingsManager.GetPreselectedProvider(component, currentProviderId, true),
+        };
+
         if (provider == Settings.Provider.NONE)
         {
             this.logger.LogWarning($"No provider is available for the {role}. Data sources cannot be made available while this agent is enabled.");
