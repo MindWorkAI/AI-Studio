@@ -48,47 +48,32 @@ LANG_NAME = "English (United States)"
 
 UI_TEXT_CONTENT = {}
 
--- No audit provider is configured.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2034826200"] = "No audit provider is configured."
-
--- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2451573087"] = "The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."
-
--- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2451573087::INFORMAL"] = "The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."
-
--- The provider is not trusted enough for security checks.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2861409367"] = "The provider is not trusted enough for security checks."
-
--- The audit agent did not return a usable response.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3310188890"] = "The audit agent did not return a usable response."
-
--- No provider is configured for the Security Audit Agent.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3605554201"] = "No provider is configured for the Security Audit Agent."
-
--- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T4104574219"] = "The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings."
-
--- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T4104574219::INFORMAL"] = "The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings."
-
--- The audit result was empty.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T432419958"] = "The audit result was empty."
-
--- The audit agent returned invalid JSON.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T917600186"] = "The audit agent returned invalid JSON."
-
 -- Concerning
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T1500095429"] = "Concerning"
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITLEVELEXTENSIONS::T1500095429"] = "Concerning"
 
 -- Dangerous
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T3421510547"] = "Dangerous"
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITLEVELEXTENSIONS::T3421510547"] = "Dangerous"
 
 -- Unknown
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T3424652889"] = "Unknown"
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITLEVELEXTENSIONS::T3424652889"] = "Unknown"
 
 -- Safe
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T760494712"] = "Safe"
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITLEVELEXTENSIONS::T760494712"] = "Safe"
+
+-- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T2451573087"] = "The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."
+
+-- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T2451573087::INFORMAL"] = "The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."
+
+-- The audit did not return a usable response.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T391654503"] = "The audit did not return a usable response."
+
+-- The audit result was empty.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T432419958"] = "The audit result was empty."
+
+-- The audit returned invalid JSON.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T678594297"] = "The audit returned invalid JSON."
 
 -- Objective
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1121586136"] = "Objective"
@@ -10257,6 +10242,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613::INFORMAL"] =
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used."
 
+-- The content was loaded, but not cleaned: the model of the content cleaner gave no answer.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1189712796"] = "The content was loaded, but not cleaned: the model of the content cleaner gave no answer."
+
 -- Fetch
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1396322691"] = "Fetch"
 
@@ -10265,6 +10253,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2235427807"] = "Please p
 
 -- Please provide a URL to load the content from.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2235427807::INFORMAL"] = "Please provide a URL to load the content from."
+
+-- Your organization does not allow the selected model. Please select another model, or configure an eligible one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2247340324"] = "Your organization does not allow the selected model. Please select another model, or configure an eligible one in the app settings."
+
+-- Your organization does not allow the selected model. Please select another model, or configure an eligible one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2247340324::INFORMAL"] = "Your organization does not allow the selected model. Please select another model, or configure an eligible one in the app settings."
 
 -- Loads the content from your URL. Does not work when the content is hidden behind a paywall.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2672192696"] = "Loads the content from your URL. Does not work when the content is hidden behind a paywall."
@@ -10353,6 +10347,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Choose File"
 -- External Assistants rated below this audit level are treated as insufficiently reviewed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "External Assistants rated below this audit level are treated as insufficiently reviewed."
 
+-- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio uses the app-wide default provider, or else the model you choose when auditing.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1707650617"] = "Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio uses the app-wide default provider, or else the model you choose when auditing."
+
+-- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio uses the app-wide default provider, or else the model you choose when auditing.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1707650617::INFORMAL"] = "Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio uses the app-wide default provider, or else the model you choose when auditing."
+
 -- Users may still activate plugins below the minimum Audit-Level
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1840342259"] = "Users may still activate plugins below the minimum Audit-Level"
 
@@ -10365,6 +10365,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDI
 -- External Assistants must be audited before activation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2065972970"] = "External Assistants must be audited before activation"
 
+-- Before external assistants are activated, a model audits newly installed or updated ones for security risks. AI Studio keeps the latest audit card until the plugin manifest changes.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2081939459"] = "Before external assistants are activated, a model audits newly installed or updated ones for security risks. AI Studio keeps the latest audit card until the plugin manifest changes."
+
+-- Security Audit for external Assistants
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2300091783"] = "Security Audit for external Assistants"
+
 -- Block activation below the minimum Audit-Level?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T232834129"] = "Block activation below the minimum Audit-Level?"
 
@@ -10374,8 +10380,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDI
 -- Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2516645821::INFORMAL"] = "Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?"
 
--- Agent: Security Audit for external Assistants
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2910364422"] = "Agent: Security Audit for external Assistants"
+-- Use the app default, otherwise the model chosen when auditing
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2888830822"] = "Use the app default, otherwise the model chosen when auditing"
 
 -- External Assistant can be activated without an audit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2915620630"] = "External Assistant can be activated without an audit"
@@ -10401,29 +10407,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDI
 -- Activation is blocked below the minimum Audit-Level
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4041192469"] = "Activation is blocked below the minimum Audit-Level"
 
--- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4166969352"] = "Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider."
+-- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the assistant.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1210631144"] = "When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the assistant."
 
--- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4166969352::INFORMAL"] = "Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider."
+-- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the assistant.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1210631144::INFORMAL"] = "When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the assistant."
 
--- This Agent audits newly installed or updated external Plugin-Assistant for security risks before they are activated and stores the latest audit card until the plugin manifest changes.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T893652865"] = "This Agent audits newly installed or updated external Plugin-Assistant for security risks before they are activated and stores the latest audit card until the plugin manifest changes."
+-- When an assistant loads content from the web, a model can clean it up: it extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1587139574"] = "When an assistant loads content from the web, a model can clean it up: it extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used."
 
--- Use Case: this agent is used to clean up text content. It extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1299550589"] = "Use Case: this agent is used to clean up text content. It extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used."
+-- Text Content Cleaner
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T2138813525"] = "Text Content Cleaner"
 
--- Agent: Text Content Cleaner Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3517268866"] = "Agent: Text Content Cleaner"
+-- Use the model of the assistant
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T2899245972"] = "Use the model of the assistant"
 
 -- No options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T354528094"] = "No options are preselected"
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3577764214"] = "When enabled, you can preselect some agent options. This might be useful when you prefer an LLM."
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3577764214::INFORMAL"] = "When enabled, you can preselect some agent options. This might be useful when you prefer an LLM."
 
 -- Preselect text content cleaner options?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3659087305"] = "Preselect text content cleaner options?"
@@ -10431,20 +10431,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANE
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3875604319"] = "Options are preselected"
 
--- Use Case: this agent is used to select the appropriate data sources for the current prompt.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2208143316"] = "Use Case: this agent is used to select the appropriate data sources for the current prompt."
+-- Data Source Selection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T15302104"] = "Data Source Selection"
 
--- Agent: Data Source Selection Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2258031949"] = "Agent: Data Source Selection"
+-- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2513220366"] = "When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the chat."
+
+-- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2513220366::INFORMAL"] = "When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the chat."
+
+-- In classic RAG, which searches the data sources with every message, a model first selects the data sources which fit the current prompt.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2522862914"] = "In classic RAG, which searches the data sources with every message, a model first selects the data sources which fit the current prompt."
+
+-- Use the model of the chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3435835378"] = "Use the model of the chat"
 
 -- No options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T354528094"] = "No options are preselected"
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3577764214"] = "When enabled, you can preselect some agent options. This might be useful when you prefer an LLM."
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3577764214::INFORMAL"] = "When enabled, you can preselect some agent options. This might be useful when you prefer an LLM."
 
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3875604319"] = "Options are preselected"
@@ -10452,50 +10455,53 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESEL
 -- Preselect data source selection options?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T991598424"] = "Preselect data source selection options?"
 
--- Use Case: this agent is used to validate any retrieval context of any retrieval process. Perhaps there are many of these retrieval contexts and you want to validate them all. Therefore, you might want to use a cheap and fast LLM for this job. When using a local or self-hosted LLM, look for a small (e.g. 3B) and fast model.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1326813386"] = "Use Case: this agent is used to validate any retrieval context of any retrieval process. Perhaps there are many of these retrieval contexts and you want to validate them all. Therefore, you might want to use a cheap and fast LLM for this job. When using a local or self-hosted LLM, look for a small (e.g. 3B) and fast model."
+-- Each validation is a request of its own, so more simultaneous validations mean as many simultaneous requests. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 and 6 validations.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1490986595"] = "Each validation is a request of its own, so more simultaneous validations mean as many simultaneous requests. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 and 6 validations."
 
--- Use Case: this agent is used to validate any retrieval context of any retrieval process. Perhaps there are many of these retrieval contexts and you want to validate them all. Therefore, you might want to use a cheap and fast LLM for this job. When using a local or self-hosted LLM, look for a small (e.g. 3B) and fast model.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1326813386::INFORMAL"] = "Use Case: this agent is used to validate any retrieval context of any retrieval process. Perhaps there are many of these retrieval contexts and you want to validate them all. Therefore, you might want to use a cheap and fast LLM for this job. When using a local or self-hosted LLM, look for a small (e.g. 3B) and fast model."
+-- Each validation is a request of its own, so more simultaneous validations mean as many simultaneous requests. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 and 6 validations.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1490986595::INFORMAL"] = "Each validation is a request of its own, so more simultaneous validations mean as many simultaneous requests. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 and 6 validations."
 
--- The validation agent is enabled
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2274149855"] = "The validation agent is enabled"
+-- How many validations should run simultaneously?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2326205445"] = "How many validations should run simultaneously?"
 
--- Enable the retrieval context validation agent?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2663872937"] = "Enable the retrieval context validation agent?"
+-- When enabled, a model checks each retrieval context of classic RAG, whether it makes sense for the given prompt.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T240073404"] = "When enabled, a model checks each retrieval context of classic RAG, whether it makes sense for the given prompt."
+
+-- Validate the retrieval contexts?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2428915017"] = "Validate the retrieval contexts?"
+
+-- When enabled, you can preselect the model for this task, the confidence it needs, and how many validations run simultaneously. Without a preselected model, AI Studio uses the model of the chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2520295642"] = "When enabled, you can preselect the model for this task, the confidence it needs, and how many validations run simultaneously. Without a preselected model, AI Studio uses the model of the chat."
+
+-- When enabled, you can preselect the model for this task, the confidence it needs, and how many validations run simultaneously. Without a preselected model, AI Studio uses the model of the chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2520295642::INFORMAL"] = "When enabled, you can preselect the model for this task, the confidence it needs, and how many validations run simultaneously. Without a preselected model, AI Studio uses the model of the chat."
 
 -- Preselect retrieval context validation options?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2663938643"] = "Preselect retrieval context validation options?"
 
--- agents
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2669785679"] = "agents"
+-- Retrieval Context Validation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2670338043"] = "Retrieval Context Validation"
 
--- When enabled, the retrieval context validation agent will check each retrieval context of any retrieval process, whether a context makes sense for the given prompt.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T298440039"] = "When enabled, the retrieval context validation agent will check each retrieval context of any retrieval process, whether a context makes sense for the given prompt."
-
--- How many validation agents should work simultaneously?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3431541788"] = "How many validation agents should work simultaneously?"
+-- Use the model of the chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3435835378"] = "Use the model of the chat"
 
 -- No options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T354528094"] = "No options are preselected"
 
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3577764214"] = "When enabled, you can preselect some agent options. This might be useful when you prefer an LLM."
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3577764214::INFORMAL"] = "When enabled, you can preselect some agent options. This might be useful when you prefer an LLM."
-
--- More active agents also mean that a corresponding number of requests are made simultaneously. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 to 6 agents.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3819544890"] = "More active agents also mean that a corresponding number of requests are made simultaneously. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 to 6 agents."
-
--- More active agents also mean that a corresponding number of requests are made simultaneously. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 to 6 agents.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3819544890::INFORMAL"] = "More active agents also mean that a corresponding number of requests are made simultaneously. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 to 6 agents."
-
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3875604319"] = "Options are preselected"
 
--- Agent: Retrieval Context Validation Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T928989804"] = "Agent: Retrieval Context Validation"
+-- validations
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T595734827"] = "validations"
+
+-- Each retrieval context is validated
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T705018823"] = "Each retrieval context is validated"
+
+-- In classic RAG, a model checks each retrieval context, i.e., each passage found in the data sources, whether it fits the current prompt. There can be many of them, so you might want to use a cheap and fast model for this job. When using a local or self-hosted model, look for a small (e.g., 3B) and fast one.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T765642962"] = "In classic RAG, a model checks each retrieval context, i.e., each passage found in the data sources, whether it fits the current prompt. There can be many of them, so you might want to use a cheap and fast model for this job. When using a local or self-hosted model, look for a small (e.g., 3B) and fast one."
+
+-- In classic RAG, a model checks each retrieval context, i.e., each passage found in the data sources, whether it fits the current prompt. There can be many of them, so you might want to use a cheap and fast model for this job. When using a local or self-hosted model, look for a small (e.g., 3B) and fast one.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T765642962::INFORMAL"] = "In classic RAG, a model checks each retrieval context, i.e., each passage found in the data sources, whether it fits the current prompt. There can be many of them, so you might want to use a cheap and fast model for this job. When using a local or self-hosted model, look for a small (e.g., 3B) and fast one."
 
 -- No validation is performed
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T95175095"] = "No validation is performed"
@@ -11925,6 +11931,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T193192210"] = "
 -- null
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1996966820"] = "null"
 
+-- The model set for security checks no longer exists. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2001789726"] = "The model set for security checks no longer exists. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."
+
+-- The model set for security checks no longer exists. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2001789726::INFORMAL"] = "The model set for security checks no longer exists. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."
+
 -- Properties
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2177370620"] = "Properties"
 
@@ -11942,6 +11954,18 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T273798258"] = "
 
 -- Size
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2789707388"] = "Size"
+
+-- Your organization does not allow the model set for security checks. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2882229141"] = "Your organization does not allow the model set for security checks. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."
+
+-- Your organization does not allow the model set for security checks. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2882229141::INFORMAL"] = "Your organization does not allow the model set for security checks. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."
+
+-- The model set for security checks is not trusted enough for them. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2917601715"] = "The model set for security checks is not trusted enough for them. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."
+
+-- The model set for security checks is not trusted enough for them. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2917601715::INFORMAL"] = "The model set for security checks is not trusted enough for them. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."
 
 -- No model configured
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2941224401"] = "No model configured"
@@ -21542,6 +21566,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1713926719"] = "The export s
 
 -- The export failed.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1895034475"] = "The export failed."
+
+-- The organization does not allow the provider for security checks.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T1679509394"] = "The organization does not allow the provider for security checks."
+
+-- No audit provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T2034826200"] = "No audit provider is configured."
+
+-- Your organization does not allow the provider for security checks. Pick another one, or choose a dedicated provider for security checks in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T2109782167"] = "Your organization does not allow the provider for security checks. Pick another one, or choose a dedicated provider for security checks in the app settings."
+
+-- Your organization does not allow the provider for security checks. Pick another one, or choose a dedicated provider for security checks in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T2109782167::INFORMAL"] = "Your organization does not allow the provider for security checks. Pick another one, or choose a dedicated provider for security checks in the app settings."
+
+-- The provider is not trusted enough for security checks.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T2861409367"] = "The provider is not trusted enough for security checks."
+
+-- No provider is configured for security checks.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T3445977179"] = "No provider is configured for security checks."
+
+-- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T4104574219"] = "The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings."
+
+-- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T4104574219::INFORMAL"] = "The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings."
 
 -- Text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1041509726"] = "Text"
