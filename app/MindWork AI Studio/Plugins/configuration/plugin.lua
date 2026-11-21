@@ -1605,24 +1605,53 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 
+-- Configure the text content cleaner.
+-- It removes navigation, advertisements, and other clutter from web pages which an assistant reads.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
+-- cleaner uses the provider of the assistant, and otherwise the app-wide default provider.
+-- The minimum confidence applies to every provider the cleaner uses, the provider of the assistant
+-- and the app-wide default included. The provider and the minimum confidence apply only while
+-- PreselectAgentOptions is true.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.MinimumProviderConfidence"] = "NONE"
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.MinimumProviderConfidence.AllowUserOverride"] = true
+
 -- Configure the data source selection agent.
 -- This agent is used when chat data source options enable AI-based data source selection.
--- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
+-- agent uses the provider of the chat, and otherwise the app-wide default provider.
+-- The minimum confidence applies to every provider the agent uses, the provider of the chat and the
+-- app-wide default included. The provider and the minimum confidence apply only while
+-- PreselectAgentOptions is true.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions"] = true
 -- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.MinimumProviderConfidence"] = "NONE"
 -- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.MinimumProviderConfidence.AllowUserOverride"] = true
 
 -- Configure the retrieval context validation agent.
 -- This agent is used when retrieval context validation is enabled globally and chat data source options enable AI-based validation.
--- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
+-- agent uses the provider of the chat, and otherwise the app-wide default provider.
+-- The minimum confidence applies to every provider the agent uses, the provider of the chat and the
+-- app-wide default included. The provider and the minimum confidence apply only while
+-- PreselectAgentOptions is true.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.MinimumProviderConfidence"] = "NONE"
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations"] = 3
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.MinimumProviderConfidence.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations.AllowUserOverride"] = true
 
 -- Configure assistant plugin security audits.
@@ -1634,6 +1663,11 @@ CONFIG["SETTINGS"] = {}
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
 -- Without a selected audit provider, AI Studio uses the app-wide default provider.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum confidence of the provider which audits a plugin. It applies to every
+-- provider an audit uses, the app-wide default and the one picked in the audit dialog included.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumProviderConfidence"] = "NONE"
 --
 -- Configure the minimum audit level assistant plugins must meet.
 -- Allowed values are: UNKNOWN, DANGEROUS, CAUTION, SAFE
@@ -1648,6 +1682,7 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether users can change assistant plugin audit settings locally.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumProviderConfidence.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants.AllowUserOverride"] = false

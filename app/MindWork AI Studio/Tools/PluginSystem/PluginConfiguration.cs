@@ -408,19 +408,27 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             && maximumPauseSeconds < minimumPauseSeconds)
             LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} is below its lower bound. The lower bound of {MinimumPauseSeconds} seconds wins.", this.Id, minimumPauseSeconds);
 
+        // Config: text content cleaner settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.TextContentCleaner, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.TextContentCleaner, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.TextContentCleaner, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+
         // Config: data source selection agent settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
         // Config: retrieval context validation agent settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.EnableRetrievalContextValidation, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.NumParallelValidations, this.Id, settingsTable, dryRun);
 
         // Config: assistant plugin audit settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.MinimumLevel, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, this.Id, settingsTable, dryRun);

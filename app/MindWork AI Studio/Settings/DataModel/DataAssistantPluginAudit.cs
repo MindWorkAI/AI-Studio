@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
+
 using AIStudio.Agents.AssistantAudit;
+using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -25,6 +27,14 @@ public sealed class DataAssistantPluginAudit(Expression<Func<Data, DataAssistant
     /// When empty, the app-wide default provider is used.
     /// </summary>
     public string PreselectedAgentProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedAgentProvider, string.Empty);
+
+    /// <summary>
+    /// The minimum confidence level of the provider which audits the plugins.
+    /// </summary>
+    /// <remarks>
+    /// It applies to every provider which audits a plugin, the fallbacks included.
+    /// </remarks>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, n => n.MinimumProviderConfidence, ConfidenceLevel.NONE);
 
     /// <summary>
     /// The minimum audit level assistant plugins should meet.

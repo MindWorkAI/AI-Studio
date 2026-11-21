@@ -223,6 +223,11 @@ public static class ComponentsExtensions
             Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence : default,
             Components.MODEL_COMPARISON_ASSISTANT => settingsManager.ConfigurationData.ModelComparison.PreselectOptions ? settingsManager.ConfigurationData.ModelComparison.MinimumProviderConfidence : default,
 
+            Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.TextContentCleaner.MinimumProviderConfidence : default,
+            Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.ConfigurationData.AgentDataSourceSelection.MinimumProviderConfidence : default,
+            Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.ConfigurationData.AgentRetrievalContextValidation.MinimumProviderConfidence : default,
+            Components.AGENT_ASSISTANT_PLUGIN_AUDIT => settingsManager.ConfigurationData.AssistantPluginAudit.MinimumProviderConfidence,
+
             _ => default,
         };
 

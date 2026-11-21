@@ -193,7 +193,7 @@ public sealed class Data
 
     public DataSWOTAnalysis SWOTAnalysis { get; set; } = new();
 
-    public DataTextContentCleaner TextContentCleaner { get; set; } = new();
+    public DataTextContentCleaner TextContentCleaner { get; set; } = new(x => x.TextContentCleaner);
     
     public DataAgentDataSourceSelection AgentDataSourceSelection { get; set; } = new(x => x.AgentDataSourceSelection);
     

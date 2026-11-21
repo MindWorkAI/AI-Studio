@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
 
+using AIStudio.Provider;
+
 namespace AIStudio.Settings.DataModel;
 
 public sealed class DataAgentRetrievalContextValidation(Expression<Func<Data, DataAgentRetrievalContextValidation>>? configSelection = null)
@@ -25,6 +27,14 @@ public sealed class DataAgentRetrievalContextValidation(Expression<Func<Data, Da
     /// Preselect a retrieval context validation provider?
     /// </summary>
     public string PreselectedAgentProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedAgentProvider, string.Empty);
+
+    /// <summary>
+    /// The minimum confidence level of the provider which validates the retrieval contexts.
+    /// </summary>
+    /// <remarks>
+    /// It applies only while PreselectAgentOptions is on, and then to every provider which validates them, the fallbacks included.
+    /// </remarks>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, n => n.MinimumProviderConfidence, ConfidenceLevel.NONE);
 
     /// <summary>
     /// Configure how many parallel validations to run.
