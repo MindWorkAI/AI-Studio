@@ -17,4 +17,9 @@ public enum ContextWindowFullSubject
     /// A message of the embedded chat of an assistant, whose earlier messages compressing replaces with the summary.
     /// </summary>
     EMBEDDED_CHAT,
+
+    /// <summary>
+    /// A request of an assistant, together with its files, which nothing compresses.
+    /// </summary>
+    ASSISTANT_REQUEST,
 }

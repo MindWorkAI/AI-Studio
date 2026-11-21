@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Components;
 namespace AIStudio.Dialogs;
 
 /// <summary>
-/// Tells the user before sending that the chat fills the context window of the model, or no
-/// longer fits into it, and offers to compress it.
+/// Tells the user before sending that the chat or the request of an assistant fills the context
+/// window of the model, or no longer fits into it, and offers to compress a chat.
 /// </summary>
 /// <remarks>
 /// Only a notice: it compresses nothing by itself, and the user may send the message anyway. The
@@ -86,7 +86,9 @@ public partial class ContextWindowFullDialog : MSGComponentBase
             { x => x.CanSendAnyway, canSendAnyway },
         };
 
-        var title = isWindowExceeded ? TB("This chat is too long for the model") : TB("This chat nearly fills the context window of the model");
+        var title = subject is ContextWindowFullSubject.ASSISTANT_REQUEST
+            ? isWindowExceeded ? TB("This request is too long for the model") : TB("This request nearly fills the context window of the model")
+            : isWindowExceeded ? TB("This chat is too long for the model") : TB("This chat nearly fills the context window of the model");
         var dialogReference = await dialogService.ShowAsync<ContextWindowFullDialog>(title, dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not ContextWindowFullDecision decision)
