@@ -8,7 +8,7 @@ namespace AIStudio.Settings;
 /// </summary>
 /// <remarks>
 /// Not every data source is an IDataSource. Those are the ones in DataSources, which classic RAG,
-/// Semantic Search and the agents read. A data source kept in a list of its own is never handed to
+/// Semantic Search and the AI operations read. A data source kept in a list of its own is never handed to
 /// them, and the compiler sees to that, because it implements only this interface or
 /// IIndexedDataSource.
 /// </remarks>

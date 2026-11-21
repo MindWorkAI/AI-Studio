@@ -14,7 +14,7 @@ public sealed class DataAgentRetrievalContextValidation(Expression<Func<Data, Da
     }
 
     /// <summary>
-    /// Enable the retrieval context validation agent?
+    /// Enable the retrieval context validation?
     /// </summary>
     public bool EnableRetrievalContextValidation { get; set; } = ManagedConfiguration.Register(configSelection, n => n.EnableRetrievalContextValidation, false);
     

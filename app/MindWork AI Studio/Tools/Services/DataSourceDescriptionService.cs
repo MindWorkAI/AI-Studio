@@ -11,7 +11,7 @@ namespace AIStudio.Tools.Services;
 /// Tells a model what a data source holds, so that it can decide where to search.
 /// </summary>
 /// <remarks>
-/// Both the agent which selects data sources and Semantic Search describe the data sources to a
+/// Both the AI operation which selects data sources and Semantic Search describe the data sources to a
 /// model. The user describes a local data source. An ERI data source is described by its server,
 /// which costs two requests and is written by somebody else: that description is filtered for
 /// prompt injections like any other external content before it is kept. It is kept for a few

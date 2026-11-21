@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace AIStudio.AIOperations.PluginAudit;
 
 /// <summary>
-/// Represents a single structured security finding produced by the assistant audit agent.
+/// Represents a single structured security finding produced by the security audit of a plugin.
 /// </summary>
 public sealed class PluginAuditFinding
 {

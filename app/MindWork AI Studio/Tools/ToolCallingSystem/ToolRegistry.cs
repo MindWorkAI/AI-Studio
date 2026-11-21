@@ -864,7 +864,7 @@ public sealed class ToolRegistry
     /// <remarks>
     /// The one place which decides between the two. The RAG process, the data source selection,
     /// and the check of what a launched chat may search all ask here, so that none of them counts
-    /// the agents of the RAG process in or out while another does the opposite. The chat searches
+    /// the AI operations of the RAG process in or out while another does the opposite. The chat searches
     /// itself when the user prefers it and GetOfferBlockReasonAsync has nothing against it. Its
     /// answer comes along whatever the user prefers, so that the user interface can leave out a
     /// choice which is none and say why the chat searches with every message.<br/><br/>

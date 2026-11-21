@@ -52,7 +52,7 @@ public static class ChatCompression
     /// still has the message being written in that field, so such a message is summarized instead.<br/><br/>
     ///
     /// What described the last request of the compressed chat is reset, as after a rollback: the data
-    /// retrieved for it and the data sources an agent picked. The restrictions only tighten, by those
+    /// retrieved for it and the data sources an AI operation picked. The restrictions only tighten, by those
     /// the summary brings along, see AssistantLaunchService.CreateTextPayloadAsync.<br/><br/>
     ///
     /// The last answer keeps what AI Studio noted about its tool calls and sources. The web addresses

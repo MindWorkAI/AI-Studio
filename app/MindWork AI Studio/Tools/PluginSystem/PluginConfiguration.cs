@@ -413,12 +413,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.TextContentCleaner, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.TextContentCleaner, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
-        // Config: data source selection agent settings
+        // Config: data source selection settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
-        // Config: retrieval context validation agent settings
+        // Config: retrieval context validation settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.EnableRetrievalContextValidation, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);

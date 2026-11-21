@@ -67,7 +67,7 @@ public sealed class ClassicRagOutboundDataRestrictionTests : ToolRegistryTestBas
     public void BothWaysOfSearchingRestrictTheChatAlike(IDataSource[] dataSources, int[] passageCounts, OutboundDataRestriction organizationMinimum)
     {
         //
-        // Semantic Search offers the data sources in a fixed order, while the selection agent of the
+        // Semantic Search offers the data sources in a fixed order, while the data source selection of the
         // classic process may return them in any order. Both have to name the same data source.
         //
         // AsEnumerable() keeps Reverse() a reversed copy: from C# 14 on, Reverse() on an array

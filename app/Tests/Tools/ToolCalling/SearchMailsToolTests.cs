@@ -321,7 +321,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     [Test]
     public void SemanticSearchNeverSeesAMailbox()
     {
-        Assert.That(typeof(IDataSource).IsAssignableFrom(typeof(DataSourceMailbox)), Is.False, "Semantic Search, classic RAG, and the agents take their data sources from DataSources, which holds only IDataSource. A mailbox has its own rules and tools.");
+        Assert.That(typeof(IDataSource).IsAssignableFrom(typeof(DataSourceMailbox)), Is.False, "Semantic Search, classic RAG, and the AI operations take their data sources from DataSources, which holds only IDataSource. A mailbox has its own rules and tools.");
     }
 
     // Stating its definition and reading its arguments needs none of the services the tool searches with:

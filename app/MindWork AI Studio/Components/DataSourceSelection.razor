@@ -75,7 +75,7 @@
                                 <MudTextSwitch Label="@T("AI-based data source selection")" Value="@this.aiBasedSourceSelection" LabelOn="@T("Yes, let the AI decide which data sources are needed.")" LabelOff="@T("No, I manually decide which data source to use.")" ValueChanged="@this.AutoModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
                             }
 
-                            @* With Semantic Search, no agent takes part: nothing would validate the retrieved data. *@
+                            @* With Semantic Search, no AI operation takes part: nothing would validate the retrieved data. *@
                             @if (this.AllowsAutomaticSelection && this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && !this.IsSemanticSearchEffective)
                             {
                                 <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
@@ -130,8 +130,8 @@
                                             </MudList>
                                         </ExpansionPanel>
                                         @*
-                                            With Semantic Search, no agent selects: the chat model picks with each search, and its
-                                            searches show in the answer. With classic RAG, there is something to show once the agent
+                                            With Semantic Search, no AI operation selects: the chat model picks with each search, and its
+                                            searches show in the answer. With classic RAG, there is something to show once the AI operation
                                             picked for a message.
                                         *@
                                         @if (!this.IsSemanticSearchEffective && this.DataSourcesAISelected.Count > 0)

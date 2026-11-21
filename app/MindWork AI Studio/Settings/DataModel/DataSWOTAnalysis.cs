@@ -20,7 +20,7 @@ public sealed class DataSWOTAnalysis
     public bool PreselectWebContentReader { get; set; }
 
     /// <summary>
-    /// Preselect the content cleaner agent?
+    /// Preselect the text content cleaner?
     /// </summary>
     public bool PreselectContentCleanerAgent { get; set; }
 

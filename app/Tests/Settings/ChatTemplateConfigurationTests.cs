@@ -73,7 +73,7 @@ public sealed class ChatTemplateConfigurationTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(read.DataSourceOptions, Is.Not.Null);
-            Assert.That(read.DataSourceOptions!.AutomaticDataSourceSelection, Is.True, "Letting an agent pick the sources is the one thing only a chat template can state, so it must not be lost on the way through Lua.");
+            Assert.That(read.DataSourceOptions!.AutomaticDataSourceSelection, Is.True, "Letting an AI operation pick the sources is the one thing only a chat template can state, so it must not be lost on the way through Lua.");
             Assert.That(read.DataSourceOptions.PreselectedDataSourceIds, Is.Empty);
             Assert.That(read.ToolIds, Is.Null);
         }
@@ -383,7 +383,7 @@ public sealed class ChatTemplateConfigurationTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(eriOnly, ConfiguredDataSources()), Is.Empty);
-            Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(agentic, ConfiguredDataSources()), Is.Empty, "An agent picks the sources per message, so this template names none to begin with.");
+            Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(agentic, ConfiguredDataSources()), Is.Empty, "An AI operation picks the sources per message, so this template names none to begin with.");
             Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(NewTemplate(), ConfiguredDataSources()), Is.Empty);
         }
     }

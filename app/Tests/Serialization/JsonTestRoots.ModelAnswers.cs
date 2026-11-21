@@ -16,7 +16,7 @@ namespace AIStudio.Tests.Serialization;
 public static partial class JsonTestRoots
 {
     /// <summary>
-    /// The JSON which models write for the agents and assistants of AI Studio, apart from the Visual Briefing
+    /// The JSON which models write for the AI operations and assistants of AI Studio, apart from the Visual Briefing
     /// assistant.
     /// </summary>
     public static IEnumerable<TestCaseData> ModelAnswers()

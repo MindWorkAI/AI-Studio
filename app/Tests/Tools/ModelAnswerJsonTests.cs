@@ -22,7 +22,7 @@ public sealed class ModelAnswerJsonTests
         """;
 
     /// <summary>
-    /// A data source selection as the agent is asked to write it.
+    /// A data source selection as the AI operation is asked to write it.
     /// </summary>
     private const string SELECTION = """
         [

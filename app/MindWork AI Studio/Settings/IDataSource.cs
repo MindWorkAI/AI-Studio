@@ -7,7 +7,7 @@ using AIStudio.Tools.RAG;
 namespace AIStudio.Settings;
 
 /// <summary>
-/// The common interface for the data sources in DataSources, which classic RAG, Semantic Search and the agents read.
+/// The common interface for the data sources in DataSources, which classic RAG, Semantic Search and the AI operations read.
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type_discriminator")]
 [JsonDerivedType(typeof(DataSourceLocalDirectory), nameof(DataSourceType.LOCAL_DIRECTORY))]

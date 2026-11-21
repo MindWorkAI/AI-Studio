@@ -313,7 +313,7 @@ public partial class DataSourceSelection : MSGComponentBase
         // that field holds what was usable the last time we looked, so a source filtered out once
         // would never come back, while the RAG process keeps reading it from the preselection.
         //
-        // How the chat searches decides whether the agents of the RAG process see the data, and
+        // How the chat searches decides whether the AI operations of the RAG process see the data, and
         // with that which data sources the provider of the chat may use at all. With several
         // models, all of them search the same way, and each must be allowed every data source:
         //
