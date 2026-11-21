@@ -21,17 +21,21 @@ public sealed class RetrievalContextValidationOperation(ILogger<RetrievalContext
     private const string JOB_DESCRIPTION =
         """
         You receive a system and user prompt as well as a retrieval context as input. Your task is to decide whether this
-        retrieval context is helpful in processing the prompts or not. You respond with the decision (true or false),
-        your reasoning, and your confidence in this decision.
+        retrieval context is helpful in processing the prompts or not. You respond with the decision, your reasoning,
+        and your confidence in this decision.
+
+        Your decision is true when the retrieval context helps in processing the prompts, and false when it does not.
 
         Your response is only one JSON object in the following format:
 
         ```
-        {"decision": true, "reason": "Why did you choose this source?", "confidence": 0.87}
+        {"decision": true, "reason": "Why does this retrieval context help or not?", "confidence": 0.87}
         ```
 
-        You express your confidence as a floating-point number between 0.0 (maximum uncertainty) and
-        1.0 (you are absolutely certain that this retrieval context is needed).
+        Your confidence is the probability that your decision is right, as a floating-point number between 0.0 and
+        1.0: 0.5 means that your decision is no better than a guess, and 1.0 means that you are absolutely certain
+        of it. This holds for both decisions: when you are certain that the retrieval context does not help, your
+        decision is false and your confidence is 1.0.
 
         The JSON schema is:
 
@@ -47,7 +51,9 @@ public sealed class RetrievalContextValidationOperation(ILogger<RetrievalContext
               "type": "string"
             },
             "confidence": {
-              "type": "number"
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
             }
           },
           "required": [
