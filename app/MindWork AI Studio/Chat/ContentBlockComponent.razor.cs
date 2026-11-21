@@ -218,6 +218,14 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
 
     /// <summary>
+    /// Whether this block tells the user above the progress bar that the model is thinking.
+    /// </summary>
+    /// <remarks>
+    /// Not while a tool runs: the status of the tools tells what happens then.
+    /// </remarks>
+    private bool ShowsThinkingStatus => this.Content is ContentText { IsThinking: true, ToolRuntimeStatus.IsRunning: false };
+
+    /// <summary>
     /// The files this block holds, tables, code blocks, and formulas, so that the export menu can offer each of them.
     /// </summary>
     /// <remarks>
@@ -449,6 +457,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                 hash.Add(text.ToolInvocations.Count);
                 hash.Add(text.Presentation?.Kind);
                 hash.Add(text.Presentation?.GetDataHashCode() ?? 0);
+                hash.Add(text.IsThinking);
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);
                 hash.Add(this.showToolTrace);

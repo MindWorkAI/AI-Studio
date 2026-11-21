@@ -140,6 +140,12 @@
         {
             if (this.Content.IsStreaming)
             {
+                @if (this.ShowsThinkingStatus)
+                {
+                    <MudText Typo="Typo.body2" Class="mb-2">
+                        @T("The model is thinking...")
+                    </MudText>
+                }
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-6" />
             }
             
@@ -225,6 +231,12 @@
 
                         if (textContent.InitialRemoteWait)
                         {
+                            @if (!textContent.ToolRuntimeStatus.IsRunning)
+                            {
+                                <MudText Typo="Typo.body2" Class="mb-2">
+                                    @T("Processing the prompt...")
+                                </MudText>
+                            }
                             <MudSkeleton Width="30%" Height="42px;"/>
                             <MudSkeleton Width="80%"/>
                             <MudSkeleton Width="100%"/>

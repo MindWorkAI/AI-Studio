@@ -76,8 +76,8 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
         await foreach (var serverSentEvent in streamRequestAsync(requestDto, streamEnd, token))
         {
             var part = accumulator.Process(serverSentEvent);
-            if (part.HasContent || part.Usage.IsKnown)
-                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage));
+            if (part.HasContent || part.Usage.IsKnown || part.IsReasoning)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage) { IsReasoning = part.IsReasoning });
         }
 
         // A stream which was cut off ends the round without an outcome, cf. IToolCallingProviderAdapter.ExecuteRoundAsync:

@@ -19,10 +19,19 @@ public readonly record struct ResponseStreamLine(string Type, int Index, Delta D
     public AnthropicStreamMessage? Message { get; init; }
 
     /// <inheritdoc />
-    public bool ContainsContent() => this != default && !string.IsNullOrWhiteSpace(this.Delta.Text);
+    public bool ContainsContent() => this != default && (!string.IsNullOrWhiteSpace(this.Delta.Text) || this.IsThinking);
 
     /// <inheritdoc />
-    public ContentStreamChunk GetContent() => new(this.Delta.Text, []);
+    public ContentStreamChunk GetContent() => new(this.Delta.Text ?? string.Empty, []) { IsReasoning = this.IsThinking };
+
+    /// <summary>
+    /// Whether this line carries thinking of the model, which says that it is reasoning.
+    /// </summary>
+    /// <remarks>
+    /// Asks the type of the delta, as the stream with tools does, cf. AnthropicMessageStreamAccumulator. The thinking
+    /// itself is never read here, so the delta needs no field for it.
+    /// </remarks>
+    private bool IsThinking => this.Delta.Type is AnthropicContentBlockBuilder.DELTA_THINKING;
 
     /// <inheritdoc />
     /// <remarks>
