@@ -22,7 +22,6 @@ public sealed class AnthropicMessageStreamAccumulator
     private const string EVENT_MESSAGE_STOP = "message_stop";
     
     private const string DELTA_TEXT = "text_delta";
-    private const string DELTA_THINKING = "thinking_delta";
 
     private readonly Dictionary<int, AnthropicContentBlockBuilder> openBlocks = [];
     private readonly SortedDictionary<int, JsonElement> finishedBlocks = [];
@@ -82,7 +81,7 @@ public sealed class AnthropicMessageStreamAccumulator
                     this.openBlocks[line.Index] = openBlock;
                 }
 
-                return new AnthropicStreamPart(openBlock.Append(line.Delta)) { IsReasoning = line.Delta.Type is DELTA_THINKING };
+                return new AnthropicStreamPart(openBlock.Append(line.Delta)) { IsReasoning = line.Delta.Type is AnthropicContentBlockBuilder.DELTA_THINKING };
             
             case EVENT_BLOCK_STOP:
                 if (this.openBlocks.Remove(line.Index, out var finishedBlock))
