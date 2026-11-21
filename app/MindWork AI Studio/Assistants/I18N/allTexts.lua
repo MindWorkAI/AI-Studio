@@ -12175,6 +12175,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T337872053"] = "The A
 -- The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T337872053::INFORMAL"] = "The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available."
 
+-- Compress
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3456693933"] = "Compress"
+
 -- The AI is summarizing the chat...
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3770574675"] = "The AI is summarizing the chat..."
 

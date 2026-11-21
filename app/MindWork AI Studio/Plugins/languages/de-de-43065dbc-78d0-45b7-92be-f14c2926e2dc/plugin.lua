@@ -12177,6 +12177,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T337872053"] = "Die K
 -- The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T337872053::INFORMAL"] = "Die KI fasst diesen Chat einschließlich des Inhalts seiner Dokumente zusammen, und das Gespräch geht in einem neuen Chat weiter. Er enthält die Zusammenfassung, deine letzte Nachricht mit ihren Dateien und die letzte Antwort der KI. Da der neue Chat viel kürzer ist, kostet jede weitere Nachricht weniger Token. Dieser Chat bleibt unverändert, sodass das gesamte Gespräch verfügbar bleibt."
 
+-- Compress
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3456693933"] = "Komprimieren"
+
 -- The AI is summarizing the chat...
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3770574675"] = "Die KI fasst den Chat zusammen …"
 
