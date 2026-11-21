@@ -96,7 +96,14 @@
             @T("Cancel")
         </MudButton>
         <MudButton OnClick="@this.CompressAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.COMPRESS_CHAT" Disabled="@this.isSummarizing">
-            @T("Compress & switch")
+            @if (this.Target is ChatCompressionTarget.SAME_CHAT)
+            {
+                @T("Compress")
+            }
+            else
+            {
+                @T("Compress & switch")
+            }
         </MudButton>
     </DialogActions>
 </MudDialog>
