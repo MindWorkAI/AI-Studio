@@ -273,6 +273,16 @@ public partial class ModelComparisonSeriesView : MSGComponentBase
         return string.Format(ModelComparisonFormat.Culture, text, number);
     }
 
+    /// <summary>
+    /// What the chat of a task says once its conversation fills the context window of the model.
+    /// </summary>
+    /// <remarks>
+    /// The chat hides the window, so that its size does not tell the models apart, see EmbeddedChat.ShowsContextWindow;
+    /// it only stops once nothing fits anymore. The task goes on as usual then: with the other model, or with the
+    /// decision.
+    /// </remarks>
+    private string FullContextHint => TA("This conversation fills the context window of the model. Finish this chat with “I'm done with this model”, and test what is left in a new task.");
+
     private string ChatHint(ModelComparisonSeriesTask task) => task.State is ModelComparisonSeriesTaskState.FIRST_CHAT
         ? TA("Work on your task with this model, as you would in a chat. Once you are done, the other model gets the same first message, and you continue with it.")
         : TA("Now work on the same task with the other model. It got your first message already. Once you are done, you decide which chat helped you more.");

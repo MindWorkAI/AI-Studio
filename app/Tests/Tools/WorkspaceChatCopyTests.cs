@@ -72,6 +72,23 @@ public sealed class WorkspaceChatCopyTests
         }
     }
 
+    [Test]
+    public void AClonedChatKeepsItsIdButSharesNoMessageWithTheOriginal()
+    {
+        var original = new ChatThread { ChatId = Guid.NewGuid(), Name = "Step chat" };
+        original.Blocks.Add(new ContentBlock { ContentType = ContentType.TEXT, Role = ChatRole.USER, Content = new ContentText { Text = "First question" } });
+
+        var clone = WorkspaceBehaviour.CloneChat(original);
+        clone.Blocks.Clear();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(clone.ChatId, Is.EqualTo(original.ChatId), "An embedded chat replaces its conversation by a compressed clone under the same ID.");
+            Assert.That(clone.Name, Is.EqualTo("Step chat"));
+            Assert.That(original.Blocks, Has.Count.EqualTo(1), "Until the compressed clone is stored, the original has to stay as it is.");
+        }
+    }
+
     /// <summary>
     /// Writes a transcript where a temporary chat keeps its transcripts.
     /// </summary>

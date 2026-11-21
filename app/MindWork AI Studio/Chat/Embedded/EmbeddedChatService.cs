@@ -250,6 +250,38 @@ public sealed class EmbeddedChatService(SettingsManager settingsManager, Assista
     }
 
     /// <summary>
+    /// Replaces the conversation of a chat, e.g., with its compressed form, see ChatCompression.TurnIntoContinuation.
+    /// </summary>
+    /// <remarks>
+    /// The new conversation keeps the ID of the chat. Unlike ResetAsync, it also keeps what the chat knows about the
+    /// files sent in it, see ChatProvenance: the messages which stay may refer to them. It is stored before the chat
+    /// shows it, so that the chat never shows a conversation which is not on the disk.
+    /// </remarks>
+    /// <param name="chatId">The ID of a chat which GetAsync loaded before.</param>
+    /// <param name="thread">The new conversation; it gets the ID of the chat.</param>
+    /// <returns>False while the model answers in the chat, or when it was not loaded.</returns>
+    /// <exception cref="IOException">The new conversation could not be stored; the chat keeps the old one.</exception>
+    /// <exception cref="UnauthorizedAccessException">The new conversation could not be stored; the chat keeps the old one.</exception>
+    public async Task<bool> ReplaceAsync(Guid chatId, ChatThread thread)
+    {
+        if (!this.conversations.TryGetValue(chatId, out var conversation))
+            return false;
+
+        lock (this.runningLock)
+        {
+            if (conversation.IsRunning)
+                return false;
+        }
+
+        thread.ChatId = chatId;
+        await conversation.Store.SaveThreadAsync(thread);
+        conversation.Thread = thread;
+
+        await this.NotifyAsync(chatId);
+        return true;
+    }
+
+    /// <summary>
     /// Stops the answer of a chat and forgets the chat, e.g., because the user deleted what it belonged to.
     /// </summary>
     /// <param name="chatId">The ID of the chat.</param>

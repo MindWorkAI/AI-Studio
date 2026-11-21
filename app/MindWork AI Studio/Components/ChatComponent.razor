@@ -110,6 +110,10 @@
                 <MudTooltip Text="@T("Copy this chat & continue in the copy.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@AppIcons.DUPLICATE" Disabled="@(!this.CanThreadBeCopied)" OnClick="@this.CopyCurrentChat"/>
                 </MudTooltip>
+
+                <MudTooltip Text="@this.CompressTooltip" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@AppIcons.COMPRESS_CHAT" Disabled="@(!this.CanThreadBeCompressed)" OnClick="@this.CompressCurrentChat"/>
+                </MudTooltip>
             }
             
             <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" KeepPreviewedText="@this.KeepPreviewedTextAsync" Disabled="@(!this.CanAttachFiles)"/>

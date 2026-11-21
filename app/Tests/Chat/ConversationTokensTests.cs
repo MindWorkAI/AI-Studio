@@ -153,4 +153,38 @@ public sealed class ConversationTokensTests
 
         Assert.That(counted.Tokens, Is.EqualTo(12_740), "The tools' share is part of the conversation, not added on top of it.");
     }
+
+    [TestCase(5_000, 0, 10_000, false, TestName = "Below the share nothing is asked")]
+    [TestCase(9_400, 99, 10_000, false, TestName = "Just below the share nothing is asked")]
+    [TestCase(9_400, 100, 10_000, true, TestName = "The message about to be sent counts as well")]
+    [TestCase(12_000, 0, 10_000, true, TestName = "Beyond the window it asks as well")]
+    public void AsksBeforeSendingFromTheShareOn(int historyTokens, int draftTokens, int window, bool asks)
+    {
+        var counted = new ConversationTokens
+        {
+            IsKnown = true,
+            HistoryTokens = historyTokens,
+            DraftTokens = draftTokens,
+            Window = ContextWindow.Of(window),
+        };
+
+        Assert.That(counted.AsksBeforeSending, Is.EqualTo(asks));
+    }
+
+    [Test]
+    public void AnUnknownWindowIsNeverFull()
+    {
+        var counted = new ConversationTokens
+        {
+            IsKnown = true,
+            HistoryTokens = 1_000_000,
+            Window = ContextWindow.UNKNOWN,
+        };
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(counted.FillShare, Is.Zero, "A share of an unknown total would be a number made up on the spot.");
+            Assert.That(counted.AsksBeforeSending, Is.False, "Nobody wrote the window down, so nobody can say that it is full.");
+        }
+    }
 }

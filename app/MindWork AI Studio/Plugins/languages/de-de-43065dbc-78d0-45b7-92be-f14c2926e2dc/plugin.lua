@@ -5841,6 +5841,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIE
 -- Start your first task. You work on it with one of the two models first, and then with the other one. AI Studio chooses at random which model you meet first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2374282918::INFORMAL"] = "Beginne mit deiner ersten Aufgabe. Du bearbeitest sie zunächst mit einem der beiden Modelle und anschließend mit dem anderen. AI Studio wählt zufällig aus, mit welchem Modell du zuerst arbeitest."
 
+-- This conversation fills the context window of the model. Finish this chat with “I'm done with this model”, and test what is left in a new task.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2698070096"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beenden Sie diesen Chat mit „Ich bin mit diesem Modell fertig“, und testen Sie den Rest in einer neuen Aufgabe."
+
+-- This conversation fills the context window of the model. Finish this chat with “I'm done with this model”, and test what is left in a new task.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2698070096::INFORMAL"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beende diesen Chat mit „Ich bin mit diesem Modell fertig“, und teste den Rest in einer neuen Aufgabe."
+
 -- I'm done with this model
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2855215253"] = "Ich bin mit diesem Modell fertig"
 
@@ -7914,6 +7920,81 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T3768991250"] = "Benutzer"
 -- AI
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T601166687"] = "KI"
 
+-- Summary of the earlier conversation
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T1179725706"] = "Zusammenfassung des bisherigen Gesprächs"
+
+-- Your last message in that chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T1936713585"] = "Ihre letzte Nachricht im ursprünglichen Chat"
+
+-- Your last message in that chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T1936713585::INFORMAL"] = "Deine letzte Nachricht im ursprünglichen Chat"
+
+-- This chat continues the conversation of that chat, which stays as it was. The summary describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2073462419"] = "Dieser Chat setzt das Gespräch des ursprünglichen Chats fort, der unverändert bleibt. Die Zusammenfassung beschreibt die dort angehängten Dateien. Die Dateien Ihrer letzten Nachricht bleiben an ihr angehängt; hängen Sie jede andere Datei erneut an, wenn die KI ihren vollständigen Inhalt benötigt."
+
+-- This chat continues the conversation of that chat, which stays as it was. The summary describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2073462419::INFORMAL"] = "Dieser Chat setzt das Gespräch des ursprünglichen Chats fort, der unverändert bleibt. Die Zusammenfassung beschreibt die dort angehängten Dateien. Die Dateien deiner letzten Nachricht bleiben an ihr angehängt; hänge jede andere Datei erneut an, wenn die KI ihren vollständigen Inhalt benötigt."
+
+-- {0} (continued {1})
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2105192574"] = "{0} (Fortsetzung {1})"
+
+-- {0} (continued)
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2398522711"] = "{0} (Fortsetzung)"
+
+-- Your last message
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2505774357"] = "Ihre letzte Nachricht"
+
+-- Your last message
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2505774357::INFORMAL"] = "Deine letzte Nachricht"
+
+-- Unnamed chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T3310482275"] = "Unbenannter Chat"
+
+-- The summary takes the place of the earlier messages of this conversation and describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T3611731843"] = "Die Zusammenfassung ersetzt die bisherigen Nachrichten dieses Gesprächs und beschreibt die dort angehängten Dateien. Die Dateien Ihrer letzten Nachricht bleiben an ihr angehängt; hängen Sie jede andere Datei erneut an, wenn die KI ihren vollständigen Inhalt benötigt."
+
+-- The summary takes the place of the earlier messages of this conversation and describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T3611731843::INFORMAL"] = "Die Zusammenfassung ersetzt die bisherigen Nachrichten dieses Gesprächs und beschreibt die dort angehängten Dateien. Die Dateien deiner letzten Nachricht bleiben an ihr angehängt; hänge jede andere Datei erneut an, wenn die KI ihren vollständigen Inhalt benötigt."
+
+-- Summary of the chat '{0}'
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T3701997113"] = "Zusammenfassung des Chats „{0}“"
+
+-- The selected provider is not allowed in this chat due to data security or confidence-level requirements. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T1783071418"] = "Der ausgewählte Anbieter ist in diesem Chat aufgrund der Datensicherheit oder der Anforderungen an das Vertrauensniveau nicht zulässig. Bitte wählen Sie einen anderen Anbieter."
+
+-- The selected provider is not allowed in this chat due to data security or confidence-level requirements. Please select a different provider.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T1783071418::INFORMAL"] = "Der ausgewählte Anbieter ist in diesem Chat aufgrund der Datensicherheit oder der Anforderungen an das Vertrauensniveau nicht zulässig. Bitte wähle einen anderen Anbieter."
+
+-- The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T3348932548"] = "Das Kontextfenster des ausgewählten Modells ist zu klein, um diesen Chat zusammenzufassen. Bitte wählen Sie ein Modell, das längere Texte verarbeiten kann."
+
+-- The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T3348932548::INFORMAL"] = "Das Kontextfenster des ausgewählten Modells ist zu klein, um diesen Chat zusammenzufassen. Bitte wähle ein Modell, das längere Texte verarbeiten kann."
+
+-- The chat could not be summarized: {0}
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T3360083574"] = "Der Chat konnte nicht zusammengefasst werden: {0}"
+
+-- The summary grew too long for the context window of the selected model. Please select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T3943296856"] = "Die Zusammenfassung ist für das Kontextfenster des ausgewählten Modells zu lang geworden. Bitte wählen Sie ein Modell, das längere Texte verarbeiten kann."
+
+-- The summary grew too long for the context window of the selected model. Please select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T3943296856::INFORMAL"] = "Die Zusammenfassung ist für das Kontextfenster des ausgewählten Modells zu lang geworden. Bitte wähle ein Modell, das längere Texte verarbeiten kann."
+
+-- Please select a provider first.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T814679973"] = "Bitte wählen Sie zuerst einen Anbieter aus."
+
+-- Please select a provider first.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T814679973::INFORMAL"] = "Bitte wähle zuerst einen Anbieter aus."
+
+-- The AI did not write a summary. Please check the messages about the provider, and try again.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T890981280"] = "Die KI hat keine Zusammenfassung geschrieben. Bitte prüfen Sie die Meldungen zum Anbieter und versuchen Sie es erneut."
+
+-- The AI did not write a summary. Please check the messages about the provider, and try again.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T890981280::INFORMAL"] = "Die KI hat keine Zusammenfassung geschrieben. Bitte prüfe die Meldungen zum Anbieter und versuche es erneut."
+
+-- Compressing the chat was canceled.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSIONSERVICE::T928686376"] = "Das Komprimieren des Chats wurde abgebrochen."
+
 -- Edit Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1183581066"] = "Nachricht bearbeiten"
 
@@ -8391,6 +8472,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1133040906"] = "Chat vers
 -- Bold
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1165397398"] = "Fett"
 
+-- Compressing a chat needs a model with a context window of at least {0} tokens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1284276020"] = "Das Komprimieren eines Chats erfordert ein Modell mit einem Kontextfenster von mindestens {0} Token."
+
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Generierung stoppen"
 
@@ -8420,6 +8504,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1967611328"] = "Ihr Promp
 
 -- Your Prompt (use selected instance '{0}', provider '{1}')
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1967611328::INFORMAL"] = "Dein Prompt (verwendete Instanz: „{0}“, Anbieter: „{1}“)"
+
+-- The new chat could not be created. This chat stays as it is.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1977579570"] = "Der neue Chat konnte nicht erstellt werden. Dieser Chat bleibt unverändert."
 
 -- approx. {0} of {1} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1992478915"] = "ca. {0} von {1} Token"
@@ -8457,6 +8544,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472::INFORMAL"] = 
 -- The selected provider is not allowed in this chat due to data security or confidence-level requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2672162875"] = "Der ausgewählte Anbieter ist in diesem Chat aufgrund der Datensicherheit oder der Anforderungen an das Vertrauensniveau nicht zulässig."
 
+-- Compress this chat & switch to a new chat with its summary.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2829016817"] = "Diesen Chat komprimieren & mit seiner Zusammenfassung in einen neuen Chat wechseln."
+
 -- Show the complete system prompt the AI receives
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2931983492"] = "Den vollständigen System-Prompt anzeigen, den die KI erhält"
 
@@ -8471,6 +8561,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3045856778"] = "Chat in d
 
 -- {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3244065777"] = "{0} Token"
+
+-- Compress Chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3544398473"] = "Chat komprimieren"
 
 -- plus {0} image(s), which cannot be counted
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3619858297"] = "zuzüglich {0} Bild(er), die nicht gezählt werden können"
@@ -8495,6 +8588,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Neuen Cha
 
 -- {0} of {1} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3996190985"] = "{0} von {1} Token"
+
+-- There is nothing to summarize yet before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4072384721"] = "Vor Ihrer letzten Nachricht und der letzten Antwort der KI gibt es noch nichts zusammenzufassen."
+
+-- There is nothing to summarize yet before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4072384721::INFORMAL"] = "Vor deiner letzten Nachricht und der letzten Antwort der KI gibt es noch nichts zusammenzufassen."
 
 -- Start temporary chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Neuen selbstlöschenden Chat starten"
@@ -8525,6 +8624,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Arbeitsber
 
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375::INFORMAL"] = "Arbeitsbereiche anzeigen"
+
+-- This chat could not be saved, so AI Studio did not compress it. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T831965343"] = "Dieser Chat konnte nicht gespeichert werden, deshalb hat AI Studio ihn nicht komprimiert. Bitte versuchen Sie es erneut."
+
+-- This chat could not be saved, so AI Studio did not compress it. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T831965343::INFORMAL"] = "Dieser Chat konnte nicht gespeichert werden, deshalb hat AI Studio ihn nicht komprimiert. Bitte versuche es erneut."
 
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T857715435"] = "ca. {0} Token"
@@ -9591,6 +9696,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1266644741"] = "Stoppen"
 -- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1561705002"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert."
 
+-- AI Studio could not save the compressed conversation, so it stays as it was. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1684892713"] = "AI Studio konnte das komprimierte Gespräch nicht speichern, daher bleibt es unverändert. Bitte versuchen Sie es erneut."
+
+-- AI Studio could not save the compressed conversation, so it stays as it was. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1684892713::INFORMAL"] = "AI Studio konnte das komprimierte Gespräch nicht speichern, daher bleibt es unverändert. Bitte versuche es erneut."
+
 -- approx. {0} of {1} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1992478915"] = "ca. {0} von {1} Token"
 
@@ -9599,6 +9710,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982"] = "Dieses Ges
 
 -- Delete this conversation and start it over?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982::INFORMAL"] = "Dieses Gespräch löschen und neu beginnen?"
+
+-- Compress Conversation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2060420344"] = "Gespräch komprimieren"
 
 -- Start the conversation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2172806379"] = "Gespräch beginnen"
@@ -9612,8 +9726,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281"] = "AI Studio 
 -- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281::INFORMAL"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Du kannst das Gespräch neu beginnen; dabei wird es gelöscht."
 
+-- This conversation fills most of the context window of the model. Once it is nearly full, AI Studio offers to compress it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3215841322"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Sobald es fast voll ist, bietet AI Studio an, es zu komprimieren."
+
 -- approx. {0} tokens; the context window of this model is unknown
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T357466604"] = "ca. {0} Token; das Kontextfenster dieses Modells ist unbekannt"
+
+-- Together with this conversation, your message no longer fits into the context window of the model. Shorten your message, or remove some of its files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3592945789"] = "Zusammen mit diesem Gespräch passt Ihre Nachricht nicht mehr in das Kontextfenster des Modells. Kürzen Sie Ihre Nachricht, oder entfernen Sie einige ihrer Dateien."
+
+-- Together with this conversation, your message no longer fits into the context window of the model. Shorten your message, or remove some of its files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3592945789::INFORMAL"] = "Zusammen mit diesem Gespräch passt deine Nachricht nicht mehr in das Kontextfenster des Modells. Kürze deine Nachricht, oder entferne einige ihrer Dateien."
 
 -- Your message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949"] = "Ihre Nachricht"
@@ -9630,6 +9753,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3757008686::INFORMAL"] = "
 -- {0} of {1} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3996190985"] = "{0} von {1} Token"
 
+-- This conversation fills the context window of the model. When you send your next message, AI Studio offers to compress the conversation.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4002070413"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Wenn Sie Ihre nächste Nachricht senden, bietet AI Studio an, das Gespräch zu komprimieren."
+
+-- This conversation fills the context window of the model. When you send your next message, AI Studio offers to compress the conversation.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4002070413::INFORMAL"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Wenn du deine nächste Nachricht sendest, bietet AI Studio an, das Gespräch zu komprimieren."
+
 -- Send
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4069397711"] = "Senden"
 
@@ -9638,6 +9767,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4195068513"] = "Dieses Ges
 
 -- Start over
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T606705767"] = "Neu beginnen"
+
+-- The conversation was not compressed, because the AI answered meanwhile.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T659616282"] = "Das Gespräch wurde nicht komprimiert, da die KI inzwischen geantwortet hat."
 
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T857715435"] = "ca. {0} Token"
@@ -12009,6 +12141,75 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T4009234360"] =
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T900713019"] = "Abbrechen"
 
+-- The summary grew too long. The AI is shortening it...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T1307726948"] = "Die Zusammenfassung ist zu lang geworden. Die KI kürzt sie gerade …"
+
+-- AI Studio is reading the messages and their files...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T1765271698"] = "AI Studio liest die Nachrichten und ihre Dateien …"
+
+-- The AI is summarizing part {0} of {1}...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T1784069543"] = "Die KI fasst Teil {0} von {1} zusammen …"
+
+-- Compress & switch
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2083316581"] = "Komprimieren & wechseln"
+
+-- Please enter a chat name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2301651387"] = "Bitte geben Sie einen Namen für den Chat ein."
+
+-- Please enter a chat name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2301651387::INFORMAL"] = "Bitte gib einen Namen für den Chat ein."
+
+-- '{0}' summarizes {1} messages.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2618292032"] = "„{0}“ fasst {1} Nachrichten zusammen."
+
+-- What should the summary pay particular attention to? (optional)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2754261329"] = "Worauf soll die Zusammenfassung besonders achten? (optional)"
+
+-- The AI does not look at the images in this chat again. The summary keeps what the conversation said about them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2909256987"] = "Die KI sieht sich die Bilder in diesem Chat nicht noch einmal an. Die Zusammenfassung behält, was im Gespräch über sie gesagt wurde."
+
+-- Name of the new chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2969679548"] = "Name des neuen Chats"
+
+-- The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T337872053"] = "Die KI fasst diesen Chat einschließlich des Inhalts seiner Dokumente zusammen, und das Gespräch geht in einem neuen Chat weiter. Er enthält die Zusammenfassung, Ihre letzte Nachricht mit ihren Dateien und die letzte Antwort der KI. Da der neue Chat viel kürzer ist, kostet jede weitere Nachricht weniger Token. Dieser Chat bleibt unverändert, sodass das gesamte Gespräch verfügbar bleibt."
+
+-- The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T337872053::INFORMAL"] = "Die KI fasst diesen Chat einschließlich des Inhalts seiner Dokumente zusammen, und das Gespräch geht in einem neuen Chat weiter. Er enthält die Zusammenfassung, deine letzte Nachricht mit ihren Dateien und die letzte Antwort der KI. Da der neue Chat viel kürzer ist, kostet jede weitere Nachricht weniger Token. Dieser Chat bleibt unverändert, sodass das gesamte Gespräch verfügbar bleibt."
+
+-- Compress
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3456693933"] = "Komprimieren"
+
+-- The AI is summarizing the chat...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3770574675"] = "Die KI fasst den Chat zusammen …"
+
+-- This chat has changes which are not saved yet. AI Studio saves it first, so that the whole conversation remains available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3878527262"] = "Dieser Chat enthält Änderungen, die noch nicht gespeichert sind. AI Studio speichert ihn zuerst, damit das gesamte Gespräch erhalten bleibt."
+
+-- Your last message has no answer yet. It goes into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T503931674"] = "Ihre letzte Nachricht hat noch keine Antwort. Der neue Chat übernimmt sie in sein Eingabefeld, sodass Sie sie dort senden können."
+
+-- Your last message has no answer yet. It goes into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T503931674::INFORMAL"] = "Deine letzte Nachricht hat noch keine Antwort. Der neue Chat übernimmt sie in sein Eingabefeld, sodass du sie dort senden kannst."
+
+-- The AI summarizes this conversation, the content of its documents included. The summary then takes the place of the earlier messages, while your last message and the last answer of the AI stay as they are. AI Studio does not keep the earlier messages. Since the conversation is much shorter afterward, every further message costs fewer tokens.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T611696201"] = "Die KI fasst dieses Gespräch einschließlich des Inhalts seiner Dokumente zusammen. Die Zusammenfassung ersetzt anschließend die bisherigen Nachrichten, während Ihre letzte Nachricht und die letzte Antwort der KI unverändert bleiben. AI Studio bewahrt die bisherigen Nachrichten nicht auf. Da das Gespräch danach viel kürzer ist, kostet jede weitere Nachricht weniger Token."
+
+-- The AI summarizes this conversation, the content of its documents included. The summary then takes the place of the earlier messages, while your last message and the last answer of the AI stay as they are. AI Studio does not keep the earlier messages. Since the conversation is much shorter afterward, every further message costs fewer tokens.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T611696201::INFORMAL"] = "Die KI fasst dieses Gespräch einschließlich des Inhalts seiner Dokumente zusammen. Die Zusammenfassung ersetzt anschließend die bisherigen Nachrichten, während deine letzte Nachricht und die letzte Antwort der KI unverändert bleiben. AI Studio bewahrt die bisherigen Nachrichten nicht auf. Da das Gespräch danach viel kürzer ist, kostet jede weitere Nachricht weniger Token."
+
+-- '{0}' summarizes 1 message.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T782708289"] = "„{0}“ fasst 1 Nachricht zusammen."
+
+-- The summary takes in the content of the documents attached in this chat. This takes longer than summarizing the messages alone.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T793617890"] = "Die Zusammenfassung bezieht den Inhalt der in diesem Chat angehängten Dokumente ein. Das dauert länger, als nur die Nachrichten zusammenzufassen."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T900713019"] = "Abbrechen"
+
+-- For example: the decisions about the budget, with all figures.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T944830013"] = "Zum Beispiel: die Entscheidungen zum Budget, mit allen Zahlen."
+
 -- Only text content is supported in the editing mode yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1352914344"] = "Im Bearbeitungsmodus wird bisher nur Textinhalt unterstützt."
 
@@ -12467,6 +12668,99 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "Nein"
 
 -- Yes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Ja"
+
+-- Compress chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1399817897"] = "Chat komprimieren"
+
+-- Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1962759837"] = "Das Komprimieren würde nicht helfen, da der neue Chat den System-Prompt, Ihre letzte Nachricht samt Dateien und die letzte Antwort der KI wörtlich übernimmt. Zusammen mit Ihrer neuen Nachricht füllen sie das Kontextfenster des Modells weiterhin fast aus."
+
+-- Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1962759837::INFORMAL"] = "Das Komprimieren würde nicht helfen, da der neue Chat den System-Prompt, deine letzte Nachricht samt Dateien und die letzte Antwort der KI wörtlich übernimmt. Zusammen mit deiner neuen Nachricht füllen sie das Kontextfenster des Modells weiterhin fast aus."
+
+-- Together with its files, this request takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse the request or leave out a part of it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2202754109"] = "Zusammen mit ihren Dateien umfasst diese Anfrage etwa {0} Token, das ausgewählte Modell liest aber höchstens {1} Token. Der Anbieter wird die Anfrage wahrscheinlich ablehnen oder einen Teil davon weglassen."
+
+-- This request is too long for the model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2505364605"] = "Diese Anfrage ist zu lang für das Modell"
+
+-- Send anyway
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2511873300"] = "Trotzdem senden"
+
+-- When you compress the conversation, the AI summarizes it, and the summary takes the place of the earlier messages. Your message stays in the input field, so you can send it afterward.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2531375206"] = "Wenn Sie das Gespräch komprimieren, fasst die KI es zusammen, und die Zusammenfassung ersetzt die bisherigen Nachrichten. Ihre Nachricht bleibt im Eingabefeld, sodass Sie sie anschließend senden können."
+
+-- When you compress the conversation, the AI summarizes it, and the summary takes the place of the earlier messages. Your message stays in the input field, so you can send it afterward.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2531375206::INFORMAL"] = "Wenn du das Gespräch komprimierst, fasst die KI es zusammen, und die Zusammenfassung ersetzt die bisherigen Nachrichten. Deine Nachricht bleibt im Eingabefeld, sodass du sie anschließend senden kannst."
+
+-- Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T285302554"] = "Zusammen mit Ihrer Nachricht umfasst dieser Chat etwa {0} Token, das ausgewählte Modell liest aber höchstens {1} Token. Der Anbieter wird Ihre Nachricht wahrscheinlich ablehnen oder einen Teil des Gesprächs weglassen."
+
+-- Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T285302554::INFORMAL"] = "Zusammen mit deiner Nachricht umfasst dieser Chat etwa {0} Token, das ausgewählte Modell liest aber höchstens {1} Token. Der Anbieter wird deine Nachricht wahrscheinlich ablehnen oder einen Teil des Gesprächs weglassen."
+
+-- This request nearly fills the context window of the model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2965624948"] = "Diese Anfrage füllt das Kontextfenster des Modells fast aus"
+
+-- You can shorten your message, remove some of its files, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3003436474"] = "Sie können Ihre Nachricht kürzen, einige ihrer Dateien entfernen oder ein Modell wählen, das längere Texte verarbeiten kann."
+
+-- You can shorten your message, remove some of its files, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3003436474::INFORMAL"] = "Du kannst deine Nachricht kürzen, einige ihrer Dateien entfernen oder ein Modell wählen, das längere Texte verarbeiten kann."
+
+-- Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3017128359"] = "Das Komprimieren würde nicht helfen, da die Anweisungen des Assistenten, Ihre letzte Nachricht und die letzte Antwort der KI unverändert bleiben und zusammen mit Ihrer neuen Nachricht das Kontextfenster des Modells weiterhin fast ausfüllen."
+
+-- Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3017128359::INFORMAL"] = "Das Komprimieren würde nicht helfen, da die Anweisungen des Assistenten, deine letzte Nachricht und die letzte Antwort der KI unverändert bleiben und zusammen mit deiner neuen Nachricht das Kontextfenster des Modells weiterhin fast ausfüllen."
+
+-- Compressing is not possible with the selected model, since it needs a context window of at least {0} tokens.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3040492253"] = "Das Komprimieren ist mit dem ausgewählten Modell nicht möglich, denn dafür braucht es ein Kontextfenster von mindestens {0} Token."
+
+-- Compressing would not help, since your message alone nearly fills the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T329309533"] = "Das Komprimieren würde nicht helfen, da schon Ihre Nachricht allein das Kontextfenster des Modells fast ausfüllt."
+
+-- Compressing would not help, since your message alone nearly fills the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T329309533::INFORMAL"] = "Das Komprimieren würde nicht helfen, da schon deine Nachricht allein das Kontextfenster des Modells fast ausfüllt."
+
+-- This chat is too long for the model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3668031040"] = "Dieser Chat ist zu lang für das Modell"
+
+-- Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3814366820"] = "Zusammen mit Ihrer Nachricht umfasst dieser Chat etwa {0} der {1} Token, die das ausgewählte Modell höchstens liest. Für die Antwort bleibt nur wenig Platz, sodass sie abbrechen kann, und Ihre nächste Nachricht passt wahrscheinlich nicht mehr hinein."
+
+-- Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3814366820::INFORMAL"] = "Zusammen mit deiner Nachricht umfasst dieser Chat etwa {0} der {1} Token, die das ausgewählte Modell höchstens liest. Für die Antwort bleibt nur wenig Platz, sodass sie abbrechen kann, und deine nächste Nachricht passt wahrscheinlich nicht mehr hinein."
+
+-- Together with its files, this request takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T4078890076"] = "Zusammen mit ihren Dateien umfasst diese Anfrage etwa {0} der {1} Token, die das ausgewählte Modell höchstens liest. Für die Antwort bleibt nur wenig Platz, sodass sie abbrechen kann."
+
+-- This chat sends no message which no longer fits, since the model would lose the beginning of the conversation and the instructions of the assistant first.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T409376063"] = "Dieser Chat sendet keine Nachricht, die nicht mehr passt, da das Modell sonst zuerst den Anfang des Gesprächs und die Anweisungen des Assistenten verlieren würde."
+
+-- When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T4191569714"] = "Wenn Sie den Chat komprimieren, fasst die KI ihn zusammen, und das Gespräch geht in einem neuen Chat weiter. Der neue Chat übernimmt Ihre Nachricht in sein Eingabefeld, sodass Sie sie dort senden können."
+
+-- When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T4191569714::INFORMAL"] = "Wenn du den Chat komprimierst, fasst die KI ihn zusammen, und das Gespräch geht in einem neuen Chat weiter. Der neue Chat übernimmt deine Nachricht in sein Eingabefeld, sodass du sie dort senden kannst."
+
+-- This chat nearly fills the context window of the model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T700383515"] = "Dieser Chat füllt das Kontextfenster des Modells fast aus"
+
+-- Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T83982298"] = "Das Komprimieren würde noch nicht helfen, da es vor Ihrer letzten Nachricht und der letzten Antwort der KI nichts zusammenzufassen gibt."
+
+-- Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T83982298::INFORMAL"] = "Das Komprimieren würde noch nicht helfen, da es vor deiner letzten Nachricht und der letzten Antwort der KI nichts zusammenzufassen gibt."
+
+-- You can attach fewer or smaller files, shorten your input, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T839986901"] = "Sie können weniger oder kleinere Dateien anhängen, Ihre Eingabe kürzen oder ein Modell wählen, das längere Texte verarbeiten kann."
+
+-- You can attach fewer or smaller files, shorten your input, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T839986901::INFORMAL"] = "Du kannst weniger oder kleinere Dateien anhängen, deine Eingabe kürzen oder ein Modell wählen, das längere Texte verarbeiten kann."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T900713019"] = "Abbrechen"
 
 -- Restart now
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREPENDINGDIALOG::T1409292924"] = "Jetzt neu starten"

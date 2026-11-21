@@ -3,6 +3,7 @@ using AIStudio.Agents.AssistantAudit;
 using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.ModelComparison;
 using AIStudio.Assistants.VisualBriefing;
+using AIStudio.Chat.Compression;
 using AIStudio.Chat.Embedded;
 using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
@@ -226,6 +227,7 @@ internal sealed class Program
         builder.Services.AddSingleton<GlobalShortcutService>();
         builder.Services.AddSingleton<MediaTranscriptionService>();
         builder.Services.AddSingleton<ConversationTokenCounter>();
+        builder.Services.AddSingleton<ChatCompressionService>();
         builder.Services.AddSingleton<VisualBriefingArtifactService>();
         builder.Services.AddSingleton<VisualBriefingStore>();
         builder.Services.AddSingleton<VisualBriefingBuildProgressService>();
