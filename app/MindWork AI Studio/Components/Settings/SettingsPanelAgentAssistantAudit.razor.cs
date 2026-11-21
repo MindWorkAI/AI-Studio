@@ -5,33 +5,29 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelAgentAssistantAudit : SettingsPanelBase
 {
-    private async Task RequireAuditBeforeActivationChanged(bool updatedState)
+    /// <summary>
+    /// Asks the user before they turn off the audit before activation; turning it on needs no confirmation.
+    /// </summary>
+    /// <param name="updatedState">The state the user chose.</param>
+    /// <returns>True when the option may take the state.</returns>
+    private async Task<bool> ConfirmRequireAuditBeforeActivationChange(bool updatedState)
     {
-        if (!updatedState)
+        if (updatedState)
+            return true;
+
+        var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                {
-                    x => x.Message,
-                    this.TA("Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?")
-                },
-            };
+                x => x.Message,
+                TA("Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?")
+            },
+        };
 
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
-                this.T("Disable Assistant Audit Protection"),
-                dialogParameters,
-                DialogOptions.FULLSCREEN);
-            var dialogResult = await dialogReference.Result;
-            if (dialogResult is null || dialogResult.Canceled)
-            {
-                await this.InvokeAsync(this.StateHasChanged);
-                return;
-            }
-        }
-
-        this.SettingsManager.ConfigurationData.AssistantPluginAudit.RequireAuditBeforeActivation = updatedState;
-        await this.SettingsManager.StoreSettings();
-        await this.SendMessage<bool>(Event.CONFIGURATION_CHANGED);
-        await this.InvokeAsync(this.StateHasChanged);
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
+            T("Disable Assistant Audit Protection"),
+            dialogParameters,
+            DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false };
     }
 }
