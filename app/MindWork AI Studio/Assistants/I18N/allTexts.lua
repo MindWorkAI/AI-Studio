@@ -12670,6 +12670,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Yes"
 -- Compress chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1399817897"] = "Compress chat"
 
+-- Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1962759837"] = "Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model."
+
+-- Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1962759837::INFORMAL"] = "Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model."
+
 -- Together with its files, this request takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse the request or leave out a part of it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2202754109"] = "Together with its files, this request takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse the request or leave out a part of it."
 
@@ -12700,6 +12706,21 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3003436474"] = "Yo
 -- You can shorten your message, remove some of its files, or select a model which takes longer texts.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3003436474::INFORMAL"] = "You can shorten your message, remove some of its files, or select a model which takes longer texts."
 
+-- Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3017128359"] = "Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model."
+
+-- Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3017128359::INFORMAL"] = "Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model."
+
+-- Compressing is not possible with the selected model, since it needs a context window of at least {0} tokens.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3040492253"] = "Compressing is not possible with the selected model, since it needs a context window of at least {0} tokens."
+
+-- Compressing would not help, since your message alone nearly fills the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T329309533"] = "Compressing would not help, since your message alone nearly fills the context window of the model."
+
+-- Compressing would not help, since your message alone nearly fills the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T329309533::INFORMAL"] = "Compressing would not help, since your message alone nearly fills the context window of the model."
+
 -- This chat is too long for the model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3668031040"] = "This chat is too long for the model"
 
@@ -12723,6 +12744,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T4191569714::INFORM
 
 -- This chat nearly fills the context window of the model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T700383515"] = "This chat nearly fills the context window of the model"
+
+-- Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T83982298"] = "Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI."
+
+-- Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T83982298::INFORMAL"] = "Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI."
 
 -- You can attach fewer or smaller files, shorten your input, or select a model which takes longer texts.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T839986901"] = "You can attach fewer or smaller files, shorten your input, or select a model which takes longer texts."
