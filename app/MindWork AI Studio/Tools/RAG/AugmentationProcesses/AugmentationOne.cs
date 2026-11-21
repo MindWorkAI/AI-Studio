@@ -79,7 +79,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                         //
                         var validated = KeepFittingPassages(validationResults);
                         usedContexts = validated.Contexts;
-                        LOGGER.LogInformation($"The check of which passages fit kept {validated.Contexts.Count:###,###,###,##0} of {validationResults.Count:###,###,###,##0} retrieved contexts: {validated.NumUnchecked:###,###,###,##0} without a usable judgment, {validated.NumBelowThreshold:###,###,###,##0} below the confidence threshold of {validated.Threshold:0.00}.");
+                        LOGGER.LogInformation($"The check of which passages fit kept {validated.Contexts.Count:###,###,###,##0} of {validationResults.Count:###,###,###,##0} retrieved contexts: {validated.NumUnchecked:###,###,###,##0} without a usable judgment, {validated.NumRejected:###,###,###,##0} judged not to fit, {validated.NumBelowThreshold:###,###,###,##0} below the confidence threshold of {validated.Threshold:0.00}.");
 
                         //
                         // The user switched this check on. When it failed for every passage, the answer
@@ -146,22 +146,24 @@ public sealed class AugmentationOne : IAugmentationProcess
     /// Keeps the passages which the check of which passages fit the user prompt let through.
     /// </summary>
     /// <remarks>
-    /// A passage whose check failed stays: the failure says nothing about the passage, neither that it fits nor
-    /// that it does not. It does not count for the threshold either, which only the judged passages decide, so
-    /// that a failed check moves the line for none of them.
+    /// A passage judged not to fit is left out, however confident the judgment. Of the passages judged to fit,
+    /// those stay whose confidence reaches the threshold, which only they decide. A passage whose check failed
+    /// stays: the failure says nothing about the passage, neither that it fits nor that it does not. It does not
+    /// count for the threshold either, so that a failed check moves the line for none of the others.
     /// </remarks>
     /// <param name="validationResults">The results of the check, one for each passage.</param>
     /// <returns>The passages left, in the order of the results, and why the others were left out.</returns>
     internal static ValidatedPassages KeepFittingPassages(IReadOnlyList<RetrievalContextValidationResult> validationResults)
     {
-        var judged = validationResults.Where(result => result.IsAnswered).ToList();
+        var numJudged = validationResults.Count(result => result.IsAnswered);
+        var fitting = validationResults.Where(result => result.IsAnswered && result.Decision).ToList();
 
         //
-        // Without a judged passage, there is no threshold to find; asking for one would only log a warning:
+        // Without a passage which fits, there is no threshold to find; asking for one would only log a warning:
         //
-        var threshold = judged.Count is 0 ? 0f : judged.GetConfidenceThreshold(judged.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING));
-        var contexts = validationResults.Where(result => !result.IsAnswered || result.Confidence >= threshold).Select(result => result.RetrievalContext).ToList();
-        return new(contexts, judged.Count, validationResults.Count - judged.Count, judged.Count(result => result.Confidence < threshold), threshold);
+        var threshold = fitting.Count is 0 ? 0f : fitting.GetConfidenceThreshold(fitting.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING));
+        var contexts = validationResults.Where(result => !result.IsAnswered || (result.Decision && result.Confidence >= threshold)).Select(result => result.RetrievalContext).ToList();
+        return new(contexts, numJudged, validationResults.Count - numJudged, numJudged - fitting.Count, fitting.Count(result => result.Confidence < threshold), threshold);
     }
 
     /// <summary>
