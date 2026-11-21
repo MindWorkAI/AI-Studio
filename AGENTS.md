@@ -36,6 +36,7 @@ Therefore, before you plan, read, or change anything in one of these areas, read
 | a release, or crediting a contributor in a changelog entry or after a merge | `app/Build/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/PluginSystem/`, or a new capability of configuration plugins | `app/MindWork AI Studio/Tools/PluginSystem/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/ToolCallingSystem/` | `app/MindWork AI Studio/Tools/ToolCallingSystem/AGENTS.md` |
+| anything under `app/MindWork AI Studio/AIOperations/` or `app/Tests/AIOperations/`, or a new task which AI Studio hands to a model on its own | `app/MindWork AI Studio/AIOperations/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Models/` or `app/Tests/Models/` | `app/MindWork AI Studio/Models/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/Services/Indexing/`, or `DataSourceEmbeddingService` | `app/MindWork AI Studio/Tools/Services/Indexing/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/Databases/` | `app/MindWork AI Studio/Tools/Databases/AGENTS.md` |

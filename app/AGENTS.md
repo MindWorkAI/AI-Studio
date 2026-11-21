@@ -15,9 +15,9 @@ Key structure:
 - **Chat/** - Chat functionality and message handling
 - **Assistants/** - Pre-configured assistants (translation, summarization, coding, etc.)
   - `AssistantBase.razor` - Base component for all assistants
-- **Agents/** - contains all agents, e.g., for data source selection, context validation, etc.
-  - `AgentDataSourceSelection.cs` - Selects appropriate data sources for queries
-  - `AgentRetrievalContextValidation.cs` - Validates retrieved context relevance
+- **AIOperations/** - tasks which AI Studio hands to a model on its own, one request in and one result out,
+  e.g., the data source selection and the retrieval context validation of the classic RAG process; see the
+  area guide `AIOperations/AGENTS.md`
 - **Tools/PluginSystem/** - Lua-based plugin system
 - **Tools/Services/** - Core background services (settings, message bus, data sources, updates)
 - **Tools/Rust/** - .NET wrapper for Rust API calls
@@ -143,8 +143,8 @@ knowledge.
 RAG is available as a beta preview feature. Architecture:
 - **External Retrieval Interface (ERI)** - Contract for integrating external data sources
 - **Data Sources** - Local files and external data via ERI servers
-- **Two ways to search** - By default, the chat model searches the data sources itself through the tool `semantic_search`, whenever a question calls for it. The classic process (`AISrcSelWithRetCtxVal`) searches them with every message instead, when the user chose so per chat (`DataSourceOptions.RetrievalMode`) or whenever the tool cannot be offered. `ToolRegistry.GetEffectiveRetrievalModeAsync` decides between the two; pass its answer to `DataSourceService`, because the agents only count as providers that see the data when they actually run. Both ways decide where a chat may still send data once their passages reached it through `DataSourceRequirements.Of`, never with a check of their own: a way which demands less leaves the other one open. See "Searching Data Sources" in `documentation/Tools.md`.
-- **Agents** - AI agents select data sources and validate retrieval quality, in the classic process only
+- **Two ways to search** - By default, the chat model searches the data sources itself through the tool `semantic_search`, whenever a question calls for it. The classic process (`AISrcSelWithRetCtxVal`) searches them with every message instead, when the user chose so per chat (`DataSourceOptions.RetrievalMode`) or whenever the tool cannot be offered. `ToolRegistry.GetEffectiveRetrievalModeAsync` decides between the two; pass its answer to `DataSourceService`, because the AI operations of the classic process only count as providers that see the data when they actually run. Both ways decide where a chat may still send data once their passages reached it through `DataSourceRequirements.Of`, never with a check of their own: a way which demands less leaves the other one open. See "Searching Data Sources" in `documentation/Tools.md`.
+- **AI operations** - select data sources and validate retrieval quality, in the classic process only; see `AIOperations/AGENTS.md`
 - **Embedding providers** - Support for various embedding models
 - **Vector database** - Qdrant Edge, embedded in the Rust runtime; see "Databases" below
 - **Index database** - SQLite, holding the file fingerprints and the chunk texts for full-text search; see "Databases" below
