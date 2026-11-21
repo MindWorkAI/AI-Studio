@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Chat.Compression;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -868,7 +869,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             return true;
 
         this.askedAboutContextWindow = true;
-        if (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokens, ContextWindowFullSubject.ASSISTANT_REQUEST, canCompress: false) is ContextWindowFullDecision.SEND_ANYWAY)
+        if (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokens, ContextWindowFullSubject.ASSISTANT_REQUEST, ChatCompressionOffer.NONE) is ContextWindowFullDecision.SEND_ANYWAY)
             return true;
 
         thread.Blocks.RemoveAll(block => block.Role is ChatRole.USER && block.Time == time);

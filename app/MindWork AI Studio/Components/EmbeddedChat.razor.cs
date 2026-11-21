@@ -216,6 +216,9 @@ public partial class EmbeddedChat : MSGComponentBase
     private AssistantLaunchService AssistantLaunchService { get; init; } = null!;
 
     [Inject]
+    private ChatCompressionService CompressionService { get; init; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
@@ -539,8 +542,9 @@ public partial class EmbeddedChat : MSGComponentBase
     /// on its own here. A message after which the next answer would no longer fit is not sent at all, see
     /// EmbeddedChatTokenBudget.NoticeBeforeSending. Where the chat hides the context window, see ShowsContextWindow,
     /// that is all it says: the dialog names the window, which would tell apart models the user must not know.
-    /// Compressing is offered where the chat allows it and where it makes room for the message, see
-    /// ChatCompressionService.MakesRoomFor; the message stays in the field then, and the user sends it afterward.
+    /// Compressing is offered where the chat allows it and where it makes room for the message; otherwise, the dialog
+    /// says why it would not help, see ChatCompressionService.OfferBeforeSendingAsync. The message stays in the field
+    /// then, and the user sends it afterward.
     /// </remarks>
     /// <param name="message">The text of the message about to be sent.</param>
     /// <returns>True when the message is to be sent.</returns>
@@ -560,8 +564,11 @@ public partial class EmbeddedChat : MSGComponentBase
             return false;
         }
 
-        var canCompress = this.AllowsCompression && thread.IsLLMProviderAllowed(this.Provider) && ChatCompressionService.MakesRoomFor(thread, 0, tokensWithMessage.Window, tokensWithMessage.DraftTokens);
-        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, canCompress, canSendAnyway: notice is EmbeddedChatSendNotice.NEARLY_FULL))
+        var offer = this.AllowsCompression && thread.IsLLMProviderAllowed(this.Provider)
+            ? await this.CompressionService.OfferBeforeSendingAsync(thread, 0, this.Provider, tokensWithMessage, this.countToken)
+            : ChatCompressionOffer.NONE;
+
+        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, offer, canSendAnyway: notice is EmbeddedChatSendNotice.NEARLY_FULL))
         {
             case ContextWindowFullDecision.SEND_ANYWAY:
                 return true;

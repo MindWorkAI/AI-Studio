@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Chat.Compression;
 using AIStudio.Components;
 using AIStudio.Tools.PluginSystem;
 
@@ -48,10 +49,10 @@ public partial class ContextWindowFullDialog : MSGComponentBase
     public ContextWindowFullSubject Subject { get; set; } = ContextWindowFullSubject.CHAT;
 
     /// <summary>
-    /// Whether the chat can be compressed, e.g., not before the AI answered for the first time.
+    /// Whether compressing is offered, or why it would not help, see ChatCompressionService.OfferBeforeSendingAsync.
     /// </summary>
     [Parameter]
-    public bool CanCompress { get; set; }
+    public ChatCompressionOffer Offer { get; set; } = ChatCompressionOffer.NONE;
 
     /// <summary>
     /// Whether the user may send the message anyway; not when the chat refuses a message which no longer fits.
@@ -64,15 +65,16 @@ public partial class ContextWindowFullDialog : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// The caller decides when to ask, see ConversationTokens.AsksBeforeSending, and whether
-    /// compressing would help. The numbers are formatted with the culture of the active language.
+    /// compressing would help, see ChatCompressionService.OfferBeforeSendingAsync. The numbers are
+    /// formatted with the culture of the active language.
     /// </remarks>
     /// <param name="dialogService">The dialog service of the caller.</param>
     /// <param name="tokens">What the conversation costs together with the message, with the context window of the model.</param>
     /// <param name="subject">What is about to be sent.</param>
-    /// <param name="canCompress">Whether compressing is offered.</param>
+    /// <param name="offer">Whether compressing is offered, or why it would not help; NONE where nothing compresses.</param>
     /// <param name="canSendAnyway">Whether the user may send the message anyway, e.g., not where the chat refuses a message which no longer fits.</param>
     /// <returns>What the user decided; CANCEL when the dialog was closed.</returns>
-    public static async Task<ContextWindowFullDecision> ShowAsync(IDialogService dialogService, ConversationTokens tokens, ContextWindowFullSubject subject, bool canCompress, bool canSendAnyway = true)
+    public static async Task<ContextWindowFullDecision> ShowAsync(IDialogService dialogService, ConversationTokens tokens, ContextWindowFullSubject subject, ChatCompressionOffer offer, bool canSendAnyway = true)
     {
         var isWindowExceeded = tokens.FillShare >= 1d;
         var culture = I18N.I.Culture;
@@ -82,7 +84,7 @@ public partial class ContextWindowFullDialog : MSGComponentBase
             { x => x.WindowTokens, TokenAmount.Format(tokens.Window.DefaultTokens, culture) },
             { x => x.IsWindowExceeded, isWindowExceeded },
             { x => x.Subject, subject },
-            { x => x.CanCompress, canCompress },
+            { x => x.Offer, offer },
             { x => x.CanSendAnyway, canSendAnyway },
         };
 
@@ -96,6 +98,11 @@ public partial class ContextWindowFullDialog : MSGComponentBase
 
         return decision;
     }
+
+    /// <summary>
+    /// Whether the dialog offers to compress, see Offer.
+    /// </summary>
+    private bool CanCompress => this.Offer is ChatCompressionOffer.OFFERED;
 
     private void Cancel() => this.MudDialog.Cancel();
 

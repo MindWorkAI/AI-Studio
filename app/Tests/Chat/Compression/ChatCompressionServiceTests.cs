@@ -1,15 +1,15 @@
-using AIStudio.Chat;
 using AIStudio.Chat.Compression;
 using AIStudio.Models;
 
 namespace AIStudio.Tests.Chat.Compression;
 
 /// <summary>
-/// Checks which models may compress a chat at all, and when a summary is too long.
+/// Checks which models may compress a chat at all, when the notice before sending offers it, and when a summary is
+/// too long.
 /// </summary>
 /// <remarks>
-/// Below the minimum, the compress button stays off and the notice before sending offers no
-/// compressing, so a wrong answer here either hides the feature or offers one which always fails.
+/// A wrong answer here either hides the feature or offers one which leaves the chat as full as before, so that the
+/// notice comes again in the new chat.
 /// </remarks>
 [TestFixture]
 public sealed class ChatCompressionServiceTests
@@ -32,52 +32,27 @@ public sealed class ChatCompressionServiceTests
         Assert.That(ChatCompressionService.IsTooLong(summaryTokens, tokensForTheSummary), Is.EqualTo(expected), "Models cannot count, so a summary somewhat longer than asked for is fine.");
     }
 
-    [Test]
-    public void CompressingMakesRoomForAnOrdinaryMessage() => Assert.That(ChatCompressionService.MakesRoomFor(ChatWithTwoExchanges(), 0, ContextWindow.Of(32_000), 500), Is.True);
-
-    [Test]
-    public void CompressingCannotMakeRoomForAMessageWhichFillsTheWindowItself()
+    [TestCase(32_000, true, 500, ChatCompressionOffer.OFFERED, TestName = "Compressing makes room for an ordinary message")]
+    [TestCase(32_000, true, 25_000, ChatCompressionOffer.MESSAGE_TOO_LONG, TestName = "A message which fills the window itself goes along unchanged")]
+    [TestCase(32_000, false, 500, ChatCompressionOffer.NOTHING_TO_SUMMARIZE, TestName = "The last exchange alone holds nothing to summarize")]
+    [TestCase(8_192, false, 316_000, ChatCompressionOffer.MESSAGE_TOO_LONG, TestName = "A message too long for the model is named before an empty chat")]
+    [TestCase(ChatCompressionService.MIN_CONTEXT_WINDOW - 1, true, 10, ChatCompressionOffer.WINDOW_TOO_SMALL, TestName = "A model below the minimum writes no summary")]
+    public void WhatSpeaksAgainstCompressingBeforeCounting(int window, bool hasSomethingToSummarize, int messageTokens, ChatCompressionOffer expected)
     {
-        Assert.That(ChatCompressionService.MakesRoomFor(ChatWithTwoExchanges(), 0, ContextWindow.Of(32_000), 25_000), Is.False, "The message goes along unchanged, so next to the summary it would fill the window again.");
+        Assert.That(ChatCompressionService.OfferBeforeCounting(ContextWindow.Of(window), hasSomethingToSummarize, messageTokens), Is.EqualTo(expected));
     }
 
     [Test]
-    public void CompressingNeedsAKnownAndLargeEnoughWindow()
+    public void WithoutAWindowNothingIsSaidAboutCompressing()
     {
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(ChatCompressionService.MakesRoomFor(ChatWithTwoExchanges(), 0, ContextWindow.UNKNOWN, 500), Is.False, "Without a window, nothing can be said about the room.");
-            Assert.That(ChatCompressionService.MakesRoomFor(ChatWithTwoExchanges(), 0, ContextWindow.Of(ChatCompressionService.MIN_CONTEXT_WINDOW - 1), 10), Is.False, "The model is too small to write a summary.");
-        }
+        Assert.That(ChatCompressionService.OfferBeforeCounting(ContextWindow.UNKNOWN, true, 500), Is.EqualTo(ChatCompressionOffer.NONE), "Without a window, AI Studio does not ask before sending at all.");
     }
 
-    [Test]
-    public void CompressingNeedsSomethingToSummarize()
+    [TestCase(32_000, 31_000, 25_000, false, TestName = "Summarizing most of the chat makes room")]
+    [TestCase(32_000, 300_000, 2_000, true, TestName = "A large file of the last message stays and fills the window again")]
+    [TestCase(32_000, 31_000, 7_000, true, TestName = "The last exchange and the summary together still fill the window")]
+    public void WhatCompressingKeepsDecidesWhetherItHelps(int window, int tokensWithMessage, int summarizedTokens, bool expected)
     {
-        var chat = new ChatThread
-        {
-            Blocks = [Block(ChatRole.USER, "Only question", 1), Block(ChatRole.AI, "Only answer", 2)],
-        };
-
-        Assert.That(ChatCompressionService.MakesRoomFor(chat, 0, ContextWindow.Of(32_000), 500), Is.False, "The new chat keeps the last exchange word for word, so there is nothing to summarize.");
+        Assert.That(ChatCompressionService.KeepsTooMuch(window, tokensWithMessage, summarizedTokens), Is.EqualTo(expected), "Compressing takes off only the summarized messages and adds the room for the summary.");
     }
-
-    private static ChatThread ChatWithTwoExchanges() => new()
-    {
-        Blocks =
-        [
-            Block(ChatRole.USER, "First question", 1),
-            Block(ChatRole.AI, "First answer", 2),
-            Block(ChatRole.USER, "Second question", 3),
-            Block(ChatRole.AI, "Second answer", 4),
-        ],
-    };
-
-    private static ContentBlock Block(ChatRole role, string text, int minute) => new()
-    {
-        Time = new DateTimeOffset(2026, 11, 21, 10, minute, 0, TimeSpan.Zero),
-        ContentType = ContentType.TEXT,
-        Content = new ContentText { Text = text },
-        Role = role,
-    };
 }

@@ -75,6 +75,9 @@ public partial class ChatComponent : MSGComponentBase
 
     [Inject]
     private ConversationTokenCounter ConversationTokenCounter { get; init; } = null!;
+
+    [Inject]
+    private ChatCompressionService CompressionService { get; init; } = null!;
     
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
@@ -827,13 +830,22 @@ public partial class ChatComponent : MSGComponentBase
     /// has to be one the chat allows, with a model large enough for it, and the chat needs a
     /// finished answer of the AI, which the new chat keeps word for word.
     /// </remarks>
-    private bool CanThreadBeCompressed => this.CanThreadBeCopied
-                                          && this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
-                                          && !this.isCompressing
-                                          && this.IsProviderSelected
-                                          && this.ChatThread.IsLLMProviderAllowed(this.Provider)
+    private bool CanThreadBeCompressed => this.AllowsCompression
                                           && !this.IsWindowTooSmallForCompression
                                           && ChatCompressionPlan.HasFinishedAnswer(this.ChatThread!);
+
+    /// <summary>
+    /// Whether this chat may be compressed at all, whatever its length and the model; see CanThreadBeCompressed.
+    /// </summary>
+    /// <remarks>
+    /// The notice before sending asks the rest, so that it can say why compressing would not help, see
+    /// ChatCompressionService.OfferBeforeSendingAsync.
+    /// </remarks>
+    private bool AllowsCompression => this.CanThreadBeCopied
+                                      && this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
+                                      && !this.isCompressing
+                                      && this.IsProviderSelected
+                                      && this.ChatThread.IsLLMProviderAllowed(this.Provider);
 
     /// <summary>
     /// Whether the model of the selected provider is too small to compress the chat, see ChatCompressionService.MIN_CONTEXT_WINDOW.
@@ -2364,9 +2376,10 @@ public partial class ChatComponent : MSGComponentBase
     /// one down, e.g., for many self-hosted models; the notice then stays away, just as the number
     /// keeps its colour, see ConversationTokens.AsksBeforeSending.<br/><br/>
     ///
-    /// Compressing is offered only where it could succeed, see ChatCompressionService.MakesRoomFor,
-    /// and where this chat allows it, see CanThreadBeCompressed. The message being written goes along
-    /// into the new chat unchanged, where the user sends it, see CompressCurrentChat.
+    /// Compressing is offered only where this chat allows it, see AllowsCompression, and where it
+    /// makes enough room; otherwise, the notice says why it would not help, see
+    /// ChatCompressionService.OfferBeforeSendingAsync. The message being written goes along into the
+    /// new chat unchanged, where the user sends it, see CompressCurrentChat.
     /// </remarks>
     /// <returns>True when the message is to be sent.</returns>
     private async Task<bool> ConfirmContextWindowAsync()
@@ -2374,8 +2387,11 @@ public partial class ChatComponent : MSGComponentBase
         if (!this.conversationTokens.AsksBeforeSending)
             return true;
 
-        var canCompress = this.CanThreadBeCompressed && ChatCompressionService.MakesRoomFor(this.ChatThread!, this.ExampleConversationLengthOf(this.ChatThread!), this.conversationTokens.Window, this.conversationTokens.DraftTokens);
-        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, this.conversationTokens, ContextWindowFullSubject.CHAT, canCompress))
+        var offer = this.AllowsCompression
+            ? await this.CompressionService.OfferBeforeSendingAsync(this.ChatThread!, this.ExampleConversationLengthOf(this.ChatThread!), this.Provider, this.conversationTokens)
+            : ChatCompressionOffer.NONE;
+
+        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, this.conversationTokens, ContextWindowFullSubject.CHAT, offer))
         {
             case ContextWindowFullDecision.SEND_ANYWAY:
                 return true;
