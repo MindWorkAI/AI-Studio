@@ -105,6 +105,26 @@ public sealed class AssistantPluginAuditService(PluginAuditOperation auditOperat
     }
 
     /// <summary>
+    /// Keeps an audit in the settings: it replaces the audit stored for the same plugin, in its place, or joins the others.
+    /// </summary>
+    /// <remarks>
+    /// The settings keep one audit per plugin, whatever version of the plugin it checked: a newer audit replaces
+    /// the older one, also when the plugin changed meanwhile. The settings are not written; the caller stores
+    /// them once it changed everything it wanted to.
+    /// </remarks>
+    /// <param name="settingsManager">The settings which keep the audits.</param>
+    /// <param name="audit">The audit to keep.</param>
+    public static void UpsertAudit(SettingsManager settingsManager, PluginAssistantAudit audit)
+    {
+        var audits = settingsManager.ConfigurationData.AssistantPluginAudits;
+        var existingIndex = audits.FindIndex(x => x.PluginId == audit.PluginId);
+        if (existingIndex >= 0)
+            audits[existingIndex] = audit;
+        else
+            audits.Add(audit);
+    }
+
+    /// <summary>
     /// Which provider an audit would run with when nobody has a provider at hand, as in the background.
     /// </summary>
     /// <param name="request">The audit, for the confidence its content requires; null for the least any audit requires.</param>
