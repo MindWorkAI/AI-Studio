@@ -1,5 +1,6 @@
 using AIStudio.AIOperations;
 using AIStudio.AIOperations.DataSourceChoice;
+using AIStudio.AIOperations.RetrievalContextValidation;
 using AIStudio.Assistants.ERI;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -177,11 +178,14 @@ public sealed class DataSourceService
     /// </remarks>
     private void AddAgentProvider(List<ParticipatingProvider> providers, Components component, string currentProviderId, string role)
     {
-        var provider = component switch
+        var operationSettings = component switch
         {
-            Components.AGENT_DATA_SOURCE_SELECTION => this.providerResolver.Preview(DataSourceChoiceOperation.GetProviderSettings(this.settingsManager), ConfidenceLevel.NONE, ClassicRagProviderOptions.For(this.settingsManager, currentProviderId)).Provider,
-            _ => this.settingsManager.GetPreselectedProvider(component, currentProviderId, true),
+            Components.AGENT_DATA_SOURCE_SELECTION => DataSourceChoiceOperation.GetProviderSettings(this.settingsManager),
+            Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => RetrievalContextValidationOperation.GetProviderSettings(this.settingsManager),
+            _ => AIOperationProviderSettings.NONE,
         };
+
+        var provider = this.providerResolver.Preview(operationSettings, ConfidenceLevel.NONE, ClassicRagProviderOptions.For(this.settingsManager, currentProviderId)).Provider;
 
         if (provider == Settings.Provider.NONE)
         {

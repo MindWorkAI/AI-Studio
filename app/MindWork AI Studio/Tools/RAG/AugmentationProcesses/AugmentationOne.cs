@@ -1,6 +1,7 @@
 using System.Text;
 
-using AIStudio.Agents;
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.RetrievalContextValidation;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -54,14 +55,21 @@ public sealed class AugmentationOne : IAugmentationProcess
         // Want the user to validate all retrieval contexts?
         if (settings.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && chatThread.DataSourceOptions.AutomaticValidation)
         {
-            // Let's get the validation agent & set up its provider:
-            var validationAgent = Program.SERVICE_PROVIDER.GetService<AgentRetrievalContextValidation>()!;
-            if (validationAgent.SetLLMProvider(provider, chatThread.DataSecurity, chatThread.RequiredProviderConfidence))
+            //
+            // Which provider validates? Only one which may see what the chat may see: the model reads
+            // the passages. One choice serves all passages of this answer.
+            //
+            var validation = Program.SERVICE_PROVIDER.GetRequiredService<RetrievalContextValidationOperation>();
+            var providerResolver = Program.SERVICE_PROVIDER.GetRequiredService<AIOperationProviderResolver>();
+            var validationRequest = new RetrievalContextValidationRequest(chatThread.SystemPrompt, lastUserPrompt, preparedContexts, chatThread.RequiredProviderConfidence);
+            var validationProviderOptions = ClassicRagProviderOptions.ForDataAccess(settings, provider.ConfiguredProviderId, chatThread.DataSecurity, chatThread.RequiredProviderConfidence);
+            var validationChoice = providerResolver.Resolve(validation, validationRequest, RetrievalContextValidationOperation.GetProviderSettings(settings), validationProviderOptions);
+            if (validationChoice.HasProvider)
             {
                 try
                 {
                     // Let's validate all retrieval contexts:
-                    var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, preparedContexts, token);
+                    var validationResults = await validation.RunAsync(validationRequest, new(validationChoice.Provider), token);
                     if (validationResults.Count == 0)
                         LOGGER.LogWarning("Retrieval context validation returned no results. Continuing augmentation with all retrieved contexts.");
                     else

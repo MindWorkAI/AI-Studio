@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 
 using AIStudio.AIOperations.DataSourceChoice;
+using AIStudio.AIOperations.RetrievalContextValidation;
 
 namespace AIStudio.AIOperations;
 
@@ -9,4 +10,5 @@ namespace AIStudio.AIOperations;
 /// </summary>
 [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(List<SelectedDataSource>))]
+[JsonSerializable(typeof(RetrievalContextValidationResult))]
 internal sealed partial class AIOperationsJsonContext : JsonSerializerContext;

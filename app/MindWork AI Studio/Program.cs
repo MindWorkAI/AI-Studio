@@ -2,6 +2,7 @@ using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.AIOperations;
 using AIStudio.AIOperations.DataSourceChoice;
+using AIStudio.AIOperations.RetrievalContextValidation;
 using AIStudio.AIOperations.TextContentCleaning;
 using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.ModelComparison;
@@ -266,7 +267,7 @@ internal sealed class Program
         builder.Services.AddSingleton<AIOperationProviderResolver>();
         builder.Services.AddSingleton<TextContentCleaningOperation>();
         builder.Services.AddSingleton<DataSourceChoiceOperation>();
-        builder.Services.AddTransient<AgentRetrievalContextValidation>();
+        builder.Services.AddSingleton<RetrievalContextValidationOperation>();
         builder.Services.AddTransient<AssistantAuditAgent>();
         builder.Services.AddTransient<AssistantPluginAuditService>();
         builder.Services.AddHostedService<UpdateService>();

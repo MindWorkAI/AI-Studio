@@ -149,12 +149,5 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
     /// <param name="chatProviderId">The ID of the provider of the chat.</param>
     /// <param name="dataSources">The data sources to choose from.</param>
     /// <returns>The options for the provider resolver.</returns>
-    internal static AIOperationProviderOptions GetChoiceProviderOptions(SettingsManager settingsManager, string chatProviderId, IReadOnlyList<IDataSource> dataSources)
-    {
-        var requiredDataSecurity = dataSources.GetRequiredSecurityPolicy();
-        var requiredConfidenceLevel = dataSources.GetRequiredConfidenceLevel();
-        return ClassicRagProviderOptions.For(settingsManager, chatProviderId, candidate => candidate.AllowsDataSourceAccess(settingsManager, requiredDataSecurity, requiredConfidenceLevel)
-            ? AIOperationProviderIssue.NONE
-            : AIOperationProviderIssue.NOT_ALLOWED_FOR_CONTENT);
-    }
+    internal static AIOperationProviderOptions GetChoiceProviderOptions(SettingsManager settingsManager, string chatProviderId, IReadOnlyList<IDataSource> dataSources) => ClassicRagProviderOptions.ForDataAccess(settingsManager, chatProviderId, dataSources.GetRequiredSecurityPolicy(), dataSources.GetRequiredConfidenceLevel());
 }
