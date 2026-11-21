@@ -860,6 +860,13 @@ public partial class ChatComponent : MSGComponentBase
         : T("Compress this chat & switch to a new chat with its summary.");
 
     /// <summary>
+    /// How many blocks the example conversation of the chat template of the given chat holds, see ChatCompressionPlan.Of.
+    /// </summary>
+    /// <param name="chat">The chat.</param>
+    /// <returns>The number of blocks, 0 without a chat template.</returns>
+    private int ExampleConversationLengthOf(ChatThread chat) => this.SettingsManager.GetChatTemplateById(chat.SelectedChatTemplate).ExampleConversation.Count;
+
+    /// <summary>
     /// Whether a chat template can be made from the open chat. While an answer is being written, the template would copy it unfinished.
     /// </summary>
     private bool CanThreadBecomeTemplate => this.CanThreadBeSaved && !this.IsCurrentChatStreaming;
@@ -2279,7 +2286,7 @@ public partial class ChatComponent : MSGComponentBase
         if (this.ComposerState.HasUserDraft)
             this.MirrorComposerIntoDraft(sourceChat);
 
-        var exampleConversationLength = this.SettingsManager.GetChatTemplateById(sourceChat.SelectedChatTemplate).ExampleConversation.Count;
+        var exampleConversationLength = this.ExampleConversationLengthOf(sourceChat);
         var plan = ChatCompressionPlan.Of(sourceChat, exampleConversationLength, sourceChat.Draft.IsEmpty);
         if (plan is null)
         {
@@ -2396,7 +2403,7 @@ public partial class ChatComponent : MSGComponentBase
         var leavesRoomForTheSummary = this.conversationTokens.DraftTokens + ChatCompressionService.TokensForTheSummary(windowTokens) < windowTokens * WINDOW_FULL_ENOUGH_TO_ASK;
         var canCompress = leavesRoomForTheSummary
                           && this.CanThreadBeCompressed
-                          && ChatCompressionPlan.Of(this.ChatThread!, this.SettingsManager.GetChatTemplateById(this.ChatThread!.SelectedChatTemplate).ExampleConversation.Count, draftIsEmpty: false) is not null;
+                          && ChatCompressionPlan.Of(this.ChatThread!, this.ExampleConversationLengthOf(this.ChatThread!), draftIsEmpty: false) is not null;
 
         var isWindowExceeded = fill >= 1d;
         var dialogParameters = new DialogParameters<ContextWindowFullDialog>

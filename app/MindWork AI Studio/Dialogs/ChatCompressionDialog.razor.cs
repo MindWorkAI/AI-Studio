@@ -97,15 +97,8 @@ public partial class ChatCompressionDialog : MSGComponentBase
 
     private async Task HandleChatNameKeyDown(KeyboardEventArgs keyEvent)
     {
-        var key = keyEvent.Key.ToLowerInvariant();
-        var code = keyEvent.Code.ToLowerInvariant();
-        if (key is not "enter" && code is not "enter" and not "numpadenter")
-            return;
-
-        if (keyEvent is { AltKey: true } or { CtrlKey: true } or { MetaKey: true })
-            return;
-
-        await this.CompressAsync();
+        if (keyEvent.IsPlainEnter)
+            await this.CompressAsync();
     }
 
     private async Task CompressAsync()
