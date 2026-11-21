@@ -13,5 +13,13 @@
         <ConfigurationOption OptionDescription="@T("Block activation below the minimum Audit-Level?")" LabelOn="@T("Activation is blocked below the minimum Audit-Level")" LabelOff="@T("Users may still activate plugins below the minimum Audit-Level")" State="@(() => this.SettingsManager.ConfigurationData.AssistantPluginAudit.BlockActivationBelowMinimum)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.AssistantPluginAudit.BlockActivationBelowMinimum = updatedState)" 
                              OptionHelp="@TA("The audit shows you all security risks and information. If you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).")" IsLocked="() => ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, out var meta) && meta.IsLocked"/>
         <ConfigurationOption OptionDescription="@T("Automatically audit new or updated plugins in the background?")" LabelOn="@T("Security audit is automatically done in the background")" LabelOff="@T("Security audit is done manually by the user")" State="@(() => this.SettingsManager.ConfigurationData.AssistantPluginAudit.AutomaticallyAuditAssistants)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.AssistantPluginAudit.AutomaticallyAuditAssistants = updatedState)" IsLocked="() => ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, out var meta) && meta.IsLocked"/>
+        @if (this.IsAutomaticAuditWithoutProvider)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="@true" Class="mb-3">
+                <MudJustifiedText Typo="Typo.body2">
+                    @TA("Automatic audits cannot run, because no model is available for security checks. Choose one above, or set an app-wide default provider in the app options.")
+                </MudJustifiedText>
+            </MudAlert>
+        }
     </MudPaper>
 </ExpansionPanel>

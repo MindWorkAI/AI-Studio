@@ -1677,6 +1677,8 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum"] = true
 --
 -- Configure whether new or changed assistant plugins are audited automatically in the background.
+-- Automatic audits need a provider: the dedicated audit provider or the app-wide default. Without
+-- one, AI Studio skips them and tells the user once.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants"] = false
 --
 -- Configure whether users can change assistant plugin audit settings locally.

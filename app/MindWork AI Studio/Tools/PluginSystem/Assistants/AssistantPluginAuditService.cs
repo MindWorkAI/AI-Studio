@@ -1,5 +1,6 @@
 using AIStudio.AIOperations;
 using AIStudio.AIOperations.PluginAudit;
+using AIStudio.Provider;
 using AIStudio.Settings;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
@@ -59,6 +60,65 @@ public sealed class AssistantPluginAuditService(PluginAuditOperation auditOperat
     }
 
     /// <summary>
+    /// Audits every running assistant plugin which needs an audit, as long as automatic audits are switched on.
+    /// </summary>
+    /// <remarks>
+    /// In the background, there is no provider at hand. Should no provider be left for a plugin, its audit would
+    /// fail without a request, and the user would get two messages for each plugin, again with every visit of the
+    /// assistants or plugins page. Such a plugin is therefore skipped, and a single message says why.
+    /// </remarks>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The audits which succeeded, for the caller to store.</returns>
+    public async Task<IReadOnlyList<PluginAssistantAudit>> RunAutomaticAuditsAsync(CancellationToken token = default)
+    {
+        if (!settingsManager.ConfigurationData.AssistantPluginAudit.AutomaticallyAuditAssistants)
+            return [];
+
+        var audits = new List<PluginAssistantAudit>();
+        AIOperationProviderIssue? issueOfSkippedPlugins = null;
+        foreach (var plugin in PluginFactory.RunningPlugins.OfType<PluginAssistants>().ToList())
+        {
+            if (!PluginAssistantSecurityResolver.Resolve(settingsManager, plugin).RequiresAudit)
+                continue;
+
+            var choice = this.PreviewProvider(new PluginAuditRequest(plugin));
+            if (!choice.HasProvider)
+            {
+                issueOfSkippedPlugins ??= GetRelevantIssue(choice);
+                continue;
+            }
+
+            var audit = await this.RunAuditAsync(plugin, token: token);
+            if (audit.Level is PluginAuditLevel.UNKNOWN)
+            {
+                await MessageBus.INSTANCE.SendError(new (AppIcons.AI_OPERATION, string.Format(TA("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually on the plugins page."), plugin.Name)));
+                continue;
+            }
+
+            audits.Add(audit);
+        }
+
+        if (issueOfSkippedPlugins is { } issue)
+            await MessageBus.INSTANCE.SendError(new (AppIcons.AI_OPERATION, GetAutomaticAuditMessage(issue)));
+
+        return audits;
+    }
+
+    /// <summary>
+    /// Which provider an audit would run with when nobody has a provider at hand, as in the background.
+    /// </summary>
+    /// <param name="request">The audit, for the confidence its content requires; null for the least any audit requires.</param>
+    /// <returns>The choice, which logs nothing.</returns>
+    public AIOperationProviderChoice PreviewProvider(PluginAuditRequest? request = null)
+    {
+        var requiredConfidence = request is null
+            ? ConfidenceLevel.NONE
+            : auditOperation.GetRequiredConfidence(request);
+
+        return providerResolver.Preview(PluginAuditOperation.GetProviderSettings(settingsManager), requiredConfidence, GetProviderOptions(settingsManager, null));
+    }
+
+    /// <summary>
     /// What an audit adds to the choice of its provider.
     /// </summary>
     /// <remarks>
@@ -95,6 +155,13 @@ public sealed class AssistantPluginAuditService(PluginAuditOperation auditOperat
         AIOperationProviderIssue.NOT_SET or AIOperationProviderIssue.MISSING => TB("No provider is configured for security checks."),
         AIOperationProviderIssue.PROHIBITED => TA("Your organization does not allow the provider for security checks. Pick another one, or choose a dedicated provider for security checks in the app settings."),
         _ => TA("The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings."),
+    };
+
+    private static string GetAutomaticAuditMessage(AIOperationProviderIssue issue) => issue switch
+    {
+        AIOperationProviderIssue.NOT_SET or AIOperationProviderIssue.MISSING => TA("AI Studio did not audit new or updated assistant plugins automatically, because no model is set for security checks, and there is no app-wide default either. Choose a model for security checks in the settings."),
+        AIOperationProviderIssue.PROHIBITED => TA("AI Studio did not audit new or updated assistant plugins automatically, because your organization does not allow the model for security checks. Choose another one in the settings."),
+        _ => TA("AI Studio did not audit new or updated assistant plugins automatically, because the model for security checks is not trusted enough. Choose another one in the settings."),
     };
 
     private static string GetMissingProviderSummary(AIOperationProviderIssue issue) => issue switch
