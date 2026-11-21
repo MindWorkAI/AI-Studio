@@ -2,6 +2,14 @@
 name = "mindwork-ai-studio"
 version = "26.11.1"
 edition = "2024"
+
+# Not our toolchain, which metadata.txt names, but the oldest Rust which still has to build the runtime: Flathub
+# builds the Flatpak with the extension org.freedesktop.Sdk.Extension.rust-stable of the branch named by
+# FLATPAK_FREEDESKTOP_VERSION in the pipeline, which lags behind. Clippy refuses every API of the standard library
+# which is newer (incompatible_msrv), and Cargo prefers versions of crates which still build with it. Keep the
+# minor version only: patch releases add no APIs, and the branches of Flathub differ in the patch. Raise it only
+# once Flathub ships a newer Rust, see runtime/AGENTS.md.
+rust-version = "1.98"
 description = "MindWork AI Studio"
 authors = ["Thorsten Sommer"]
 

@@ -80,15 +80,15 @@
       <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
       <PackageReference Include="MailKit" Version="4.18.2" />
-      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.14" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
+      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.15" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.15" />
 
       <!--
           Its assembly ships with ASP.NET Core, but the package also brings the build logic which writes the
           manifest of the embedded files. Without that manifest, the release serves no static files at all, and
           WebRootFiles finds neither the changelogs nor the ERI specifications in any build.
       -->
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.14" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.15" />
       <PackageReference Include="MudBlazor" Version="9.12.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="9.10.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
