@@ -75,15 +75,34 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     public static bool CanSummarizeWith(ContextWindow window) => !window.IsKnown || window.DefaultTokens >= MIN_CONTEXT_WINDOW;
 
     /// <summary>
-    /// How many tokens the summary may take in a model with the given context window.
+    /// How much longer than the room kept for it a summary may grow before the AI shortens it, see IsTooLong.
+    /// </summary>
+    /// <remarks>
+    /// Models cannot count what they write. The request already asks for half as many words as the
+    /// room holds tokens, which leaves a margin of its own; beyond half as much again, the summary
+    /// takes room the next part or the new chat needs.
+    /// </remarks>
+    internal const double SUMMARY_TOLERANCE = 1.5;
+
+    /// <summary>
+    /// How many tokens the summary should take in a model with the given context window.
     /// </summary>
     /// <remarks>
     /// A quarter of the window, at least MIN_TOKENS_FOR_THE_SUMMARY and at most MAX_TOKENS_FOR_THE_SUMMARY.
-    /// The new chat starts with a summary of this length at most.
+    /// It is a target, not a limit: the AI is asked for a summary of this length, and one which grows
+    /// far beyond it is shortened once, see SummarizeAsync.
     /// </remarks>
     /// <param name="windowTokens">The context window of the model which writes the summary.</param>
     /// <returns>The tokens kept free for the summary.</returns>
     public static int TokensForTheSummary(int windowTokens) => Math.Clamp(windowTokens / 4, MIN_TOKENS_FOR_THE_SUMMARY, MAX_TOKENS_FOR_THE_SUMMARY);
+
+    /// <summary>
+    /// Whether a summary grew so long beyond the room kept for it that the AI has to shorten it.
+    /// </summary>
+    /// <param name="summaryTokens">The tokens the summary takes.</param>
+    /// <param name="tokensForTheSummary">The room kept for the summary, or 0 when the window of the model is unknown.</param>
+    /// <returns>True when the summary takes more than SUMMARY_TOLERANCE times the room kept for it; never without a room.</returns>
+    internal static bool IsTooLong(int summaryTokens, int tokensForTheSummary) => tokensForTheSummary > 0 && summaryTokens > tokensForTheSummary * SUMMARY_TOLERANCE;
 
     /// <summary>
     /// Asks the AI for a summary of the messages the plan names.
@@ -105,7 +124,14 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     /// leaves after the summary so far, which is counted anew after every answer: a model may write
     /// more than it was asked to, and some languages take several tokens per word. When the window
     /// is unknown, the whole conversation goes into one request, and the provider tells when it is
-    /// too long.
+    /// too long.<br/><br/>
+    ///
+    /// A summary which grew beyond SUMMARY_TOLERANCE times its room is shortened by the AI in one
+    /// request of its own, after a part as well as at the end, see IsTooLong. What comes back is taken
+    /// as it is: a second round would cost another request and could not promise more, and the notice
+    /// before sending tells the user when the new chat is still too long. A summary which the provider
+    /// cut off, e.g., because it reached the most tokens the model writes at once, cannot be told
+    /// apart from a complete one, since the providers do not report why an answer ended.
     /// </remarks>
     /// <param name="sourceChat">The chat to summarize. It stays unchanged.</param>
     /// <param name="plan">Which messages to summarize, see ChatCompressionPlan.Of.</param>
@@ -187,8 +213,23 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
                 if (string.IsNullOrWhiteSpace(summary))
                     return ChatCompressionResult.Failed(TA("The AI did not write a summary. Please check the messages about the provider, and try again."));
 
-                if (!isLastPart && window.IsKnown)
+                if (window.IsKnown)
+                {
                     summaryTokens = (await this.CountAsync(provider, summary, token)).Tokens;
+                    if (IsTooLong(summaryTokens, tokensForTheSummary))
+                    {
+                        progress?.Report(new(ChatCompressionStep.CONDENSING, part, isLastPart ? part : Math.Max(part + 1, expectedParts)));
+                        var shortened = await RequestSummaryAsync(sourceChat, provider, ChatCompressionPrompts.BuildShorteningRequest(summary, maxWords), token);
+                        token.ThrowIfCancellationRequested();
+
+                        // An empty answer shortens nothing, so the longer summary is still better than none:
+                        if (!string.IsNullOrWhiteSpace(shortened))
+                        {
+                            summary = shortened;
+                            summaryTokens = (await this.CountAsync(provider, summary, token)).Tokens;
+                        }
+                    }
+                }
 
                 position = conversation.Next;
             }

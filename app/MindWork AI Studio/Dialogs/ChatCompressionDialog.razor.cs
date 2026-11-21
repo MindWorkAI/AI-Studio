@@ -88,6 +88,7 @@ public partial class ChatCompressionDialog : MSGComponentBase
     {
         ChatCompressionStep.SUMMARIZING when this.progress.Total > 1 => string.Format(T("The AI is summarizing part {0} of {1}..."), this.progress.Current, this.progress.Total),
         ChatCompressionStep.SUMMARIZING => T("The AI is summarizing the chat..."),
+        ChatCompressionStep.CONDENSING => T("The summary grew too long. The AI is shortening it..."),
 
         _ => T("AI Studio is reading the messages and their files..."),
     };

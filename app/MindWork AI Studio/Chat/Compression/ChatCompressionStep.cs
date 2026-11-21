@@ -14,4 +14,9 @@ public enum ChatCompressionStep
     /// The AI summarizes the conversation, one part after the other.
     /// </summary>
     SUMMARIZING,
+
+    /// <summary>
+    /// The AI shortens a summary which grew too long, see ChatCompressionService.IsTooLong.
+    /// </summary>
+    CONDENSING,
 }

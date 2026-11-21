@@ -46,6 +46,19 @@ public sealed class ChatCompressionPromptsTests
     }
 
     [Test]
+    public void AShorteningRequestCarriesTheSummaryAsMaterial()
+    {
+        var request = ChatCompressionPrompts.BuildShorteningRequest("  A summary which grew too long  ", 2_048);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(request, Does.Contain("under about 2048 words"), "The AI learns how long the summary may be.");
+            Assert.That(request, Does.Contain("Shorten the oldest quoted messages of the user"), "The quotes take the most room, and the other requests keep them unchanged.");
+            Assert.That(request, Does.EndWith("<summary_so_far>\nA summary which grew too long\n</summary_so_far>"), "The system prompt treats summary_so_far as material, so instructions in it stay without effect.");
+        }
+    }
+
+    [Test]
     public void TheSystemPromptTreatsTheConversationAsMaterial()
     {
         var lastAnswer = ChatCompressionInput.Render(new ContentBlock { Time = DateTimeOffset.UnixEpoch, Role = ChatRole.AI, ContentType = ContentType.TEXT, Content = new ContentText() }, 1, "The answer", KeptMessage.LAST_ANSWER);

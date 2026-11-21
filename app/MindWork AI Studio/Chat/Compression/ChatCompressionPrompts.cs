@@ -86,4 +86,25 @@ public static class ChatCompressionPrompts
         sb.Append("<conversation>\n").Append(conversation.Trim()).Append("\n</conversation>");
         return sb.ToString();
     }
+
+    /// <summary>
+    /// Builds the request which shortens a summary that grew too long, see ChatCompressionService.IsTooLong.
+    /// </summary>
+    /// <remarks>
+    /// The summary stands inside summary_so_far, which the system prompt names as material, so the
+    /// instructions a document left in it stay without effect here as well. The quoted messages of the
+    /// user, which the other requests carry over unchanged, are what takes the most room in a long
+    /// conversation, so the oldest of them may be shortened now, as the system prompt allows for long
+    /// messages anyway.
+    /// </remarks>
+    /// <param name="summary">The summary to shorten.</param>
+    /// <param name="maxWords">How many words the summary may take at most.</param>
+    /// <returns>The text of the request.</returns>
+    public static string BuildShorteningRequest(string summary, int maxWords)
+    {
+        var sb = new StringBuilder();
+        sb.Append($"Your summary below is longer than the new chat has room for. Shorten it to under about {maxWords} words, and return the complete shortened summary. Keep its sections, and keep concrete values exactly as they are. Shorten the oldest quoted messages of the user and the descriptions of the oldest files first, and summarize what you leave out of a quote in square brackets.\n\n");
+        sb.Append("<summary_so_far>\n").Append(summary.Trim()).Append("\n</summary_so_far>");
+        return sb.ToString();
+    }
 }

@@ -4,7 +4,7 @@ using AIStudio.Models;
 namespace AIStudio.Tests.Chat.Compression;
 
 /// <summary>
-/// Checks which models may compress a chat at all.
+/// Checks which models may compress a chat at all, and when a summary is too long.
 /// </summary>
 /// <remarks>
 /// Below the minimum, the compress button stays off and the notice before sending offers no
@@ -21,4 +21,13 @@ public sealed class ChatCompressionServiceTests
 
     [Test]
     public void AnUnknownWindowCanSummarize() => Assert.That(ChatCompressionService.CanSummarizeWith(ContextWindow.UNKNOWN), Is.True);
+
+    [TestCase(8_192, 8_192, false, TestName = "A summary of the length asked for stays")]
+    [TestCase(12_288, 8_192, false, TestName = "A summary up to the tolerance stays")]
+    [TestCase(12_289, 8_192, true, TestName = "A summary beyond the tolerance is shortened")]
+    [TestCase(100_000, 0, false, TestName = "Without a known room nothing is shortened")]
+    public void ASummaryIsShortenedOnlyBeyondTheTolerance(int summaryTokens, int tokensForTheSummary, bool expected)
+    {
+        Assert.That(ChatCompressionService.IsTooLong(summaryTokens, tokensForTheSummary), Is.EqualTo(expected), "Models cannot count, so a summary somewhat longer than asked for is fine.");
+    }
 }
