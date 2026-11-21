@@ -3,7 +3,7 @@
 <MudDialog>
     <DialogContent>
         <MudStack Spacing="3">
-            <MudText Typo="Typo.body1">
+            <MudJustifiedText Typo="Typo.body1">
                 @if (this.Subject is ContextWindowFullSubject.ASSISTANT_REQUEST)
                 {
                     @if (this.IsWindowExceeded)
@@ -23,38 +23,38 @@
                 {
                     @(string.Format(TA("Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit."), this.Tokens, this.WindowTokens))
                 }
-            </MudText>
+            </MudJustifiedText>
 
             @if (!this.CanSendAnyway)
             {
-                <MudText Typo="Typo.body1">
+                <MudJustifiedText Typo="Typo.body1">
                     @T("This chat sends no message which no longer fits, since the model would lose the beginning of the conversation and the instructions of the assistant first.")
-                </MudText>
+                </MudJustifiedText>
             }
 
             @if (this.CanCompress && this.Subject is ContextWindowFullSubject.EMBEDDED_CHAT)
             {
-                <MudText Typo="Typo.body1">
+                <MudJustifiedText Typo="Typo.body1">
                     @TA("When you compress the conversation, the AI summarizes it, and the summary takes the place of the earlier messages. Your message stays in the input field, so you can send it afterward.")
-                </MudText>
+                </MudJustifiedText>
             }
             else if (this.CanCompress)
             {
-                <MudText Typo="Typo.body1">
+                <MudJustifiedText Typo="Typo.body1">
                     @TA("When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.")
-                </MudText>
+                </MudJustifiedText>
             }
             else if (this.Subject is ContextWindowFullSubject.ASSISTANT_REQUEST)
             {
-                <MudText Typo="Typo.body1">
+                <MudJustifiedText Typo="Typo.body1">
                     @TA("You can attach fewer or smaller files, shorten your input, or select a model which takes longer texts.")
-                </MudText>
+                </MudJustifiedText>
             }
             else
             {
-                <MudText Typo="Typo.body1">
+                <MudJustifiedText Typo="Typo.body1">
                     @TA("You can shorten your message, remove some of its files, or select a model which takes longer texts.")
-                </MudText>
+                </MudJustifiedText>
             }
         </MudStack>
     </DialogContent>
