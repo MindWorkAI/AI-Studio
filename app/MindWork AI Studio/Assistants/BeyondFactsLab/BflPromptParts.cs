@@ -8,4 +8,5 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// <param name="Step">The prompt of the step.</param>
 /// <param name="Address">The instruction for the form of address.</param>
 /// <param name="OrganizationRules">How the chat treats the guidelines of the organization, which the prompt carries only while there are any.</param>
-public sealed record BflPromptParts(string Core, string Knowledge, string Step, string Address, string OrganizationRules);
+/// <param name="Simulation">How the chat of the step "Test situation" plays people from the research, which follows the prompt of the step; empty for every other step and for generic counterparts.</param>
+public sealed record BflPromptParts(string Core, string Knowledge, string Step, string Address, string OrganizationRules, string Simulation = "");

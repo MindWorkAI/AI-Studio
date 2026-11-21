@@ -2,7 +2,7 @@
 
 <MudText Typo="Typo.subtitle1" Class="mb-2"><b>@T("Reflect. Take a position. Communicate.")</b></MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
-    @TA("The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your role, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.")
+    @TA("The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your roles, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.")
 </MudJustifiedText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
     @T("The knowledge base of the lab is a guide on science in public debates by Lara Wüster from the Technical University of Munich (TUM).")
@@ -35,7 +35,7 @@
         <MudJustifiedText Typo="Typo.body1">@TA("Add material beside the steps, e.g., notes, a talk draft, a paper, the invitation, the recording of an interview, or a poster. It applies to all steps, and the lab asks you about it. Add only what you may process with the selected provider; recordings also go to the transcription provider of AI Studio.")</MudJustifiedText>
     </MudListItem>
     <MudListItem T="string" Icon="@AppIcons.STEP_5" Style="@LIST_ITEM_STYLE">
-        <MudJustifiedText Typo="Typo.body1">@TA("Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.")</MudJustifiedText>
+        <MudJustifiedText Typo="Typo.body1">@TA("Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your roles, your strategy, or a round of critical questions. You can always say that you do not know.")</MudJustifiedText>
     </MudListItem>
     <MudListItem T="string" Icon="@AppIcons.STEP_6" Style="@LIST_ITEM_STYLE">
         <MudJustifiedText Typo="Typo.body1">@TA("Once a step is largely clear, let the lab create its work state below the conversation. You check and edit it, and once you confirm it, the later steps build on it. The lab also suggests values for empty fields of 'Your details', which you take over one by one.")</MudJustifiedText>
@@ -45,16 +45,29 @@
     </MudListItem>
 </MudList>
 
+<MudText Typo="Typo.h6">@T("Value card sort")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-4">
+    @string.Format(Culture, TA("In the step '{0}', you can sort twelve values in three rounds by how important they are to you for this occasion, add values of your own, and choose two or three to look at more closely. The conversation of the step knows your card sort and builds on it; the later steps learn what you take from it through its confirmed work state. The card sort is voluntary and no validated test of values or personality."), BflStep.VALUES_AND_PERSPECTIVES.Title)
+</MudJustifiedText>
+
 <MudText Typo="Typo.h6">@T("Research on the web")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
     @string.Format(Culture, TA("In the step '{0}', research agents of the lab look into the event, its participants, and the public debate on its topic, one agent for each. They start on their own once you confirm the event details, provided the web search is set up in AI Studio, and you can start them again at any time."), BflStep.STRATEGY.Title)
     @TA("If you state in the event details that the event is not public, the lab never researches it on the web.")
+</MudJustifiedText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @TA("From the list of participants, you choose whom the lab researches in depth; for a long list, the lab suggests whom. For this suggestion, it uses your details of the first three steps, but searches nothing, and only names from the list go on into the research. For each person you choose, research agents look into the profile, the public positions on the topic, and how the person argues in public, one stage after the other. They receive only the name and the list entry of the person, the public details about the event, and what the earlier stages found. They look only for public, professional information, keep summaries with sources, and create no personality profiles.")
 </MudJustifiedText>
 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@AppIcons.PRIVACY" Class="mb-4">
     <MudJustifiedText Typo="Typo.body1">
         @TA("The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event.")
     </MudJustifiedText>
 </MudAlert>
+
+<MudText Typo="Typo.h6">@T("Simulated participants")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-4">
+    @string.Format(Culture, TA("In the step '{0}', the lab simulates generic counterparts and gives you feedback after every answer. Under 'Simulation', you can instead let it simulate participants whom it researched in depth: one person, a panel discussion with up to three, or a press conference with up to five people. The lab lets them argue only with the positions their research documents, invents no quotes, and marks each of their contributions as a simulation. Such a simulation runs until you end it with 'End and evaluate the exercise'; then you get feedback on the whole exercise, and with 'Pause' you get brief feedback in between. The research on each person takes room in the context of the model, and the lab tells you how much."), BflStep.TEST_SITUATION.Title)
+</MudJustifiedText>
 
 <MudText Typo="Typo.h6">@T("Sharing with the research team")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-4">

@@ -94,7 +94,10 @@ public static class BflStaleness
     /// Computes the fingerprint of a form, which tells whether the person changed it.
     /// </summary>
     /// <remarks>
-    /// Line endings and spaces around a value do not count, since they change nothing the model reads.
+    /// Line endings and spaces around a value do not count, since they change nothing the model reads. The card sort
+    /// counts as a detail of its step; without one, or with an empty one, the fingerprint is the same as before the lab
+    /// had a card sort, so that no confirmation of an older preparation turns into "Details changed". The same holds for
+    /// the simulation of the step "Test situation" with generic counterparts.
     /// </remarks>
     /// <param name="form">The form.</param>
     /// <returns>The fingerprint, in hexadecimal digits.</returns>
@@ -110,6 +113,52 @@ public static class BflStaleness
             text.Append(fieldId).Append(SEPARATOR).Append(normalized).Append(SEPARATOR);
         }
 
+        if (form.CardSort is { IsEmpty: false } cardSort)
+            AppendCardSort(text, cardSort);
+
+        if (form.Simulation is { Mode.HasPeople: true } simulation)
+            AppendSimulation(text, simulation);
+
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text.ToString())));
+    }
+
+    /// <summary>
+    /// Appends a simulation with people to the text a fingerprint is computed from.
+    /// </summary>
+    /// <remarks>
+    /// Generic counterparts add nothing, so that the fingerprint stays the same as before the lab simulated people. The
+    /// people count as a set, by the keys of their names: the order the person chose them in means nothing.
+    /// </remarks>
+    /// <param name="text">The text so far.</param>
+    /// <param name="simulation">The simulation.</param>
+    private static void AppendSimulation(StringBuilder text, BflSimulation simulation)
+    {
+        text.Append(SEPARATOR).Append("simulation").Append(SEPARATOR).Append(simulation.Mode.ToString()).Append(SEPARATOR);
+        foreach (var key in simulation.People.Select(BflParticipant.NameKey).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
+            text.Append(key).Append(SEPARATOR);
+    }
+
+    /// <summary>
+    /// Appends a card sort to the text a fingerprint is computed from.
+    /// </summary>
+    /// <remarks>
+    /// Each part starts with a separator and its name, which no ID of a field begins with. The values to look at more
+    /// closely count as a set: the order the person chose them in is no ranking.
+    /// </remarks>
+    /// <param name="text">The text so far.</param>
+    /// <param name="cardSort">The card sort.</param>
+    private static void AppendCardSort(StringBuilder text, BflCardSort cardSort)
+    {
+        text.Append(SEPARATOR).Append("categories").Append(SEPARATOR);
+        foreach (var (valueId, category) in cardSort.Categories.Where(entry => entry.Value is not BflValueCategory.NONE).OrderBy(entry => entry.Key, StringComparer.Ordinal))
+            text.Append(valueId).Append(SEPARATOR).Append(category.ToString()).Append(SEPARATOR);
+
+        text.Append(SEPARATOR).Append("own values").Append(SEPARATOR);
+        foreach (var value in cardSort.OwnValues)
+            text.Append(value.Id).Append(SEPARATOR).Append(value.Name.Trim()).Append(SEPARATOR).Append(value.Definition.Trim()).Append(SEPARATOR);
+
+        text.Append(SEPARATOR).Append("focus").Append(SEPARATOR);
+        foreach (var valueId in cardSort.Focus.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
+            text.Append(valueId).Append(SEPARATOR);
     }
 }

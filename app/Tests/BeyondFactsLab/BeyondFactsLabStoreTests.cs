@@ -336,11 +336,121 @@ public sealed class BeyondFactsLabStoreTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(File.Exists(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "01-framework", "form.json")), Is.True);
+            Assert.That(File.Exists(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "framework", "form.json")), Is.True);
             Assert.That(loaded.Get(BflFieldCatalog.FORMAT), Is.EqualTo("Panel discussion"));
             Assert.That(changed.ModifiedAtUtc, Is.GreaterThan(created.ModifiedAtUtc));
             Assert.That((await store.LoadAsync(created.ProjectId))!.ModifiedAtUtc, Is.EqualTo(changed.ModifiedAtUtc));
         }
+    }
+
+    [Test]
+    public async Task ACardSortIsStoredWithTheFormOfItsStep()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var form = new BflStepFormData { CardSort = new() };
+        form.CardSort.Sort("honesty", BflValueCategory.ESPECIALLY_IMPORTANT);
+        var ownValue = form.CardSort.AddOwnValue("Neugier", "Fragen stellen")!;
+        form.CardSort.ChooseFocus(["honesty", ownValue.Id]);
+
+        await store.SaveFormAsync(created.ProjectId, BflStep.VALUES_AND_PERSPECTIVES, form);
+        var loaded = (await this.CreateStore().LoadFormAsync(created.ProjectId, BflStep.VALUES_AND_PERSPECTIVES)).CardSort;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(loaded, Is.Not.Null);
+            Assert.That(loaded!.CategoryOf("honesty"), Is.EqualTo(BflValueCategory.ESPECIALLY_IMPORTANT));
+            Assert.That(loaded.OwnValues.Select(value => (value.Id, value.Name, value.Definition)), Is.EqualTo(new[] { (ownValue.Id, "Neugier", "Fragen stellen") }));
+            Assert.That(loaded.Focus, Is.EqualTo(new[] { "honesty", ownValue.Id }));
+        }
+    }
+
+    [Test]
+    public async Task AFormWithoutACardSortStoresNone()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var form = new BflStepFormData();
+        form.Set(BflFieldCatalog.CORE_THESES, "Thesis");
+
+        await store.SaveFormAsync(created.ProjectId, BflStep.KNOWLEDGE, form);
+        var json = await File.ReadAllTextAsync(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "knowledge", "form.json"));
+
+        Assert.That(json, Does.Not.Contain("cardSort"));
+    }
+
+    [Test]
+    public async Task AFormOfTheFirstVersionIsStillOpened()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteFormFileAsync(created.ProjectId, "values", """{ "schemaVersion": 1, "values": { "values_and_concerns": "Text" } }""");
+
+        var form = await store.LoadFormAsync(created.ProjectId, BflStep.VALUES_AND_PERSPECTIVES);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(form.Get(BflFieldCatalog.VALUES_AND_CONCERNS), Is.EqualTo("Text"));
+            Assert.That(form.CardSort, Is.Null);
+        }
+    }
+
+    [Test]
+    public async Task AFormWithABrokenCardSortIsNotOpened()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteFormFileAsync(created.ProjectId, "values", """{ "schemaVersion": 2, "values": {}, "cardSort": { "categories": {}, "ownValues": [ null ], "focus": [] } }""");
+
+        await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadFormAsync(created.ProjectId, BflStep.VALUES_AND_PERSPECTIVES));
+    }
+
+    [Test]
+    public async Task ASimulationIsStoredWithTheFormOfItsStep()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        var form = new BflStepFormData { Simulation = new() { Mode = BflSimulationMode.PANEL_DISCUSSION, People = ["Eva Klein", "Frank Ott"] } };
+
+        await store.SaveFormAsync(created.ProjectId, BflStep.TEST_SITUATION, form);
+        var json = await File.ReadAllTextAsync(Path.Combine(this.RootDirectory, created.ProjectId.ToString("D"), "steps", "test", "form.json"));
+        var loaded = (await this.CreateStore().LoadFormAsync(created.ProjectId, BflStep.TEST_SITUATION)).Simulation;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(json, Does.Contain("\"PANEL_DISCUSSION\""), "The mode is stored by its name, which never changes.");
+            Assert.That(loaded, Is.Not.Null);
+            Assert.That(loaded!.Mode, Is.EqualTo(BflSimulationMode.PANEL_DISCUSSION));
+            Assert.That(loaded.People, Is.EqualTo(new[] { "Eva Klein", "Frank Ott" }));
+        }
+    }
+
+    [Test]
+    public async Task AFormOfTheSecondVersionIsStillOpenedWithoutASimulation()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteFormFileAsync(created.ProjectId, "test", """{ "schemaVersion": 2, "values": { "test_notes": "Text" } }""");
+
+        var form = await store.LoadFormAsync(created.ProjectId, BflStep.TEST_SITUATION);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(form.Get(BflFieldCatalog.TEST_NOTES), Is.EqualTo("Text"));
+            Assert.That(form.Simulation, Is.Null);
+        }
+    }
+
+    [TestCase("""{ "schemaVersion": 3, "values": {}, "simulation": { "mode": "PANEL_DISCUSSION", "people": null } }""")]
+    [TestCase("""{ "schemaVersion": 3, "values": {}, "simulation": { "mode": "PANEL_DISCUSSION", "people": [ null ] } }""")]
+    [TestCase("""{ "schemaVersion": 3, "values": {}, "simulation": { "mode": 42, "people": [] } }""")]
+    public async Task AFormWithABrokenSimulationIsNotOpened(string json)
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteFormFileAsync(created.ProjectId, "test", json);
+
+        await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadFormAsync(created.ProjectId, BflStep.TEST_SITUATION));
     }
 
     [Test]
@@ -364,7 +474,7 @@ public sealed class BeyondFactsLabStoreTests
     {
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var formPath = await this.WriteFormFileAsync(created.ProjectId, "02-knowledge", """{ "schemaVersion": 1, "values": { "field_of_a_newer_version": "kept" } }""");
+        var formPath = await this.WriteFormFileAsync(created.ProjectId, "knowledge", """{ "schemaVersion": 1, "values": { "field_of_a_newer_version": "kept" } }""");
 
         var form = await store.LoadFormAsync(created.ProjectId, BflStep.KNOWLEDGE);
         form.Set(BflFieldCatalog.CORE_THESES, "Thesis");
@@ -384,7 +494,7 @@ public sealed class BeyondFactsLabStoreTests
         const string DAMAGED = "{ \"values\": ";
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var formPath = await this.WriteFormFileAsync(created.ProjectId, "01-framework", DAMAGED);
+        var formPath = await this.WriteFormFileAsync(created.ProjectId, "framework", DAMAGED);
 
         var forms = await store.LoadFormsAsync(created.ProjectId);
 
@@ -401,10 +511,10 @@ public sealed class BeyondFactsLabStoreTests
     [Test]
     public async Task AFormOfANewerVersionIsNotOverwritten()
     {
-        const string NEWER = """{ "schemaVersion": 2, "values": {} }""";
+        const string NEWER = """{ "schemaVersion": 4, "values": {} }""";
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var formPath = await this.WriteFormFileAsync(created.ProjectId, "05-strategy", NEWER);
+        var formPath = await this.WriteFormFileAsync(created.ProjectId, "strategy", NEWER);
 
         using (Assert.EnterMultipleScope())
         {

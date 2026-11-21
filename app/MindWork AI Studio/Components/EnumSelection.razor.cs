@@ -59,7 +59,18 @@ public partial class EnumSelection<T> : EnumSelectionBase where T : struct, Enum
     
     [Parameter]
     public Func<T, Task> SelectionUpdated { get; set; } = _ => Task.CompletedTask;
-    
+
+    /// <summary>
+    /// Gets or sets the values to offer, in the order to show them.
+    /// </summary>
+    /// <remarks>
+    /// Without it, the selection offers every value of the enum in the order of its declaration.
+    /// </remarks>
+    [Parameter]
+    public IReadOnlyList<T>? Values { get; set; }
+
+    private IReadOnlyList<T> OfferedValues => this.Values ?? Enum.GetValues<T>();
+
     [Inject]
     private SettingsManager SettingsManager { get; set; } = null!;
     

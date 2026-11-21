@@ -100,6 +100,26 @@ public static partial class BflPromptTemplate
     public const string PUBLIC_DETAILS = "PUBLIC_DETAILS";
 
     /// <summary>
+    /// The person an agent of the research on people looks into: the name and the entry in the list of participants.
+    /// </summary>
+    public const string PERSON = "PERSON";
+
+    /// <summary>
+    /// What the earlier stages of the research on a person found.
+    /// </summary>
+    public const string EARLIER_STAGES = "EARLIER_STAGES";
+
+    /// <summary>
+    /// The list of participants from which the lab suggests whom to research.
+    /// </summary>
+    public const string PARTICIPANTS = "PARTICIPANTS";
+
+    /// <summary>
+    /// How many people the lab suggests to research at most.
+    /// </summary>
+    public const string SELECTION_SIZE = "SELECTION_SIZE";
+
+    /// <summary>
     /// Fills every placeholder of a template.
     /// </summary>
     /// <param name="template">The template.</param>

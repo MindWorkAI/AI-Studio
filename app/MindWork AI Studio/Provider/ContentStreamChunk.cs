@@ -35,6 +35,16 @@ public sealed record ContentStreamChunk(string Content, IList<ISource> Sources, 
     public bool IsReasoning { get; init; }
 
     /// <summary>
+    /// Tells whether the model ended its turn without an answer, so that the content of the chunk is a notice of the
+    /// app rather than a word of the model.
+    /// </summary>
+    /// <remarks>
+    /// The tool calling loop says so when the model stays silent after its tools, cf. ToolCallingLoop. Whoever uses
+    /// the answer as a result, such as an agent which stores it, asks this instead of reading the text.
+    /// </remarks>
+    public bool EndsWithoutAnswer { get; init; }
+
+    /// <summary>
     /// Implicit conversion to string.
     /// </summary>
     /// <param name="chunk">The content stream chunk.</param>

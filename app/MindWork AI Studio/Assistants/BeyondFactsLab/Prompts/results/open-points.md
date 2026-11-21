@@ -10,7 +10,7 @@ Schreibe jetzt die offenen Punkte und nächsten Schritte der Person: was sie vor
 
 1. Recherchieren: was die Person noch nachlesen, prüfen oder belegen muss.
 2. Mit anderen klären: was sie mit wem klären muss, etwa mit den Veranstaltenden, der Pressestelle oder Kolleginnen und Kollegen. Nenne die Ansprechpersonen nur, wenn die Person sie genannt hat.
-3. Selbst entscheiden: was die Person für sich entscheiden muss, etwa eine Wertabwägung oder ihre Rolle.
+3. Selbst entscheiden: was die Person für sich entscheiden muss, etwa eine Wertabwägung oder ihre Rollen.
 
 Ordne die Punkte in jedem Teil danach, was vor dem Auftritt am dringendsten ist. Bleibt ein Teil leer, schreibe das in einem Satz.
 

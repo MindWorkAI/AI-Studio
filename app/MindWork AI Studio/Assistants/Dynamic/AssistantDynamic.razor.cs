@@ -242,7 +242,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private PluginAssistants? ResolveAssistantPlugin()
     {
         var pluginAssistants = PluginFactory.RunningPlugins.OfType<PluginAssistants>()
-            .Where(plugin => this.SettingsManager.IsPluginEnabled(plugin))
+            .Where(plugin => this.SettingsManager.IsAssistantPluginAvailable(plugin))
             .ToList();
         if (pluginAssistants.Count == 0)
             return null;

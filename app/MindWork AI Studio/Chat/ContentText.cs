@@ -52,6 +52,17 @@ public sealed class ContentText : IContent
     [JsonIgnore]
     public bool IsReasoning { get; private set; }
 
+    /// <summary>
+    /// Tells whether the model ended its turn without an answer, so that the text holds a notice of the app rather
+    /// than a word of the model, see ContentStreamChunk.EndsWithoutAnswer.
+    /// </summary>
+    /// <remarks>
+    /// Only for whoever uses the answer right away, such as an agent which stores it as a result. A stored chat no
+    /// longer knows it, and shows the notice like any other text.
+    /// </remarks>
+    [JsonIgnore]
+    public bool EndedWithoutAnswer { get; set; }
+
     /// <inheritdoc />
     [JsonIgnore]
     public Func<Task> StreamingDone { get; set; } = IContent.NO_STREAMING_HANDLER;
@@ -392,6 +403,9 @@ public sealed class ContentText : IContent
             this.IsReasoning = false;
 
         this.Text += chunk;
+        if (chunk.EndsWithoutAnswer)
+            this.EndedWithoutAnswer = true;
+
         if (chunk.Sources.Count > 0 || chunk.Passages.Count > 0)
             this.AddSources(chunk.Sources, chunk.Passages);
 
@@ -647,6 +661,7 @@ public sealed class ContentText : IContent
         Text = this.Text,
         InitialRemoteWait = this.InitialRemoteWait,
         IsStreaming = this.IsStreaming,
+        EndedWithoutAnswer = this.EndedWithoutAnswer,
         Sources = [..this.Sources],
         SourcePassages = [..this.SourcePassages],
         FileAttachments = [..this.FileAttachments],

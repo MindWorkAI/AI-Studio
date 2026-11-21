@@ -964,9 +964,13 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="providerName">The name of the provider, for logging and error reporting.</param>
     /// <param name="operationName">What is being streamed, for logging: a chat completion, say, or a responses call.</param>
     /// <param name="requestBuilder">A function that builds the request.</param>
+    /// <param name="streamEnd">
+    /// Marked once the provider closed the stream, and left alone when a stop, a timeout, or a
+    /// broken connection cut it off. Null for a caller to whom both are the same.
+    /// </param>
     /// <param name="token">The cancellation token to use.</param>
     /// <returns>The events of the stream, in the order they arrived.</returns>
-    protected async IAsyncEnumerable<ServerSentEvent> ReadServerSentEventsAsync(string providerName, string operationName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default)
+    protected async IAsyncEnumerable<ServerSentEvent> ReadServerSentEventsAsync(string providerName, string operationName, Func<Task<HttpRequestMessage>> requestBuilder, ServerSentEventStreamEnd? streamEnd, [EnumeratorCancellation] CancellationToken token = default)
     {
         StreamReader? streamReader = null;
         using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
@@ -1056,9 +1060,15 @@ public abstract class BaseProvider : IProvider, ISecretId
                     break;
                 }
 
-                // The stream ended:
+                //
+                // The provider closed the stream. This is the only way to its end: every other
+                // way out of this loop cuts it off.
+                //
                 if (line is null)
+                {
+                    streamEnd?.MarkReached();
                     break;
+                }
 
                 // Skip empty lines:
                 if (string.IsNullOrWhiteSpace(line))
@@ -1095,7 +1105,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Check if annotations are supported:
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
-        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "chat completion", requestBuilder, token))
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "chat completion", requestBuilder, streamEnd: null, token))
         {
             // Skip lines without a payload. According to the specification,
             // we only want to read the data lines:
@@ -1197,7 +1207,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
         var isCompleted = false;
-        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, token))
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, streamEnd: null, token))
         {
             // Check if the line announces the end of the stream. This one is read off the raw
             // line rather than off a payload, because it has none:
@@ -1407,7 +1417,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
                     runnableTools.Select(x => (object)ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
-                    (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, requestToken),
+                    (requestDto, streamEnd, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, streamEnd, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
 
@@ -1498,7 +1508,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// belongs to the shared stream reader, which the tool rounds used to go without.
     /// </remarks>
     private IAsyncEnumerable<ServerSentEvent> StreamChatCompletionRequest(ChatCompletionAPIRequest requestDto, string providerName, string requestPath,
-        RequestedSecret requestedSecret, Action<HttpRequestHeaders>? headersAction, CancellationToken token)
+        RequestedSecret requestedSecret, Action<HttpRequestHeaders>? headersAction, ServerSentEventStreamEnd streamEnd, CancellationToken token)
     {
         async Task<HttpRequestMessage> RequestBuilder()
         {
@@ -1511,7 +1521,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             return request;
         }
 
-        return this.ReadServerSentEventsAsync(providerName, "chat completion", RequestBuilder, token);
+        return this.ReadServerSentEventsAsync(providerName, "chat completion", RequestBuilder, streamEnd, token);
     }
 
     /// <summary>

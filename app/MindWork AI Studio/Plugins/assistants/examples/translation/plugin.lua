@@ -7,7 +7,8 @@ TYPE = "ASSISTANT"
 AUTHORS = {"MindWork AI"}
 SUPPORT_CONTACT = "mailto:info@mindwork.ai"
 SOURCE_URL = "https://github.com/MindWorkAI/AI-Studio/tree/main/app/MindWork%20AI%20Studio/Plugins/assistants/examples/translation"
-CATEGORIES = {"CORE"}
+-- The assistants page shows the example under "General", next to the built-in Translation assistant:
+CATEGORIES = {"COMMON"}
 TARGET_GROUPS = {"EVERYONE"}
 IS_MAINTAINED = true
 DEPRECATION_MESSAGE = ""

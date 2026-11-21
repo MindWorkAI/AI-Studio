@@ -43,6 +43,13 @@ public partial class BflChat : MSGComponentBase
     [Parameter]
     public string? ProviderIssue { get; set; }
 
+    /// <summary>
+    /// Gets or sets a number which changes whenever a detail changes which takes much room in the next request, such as
+    /// whom the step "Test situation" simulates, whose research the prompt carries.
+    /// </summary>
+    [Parameter]
+    public int DetailsVersion { get; set; }
+
     [Inject]
     private BflConversationService ConversationService { get; init; } = null!;
 
@@ -70,9 +77,10 @@ public partial class BflChat : MSGComponentBase
 
     /// <summary>
     /// Gets a number which changes whenever what the next request carries beside the conversation changed: the
-    /// material, or the guidelines of the organization after a configuration plugin was reloaded.
+    /// material, the guidelines of the organization after a configuration plugin was reloaded, or a detail which takes
+    /// much room, see DetailsVersion.
     /// </summary>
-    private int ContextVersion => HashCode.Combine(this.materialsVersion, this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules);
+    private int ContextVersion => HashCode.Combine(this.materialsVersion, this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules, this.DetailsVersion);
 
     /// <summary>
     /// Gets what the chat says before its conversation begins.
@@ -100,6 +108,14 @@ public partial class BflChat : MSGComponentBase
         BflStepThreadLocation => TA("Delete the conversation of this step and start it over? Your details stay as they are."),
         _ => TA("Delete this conversation and start it over?")
     };
+
+    /// <summary>
+    /// Gets the button with which the person ends an exercise of the step "Test situation" and asks for its evaluation,
+    /// see Prompts/steps/test.md; the other chats have none.
+    /// </summary>
+    private EmbeddedChatQuickMessage? QuickMessage => this.Location is BflStepThreadLocation { Step: BflStep.TEST_SITUATION }
+        ? new(T("End and evaluate the exercise"), AppIcons.END_EXERCISE, T("I would like to end the exercise now and get its evaluation."), TA("This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between."))
+        : null;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()

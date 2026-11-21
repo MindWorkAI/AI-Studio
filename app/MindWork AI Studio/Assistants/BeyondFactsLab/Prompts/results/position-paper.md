@@ -13,7 +13,7 @@ Schreibe jetzt das Positionsblatt der Person: eine Seite, die sie vor ihrem Auft
 2. Zentrale Aussagen: drei bis fünf, jede mit ihrer Begründung und, wo vorhanden, dem Beleg oder dem Material, auf das sie sich stützt.
 3. Wertabwägungen: welche Werte die Position tragen und wo die Person zwischen ihnen abwägt.
 4. Grenzen der eigenen Expertise: was die Person nicht beurteilen kann, was unsicher ist und was sie bewusst offen lässt.
-5. Rolle: in welcher Rolle die Person spricht und was sie mit ihrem Beitrag erreichen möchte.
+5. Rollen: in welchen Rollen die Person spricht und was sie mit ihrem Beitrag erreichen möchte.
 
 # Form
 

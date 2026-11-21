@@ -45,7 +45,7 @@ public static class BflToolStatus
     public static string ForOnboarding(BflResearchAvailability availability)
     {
         var research = availability.CanResearch
-            ? $"Mit der aktuellen Einrichtung und dem hier gewählten Anbieter kann das Lab im Web recherchieren. Im Schritt „Strategie“ recherchieren eigene Recherche-Agenten die Veranstaltung, ihre Teilnehmenden sowie die öffentliche Debatte und das Framing zum Thema. Sie erhalten ausschließlich die öffentlichen Angaben zur Veranstaltung ({PublicFields()}). Alle anderen Angaben, das Material, die Arbeitsstände und die Gespräche bleiben in der Vorbereitung und erreichen keine Suche. {NOT_PUBLIC}"
+            ? $"Mit der aktuellen Einrichtung und dem hier gewählten Anbieter kann das Lab im Web recherchieren. Im Schritt „Strategie“ recherchieren eigene Recherche-Agenten die Veranstaltung, die Liste ihrer Teilnehmenden sowie die öffentliche Debatte und das Framing zum Thema, und auf Wunsch der Person einzelne Teilnehmende genauer. Sie erhalten ausschließlich die öffentlichen Angaben zur Veranstaltung ({PublicFields()}). Alle anderen Angaben, das Material, die Arbeitsstände und die Gespräche bleiben in der Vorbereitung und erreichen keine Suche. {NOT_PUBLIC}"
             : $"Mit der aktuellen Einrichtung und dem hier gewählten Anbieter kann das Lab nicht im Web recherchieren. {ReasonFor(availability.WebSearch)} Gibt es die Recherche, erhält sie ausschließlich die öffentlichen Angaben zur Veranstaltung ({PublicFields()}); alle anderen Angaben bleiben in der Vorbereitung.";
 
         var readWebPage = availability.ReadWebPage is ToolOfferBlockReason.NONE

@@ -119,6 +119,13 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
             return EmbeddedChatPreparation.REFUSED;
         }
 
+        // The dossiers of the people the chat plays are never shortened, so a window which is known to be too small refuses:
+        if (BflSimulationBudget.Check(requestMaterial.Simulation ?? BflEffectiveSimulation.GENERIC, provider.GetModelProfile().Context) is BflSimulationFit.TOO_SMALL)
+        {
+            await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, TA("The model of the selected provider likely reads too little at once for the people you chose for the simulation. Please choose fewer people or another provider.")));
+            return EmbeddedChatPreparation.REFUSED;
+        }
+
         return Prepare(location, provider, thread, requestMaterial);
     }
 
@@ -152,8 +159,8 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
     /// <returns>The text to count.</returns>
-    /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
-    /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
+    /// <exception cref="FileNotFoundException">The app comes without one of the prompts or without the value deck.</exception>
+    /// <exception cref="FormatException">A prompt has a placeholder without a value, or something is wrong with the value deck.</exception>
     public async Task<string> ComposeTextForCountAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var requestMaterial = await this.ComposeRequestAsync(location, provider);
@@ -169,14 +176,23 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     public async Task<bool> UsesPromptOverridesAsync(CancellationToken token = default) => this.PromptOverridesDirectory is { } directory && (await BflPromptOverrides.FindAsync(directory, token)).Count > 0;
 
     /// <summary>
+    /// Finds the Markdown files in the test folder which replace no prompt of the lab, so that the lab can tell the
+    /// person why they change nothing.
+    /// </summary>
+    /// <returns>The files relative to the test folder, see BflPromptOverrides.FindUnknown; none while the setting does not allow prompt overrides.</returns>
+    /// <exception cref="IOException">The test folder cannot be read.</exception>
+    /// <exception cref="UnauthorizedAccessException">The test folder cannot be read.</exception>
+    public IReadOnlyList<string> FindUnknownPromptOverrides() => this.PromptOverridesDirectory is { } directory ? BflPromptOverrides.FindUnknown(directory) : [];
+
+    /// <summary>
     /// Puts together what a request of a chat carries beside the conversation: the system prompt, the images of the
     /// material the model may see, and the guidelines of the organization.
     /// </summary>
     /// <param name="location">Where the chat belongs.</param>
     /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
     /// <returns>The system prompt, the images, and the guidelines.</returns>
-    /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
-    /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
+    /// <exception cref="FileNotFoundException">The app comes without one of the prompts or without the value deck.</exception>
+    /// <exception cref="FormatException">A prompt has a placeholder without a value, or something is wrong with the value deck.</exception>
     internal async Task<BflRequestMaterial> ComposeRequestAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var addressForm = Tools.PluginSystem.I18N.I.AddressForm;
@@ -188,11 +204,13 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
             case BflStepThreadLocation stepLocation:
                 var forms = await store.LoadFormsAsync(stepLocation.ProjectId);
                 var workStates = await store.LoadWorkStatesAsync(stepLocation.ProjectId);
-                var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm, this.PromptOverridesDirectory);
+                var simulation = await this.LoadSimulationAsync(stepLocation, forms);
+                var parts = await BflPromptLibrary.LoadPartsAsync(stepLocation.Step, addressForm, this.PromptOverridesDirectory, simulation.Mode);
                 var research = await this.LoadResearchAsync(stepLocation);
-                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, workStates, tools, research, rules, language, provider);
+                var valueDeck = await LoadValueDeckAsync(stepLocation);
+                var shares = await this.ShareMaterialsAsync(stepLocation, parts, forms, workStates, tools, research, rules, valueDeck, simulation, language, provider);
                 var materials = await this.ReadMaterialsAsync(stepLocation.ProjectId, shares);
-                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language, workStates, tools, research, rules), this.ImagesOf(stepLocation.ProjectId, shares), rules);
+                return new(BflPromptComposer.Compose(parts, stepLocation.Step, forms, materials, language, workStates, tools, research.Topics, rules, valueDeck, research.People, simulation), this.ImagesOf(stepLocation.ProjectId, shares), rules, simulation);
 
             case BflOnboardingThreadLocation:
                 // It never gets the guidelines themselves, but it tells the person that they exist:
@@ -299,28 +317,57 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="location">The step.</param>
     /// <param name="provider">The provider which answers; its model decides how much of the material fits.</param>
     /// <returns>The share of each material this version can open, in the order the person added them.</returns>
-    /// <exception cref="FileNotFoundException">The app comes without one of the prompts.</exception>
-    /// <exception cref="FormatException">A prompt has a placeholder without a value.</exception>
+    /// <exception cref="FileNotFoundException">The app comes without one of the prompts or without the value deck.</exception>
+    /// <exception cref="FormatException">A prompt has a placeholder without a value, or something is wrong with the value deck.</exception>
     public async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, AIStudio.Settings.Provider provider)
     {
         var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
         var forms = await store.LoadFormsAsync(location.ProjectId);
         var workStates = await store.LoadWorkStatesAsync(location.ProjectId);
-        var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm, this.PromptOverridesDirectory);
+        var simulation = await this.LoadSimulationAsync(location, forms);
+        var parts = await BflPromptLibrary.LoadPartsAsync(location.Step, Tools.PluginSystem.I18N.I.AddressForm, this.PromptOverridesDirectory, simulation.Mode);
         var tools = await BflResearchAvailability.CheckAsync(toolRegistry, provider);
         var research = await this.LoadResearchAsync(location);
         var rules = BflOrganizationRules.For(location, settingsManager.ConfigurationData.BeyondFactsLab);
-        return await this.ShareMaterialsAsync(location, parts, forms, workStates, tools, research, rules, language, provider);
+        return await this.ShareMaterialsAsync(location, parts, forms, workStates, tools, research, rules, await LoadValueDeckAsync(location), simulation, language, provider);
+    }
+
+    /// <summary>
+    /// Loads whom the chat of a step plays: in the step "Test situation" what the person chose of the people who
+    /// qualify, in every other step generic counterparts.
+    /// </summary>
+    /// <param name="location">The step.</param>
+    /// <param name="forms">The forms of the preparation, with the choice of the person.</param>
+    /// <returns>The simulation in effect.</returns>
+    public async Task<BflEffectiveSimulation> LoadSimulationAsync(BflStepThreadLocation location, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
+    {
+        if (location.Step is not BflStep.TEST_SITUATION || forms.GetValueOrDefault(BflStep.TEST_SITUATION)?.Simulation is not { Mode.HasPeople: true } simulation)
+            return BflEffectiveSimulation.GENERIC;
+
+        var candidates = BflSimulationCandidates.Of(forms, await store.LoadAllResearchAsync(location.ProjectId), await store.LoadAllPersonResearchAsync(location.ProjectId));
+        return BflEffectiveSimulation.Of(simulation, candidates);
     }
 
     /// <summary>
     /// Loads the research a step carries in its prompt: the step "Strategy" all of it, every other step none.
     /// </summary>
     /// <param name="location">The step.</param>
-    /// <returns>The research this version can open, by its topics.</returns>
-    private async Task<IReadOnlyDictionary<BflResearchTopic, BflResearch>> LoadResearchAsync(BflStepThreadLocation location) => location.Step is BflStep.STRATEGY
-        ? await store.LoadAllResearchAsync(location.ProjectId)
-        : new Dictionary<BflResearchTopic, BflResearch>();
+    /// <returns>The research this version can open: on the topics, and on the people of the current list.</returns>
+    private async Task<BflStepResearch> LoadResearchAsync(BflStepThreadLocation location) => location.Step is BflStep.STRATEGY
+        ? BflStepResearch.Of(await store.LoadAllResearchAsync(location.ProjectId), await store.LoadAllPersonResearchAsync(location.ProjectId))
+        : BflStepResearch.NONE;
+
+    /// <summary>
+    /// Loads the value deck a step carries in its prompt, with the card sort of the person: the step "Values and
+    /// perspectives" the deck in the language of the app, every other step none.
+    /// </summary>
+    /// <param name="location">The step.</param>
+    /// <returns>The deck, or null for every other step.</returns>
+    /// <exception cref="FileNotFoundException">The app comes without the deck.</exception>
+    /// <exception cref="FormatException">Something is wrong with the deck.</exception>
+    private static async Task<BflValueDeck?> LoadValueDeckAsync(BflStepThreadLocation location) => location.Step is BflStep.VALUES_AND_PERSPECTIVES
+        ? await BflValueDeck.LoadAsync(Tools.PluginSystem.I18N.I.Culture)
+        : null;
 
     /// <summary>
     /// Decides how much of the material of a preparation a request of a step carries: which images go along, and how
@@ -331,12 +378,14 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     /// <param name="forms">The forms of the preparation.</param>
     /// <param name="workStates">The work states of the preparation, whose confirmed ones take room in the prompt as well.</param>
     /// <param name="tools">What keeps the tools of the lab from being offered, which the prompt describes as well.</param>
-    /// <param name="research">The research the prompt of the step carries, by its topics.</param>
+    /// <param name="research">The research the prompt of the step carries, on the topics and on people.</param>
     /// <param name="organizationRules">The guidelines of the organization, which take room in the prompt and in the first message.</param>
+    /// <param name="valueDeck">The value deck with which the prompt of the step shows the card sort, which takes room as well; null for the other steps.</param>
+    /// <param name="simulation">Whom the chat of the step "Test situation" plays, whose dossiers take room as well.</param>
     /// <param name="language">The name of the language the model answers in.</param>
     /// <param name="provider">The provider which answers.</param>
     /// <returns>The share of each material this version can open, in the order the person added them.</returns>
-    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflStep, BflWorkState> workStates, BflResearchAvailability tools, IReadOnlyDictionary<BflResearchTopic, BflResearch> research, string organizationRules, string language, AIStudio.Settings.Provider provider)
+    private async Task<IReadOnlyList<BflMaterialShare>> ShareMaterialsAsync(BflStepThreadLocation location, BflPromptParts parts, IReadOnlyDictionary<BflStep, BflStepFormData> forms, IReadOnlyDictionary<BflStep, BflWorkState> workStates, BflResearchAvailability tools, BflStepResearch research, string organizationRules, BflValueDeck? valueDeck, BflEffectiveSimulation simulation, string language, AIStudio.Settings.Provider provider)
     {
         var materials = (await store.ListMaterialsAsync(location.ProjectId)).Select(entry => entry.Material).OfType<BflMaterial>().ToList();
         if (materials.Count is 0)
@@ -345,7 +394,7 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
         var imageShares = BflMaterialBudget.ShareImages([.. materials.Where(material => material.Kind is BflMaterialKind.IMAGE)], ImagesTheModelTakes(provider));
         var sentImages = imageShares.Count(share => share.Image is BflImageDelivery.SENT);
 
-        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language, workStates, tools, research, organizationRules);
+        var promptWithoutMaterials = BflPromptComposer.Compose(parts, location.Step, forms, [], language, workStates, tools, research.Topics, organizationRules, valueDeck, research.People, simulation);
         var characters = BflMaterialBudget.CharactersFor(provider.GetModelProfile().Context, promptWithoutMaterials.Length + BflOrganizationRules.Frame(organizationRules).Length, sentImages);
         var textShares = BflMaterialBudget.Share([.. materials.Where(material => material.Kind is not BflMaterialKind.IMAGE)], characters);
 

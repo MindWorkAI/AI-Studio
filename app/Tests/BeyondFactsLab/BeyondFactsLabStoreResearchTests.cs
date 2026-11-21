@@ -50,6 +50,7 @@ public sealed class BeyondFactsLabStoreResearchTests
             Details = [new() { FieldId = BflFieldCatalog.EVENT_TOPIC, Value = "Klimapolitik" }],
             SearchQueries = ["Podium Klimapolitik"],
             Pages = [new() { Title = "Programm", Url = "https://example.org/programm" }],
+            Participants = [new() { Name = "Person A", Entry = "- Rolle: Podium" }],
             CreatedAtUtc = new DateTimeOffset(2026, 11, 10, 14, 0, 0, TimeSpan.Zero),
         };
 
@@ -64,10 +65,12 @@ public sealed class BeyondFactsLabStoreResearchTests
             Assert.That(loaded.Details.Single().Value, Is.EqualTo("Klimapolitik"));
             Assert.That(loaded.SearchQueries, Is.EqualTo(new[] { "Podium Klimapolitik" }));
             Assert.That(loaded.Pages.Single().Url, Is.EqualTo("https://example.org/programm"));
+            Assert.That(loaded.Participants.Single().Name, Is.EqualTo("Person A"));
+            Assert.That(loaded.Participants.Single().Entry, Is.EqualTo("- Rolle: Podium"));
             Assert.That(loaded.CreatedAtUtc, Is.EqualTo(research.CreatedAtUtc));
             Assert.That(all.Keys, Is.EquivalentTo(new[] { BflResearchTopic.PARTICIPANTS }));
             Assert.That(changed.ModifiedAtUtc, Is.GreaterThanOrEqualTo(created.ModifiedAtUtc));
-            Assert.That(File.Exists(Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, created.ProjectId.ToString("D"), "steps", "05-strategy", "research", "participants.json")), Is.True);
+            Assert.That(File.Exists(Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, created.ProjectId.ToString("D"), "steps", "strategy", "research", "participants.json")), Is.True);
         }
     }
 
@@ -98,6 +101,33 @@ public sealed class BeyondFactsLabStoreResearchTests
     }
 
     [Test]
+    public async Task AResearchStoredBeforeTheListOfPeopleHasAnEmptyList()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteResearchFileAsync(created.ProjectId, "participants.json", """{ "schemaVersion": 1, "text": "### Person A", "details": [], "searchQueries": [], "pages": [] }""");
+
+        var loaded = await store.LoadResearchAsync(created.ProjectId, BflResearchTopic.PARTICIPANTS);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(loaded, Is.Not.Null);
+            Assert.That(loaded!.Text, Is.EqualTo("### Person A"));
+            Assert.That(loaded.Participants, Is.Empty);
+        }
+    }
+
+    [Test]
+    public async Task AResearchWithAPersonWithoutANameStaysAsItIs()
+    {
+        var store = this.CreateStore();
+        var created = await store.CreateAsync("Panel");
+        await this.WriteResearchFileAsync(created.ProjectId, "participants.json", """{ "schemaVersion": 2, "text": "Text", "details": [], "searchQueries": [], "pages": [], "participants": [ { "name": null, "entry": "" } ] }""");
+
+        await Assert.ThrowsAsync<InvalidDataException>(async () => await store.LoadResearchAsync(created.ProjectId, BflResearchTopic.PARTICIPANTS));
+    }
+
+    [Test]
     public async Task ResearchForAMissingPreparationIsNotStored()
     {
         var store = this.CreateStore();
@@ -107,7 +137,7 @@ public sealed class BeyondFactsLabStoreResearchTests
 
     private async Task<string> WriteResearchFileAsync(Guid projectId, string fileName, string content)
     {
-        var directory = Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, projectId.ToString("D"), "steps", "05-strategy", "research");
+        var directory = Path.Combine(this.dataDirectory, BeyondFactsLabStore.ROOT_DIRECTORY_NAME, projectId.ToString("D"), "steps", "strategy", "research");
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, fileName);
         await File.WriteAllTextAsync(path, content);

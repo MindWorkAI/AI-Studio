@@ -125,6 +125,35 @@ public sealed class ToolCallingLoopTests
     }
     
     [Test]
+    public async Task OnlyANoticeInPlaceOfTheAnswerIsMarkedAsOne()
+    {
+        //
+        // An agent which stores the answer as a result has to tell the notice apart from a word of the model, without
+        // reading the text, which a language plugin translates:
+        //
+        var silentAfterLimit = await Collect(new ScriptedAdapter([..ExhaustTheToolBudget(), [Completed(string.Empty)]]));
+        var silentAfterCall = await Collect(new ScriptedAdapter(
+            [Completed(string.Empty, [Call("call-1")])],
+            [Completed(string.Empty)]));
+
+        var answering = await Collect(new ScriptedAdapter(
+            [Completed(string.Empty, [Call("call-1")])],
+            [Text(ANSWER), Completed(ANSWER)]));
+
+        var answeringAfterLimit = await Collect(new ScriptedAdapter([..ExhaustTheToolBudget(), [Text(ANSWER), Completed(ANSWER)]]));
+        var neverCompleting = await Collect(new ScriptedAdapter([Text(PREAMBLE)]));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(silentAfterLimit.Where(chunk => chunk.EndsWithoutAnswer).Select(chunk => chunk.Content), Has.One.Contains(NO_ANSWER), "Silence after the last tools is a notice, and it carries the mark.");
+            Assert.That(silentAfterCall.Where(chunk => chunk.EndsWithoutAnswer).Select(chunk => chunk.Content), Has.One.Contains(NO_ANSWER), "Silence after a tool call is a notice as well.");
+            Assert.That(answering.Select(chunk => chunk.EndsWithoutAnswer), Is.All.False, "The model answered, so nothing is a notice.");
+            Assert.That(answeringAfterLimit.Select(chunk => chunk.EndsWithoutAnswer), Is.All.False, "An answer after the limit is an answer.");
+            Assert.That(neverCompleting.Select(chunk => chunk.EndsWithoutAnswer), Is.All.False, "A failed round was reported by its adapter, and the loop adds no notice of its own.");
+        }
+    }
+
+    [Test]
     public async Task TheSourcesArriveAlthoughTheFinalTextNoLongerDoes()
     {
         //
@@ -213,6 +242,52 @@ public sealed class ToolCallingLoopTests
         {
             Assert.That(string.Concat(chunks.Select(x => x.Content)), Is.EqualTo(PREAMBLE), "Everything written before the stop stays, and nothing after it arrives.");
             Assert.That(chunks.Select(x => x.Content), Has.None.Contains(NO_ANSWER), "A stop is not a failure to answer, so it is not reported as one.");
+        }
+    }
+
+    [Test]
+    public async Task AStopRightAfterASilentRoundIsNotReportedAsAnInvalidAnswer()
+    {
+        //
+        // The user stops the answer just after the provider closed the stream of a round which
+        // said nothing and called nothing, e.g., of a reasoning model which never got to its first
+        // word. That is no invalid answer of the provider, and reporting it as one would put an
+        // error message on top of the stop.
+        //
+        using var cancellation = new CancellationTokenSource();
+        var adapter = new ScriptedAdapter([Completed(string.Empty)])
+        {
+            CancelAfterFirstEvent = cancellation,
+        };
+
+        var chunks = await Collect(adapter, cancellation.Token);
+
+        Assert.That(string.Concat(chunks.Select(x => x.Content)), Is.Empty, "A stop is neither an error nor an answer, so nothing is written on its behalf.");
+    }
+
+    [Test]
+    public async Task AToolCallWhichArrivedBeforeTheStopDoesNotRun()
+    {
+        //
+        // The model asked for a tool, and the user stopped the answer before the tool ran. Running
+        // it anyway would act on behalf of an answer nobody waits for any longer, e.g., search the
+        // web with the question of the chat, and then ask the model for a round of its own.
+        //
+        using var cancellation = new CancellationTokenSource();
+        var adapter = new ScriptedAdapter(
+            [Completed(string.Empty, [Call("call-1")])],
+            [Text(ANSWER), Completed(ANSWER)])
+        {
+            CancelAfterFirstEvent = cancellation,
+        };
+
+        var written = string.Concat((await Collect(adapter, cancellation.Token)).Select(x => x.Content));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(adapter.Recordings, Is.Empty, "Nothing is recorded and nothing is run once the user said stop.");
+            Assert.That(adapter.RequestedRounds, Is.EqualTo(1), "No further round is asked for.");
+            Assert.That(written, Is.Empty, "And nothing is written on behalf of the stop.");
         }
     }
 
@@ -333,13 +408,19 @@ public sealed class ToolCallingLoopTests
         /// What the loop recorded, in the order it did.
         /// </summary>
         public List<string> Recordings { get; } = [];
-        
+
+        /// <summary>
+        /// How many rounds the loop asked for.
+        /// </summary>
+        public int RequestedRounds { get; private set; }
+
         /// <inheritdoc />
         public IReadOnlyList<string> RecordedRequestTexts => [];
-        
+
         /// <inheritdoc />
         public async IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, [EnumeratorCancellation] CancellationToken token = default)
         {
+            this.RequestedRounds++;
             await Task.Yield();
             if (this.remainingRounds.Count is 0)
                 yield break;
