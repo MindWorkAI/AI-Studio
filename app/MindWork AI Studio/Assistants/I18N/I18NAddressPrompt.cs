@@ -41,6 +41,24 @@ public static class I18NAddressPrompt
     }
 
     /// <summary>
+    /// Gives every informal variant the words of its formal text, for a language with one form of address only.
+    /// </summary>
+    /// <remarks>
+    /// English addresses everybody alike, yet its language plugin may word a text differently than the source code
+    /// does. An informal variant taken from the source code would then differ from the formal text, and the language
+    /// would offer the choice of address, see <see cref="AIStudio.Tools.PluginSystem.LanguagePluginExtensions"/>.
+    /// </remarks>
+    /// <param name="content">All texts of the language plugin, by their keys; changed in place.</param>
+    public static void AlignInformalVariants(IDictionary<string, string> content)
+    {
+        foreach (var key in content.Keys.ToList())
+        {
+            if (I18NAddressVariant.TryGetFormalKey(key, out var formalKey) && content.TryGetValue(formalKey, out var formalText))
+                content[key] = formalText;
+        }
+    }
+
+    /// <summary>
     /// Gets the section of the system prompt about the form of address.
     /// </summary>
     /// <param name="language">The target language.</param>

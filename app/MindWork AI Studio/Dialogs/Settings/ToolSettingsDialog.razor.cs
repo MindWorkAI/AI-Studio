@@ -202,7 +202,7 @@ public partial class ToolSettingsDialog : SettingsDialogBase
 
             this.validationMessage = !string.IsNullOrWhiteSpace(validationState.Message)
                 ? validationState.Message
-                : string.Format(T("Please configure the required settings: {0}"), string.Join(", ", validationState.MissingRequiredFields));
+                : string.Format(TA("Please configure the required settings: {0}"), string.Join(", ", validationState.MissingRequiredFields));
             return;
         }
 

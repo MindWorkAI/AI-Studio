@@ -23,6 +23,8 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(LocalIndexSearchService).Namespace, nameof(LocalIndexSearchService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(LocalIndexSearchService).Namespace, nameof(LocalIndexSearchService));
+
     //
     // Which gaps the user was already told about in this session. Retrieval runs for every single
     // message, so without this one broken embedding provider would put a warning on every prompt.
@@ -84,7 +86,7 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
             if (!DataSourceEmbeddingProviders.TryResolve(settingsManager, dataSource, out var embeddingProvider))
             {
                 logger.LogWarning("Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the selected embedding provider is not available.", dataSource.Name, dataSource.Id);
-                await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "no-embedding-provider", string.Format(TB("The data source '{0}' was left out of the answer: its embedding provider is not available. Please check it in the settings."), dataSource.Name));
+                await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "no-embedding-provider", string.Format(TA("The data source '{0}' was left out of the answer: its embedding provider is not available. Please check it in the settings."), dataSource.Name));
                 return [];
             }
 
@@ -136,7 +138,7 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
             // answer into one the user can do something about.
             //
             logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}) because its vector store cannot be read.", dataSource.Name, dataSource.Id);
-            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "vector-store-unreadable", string.Format(TB("The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it in your data source settings."), dataSource.Name));
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "vector-store-unreadable", string.Format(TA("The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it in your data source settings."), dataSource.Name));
             return [];
         }
         catch (Exception exception)
@@ -249,7 +251,7 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
                 query.Length,
                 RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH,
                 providerTokenLimit);
-            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.QUERY_NOT_SEARCHABLE, "query-too-long", string.Format(TB("The data source '{0}' was left out of the answer because your message is too long to search with."), dataSource.Name));
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.QUERY_NOT_SEARCHABLE, "query-too-long", string.Format(TA("The data source '{0}' was left out of the answer because your message is too long to search with."), dataSource.Name));
             return false;
         }
 
@@ -276,7 +278,7 @@ public sealed class LocalIndexSearchService(SettingsManager settingsManager, Rus
                 queryTokenCount,
                 embeddingProvider.Name,
                 providerTokenLimit);
-            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.QUERY_NOT_SEARCHABLE, "query-over-token-limit", string.Format(TB("The data source '{0}' was left out of the answer because your message is longer than its embedding provider '{1}' accepts."), dataSource.Name, embeddingProvider.Name));
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.QUERY_NOT_SEARCHABLE, "query-over-token-limit", string.Format(TA("The data source '{0}' was left out of the answer because your message is longer than its embedding provider '{1}' accepts."), dataSource.Name, embeddingProvider.Name));
             return false;
         }
 

@@ -14,7 +14,8 @@
         </MudStack>
 
         <InnerScrolling>
-            @* How to work with the lab opens by itself while there is no preparation yet. *@
+            @* How to work with the lab opens by itself while there is no preparation yet. The guidelines of the
+               organization appear only when a configuration plugin sets them, and open with every visit. *@
             <MudExpansionPanels MultiExpansion="@true" Class="mb-6 mr-3">
                 <ExpansionPanel HeaderIcon="@AppIcons.INTRODUCTION" HeaderText="@T("Working with the lab")" IsExpanded="@this.introductionExpanded" ExpandedChanged="@this.IntroductionExpandedChanged">
                     <BflIntroduction/>
@@ -22,6 +23,13 @@
                 <ExpansionPanel HeaderIcon="@AppIcons.HELP" HeaderText="@T("Is the lab right for my task?")">
                     <BflOnboarding/>
                 </ExpansionPanel>
+                @if (!string.IsNullOrWhiteSpace(this.OrganizationRules))
+                {
+                    <ExpansionPanel HeaderIcon="@AppIcons.ORGANIZATION" HeaderText="@TA("Guidelines from your organization")" IsExpanded="@this.organizationRulesExpanded" ExpandedChanged="@this.OrganizationRulesExpandedChanged">
+                        <MudText Typo="Typo.body2" Class="mb-3">@string.Format(Culture, TA("Your organization has set these guidelines for public appearances. The conversations of the steps know them as well, and the material '{0}' ends with them."), BflResultKind.OPEN_POINTS.Title)</MudText>
+                        <MudMarkdown Value="@this.OrganizationRules" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                    </ExpansionPanel>
+                }
             </MudExpansionPanels>
 
             <MudText Typo="Typo.h5" Class="mb-1">@TA("Your preparations")</MudText>
@@ -139,6 +147,15 @@
                                 {
                                     var step = this.activeStep;
                                     <BflStepForm Step="@step" Form="@form" FormChanged="@(() => this.SaveFormAsync(step))"/>
+                                    @if (step is BflStep.TEST_SITUATION)
+                                    {
+                                        <BflSimulationChoice ProjectId="@project.ProjectId"
+                                                             Forms="@this.forms"
+                                                             Form="@form"
+                                                             FormChanged="@(() => this.SaveFormAsync(step))"
+                                                             Provider="@this.providerSettings"
+                                                             Class="mt-3"/>
+                                    }
                                 }
                                 else
                                 {
@@ -156,7 +173,7 @@
                                                       ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
                                 }
 
-                                <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)"/>
+                                <BflChat Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))" Provider="@this.providerSettings" ProviderIssue="@this.ValidateProvider(this.providerSettings)" DetailsVersion="@this.ChatDetailsVersion"/>
 
                                 <BflWorkStatePanel Location="@(new BflStepThreadLocation(project.ProjectId, this.activeStep))"
                                                    WorkStates="@this.workStates"

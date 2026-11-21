@@ -280,23 +280,23 @@ public partial class ReadWebContent : MSGComponentBase
                 return null;
 
             if(this.ProviderSettings == AIStudio.Settings.Provider.NONE)
-                return T("The content cleaner uses the model of this assistant. Please select one below.");
+                return TA("The content cleaner uses the model of this assistant. Please select one below.");
 
-            return T("The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.");
+            return TA("The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.");
         }
     }
 
     private string? ValidateURL(string url)
     {
         if(string.IsNullOrWhiteSpace(url))
-            return T("Please provide a URL to load the content from.");
+            return TA("Please provide a URL to load the content from.");
 
         var urlParsingResult = Uri.TryCreate(url, UriKind.Absolute, out var uriResult);
         if(!urlParsingResult)
-            return T("Please provide a valid URL.");
+            return TA("Please provide a valid URL.");
 
         if(uriResult is not { Scheme: "http" or "https" })
-            return T("Please provide a valid HTTP or HTTPS URL.");
+            return TA("Please provide a valid HTTP or HTTPS URL.");
 
         return null;
     }

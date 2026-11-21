@@ -52,7 +52,7 @@ const SETTINGS_FILE_NAME: &str = "settings.json";
 /// (`DataBackupContents`) includes. The runtime refuses a plan which names anything else, so that
 /// whatever goes wrong in the app, a restore never replaces the logs, the downloaded tools, or the
 /// data folder as a whole.
-const REPLACEABLE_ELEMENTS: [(Location, &str); 11] = [
+const REPLACEABLE_ELEMENTS: [(Location, &str); 12] = [
     (Location::ConfigDirectory, SETTINGS_FILE_NAME),
     (Location::DataDirectory, "workspaces/"),
     (Location::DataDirectory, "tempChats/"),
@@ -61,6 +61,7 @@ const REPLACEABLE_ELEMENTS: [(Location, &str); 11] = [
     (Location::DataDirectory, "tokenizers/"),
     (Location::DataDirectory, "visualBriefings/"),
     (Location::DataDirectory, "beyondFactsLab/"),
+    (Location::DataDirectory, "modelComparisons/"),
     (Location::DataDirectory, "databases/sqlite/"),
     (Location::DataDirectory, "databases/vector_database/stores/"),
     (Location::DataDirectory, "mediaTranscripts/"),
@@ -825,6 +826,21 @@ mod tests {
         assert_eq!(outcome, Some(RestoreOutcome::Applied));
         assert_eq!(test.read(Location::DataDirectory, "beyondFactsLab/restored/project.json").as_deref(), Some("restored preparation"));
         assert!(!test.exists(Location::DataDirectory, "beyondFactsLab/current"));
+    }
+
+    #[test]
+    fn a_restore_replaces_the_files_of_the_model_comparison() {
+        let test = TestFolders::new();
+        test.write_current_data();
+        test.write(Location::DataDirectory, "modelComparisons/presets/current.json", "current preset");
+        test.prepare_restore(r#"{ "location": "DATA_DIRECTORY", "relative_path": "modelComparisons/", "keep": [] }"#);
+        test.write(Location::DataDirectory, ".restore-pending/modelComparisons/presets/restored.json", "restored preset");
+
+        let outcome = apply_pending_restore_in(&test.folders(), &[]);
+
+        assert_eq!(outcome, Some(RestoreOutcome::Applied));
+        assert_eq!(test.read(Location::DataDirectory, "modelComparisons/presets/restored.json").as_deref(), Some("restored preset"));
+        assert!(!test.exists(Location::DataDirectory, "modelComparisons/presets/current.json"));
     }
 
     #[test]

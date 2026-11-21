@@ -8,7 +8,7 @@ namespace AIStudio.Dialogs;
 
 public partial class ReviewAttachmentsDialog : MSGComponentBase
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ReviewAttachmentsDialog).Namespace, nameof(ReviewAttachmentsDialog));
+    private new static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ReviewAttachmentsDialog).Namespace, nameof(ReviewAttachmentsDialog));
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -186,7 +186,7 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
         if (keepReadText is not null)
             dialogParameters.Add(x => x.KeepReadText, keepReadText);
 
-        var dialogReference = await dialogService.ShowAsync<ReviewAttachmentsDialog>(TB("Your attached files"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await dialogService.ShowAsync<ReviewAttachmentsDialog>(TA("Your attached files"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return documentPaths;

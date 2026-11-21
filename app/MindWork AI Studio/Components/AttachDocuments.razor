@@ -32,7 +32,7 @@
             }
             else if (this.DocumentPaths.Any())
             {
-                <MudTooltip Text="@T("Click the paperclip to attach files, or click the number to see your attached files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@TA("Click the paperclip to attach files, or click the number to see your attached files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudBadge
                         Content="@this.DocumentPaths.Count"
                         Color="Color.Primary"
@@ -49,7 +49,7 @@
             }
             else
             {
-                <MudTooltip Text="@T("Click here to attach files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@TA("Click here to attach files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton
                         Icon="@AppIcons.ATTACH_FILE"
                         Color="Color.Default"
@@ -70,7 +70,7 @@ else
     {
         <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
             <MudText Typo="Typo.body1" Inline="true">
-                @T("Drag and drop files into the marked area or click here to attach documents: ")
+                @TA("Drag and drop files into the marked area or click here to attach documents: ")
             </MudText>
             <MudButton
                 Variant="Variant.Filled"

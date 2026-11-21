@@ -10,7 +10,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     
     protected override string Title => T("Rewrite & Improve Text");
     
-    protected override string Description => T("Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.");
+    protected override string Description => TA("Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.");
     
     // The prompt of this assistant forbids explanations, so the chat gets a prompt of its own, which keeps the style of the text:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
@@ -58,7 +58,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
         },
     ];
     
-    protected override string SubmitText => T("Improve your text");
+    protected override string SubmitText => TA("Improve your text");
 
     protected override Func<Task> SubmitAction => this.RewriteText;
 
@@ -137,7 +137,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     private string? ValidateText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -145,7 +145,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }

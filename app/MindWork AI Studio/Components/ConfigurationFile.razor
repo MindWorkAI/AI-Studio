@@ -7,7 +7,7 @@
             Text="@this.Text()"
             TextChanged="@this.InternalUpdate"
             Disabled="@this.IsDisabled"
-            Placeholder="@(this.IsDisabled ? string.Empty : T("You can also drag & drop the file here."))"
+            Placeholder="@(this.IsDisabled ? string.Empty : TA("You can also drag & drop the file here."))"
             Adornment="Adornment.Start"
             AdornmentIcon="@this.Icon"
             AdornmentColor="@(isDropTarget ? Color.Primary : this.IconColor)"

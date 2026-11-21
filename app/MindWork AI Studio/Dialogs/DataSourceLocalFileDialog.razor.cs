@@ -193,9 +193,9 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     private string? MediaTranscriptionHint => !this.SelectsMedia
         ? null
         : this.MediaTranscriptionService.GetUsableProvider() is null
-            ? T("This audio or video file is skipped until you choose a transcription provider in the settings.")
+            ? TA("This audio or video file is skipped until you choose a transcription provider in the settings.")
             : this.AllowedTranscriptionProvider is null
-                ? T("This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires.")
+                ? TA("This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires.")
                 : null;
 
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
@@ -297,7 +297,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
             return null;
 
         if (maxChunkTokenLength < 1)
-            return T("Please enter a token limit of at least 1.");
+            return TA("Please enter a token limit of at least 1.");
 
         var providerMaxChunkTokenLength = this.ProviderMaxChunkTokenLength;
         if (maxChunkTokenLength > providerMaxChunkTokenLength)
@@ -312,7 +312,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
             return null;
 
         if (chunkOverlapTokenLength < 0)
-            return T("Please enter 0 or a positive overlap length.");
+            return TA("Please enter 0 or a positive overlap length.");
 
         var effectiveMaxChunkTokenLength = this.showExpertSettings && this.dataMaxChunkTokenLength > 0
             ? this.dataMaxChunkTokenLength

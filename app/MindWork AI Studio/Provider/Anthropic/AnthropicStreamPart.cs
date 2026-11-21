@@ -24,4 +24,12 @@ public readonly record struct AnthropicStreamPart(string TextDelta, TokenUsage U
     /// all is the tool calling loop's decision, which knows which round this is.
     /// </remarks>
     public bool HasContent => this.TextDelta.Length > 0;
+
+    /// <summary>
+    /// Whether this line carried thinking of the model, see ContentStreamChunk.IsReasoning.
+    /// </summary>
+    /// <remarks>
+    /// The thinking itself still does not show; only that it happens does.
+    /// </remarks>
+    public bool IsReasoning { get; init; }
 }

@@ -7,7 +7,7 @@ namespace AIStudio.Components;
 
 public partial class ConfigurationProviderSelection : MSGComponentBase
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationProviderSelection).Namespace, nameof(ConfigurationProviderSelection));
+    private new static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ConfigurationProviderSelection).Namespace, nameof(ConfigurationProviderSelection));
     
     [Parameter]
     public Func<string> SelectedValue { get; set; } = () => string.Empty;
@@ -19,7 +19,7 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
     public IEnumerable<ConfigurationSelectData<string>> Data { get; set; } = new List<ConfigurationSelectData<string>>();
     
     [Parameter]
-    public Func<string> HelpText { get; set; } = () => TB("Select a provider that is preselected.");
+    public Func<string> HelpText { get; set; } = () => TA("Select a provider that is preselected.");
 
     [Parameter]
     public Tools.Components Component { get; set; } = Tools.Components.NONE;
@@ -33,8 +33,27 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
     [Parameter]
     public Func<bool> IsLocked { get; set; } = () => false;
 
+    /// <summary>
+    /// The label of the option, or null for "Preselected provider".
+    /// </summary>
+    [Parameter]
+    public string? OptionDescription { get; set; }
+
+    /// <summary>
+    /// The text of an entry which preselects no provider at all, or null to offer no such entry.
+    /// </summary>
+    /// <remarks>
+    /// The entry stands before "Use app default" and selects the ID of Provider.NONE, because an empty text already
+    /// means the provider of the whole app.
+    /// </remarks>
+    [Parameter]
+    public string? NoPreselectionText { get; set; }
+
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
+        if (this.NoPreselectionText is not null)
+            yield return new(this.NoPreselectionText, AIStudio.Settings.Provider.NONE.Id);
+
         if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
             yield return new(T("Use app default"), string.Empty);
 
@@ -69,6 +88,10 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
             case Event.CONFIGURATION_CHANGED:
                 
                 if(string.IsNullOrWhiteSpace(this.SelectedValue()))
+                    break;
+
+                // Preselecting no provider stays valid, whichever providers exist:
+                if (this.NoPreselectionText is not null && this.SelectedValue() == AIStudio.Settings.Provider.NONE.Id)
                     break;
                 
                 // Check if the selected value is still valid:

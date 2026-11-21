@@ -49,6 +49,8 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AIJobService).Namespace, nameof(AIJobService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(AIJobService).Namespace, nameof(AIJobService));
+
     private readonly ConcurrentDictionary<Guid, AIJobState> jobs = new();
     private readonly ConcurrentDictionary<Guid, Guid> activeChatJobsByChatId = new();
 
@@ -260,7 +262,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             if (settingsManager.IsProviderProhibited(request.ProviderSettings.UsedLLMProvider))
             {
                 logger.LogError("The provider of chat '{ChatId}' is prohibited by the organization. Skipping the AI process.", chatThread.ChatId);
-                await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, TB("The use of this provider has been prohibited by your organization. Please select a different provider."));
+                await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, TA("The use of this provider has been prohibited by your organization. Please select a different provider."));
                 return;
             }
 
@@ -301,7 +303,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                 // The answer is about to be created without the data the user expected it to use.
                 // Without this message, that answer is indistinguishable from one that did use it:
                 //
-                await MessageBus.INSTANCE.SendWarning(new(AppIcons.DATA_SOURCE, TB("Your data sources could not be used. This answer was created without them.")));
+                await MessageBus.INSTANCE.SendWarning(new(AppIcons.DATA_SOURCE, TA("Your data sources could not be used. This answer was created without them.")));
             }
 
             token.ThrowIfCancellationRequested();
@@ -601,7 +603,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             return true;
 
         var message = string.Format(
-            TB("The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."),
+            TA("The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."),
             chatModel.Id,
             provider.InstanceName,
             provider.Provider);

@@ -28,7 +28,18 @@ public interface IProvider
     /// e.g., to distinguish between different OpenAI API keys.
     /// </summary>
     public string InstanceName { get; }
-    
+
+    /// <summary>
+    /// Whether messages to the user leave out which provider and which model this is, e.g., while the Model Comparison
+    /// assistant must not reveal which model answers in a chat.
+    /// </summary>
+    /// <remarks>
+    /// Set on the instance of one request, which Settings.Provider.CreateProvider creates anew every time, so that it
+    /// never reaches another request. Messages read the names through NameForUser, TypeForUser, and ModelNameForUser.
+    /// What a provider writes into its own error message can still name it; such a message reaches the user as it is.
+    /// </remarks>
+    public bool HidesIdentity { get; set; }
+
     /// <summary>
     /// The additional API parameters.
     /// </summary>

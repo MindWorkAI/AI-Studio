@@ -131,6 +131,32 @@ public static partial class PluginFactory
         return wasConfigurationChanged;
     }
 
+    /// <summary>
+    /// Whether your organization deployed this assistant plugin itself.
+    /// </summary>
+    /// <remarks>
+    /// Rules of your organization which keep plugins of others away, e.g., disabled categories, never
+    /// apply to its own plugins. Two things prove that a plugin is one of them: it is stored below the
+    /// directory of a configuration plugin, or it declares DEPLOYED_USING_CONFIG_SERVER and your
+    /// organization approved exactly its code, e.g., when an MDM solution rolls it out. The declaration
+    /// alone proves nothing, because any plugin from the internet can make it. The approval alone does
+    /// not either: it states that a plugin is safe, not that the organization wants it.
+    /// </remarks>
+    /// <param name="plugin">The assistant plugin in question.</param>
+    /// <param name="approvals">The approvals of your organization, i.e., DataAssistantPluginAudit.EnterpriseApprovedPlugins.</param>
+    /// <returns>True when your organization deployed the plugin itself.</returns>
+    public static bool IsAssistantDeployedByOrganization(PluginAssistants plugin, IEnumerable<DataAssistantPluginEnterpriseApproval> approvals)
+    {
+        if (IsOrganizationConfigurationPath(plugin.PluginPath))
+            return true;
+
+        if (!plugin.IsManagedByConfigServer)
+            return false;
+
+        var pluginHash = NormalizeAssistantHash(plugin.ComputeAuditHash());
+        return pluginHash.Length > 0 && approvals.Any(approval => string.Equals(NormalizeAssistantHash(approval.PluginHash), pluginHash, StringComparison.Ordinal));
+    }
+
     private static bool IsOrganizationDefaultActivation(Dictionary<string, DataAssistantPluginEnterpriseApproval> approvalsByHash, string pluginHash)
         => approvalsByHash.TryGetValue(pluginHash, out var approval) && approval is { Activate: true, AllowUserOverride: true };
 

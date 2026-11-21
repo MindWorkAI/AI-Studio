@@ -1,8 +1,10 @@
 using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Assistants.BeyondFactsLab;
+using AIStudio.Assistants.ModelComparison;
 using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Chat.Compression;
+using AIStudio.Chat.Embedded;
 using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
@@ -238,6 +240,9 @@ internal sealed class Program
         builder.Services.AddSingleton<BflResultGenerator>();
         builder.Services.AddSingleton<BflResearchRunner>();
         builder.Services.AddSingleton<BflMaterialService>();
+        builder.Services.AddSingleton<ModelComparisonStore>();
+        builder.Services.AddSingleton<ModelComparisonSeriesJudge>();
+        builder.Services.AddSingleton<EmbeddedChatService>();
         builder.Services.AddSingleton<PluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
@@ -358,10 +363,9 @@ internal sealed class Program
         // which are not part of the request pipeline:
         SERVICE_PROVIDER = app.Services;
 
-        // The texts of TA() address the person as the BeyondFacts Lab is set to, since only the lab has such texts
-        // so far. Once the app gets a setting of its own for the form of address, that setting takes over here:
+        // The texts of TA() address the person as the app settings say:
         var settingsForTexts = app.Services.GetRequiredService<SettingsManager>();
-        I18N.UseAddressFormOf(() => settingsForTexts.ConfigurationData.BeyondFactsLab.AddressForm);
+        I18N.UseAddressFormOf(() => settingsForTexts.ConfigurationData.App.AddressForm);
 
         // Initialize the encryption service:
         programLogger.LogInformation("Initializing the encryption service.");

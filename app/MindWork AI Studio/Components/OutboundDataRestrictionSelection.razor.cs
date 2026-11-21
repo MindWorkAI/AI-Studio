@@ -64,7 +64,7 @@ public partial class OutboundDataRestrictionSelection : MSGComponentBase
                 return T("Only self-hosted providers may use this data source. A chat which found something in it may therefore only use the services configured in AI Studio, such as the allowed private hosts of the tool 'Read Web Page'.");
 
             if (this.OrganizationMinimum is not OutboundDataRestriction.UNRESTRICTED)
-                return T("Your organization does not allow less strict settings than the ones offered here.");
+                return TA("Your organization does not allow less strict settings than the ones offered here.");
 
             return null;
         }

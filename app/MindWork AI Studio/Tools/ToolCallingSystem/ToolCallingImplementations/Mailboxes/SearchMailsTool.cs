@@ -31,6 +31,8 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SearchMailsTool).Namespace, nameof(SearchMailsTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(SearchMailsTool).Namespace, nameof(SearchMailsTool));
+
     private const string QUERY_ARGUMENT = "query";
     private const string PAGE_ARGUMENT = "page";
     private const string TOOL_ACTION = "search";
@@ -187,7 +189,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 
     public string GetDisplayName() => TB("Search Mails");
 
-    public string GetDescription() => TB("Lets the AI search your mailboxes, list mails by sender, date, or flags, and quote what they say.");
+    public string GetDescription() => TA("Lets the AI search your mailboxes, list mails by sender, date, or flags, and quote what they say.");
 
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(ToolDefinition definition, IReadOnlyDictionary<string, string> settingsValues, CancellationToken token = default) =>
         Task.FromResult(MailToolConfiguration.GetState(settingsManager));

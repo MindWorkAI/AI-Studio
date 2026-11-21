@@ -18,6 +18,8 @@ namespace AIStudio.Agents.AssistantAudit;
 public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILogger<AgentBase> baseLogger, SettingsManager settingsManager, DataSourceService dataSourceService, ToolRegistry toolRegistry, ThreadSafeRandom rng) : AgentBase(baseLogger, settingsManager, dataSourceService, rng)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantAuditAgent).Namespace, nameof(AssistantAuditAgent));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(AssistantAuditAgent).Namespace, nameof(AssistantAuditAgent));
     
     protected override Type Type => Type.SYSTEM;
 
@@ -167,7 +169,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             //
             var wasFallbackRejected = fallbackProvider is { UsedLLMProvider: not LLMProviders.NONE };
             var message = wasFallbackRejected
-                ? TB("The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.")
+                ? TA("The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.")
                 : TB("No provider is configured for the Security Audit Agent.");
 
             await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, message));
@@ -270,7 +272,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         if (response.Content is not ContentText content || string.IsNullOrWhiteSpace(content.Text))
         {
             logger.LogWarning($"The assistant plugin audit agent did not return text: {response}");
-            await MessageBus.INSTANCE.SendWarning(new (AppIcons.AUDIT_INCOMPLETE, string.Format(TB("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."))));
+            await MessageBus.INSTANCE.SendWarning(new (AppIcons.AUDIT_INCOMPLETE, string.Format(TA("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."))));
             
             return new AssistantAuditResult
             {

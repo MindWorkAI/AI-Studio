@@ -29,6 +29,8 @@ public static class ConfigurationSnippetImport
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationSnippetImport).Namespace, nameof(ConfigurationSnippetImport));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ConfigurationSnippetImport).Namespace, nameof(ConfigurationSnippetImport));
+
     /// <summary>
     /// Reads a pasted configuration snippet and makes its configuration object one of the user's own.
     /// </summary>
@@ -66,7 +68,7 @@ public static class ConfigurationSnippetImport
             case DataSourceERI_V1 dataSource:
                 if (dataSource.AuthMethod is AuthMethod.KERBEROS)
                 {
-                    issue = TB("Data sources which sign in with Kerberos cannot be imported yet. Please add them yourself.");
+                    issue = TA("Data sources which sign in with Kerberos cannot be imported yet. Please add them yourself.");
                     return false;
                 }
 
@@ -99,7 +101,7 @@ public static class ConfigurationSnippetImport
             case ChatTemplate template:
                 var localPaths = attachmentPaths.Where(IsLocalFile).ToList();
                 if (localPaths.Count > 0)
-                    hints.Add(string.Format(TB("The chat template attaches these files from this computer to every chat started with it: {0}. Please check that you want to share them."), string.Join(", ", localPaths)));
+                    hints.Add(string.Format(TA("The chat template attaches these files from this computer to every chat started with it: {0}. Please check that you want to share them."), string.Join(", ", localPaths)));
 
                 result = new(MakeLocal(template) with { FileAttachments = localPaths.Select(FileAttachment.FromPath).ToList() }, string.Empty, hints, attachmentPaths.Except(localPaths).ToList());
                 return true;
@@ -152,15 +154,15 @@ public static class ConfigurationSnippetImport
                 {
                     var templateProvider = settingsManager.GetProviderById(template.ProviderId);
                     if (templateProvider == Settings.Provider.NONE)
-                        hints.Add(string.Format(TB("The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead."), template.ProviderId));
+                        hints.Add(string.Format(TA("The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead."), template.ProviderId));
                     else if (settingsManager.GetChatTemplateProvider(template.ProviderId) == Settings.Provider.NONE)
-                        hints.Add(string.Format(TB("The chat template preselects the provider '{0}', which does not meet the confidence level required for chats. Chats started with it use your usual provider instead."), templateProvider.InstanceName));
+                        hints.Add(string.Format(TA("The chat template preselects the provider '{0}', which does not meet the confidence level required for chats. Chats started with it use your usual provider instead."), templateProvider.InstanceName));
                 }
 
                 if (template.ProfileId is not null && !template.AllowProfileUsage)
                     hints.Add(TB("The chat template preselects a profile but does not allow profiles. Chats started with it ignore that profile."));
                 else if (template.ProfileId is not null && !template.StartsWithoutProfile() && settingsManager.GetProfileById(template.ProfileId) == Profile.NO_PROFILE)
-                    hints.Add(string.Format(TB("The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead."), template.ProfileId));
+                    hints.Add(string.Format(TA("The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead."), template.ProfileId));
 
                 return result with { ConfigurationObject = template with { ToolIds = templateToolIds }, Hints = hints };
 
@@ -265,14 +267,14 @@ public static class ConfigurationSnippetImport
 
         if (!EnterpriseEncryption.IsEncrypted(encryptedApiKey))
         {
-            hints.Add(TB("The pasted configuration contains an API key which is not encrypted, so it was left out. Please enter your API key before you save the provider."));
+            hints.Add(TA("The pasted configuration contains an API key which is not encrypted, so it was left out. Please enter your API key before you save the provider."));
             return string.Empty;
         }
 
         if (TryReadSecret(table, API_KEY_FIELD, out var apiKey))
             return apiKey;
 
-        hints.Add(TB("The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider."));
+        hints.Add(TA("The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider."));
         return string.Empty;
     }
 
@@ -303,7 +305,7 @@ public static class ConfigurationSnippetImport
         {
             var secretFieldName = DataSourceERI_V1.GetSecretFieldName(authMethod);
             if (EnterpriseEncryption.IsEncrypted(ReadString(table, secretFieldName)) && !TryReadSecret(table, secretFieldName, out _))
-                return TB("The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.");
+                return TA("The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.");
         }
 
         return string.Format(TB("The pasted configuration is not a valid configuration of the type '{0}'."), type.Name);

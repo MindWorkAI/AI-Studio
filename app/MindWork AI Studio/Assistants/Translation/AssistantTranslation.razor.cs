@@ -151,7 +151,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -159,7 +159,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private string? ValidatingTargetLanguage(CommonLanguages language)
     {
         if(language == CommonLanguages.AS_IS)
-            return T("Please select a target language.");
+            return TA("Please select a target language.");
         
         return null;
     }
@@ -167,7 +167,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }

@@ -7,7 +7,7 @@
         <MudStack Row="true" AlignItems="AlignItems.Center">
             <MudText Typo="Typo.h5">@T("Background embeddings")</MudText>
             <MudSpacer/>
-            <MudTooltip Text="@T("Manage your data sources")" Placement="Placement.Top">
+            <MudTooltip Text="@TA("Manage your data sources")" Placement="Placement.Top">
                 <MudIconButton Icon="@AppIcons.SETTINGS" OnClick="@this.OpenDataSourceSettings"/>
             </MudTooltip>
         </MudStack>
@@ -15,7 +15,7 @@
             @T("AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run. The same applies to documents without readable text, such as scanned pages: AI Studio remembers them and reads them again only once they change.")
         </MudText>
         <MudText Typo="Typo.body1" Class="mt-2">
-            @T("AI Studio indexes large data sources in steps of a few minutes, so that your other data sources get their turn in between.")
+            @TA("AI Studio indexes large data sources in steps of a few minutes, so that your other data sources get their turn in between.")
             @this.PauseBetweenStepsText
         </MudText>
         @if (this.AreMailboxesEnabled)
@@ -177,7 +177,7 @@
                                                         <MudTd>
                                                             @if (CanShowInFileManager(status, context))
                                                             {
-                                                                <MudTooltip Text="@T("Show this file in the file browser of your system")">
+                                                                <MudTooltip Text="@TA("Show this file in the file browser of your system")">
                                                                     <MudIconButton Icon="@AppIcons.FOLDER_OPEN" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.ShowInFileManager(context))"/>
                                                                 </MudTooltip>
                                                             }
@@ -233,7 +233,7 @@
                                                         <MudTd>
                                                             @if (CanShowInFileManager(status, context.FilePath))
                                                             {
-                                                                <MudTooltip Text="@T("Show this file in the file browser of your system")">
+                                                                <MudTooltip Text="@TA("Show this file in the file browser of your system")">
                                                                     <MudIconButton Icon="@AppIcons.FOLDER_OPEN" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.ShowInFileManager(context.FilePath))"/>
                                                                 </MudTooltip>
                                                             }

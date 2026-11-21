@@ -170,7 +170,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     private string? ValidatingText(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
-            return T("Please provide source material for the SWOT analysis. You can enter text, load a document, or import content from a website.");
+            return TA("Please provide source material for the SWOT analysis. You can enter text, load a document, or import content from a website.");
 
         return null;
     }
@@ -178,7 +178,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     private string? ValidatingAnalysisGoal(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
-            return T("Please describe the goal the SWOT analysis should support.");
+            return TA("Please describe the goal the SWOT analysis should support.");
 
         return null;
     }
@@ -186,7 +186,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
     private string? ValidateCustomLanguage(string language)
     {
         if (this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
 
         return null;
     }

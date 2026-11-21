@@ -31,6 +31,8 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(CountMailsTool).Namespace, nameof(CountMailsTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(CountMailsTool).Namespace, nameof(CountMailsTool));
+
     private const string GROUP_BY_ARGUMENT = "group_by";
     private const string TOOL_ACTION = "count";
 
@@ -124,7 +126,7 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
 
     public string GetDisplayName() => TB("Count Mails");
 
-    public string GetDescription() => TB("Lets the AI count the mails in your mailboxes, e.g., the unread ones or those in a project folder.");
+    public string GetDescription() => TA("Lets the AI count the mails in your mailboxes, e.g., the unread ones or those in a project folder.");
 
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(ToolDefinition definition, IReadOnlyDictionary<string, string> settingsValues, CancellationToken token = default) =>
         Task.FromResult(MailToolConfiguration.GetState(settingsManager));

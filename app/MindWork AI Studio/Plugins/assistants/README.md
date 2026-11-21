@@ -8,6 +8,9 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
   - [Directory Structure](#directory-structure)
   - [Structure](#structure)
     - [Minimal Requirements Assistant Table](#example-minimal-requirements-assistant-table)
+  - [Categories](#categories)
+    - [Custom categories](#custom-categories)
+    - [Categories your organization disabled](#categories-your-organization-disabled)
   - [Continuing in a Chat](#continuing-in-a-chat)
     - [Supported types (matching the Blazor UI components):](#supported-types-matching-the-blazor-ui-components)
   - [Component References](#component-references)
@@ -111,6 +114,64 @@ ASSISTANT = {
     },
 }
 ```
+
+## Categories
+`CATEGORIES` decides where the assistants page shows your assistant: under the heading of each category it names, next to the built-in assistants of the same category. An assistant with `CATEGORIES = { "BUSINESS", "SCIENCE" }` appears under "Business" and under "Science", but only once under each heading. Name at least one category, and name only categories which fit your assistant: users and organizations decide by the categories what they see.
+
+| Key | Heading on the assistants page |
+|---|---|
+| `COMMON` | General |
+| `BUSINESS` | Business |
+| `EDUCATION` | Learning & Reflecting |
+| `SOFTWARE_DEVELOPMENT` | Software Development |
+| `ART` | Art |
+| `CONTENT_CREATION` | Content Creation |
+| `ENTERTAINMENT` | Entertainment |
+| `FICTION` | Fiction |
+| `FITNESS` | Fitness |
+| `FOOD` | Food |
+| `GAMING` | Gaming |
+| `HEALTH` | Health |
+| `INDUSTRY` | Industry |
+| `MUSIC` | Music |
+| `NEWS` | News |
+| `PARTY` | Party |
+| `POLITICAL` | Political |
+| `SCIENCE` | Science |
+| `SHOPPING` | Shopping |
+| `SOCIAL` | Social |
+| `SPORTS` | Sports |
+| `TECHNOLOGY` | Technology |
+| `TRAVEL` | Travel |
+| `UTILITY` | Utility |
+| `WEATHER` | Weather |
+| `WRITING` | Writing |
+| `AI_STUDIO_DEVELOPMENT` | AI Studio Development |
+| `CUSTOM` | Your own categories, see below |
+
+- AI Studio shows the headings in the language of the user. The page starts with "General", "Business", "Learning & Reflecting", and "Software Development", continues with the other categories in alphabetical order, then with custom categories, and ends with "AI Studio Development".
+- `CORE` belongs to configuration and language plugins. An assistant which names it appears under "General", just like one with `COMMON`.
+- Write the keys exactly as listed. AI Studio skips an unknown key, and a plugin without any known key does not load.
+- Users can collapse a category or hide it on the assistants page. They also decide whether the "Send to ..." menu keeps offering the assistants of such a category.
+- Requires AI Studio v26.11.2 or newer. Older versions do not know `COMMON`, `AI_STUDIO_DEVELOPMENT`, and `CUSTOM`, skip them, and refuse a plugin which names no other key. To reach older versions as well, add a key they know, e.g., `CATEGORIES = { "COMMON", "CORE" }`: both stand for "General", so the assistant appears there once.
+
+### Custom categories
+When no category fits, name your own: add `CUSTOM` to `CATEGORIES` and the names to `CUSTOM_CATEGORIES`.
+
+```lua
+CATEGORIES = { "SCIENCE", "CUSTOM" }
+CUSTOM_CATEGORIES = { "Space Travel" }
+```
+
+- AI Studio shows the names as you write them, in every language, so write them in the language of your users.
+- Names which differ only in case share one heading, also when they come from different plugins.
+- `CUSTOM` needs `CUSTOM_CATEGORIES` with at least one name, and `CUSTOM_CATEGORIES` needs `CUSTOM`. A name must not be empty. Otherwise, AI Studio does not load the plugin.
+
+### Categories your organization disabled
+Organizations can disable categories on their devices, e.g., `ENTERTAINMENT`, through the settings `DataApp.DisabledAssistantCategories` and `DataApp.DisabledCustomAssistantCategories` of a configuration plugin. An assistant of a disabled category disappears: from the assistants page, from links, and from the Assistant Builder. Users cannot switch it on.
+
+- An assistant with several categories stays available while one of them is not disabled.
+- Assistant plugins the organization deployed itself are never disabled by their categories: a plugin stored below the directory of a configuration plugin, or one which declares `DEPLOYED_USING_CONFIG_SERVER = true` and whose code the organization approved.
 
 ## Continuing in a Chat
 Users can continue the result of a form assistant in a chat: "Send to ..." → "New Chat" opens a chat with the conversation of the assistant. Which system prompt that chat gets is your decision, made in the optional field `ChatSystemPrompt`:

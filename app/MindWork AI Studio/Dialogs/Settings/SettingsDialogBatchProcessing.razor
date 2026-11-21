@@ -25,7 +25,7 @@
             <MudText Typo="Typo.subtitle2" Class="mb-2 mt-4">@T("Files to include")</MudText>
             <FilePatternSelection>
                 <AllowedContent>
-                    <ConfigurationText Compact="@true" ExpandToContent="@true" OptionDescription="@T("Files to include")" Disabled="@this.DefaultsDisabled" Icon="@AppIcons.FILE_FILTER" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.FilePatterns)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.FilePatterns = value)" ResetValue="@(() => DataBatchProcessing.DEFAULT_FILE_PATTERNS)" ResetButtonText="@T("Restore default patterns")" ResetButtonIconOnly="@true" OptionHelp="@T("Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats as well as images in JPG, PNG, WebP, GIF, BMP, and TIFF format.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.FilePatterns, out var meta) && meta.IsLocked"/>
+                    <ConfigurationText Compact="@true" ExpandToContent="@true" OptionDescription="@T("Files to include")" Disabled="@this.DefaultsDisabled" Icon="@AppIcons.FILE_FILTER" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.FilePatterns)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.FilePatterns = value)" ResetValue="@(() => DataBatchProcessing.DEFAULT_FILE_PATTERNS)" ResetButtonText="@T("Restore default patterns")" ResetButtonIconOnly="@true" OptionHelp="@TA("Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats as well as images in JPG, PNG, WebP, GIF, BMP, and TIFF format.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.FilePatterns, out var meta) && meta.IsLocked"/>
                 </AllowedContent>
                 <ExcludedContent>
                     <ConfigurationFileExclusions Compact="@true" ShowHelp="@false" OptionDescription="@T("Default excluded files and folders")" Disabled="@this.DefaultsDisabled" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.ExcludePatterns)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.ExcludePatterns = value)" Validation="@FileExclusions.Validate" ResetValue="@(() => FileExclusions.DEFAULT_PATTERNS)" ResetButtonText="@T("Restore default")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.ExcludePatterns, out var meta) && meta.IsLocked"/>
@@ -51,7 +51,7 @@
                 <ConfigurationSelect OptionDescription="@T("Default document analysis policy")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedPolicyId)" Data="@this.PolicyData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedPolicyId = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PreselectedPolicyId, out var meta) && meta.IsLocked"/>
                 @if (this.SelectedPolicyMissing)
                 {
-                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-6">@T("The configured default policy no longer exists. Select another policy before starting a policy-based batch run.")</MudAlert>
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-6">@TA("The configured default policy no longer exists. Select another policy before starting a policy-based batch run.")</MudAlert>
                 }
             }
 
@@ -59,7 +59,7 @@
             @if (this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource is BatchProcessingPromptSource.POLICY)
             {
                 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-                    @T("A policy brings its own tools, so there is nothing to preselect here. You configure them with the policy in the Document Analysis Assistant.")
+                    @TA("A policy brings its own tools, so there is nothing to preselect here. You configure them with the policy in the Document Analysis Assistant.")
                 </MudJustifiedText>
             }
             else
@@ -71,16 +71,16 @@
             <ConfigurationSelect OptionDescription="@T("Default output mode")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode)" Data="@this.OutputModeData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.OutputMode, out var meta) && meta.IsLocked"/>
             @if (this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
             {
-                <ConfigurationSelect OptionDescription="@T("Default file format")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.ResultFileFormat)" Data="@ResultFileFormatData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.ResultFileFormat = value)" OptionHelp="@T("Choose the format of new result files. Everything except Markdown is converted by Pandoc.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.ResultFileFormat, out var meta) && meta.IsLocked"/>
+                <ConfigurationSelect OptionDescription="@T("Default file format")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.ResultFileFormat)" Data="@ResultFileFormatData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.ResultFileFormat = value)" OptionHelp="@TA("Choose the format of new result files. Everything except Markdown is converted by Pandoc.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.ResultFileFormat, out var meta) && meta.IsLocked"/>
             }
             else
             {
                 <ConfigurationText OptionDescription="@T("Default results table name")" Disabled="@this.DefaultsDisabled" Icon="@AppIcons.DOCUMENT" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.CsvFileName)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.CsvFileName = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.CsvFileName, out var meta) && meta.IsLocked"/>
                 <ConfigurationText OptionDescription="@T("Default result column header")" Disabled="@this.DefaultsDisabled" Icon="@AppIcons.RESULT_COLUMN" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.ResultColumnHeader)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.ResultColumnHeader = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.ResultColumnHeader, out var meta) && meta.IsLocked"/>
-                <ConfigurationSelect OptionDescription="@T("Default column separator")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.CsvSeparator)" Data="@this.CsvSeparatorData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.CsvSeparator = value)" OptionHelp="@T("Choose which character separates the columns of new results tables.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.CsvSeparator, out var meta) && meta.IsLocked"/>
+                <ConfigurationSelect OptionDescription="@T("Default column separator")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.CsvSeparator)" Data="@this.CsvSeparatorData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.CsvSeparator = value)" OptionHelp="@TA("Choose which character separates the columns of new results tables.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.CsvSeparator, out var meta) && meta.IsLocked"/>
                 @if (this.SettingsManager.ConfigurationData.BatchProcessing.CsvSeparator is BatchProcessingCsvSeparator.CUSTOM)
                 {
-                    <ConfigurationText OptionDescription="@T("Default custom column separator")" Disabled="@this.DefaultsDisabled" Icon="@AppIcons.CSV_SEPARATOR" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.CustomCsvSeparator)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.CustomCsvSeparator = value)" Validation="@this.ValidateCustomCsvSeparator" OptionHelp="@T("Enter one punctuation or symbol character.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.CustomCsvSeparator, out var meta) && meta.IsLocked"/>
+                    <ConfigurationText OptionDescription="@T("Default custom column separator")" Disabled="@this.DefaultsDisabled" Icon="@AppIcons.CSV_SEPARATOR" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.CustomCsvSeparator)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.CustomCsvSeparator = value)" Validation="@this.ValidateCustomCsvSeparator" OptionHelp="@TA("Enter one punctuation or symbol character.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.CustomCsvSeparator, out var meta) && meta.IsLocked"/>
                 }
             }
             <ConfigurationDirectory OptionDescription="@T("Default output folder")" Disabled="@this.DefaultsDisabled" DirectoryDialogTitle="@T("Select the default output folder")" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.OutputDirectory)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.OutputDirectory = value)" OptionHelp="@T("Leave empty to use the ai-results subfolder of the input folder.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.OutputDirectory, out var meta) && meta.IsLocked"/>
@@ -88,7 +88,7 @@
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Processing pace")</MudText>
             @if (this.MinimumDelayIsManaged)
             {
-                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-6">@(string.Format(T("Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit."), this.ManagedMinimumDelaySeconds))</MudAlert>
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-6">@(string.Format(TA("Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit."), this.ManagedMinimumDelaySeconds))</MudAlert>
             }
             else
             {

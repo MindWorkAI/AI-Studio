@@ -15,7 +15,7 @@ public sealed partial class RustService
     /// <param name="text">The text to copy to the clipboard.</param>
     public async Task CopyText2Clipboard(string text)
     {
-        var message = TB("Successfully copied the text to your clipboard");
+        var message = TA("Successfully copied the text to your clipboard");
         var succeeded = false;
         try
         {
@@ -24,7 +24,7 @@ public sealed partial class RustService
             if (!response.IsSuccessStatusCode)
             {
                 this.logger!.LogError($"Failed to copy the text to the clipboard due to an network error: '{response.StatusCode}'");
-                message = TB("Failed to copy the text to your clipboard.");
+                message = TA("Failed to copy the text to your clipboard.");
                 return;
             }
 
@@ -32,7 +32,7 @@ public sealed partial class RustService
             if (!state.Success)
             {
                 this.logger!.LogError("Failed to copy the text to the clipboard.");
-                message = TB("Failed to copy the text to your clipboard.");
+                message = TA("Failed to copy the text to your clipboard.");
                 return;
             }
 

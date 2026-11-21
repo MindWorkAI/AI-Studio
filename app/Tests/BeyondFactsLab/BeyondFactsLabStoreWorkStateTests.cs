@@ -75,7 +75,7 @@ public sealed class BeyondFactsLabStoreWorkStateTests
         const string DAMAGED = "{ \"draft\": ";
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var path = await this.WriteWorkStateFileAsync(created.ProjectId, "02-knowledge", DAMAGED);
+        var path = await this.WriteWorkStateFileAsync(created.ProjectId, "knowledge", DAMAGED);
 
         var workStates = await store.LoadWorkStatesAsync(created.ProjectId);
 
@@ -95,7 +95,7 @@ public sealed class BeyondFactsLabStoreWorkStateTests
         const string NEWER = """{ "schemaVersion": 2, "fieldSuggestions": {} }""";
         var store = this.CreateStore();
         var created = await store.CreateAsync("Panel");
-        var path = await this.WriteWorkStateFileAsync(created.ProjectId, "05-strategy", NEWER);
+        var path = await this.WriteWorkStateFileAsync(created.ProjectId, "strategy", NEWER);
 
         using (Assert.EnterMultipleScope())
         {

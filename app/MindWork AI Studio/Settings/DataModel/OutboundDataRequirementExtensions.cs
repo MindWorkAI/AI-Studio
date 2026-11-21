@@ -5,6 +5,8 @@ namespace AIStudio.Settings.DataModel;
 public static class OutboundDataRequirementExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(OutboundDataRequirementExtensions).Namespace, nameof(OutboundDataRequirementExtensions));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(OutboundDataRequirementExtensions).Namespace, nameof(OutboundDataRequirementExtensions));
     /// <param name="requirement">What the chat demands.</param>
     extension(OutboundDataRequirement requirement)
     {
@@ -24,7 +26,7 @@ public static class OutboundDataRequirementExtensions
         public string GetToolBlockedMessage(Data settings) => requirement.Origin switch
         {
             OutboundDataOrigin.MAILBOX => GetMailboxBlockedMessage(requirement, settings.Mailboxes),
-            OutboundDataOrigin.CONFLUENCE_WIKI => string.Format(TB("This chat holds content from your Confluence wiki, found while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again."), requirement.Restriction.Name),
+            OutboundDataOrigin.CONFLUENCE_WIKI => string.Format(TA("This chat holds content from your Confluence wiki, found while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again."), requirement.Restriction.Name),
             OutboundDataOrigin.INTERNAL_WEB_PAGE => string.Format(TB("This chat holds content from an internal web page on '{0}', read while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat without this content can use it again."), requirement.Reference, requirement.Restriction.Name),
             OutboundDataOrigin.DATA_SOURCE => GetDataSourceBlockedMessage(requirement, settings.DataSources),
             OutboundDataOrigin.BEYOND_FACTS_LAB => TB("This chat holds a preparation of the BeyondFacts Lab, which may be unpublished, so it reads only web pages whose addresses stand in the chat. This tool would send data beyond that, so it is not available in this chat. The lab searches the web in a research of its own, which receives only the public details about the event. A new chat without this content can use it again."),

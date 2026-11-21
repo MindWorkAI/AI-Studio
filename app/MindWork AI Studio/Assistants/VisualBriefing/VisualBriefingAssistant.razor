@@ -68,7 +68,7 @@
                                     <MudCopyClipboardButton TooltipMessage="@T("Copy project ID")" StringContent="@this.selectedProject.BriefingId.ToString("D")"/>
                                 </MudStack>
                                 <MudText Typo="Typo.body2">
-                                    @T("If you need help, report the problem and include the project ID.")
+                                    @TA("If you need help, report the problem and include the project ID.")
                                     <MudLink Href="https://github.com/MindWorkAI/AI-Studio" Target="_blank">@T("Report a problem?")</MudLink>
                                 </MudText>
                                 <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
@@ -81,7 +81,7 @@
                     else if (this.selectedBriefing is null)
                     {
                         <MudPaper Outlined="true" Class="pa-6">
-                            <MudText Typo="Typo.h5">@T("Create or import a visual briefing to begin.")</MudText>
+                            <MudText Typo="Typo.h5">@TA("Create or import a visual briefing to begin.")</MudText>
                         </MudPaper>
                     }
                     else
@@ -192,27 +192,9 @@
 
                             <MudPaper Outlined="true" Class="pa-4 mb-4">
                                 <MudText Typo="Typo.h5" Class="mb-3">@T("Briefing settings")</MudText>
-                                @*
-                                    The confidence belongs to the provider chosen right next to it, so both share one row.
-                                    It uses the icon trigger, like the chat does, so this row ends the same way the profile
-                                    row below it does: a field followed by one compact icon button.
-                                    Do not add a margin to that button to "correct" its height: a dense outlined select with
-                                    a label carries margin-top 8px and margin-bottom 4px of its own, so centring the boxes
-                                    already lands within a few pixels of the visible frame, and any added margin makes it
-                                    worse. Baseline alignment does not work here either, because the wrapper below takes
-                                    its baseline from its last line box, which sits under the input.
-                                *@
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.NoWrap">
-                                    @* ProviderSelection marks its select as flex-grow-0, and that utility is declared
-                                       !important, so StretchItems cannot widen it. The width has to come from here. *@
-                                    <div class="flex-grow-1">
-                                        <ProviderSelection @bind-ProviderSettings="@this.editor.Provider" ValidateProvider="@this.ValidateProvider" ExplicitMinimumConfidence="@this.MinimumProviderConfidence" Disabled="@this.IsCurrentBusy"/>
-                                    </div>
-                                    @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
-                                    {
-                                        <ConfidenceInfo LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
-                                    }
-                                </MudStack>
+                                @* The provider row ends in a field followed by one compact icon button, the same way the
+                                   profile row below it does. *@
+                                <ProviderSelectionWithConfidence @bind-ProviderSettings="@this.editor.Provider" ValidateProvider="@this.ValidateProvider" ExplicitMinimumConfidence="@this.MinimumProviderConfidence" Disabled="@this.IsCurrentBusy"/>
 
                                 <ProfileFormSelection @bind-Profile="@this.editor.Profile" Disabled="@this.IsCurrentBusy"/>
                                 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name)" @bind-Value="@this.editor.TargetLanguage" Icon="@AppIcons.LANGUAGE" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.editor.CustomTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomTargetLanguage" SelectionUpdated="@(_ => this.ScheduleFormValidation())" Disabled="@this.IsCurrentBusy"/>
@@ -248,7 +230,7 @@
                                     </MudTooltip>
                                     <MudTooltip Text="@(this.SelectedVersionSupportsEdits
                                                           ? T("Recompile this version with the current AI Studio version without AI model calls.")
-                                                          : T("This version has no compatible semantic artifacts. Rebuild the briefing instead."))">
+                                                          : TA("This version has no compatible semantic artifacts. Rebuild the briefing instead."))">
                                         <span>
                                             <MudButton Variant="Variant.Filled" StartIcon="@AppIcons.RECOMPILE" OnClick="@(() => this.RecompileAsync())" Disabled="@this.CannotRecompile">@T("Recompile briefing")</MudButton>
                                         </span>
@@ -278,7 +260,7 @@
                         {
                             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
-                                    <MudText>@T("The updated content no longer fits the current presentation. You can continue as a rebuild without another content model call.")</MudText>
+                                    <MudText>@TA("The updated content no longer fits the current presentation. You can continue as a rebuild without another content model call.")</MudText>
                                     <MudButton Variant="Variant.Filled"
                                                Color="Color.Warning"
                                                StartIcon="@AppIcons.REGENERATE"

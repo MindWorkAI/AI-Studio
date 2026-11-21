@@ -1,0 +1,49 @@
+@inherits MSGComponentBase
+
+@if (this.Entry.Result.BothCompleted)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-4">
+        @* Until the batch is over, nothing on this screen may say which model wrote which answer: no name, no time. A small model is usually faster, so a time would give the model away. *@
+        <MudText Typo="Typo.h5" Class="mb-3">
+            @this.Heading
+        </MudText>
+
+        <MudText Typo="Typo.body2" Class="mb-3">
+            @TA("You do not know which model wrote which answer, and the columns are in random order. Compare them by what they say. You learn the names at the end.")
+        </MudText>
+
+        <ModelComparisonVoteColumns Heading="@T("Which answer is better?")" ALabel="@T("Answer A is better")" BLabel="@T("Answer B is better")" TieLabel="@T("Both are equally good")" Vote="@this.Vote">
+            <ColumnA>
+                <ModelComparisonAnswerCard Title="@T("Answer A")" Answer="@this.Entry.PresentationOrder.InColumnA(this.Entry.Result)" Time="@this.Entry.Result.Time"/>
+            </ColumnA>
+            <ColumnB>
+                <ModelComparisonAnswerCard Title="@T("Answer B")" Answer="@this.Entry.PresentationOrder.InColumnB(this.Entry.Result)" Time="@this.Entry.Result.Time"/>
+            </ColumnB>
+        </ModelComparisonVoteColumns>
+
+        @* Below every other button in both layouts, so outside the columns: *@
+        @if (this.Batch.RunCount > 1)
+        {
+            <MudStack Row="true" Wrap="Wrap.Wrap" Justify="Justify.Center" Spacing="2" Class="mt-3">
+                <MudButton Variant="Variant.Text" OnClick="@(() => this.SkipThisRun.InvokeAsync())">
+                    @T("Skip this run")
+                </MudButton>
+                <MudButton Variant="Variant.Text" OnClick="@(() => this.SkipRemainingVotes.InvokeAsync())">
+                    @T("Skip remaining votes")
+                </MudButton>
+            </MudStack>
+        }
+    </MudPaper>
+}
+else
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-4">
+        <MudText Typo="Typo.body1" Class="mb-3">
+            @T("At least one of the models did not answer in this run, so there is nothing to compare.")
+        </MudText>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.NEXT" OnClick="@(() => this.NextEntry.InvokeAsync())">
+            @(this.Batch.IsLastEntry ? T("Finish") : T("Next run"))
+        </MudButton>
+    </MudPaper>
+}

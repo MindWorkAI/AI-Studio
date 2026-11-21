@@ -1,0 +1,30 @@
+@typeparam TMode
+<MudGrid Spacing="3" Class="mb-3">
+    @foreach (var option in this.Options)
+    {
+        <MudItem xs="12" md="6">
+            <MudCard Outlined="@true" Style="height: 100%; display: flex; flex-direction: column;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack AlignItems="AlignItems.Center" Row="@true">
+                            <MudIcon Icon="@option.Icon" Size="Size.Large" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">
+                                @option.Title
+                            </MudText>
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent Style="flex-grow: 1;">
+                    <MudJustifiedText Typo="Typo.body1">
+                        @option.Description
+                    </MudJustifiedText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Size="Size.Large" Variant="Variant.Filled" StartIcon="@option.Icon" OnClick="@(async () => await this.Choose(option))">
+                        @option.Title
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>

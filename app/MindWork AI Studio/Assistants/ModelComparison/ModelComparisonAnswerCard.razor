@@ -1,0 +1,18 @@
+@using AIStudio.Chat
+@inherits MSGComponentBase
+
+<div class="d-flex flex-column flex-grow-1">
+    <MudText Typo="Typo.subtitle1">
+        @this.Title
+    </MudText>
+    @if (this.Answer.Completed)
+    {
+        <ContentBlockComponent Role="ChatRole.AI" Type="ContentType.TEXT" Time="@this.Time" Content="@this.content" Class="@this.CardClass"/>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="@this.CardClass">
+            @T("This model did not answer.")
+        </MudAlert>
+    }
+</div>

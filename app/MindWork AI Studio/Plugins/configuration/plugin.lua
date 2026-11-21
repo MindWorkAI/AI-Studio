@@ -438,6 +438,12 @@ CONFIG["SETTINGS"] = {}
 -- every redraw of the screen is costly.
 -- CONFIG["SETTINGS"]["DataApp.IsSavingEnergy"] = true
 
+-- Configure how AI Studio addresses users in languages with a formal and an informal address, such as German.
+-- In a language with one form of address only, such as English, the setting has no effect, and the app
+-- settings do not show it.
+-- Allowed values are: FORMAL, INFORMAL
+-- CONFIG["SETTINGS"]["DataApp.AddressForm"] = "FORMAL"
+
 -- Configure whether the quick start guide is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowQuickStartGuide"] = false
 
@@ -914,14 +920,59 @@ CONFIG["SETTINGS"] = {}
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
 --   DOCUMENT_ANALYSIS_ASSISTANT, BATCH_PROCESSING_ASSISTANT, SLIDE_BUILDER_ASSISTANT,
---   VISUAL_BRIEFING_ASSISTANT, BEYOND_FACTS_LAB_ASSISTANT, I18N_ASSISTANT,
---   LOG_VIEWER_ASSISTANT
+--   VISUAL_BRIEFING_ASSISTANT, BEYOND_FACTS_LAB_ASSISTANT, MODEL_COMPARISON_ASSISTANT,
+--   I18N_ASSISTANT, LOG_VIEWER_ASSISTANT
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
 -- completely. This is what lets a department show an assistant again that the base
 -- configuration hides. The department configuration must then list every other
 -- assistant that is supposed to stay hidden, otherwise those become visible too.
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
+
+-- Configure which categories of assistants are disabled. Requires AI Studio v26.11.2 or newer.
+-- Unlike DataApp.HiddenAssistants above, this also covers assistant plugins, e.g., plugins users
+-- imported from the internet. An assistant of a disabled category disappears everywhere: from the
+-- assistants page, from the "Send to" menu, from links, from direct chat launchers, and from the
+-- category selection of the Assistant Builder. Users cannot show it again.
+--
+-- An assistant plugin with several categories stays available while one of its categories is not
+-- disabled. Assistant plugins your organization deployed itself are never disabled by their
+-- categories: a plugin stored below the directory of a configuration plugin, or a plugin which
+-- declares DEPLOYED_USING_CONFIG_SERVER = true and whose code you approved in
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"].
+--
+-- Allowed values are:
+--   COMMON, BUSINESS, EDUCATION, SOFTWARE_DEVELOPMENT, AI_STUDIO_DEVELOPMENT, INDUSTRY,
+--   UTILITY, GAMING, ENTERTAINMENT, SOCIAL, SHOPPING, TRAVEL, HEALTH, FITNESS, FOOD, PARTY,
+--   SPORTS, NEWS, WEATHER, MUSIC, POLITICAL, SCIENCE, TECHNOLOGY, ART, FICTION, WRITING,
+--   CONTENT_CREATION, CUSTOM
+--
+-- COMMON is the category "General"; disabling it disables CORE as well, because both share that
+-- heading. CUSTOM disables every custom category of a plugin. To disable single custom
+-- categories, list their names in DataApp.DisabledCustomAssistantCategories instead; the names
+-- are compared without regard to case.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces these lists
+-- completely, just like DataApp.HiddenAssistants.
+-- CONFIG["SETTINGS"]["DataApp.DisabledAssistantCategories"] = { "ENTERTAINMENT", "GAMING" }
+-- CONFIG["SETTINGS"]["DataApp.DisabledCustomAssistantCategories"] = { "Fun & Games" }
+
+-- Users may collapse categories on the assistants page, and hide categories they do not need.
+-- Both are their own choices, which your organization cannot preset. You can preset, though,
+-- what happens to the assistants of such categories outside of the assistants page, e.g., in
+-- the "Send to ..." menu. Requires AI Studio v26.11.2 or newer. Allowed values are:
+--   KEEP_OFFERING: AI Studio keeps offering the assistants.
+--   TREAT_AS_ABSENT: AI Studio treats the assistants as if they did not exist.
+--
+-- For collapsed categories; the default is KEEP_OFFERING:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.CollapsedCategoryAssistants"] = "TREAT_AS_ABSENT"
+--
+-- For hidden categories; the default is TREAT_AS_ABSENT:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.HiddenCategoryAssistants"] = "TREAT_AS_ABSENT"
+--
+-- Allow users to change these options even though your organization set them above:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.CollapsedCategoryAssistants.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantsPage.HiddenCategoryAssistants.AllowUserOverride"] = true
 
 -- Configure organization defaults for the Visual Briefing Assistant.
 -- The assistant turns documents, images, audio, and video into a self-contained interactive
@@ -997,18 +1048,40 @@ CONFIG["SETTINGS"] = {}
 -- A lower value has no effect; HIGH allows only self-hosted models in the built-in confidence schemes.
 -- CONFIG["SETTINGS"]["DataBeyondFactsLab.MinimumProviderConfidence"] = "MEDIUM"
 --
--- Configure how the lab addresses users in languages with a formal and an informal address, such as German.
--- In a language with one form of address only, such as English, the setting has no effect, and the options
--- of the lab do not show it.
--- Allowed values are: FORMAL, INFORMAL
--- CONFIG["SETTINGS"]["DataBeyondFactsLab.AddressForm"] = "FORMAL"
---
 -- Configure whether files in the folder for prompt overrides replace the prompts which come with the lab.
 -- The option serves the further development of the prompts, e.g., by the research team behind the lab.
 -- Preparing an appearance does not need it. Such files count as instructions of the users themselves,
 -- and the lab shows a banner while one of them replaces a prompt. Set it to false and lock it to keep
 -- users with the prompts which come with AI Studio.
 -- CONFIG["SETTINGS"]["DataBeyondFactsLab.AllowPromptOverrides"] = false
+--
+-- Configure the notes of your organization for public appearances, e.g., to contact the press office
+-- before every public event. The lab shows them word for word in a panel of their own, and the chats of
+-- the steps receive them along with the first message, as information from the organization. They do not
+-- replace the rules of the lab: where they contradict them, the rules of the lab apply, and the chat
+-- points out the contradiction. The material "Open points and next steps" ends with them as well. Markdown
+-- is allowed, with at most 2000 characters; the lab ignores longer notes. The options of the lab offer no
+-- field for them, so only a configuration plugin sets them.
+-- CONFIG["SETTINGS"]["DataBeyondFactsLab.OrganizationRules"] = [[
+-- - Before every public event, contact the press office: press@example.org
+-- - Speak on behalf of the institute only after consulting your head of department.
+-- ]]
+
+-- Configure defaults for the Model Comparison assistant.
+-- Preselection must be enabled for the remaining Model Comparison settings to take effect.
+-- CONFIG["SETTINGS"]["DataModelComparison.PreselectOptions"] = true
+--
+-- Configure the minimum provider confidence which every compared model and every judge needs.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataModelComparison.MinimumProviderConfidence"] = "NONE"
+--
+-- Configure the model which new presets and comparison series start with as their first model,
+-- and the judge which they start with. A preselected judge also switches the judge on.
+-- Use one of the provider IDs defined in CONFIG["LLM_PROVIDERS"], an empty text for the
+-- app-wide default provider, or "00000000-0000-0000-0000-000000000000" for no model at all,
+-- which is also the default.
+-- CONFIG["SETTINGS"]["DataModelComparison.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataModelComparison.PreselectedJudgeProvider"] = "00000000-0000-0000-0000-000000000000"
 
 -- Configure defaults for the Assistant Builder.
 -- Preselection must be enabled for the remaining Assistant Builder settings to take effect.

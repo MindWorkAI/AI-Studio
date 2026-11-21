@@ -21,6 +21,8 @@ public sealed partial class PluginInstallService
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginInstallService).Namespace, nameof(PluginInstallService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(PluginInstallService).Namespace, nameof(PluginInstallService));
+
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private const string ASSISTANT_BUILDER_DIRECTORY_PREFIX = "assistant-builder";
     private const string PLUGIN_IMPORT_DIRECTORY_PREFIX = "plugin-import";

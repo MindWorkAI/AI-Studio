@@ -9,6 +9,8 @@ namespace AIStudio.Tools.Validation;
 public sealed class ProviderValidation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderValidation).Namespace, nameof(ProviderValidation));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ProviderValidation).Namespace, nameof(ProviderValidation));
     
     public Func<LLMProviders> GetProvider { get; init; } = () => LLMProviders.NONE;
     
@@ -36,7 +38,7 @@ public sealed class ProviderValidation
             return null;
         
         if(string.IsNullOrWhiteSpace(hostname))
-            return TB("Please enter a hostname, e.g., http://localhost:1234");
+            return TA("Please enter a hostname, e.g., http://localhost:1234");
         
         if(!hostname.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !hostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
             return TB("The hostname must start with either http:// or https://");
@@ -61,7 +63,7 @@ public sealed class ProviderValidation
             return null;
 
         if(string.IsNullOrWhiteSpace(apiKey))
-            return TB("Please enter an API key.");
+            return TA("Please enter an API key.");
 
         return null;
     }
@@ -69,7 +71,7 @@ public sealed class ProviderValidation
     public string? ValidatingInstanceName(string instanceName)
     {
         if (string.IsNullOrWhiteSpace(instanceName))
-            return TB("Please enter an instance name.");
+            return TA("Please enter an instance name.");
         
         if (instanceName.Length > 40)
             return TB("The instance name must not exceed 40 characters.");
@@ -102,7 +104,7 @@ public sealed class ProviderValidation
             return null;
 
         if (model == default)
-            return TB("Please select a model.");
+            return TA("Please select a model.");
 
         return null;
     }
@@ -110,7 +112,7 @@ public sealed class ProviderValidation
     public string? ValidatingProvider(LLMProviders llmProvider)
     {
         if (llmProvider == LLMProviders.NONE)
-            return TB("Please select a provider.");
+            return TA("Please select a provider.");
         
         return null;
     }
@@ -121,7 +123,7 @@ public sealed class ProviderValidation
             return null;
 
         if (host == Host.NONE)
-            return TB("Please select a host.");
+            return TA("Please select a host.");
 
         return null;
     }
@@ -132,7 +134,7 @@ public sealed class ProviderValidation
             return null;
 
         if (!inferenceProvider.SupportsChat)
-            return TB("Please select an Hugging Face inference provider.");
+            return TA("Please select an Hugging Face inference provider.");
 
         return null;
     }
@@ -163,10 +165,10 @@ public sealed class ProviderValidation
             return null;
 
         if (inferenceProvider is HFInferenceProvider.NONE)
-            return TB("Please select an Hugging Face inference provider.");
+            return TA("Please select an Hugging Face inference provider.");
 
         if (!inferenceProvider.SupportsEmbeddings)
-            return TB("This Hugging Face inference provider does not create embeddings. Please select another one.");
+            return TA("This Hugging Face inference provider does not create embeddings. Please select another one.");
 
         return null;
     }
@@ -186,10 +188,10 @@ public sealed class ProviderValidation
             return null;
 
         if (inferenceProvider is HFInferenceProvider.NONE)
-            return TB("Please select an Hugging Face inference provider.");
+            return TA("Please select an Hugging Face inference provider.");
 
         if (!inferenceProvider.SupportsTranscription)
-            return TB("This Hugging Face inference provider does not transcribe audio. Please select another one.");
+            return TA("This Hugging Face inference provider does not transcribe audio. Please select another one.");
 
         return null;
     }

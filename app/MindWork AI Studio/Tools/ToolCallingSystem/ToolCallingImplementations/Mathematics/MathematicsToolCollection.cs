@@ -18,6 +18,8 @@ public sealed class MathematicsToolCollection : IToolCollection
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MathematicsToolCollection).Namespace, nameof(MathematicsToolCollection));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(MathematicsToolCollection).Namespace, nameof(MathematicsToolCollection));
+
     public ToolCollectionDefinition GetDefinition() => new()
     {
         Id = ToolSelectionRules.MATHEMATICS_COLLECTION_ID,
@@ -30,5 +32,5 @@ public sealed class MathematicsToolCollection : IToolCollection
 
     public string GetDisplayName() => TB("Mathematics");
 
-    public string GetDescription() => TB("Lets the AI calculate exactly and work with formulas, such as solving equations or checking an integral, right on your computer.");
+    public string GetDescription() => TA("Lets the AI calculate exactly and work with formulas, such as solving equations or checking an integral, right on your computer.");
 }

@@ -90,12 +90,12 @@ public partial class ProviderSelection : MSGComponentBase
 
         var configuredProviders = this.SettingsManager.GetAllProviders().Where(x => x.UsedLLMProvider is not LLMProviders.NONE).ToList();
         if (configuredProviders.Count == 0)
-            return this.T("No LLM providers are configured yet. Add a provider in the app settings.");
+            return this.TA("No LLM providers are configured yet. Add a provider in the app settings.");
 
         if (configuredProviders.All(x => this.SettingsManager.IsProviderProhibited(x.UsedLLMProvider)))
-            return this.T("The use of all your LLM providers has been prohibited by your organization. Add a different provider in the app settings.");
+            return this.TA("The use of all your LLM providers has been prohibited by your organization. Add a different provider in the app settings.");
 
-        return this.T("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.");
+        return this.TA("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.");
     }
 
     private IReadOnlyList<CapabilityIcon> GetCapabilityIcons(AIStudio.Settings.Provider provider)

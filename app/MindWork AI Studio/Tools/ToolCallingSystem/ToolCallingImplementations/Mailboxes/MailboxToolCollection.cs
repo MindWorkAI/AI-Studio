@@ -17,6 +17,8 @@ public sealed class MailboxToolCollection : IToolCollection
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MailboxToolCollection).Namespace, nameof(MailboxToolCollection));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(MailboxToolCollection).Namespace, nameof(MailboxToolCollection));
+
     public ToolCollectionDefinition GetDefinition() => new()
     {
         Id = ToolSelectionRules.MAILBOXES_COLLECTION_ID,
@@ -29,5 +31,5 @@ public sealed class MailboxToolCollection : IToolCollection
 
     public string GetDisplayName() => TB("Mailboxes");
 
-    public string GetDescription() => TB("Lets the AI search, read, and count the mails in your mailboxes, including their attachments.");
+    public string GetDescription() => TA("Lets the AI search, read, and count the mails in your mailboxes, including their attachments.");
 }

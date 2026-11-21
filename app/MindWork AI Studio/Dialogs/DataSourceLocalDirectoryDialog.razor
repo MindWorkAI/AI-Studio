@@ -41,7 +41,7 @@
                 Adornment="Adornment.Start"
                 AdornmentIcon="@AppIcons.DESCRIPTION"
                 AdornmentColor="Color.Info"
-                HelperText="@T("Describe what data this directory contains to help the AI select it.")"
+                HelperText="@TA("Describe what data this directory contains to help the AI select it.")"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 Variant="Variant.Outlined"
                 Lines="3"
@@ -51,9 +51,9 @@
                 @T("Folder")
             </MudText>
             <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-                @T("Select a root directory for this data source.")
+                @TA("Select a root directory for this data source.")
             </MudJustifiedText>
-            <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" EnableDragDrop="true" CatchAllDocuments="true" />
+            <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@TA("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" EnableDragDrop="true" CatchAllDocuments="true" />
 
             <MudTextSwitch
                 Label="@T("Include subfolders?")"
@@ -67,7 +67,7 @@
                 @T("Files to include")
             </MudText>
             <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-                @T("Select the file patterns this data source should index. Audio and video files, e.g., *.mp3 or *.mp4, are transcribed by your transcription provider.")
+                @TA("Select the file patterns this data source should index. Audio and video files, e.g., *.mp3 or *.mp4, are transcribed by your transcription provider.")
             </MudJustifiedText>
 
             <FilePatternSelection>
@@ -97,7 +97,7 @@
                 @T("Embedding")
             </MudText>
             <MudText Typo="Typo.body2" Class="mb-3">
-                @T("Choose an embedding provider to make this data source searchable.")
+                @TA("Choose an embedding provider to make this data source searchable.")
             </MudText>
             <MudSelect @ref="@this.embeddingSelect" @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
                 @foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
@@ -115,7 +115,7 @@
             else if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
             {
                 <MudJustifiedText Typo="Typo.body2" Color="Color.Tertiary" Class="mb-3">
-                    @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
+                    @TA("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
                 </MudJustifiedText>
             }
 
@@ -133,7 +133,7 @@
                 }
             </MudSelect>
 
-            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@T("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction"/>
+            <OutboundDataRestrictionSelection @bind-Value="@this.SelectedOutboundDataRestriction" Label="@T("Where a chat may send data after reading this data source")" Explanation="@TA("This setting decides where a chat may still send data once the AI found something in this data source, so that its content does not end up in a web search, for example. Choose no restriction only for content anybody may read anyway.")" OrganizationMinimum="@this.OrganizationMinimumOutboundDataRestriction"/>
 
             @if (this.MediaTranscriptionHint is { } mediaTranscriptionHint)
             {
@@ -170,7 +170,7 @@
                         Class="mb-3"
                         Min="@FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES"
                         Immediate="@true"
-                        HelperText="@T("Selected files above this size are not indexed, e.g., images of virtual machines. The embedding page lists them, so you can raise the limit when needed.")"
+                        HelperText="@TA("Selected files above this size are not indexed, e.g., images of virtual machines. The embedding page lists them, so you can raise the limit when needed.")"
                         Variant="Variant.Outlined"
                         Adornment="Adornment.End"
                         AdornmentText="MB"/>
@@ -223,7 +223,7 @@
                         T="ushort"
                         Min="10"
                         @bind-Value="@this.dataMaxMatches"
-                        Label="@T("How many matches do you want at most per query?")"
+                        Label="@TA("How many matches do you want at most per query?")"
                         Variant="Variant.Outlined"
                         Step="10"
                         Adornment="Adornment.Start"

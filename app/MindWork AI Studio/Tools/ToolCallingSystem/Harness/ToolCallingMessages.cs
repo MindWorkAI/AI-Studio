@@ -12,7 +12,19 @@ namespace AIStudio.Tools.ToolCallingSystem.Harness;
 /// </remarks>
 public static class ToolCallingMessages
 {
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ToolCallingMessages).Namespace, nameof(ToolCallingMessages));
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ToolCallingMessages).Namespace, nameof(ToolCallingMessages));
+
+    /// <summary>
+    /// Says in place of the answer that the model stayed silent after a tool call.
+    /// </summary>
+    public static string NoAnswerAfterToolCall => TB("The model completed the tool call but did not return a final answer.");
+
+    /// <summary>
+    /// Says in place of the answer that the model stayed silent after it used up its tool calls.
+    /// </summary>
+    public static string NoAnswerAfterLimit => TB("The model did not return a final answer after completing the available tool calls.");
 
     /// <summary>
     /// Builds the exception for a response that cannot be used to continue.
@@ -20,7 +32,7 @@ public static class ToolCallingMessages
     /// <param name="providerInstanceName">The provider instance the user configured.</param>
     public static ProviderRequestException InvalidToolCallingResponse(string providerInstanceName) => new(
         ProviderRequestFailureReason.NONE,
-        string.Format(TB("The provider '{0}' returned an invalid tool calling response. Check the provider's tool calling configuration and see the logs for details."), providerInstanceName));
+        string.Format(TA("The provider '{0}' returned an invalid tool calling response. Check the provider's tool calling configuration and see the logs for details."), providerInstanceName));
 
     /// <summary>
     /// Tells the user that a tool round could not be requested at all.
@@ -32,5 +44,5 @@ public static class ToolCallingMessages
     /// <param name="statusCode">The status code the provider answered with.</param>
     public static async Task SendToolCallingRequestFailedAsync(int statusCode) => await MessageBus.INSTANCE.SendError(new(
         AppIcons.TOOL,
-        string.Format(TB("The tool calling request failed with status code {0}. See the logs for details."), statusCode)));
+        string.Format(TA("The tool calling request failed with status code {0}. See the logs for details."), statusCode)));
 }

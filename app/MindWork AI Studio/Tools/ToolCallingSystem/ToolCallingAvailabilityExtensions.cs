@@ -6,20 +6,20 @@ namespace AIStudio.Tools.ToolCallingSystem;
 
 public static class ToolCallingAvailabilityExtensions
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ToolCallingAvailabilityExtensions).Namespace, nameof(ToolCallingAvailabilityExtensions));
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ToolCallingAvailabilityExtensions).Namespace, nameof(ToolCallingAvailabilityExtensions));
 
     extension(AIStudio.Settings.Provider provider)
     {
         public ToolCallingAvailability GetToolCallingAvailability()
         {
             if (provider == AIStudio.Settings.Provider.NONE || provider.UsedLLMProvider is LLMProviders.NONE)
-                return new(false, TB("Please select an LLM provider."));
+                return new(false, TA("Please select an LLM provider."));
 
             var modelProfile = provider.GetModelProfile();
             var supportsRequiredApis = modelProfile.HasAny(Capability.CHAT_COMPLETION_API | Capability.RESPONSES_API);
 
             if (!supportsRequiredApis || !modelProfile.Has(Capability.FUNCTION_CALLING))
-                return new(false, TB("Tool calling support is not enabled by default for this model, but you can enable this capability in the expert settings of the provider if you are sure the model supports it."));
+                return new(false, TA("Tool calling support is not enabled by default for this model, but you can enable this capability in the expert settings of the provider if you are sure the model supports it."));
 
             return ToolCallingAvailability.Available();
         }

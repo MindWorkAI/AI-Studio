@@ -367,7 +367,7 @@ public partial class AttachDocuments : MSGComponentBase
             this.Logger.LogWarning("Could not access {Count} dropped or selected file(s): {Paths}", inaccessiblePaths.Count, string.Join(", ", inaccessiblePaths));
             await this.MessageBus.SendWarning(new(
                 AppIcons.WARNING,
-                this.T("Some files could not be accessed. Please select them with the file chooser instead.")));
+                this.TA("Some files could not be accessed. Please select them with the file chooser instead.")));
         }
 
         var existingPaths = pathList.Except(inaccessiblePaths).ToList();
@@ -422,7 +422,7 @@ public partial class AttachDocuments : MSGComponentBase
         {
             await this.MessageBus.SendWarning(new(
                 AppIcons.VOICE_TRANSCRIPTION,
-                this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
+                this.TA("Media files require a configured transcription provider. Configure one in the transcription settings.")));
             return attached;
         }
 

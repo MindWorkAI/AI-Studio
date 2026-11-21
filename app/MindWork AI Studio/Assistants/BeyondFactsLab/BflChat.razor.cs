@@ -1,13 +1,8 @@
 using AIStudio.Chat;
+using AIStudio.Chat.Embedded;
 using AIStudio.Components;
-using AIStudio.Dialogs;
-using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.BeyondFactsLab;
 
@@ -15,9 +10,12 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// A chat of the BeyondFacts Lab, such as the one of a step below its form "Your details".
 /// </summary>
 /// <remarks>
-/// The chat itself lives in BflConversationService, so an answer goes on while the person looks elsewhere; this
-/// component shows it and renders whenever the service says it changed. It offers no "send to": the lab neither
-/// receives content from other assistants nor hands its answers on.
+/// The embedded chat of assistants with what the lab decides for each of its places: the opening request, the
+/// introduction, the question before starting over, and, for every request, the system prompt with the guide, the
+/// details, and the material, and the guidelines of the organization in front of the first message, see
+/// BflConversationService.PrepareAsync. The count of tokens shows how full the context
+/// of the model is, since every request carries the guide. It offers no "send to": the lab neither receives content
+/// from other assistants nor hands its answers on.
 /// </remarks>
 public partial class BflChat : MSGComponentBase
 {
@@ -45,6 +43,13 @@ public partial class BflChat : MSGComponentBase
     [Parameter]
     public string? ProviderIssue { get; set; }
 
+    /// <summary>
+    /// Gets or sets a number which changes whenever a detail changes which takes much room in the next request, such as
+    /// whom the step "Test situation" simulates, whose research the prompt carries.
+    /// </summary>
+    [Parameter]
+    public int DetailsVersion { get; set; }
+
     [Inject]
     private BflConversationService ConversationService { get; init; } = null!;
 
@@ -52,66 +57,30 @@ public partial class BflChat : MSGComponentBase
     private BflMaterialService MaterialService { get; init; } = null!;
 
     [Inject]
-    private IDialogService DialogService { get; init; } = null!;
-
-    [Inject]
     private ILogger<BflChat> Logger { get; init; } = null!;
 
-    [Inject]
-    private ConversationTokenCounter TokenCounter { get; init; } = null!;
+    /// <summary>
+    /// Readies a request of the chat shown, with the provider chosen; made anew whenever either changes.
+    /// </summary>
+    private Func<ChatThread, Task<EmbeddedChatPreparation>> prepareAsync = _ => Task.FromResult(EmbeddedChatPreparation.REFUSED);
 
     /// <summary>
-    /// Ends a count when the component goes away.
+    /// Gets what the next request of the chat shown carries beside the conversation, for the count of tokens; made anew
+    /// whenever the chat or the provider changes.
     /// </summary>
-    private readonly CancellationTokenSource countCancellation = new();
+    private Func<Task<string?>> systemPromptForCountAsync = () => Task.FromResult<string?>(null);
 
     /// <summary>
-    /// The token of countCancellation, taken while the source still lives.
+    /// Changes whenever the material of the preparation changes, since every request of a step carries it.
     /// </summary>
-    /// <remarks>
-    /// A count goes on after an await, when the component may have gone away meanwhile, e.g., because the person moved
-    /// on to another step. The source is disposed by then and refuses to hand out its token; the token taken before
-    /// still tells that the count was cancelled.
-    /// </remarks>
-    private CancellationToken countToken;
+    private int materialsVersion;
 
     /// <summary>
-    /// What the next request carries, as far as it was counted.
+    /// Gets a number which changes whenever what the next request carries beside the conversation changed: the
+    /// material, the guidelines of the organization after a configuration plugin was reloaded, or a detail which takes
+    /// much room, see DetailsVersion.
     /// </summary>
-    private ConversationTokens tokens = ConversationTokens.UNAVAILABLE;
-
-    /// <summary>
-    /// The provider the tokens were counted for, to count again when the parent chooses another one.
-    /// </summary>
-    private string countedProviderId = string.Empty;
-
-    /// <summary>
-    /// The chat shown, or null while it loads.
-    /// </summary>
-    private BflConversation? conversation;
-
-    /// <summary>
-    /// Where the chat shown belongs, to notice when the parent shows another one.
-    /// </summary>
-    private BflThreadLocation? shownLocation;
-
-    /// <summary>
-    /// The message the person writes.
-    /// </summary>
-    private string userInput = string.Empty;
-
-    /// <summary>
-    /// The attributes of the message field, such as the spell checking the person chose.
-    /// </summary>
-    private readonly Dictionary<string, object?> inputAttributes = new();
-
-    private bool IsRunning => this.conversation?.IsRunning ?? false;
-
-    private BflTokenBudgetState Budget => BflTokenBudget.Of(this.tokens);
-
-    private bool CanSend => this.conversation is { IsAvailable: true, IsRunning: false } && this.ProviderIssue is null && this.Budget is not BflTokenBudgetState.FULL;
-
-    private bool CanSendMessage => this.CanSend && !string.IsNullOrWhiteSpace(this.userInput);
+    private int ContextVersion => HashCode.Combine(this.materialsVersion, this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules, this.DetailsVersion);
 
     /// <summary>
     /// Gets what the chat says before its conversation begins.
@@ -140,13 +109,18 @@ public partial class BflChat : MSGComponentBase
         _ => TA("Delete this conversation and start it over?")
     };
 
+    /// <summary>
+    /// Gets the button with which the person ends an exercise of the step "Test situation" and asks for its evaluation,
+    /// see Prompts/steps/test.md; the other chats have none.
+    /// </summary>
+    private EmbeddedChatQuickMessage? QuickMessage => this.Location is BflStepThreadLocation { Step: BflStep.TEST_SITUATION }
+        ? new(T("End and evaluate the exercise"), AppIcons.END_EXERCISE, T("I would like to end the exercise now and get its evaluation."), TA("This button ends the exercise, and the lab evaluates it. While the lab simulates people, it gives feedback only then; write 'Pause' to get brief feedback in between."))
+        : null;
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        this.countToken = this.countCancellation.Token;
-        this.ConversationService.ConversationChanged += this.OnConversationChangedAsync;
         this.MaterialService.MaterialsChanged += this.OnMaterialsChangedAsync;
-        this.SettingsManager.InjectSpellchecking(this.inputAttributes);
         await base.OnInitializedAsync();
     }
 
@@ -154,48 +128,28 @@ public partial class BflChat : MSGComponentBase
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-        if (this.shownLocation != this.Location)
-        {
-            this.shownLocation = this.Location;
-            this.conversation = null;
-            this.userInput = string.Empty;
-            this.conversation = await this.ConversationService.GetAsync(this.Location);
-            await this.RecountAsync();
-        }
-        else if (this.countedProviderId != this.Provider.Id)
-            await this.RecountAsync();
+
+        // Bound to the chat and the provider shown now, so that a request never takes those of the next render:
+        var location = this.Location;
+        var provider = this.Provider;
+        this.prepareAsync = thread => this.ConversationService.PrepareAsync(location, provider, thread);
+        this.systemPromptForCountAsync = () => this.SystemPromptForCountAsync(location, provider);
     }
 
     /// <inheritdoc />
     protected override void DisposeResources()
     {
-        this.ConversationService.ConversationChanged -= this.OnConversationChangedAsync;
         this.MaterialService.MaterialsChanged -= this.OnMaterialsChangedAsync;
-        this.countCancellation.Cancel();
-        this.countCancellation.Dispose();
         base.DisposeResources();
     }
 
     /// <summary>
-    /// Renders the chat again when the service changed it, and counts again once an answer is complete.
+    /// Creates the chat of the place shown, for a place which has no stored chat yet.
     /// </summary>
-    /// <param name="location">Where the chat which changed belongs.</param>
-    private Task OnConversationChangedAsync(BflThreadLocation location)
-    {
-        if (location != this.Location)
-            return Task.CompletedTask;
-
-        return this.InvokeAsync(async () =>
-        {
-            if (!this.IsRunning)
-                await this.RecountAsync();
-
-            this.StateHasChanged();
-        });
-    }
+    private ChatThread CreateThread() => BflThreadFactory.Create(this.Location);
 
     /// <summary>
-    /// Counts again when the material of the preparation changed, since every request of a step carries it.
+    /// Lets the chat count again when the material of the preparation changed.
     /// </summary>
     /// <param name="projectId">The ID of the preparation whose material changed.</param>
     private Task OnMaterialsChangedAsync(Guid projectId)
@@ -203,145 +157,31 @@ public partial class BflChat : MSGComponentBase
         if (this.Location is not BflStepThreadLocation stepLocation || stepLocation.ProjectId != projectId)
             return Task.CompletedTask;
 
-        return this.InvokeAsync(async () =>
+        return this.InvokeAsync(() =>
         {
-            if (!this.IsRunning)
-                await this.RecountAsync();
-
+            this.materialsVersion++;
             this.StateHasChanged();
         });
     }
 
     /// <summary>
-    /// Counts what the next request of the chat carries: the system prompt, e.g., with the guide, and the conversation.
+    /// Puts together what the next request of a chat carries beside the conversation, for the count of tokens: the
+    /// system prompt, and the guidelines of the organization in front of the first message.
     /// </summary>
-    /// <remarks>
-    /// Only while no answer runs: the request appends to the conversation which the count reads. The message being
-    /// written is left out; the reserve of the budget keeps room for it.
-    /// </remarks>
-    private async Task RecountAsync()
+    /// <param name="location">Where the chat belongs.</param>
+    /// <param name="provider">The provider which answers.</param>
+    /// <returns>The text to count, or null when it cannot be put together now.</returns>
+    private async Task<string?> SystemPromptForCountAsync(BflThreadLocation location, AIStudio.Settings.Provider provider)
     {
-        this.countedProviderId = this.Provider.Id;
-        if (this.conversation is not { Thread: { } thread, IsRunning: false } || this.ProviderIssue is not null)
-        {
-            this.tokens = ConversationTokens.UNAVAILABLE;
-            return;
-        }
-
         try
         {
-            var systemPrompt = await this.ConversationService.ComposeSystemPromptAsync(this.Location, this.Provider);
-            var parts = ConversationParts.Of(thread, systemPrompt, string.Empty, null, false, null);
-            this.tokens = await this.TokenCounter.CountAsync(this.Provider, parts, thread.ReportedHistoryFor(this.Provider.Model), this.countToken);
-        }
-        catch (OperationCanceledException)
-        {
-            // The component went away.
+            return await this.ConversationService.ComposeTextForCountAsync(location, provider);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
         {
             // Sending reports the same problem; the count only stays unknown:
             this.Logger.LogDebug(exception, "Could not count the tokens of a chat in the BeyondFacts Lab.");
-            this.tokens = ConversationTokens.UNAVAILABLE;
-        }
-    }
-
-    /// <summary>
-    /// Gets how full the context of the model is, or null when nothing could be counted.
-    /// </summary>
-    private string? TokenBudgetText
-    {
-        get
-        {
-            if (!this.tokens.IsKnown)
-                return null;
-
-            var culture = Tools.PluginSystem.I18N.I.Culture;
-            var counted = TokenAmount.Format(this.tokens.Tokens, culture);
-            if (!this.tokens.Window.IsKnown)
-                return string.Format(T("approx. {0} tokens; the context window of this model is unknown"), counted);
-
-            var window = TokenAmount.Format(this.tokens.Window.DefaultTokens, culture);
-            var budget = string.Format(this.tokens.IsEstimate && !this.tokens.HistoryIsReported ? T("approx. {0} of {1} tokens") : T("{0} of {1} tokens"), counted, window);
-            return this.Budget switch
-            {
-                BflTokenBudgetState.FULL => $"{budget}. {TA("This conversation fills the context window of the model. Start it over, or choose a provider whose model reads more at once.")}",
-                BflTokenBudgetState.WARNING => $"{budget}. {TA("This conversation fills most of the context window of the model. Soon, you will have to start it over.")}",
-                _ => budget
-            };
-        }
-    }
-
-    /// <summary>
-    /// Gets the classes of the message field; like on the chat page, they colour its helper text with the tokens.
-    /// </summary>
-    private string InputClass => this.Budget switch
-    {
-        BflTokenBudgetState.FULL => "mt-2 token-budget-exceeded",
-        BflTokenBudgetState.WARNING => "mt-2 token-budget-nearly-full",
-        _ => "mt-2"
-    };
-
-    /// <summary>
-    /// Lets the model open the conversation.
-    /// </summary>
-    private async Task StartAsync()
-    {
-        if (this.CanSend)
-            await this.ConversationService.StartAsync(this.Location, this.Provider);
-    }
-
-    /// <summary>
-    /// Sends the message of the person.
-    /// </summary>
-    private async Task SendAsync()
-    {
-        if (!this.CanSendMessage)
-            return;
-
-        var text = this.userInput.Trim();
-        this.userInput = string.Empty;
-        await this.ConversationService.SendAsync(this.Location, this.Provider, text);
-    }
-
-    /// <summary>
-    /// Sends the message when the person releases the shortcut they chose for the chat.
-    /// </summary>
-    /// <param name="keyEvent">The key released.</param>
-    private async Task InputKeyEventAsync(KeyboardEventArgs keyEvent)
-    {
-        if (this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior.IsSendShortcut(keyEvent))
-            await this.SendAsync();
-    }
-
-    /// <summary>
-    /// Stops the answer the model writes.
-    /// </summary>
-    private Task CancelAsync() => this.ConversationService.CancelAsync(this.Location);
-
-    /// <summary>
-    /// Deletes the conversation after asking, so that it starts over.
-    /// </summary>
-    private async Task ResetAsync()
-    {
-        var parameters = new DialogParameters<ConfirmDialog>
-        {
-            { dialog => dialog.Message, this.ResetQuestion }
-        };
-
-        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Start over"), parameters, DialogOptions.FULLSCREEN);
-        var result = await reference.Result;
-        if (result is null || result.Canceled)
-            return;
-
-        try
-        {
-            await this.ConversationService.ResetAsync(this.Location);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            this.Logger.LogError(exception, "Could not delete the chat '{Location}' of the BeyondFacts Lab.", this.Location.Key);
-            await this.MessageBus.SendError(new(AppIcons.DELETE, TA("AI Studio could not delete this conversation. Please try again.")));
+            return null;
         }
     }
 }

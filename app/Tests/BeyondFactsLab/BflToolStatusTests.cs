@@ -104,7 +104,7 @@ public sealed class BflToolStatusTests
     [Test]
     public void TheSameSetupGivesTheSamePrompt()
     {
-        var parts = new BflPromptParts("{{TOOLS}}", "Leitfaden", "Schritt", "Anrede");
+        var parts = new BflPromptParts("{{TOOLS}}", "Leitfaden", "Schritt", "Anrede", string.Empty);
         var forms = BflStep.All.ToDictionary(step => step, _ => new BflStepFormData());
 
         var first = BflPromptComposer.Compose(parts, BflStep.STRATEGY, forms, [], "Deutsch", null, new BflResearchAvailability(ToolOfferBlockReason.NONE, ToolOfferBlockReason.NONE));

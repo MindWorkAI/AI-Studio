@@ -11,7 +11,11 @@ media/**/*.pptx filter=lfs diff=lfs merge=lfs -text
 media/**/*.png filter=lfs diff=lfs merge=lfs -text
 media/**/*.ico filter=lfs diff=lfs merge=lfs -text
 media/**/*.icns filter=lfs diff=lfs merge=lfs -text
-*.woff2 filter=lfs diff=lfs merge=lfs -text
 *.afpub filter=lfs diff=lfs merge=lfs -text
 *.afdesign filter=lfs diff=lfs merge=lfs -text
 *.afphoto filter=lfs diff=lfs merge=lfs -text
+
+# Files which the app or the runtime ships never go into Git LFS: the pipeline and the Flatpak check
+# out without LFS, so a release would ship the pointer instead of the file. WebRootFilesTests checks
+# the files the app embeds.
+*.woff2 binary

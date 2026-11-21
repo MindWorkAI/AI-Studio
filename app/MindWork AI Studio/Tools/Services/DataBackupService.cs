@@ -46,6 +46,8 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataBackupService).Namespace, nameof(DataBackupService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(DataBackupService).Namespace, nameof(DataBackupService));
+
     private readonly Lock stateLock = new();
 
     private CancellationTokenSource? running;
@@ -92,14 +94,14 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
     public async Task<DataBackupResult> CreateBackupAsync(string archivePath)
     {
         if (!settingsManager.ConfigurationData.App.AllowUserToBackUpData)
-            return this.Refuse(archivePath, TB("Your organization does not allow backups."));
+            return this.Refuse(archivePath, TA("Your organization does not allow backups."));
 
         //
         // A chat which is being written while it is copied may end up broken in the backup. An
         // answer or a transcript stores its chat once it is done, so the backup waits for them:
         //
         if (aiJobService.HasActiveJobs || mediaTranscriptionService.GetSnapshots().Any(snapshot => snapshot.Status is MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING))
-            return this.Refuse(archivePath, TB("AI Studio is still writing an answer or a transcript. Please start the backup once it is done."));
+            return this.Refuse(archivePath, TA("AI Studio is still writing an answer or a transcript. Please start the backup once it is done."));
 
         CancellationTokenSource cancellation;
         lock (this.stateLock)
@@ -135,7 +137,7 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
         {
             this.TryDeleteArchive(archivePath);
             logger.LogError(exception, "The backup into '{ArchivePath}' failed, since the file system takes no file this large. The incomplete backup was removed.", archivePath);
-            return this.End(new(false, false, archivePath, 0, 0, false, TB("The backup is too large for the chosen drive, which takes no files beyond 4 GB. USB sticks formatted with FAT32 are such drives. Please choose another drive.")));
+            return this.End(new(false, false, archivePath, 0, 0, false, TA("The backup is too large for the chosen drive, which takes no files beyond 4 GB. USB sticks formatted with FAT32 are such drives. Please choose another drive.")));
         }
         catch (Exception exception)
         {

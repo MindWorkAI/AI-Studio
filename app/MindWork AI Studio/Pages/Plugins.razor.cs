@@ -57,7 +57,7 @@ public partial class Plugins : MSGComponentBase
                 if (pluginMeta.IsInternal)
                     return GROUP_INTERNAL;
                 
-                return this.SettingsManager.IsPluginEnabled(pluginMeta)
+                return this.IsPluginWorking(pluginMeta)
                     ? GROUP_ENABLED
                     : GROUP_DISABLED;
             }
@@ -82,7 +82,7 @@ public partial class Plugins : MSGComponentBase
         // activation is decided live, but it would leave the settings in a state which claims the
         // opposite of what the user sees:
         //
-        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id) || this.IsDisabledByItsCategories(pluginMeta))
             return;
 
         if (this.SettingsManager.IsPluginEnabled(pluginMeta))
@@ -159,7 +159,7 @@ public partial class Plugins : MSGComponentBase
             {
                 x => x.Message,
                 string.Format(
-                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
+                    this.TA("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
                     pluginName,
                     actualLevel.Name,
                     this.AssistantPluginAuditSettings.MinimumLevel.Name)
@@ -172,10 +172,28 @@ public partial class Plugins : MSGComponentBase
         return dialogResult is not null && !dialogResult.Canceled;
     }
     
+    /// <summary>
+    /// Whether your organization disabled this assistant plugin through its categories.
+    /// </summary>
+    private bool IsDisabledByItsCategories(IPluginMetadata pluginMeta) =>
+        pluginMeta.Type is PluginType.ASSISTANT &&
+        this.TryGetAssistantPlugin(pluginMeta.Id) is { } assistantPlugin &&
+        this.SettingsManager.IsDisabledByItsCategories(assistantPlugin);
+
+    /// <summary>
+    /// Whether a plugin works: it is enabled, and your organization did not disable it through its categories.
+    /// </summary>
+    /// <remarks>
+    /// The switch shows this instead of the stored activation. The activation stays stored, so the plugin
+    /// works again as soon as your organization enables one of its categories again.
+    /// </remarks>
+    private bool IsPluginWorking(IPluginMetadata pluginMeta) => this.SettingsManager.IsPluginEnabled(pluginMeta) && !this.IsDisabledByItsCategories(pluginMeta);
+
     private bool IsActivationSwitchDisabled(IPluginMetadata pluginMeta, bool isEnabled)
     {
-        // An assistant plugin your organization requires to stay enabled has no switch to offer:
-        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+        // An assistant plugin your organization requires to stay enabled, or disabled through its
+        // categories, has no switch to offer:
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id) || this.IsDisabledByItsCategories(pluginMeta))
             return true;
 
         if (isEnabled || pluginMeta.Type is not PluginType.ASSISTANT)
@@ -192,7 +210,15 @@ public partial class Plugins : MSGComponentBase
     private string GetActivationTooltip(IPluginMetadata pluginMeta, bool isEnabled)
     {
         if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
-            return this.T("Your organization requires this assistant to stay enabled");
+            return this.TA("Your organization requires this assistant to stay enabled");
+
+        if (this.IsDisabledByItsCategories(pluginMeta))
+        {
+            var categoryNames = AssistantCategoryKey.AllOf(pluginMeta).Select(category => category.Name).ToList();
+            return categoryNames.Count == 1
+                ? string.Format(TA("Your organization disabled the category '{0}' of this assistant"), categoryNames[0])
+                : string.Format(TA("Your organization disabled all categories of this assistant: {0}"), string.Join(", ", categoryNames));
+        }
 
         if (isEnabled)
             return this.T("Disable plugin");
@@ -275,7 +301,7 @@ public partial class Plugins : MSGComponentBase
 
     private string SharePluginTooltip => this.PluginShareService.UsesExport ? this.T("Export plugin archive") : this.T("Share plugin archive");
 
-    private string SharePluginLockText => this.PluginShareService.UsesExport ? this.T("Your organization has disabled exporting plugins.") : this.T("Your organization has disabled sharing plugins.");
+    private string SharePluginLockText => this.PluginShareService.UsesExport ? this.TA("Your organization has disabled exporting plugins.") : this.TA("Your organization has disabled sharing plugins.");
 
     private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
     {
@@ -421,7 +447,7 @@ public partial class Plugins : MSGComponentBase
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(this.T("{0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing."), issue) },
+            { x => x.Message, string.Format(this.TA("{0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing."), issue) },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Share dialog not available"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -555,7 +581,7 @@ public partial class Plugins : MSGComponentBase
                 var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
                 if (audit.Level is AssistantAuditLevel.UNKNOWN)
                 {
-                    await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, string.Format(this.T("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."), assistantPlugin.Name)));
+                    await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, string.Format(this.TA("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."), assistantPlugin.Name)));
                     continue;
                 }
 
@@ -622,11 +648,11 @@ public partial class Plugins : MSGComponentBase
         switch (archivePaths.Count)
         {
             case 0:
-                await this.MessageBus.SendWarning(new(AppIcons.WARNING, string.Format(this.T("Please drop a plugin archive with the extension {0} or .zip."), PluginArchive.PLUGIN_FILE_EXTENSION)));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, string.Format(this.TA("Please drop a plugin archive with the extension {0} or .zip."), PluginArchive.PLUGIN_FILE_EXTENSION)));
                 return;
 
             case > 1:
-                await this.MessageBus.SendWarning(new(AppIcons.WARNING, this.T("Please drop only one plugin archive at a time.")));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, this.TA("Please drop only one plugin archive at a time.")));
                 return;
         }
 

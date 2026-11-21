@@ -92,11 +92,11 @@ public sealed class BflWorkStateGenerator(BeyondFactsLabStore store, BflConversa
             sessionId = (await sessionService.TryBeginAsync(sessionKey, Tools.Components.BEYOND_FACTS_LAB_ASSISTANT.Name, cancellation, null, new(StringComparer.Ordinal))).SessionId;
             await this.NotifyAsync(location);
 
-            var answer = BflMarkdownSections.Read(await BflHiddenRequest.AskAsync(hidden, provider, request, requestMaterial.Images, cancellation.Token), location.Step, form);
+            var answer = BflMarkdownSections.Read(await BflHiddenRequest.AskAsync(hidden, provider, request, requestMaterial.Images, requestMaterial.OrganizationRules, cancellation.Token), location.Step, form);
             if (answer.Problems.Count > 0 && !cancellation.IsCancellationRequested)
             {
                 logger.LogInformation("The model wrote a work state of the BeyondFacts Lab with {Count} problems; it may correct them once.", answer.Problems.Count);
-                answer = BflMarkdownSections.Read(await BflHiddenRequest.AskAsync(hidden, provider, BflPromptComposer.ComposeWorkStateRepairRequest(answer.Problems), requestMaterial.Images, cancellation.Token), location.Step, form);
+                answer = BflMarkdownSections.Read(await BflHiddenRequest.AskAsync(hidden, provider, BflPromptComposer.ComposeWorkStateRepairRequest(answer.Problems), requestMaterial.Images, requestMaterial.OrganizationRules, cancellation.Token), location.Step, form);
             }
 
             if (cancellation.IsCancellationRequested)

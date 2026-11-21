@@ -2,7 +2,7 @@
 
 <ExpansionPanel HeaderIcon="@AppIcons.TOOL" HeaderText="@T("Tool Settings")">
     <MudText Typo="Typo.body1" Class="mb-4">
-        @T("Configure global settings for each tool.") @T("Switch off the tools you never need: they then appear in no tool selection, and the AI cannot use them.")
+        @TA("Configure global settings for each tool.") @TA("Switch off the tools you never need: they then appear in no tool selection, and the AI cannot use them.")
     </MudText>
 
     <MudTable Items="@this.items" Hover="@true" Dense="@true">
@@ -44,13 +44,13 @@
                 @if (IsSwitchedOffByUser(context))
                 {
                     @* Whether its settings are complete does not matter while nobody can use the tool: *@
-                    <MudTooltip Text="@T("You switched off this tool. It appears in no tool selection, and the AI cannot use it.")">
+                    <MudTooltip Text="@TA("You switched off this tool. It appears in no tool selection, and the AI cannot use it.")">
                         <MudIcon Icon="@AppIcons.HIDDEN" Color="Color.Default" />
                     </MudTooltip>
                 }
                 else if (!context.IsActive)
                 {
-                    <MudTooltip Text="@T("This tool has been disabled by your organization.")">
+                    <MudTooltip Text="@TA("This tool has been disabled by your organization.")">
                         <MudIcon Icon="@AppIcons.LOCK" Color="Color.Error" />
                     </MudTooltip>
                 }

@@ -27,7 +27,7 @@
                 else if (this.Disabled)
                 {
                     <MudAlert Dense="@true" Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-2">
-                        @T("Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")
+                        @TA("Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")
                     </MudAlert>
                 }
                 else if (this.catalog.Count == 0)
@@ -76,7 +76,7 @@
                                 }
                             </div>
                             <MudJustifiedText Typo="Typo.caption" HtmlTag="div" Class="mt-2 ml-2">
-                                @T("You can switch off tools you never need in the app settings, under Tool Settings. They then no longer appear here.")
+                                @TA("You can switch off tools you never need in the app settings, under Tool Settings. They then no longer appear here.")
                             </MudJustifiedText>
                         </MudCollapse>
                     }
@@ -122,7 +122,7 @@
                     <MudIcon Icon="@item.Icon" Color="Color.Info" />
                     @if (!item.IsActive)
                     {
-                        <MudTooltip Text="@T("This tool has been disabled by your organization.")">
+                        <MudTooltip Text="@TA("This tool has been disabled by your organization.")">
                             <MudIcon Icon="@AppIcons.LOCK" Color="Color.Error" Size="Size.Small" />
                         </MudTooltip>
                     }

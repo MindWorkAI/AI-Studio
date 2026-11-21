@@ -17,7 +17,7 @@
 
         @if (this.ShowOpen)
         {
-            <MudTooltip Text="@T("Open this web page in your browser")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
+            <MudTooltip Text="@TA("Open this web page in your browser")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
                 <MudIconButton Icon="@AppIcons.OPEN_EXTERNAL" Size="Size.Small" Class="icon-button-compact" Href="@this.Path" Target="_blank"/>
             </MudTooltip>
         }
@@ -46,7 +46,7 @@
         {
             @if (this.ShowFileManager)
             {
-                <MudTooltip Text="@T("Show this file in the file manager of your system")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
+                <MudTooltip Text="@TA("Show this file in the file manager of your system")" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
                     <MudIconButton Icon="@AppIcons.FOLDER_OPEN" Size="Size.Small" Class="icon-button-compact" OnClick="@this.ShowInFileManager"/>
                 </MudTooltip>
             }

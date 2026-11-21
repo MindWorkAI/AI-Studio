@@ -1,13 +1,13 @@
 @using AIStudio.Settings.DataModel
 @inherits MSGComponentBase
 
-<WorkspaceNameField WorkspaceName="@this.WorkspaceName" WorkspaceNameChanged="@this.SetWorkspaceName" SelectLabel="@T("Existing workspace (Optional)")" Label="@T("Workspace name (Optional)")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" AdornmentIcon="@(this.OpensTemporaryChat ? AppIcons.TEMPORARY_CHAT : AppIcons.NEW_FOLDER)" AdornmentIconSize="Size.Small" TextFieldClass="mb-1"/>
+<WorkspaceNameField WorkspaceName="@this.WorkspaceName" WorkspaceNameChanged="@this.SetWorkspaceName" SelectLabel="@T("Existing workspace (Optional)")" Label="@T("Workspace name (Optional)")" HelperText="@TA("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" AdornmentIcon="@(this.OpensTemporaryChat ? AppIcons.TEMPORARY_CHAT : AppIcons.NEW_FOLDER)" AdornmentIconSize="Size.Small" TextFieldClass="mb-1"/>
 
 @* The tile behaves differently with and without a workspace, so the form says which of the two is
    chosen right now instead of only explaining that both are possible. *@
 <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
     @(this.OpensTemporaryChat
-        ? T("Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings.")
+        ? TA("Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings.")
         : T("The tile opens its chat in this workspace and creates the workspace when it does not exist yet."))
 </MudText>
 @if (this.OpensTemporaryChat && this.SettingsManager.GetChatTemplateWorkspaceName(this.SelectedChatTemplate) is { } templateWorkspaceName)

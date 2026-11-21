@@ -165,6 +165,11 @@ public sealed class Data
 
     public DataChat Chat { get; set; } = new(x => x.Chat);
 
+    /// <summary>
+    /// Gets the settings of the assistants page: collapsed and hidden categories.
+    /// </summary>
+    public DataAssistantsPage AssistantsPage { get; set; } = new(x => x.AssistantsPage);
+
     public DataWorkspace Workspace { get; set; } = new();
 
     public DataIconFinder IconFinder { get; set; } = new();
@@ -222,7 +227,12 @@ public sealed class Data
     /// Gets the managed settings of the BeyondFacts Lab.
     /// </summary>
     public DataBeyondFactsLab BeyondFactsLab { get; set; } = new(x => x.BeyondFactsLab);
-    
+
+    /// <summary>
+    /// Gets the options of the Model Comparison assistant.
+    /// </summary>
+    public DataModelComparison ModelComparison { get; set; } = new(x => x.ModelComparison);
+
     public DataLegalCheck LegalCheck { get; set; } = new();
     
     public DataSynonyms Synonyms { get; set; } = new();

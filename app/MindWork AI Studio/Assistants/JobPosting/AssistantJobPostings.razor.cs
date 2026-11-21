@@ -10,7 +10,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     
     protected override string Title => T("Job Posting");
     
-    protected override string Description => T("Provide some key points about the job you want to post. The AI will then formulate a suggestion that you can finalize.");
+    protected override string Description => TA("Provide some key points about the job you want to post. The AI will then formulate a suggestion that you can finalize.");
     
     // The prompt of this assistant forbids questions, so the chat gets a prompt of its own, which keeps the role and the language:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
@@ -203,7 +203,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom target language.");
+            return TA("Please provide a custom target language.");
         
         return null;
     }
@@ -211,7 +211,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     private string? ValidateJobDescription(string jobDescription)
     {
         if(string.IsNullOrWhiteSpace(jobDescription))
-            return T("Please provide a job description.");
+            return TA("Please provide a job description.");
         
         return null;
     }
@@ -219,7 +219,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     private string? ValidateCountryLegalFramework(string countryLegalFramework)
     {
         if(string.IsNullOrWhiteSpace(countryLegalFramework))
-            return T("Please provide the country where the job is posted (legal framework).");
+            return TA("Please provide the country where the job is posted (legal framework).");
         
         return null;
     }

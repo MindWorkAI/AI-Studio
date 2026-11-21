@@ -13,6 +13,8 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginShareService).Namespace, nameof(PluginShareService));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(PluginShareService).Namespace, nameof(PluginShareService));
+
     private const string PLUGIN_FILE_NAME = "plugin.lua";
 
     /// <remarks>
@@ -101,7 +103,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
 
         if (!settingsManager.ConfigurationData.App.AllowUserToSharePlugins)
         {
-            issue = TB("Your organization has disabled sharing plugins.");
+            issue = TA("Your organization has disabled sharing plugins.");
             return false;
         }
 
@@ -195,7 +197,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
                 // We keep it for that case; the clean-up removes it once it expired:
                 //
                 case ShareSheetOutcome.UNRESPONSIVE:
-                    return ShareSheetUnavailable(plugin, TB("The share dialog of your operating system did not respond."));
+                    return ShareSheetUnavailable(plugin, TA("The share dialog of your operating system did not respond."));
 
                 case ShareSheetOutcome.FAILED:
                 case ShareSheetOutcome.UNKNOWN:

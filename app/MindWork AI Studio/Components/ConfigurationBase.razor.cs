@@ -83,7 +83,11 @@ public abstract partial class ConfigurationBase : MSGComponentBase
 
     #endregion
     
-    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(ConfigurationBase).Namespace, nameof(ConfigurationBase));
+    /// <summary>
+    /// Gets a text of this base class which addresses the reader; the collector files it under ConfigurationBase,
+    /// not under the component which derives from it.
+    /// </summary>
+    private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(ConfigurationBase).Namespace, nameof(ConfigurationBase));
     
     protected async Task InformAboutChange() => await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
 

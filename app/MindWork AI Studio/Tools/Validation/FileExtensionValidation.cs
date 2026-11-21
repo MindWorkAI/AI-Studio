@@ -11,6 +11,8 @@ public static class FileExtensionValidation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExtensionValidation).Namespace, nameof(FileExtensionValidation));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(FileExtensionValidation).Namespace, nameof(FileExtensionValidation));
+
     /// <summary>
     /// Defines the use cases for file extension validation.
     /// </summary>
@@ -46,7 +48,7 @@ public static class FileExtensionValidation
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 AppIcons.DOCUMENT,
-                TB("This file format is not supported. Please convert the .doc file to .docx (e.g. with Microsoft Word).")));
+                TA("This file format is not supported. Please convert the .doc file to .docx (e.g. with Microsoft Word).")));
             return false;
         }
 
@@ -77,7 +79,7 @@ public static class FileExtensionValidation
                 case UseCase.ATTACHING_CONTENT when !FileTypes.IsAllowedPath(filePath, FileTypes.MODEL_IMAGE):
                     await MessageBus.INSTANCE.SendWarning(new(
                         AppIcons.IMAGE_NOT_SUPPORTED,
-                        string.Format(TB("AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG."), Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant())));
+                        string.Format(TA("AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG."), Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant())));
                     return false;
 
                 // In this use case, we don't validate the provider capabilities:

@@ -17,7 +17,7 @@
             else if (this.assistantPlugin is not null)
             {
                 <MudText Typo="Typo.h6">@this.assistantPlugin.AssistantTitle</MudText>
-                <MudText Typo="Typo.body2" Class="mud-text-secondary">@T("Describe what should change after trying the assistant. AI Studio will revise the installed plugin while keeping the same assistant ID.")</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@TA("Describe what should change after trying the assistant. AI Studio will revise the installed plugin while keeping the same assistant ID.")</MudText>
 
                 <MudTextField T="string"
                               @bind-Text="@this.changeRequest"

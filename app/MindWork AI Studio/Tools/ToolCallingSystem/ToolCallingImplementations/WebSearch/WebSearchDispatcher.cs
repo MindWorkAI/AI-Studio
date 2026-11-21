@@ -20,6 +20,8 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WebSearchDispatcher).Namespace, nameof(WebSearchDispatcher));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(WebSearchDispatcher).Namespace, nameof(WebSearchDispatcher));
+
     public IReadOnlyList<IWebSearchBackend> Backends { get; } = backends.OrderBy(backend => backend.Backend).ToList();
 
     /// <summary>
@@ -115,7 +117,7 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
 
         var remainingBackends = backendsToAsk.Where(backend => backend.Capabilities.SupportsSafeSearch).ToList();
         if (remainingBackends.Count is 0)
-            throw new InvalidOperationException(TB("None of the search services this search would use can filter explicit results, which the configured safe search policy requires. Please configure a search service that can filter, or turn the policy off."));
+            throw new InvalidOperationException(TA("None of the search services this search would use can filter explicit results, which the configured safe search policy requires. Please configure a search service that can filter, or turn the policy off."));
 
         foreach (var backend in backendsToAsk.Where(backend => !backend.Capabilities.SupportsSafeSearch))
             notes.Add($"{backend.Backend.Name} was not asked, because it cannot filter explicit results and the configured safe search policy requires that.");

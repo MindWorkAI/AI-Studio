@@ -1,0 +1,23 @@
+@inherits MSGComponentBase
+
+@* Two charts rather than one with two axes: messages and minutes do not share a scale. *@
+<MudGrid Spacing="3" Class="mb-1">
+    @if (this.messageEfforts.Count > 0)
+    {
+        <MudItem xs="12" md="6">
+            <MudText Typo="Typo.subtitle2">
+                @TA("Your messages on average")
+            </MudText>
+            <MudChart T="double" ChartType="ChartType.Bar" ChartLabels="@ModelComparisonCharts.ModelLabels(this.messageEfforts.Select(effort => effort.Model))" ChartSeries="@this.MessageSeries" ChartOptions="@this.MessageChartOptions" Width="100%" Height="220px"/>
+        </MudItem>
+    }
+    @if (this.timeEfforts.Count > 0)
+    {
+        <MudItem xs="12" md="6">
+            <MudText Typo="Typo.subtitle2">
+                @T("Median time")
+            </MudText>
+            <MudChart T="double" ChartType="ChartType.Bar" ChartLabels="@ModelComparisonCharts.ModelLabels(this.timeEfforts.Select(effort => effort.Model))" ChartSeries="@this.TimeSeries" ChartOptions="@this.TimeChartOptions" Width="100%" Height="220px"/>
+        </MudItem>
+    }
+</MudGrid>

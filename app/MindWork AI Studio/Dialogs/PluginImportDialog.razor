@@ -2,7 +2,7 @@
 <MudDialog>
     <DialogContent>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @this.IntroductionText @T("Plugins contain code that runs inside AI Studio. Install plugins only when you trust their source.")
+            @this.IntroductionText @TA("Plugins contain code that runs inside AI Studio. Install plugins only when you trust their source.")
         </MudJustifiedText>
 
         <MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
@@ -38,7 +38,7 @@
         @if (this.Preview.ConfigurationSummary is { HasAnyContent: true } configurationSummary)
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3">
-                @T("A configuration takes effect right after the installation and has no on/off switch. Please check what it sets up:")
+                @TA("A configuration takes effect right after the installation and has no on/off switch. Please check what it sets up:")
             </MudAlert>
 
             @if (configurationSummary.Destinations.Count > 0)

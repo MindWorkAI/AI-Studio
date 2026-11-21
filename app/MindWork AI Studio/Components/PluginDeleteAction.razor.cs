@@ -149,8 +149,8 @@ public partial class PluginDeleteAction : MSGComponentBase
             : this.T("Delete Language Plugin");
 
         var message = this.IsAssistant
-            ? string.Format(this.T("Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."), this.Plugin.Name)
-            : string.Format(this.T("Do you really want to delete the language plugin '{0}'? This permanently deletes its local plugin files. When it is your chosen language, AI Studio returns to choosing the language automatically."), this.Plugin.Name);
+            ? string.Format(this.TA("Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."), this.Plugin.Name)
+            : string.Format(this.TA("Do you really want to delete the language plugin '{0}'? This permanently deletes its local plugin files. When it is your chosen language, AI Studio returns to choosing the language automatically."), this.Plugin.Name);
 
         var parameters = new DialogParameters<ConfirmDialog>
         {

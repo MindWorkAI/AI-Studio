@@ -17,6 +17,8 @@ public sealed class DataSourceValidation
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceValidation).Namespace, nameof(DataSourceValidation));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(DataSourceValidation).Namespace, nameof(DataSourceValidation));
+
     public static bool IsNameValid(string name) => !string.IsNullOrWhiteSpace(name) && name.Length <= MAX_NAME_LENGTH && !name.Any(char.IsControl);
     
     public Func<string> GetSecretStorageIssue { get; init; } = () => string.Empty;
@@ -48,7 +50,7 @@ public sealed class DataSourceValidation
     public string? ValidatingHostname(string hostname)
     {
         if(string.IsNullOrWhiteSpace(hostname))
-            return TB("Please enter a hostname, e.g., http://localhost");
+            return TA("Please enter a hostname, e.g., http://localhost");
         
         if(!hostname.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !hostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
             return TB("The hostname must start with either http:// or https://");
@@ -70,14 +72,14 @@ public sealed class DataSourceValidation
     public string? ValidateSecurityPolicy(DataSourceSecurity securityPolicy)
     {
         if(securityPolicy is DataSourceSecurity.NOT_SPECIFIED)
-            return TB("Please select your security policy.");
+            return TA("Please select your security policy.");
 
         var dataSourceSecurity = this.GetSecurityRequirements();
         if (dataSourceSecurity is null)
             return null;
 
         if(dataSourceSecurity.Value.AllowedProviderType is ProviderType.SELF_HOSTED && securityPolicy is not DataSourceSecurity.SELF_HOSTED)
-            return TB("This data source can only be used with a self-hosted LLM provider. Please change the security policy.");
+            return TA("This data source can only be used with a self-hosted LLM provider. Please change the security policy.");
 
         return null;
     }
@@ -106,10 +108,10 @@ public sealed class DataSourceValidation
         if (string.IsNullOrWhiteSpace(secret))
             return authMethod switch
             {
-                AuthMethod.TOKEN => TB("Please enter your secure access token."),
-                AuthMethod.USERNAME_PASSWORD => TB("Please enter your password."),
+                AuthMethod.TOKEN => TA("Please enter your secure access token."),
+                AuthMethod.USERNAME_PASSWORD => TA("Please enter your password."),
 
-                _ => TB("Please enter the secret necessary for authentication.")
+                _ => TA("Please enter the secret necessary for authentication.")
             };
         
         return null;
@@ -118,7 +120,7 @@ public sealed class DataSourceValidation
     public string? ValidateRetrievalProcess(RetrievalInfo retrievalInfo)
     {
         if(retrievalInfo == default)
-            return TB("Please select one retrieval process.");
+            return TA("Please select one retrieval process.");
         
         return null;
     }
@@ -136,7 +138,7 @@ public sealed class DataSourceValidation
         
         var lowerName = dataSourceName.ToLowerInvariant();
         if(lowerName != this.GetPreviousDataSourceName() && this.GetUsedDataSourceNames().Contains(lowerName))
-            return TB("The name is already used by another data source. Please choose a different name.");
+            return TA("The name is already used by another data source. Please choose a different name.");
         
         return null;
     }
@@ -144,10 +146,10 @@ public sealed class DataSourceValidation
     public string? ValidatePath(string path)
     {
         if(string.IsNullOrWhiteSpace(path))
-            return TB("The path must not be empty. Please select a directory.");
+            return TA("The path must not be empty. Please select a directory.");
         
         if(!Directory.Exists(path))
-            return TB("The path does not exist. Please select a valid directory.");
+            return TA("The path does not exist. Please select a valid directory.");
         
         return null;
     }
@@ -155,10 +157,10 @@ public sealed class DataSourceValidation
     public string? ValidateFilePath(string filePath)
     {
         if(string.IsNullOrWhiteSpace(filePath))
-            return TB("The file path must not be empty. Please select a file.");
+            return TA("The file path must not be empty. Please select a file.");
         
         if(!File.Exists(filePath))
-            return TB("The file does not exist. Please select a valid file.");
+            return TA("The file does not exist. Please select a valid file.");
 
         if(!FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO))
             return TB("The selected file is not a supported document, readable text file, audio file, or video file.");
@@ -171,7 +173,7 @@ public sealed class DataSourceValidation
     public string? ValidateEmbeddingId(string embeddingId)
     {
         if(string.IsNullOrWhiteSpace(embeddingId))
-            return TB("Please select an embedding provider.");
+            return TA("Please select an embedding provider.");
         
         return null;
     }
@@ -187,11 +189,11 @@ public sealed class DataSourceValidation
         // data source keeps pointing at a provider nobody can reach, and nothing of it is embedded:
         //
         if(this.GetSelectedEmbeddingProvider() is not { } selectedEmbedding)
-            return TB("The embedding provider of this data source no longer exists. Please select another one.");
+            return TA("The embedding provider of this data source no longer exists. Please select another one.");
 
         // Saved like this, nothing of the data source would ever be embedded:
         if(this.GetSettingsManager() is { } settingsManager && settingsManager.IsProviderProhibited(selectedEmbedding.UsedLLMProvider))
-            return TB("The use of this embedding provider has been prohibited by your organization. Please select a different embedding provider.");
+            return TA("The use of this embedding provider has been prohibited by your organization. Please select a different embedding provider.");
 
         return this.ValidateSelectedEmbeddingProviderAccess();
     }
@@ -199,7 +201,7 @@ public sealed class DataSourceValidation
     public string? ValidateDataSourceConfidenceLevel(ConfidenceLevel confidenceLevel)
     {
         if(confidenceLevel is ConfidenceLevel.NONE)
-            return TB("Please select a required provider confidence level.");
+            return TA("Please select a required provider confidence level.");
 
         return this.ValidateSelectedEmbeddingProviderAccess();
     }
@@ -207,7 +209,7 @@ public sealed class DataSourceValidation
     public string? ValidateMailboxConfidenceLevel(ConfidenceLevel confidenceLevel)
     {
         if(confidenceLevel is ConfidenceLevel.NONE)
-            return TB("Please select a required provider confidence level.");
+            return TA("Please select a required provider confidence level.");
 
         if(!confidenceLevel.IsAllowedMailboxConfidence)
             return string.Format(TB("A mailbox requires a provider confidence level from '{0}' to '{1}'."), ConfidenceLevel.VERY_LOW.Name, ConfidenceLevel.HIGH.Name);
@@ -218,10 +220,10 @@ public sealed class DataSourceValidation
     public static string? ValidateMailboxHost(string host)
     {
         if(string.IsNullOrWhiteSpace(host))
-            return TB("Please enter the host of the IMAP server, e.g., imap.example.org.");
+            return TA("Please enter the host of the IMAP server, e.g., imap.example.org.");
 
         if(Uri.CheckHostName(host.Trim()) is not (UriHostNameType.Dns or UriHostNameType.IPv4 or UriHostNameType.IPv6))
-            return TB("Please enter the host alone, without a protocol, a port, or a path, e.g., imap.example.org.");
+            return TA("Please enter the host alone, without a protocol, a port, or a path, e.g., imap.example.org.");
 
         return null;
     }
@@ -229,7 +231,7 @@ public sealed class DataSourceValidation
     public static string? ValidateMailboxTransportSecurity(MailboxTransportSecurity transportSecurity)
     {
         if(transportSecurity is MailboxTransportSecurity.UNKNOWN)
-            return TB("Please select how the connection to the server is encrypted.");
+            return TA("Please select how the connection to the server is encrypted.");
 
         return null;
     }
@@ -249,7 +251,7 @@ public sealed class DataSourceValidation
             return secretStorageIssue;
 
         if(string.IsNullOrEmpty(password))
-            return TB("Please enter your password.");
+            return TA("Please enter your password.");
 
         return null;
     }
@@ -265,10 +267,10 @@ public sealed class DataSourceValidation
     public string? ValidateUserAcknowledgedCloudEmbedding(bool value)
     {
         if(this.GetSelectedCloudTranscription() && !value)
-            return TB("Please acknowledge that you are aware of the cloud transcription implications.");
+            return TA("Please acknowledge that you are aware of the cloud transcription implications.");
 
         if(this.GetSelectedCloudEmbedding() && !value)
-            return TB("Please acknowledge that you are aware of the cloud embedding implications.");
+            return TA("Please acknowledge that you are aware of the cloud embedding implications.");
         
         return null;
     }
@@ -276,10 +278,10 @@ public sealed class DataSourceValidation
     public string? ValidateTestedConnection()
     {
         if(!this.GetTestedConnection())
-            return TB("Please test the connection before saving.");
+            return TA("Please test the connection before saving.");
         
         if(!this.GetTestedConnectionResult())
-            return TB("The connection test failed. Please check the connection settings.");
+            return TA("The connection test failed. Please check the connection settings.");
         
         return null;
     }
@@ -287,7 +289,7 @@ public sealed class DataSourceValidation
     public string? ValidateAuthMethod(AuthMethod authMethod)
     {
         if(!this.GetAvailableAuthMethods().Contains(authMethod))
-            return TB("Please select one valid authentication method.");
+            return TA("Please select one valid authentication method.");
         
         return null;
     }
@@ -304,7 +306,7 @@ public sealed class DataSourceValidation
             return null;
 
         return string.Format(
-            TB("The selected embedding provider has confidence '{0}', but this data source requires provider confidence '{1}'. Select an embedding provider with equal or higher confidence or lower the required confidence level."),
+            TA("The selected embedding provider has confidence '{0}', but this data source requires provider confidence '{1}'. Select an embedding provider with equal or higher confidence or lower the required confidence level."),
             selectedEmbedding.GetConfidenceLevel(settingsManager).Name,
             confidenceLevel.Name);
     }

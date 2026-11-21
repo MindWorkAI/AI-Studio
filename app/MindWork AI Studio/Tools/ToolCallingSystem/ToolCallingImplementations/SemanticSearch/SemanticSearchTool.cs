@@ -35,6 +35,8 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SemanticSearchTool).Namespace, nameof(SemanticSearchTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(SemanticSearchTool).Namespace, nameof(SemanticSearchTool));
+
     private const string QUERY_ARGUMENT = "query";
     private const string DATA_SOURCE_IDS_ARGUMENT = "data_source_ids";
     private const string PAGE_ARGUMENT = "page";
@@ -84,11 +86,14 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         Id = ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID,
         ImplementationKey = ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID,
 
-        // Only a chat has data sources to search:
+        //
+        // Only a chat has data sources to search: the chat of the app, and the chats of a comparison series of the
+        // Model Comparison assistant. Its mode Answer Variance runs as the same component, but its chats keep
+        // the data sources switched off, see ModelComparisonProviderAdapter:
+        //
         VisibleIn = new()
         {
-            Chat = true,
-            Assistants = false,
+            AllowedComponents = [Components.CHAT, Components.MODEL_COMPARISON_ASSISTANT],
         },
 
         Activation = ToolActivation.CONTEXT,
@@ -345,7 +350,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
     public string GetDisplayName() => TB("Semantic Search");
 
-    public string GetDescription() => TB("Lets the AI search the data sources of your chat itself, whenever a question calls for it.");
+    public string GetDescription() => TA("Lets the AI search the data sources of your chat itself, whenever a question calls for it.");
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {

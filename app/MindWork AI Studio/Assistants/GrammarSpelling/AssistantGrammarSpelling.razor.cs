@@ -122,7 +122,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     private string? ValidateText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -130,7 +130,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }

@@ -242,7 +242,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private PluginAssistants? ResolveAssistantPlugin()
     {
         var pluginAssistants = PluginFactory.RunningPlugins.OfType<PluginAssistants>()
-            .Where(plugin => this.SettingsManager.IsPluginEnabled(plugin))
+            .Where(plugin => this.SettingsManager.IsAssistantPluginAvailable(plugin))
             .ToList();
         if (pluginAssistants.Count == 0)
             return null;
@@ -708,7 +708,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile? profile)
     {
         if (profile != null && profile != Profile.NO_PROFILE) return null;
-        return !string.IsNullOrWhiteSpace(profileSelection.ValidationMessage) ? profileSelection.ValidationMessage : this.T("Please select one of your profiles.");
+        return !string.IsNullOrWhiteSpace(profileSelection.ValidationMessage) ? profileSelection.ValidationMessage : this.TA("Please select one of your profiles.");
     }
     
     private async Task Submit()

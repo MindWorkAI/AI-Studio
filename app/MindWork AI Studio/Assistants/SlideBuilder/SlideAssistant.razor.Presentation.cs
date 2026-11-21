@@ -176,15 +176,15 @@ public partial class SlideAssistant
         get
         {
             if (this.slideDeck is null)
-                return T("Please plan the slides first.");
+                return TA("Please plan the slides first.");
 
             if (this.template is null)
-                return T("Please choose a PowerPoint template to create a file from the slides.");
+                return TA("Please choose a PowerPoint template to create a file from the slides.");
 
             if (!this.PlannedForCurrentTemplate)
-                return T("The slides were planned for another template. Please plan them again.");
+                return TA("The slides were planned for another template. Please plan them again.");
 
-            return T("Creates a PowerPoint file in the design of your template.");
+            return TA("Creates a PowerPoint file in the design of your template.");
         }
     }
 
@@ -288,7 +288,7 @@ public partial class SlideAssistant
     private string? ValidateTemplateSlideUse(TemplateSlide slide, TemplateSlideUse use)
     {
         if (use is TemplateSlideUse.EDIT && !slide.IsEditable)
-            return T("The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out.");
+            return TA("The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out.");
 
         return null;
     }
@@ -324,7 +324,7 @@ public partial class SlideAssistant
             return T("The template file does not exist.");
 
         if (this.template is null)
-            return T("The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx).");
+            return TA("The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx).");
 
         if (this.template.Families.Count == 0)
             return T("The template has no layouts with room for content.");
@@ -574,7 +574,7 @@ public partial class SlideAssistant
             if (!result.IsWritten)
             {
                 this.Logger.LogWarning("The PowerPoint template '{TemplatePath}' changed since the slides were planned, and they no longer fit it.", this.slideDeckTemplatePath);
-                await this.MessageBus.SendError(new(AppIcons.SLIDES, T("The template has changed since the slides were planned. Please create the slides again.")));
+                await this.MessageBus.SendError(new(AppIcons.SLIDES, TA("The template has changed since the slides were planned. Please create the slides again.")));
                 return;
             }
 
@@ -591,7 +591,7 @@ public partial class SlideAssistant
         catch (Exception e)
         {
             this.Logger.LogError(e, "Creating the PowerPoint file '{FilePath}' failed.", targetPath);
-            await this.MessageBus.SendError(new(AppIcons.SLIDES, T("The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.")));
+            await this.MessageBus.SendError(new(AppIcons.SLIDES, TA("The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.")));
         }
         finally
         {

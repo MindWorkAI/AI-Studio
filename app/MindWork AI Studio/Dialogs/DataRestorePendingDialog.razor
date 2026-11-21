@@ -4,13 +4,13 @@
         <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="3">
             <MudIcon Icon="@AppIcons.RESTART_APP" Color="Color.Warning" Size="Size.Large"/>
             <MudJustifiedText Typo="Typo.body1">
-                @T("Your backup is ready. AI Studio restarts to put it in place. Whatever you changed until then would be lost, so please restart now.")
+                @TA("Your backup is ready. AI Studio restarts to put it in place. Whatever you changed until then would be lost, so please restart now.")
             </MudJustifiedText>
         </MudStack>
         @if (this.restartFailed)
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-4">
-                @T("AI Studio could not restart by itself. Please quit AI Studio and start it again.")
+                @TA("AI Studio could not restart by itself. Please quit AI Studio and start it again.")
             </MudAlert>
         }
     </DialogContent>

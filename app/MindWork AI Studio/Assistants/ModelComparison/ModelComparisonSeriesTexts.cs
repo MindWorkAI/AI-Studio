@@ -1,0 +1,35 @@
+namespace AIStudio.Assistants.ModelComparison;
+
+/// <summary>
+/// The long explanations of the mode Everyday Tasks of the Model Comparison assistant, which its page and the dialog of a new
+/// comparison series share.
+/// </summary>
+public static class ModelComparisonSeriesTexts
+{
+    private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(ModelComparisonSeriesTexts).Namespace, nameof(ModelComparisonSeriesTexts));
+
+    /// <summary>
+    /// What a comparison series is.
+    /// </summary>
+    public static string WhatASeriesIs => TA("A comparison series collects your real tasks over days or weeks. You work on each task with one of the two models, and then on the same task with the other one; the second chat starts with your first message of the first one. Afterward, you decide which chat helped you more. You learn which model was which only when you look at the result of the series.");
+
+    /// <summary>
+    /// How a task of a series runs, step by step.
+    /// </summary>
+    public static string HowATaskWorks => TA("A task runs in four steps. First, you start it, and AI Studio chooses at random which of the two models you chat with first. Second, you work on your task in the chat as you always do: you can attach files, and the model uses the profile, tools, and data sources of the series. Third, once you are done, the other model gets your first message with its files, and you continue the same task with it. Fourth, you decide which chat helped you more; when the series has a judge, it gives its own verdict afterward. You can look at the result of the series whenever you like. Since it names the models, the tasks you decide afterward no longer count as blind.");
+
+    /// <summary>
+    /// How the two models of a series are chosen and kept blind.
+    /// </summary>
+    public static string WhatTheModelsAreFor => TA("Choose the two models you want to compare, e.g., the model you work with every day and a new one. For every task, AI Studio decides at random which model you chat with first, and it hides their names until you look at the result of the series.");
+
+    /// <summary>
+    /// What the judge of a series does, why it is useful, and what it needs.
+    /// </summary>
+    public static string WhatTheJudgeIsFor => TA("After your own vote on a task, a third model reads both chats and gives its own verdict, without knowing which model wrote which chat. It applies your expectations, values, and goals to every task in the same way and so gives you a second opinion; in the result of the series, you see how often it agreed with you. Since the judge reads both chats in full, it must be allowed to see your data sources as well. It costs one more request per task.");
+
+    /// <summary>
+    /// What both models of a series share, and what decides what the selection offers.
+    /// </summary>
+    public static string WhatBothModelsShare => TA("Both models work with the same profile, the same tools, and the same data sources, so that the comparison stays fair. AI Studio therefore offers only what each of them may use: the model with the lower confidence decides which tools and data sources you can choose, and the tool selection lists the others with the reason. When both models can search the data sources themselves, they do so with Semantic Search; otherwise, AI Studio searches them with every message for both. In each task, you can attach files to your message, which both models receive; images only when both models can read them.");
+}

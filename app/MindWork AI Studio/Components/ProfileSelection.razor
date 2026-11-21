@@ -15,7 +15,7 @@
             }
         </ActivatorContent>
         <ChildContent>
-            <MudMenuItem Icon="@AppIcons.SETTINGS" Label="@T("Manage your profiles")" OnClick="@(async () => await this.OpenSettingsDialog())" />
+            <MudMenuItem Icon="@AppIcons.SETTINGS" Label="@TA("Manage your profiles")" OnClick="@(async () => await this.OpenSettingsDialog())" />
             <MudDivider/>
             @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
             {

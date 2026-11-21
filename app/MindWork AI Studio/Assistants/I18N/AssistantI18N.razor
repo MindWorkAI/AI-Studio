@@ -3,7 +3,7 @@
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogI18N>
 
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting)" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@AppIcons.LANGUAGE" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" SelectionUpdated="_ => this.OnChangedLanguage()" Disabled="@this.IsProcessing" />
-<ConfigurationSelect OptionDescription="@T("Language plugin used for comparision")" SelectedValue="@(() => this.selectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(async void (id) => await this.OnLanguagePluginChanged(id))" OptionHelp="@T("Select the language plugin used for comparision.")" Disabled="@(() => this.IsProcessing)"/>
+<ConfigurationSelect OptionDescription="@T("Language plugin used for comparision")" SelectedValue="@(() => this.selectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(async void (id) => await this.OnLanguagePluginChanged(id))" OptionHelp="@TA("Select the language plugin used for comparision.")" Disabled="@(() => this.IsProcessing)"/>
 @if (this.isLoading)
 {
     <MudText Typo="Typo.body1" Class="mb-6">
@@ -76,7 +76,7 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
     @if (this.selectedTargetLanguage is CommonLanguages.EN_US)
     {
         <MudJustifiedText Typo="Typo.body1" Class="mb-6">
-            @T("Please note: neither is a translation needed nor performed for English (USA). Anyway, you might want to generate the related Lua code.")
+            @TA("Please note: neither is a translation needed nor performed for English (USA). Anyway, you might want to generate the related Lua code.")
         </MudJustifiedText>
     }
     else

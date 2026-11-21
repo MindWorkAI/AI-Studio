@@ -1,0 +1,165 @@
+@using AIStudio.Assistants.ModelComparison
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @ModelComparisonResultTexts.WhatTheResultsShow
+        </MudJustifiedText>
+
+        <MudToggleGroup T="ModelComparisonResultSource" Value="@this.source" ValueChanged="@this.SourceChanged" SelectionMode="SelectionMode.SingleSelection" Size="Size.Small" Color="Color.Primary" Class="mb-3">
+            <MudToggleItem Value="@ModelComparisonResultSource.ALL" Text="@T("All results")"/>
+            <MudToggleItem Value="@ModelComparisonResultSource.ANSWERS" Text="@ModelComparisonMode.STABILITY.Name"/>
+            <MudToggleItem Value="@ModelComparisonResultSource.TASKS" Text="@ModelComparisonMode.TASKS.Name"/>
+        </MudToggleGroup>
+
+        @if (this.statistics is null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="@true" Class="mb-3"/>
+        }
+        else if (this.statistics.IsEmpty)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                @TA("There are no results yet. They appear here as soon as you vote on the answers in the mode “Answer Variance”, or once you look at the result of a comparison series in the mode “Everyday Tasks”.")
+            </MudAlert>
+        }
+        else
+        {
+            var shownStatistics = this.statistics;
+            @if (shownStatistics.ComparisonCount > 0)
+            {
+                <MudText Typo="Typo.body1">
+                    @string.Format(ModelComparisonFormat.Culture, T("{0}: {1} comparisons with {2} runs."), ModelComparisonMode.STABILITY.Name, shownStatistics.ComparisonCount.CompactCount(), shownStatistics.RunCount.CompactCount())
+                </MudText>
+            }
+            @if (shownStatistics.SeriesCount > 0)
+            {
+                <MudText Typo="Typo.body1">
+                    @string.Format(ModelComparisonFormat.Culture, T("{0}: {1} comparison series with {2} tasks decided without knowing the models."), ModelComparisonMode.TASKS.Name, shownStatistics.SeriesCount.CompactCount(), shownStatistics.TaskCount.CompactCount())
+                </MudText>
+            }
+
+            <MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" TabPanelsClass="pa-4" Class="mt-3">
+                <MudTabPanel Text="@TA("Your votes")" Icon="@AppIcons.VOTED">
+                    <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+                        @TA("How often each model won by your votes. A comparison of a model with itself does not count here, since it only shows how consistently that model answers.")
+                    </MudJustifiedText>
+                    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                        @ModelComparisonResultTexts.HowToReadTheShares
+                    </MudJustifiedText>
+                    @if (shownStatistics.VoteRanking.Count == 0)
+                    {
+                        <MudJustifiedText Typo="Typo.body1">
+                            @TA("You have not voted on two different models yet.")
+                        </MudJustifiedText>
+                    }
+                    else
+                    {
+                        <ModelComparisonRanking Standings="@shownStatistics.VoteRanking"/>
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="@T("Pairs")" Icon="@AppIcons.ASSISTANT_MODEL_COMPARISON">
+                    @if (shownStatistics.Pairings.Count == 0)
+                    {
+                        <MudJustifiedText Typo="Typo.body1">
+                            @T("No two different models were compared with each other yet.")
+                        </MudJustifiedText>
+                    }
+                    else
+                    {
+                        <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+                            @TA("How often each of two models won when they competed directly, by your votes and by the verdicts of the judges.")
+                        </MudJustifiedText>
+                        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                            @ModelComparisonResultTexts.WhatThePairAssessmentMeans
+                        </MudJustifiedText>
+                        @foreach (var pairing in shownStatistics.Pairings)
+                        {
+                            <ModelComparisonPairCard @key="@ModelComparisonPairKey.Of(pairing.First.Key, pairing.Second.Key)" Pairing="@pairing"/>
+                        }
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="@T("Judges")" Icon="@AppIcons.JUDGE">
+                    @if (shownStatistics.JudgeAgreements.Count == 0 && shownStatistics.JudgeRanking.Count == 0)
+                    {
+                        <MudJustifiedText Typo="Typo.body1">
+                            @T("No judge has given a usable verdict yet.")
+                        </MudJustifiedText>
+                    }
+                    else
+                    {
+                        @if (shownStatistics.JudgeAgreements.Count > 0)
+                        {
+                            <MudText Typo="Typo.subtitle1">
+                                @TA("Agreement with your votes")
+                            </MudText>
+                            <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+                                @TA("How often each judge chose the same as you. Only runs and tasks with both your vote and a verdict of the judge count.")
+                            </MudJustifiedText>
+                            <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+                                @ModelComparisonResultTexts.WhatTheAgreementMeans
+                            </MudJustifiedText>
+                            <MudSimpleTable Dense="@true" Hover="@true" Class="mb-6">
+                                <thead>
+                                    <tr>
+                                        <th>@T("Judge")</th>
+                                        <th>@T("Compared")</th>
+                                        <th>@T("Same choice")</th>
+                                        <th>@T("Agreement")</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var agreement in shownStatistics.JudgeAgreements)
+                                    {
+                                        <tr @key="agreement.Judge.Key">
+                                            <td>@agreement.Judge.Label</td>
+                                            <td>@agreement.ComparedRuns.CompactCount()</td>
+                                            <td>@agreement.Agreements.CompactCount()</td>
+                                            <td>@ModelComparisonFormat.Share(agreement.Share)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+
+                        @if (shownStatistics.JudgeRanking.Count > 0)
+                        {
+                            <MudText Typo="Typo.subtitle1">
+                                @T("Ranking by the judges")
+                            </MudText>
+                            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                                @T("How often each model won by the verdicts of the judges.")
+                            </MudJustifiedText>
+                            <ModelComparisonRanking Standings="@shownStatistics.JudgeRanking"/>
+                        }
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="@T("Speed")" Icon="@AppIcons.ELAPSED_TIME">
+                    @if (shownStatistics.Speeds.Count == 0)
+                    {
+                        <MudJustifiedText Typo="Typo.body1">
+                            @T("Only the mode “Answer Variance” measures how fast the models answer.")
+                        </MudJustifiedText>
+                    }
+                    else
+                    {
+                        <ModelComparisonSpeeds Speeds="@shownStatistics.Speeds"/>
+                    }
+                </MudTabPanel>
+            </MudTabs>
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (this.DeletesResults || this.DeletesSeries)
+        {
+            <MudButton OnClick="@this.DeleteAsync" Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" Disabled="@this.isDeleting">
+                @this.DeleteText
+            </MudButton>
+        }
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

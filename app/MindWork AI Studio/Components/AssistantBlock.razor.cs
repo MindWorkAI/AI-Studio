@@ -2,6 +2,7 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -62,7 +63,10 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     /// Gets or sets the assistant category this block belongs to, if any.
     /// </summary>
     [CascadingParameter]
-    public AssistantCategoryBlock? Category { get; set; }
+    public AssistantCategoryBlock? CategoryBlock { get; set; }
+
+    [Inject]
+    private ILogger<AssistantBlock<TSettings>> Logger { get; init; } = null!;
 
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
@@ -141,9 +145,9 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     {
         MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => new(AppIcons.RUNNING, Color.Info, this.T("Media is still being prepared.")),
         MediaImportStatus.SUCCEEDED => new(AppIcons.SUCCESS, Color.Success, this.T("The media transcript is ready.")),
-        MediaImportStatus.WARNING => new(AppIcons.WARNING, Color.Warning, this.T("Media transcription completed with a warning. Open the assistant to review it.")),
-        MediaImportStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.T("Media transcription failed. Open the assistant to review it.")),
-        MediaImportStatus.CANCELLED => new(AppIcons.CANCELED, Color.Warning, this.T("Media transcription was canceled. Open the assistant to review it.")),
+        MediaImportStatus.WARNING => new(AppIcons.WARNING, Color.Warning, this.TA("Media transcription completed with a warning. Open the assistant to review it.")),
+        MediaImportStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.TA("Media transcription failed. Open the assistant to review it.")),
+        MediaImportStatus.CANCELLED => new(AppIcons.CANCELED, Color.Warning, this.TA("Media transcription was canceled. Open the assistant to review it.")),
         
         _ => this.AssistantSessionIndicatorWithoutMedia,
     };
@@ -152,16 +156,36 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     {
         AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(AppIcons.RUNNING, Color.Info, this.T("Assistant is still running.")),
         AssistantSessionStatus.COMPLETED => new(AppIcons.SUCCESS, Color.Success, this.T("The result is ready.")),
-        AssistantSessionStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.T("Assistant failed. Open it to review the result.")),
-        AssistantSessionStatus.CANCELED => new(AppIcons.CANCELED, Color.Warning, this.T("Assistant was canceled. Open it to review the result.")),
+        AssistantSessionStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.TA("Assistant failed. Open it to review the result.")),
+        AssistantSessionStatus.CANCELED => new(AppIcons.CANCELED, Color.Warning, this.TA("Assistant was canceled. Open it to review the result.")),
         _ => null,
     };
 
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        this.Category?.RegisterAssistant(this);
+        this.CategoryBlock?.RegisterAssistant(this);
+        this.WarnAboutAnotherCategory();
         await base.OnInitializedAsync();
+    }
+
+    /// <summary>
+    /// Reports a built-in assistant which the page shows in another section than its category.
+    /// </summary>
+    /// <remarks>
+    /// The category of a built-in assistant is stated in code, see Components.Category, and everything
+    /// which offers assistants outside the assistants page relies on it. The page, though, places the
+    /// assistant by its markup. Should both ever differ, a user would find the assistant in one category
+    /// and lose it with another one, so we make sure that a developer notices it.
+    /// </remarks>
+    private void WarnAboutAnotherCategory()
+    {
+        var category = this.Component.Category;
+        if (category is PluginCategory.NONE || this.CategoryBlock is null)
+            return;
+
+        if (new AssistantCategoryKey(category) != this.CategoryBlock.Category)
+            this.Logger.LogError("The assistants page shows the assistant '{Component}' under the category '{PageCategory}', but its category is '{Category}'. Please move it into the section of its category.", this.Component, this.CategoryBlock.Category.Category, category);
     }
 
     private void OnMediaImportStateChanged(MediaImportOwner owner)
@@ -173,7 +197,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
-        this.Category?.UnregisterAssistant(this);
+        this.CategoryBlock?.UnregisterAssistant(this);
         base.DisposeResources();
     }
 

@@ -349,7 +349,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the ERI server preset '{0}'?"), this.selectedERIServer.ServerName) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the ERI server preset '{0}'?"), this.selectedERIServer.ServerName) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete ERI server preset"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -445,13 +445,13 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string? ValidateServerName(string name)
     {
         if(string.IsNullOrWhiteSpace(name))
-            return T("Please provide a name for your ERI server. This name will be used to identify the server in AI Studio.");
+            return TA("Please provide a name for your ERI server. This name will be used to identify the server in AI Studio.");
         
         if(name.Length is > 60 or < 6)
-            return T("The name of your ERI server must be between 6 and 60 characters long.");
+            return TA("The name of your ERI server must be between 6 and 60 characters long.");
         
         if(this.SettingsManager.ConfigurationData.ERI.ERIServers.Where(n => n != this.selectedERIServer).Any(n => n.ServerName == name))
-            return T("An ERI server preset with this name already exists. Please choose a different name.");
+            return TA("An ERI server preset with this name already exists. Please choose a different name.");
         
         return null;
     }
@@ -459,10 +459,10 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string? ValidateServerDescription(string description)
     {
         if(string.IsNullOrWhiteSpace(description))
-            return T("Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.");
+            return TA("Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.");
         
         if(description.Length is < 32 or > 512)
-            return T("The description of your ERI server must be between 32 and 512 characters long.");
+            return TA("The description of your ERI server must be between 32 and 512 characters long.");
         
         return null;
     }
@@ -470,7 +470,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string? ValidateERIVersion(ERIVersion version)
     {
         if (version == ERIVersion.NONE)
-            return T("Please select an ERI specification version for the ERI server.");
+            return TA("Please select an ERI specification version for the ERI server.");
         
         return null;
     }
@@ -481,7 +481,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if (language == ProgrammingLanguages.NONE)
-            return T("Please select a programming language for the ERI server.");
+            return TA("Please select a programming language for the ERI server.");
         
         return null;
     }
@@ -492,7 +492,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(language))
-            return T("Please specify the custom programming language for the ERI server.");
+            return TA("Please specify the custom programming language for the ERI server.");
         
         return null;
     }
@@ -503,7 +503,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if (dataSource == DataSources.NONE)
-            return T("Please select a data source for the ERI server.");
+            return TA("Please select a data source for the ERI server.");
         
         return null;
     }
@@ -514,7 +514,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(productName))
-            return T("Please specify the product name of the data source, e.g., 'MongoDB', 'Redis', 'PostgreSQL', 'Neo4j', or 'MinIO', etc.");
+            return TA("Please specify the product name of the data source, e.g., 'MongoDB', 'Redis', 'PostgreSQL', 'Neo4j', or 'MinIO', etc.");
         
         return null;
     }
@@ -525,7 +525,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(dataSource))
-            return T("Please describe the data source of your ERI server.");
+            return TA("Please describe the data source of your ERI server.");
         
         return null;
     }
@@ -540,7 +540,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(hostname))
-            return T("Please provide the hostname of the data source. Use 'localhost' if the data source is on the same machine as the ERI server.");
+            return TA("Please provide the hostname of the data source. Use 'localhost' if the data source is on the same machine as the ERI server.");
         
         if(hostname.Length > 255)
             return T("The hostname of the data source must not exceed 255 characters.");
@@ -558,7 +558,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(port is null)
-            return T("Please provide the port of the data source.");
+            return TA("Please provide the port of the data source.");
         
         if(port is < 1 or > 65535)
             return T("The port of the data source must be between 1 and 65535.");
@@ -606,7 +606,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     {
         var authenticationMethods = (this.selectedAuthenticationMethods as HashSet<Auth>)!;
         if(authenticationMethods.Count == 0)
-            return T("Please select at least one authentication method for the ERI server.");
+            return TA("Please select at least one authentication method for the ERI server.");
         
         return null;
     }
@@ -636,7 +636,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(os is OperatingSystem.NONE)
-            return T("Please select the operating system on which the ERI server will run. This is necessary when using SSO with Kerberos.");
+            return TA("Please select the operating system on which the ERI server will run. This is necessary when using SSO with Kerberos.");
         
         return null;
     }
@@ -644,12 +644,12 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string? ValidateAllowedLLMProviders(AllowedLLMProviders provider)
     {
         if(provider == AllowedLLMProviders.NONE)
-            return T("Please select which types of LLMs users are allowed to use with the data from this ERI server.");
+            return TA("Please select which types of LLMs users are allowed to use with the data from this ERI server.");
         
         return null;
     }
     
-    private string AuthDescriptionTitle() => this.IsAuthDescriptionOptional() ? T("(Optional) Describe how you planned the authentication process") : T("Describe how you planned the authentication process");
+    private string AuthDescriptionTitle() => this.IsAuthDescriptionOptional() ? TA("(Optional) Describe how you planned the authentication process") : TA("Describe how you planned the authentication process");
 
     private bool IsAuthDescriptionOptional()
     {
@@ -669,10 +669,10 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     {
         var authenticationMethods = (this.selectedAuthenticationMethods as HashSet<Auth>)!;
         if(authenticationMethods.Any(n => n == Auth.NONE) && authenticationMethods.Count > 1 && string.IsNullOrWhiteSpace(this.authDescription))
-            return T("Please describe how the selected authentication methods should be used. Especially, explain for what data the NONE method (public access) is used.");
+            return TA("Please describe how the selected authentication methods should be used. Especially, explain for what data the NONE method (public access) is used.");
         
         if(authenticationMethods.Count > 1 && string.IsNullOrWhiteSpace(this.authDescription))
-            return T("Please describe how the selected authentication methods should be used.");
+            return TA("Please describe how the selected authentication methods should be used.");
         
         return null;
     }
@@ -683,7 +683,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return null;
         
         if(string.IsNullOrWhiteSpace(path))
-            return T("Please provide a base directory for the ERI server to write files to.");
+            return TA("Please provide a base directory for the ERI server to write files to.");
         
         return null;
     }
@@ -691,12 +691,12 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private string GetMultiSelectionAuthText(List<Auth> selectedValues)
     {
         if(selectedValues.Count == 0)
-            return T("Please select at least one authentication method");
+            return TA("Please select at least one authentication method");
         
         if(selectedValues.Count == 1)
-            return T("You have selected 1 authentication method");
+            return TA("You have selected 1 authentication method");
         
-        return string.Format(T("You have selected {0} authentication methods"), selectedValues.Count);
+        return string.Format(TA("You have selected {0} authentication methods"), selectedValues.Count);
     }
 
     private bool NeedHostnamePort()
@@ -767,8 +767,8 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return;
 
         var message = this.retrievalProcesses.Any(n => n.Embeddings?.Contains(embeddingInfo) is true)
-            ? string.Format(T("The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?"), embeddingInfo.EmbeddingName)
-            : string.Format(T("Are you sure you want to delete the embedding '{0}'?"), embeddingInfo.EmbeddingName);
+            ? string.Format(TA("The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?"), embeddingInfo.EmbeddingName)
+            : string.Format(TA("Are you sure you want to delete the embedding '{0}'?"), embeddingInfo.EmbeddingName);
         
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
@@ -844,7 +844,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the retrieval process '{0}'?"), retrievalInfo.Name) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the retrieval process '{0}'?"), retrievalInfo.Name) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Retrieval Process"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -868,7 +868,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         
         if(this.retrievalProcesses.Count == 0)
         {
-            this.AddInputIssue(T("Please describe at least one retrieval process."));
+            this.AddInputIssue(TA("Please describe at least one retrieval process."));
             return;
         }
 
@@ -879,7 +879,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.WebRootFiles);
         if (string.IsNullOrWhiteSpace(this.eriSpecification))
         {
-            this.AddInputIssue(T("The ERI specification could not be loaded. Please try again later."));
+            this.AddInputIssue(TA("The ERI specification could not be loaded. Please try again later."));
             return;
         }
         
@@ -917,7 +917,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         if (!ERIServerFileList.TryParse(fileListAnswer, out var filesToGenerate))
         {
             this.Logger.LogWarning("The list of files could not be read from the answer of the model: '{Answer}'", fileListAnswer);
-            await this.MessageBus.SendWarning(new(AppIcons.SAVE_FAILED, T("The list of files in the answer of the model could not be read, so no files were created. Please try again.")));
+            await this.MessageBus.SendWarning(new(AppIcons.SAVE_FAILED, TA("The list of files in the answer of the model could not be read, so no files were created. Please try again.")));
             return;
         }
 

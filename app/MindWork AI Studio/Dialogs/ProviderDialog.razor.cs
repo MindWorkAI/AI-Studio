@@ -299,7 +299,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 // state, not a storage failure -- the user is just about to set their own key:
                 if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
-                    this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
+                    this.dataAPIKeyStorageIssue = string.Format(TA("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.ValidateAsync();
                 }
             }
@@ -394,7 +394,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             var storeResponse = await this.RustService.SetAPIKey(this, this.dataAPIKey, SecretStoreType.LLM_PROVIDER);
             if (!storeResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = string.Format(T("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
+                this.dataAPIKeyStorageIssue = string.Format(TA("Failed to store the API key in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.ValidateAsync();
                 return;
             }
@@ -408,7 +408,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             var deleteResponse = await this.RustService.DeleteAPIKey(this, SecretStoreType.LLM_PROVIDER);
             if (!deleteResponse.Success)
             {
-                this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
+                this.dataAPIKeyStorageIssue = string.Format(TA("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
                 await this.form.ValidateAsync();
                 return;
             }
@@ -422,7 +422,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string? ValidateManuallyModel(string manuallyModel)
     {
         if (this.DataLLMProvider.IsLLMModelProvidedManually && string.IsNullOrWhiteSpace(manuallyModel))
-            return T("Please enter a model name.");
+            return TA("Please enter a model name.");
         
         return null;
     }
@@ -447,7 +447,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.isTokenizerFileDialogOpen = true;
         try
         {
-            var response = await this.RustService.SelectFile(T("Choose a custom tokenizer here"), [ FileTypes.JSON ], string.IsNullOrWhiteSpace(this.dataFilePath) ? null : this.dataFilePath);
+            var response = await this.RustService.SelectFile(TA("Choose a custom tokenizer here"), [ FileTypes.JSON ], string.IsNullOrWhiteSpace(this.dataFilePath) ? null : this.dataFilePath);
             if (!response.UserCancelled)
                 await this.OnDataFilePathChanged(response.SelectedFilePath);
         }
@@ -483,7 +483,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         }
 
         this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a tokenizer.", paths.Count);
-        await this.MessageBus.SendWarning(new(AppIcons.WARNING, T("Please drop a tokenizer file in the JSON format.")));
+        await this.MessageBus.SendWarning(new(AppIcons.WARNING, TA("Please drop a tokenizer file in the JSON format.")));
     }
 
     private async Task OnDataFilePathChanged(string? changedFilePath)
@@ -530,7 +530,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 return;
 
             this.Logger.LogError(e, "Failed to validate custom tokenizer.");
-            this.dataCustomTokenizerValidationIssue = T("Failed to validate the selected tokenizer. Please try again.");
+            this.dataCustomTokenizerValidationIssue = TA("Failed to validate the selected tokenizer. Please try again.");
         }
     }
 
@@ -632,7 +632,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         catch (Exception e)
         {
             this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
-            this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
+            this.dataLoadingModelsIssue = TA("We are currently unable to communicate with the provider to load models. Please try again later.");
         }
     }
     
@@ -849,7 +849,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         {
             var context = this.GetAutomaticModelProfile().Context;
             return context.IsKnown
-                ? string.Format(T("Detected: {0} tokens. Leave the field empty to use that."), context.DefaultTokens.ToString("N0", this.currentCulture))
+                ? string.Format(TA("Detected: {0} tokens. Leave the field empty to use that."), context.DefaultTokens.ToString("N0", this.currentCulture))
                 : T("Nobody has stated a window for this model. Left empty, the chat counts the tokens of a conversation without saying what they may grow to.");
         }
     }
@@ -938,7 +938,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         }
         catch (JsonException)
         {
-            return T("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
+            return TA("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
         }
     }
 
@@ -1071,7 +1071,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         if (objectStack.Count != 0)
         {
-            errorMessage = T("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
+            errorMessage = TA("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
             return false;
         }
 

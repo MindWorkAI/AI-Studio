@@ -170,7 +170,7 @@ public partial class VoiceRecorder : MSGComponentBase
             ? T("Transcription in progress...")
             : this.isRecording
                 ? T("Stop recording and start transcription")
-                : T("Start recording your voice for a transcription");
+                : TA("Start recording your voice for a transcription");
     
     private async Task OnRecordingToggled(bool toggled)
     {

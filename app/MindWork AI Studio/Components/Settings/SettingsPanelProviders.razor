@@ -8,7 +8,7 @@
         @T("Configured LLM Providers")
     </MudText>
     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-        @T("What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-6 Luna. You can configure as many providers as you want. This way, you can use the appropriate model for each task. As an LLM provider, you can also choose local providers. However, to use this app, you must configure at least one provider.")
+        @TA("What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-6 Luna. You can configure as many providers as you want. This way, you can use the appropriate model for each task. As an LLM provider, you can also choose local providers. However, to use this app, you must configure at least one provider.")
     </MudJustifiedText>
     <MudTable Items="@this.SettingsManager.GetAllProviders()" Hover="@true" GroupBy="@GROUP_CONFIG" Class="border-dashed border rounded-lg">
         <ColGroup>
@@ -38,25 +38,25 @@
                 <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
                     @if (this.SettingsManager.IsProviderProhibited(context.UsedLLMProvider))
                     {
-                        <MudTooltip Text="@T("The use of this provider has been prohibited by your organization.")">
+                        <MudTooltip Text="@TA("The use of this provider has been prohibited by your organization.")">
                             <MudIconButton Color="Color.Error" Icon="@AppIcons.BLOCKED" Disabled="true"/>
                         </MudTooltip>
                     }
                     @if (context.IsTrustedForDataSourceSecurityChecks(this.SettingsManager))
                     {
-                        <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted provider is trusted for data source security checks.") : T("This provider is trusted by your organization for data source security checks."))">
+                        <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted provider is trusted for data source security checks.") : TA("This provider is trusted by your organization for data source security checks."))">
                             <MudIconButton Color="Color.Success" Icon="@AppIcons.TRUSTED" Disabled="true"/>
                         </MudTooltip>
                     }
                     @if (context.IsEnterpriseConfiguration && !context.AllowUserProvidedAPIKey)
                     {
-                        <MudTooltip Text="@T("This provider is managed by your organization.")">
+                        <MudTooltip Text="@TA("This provider is managed by your organization.")">
                             <MudIconButton Color="Color.Info" Icon="@AppIcons.ORGANIZATION" Disabled="true"/>
                         </MudTooltip>
                     }
                     else if (context.IsEnterpriseConfiguration && context.AllowUserProvidedAPIKey)
                     {
-                        <MudTooltip Text="@T("This provider is managed by your organization. You can set your own API key.")">
+                        <MudTooltip Text="@TA("This provider is managed by your organization. You can set your own API key.")">
                             <MudIconButton Color="Color.Info" Icon="@AppIcons.KEY" OnClick="@(() => this.EditLLMProvider(context))"/>
                         </MudTooltip>
                     }

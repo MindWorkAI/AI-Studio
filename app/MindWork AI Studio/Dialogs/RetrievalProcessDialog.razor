@@ -11,7 +11,7 @@
             </MudText>
 
             <MudText Typo="Typo.body1" Class="mb-3">
-                @T("Please provide some general information about your retrieval process first. This data may be displayed to the users.")
+                @TA("Please provide some general information about your retrieval process first. This data may be displayed to the users.")
             </MudText>
             
             @* ReSharper disable once CSharpWarnings::CS8974 *@
@@ -19,7 +19,7 @@
                 T="string"
                 @bind-Text="@this.DataName"
                 Label="@T("Retrieval Process Name")"
-                HelperText="@T("The name of your retrieval process.")"
+                HelperText="@TA("The name of your retrieval process.")"
                 Class="mb-3"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@AppIcons.NAME"
@@ -55,7 +55,7 @@
                 T="string"
                 @bind-Text="@this.DataLink"
                 Label="@T("Retrieval Process Link")"
-                HelperText="@T("A link to the retrieval process, e.g., the source code, the paper, it's Wikipedia page, etc. Make sense for common retrieval processes. Leave empty if not applicable.")"
+                HelperText="@TA("A link to the retrieval process, e.g., the source code, the paper, it's Wikipedia page, etc. Make sense for common retrieval processes. Leave empty if not applicable.")"
                 Class="mb-6"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@AppIcons.LINK"
@@ -68,7 +68,7 @@
             </MudText>
 
             <MudText Typo="Typo.body1" Class="mb-3">
-                @T("You may want to parameterize your retrieval process. However, this is optional. You can specify any parameters that can be set by the user or the system during the call. Nevertheless, you should use sensible default values in your code so that users are not forced to set the parameters manually.")
+                @TA("You may want to parameterize your retrieval process. However, this is optional. You can specify any parameters that can be set by the user or the system during the call. Nevertheless, you should use sensible default values in your code so that users are not forced to set the parameters manually.")
             </MudText>
             
             <MudStack Row="@true" Spacing="6" AlignItems="AlignItems.Start" StretchItems="StretchItems.None">
@@ -97,13 +97,13 @@
                         @if(this.retrievalParameters.Count == 0)
                         {
                             <MudText>
-                                @T("Add a parameter first, then select it to edit.")
+                                @TA("Add a parameter first, then select it to edit.")
                             </MudText>
                         }
                         else
                         {
                             <MudText>
-                                @T("Select a parameter to show and edit it.")
+                                @TA("Select a parameter to show and edit it.")
                             </MudText>
                         }
                     }
@@ -160,13 +160,13 @@
             @if(this.AvailableEmbeddings.Count == 0)
             {
                 <MudText Typo="Typo.body1" Class="mb-3">
-                    @T("Currently, you have not defined any embedding methods. If your retrieval process does not require embedding, you can ignore this part. Otherwise, you can define one or more embedding methods in the previous view to assign them to your retrieval process here.")
+                    @TA("Currently, you have not defined any embedding methods. If your retrieval process does not require embedding, you can ignore this part. Otherwise, you can define one or more embedding methods in the previous view to assign them to your retrieval process here.")
                 </MudText>
             }
             else
             {
                 <MudText Typo="Typo.body1" Class="mb-3">
-                    @T("Here you can select which embedding methods are used for this retrieval process. Embeddings are optional; if your retrieval process works without embedding, you can ignore this part. You can only choose the embedding methods you have previously defined.")
+                    @TA("Here you can select which embedding methods are used for this retrieval process. Embeddings are optional; if your retrieval process works without embedding, you can ignore this part. You can only choose the embedding methods you have previously defined.")
                 </MudText>
 
                 <MudSelectExtended
@@ -181,7 +181,7 @@
                     ShrinkLabel="@true"
                     Class="mb-3"
                     Variant="Variant.Outlined"
-                    HelperText="@T("Optional. Select the embedding methods that are used for this retrieval process.")">
+                    HelperText="@TA("Optional. Select the embedding methods that are used for this retrieval process.")">
                     @foreach (var embedding in this.AvailableEmbeddings)
                     {
                         <MudSelectItemExtended Value="@embedding">

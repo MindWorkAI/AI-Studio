@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
 
@@ -43,6 +44,17 @@ public static class AssistantVisibilityExtensions
                 return true;
             }
 
+            // Your organization may disable whole categories of assistants. Plugins bring their categories
+            // along, so AssistantCategoryRules.IsAssistantPluginAvailable checks them instead:
+            var category = component.Category;
+            if (category is not PluginCategory.NONE && settingsManager.ConfigurationData.App.IsAssistantCategoryDisabled(new AssistantCategoryKey(category)))
+            {
+                if(withLogging)
+                    LOGGER.LogInformation("Assistant '{AssistantName}' is not visible because your organization disabled its category '{Category}'.", assistantName, category);
+
+                return false;
+            }
+
             // Dynamic assistants are controlled through plugin activation and their security state.
             // The Assistant Builder is controlled through its preview feature. Neither belongs to the
             // built-in assistant visibility list, so both are expected to be visible at this point.
@@ -70,6 +82,7 @@ public static class AssistantVisibilityExtensions
                 Components.ERI_ASSISTANT => ConfigurableAssistant.ERI_ASSISTANT,
                 Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfigurableAssistant.DOCUMENT_ANALYSIS_ASSISTANT,
                 Components.BATCH_PROCESSING_ASSISTANT => ConfigurableAssistant.BATCH_PROCESSING_ASSISTANT,
+                Components.MODEL_COMPARISON_ASSISTANT => ConfigurableAssistant.MODEL_COMPARISON_ASSISTANT,
                 Components.SLIDE_BUILDER_ASSISTANT => ConfigurableAssistant.SLIDE_BUILDER_ASSISTANT,
                 Components.VISUAL_BRIEFING_ASSISTANT => ConfigurableAssistant.VISUAL_BRIEFING_ASSISTANT,
                 Components.BEYOND_FACTS_LAB_ASSISTANT => ConfigurableAssistant.BEYOND_FACTS_LAB_ASSISTANT,

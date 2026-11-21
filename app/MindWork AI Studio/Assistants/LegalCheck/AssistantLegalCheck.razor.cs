@@ -10,7 +10,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     protected override string Title => T("Legal Check");
     
-    protected override string Description => T("Provide a legal document and ask a question about it. This assistant does not replace legal advice. Consult a lawyer to get professional advice. Remember that LLMs can invent answers and facts. Please do not rely on this answers.");
+    protected override string Description => TA("Provide a legal document and ask a question about it. This assistant does not replace legal advice. Consult a lawyer to get professional advice. Remember that LLMs can invent answers and facts. Please do not rely on this answers.");
     
     // This prompt answers questions about the legal document, which is what the chat continues:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
@@ -26,7 +26,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     protected override IReadOnlyList<IButtonData> FooterButtons => [];
     
-    protected override string SubmitText => T("Ask your questions");
+    protected override string SubmitText => TA("Ask your questions");
 
     protected override Func<Task> SubmitAction => this.AskQuestions;
 
@@ -104,7 +104,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     private string? ValidatingLegalDocument(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a legal document as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a legal document as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -112,7 +112,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     private string? ValidatingQuestions(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide your questions as input.");
+            return TA("Please provide your questions as input.");
         
         return null;
     }

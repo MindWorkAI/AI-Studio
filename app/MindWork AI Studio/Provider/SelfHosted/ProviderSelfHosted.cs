@@ -16,6 +16,8 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderSelfHosted).Namespace, nameof(ProviderSelfHosted));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ProviderSelfHosted).Namespace, nameof(ProviderSelfHosted));
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -260,7 +262,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             throw new ProviderRequestException(
                 ProviderRequestFailureReason.NONE,
                 string.Format(
-                    TB("The llama.cpp provider '{0}' does not offer a usable text model. Please check your provider settings."),
+                    TA("The llama.cpp provider '{0}' does not offer a usable text model. Please check your provider settings."),
                     this.InstanceName));
         }
 
@@ -276,7 +278,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             throw new ProviderRequestException(
                 ProviderRequestFailureReason.NONE,
                 string.Format(
-                    TB("The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use."),
+                    TA("The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use."),
                     this.InstanceName));
         }
 

@@ -39,6 +39,7 @@ Key structure:
 - **JSON contracts** - The contracts of all JSON which AI Studio reads or writes are generated while compiling. Each kind of options names the `JsonSerializerContext` which knows its types, with `GenerationMode = Metadata`, as its `TypeInfoResolver` and ends with `.AsReadOnly()`; only `VisualBriefingJson.Canonical` leaves that out, see MWAIS0010. A new JSON type goes into the context of the options it is read or written with, and into `JsonTestRoots` in `app/Tests/Serialization/`, whose contract, defaults, and coverage tests then check it. Give JSON types `set` instead of `init`, because the source generator of .NET 10 drops the initializer of an `init` property which the JSON leaves out, and write a record or a `JsonObject` instead of an anonymous type. Never call System.Text.Json without options, nor with `JsonSerializerOptions.Default`, `.Web`, or a `DefaultJsonTypeInfoResolver`: each of them builds the contracts by reflection, whose code a published build may lack. MWAIS0015 refuses them while compiling, `JsonOptionsResolverTests` checks the resolvers of all options of the app, and the trim smoke test of `dotnet run verify` builds the contract of every type of their contexts in a trimmed build. Reflection itself stays switched on, because Blazor Server needs it for JSON of its own, see `Trimming.props`.
 - **Long menus** - MudBlazor keeps a `MudSelect` inside the window by itself, but never a `MudMenu`: a menu taller than the window runs past its edge, and its lower entries cannot be reached. Give every `MudMenu` whose entries come from data, such as the assistants or the profiles, `MaxHeight="@MenuDefaults.MAX_HEIGHT"`, so that it scrolls.
 - **Growing popovers** - Since version 9, MudBlazor places an open popover again whenever its content changes size. Content which unfolds later, such as a `MudCollapse` or an `ExpansionPanel` inside a `MudPopover`, therefore stays inside the window and needs no code of its own.
+- **Validated text fields** - Without `Immediate` or a `DebounceInterval`, a `MudTextField` passes its text on only when the user leaves it, so an issue stays visible while the user types the text which resolves it. Give every `MudTextField` with a `Validation` which takes typing `DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS"` and bind its `Value`, not its `Text`: bound by its text, the field also delays the texts its parent sets, e.g., by a reset, and checks them although nobody touched it. `Immediate="@true"` works as well, but renders the parent with every keystroke. `ValidatedTextFieldTests` checks this rule.
 - **Encryption** - Initialized before Rust service is marked ready
 - **Access to the app server** - Only the app window gets into the Blazor server. `AppAccessMiddleware` runs first in `Program.cs`, right after the host filter, and refuses every request without the session cookie of the window or with an origin other than the app's own. Add no exception for any path, not even for static files: `AppAccessPipelineTests` checks the order in `Program.cs`. Since nothing but the window holds the cookie, the app never sends a request to its own server: read files below `wwwroot/` through `WebRootFiles`. The system browser gets no cookie either, so never open a URL of the app server there; offer a save dialog through `RustService` instead, as the ERI Server assistant does for its specification. `runtime/AGENTS.md` describes the runtime side.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
@@ -80,15 +81,23 @@ and the translations keep the line breaks. A text which is not one literal, such
 or a concatenation, gets no translation; the collector warns about it.
 
 **A text which addresses the reader**, with "you" or by asking them to do something in a sentence, uses `TA()`
-instead of `T()` or `TB()`; labels, buttons, titles, and examples stay with those. A static class gets a `TA()` of
-its own next to its `TB()`: `private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(X).Namespace, nameof(X));`.
+instead of `T()` or `TB()`, and so does a label with "your", such as "Your name"; other labels, buttons, titles,
+and examples stay with those. A thank-you on the supporters page addresses the supporter, not the reader, and
+stays with `T()`. `AddressedTextsTests` checks the rule: a text with "you", or one whose German translation says
+"Sie" inside a sentence, needs `TA()`. A static class gets a `TA()` of its own next to its `TB()`:
+`private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(X).Namespace, nameof(X));`, in a
+component, which inherits `TA()`, as `private new static string TA(...)`. A base class whose texts the collector
+files under its own name, such as `AssistantBase`, uses
+`private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(X).Namespace, nameof(X));`.
 The collector files such a text under two keys: the usual one, translated with the formal address, such as "Sie"
 in German, and the same key ending in `::INFORMAL`, translated with the informal address, such as "du". The
 localization assistant writes the informal variant from the formal translation and changes only the form of
-address; whoever corrects a formal translation in the review corrects its informal variant alike. Which one
-the app shows follows `I18N.I.AddressForm`; when the language in use lacks the informal variant, it shows the
-formal one. So far, only the BeyondFacts Lab uses `TA()`, and its option "Form of address" decides, see
-`Program.cs`. The rest of the app addresses the reader formally until it gets a setting of its own for this.
+address, in German with "du" and "dein" in lowercase; whoever corrects a formal translation in the review
+corrects its informal variant alike. In US English, it gives every informal variant the words of the formal text
+of the plugin, so that English offers no choice; the test checks that as well. Which one the app shows follows `I18N.I.AddressForm`; when the language in use lacks the informal variant, it shows the
+formal one. The option "Form of address" of the app settings decides, `DataApp.AddressForm`, see `Program.cs`;
+the settings show it only in a language with both forms. A change sends `Event.ADDRESS_FORM_CHANGED`, which
+every component handles by rendering again.
 
 ## Plugin System
 

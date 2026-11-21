@@ -41,7 +41,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     /// </summary>
     protected override string ExportFileName => string.IsNullOrWhiteSpace(this.analyzedPolicyName) ? this.Title : this.analyzedPolicyName;
 
-    protected override string Description => T("The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.");
+    protected override string Description => TA("The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.");
 
     // The prompt of this assistant demands the output of the policy and nothing else, so the chat gets a prompt of its own, which keeps the policy:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
@@ -162,7 +162,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     
     protected override bool ShowSendTo => true;
 
-    protected override string SubmitText => T("Analyze the documents based on your chosen policy");
+    protected override string SubmitText => TA("Analyze the documents based on your chosen policy");
 
     protected override Func<Task> SubmitAction => this.Analyze;
 
@@ -191,7 +191,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                         ContentType = ContentType.TEXT,
                         Content = new ContentText
                         {
-                            Text = this.T("The result of your previous document analysis session."),
+                            Text = this.TA("The result of your previous document analysis session."),
                             FileAttachments = this.loadedDocumentPaths.ToList(),
                         }
                     },
@@ -572,7 +572,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the document analysis policy '{0}'?"), this.selectedPolicy.PolicyName) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the document analysis policy '{0}'?"), this.selectedPolicy.PolicyName) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete document analysis policy"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -830,13 +830,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return null;
         
         if(string.IsNullOrWhiteSpace(name))
-            return T("Please provide a name for your policy. This name will be used to identify the policy in AI Studio.");
+            return TA("Please provide a name for your policy. This name will be used to identify the policy in AI Studio.");
         
         if(name.Length is > 60 or < 6)
-            return T("The name of your policy must be between 6 and 60 characters long.");
+            return TA("The name of your policy must be between 6 and 60 characters long.");
         
         if(this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Where(n => n != this.selectedPolicy).Any(n => n.PolicyName == name))
-            return T("A policy with this name already exists. Please choose a different name.");
+            return TA("A policy with this name already exists. Please choose a different name.");
         
         return null;
     }
@@ -847,10 +847,10 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return null;
         
         if(string.IsNullOrWhiteSpace(description))
-            return T("Please provide a description for your policy. This description will be used to inform users about the purpose of your document analysis policy.");
+            return TA("Please provide a description for your policy. This description will be used to inform users about the purpose of your document analysis policy.");
         
         if(description.Length is < 32 or > 512)
-            return T("The description of your policy must be between 32 and 512 characters long.");
+            return TA("The description of your policy must be between 32 and 512 characters long.");
         
         return null;
     }
@@ -858,7 +858,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private string? ValidateAnalysisRules(string analysisRules)
     {
         if(string.IsNullOrWhiteSpace(analysisRules))
-            return T("Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.");
+            return TA("Please provide a description of your analysis rules. These rules will be used to instruct the AI on how to analyze the documents.");
         
         return null;
     }
@@ -866,7 +866,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private string? ValidateOutputRules(string outputRules)
     {
         if(string.IsNullOrWhiteSpace(outputRules))
-            return T("Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.");
+            return TA("Please provide a description of your output rules. These rules will be used to instruct the AI on how to format the output of the analysis.");
         
         return null;
     }
@@ -1011,7 +1011,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     {
         if (this.IsNoPolicySelected)
         {
-            await this.MessageBus.SendError(new (AppIcons.ANALYSIS_POLICY, this.T("No policy is selected. Please select a policy to export.")));
+            await this.MessageBus.SendError(new (AppIcons.ANALYSIS_POLICY, this.TA("No policy is selected. Please select a policy to export.")));
             return;
         }
 
@@ -1035,7 +1035,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                 policyIssues.Count,
                 string.Join(" | ", policyIssues));
 
-            await this.MessageBus.SendError(new (AppIcons.ANALYSIS_POLICY, $"{this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")} {string.Join(" ", policyIssues)}"));
+            await this.MessageBus.SendError(new (AppIcons.ANALYSIS_POLICY, $"{this.TA("The selected policy contains invalid data. Please fix the issues before exporting the policy.")} {string.Join(" ", policyIssues)}"));
             return;
         }
 

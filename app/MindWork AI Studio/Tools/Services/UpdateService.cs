@@ -9,6 +9,8 @@ namespace AIStudio.Tools.Services;
 public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(UpdateService).Namespace, nameof(UpdateService));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(UpdateService).Namespace, nameof(UpdateService));
     
     private static bool IS_INITIALIZED;
 
@@ -100,7 +102,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 
             if (notifyUserWhenNoUpdate)
             {
-                await this.messageBus.SendError(new(AppIcons.ERROR, TB("Failed to check for updates. Please try again later.")));
+                await this.messageBus.SendError(new(AppIcons.ERROR, TA("Failed to check for updates. Please try again later.")));
             }
 
             return;
@@ -127,7 +129,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
                 }
                 catch (Exception)
                 {
-                    await this.messageBus.SendError(new(AppIcons.ERROR, TB("Failed to install update automatically. Please try again manually.")));
+                    await this.messageBus.SendError(new(AppIcons.ERROR, TA("Failed to install update automatically. Please try again manually.")));
                 }
             }
             else

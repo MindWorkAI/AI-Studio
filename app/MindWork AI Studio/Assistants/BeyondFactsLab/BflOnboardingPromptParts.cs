@@ -6,4 +6,5 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// </summary>
 /// <param name="Onboarding">The prompt of the conversation with its placeholders.</param>
 /// <param name="Address">The instruction for the form of address.</param>
-public sealed record BflOnboardingPromptParts(string Onboarding, string Address);
+/// <param name="OrganizationRules">What the conversation knows about the guidelines of the organization, which the prompt carries only while there are any.</param>
+public sealed record BflOnboardingPromptParts(string Onboarding, string Address, string OrganizationRules);

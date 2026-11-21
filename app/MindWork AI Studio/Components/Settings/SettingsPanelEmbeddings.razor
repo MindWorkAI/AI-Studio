@@ -15,7 +15,7 @@
         </MudJustifiedText>
 
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints. For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that discuss similar topics or experiences, even if they use different words.")
+            @TA("This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints. For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that discuss similar topics or experiences, even if they use different words.")
         </MudJustifiedText>
         <MudTable Items="@this.SettingsManager.GetAllEmbeddingProviders()" Hover="@true" GroupBy="@GROUP_CONFIG" Class="border-dashed border rounded-lg">
             <ColGroup>
@@ -46,25 +46,25 @@
                     <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
                         @if (this.SettingsManager.IsProviderProhibited(context.UsedLLMProvider))
                         {
-                            <MudTooltip Text="@T("The use of this embedding provider has been prohibited by your organization.")">
+                            <MudTooltip Text="@TA("The use of this embedding provider has been prohibited by your organization.")">
                                 <MudIconButton Color="Color.Error" Icon="@AppIcons.BLOCKED" Disabled="true"/>
                             </MudTooltip>
                         }
                         @if (context.IsTrustedForDataSourceSecurityChecks(this.SettingsManager))
                         {
-                            <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted embedding provider is trusted for data source security checks. Local data can be sent to it without security warnings.") : T("This embedding provider is trusted by your organization for data source security checks. Local data can be sent to it without security warnings."))">
+                            <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted embedding provider is trusted for data source security checks. Local data can be sent to it without security warnings.") : TA("This embedding provider is trusted by your organization for data source security checks. Local data can be sent to it without security warnings."))">
                                 <MudIconButton Color="Color.Success" Icon="@AppIcons.TRUSTED" Disabled="true"/>
                             </MudTooltip>
                         }
                         @if (context.IsEnterpriseConfiguration && !context.AllowUserProvidedAPIKey)
                         {
-                            <MudTooltip Text="@T("This embedding provider is managed by your organization.")">
+                            <MudTooltip Text="@TA("This embedding provider is managed by your organization.")">
                                 <MudIconButton Color="Color.Info" Icon="@AppIcons.ORGANIZATION" Disabled="true"/>
                             </MudTooltip>
                         }
                         else if (context.IsEnterpriseConfiguration && context.AllowUserProvidedAPIKey)
                         {
-                            <MudTooltip Text="@T("This embedding provider is managed by your organization. You can set your own API key.")">
+                            <MudTooltip Text="@TA("This embedding provider is managed by your organization. You can set your own API key.")">
                                 <MudIconButton Color="Color.Info" Icon="@AppIcons.KEY" OnClick="@(() => this.EditEmbeddingProvider(context))"/>
                             </MudTooltip>
                             <MudTooltip Text="@T("Test")">

@@ -1,0 +1,114 @@
+@inherits MSGComponentBase
+
+@if (this.seriesIssue is { } issue)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3 mr-3">
+        @issue
+    </MudAlert>
+}
+
+<CompactExpansionPanel HeaderIcon="@AppIcons.HELP" HeaderText="@T("How a task works")" Class="mb-3 mr-3" @bind-Expanded="@this.explanationExpanded">
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+        @ModelComparisonSeriesTexts.HowATaskWorks
+    </MudJustifiedText>
+</CompactExpansionPanel>
+
+@if (this.Series.OpenTask is { } task)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-4 mr-3">
+        @* Stays at the top while the user scrolls through a long chat, like the header of the BeyondFacts Lab: which
+           task and chat this is, and the setup both models work with, which matters for the decision. Its background
+           is that of the paper below it. *@
+        <div class="pb-2 mb-2" style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-surface);">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-1">
+                <MudText Typo="Typo.h6">
+                    @this.TaskHeading(task)
+                </MudText>
+                <MudSpacer/>
+                <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@AppIcons.DELETE" OnClick="@this.DiscardTaskAsync" Disabled="@this.isSaving">
+                    @T("Discard task")
+                </MudButton>
+            </MudStack>
+            <ModelComparisonSeriesSetupLine Series="@this.Series" Class="mb-2"/>
+            <MudDivider/>
+        </div>
+
+        @if (task.CurrentChat is { } chat)
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+                @this.ChatHint(task)
+            </MudJustifiedText>
+            @if (this.allowedFileTypes is not null)
+            {
+                <MudJustifiedText Typo="Typo.body1" Class="mb-2">
+                    @TA("You cannot attach images in this series, since not both models can read them. Other files, such as documents, work as usual.")
+                </MudJustifiedText>
+            }
+
+            @* Only once everything this chat needs is ready, see ShowOpenTaskAsync: *@
+            @if (this.shownChat is { } shown && shown.ChatId == chat.ChatId)
+            {
+                <EmbeddedChat @key="@shown.ChatId"
+                              Store="@this.chatStore"
+                              Component="@COMPONENT"
+                              ChatId="@shown.ChatId"
+                              CreateThread="@this.CreateThread"
+                              Provider="@shown.Provider"
+                              PrepareAsync="@this.prepareChat"
+                              HidesModelIdentity="true"
+                              ProviderIssue="@this.seriesIssue"
+                              AllowedFileTypes="@this.allowedFileTypes"
+                              OpeningMessage="@this.openingMessage"
+                              ExportFileName="@this.Series.Name"/>
+            }
+            else
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-3"/>
+            }
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.DONE_WITH_MODEL" OnClick="@this.FinishChatAsync" Disabled="@(!this.CanFinishChat)" Class="mt-3">
+                @T("I'm done with this model")
+            </MudButton>
+        }
+        else
+        {
+            <ModelComparisonSeriesDecision Store="@this.chatStore" SeriesTask="@task" CreateThread="@this.CreateThread" IsSaving="@this.isSaving" Vote="@this.DecideAsync"/>
+        }
+    </MudPaper>
+}
+else
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-4 mr-3">
+        @if (this.Series.Judge is not null && this.LastDecidedTask is { } decidedTask)
+        {
+            <ModelComparisonSeriesVerdict SeriesTask="@decidedTask" TaskNumber="@(this.Series.Tasks.IndexOf(decidedTask) + 1)" IsJudging="@this.isJudging" AskJudge="@(() => this.AskJudgeAsync(decidedTask))"/>
+        }
+
+        <MudText Typo="Typo.subtitle2">
+            @T("Setup of this series")
+        </MudText>
+        <ModelComparisonSeriesSetupLine Series="@this.Series" Class="mb-3"/>
+
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @this.NextTaskText
+        </MudJustifiedText>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.ADD" OnClick="@this.StartTaskAsync" Disabled="@(this.seriesIssue is not null || this.isSaving)">
+                @(this.DecidedTaskCount == 0 ? T("Start a task") : T("Test another task"))
+            </MudButton>
+            @if (this.DecidedTaskCount > 0)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.COMPARISON_RESULTS" OnClick="@this.ToggleResultAsync" Disabled="@this.isSaving">
+                    @(this.showsResult ? T("Hide the result") : T("Show the result"))
+                </MudButton>
+            }
+        </MudStack>
+    </MudPaper>
+
+    @if (this.showsResult && this.Series.IsResolved)
+    {
+        <MudPaper Outlined="true" Class="pa-4 mb-4 mr-3">
+            <ModelComparisonSeriesResult Statistics="@ModelComparisonSeriesStatistics.Of(this.Series)"/>
+        </MudPaper>
+    }
+}

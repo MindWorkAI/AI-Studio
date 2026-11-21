@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 using AIStudio.Provider;
 using AIStudio.Provider.Anthropic;
 
@@ -76,6 +74,31 @@ public sealed class AnthropicToolCallingAdapterTests
         Assert.That(written, Is.EqualTo(new[] { "Hello." }));
     }
 
+    [Test]
+    public async Task ARoundWhoseStreamWasCutOffEndsWithoutAnOutcome()
+    {
+        //
+        // A message which ended although its stream did not: the user stopped the answer, or the connection broke,
+        // right after the closing event. Every adapter treats a stream which was cut off alike, so the loop never
+        // runs a call the user no longer wants:
+        //
+        string[] toolUse =
+        [
+            """{"type":"message_start","message":{"id":"msg_1","type":"message","role":"assistant","content":[],"usage":{"input_tokens":1200,"output_tokens":1}}}""",
+            """{"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_1","name":"web_search","input":{}}}""",
+            """{"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"query\":\"weather\"}"}}""",
+            """{"type":"content_block_stop","index":0}""",
+            """{"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":20}}""",
+            """{"type":"message_stop"}""",
+        ];
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(await ScriptedStream.RoundCompletesAsync(Adapter([..toolUse, ScriptedStream.CUT_OFF])), Is.False, "A stream which was cut off is a failed round, even after the message ended.");
+            Assert.That(await ScriptedStream.RoundCompletesAsync(Adapter(toolUse)), Is.True, "The same stream, closed by the provider, completes the round.");
+        }
+    }
+
     /// <summary>
     /// Runs the next round and returns the prompt of every usage it passed on.
     /// </summary>
@@ -95,17 +118,6 @@ public sealed class AnthropicToolCallingAdapterTests
     private static AnthropicToolCallingAdapter Adapter(params string[][] rounds)
     {
         var nextRound = 0;
-        return new(new Model("claude-test", null), [], "You are a helpful assistant.", 1024, new Dictionary<string, object>(), [], (_, token) => Lines(rounds[nextRound++], token));
-    }
-
-    private static async IAsyncEnumerable<ServerSentEvent> Lines(string[] data, [EnumeratorCancellation] CancellationToken token = default)
-    {
-        foreach (var line in data)
-        {
-            token.ThrowIfCancellationRequested();
-            yield return new ServerSentEvent($"data: {line}", line);
-        }
-
-        await Task.CompletedTask;
+        return new(new Model("claude-test", null), [], "You are a helpful assistant.", 1024, new Dictionary<string, object>(), [], (_, streamEnd, token) => ScriptedStream.Lines(rounds[nextRound++], streamEnd, token));
     }
 }

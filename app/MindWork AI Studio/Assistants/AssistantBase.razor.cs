@@ -134,6 +134,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual bool ShowReset => true;
 
     /// <summary>
+    /// Whether the footer shows the confidence card of the selected provider, and the submit button its confidence,
+    /// when the user wants to see confidences, see DataConfidence.ShowProviderConfidence.
+    /// </summary>
+    /// <remarks>
+    /// An assistant which works with several providers at once turns this off: the footer would show only one of them.
+    /// It shows the confidence next to each provider selection instead, see ProviderSelectionWithConfidence.
+    /// </remarks>
+    protected virtual bool ShowProviderConfidence => true;
+
+    /// <summary>
     /// Whether the system prompt starts with the current date and time.
     /// </summary>
     /// <remarks>
@@ -354,18 +364,26 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
 
-    private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
+    /// <summary>
+    /// Gets a text of this base class which addresses the reader; the collector files it under AssistantBase, not
+    /// under the assistant which derives from it.
+    /// </summary>
+    private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
+
+    private bool ShowsProviderConfidence => this.ShowProviderConfidence && this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence;
+
+    private string SubmitButtonStyle => this.ShowsProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
 
     private IReadOnlyList<Tools.Components> VisibleSendToAssistants => this.AssistantLaunchService.GetDestinationsFor(this.Component);
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
         if(provider.UsedLLMProvider == LLMProviders.NONE)
-            return this.TB("Please select a provider.");
+            return this.TA("Please select a provider.");
 
         // A provider which nothing else rules out may still be kept from the text sent here, because of where it came from:
         if (!this.transferredRestrictions.IsLLMProviderAllowed(provider) && ChatRestrictions.NONE.IsLLMProviderAllowed(provider))
-            return this.TB("This provider may not see the text sent to this assistant, because of where the text came from. Please select another provider.");
+            return this.TA("This provider may not see the text sent to this assistant, because of where the text came from. Please select another provider.");
 
         return null;
     }

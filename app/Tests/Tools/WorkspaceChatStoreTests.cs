@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 
 using AIStudio.Chat;
@@ -85,6 +86,35 @@ public sealed class WorkspaceChatStoreTests
             Assert.That(transcript.IsStaged, Is.False, "The chat owns the transcript now, so deleting the chat deletes its file as well.");
             Assert.That(File.Exists(staged.FilePath), Is.False, "The transcript moves, so there is only one file to own.");
             Assert.That(stored.Draft.MediaTranscripts.Single().FilePath, Is.EqualTo(transcript.FilePath), "Opening the chat again brings the draft back from the stored chat, so that has to know the new path as well.");
+        }
+    }
+
+    /// <summary>
+    /// Storing writes each file of the chat next to it first and replaces it then, so that a crash while storing
+    /// leaves the chat as it was stored before. The files keep the encoding they always had.
+    /// </summary>
+    [Test]
+    public async Task StoringAChatAgainLeavesNoTemporaryFileAndKeepsTheEncodingOfItsFiles()
+    {
+        var workspace = await WorkspaceBehaviour.TryCreateWorkspaceAsync("Projects");
+        Assert.That(workspace.Success, Is.True, "The workspace could not be created.");
+
+        var chat = new ChatThread { WorkspaceId = workspace.Workspace.WorkspaceId, ChatId = Guid.NewGuid(), Name = "Meeting notes" };
+        Assert.That(await WorkspaceBehaviour.StoreChatAsync(chat), Is.True, "The chat could not be stored.");
+
+        chat.Name = "Meeting notes, revised";
+        Assert.That(await WorkspaceBehaviour.StoreChatAsync(chat), Is.True, "The chat could not be stored again.");
+
+        var chatDirectory = WorkspaceBehaviour.GetChatDirectory(chat.WorkspaceId, chat.ChatId);
+        var thread = await File.ReadAllBytesAsync(Path.Combine(chatDirectory, "thread.json"));
+        var name = await File.ReadAllBytesAsync(Path.Combine(chatDirectory, "name"));
+        byte[] byteOrderMark = [0xEF, 0xBB, 0xBF];
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Directory.EnumerateFiles(chatDirectory, "*.tmp*"), Is.Empty, "A temporary file stayed in the chat directory.");
+            Assert.That(thread.Take(byteOrderMark.Length), Is.EqualTo(byteOrderMark), "The thread starts with a byte order mark, as it always did.");
+            Assert.That(name, Is.EqualTo(Encoding.UTF8.GetBytes("Meeting notes, revised")), "The name holds the name stored last, without a byte order mark.");
         }
     }
 }

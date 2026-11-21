@@ -37,8 +37,8 @@
             />
 
             <MudList T="@string" Class="mb-3">
-                <MudListItem Icon="@AppIcons.LINK" Href="https://en.wikipedia.org/wiki/Word_embedding" Target="_blank" Text="@T("See Wikipedia for more information about word embeddings")"/>
-                <MudListItem Icon="@AppIcons.LINK" Href="https://en.wikipedia.org/wiki/Knowledge_graph_embedding" Target="_blank" Text="@T("See Wikipedia for more information about knowledge graph embeddings")"/>
+                <MudListItem Icon="@AppIcons.LINK" Href="https://en.wikipedia.org/wiki/Word_embedding" Target="_blank" Text="@TA("See Wikipedia for more information about word embeddings")"/>
+                <MudListItem Icon="@AppIcons.LINK" Href="https://en.wikipedia.org/wiki/Knowledge_graph_embedding" Target="_blank" Text="@TA("See Wikipedia for more information about knowledge graph embeddings")"/>
             </MudList>
 
             @* ReSharper disable once CSharpWarnings::CS8974 *@
@@ -65,7 +65,7 @@
                 T="string"
                 @bind-Text="@this.DataUsedWhen"
                 Label="@T("Used when")"
-                HelperText="@T("When is this embedding used? When you define multiple embeddings, it is helpful to know when to use which one.")"
+                HelperText="@TA("When is this embedding used? When you define multiple embeddings, it is helpful to know when to use which one.")"
                 Lines="3"
                 Sizing="InputSizing.Auto"
                 MaxLines="6"
