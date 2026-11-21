@@ -46,4 +46,23 @@ public sealed class EmbeddedChatTokenBudgetTests
 
         Assert.That(EmbeddedChatTokenBudget.Of(tokens), Is.EqualTo(EmbeddedChatTokenBudgetState.WARNING));
     }
+
+    [TestCase(20_000, 1_000, WINDOW, EmbeddedChatSendNotice.NONE, TestName = "A message which fits needs no notice")]
+    [TestCase(27_000, 1_000, WINDOW, EmbeddedChatSendNotice.FULL, TestName = "In a small window the reserve refuses the message before the share asks")]
+    [TestCase(950_000, 1_000, 1_000_000, EmbeddedChatSendNotice.NEARLY_FULL, TestName = "In a large window the share asks before the reserve refuses")]
+    [TestCase(990_000, 7_000, 1_000_000, EmbeddedChatSendNotice.FULL, TestName = "In a large window the reserve still refuses the last message")]
+    public void TheMessageDecidesTheNoticeBeforeSending(int historyTokens, int messageTokens, int window, EmbeddedChatSendNotice expected)
+    {
+        var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = historyTokens, DraftTokens = messageTokens, Window = ContextWindow.Of(window) };
+
+        Assert.That(EmbeddedChatTokenBudget.NoticeBeforeSending(tokens), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void AnUnknownWindowNeedsNoNotice()
+    {
+        var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = 500_000, DraftTokens = 1_000, Window = ContextWindow.UNKNOWN };
+
+        Assert.That(EmbeddedChatTokenBudget.NoticeBeforeSending(tokens), Is.EqualTo(EmbeddedChatSendNotice.NONE), "Nobody wrote the window down, so nobody can say that it is full.");
+    }
 }

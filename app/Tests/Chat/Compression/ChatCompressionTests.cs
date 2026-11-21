@@ -30,12 +30,12 @@ public sealed class ChatCompressionTests
             Block(ChatRole.USER, "Second question", 5),
             Block(ChatRole.AI, "Second answer", 6));
 
-        ChatCompression.TurnIntoContinuation(chat, 2, "The summary", ChatRestrictions.NONE, "provider-1");
+        ChatCompression.TurnIntoContinuation(chat, 2, ChatCompressionTarget.NEW_CHAT, "The summary", ChatRestrictions.NONE, "provider-1");
 
         var ordered = chat.Blocks.OrderBy(block => block.Time).ToList();
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(Texts(chat), Is.EqualTo(new[] { "Example question", "Example answer", ChatCompression.WithLastMessage("The summary", "Second question"), "Second answer" }), "The order of the time stamps is the order of the conversation.");
+            Assert.That(Texts(chat), Is.EqualTo(new[] { "Example question", "Example answer", ChatCompression.WithLastMessage(ChatCompressionTarget.NEW_CHAT, "The summary", "Second question"), "Second answer" }), "The order of the time stamps is the order of the conversation.");
             Assert.That(ordered.Select(block => block.Role), Is.EqualTo(new[] { ChatRole.USER, ChatRole.AI, ChatRole.USER, ChatRole.AI }), "The summary shares the message of the user, so the roles keep alternating.");
             Assert.That(ordered[2].HideFromUser, Is.False, "The user sees what the new chat continues from.");
             Assert.That(ordered[2].Time, Is.EqualTo(START.AddMinutes(5)), "The last message of the user keeps its time.");
@@ -60,7 +60,7 @@ public sealed class ChatCompressionTests
             lastQuestion,
             Block(ChatRole.AI, "The comparison", 4));
 
-        ChatCompression.TurnIntoContinuation(chat, 0, "The summary", ChatRestrictions.NONE, "provider-1");
+        ChatCompression.TurnIntoContinuation(chat, 0, ChatCompressionTarget.NEW_CHAT, "The summary", ChatRestrictions.NONE, "provider-1");
 
         var message = (ContentText)chat.Blocks.OrderBy(block => block.Time).First().Content!;
         Assert.That(message.FileAttachments.Select(attachment => attachment.FileName), Is.EqualTo(new[] { "report.pdf", "chart.png" }), "The AI receives the files of the last message in full again.");
@@ -75,7 +75,7 @@ public sealed class ChatCompressionTests
             Block(ChatRole.USER, "Prompt of an assistant", 3, hidden: true),
             Block(ChatRole.AI, "Result of the assistant", 4));
 
-        ChatCompression.TurnIntoContinuation(chat, 0, "The summary", ChatRestrictions.NONE, "provider-1");
+        ChatCompression.TurnIntoContinuation(chat, 0, ChatCompressionTarget.NEW_CHAT, "The summary", ChatRestrictions.NONE, "provider-1");
 
         var ordered = chat.Blocks.OrderBy(block => block.Time).ToList();
         using (Assert.EnterMultipleScope())
@@ -101,7 +101,7 @@ public sealed class ChatCompressionTests
         chat.AugmentedData = "A chunk from the handbook";
         chat.SelectedProvider = "provider-of-the-old-chat";
 
-        ChatCompression.TurnIntoContinuation(chat, 0, "The summary", ChatRestrictions.NONE, "provider-1");
+        ChatCompression.TurnIntoContinuation(chat, 0, ChatCompressionTarget.NEW_CHAT, "The summary", ChatRestrictions.NONE, "provider-1");
 
         using (Assert.EnterMultipleScope())
         {
@@ -125,7 +125,7 @@ public sealed class ChatCompressionTests
             Block(ChatRole.USER, "Second question", 3),
             Block(ChatRole.AI, "Second answer", 4));
 
-        ChatCompression.TurnIntoContinuation(chat, 0, "The AI read https://example.org/report.", ChatRestrictions.NONE, "provider-1");
+        ChatCompression.TurnIntoContinuation(chat, 0, ChatCompressionTarget.NEW_CHAT, "The AI read https://example.org/report.", ChatRestrictions.NONE, "provider-1");
 
         var lastAnswer = (ContentText)chat.Blocks.OrderBy(block => block.Time).Last().Content!;
         using (Assert.EnterMultipleScope())
@@ -147,7 +147,7 @@ public sealed class ChatCompressionTests
         chat.DataSecurity = DataSourceSecurity.SELF_HOSTED;
         chat.RequireProviderConfidence(ConfidenceLevel.MEDIUM);
 
-        ChatCompression.TurnIntoContinuation(chat, 0, "The summary", ChatRestrictions.NONE with { ProviderConfidence = ConfidenceLevel.HIGH }, "provider-1");
+        ChatCompression.TurnIntoContinuation(chat, 0, ChatCompressionTarget.NEW_CHAT, "The summary", ChatRestrictions.NONE with { ProviderConfidence = ConfidenceLevel.HIGH }, "provider-1");
 
         using (Assert.EnterMultipleScope())
         {
@@ -169,13 +169,13 @@ public sealed class ChatCompressionTests
             Block(ChatRole.AI, "Second answer", 4),
             pending);
 
-        ChatCompression.TurnIntoContinuation(chat, 0, "The summary", ChatRestrictions.NONE, "provider-1");
+        ChatCompression.TurnIntoContinuation(chat, 0, ChatCompressionTarget.NEW_CHAT, "The summary", ChatRestrictions.NONE, "provider-1");
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(chat.Draft.Text, Is.EqualTo("Question which was too long for the model"), "The user finds the question in the field for the next message and can send it again.");
             Assert.That(chat.Draft.FileAttachments.Select(attachment => attachment.FileName), Is.EqualTo(new[] { "report.pdf" }));
-            Assert.That(Texts(chat), Is.EqualTo(new[] { ChatCompression.WithLastMessage("The summary", "Second question"), "Second answer" }), "The question is in the draft, so it is not a message of the new chat as well.");
+            Assert.That(Texts(chat), Is.EqualTo(new[] { ChatCompression.WithLastMessage(ChatCompressionTarget.NEW_CHAT, "The summary", "Second question"), "Second answer" }), "The question is in the draft, so it is not a message of the new chat as well.");
         }
     }
 
@@ -184,7 +184,7 @@ public sealed class ChatCompressionTests
     {
         var chat = Chat(Block(ChatRole.USER, "First question", 1));
 
-        Assert.That(() => ChatCompression.TurnIntoContinuation(chat, 0, "The summary", ChatRestrictions.NONE, "provider-1"), Throws.InvalidOperationException, "A copy which cannot become a continuation must not be stored.");
+        Assert.That(() => ChatCompression.TurnIntoContinuation(chat, 0, ChatCompressionTarget.NEW_CHAT, "The summary", ChatRestrictions.NONE, "provider-1"), Throws.InvalidOperationException, "A copy which cannot become a continuation must not be stored.");
     }
 
     [TestCase("Plan", "Plan (continued)")]
@@ -219,7 +219,7 @@ public sealed class ChatCompressionTests
     [Test]
     public void TheSummaryMessageNamesTheChatItContinues()
     {
-        var message = ChatCompression.SummaryMessage("Budget 2027", "  1. Primary request and intent: ...  ");
+        var message = ChatCompression.SummaryMessage(ChatCompressionTarget.NEW_CHAT, "Budget 2027", "  1. Primary request and intent: ...  ");
 
         using (Assert.EnterMultipleScope())
         {
@@ -229,9 +229,40 @@ public sealed class ChatCompressionTests
     }
 
     [Test]
+    public void TheSummaryWithinTheSameChatNamesNoOtherChat()
+    {
+        var message = ChatCompression.SummaryMessage(ChatCompressionTarget.SAME_CHAT, "Budget 2027", "The summary");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(message, Does.StartWith("**Summary of the earlier conversation**"), "The conversation goes on where it was, so there is no other chat to name.");
+            Assert.That(message, Does.Not.Contain("Budget 2027"));
+        }
+    }
+
+    [Test]
+    public void WithinTheSameChatAnUnansweredQuestionIsSummarized()
+    {
+        var chat = Chat(
+            Block(ChatRole.USER, "First question", 1),
+            Block(ChatRole.AI, "First answer", 2),
+            Block(ChatRole.USER, "Second question", 3),
+            Block(ChatRole.AI, "Second answer", 4),
+            Block(ChatRole.USER, "Question which was too long for the model", 5));
+
+        ChatCompression.TurnIntoContinuation(chat, 0, ChatCompressionTarget.SAME_CHAT, "The summary", ChatRestrictions.NONE, "provider-1");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(chat.Draft.IsEmpty, Is.True, "The user still has the message being written in the field, and the chat of an assistant reads no draft.");
+            Assert.That(Texts(chat), Is.EqualTo(new[] { ChatCompression.WithLastMessage(ChatCompressionTarget.SAME_CHAT, "The summary", "Second question"), "Second answer" }), "The unanswered question is part of the summary instead.");
+        }
+    }
+
+    [Test]
     public void TheLastMessageFollowsTheSummaryUnchanged()
     {
-        var message = ChatCompression.WithLastMessage("**Summary of the chat 'Budget 2027'**", "What about  the travel costs?\n");
+        var message = ChatCompression.WithLastMessage(ChatCompressionTarget.NEW_CHAT, "**Summary of the chat 'Budget 2027'**", "What about  the travel costs?\n");
 
         using (Assert.EnterMultipleScope())
         {

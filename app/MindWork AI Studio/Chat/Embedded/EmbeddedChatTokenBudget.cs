@@ -36,4 +36,22 @@ public static class EmbeddedChatTokenBudget
 
         return tokens.Tokens >= window * WARNING_SHARE ? EmbeddedChatTokenBudgetState.WARNING : EmbeddedChatTokenBudgetState.OK;
     }
+
+    /// <summary>
+    /// Decides what the chat tells the user before it sends a message.
+    /// </summary>
+    /// <remarks>
+    /// The chat refuses a message after which the conversation would be full, see RESERVE_TOKENS; before that, it asks
+    /// from the share on from which the chat page asks as well, see ConversationTokens.SHARE_TO_ASK_BEFORE_SENDING. In
+    /// a small window, the reserve comes first; in a large one, the share does.
+    /// </remarks>
+    /// <param name="tokensWithMessage">What the conversation costs together with the message, and the context of the model.</param>
+    /// <returns>What to tell the user.</returns>
+    public static EmbeddedChatSendNotice NoticeBeforeSending(ConversationTokens tokensWithMessage)
+    {
+        if (Of(tokensWithMessage) is EmbeddedChatTokenBudgetState.FULL)
+            return EmbeddedChatSendNotice.FULL;
+
+        return tokensWithMessage.AsksBeforeSending ? EmbeddedChatSendNotice.NEARLY_FULL : EmbeddedChatSendNotice.NONE;
+    }
 }

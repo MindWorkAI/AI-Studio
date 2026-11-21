@@ -2313,8 +2313,8 @@ public partial class ChatComponent : MSGComponentBase
 
             // A model reads the summary again in the new chat, so what the AI wrote passes the filter first:
             var payload = await this.AssistantLaunchService.CreateTextPayloadAsync(result.Summary, writtenByModel: true, sourceChat.CaptureRestrictions(), sourceName);
-            var summaryMessage = ChatCompression.SummaryMessage(sourceName, payload.Text);
-            Action<ChatThread> turnIntoContinuation = copy => ChatCompression.TurnIntoContinuation(copy, exampleConversationLength, summaryMessage, payload.Restrictions, provider.Id);
+            var summaryMessage = ChatCompression.SummaryMessage(ChatCompressionTarget.NEW_CHAT, sourceName, payload.Text);
+            Action<ChatThread> turnIntoContinuation = copy => ChatCompression.TurnIntoContinuation(copy, exampleConversationLength, ChatCompressionTarget.NEW_CHAT, summaryMessage, payload.Restrictions, provider.Id);
 
             ChatThread continuation;
             try

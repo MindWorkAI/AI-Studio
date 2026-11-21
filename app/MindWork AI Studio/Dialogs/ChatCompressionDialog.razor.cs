@@ -42,7 +42,13 @@ public partial class ChatCompressionDialog : MSGComponentBase
     public AIStudio.Settings.Provider ProviderSettings { get; set; } = AIStudio.Settings.Provider.NONE;
 
     /// <summary>
-    /// The name suggested for the new chat.
+    /// Where the conversation goes on: in a new chat, which the user names here, or in the same chat.
+    /// </summary>
+    [Parameter]
+    public ChatCompressionTarget Target { get; set; } = ChatCompressionTarget.NEW_CHAT;
+
+    /// <summary>
+    /// The name suggested for the new chat; not asked for when the conversation goes on in the same chat.
     /// </summary>
     [Parameter]
     public string SuggestedName { get; set; } = string.Empty;

@@ -988,6 +988,21 @@ public static partial class WorkspaceBehaviour
     }
 
     /// <summary>
+    /// Copies a chat in memory, as it would be stored and read back, so that the copy shares nothing with the original.
+    /// </summary>
+    /// <remarks>
+    /// Keeps the ID and the name; only what is stored with a chat comes along, as when it is loaded.
+    /// Files stay where they are: the copy refers to the same ones.
+    /// </remarks>
+    /// <param name="chat">The chat to copy. It stays untouched.</param>
+    /// <returns>The copy.</returns>
+    internal static ChatThread CloneChat(ChatThread chat)
+    {
+        var serializedChat = JsonSerializer.Serialize(chat, JSON_OPTIONS);
+        return JsonSerializer.Deserialize<ChatThread>(serializedChat, JSON_OPTIONS) ?? throw new InvalidOperationException("The chat could not be copied.");
+    }
+
+    /// <summary>
     /// Copies a chat into a new chat of the same workspace, including its managed transcript files.
     /// </summary>
     /// <remarks>
@@ -1002,10 +1017,7 @@ public static partial class WorkspaceBehaviour
     /// <returns>The persisted copy.</returns>
     internal static async Task<ChatThread> CopyChatAsync(ChatThread sourceChat, string name, Action<ChatThread>? reshape = null)
     {
-        var serializedChat = JsonSerializer.Serialize(sourceChat, JSON_OPTIONS);
-        var copiedChat = JsonSerializer.Deserialize<ChatThread>(serializedChat, JSON_OPTIONS)
-                         ?? throw new InvalidOperationException("The chat could not be copied.");
-        copiedChat = copiedChat with
+        var copiedChat = CloneChat(sourceChat) with
         {
             ChatId = Guid.NewGuid(),
             Name = name,

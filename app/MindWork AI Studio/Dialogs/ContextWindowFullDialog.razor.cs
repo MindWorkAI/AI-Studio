@@ -54,6 +54,12 @@ public partial class ContextWindowFullDialog : MSGComponentBase
     public bool CanCompress { get; set; }
 
     /// <summary>
+    /// Whether the user may send the message anyway; not when the chat refuses a message which no longer fits.
+    /// </summary>
+    [Parameter]
+    public bool CanSendAnyway { get; set; } = true;
+
+    /// <summary>
     /// Asks the user what to do with a message which fills the context window of the model.
     /// </summary>
     /// <remarks>
@@ -64,8 +70,9 @@ public partial class ContextWindowFullDialog : MSGComponentBase
     /// <param name="tokens">What the conversation costs together with the message, with the context window of the model.</param>
     /// <param name="subject">What is about to be sent.</param>
     /// <param name="canCompress">Whether compressing is offered.</param>
+    /// <param name="canSendAnyway">Whether the user may send the message anyway, e.g., not where the chat refuses a message which no longer fits.</param>
     /// <returns>What the user decided; CANCEL when the dialog was closed.</returns>
-    public static async Task<ContextWindowFullDecision> ShowAsync(IDialogService dialogService, ConversationTokens tokens, ContextWindowFullSubject subject, bool canCompress)
+    public static async Task<ContextWindowFullDecision> ShowAsync(IDialogService dialogService, ConversationTokens tokens, ContextWindowFullSubject subject, bool canCompress, bool canSendAnyway = true)
     {
         var isWindowExceeded = tokens.FillShare >= 1d;
         var culture = I18N.I.Culture;
@@ -76,6 +83,7 @@ public partial class ContextWindowFullDialog : MSGComponentBase
             { x => x.IsWindowExceeded, isWindowExceeded },
             { x => x.Subject, subject },
             { x => x.CanCompress, canCompress },
+            { x => x.CanSendAnyway, canSendAnyway },
         };
 
         var title = isWindowExceeded ? TB("This chat is too long for the model") : TB("This chat nearly fills the context window of the model");

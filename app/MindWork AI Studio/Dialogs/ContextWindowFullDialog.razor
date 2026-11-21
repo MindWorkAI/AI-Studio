@@ -14,7 +14,20 @@
                 }
             </MudText>
 
-            @if (this.CanCompress)
+            @if (!this.CanSendAnyway)
+            {
+                <MudText Typo="Typo.body1">
+                    @T("This chat sends no message which no longer fits, since the model would lose the beginning of the conversation and the instructions of the assistant first.")
+                </MudText>
+            }
+
+            @if (this.CanCompress && this.Subject is ContextWindowFullSubject.EMBEDDED_CHAT)
+            {
+                <MudText Typo="Typo.body1">
+                    @TA("When you compress the conversation, the AI summarizes it, and the summary takes the place of the earlier messages. Your message stays in the input field, so you can send it afterward.")
+                </MudText>
+            }
+            else if (this.CanCompress)
             {
                 <MudText Typo="Typo.body1">
                     @TA("When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.")
@@ -32,9 +45,12 @@
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
             @T("Cancel")
         </MudButton>
-        <MudButton OnClick="@this.SendAnyway" Variant="Variant.Filled" Color="Color.Error">
-            @T("Send anyway")
-        </MudButton>
+        @if (this.CanSendAnyway)
+        {
+            <MudButton OnClick="@this.SendAnyway" Variant="Variant.Filled" Color="Color.Error">
+                @T("Send anyway")
+            </MudButton>
+        }
         @if (this.CanCompress)
         {
             <MudButton OnClick="@this.Compress" Variant="Variant.Filled" Color="Color.Primary">

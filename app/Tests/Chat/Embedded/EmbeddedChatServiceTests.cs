@@ -306,6 +306,56 @@ public sealed class EmbeddedChatServiceTests
         Assert.That(await service.ResetAsync(Guid.NewGuid(), () => new ChatThread()), Is.False);
     }
 
+    [Test]
+    public async Task AReplacedConversationIsStoredAndKeepsTheIdOfTheChat()
+    {
+        var store = new InMemoryEmbeddedChatStore();
+        var chatId = Guid.NewGuid();
+        var service = this.CreateService(Answer("An answer."));
+
+        var conversation = await service.GetAsync(store, COMPONENT, chatId, () => new ChatThread());
+        await service.SendAsync(chatId, this.Request("A question."));
+        var compressed = new ChatThread { ChatId = Guid.NewGuid(), Blocks = [new ContentBlock { Time = DateTimeOffset.Now, ContentType = ContentType.TEXT, Role = ChatRole.USER, Content = new ContentText { Text = "The summary" } }] };
+        var replaced = await service.ReplaceAsync(chatId, compressed);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(replaced, Is.True);
+            Assert.That(conversation.Thread, Is.SameAs(compressed), "The chat shows the new conversation.");
+            Assert.That(conversation.Thread!.ChatId, Is.EqualTo(chatId), "The chat stays the one of its assistant.");
+            Assert.That(store.StoredBlocks(chatId).Select(block => ((ContentText)block.Content!).Text), Is.EqualTo(new[] { "The summary" }), "What the chat shows is on the disk as well.");
+        }
+    }
+
+    [Test]
+    public async Task AConversationIsNotReplacedWhileTheModelAnswers()
+    {
+        var store = new InMemoryEmbeddedChatStore();
+        var chatId = Guid.NewGuid();
+        var answering = new TaskCompletionSource();
+        var release = new TaskCompletionSource();
+        var service = this.CreateService(async (_, answer, _, _) =>
+        {
+            answering.SetResult();
+            await release.Task;
+            answer.Text = "An answer.";
+        });
+
+        var conversation = await service.GetAsync(store, COMPONENT, chatId, () => new ChatThread());
+        var sending = service.SendAsync(chatId, this.Request("A question."));
+        await answering.Task;
+
+        var replaced = await service.ReplaceAsync(chatId, new ChatThread());
+        release.SetResult();
+        await sending;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(replaced, Is.False, "The answer would go into a conversation nobody sees anymore.");
+            Assert.That(conversation.Thread!.Blocks, Has.Count.EqualTo(2), "The question and its answer stay.");
+        }
+    }
+
     private EmbeddedChatService CreateService(Func<EmbeddedChatRequest, ContentText, ChatThread, CancellationToken, Task> answerAsync) => new(this.settingsManager, new AssistantSessionService(MessageBus.INSTANCE), MessageBus.INSTANCE, NullLogger<EmbeddedChatService>.Instance, answerAsync);
 
     private EmbeddedChatRequest Request(string text) => new() { Provider = this.provider, Message = new ContentText { Text = text } };

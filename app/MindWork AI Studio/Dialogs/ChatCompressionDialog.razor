@@ -1,10 +1,18 @@
+@using AIStudio.Chat.Compression
 @inherits MSGComponentBase
 
 <MudDialog DefaultFocus="DefaultFocus.FirstChild">
     <DialogContent>
         <MudStack Spacing="3">
             <MudText Typo="Typo.body1">
-                @TA("The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.")
+                @if (this.Target is ChatCompressionTarget.SAME_CHAT)
+                {
+                    @TA("The AI summarizes this conversation, the content of its documents included. The summary then takes the place of the earlier messages, while your last message and the last answer of the AI stay as they are. AI Studio does not keep the earlier messages. Since the conversation is much shorter afterward, every further message costs fewer tokens.")
+                }
+                else
+                {
+                    @TA("The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.")
+                }
             </MudText>
 
             <MudText Typo="Typo.body2">
@@ -40,15 +48,18 @@
             }
 
             <MudForm @ref="this.form">
-                <MudTextField T="string"
-                              @bind-Value="@this.chatName"
-                              Label="@T("Name of the new chat")"
-                              Variant="Variant.Outlined"
-                              Immediate="@true"
-                              Disabled="@this.isSummarizing"
-                              OnKeyDown="@this.HandleChatNameKeyDown"
-                              UserAttributes="@USER_INPUT_ATTRIBUTES"
-                              Validation="@this.ValidateChatName"/>
+                @if (this.Target is ChatCompressionTarget.NEW_CHAT)
+                {
+                    <MudTextField T="string"
+                                  @bind-Value="@this.chatName"
+                                  Label="@T("Name of the new chat")"
+                                  Variant="Variant.Outlined"
+                                  Immediate="@true"
+                                  Disabled="@this.isSummarizing"
+                                  OnKeyDown="@this.HandleChatNameKeyDown"
+                                  UserAttributes="@USER_INPUT_ATTRIBUTES"
+                                  Validation="@this.ValidateChatName"/>
+                }
 
                 <MudTextField T="string"
                               @bind-Text="@this.focus"

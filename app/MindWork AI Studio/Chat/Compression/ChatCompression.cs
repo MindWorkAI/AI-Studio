@@ -6,14 +6,15 @@ using AIStudio.Tools.Web;
 namespace AIStudio.Chat.Compression;
 
 /// <summary>
-/// Makes the new chat a compressed chat continues in.
+/// Makes the chat a compressed chat continues in.
 /// </summary>
 /// <remarks>
 /// The new chat starts as a copy of the compressed one, see WorkspaceBehaviour.CopyChatAsync, so it
 /// keeps everything which is not a message: the workspace, the profile, the chat template, the
 /// tools, the data sources, the system prompt, and above all the restrictions, which say what the
 /// conversation has seen and which providers and tools may still see it. Only the messages are
-/// replaced, before the copy is stored for the first time.
+/// replaced, before the copy is stored for the first time. An embedded chat of an assistant has no
+/// workspace to keep the original in, so its copy replaces it, see ChatCompressionTarget.SAME_CHAT.
 /// </remarks>
 public static class ChatCompression
 {
@@ -47,7 +48,8 @@ public static class ChatCompression
     /// message of its own, right before the last answer.<br/><br/>
     ///
     /// A message of the user which had no answer becomes the draft of the new chat, so the user finds
-    /// it in the field for the next message, see ChatCompressionPlan.<br/><br/>
+    /// it in the field for the next message, see ChatCompressionPlan. Within the same chat, the user
+    /// still has the message being written in that field, so such a message is summarized instead.<br/><br/>
     ///
     /// What described the last request of the compressed chat is reset, as after a rollback: the data
     /// retrieved for it and the data sources an agent picked. The restrictions only tighten, by those
@@ -59,19 +61,21 @@ public static class ChatCompression
     /// </remarks>
     /// <param name="continuation">The copy of the compressed chat, not stored yet.</param>
     /// <param name="exampleConversationLength">How many blocks the example conversation of the chat template holds, 0 without a template.</param>
+    /// <param name="target">Where the conversation goes on.</param>
     /// <param name="summaryMessage">The text of the message which holds the summary, see SummaryMessage.</param>
     /// <param name="summaryRestrictions">What the filtered summary demands, which the new chat demands as well.</param>
     /// <param name="providerId">The provider the new chat continues with: the one which wrote the summary.</param>
     /// <exception cref="InvalidOperationException">The copy holds nothing to compress, which only happens when it is not a copy of a chat which had something.</exception>
-    public static void TurnIntoContinuation(ChatThread continuation, int exampleConversationLength, string summaryMessage, ChatRestrictions summaryRestrictions, string providerId)
+    public static void TurnIntoContinuation(ChatThread continuation, int exampleConversationLength, ChatCompressionTarget target, string summaryMessage, ChatRestrictions summaryRestrictions, string providerId)
     {
-        var plan = ChatCompressionPlan.Of(continuation, exampleConversationLength, continuation.Draft.IsEmpty)
+        var draftIsEmpty = target is ChatCompressionTarget.NEW_CHAT && continuation.Draft.IsEmpty;
+        var plan = ChatCompressionPlan.Of(continuation, exampleConversationLength, draftIsEmpty)
                    ?? throw new InvalidOperationException("The chat holds nothing to compress.");
 
         ContentBlock summary;
         if (plan.LastQuestion is { Content: ContentText lastQuestion } lastQuestionBlock)
         {
-            lastQuestion.Text = WithLastMessage(summaryMessage, lastQuestion.Text);
+            lastQuestion.Text = WithLastMessage(target, summaryMessage, lastQuestion.Text);
             summary = lastQuestionBlock;
         }
         else
@@ -141,30 +145,43 @@ public static class ChatCompression
     }
 
     /// <summary>
-    /// The text of the message which holds the summary in the new chat.
+    /// The text of the message which holds the summary in the chat the conversation continues in.
     /// </summary>
     /// <remarks>
     /// The user reads it, so it says where the conversation comes from and that the summary only
     /// describes the files attached there. The AI reads it as well, which does no harm: it learns
     /// the same.
     /// </remarks>
-    /// <param name="sourceName">The name of the compressed chat.</param>
+    /// <param name="target">Where the conversation goes on.</param>
+    /// <param name="sourceName">The name of the compressed chat; only a new chat names it.</param>
     /// <param name="summary">The summary, filtered for prompt injections.</param>
     /// <returns>The text of the message.</returns>
-    public static string SummaryMessage(string sourceName, string summary)
+    public static string SummaryMessage(ChatCompressionTarget target, string sourceName, string summary)
     {
-        var heading = string.Format(TB("Summary of the chat '{0}'"), sourceName);
-        var note = TA("This chat continues the conversation of that chat, which stays as it was. The summary describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.");
-        return $"**{heading}**\n\n{note}\n\n---\n\n{summary.Trim()}";
+        if (target is ChatCompressionTarget.SAME_CHAT)
+        {
+            var heading = TB("Summary of the earlier conversation");
+            var note = TA("The summary takes the place of the earlier messages of this conversation and describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.");
+            return $"**{heading}**\n\n{note}\n\n---\n\n{summary.Trim()}";
+        }
+
+        var chatHeading = string.Format(TB("Summary of the chat '{0}'"), sourceName);
+        var chatNote = TA("This chat continues the conversation of that chat, which stays as it was. The summary describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.");
+        return $"**{chatHeading}**\n\n{chatNote}\n\n---\n\n{summary.Trim()}";
     }
 
     /// <summary>
-    /// The text of the last message of the user in the new chat: the summary, followed by the message as it was.
+    /// The text of the last message of the user after compressing: the summary, followed by the message as it was.
     /// </summary>
+    /// <param name="target">Where the conversation goes on.</param>
     /// <param name="summaryMessage">The text of the message which holds the summary, see SummaryMessage.</param>
     /// <param name="lastMessage">The text of the last message of the user.</param>
     /// <returns>The text of the message.</returns>
-    internal static string WithLastMessage(string summaryMessage, string lastMessage) => $"{summaryMessage}\n\n---\n\n**{TA("Your last message in that chat")}**\n\n{lastMessage}";
+    internal static string WithLastMessage(ChatCompressionTarget target, string summaryMessage, string lastMessage)
+    {
+        var heading = target is ChatCompressionTarget.SAME_CHAT ? TA("Your last message") : TA("Your last message in that chat");
+        return $"{summaryMessage}\n\n---\n\n**{heading}**\n\n{lastMessage}";
+    }
 
     /// <summary>
     /// The name of a chat as the summary and the suggested name of its continuation call it.
