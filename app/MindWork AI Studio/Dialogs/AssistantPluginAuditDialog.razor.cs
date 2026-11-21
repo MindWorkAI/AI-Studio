@@ -44,7 +44,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private PluginAssistantSecurityState securityState = new();
 
     /// <summary>
-    /// The provider the user picks inside this dialog when nothing is configured for the audit agent.
+    /// The provider the user picks inside this dialog when nothing is configured for the audit.
     /// </summary>
     /// <remarks>
     /// It lives and dies with this dialog and is never written to the settings: an audit is a one-off
@@ -75,7 +75,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     /// </summary>
     private string ProviderSelectionHint => AssistantPluginAuditService.GetRelevantIssue(this.ConfiguredChoice) switch
     {
-        AIOperationProviderIssue.NOT_SET => TA("No model is set for security checks, neither for this agent nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."),
+        AIOperationProviderIssue.NOT_SET => TA("No model is set for security checks, neither for this AI task nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."),
         AIOperationProviderIssue.MISSING => TA("The model set for security checks no longer exists. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."),
         AIOperationProviderIssue.PROHIBITED => TA("Your organization does not allow the model set for security checks. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."),
         _ => TA("The model set for security checks is not trusted enough for them. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings."),
@@ -163,7 +163,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         {
             //
             // The provider picked here is handed over as the fallback: the audit service uses it only
-            // when nothing is configured for the audit agent, so an organization-wide provider keeps
+            // when nothing is configured for the audit, so an organization-wide provider keeps
             // its precedence.
             //
             this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin, providerAtHand: this.auditProviderSelection);

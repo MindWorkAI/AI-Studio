@@ -106,7 +106,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                 // an event. It does not change between two answers, so a message would repeat itself
                 // with every single one until the setting changes.
                 //
-                LOGGER.LogWarning("Skipping retrieval context validation because no sufficiently trusted validation agent provider is available. Continuing augmentation with all retrieved contexts.");
+                LOGGER.LogWarning("Skipping retrieval context validation because no provider which is trusted enough is available for it. Continuing augmentation with all retrieved contexts.");
             }
         }
 

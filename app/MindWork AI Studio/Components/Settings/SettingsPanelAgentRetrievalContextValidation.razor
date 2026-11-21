@@ -1,7 +1,7 @@
 @using AIStudio.Settings
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@AppIcons.RETRIEVAL_CONTEXT_VALIDATION" HeaderText="@T("Retrieval Context Validation")">
+<ExpansionPanel HeaderIcon="@AppIcons.RETRIEVAL_CONTEXT_VALIDATION" HeaderText="@T("AI Task: Retrieval Context Validation")">
     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
         @TA("In classic RAG, a model checks each retrieval context, i.e., each passage found in the data sources, whether it fits the current prompt. There can be many of them, so you might want to use a cheap and fast model for this job. When using a local or self-hosted model, look for a small (e.g., 3B) and fast one.")
     </MudJustifiedText>
