@@ -19,7 +19,7 @@ namespace AIStudio.Tests.Settings;
 /// <remarks>
 /// The settings are reached through Program.SERVICE_PROVIDER, as in the app, because a managed
 /// setting writes its value and its lock there. Names are written out in full where a short one
-/// would find a namespace of this assembly first, see PreselectedProviderTests.
+/// would find a namespace of this assembly first, see AIOperationProviderResolverTests.
 /// </remarks>
 [TestFixture]
 public sealed class ProhibitedProvidersTests

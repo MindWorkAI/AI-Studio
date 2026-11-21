@@ -12,7 +12,7 @@ namespace AIStudio.Tests.Settings;
 /// The text content cleaner, the data source selection, and the retrieval context validation apply their
 /// provider and their minimum only while their preselection is switched on, like the assistants. The audit
 /// of plugins has no such switch, so its minimum always applies. Names are written out in full where a short
-/// one would find a namespace of this assembly first, see PreselectedProviderTests.
+/// one would find a namespace of this assembly first, see AIOperationProviderResolverTests.
 /// </remarks>
 [TestFixture]
 public sealed class BackgroundTaskMinimumConfidenceTests

@@ -11,7 +11,7 @@ namespace AIStudio.Tests.AIOperations;
 /// one was not chosen, and why the first named fallback failed. The rows cover every issue and their order,
 /// the order of the fallbacks, the minimum of the operation for fallbacks switched on and off, and the rules
 /// which apply to every candidate. Names are written out in full where a short one would find a namespace
-/// of this assembly first, see PreselectedProviderTests.
+/// of this assembly first, see AIOperationProviderResolverTests.
 /// </remarks>
 [TestFixture]
 public sealed class AIOperationProviderChoiceTests

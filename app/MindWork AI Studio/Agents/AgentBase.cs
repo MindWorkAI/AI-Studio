@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -18,12 +16,6 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         Role = ChatRole.AGENT,
         Time = DateTimeOffset.UtcNow,
     };
-    
-    internal static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new JsonSerializerOptions
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        TypeInfoResolver = AgentJsonContext.Default,
-    }.AsReadOnly();
     
     protected DataSourceService DataSourceService { get; init; } = dataSourceService;
     

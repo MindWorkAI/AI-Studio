@@ -12,8 +12,11 @@ namespace AIStudio.Tests.AIOperations;
 /// <remarks>
 /// AIOperationProviderChoiceTests covers the decision itself. Here, it is about what the resolver reads:
 /// a deleted provider, a prohibition of the organization, the global minimum, the check of the caller, and
-/// the app-wide default with its shortcut for a single provider. Names are written out in full where a
-/// short one would find a namespace of this assembly first, see PreselectedProviderTests.
+/// the app-wide default with its shortcut for a single provider.<br/><br/>
+/// Names are written out in full where a short one would find a namespace of this assembly first. This
+/// assembly has an AIStudio.Tests.Tools and an AIStudio.Tests.Provider of its own, and the app has an
+/// AIStudio.Components -- all three are what a short name finds from here, and a using alias does not help,
+/// because names from the enclosing namespaces win over it.
 /// </remarks>
 [TestFixture]
 public sealed class AIOperationProviderResolverTests

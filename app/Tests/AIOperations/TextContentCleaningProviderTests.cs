@@ -16,7 +16,7 @@ namespace AIStudio.Tests.AIOperations;
 /// assistant it sits in, the app-wide default, or nothing at all. Two bugs shipped in that fallback, which is
 /// why it is pinned down here, with the options the reader passes. The component lifecycle itself is not
 /// covered; there is no bUnit in this solution. Names are written out in full where a short one would find a
-/// namespace of this assembly first, see PreselectedProviderTests.
+/// namespace of this assembly first, see AIOperationProviderResolverTests.
 /// </remarks>
 [TestFixture]
 public sealed class TextContentCleaningProviderTests

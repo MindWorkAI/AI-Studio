@@ -40,7 +40,7 @@
                 {
                     <MudPaper Class="pa-3 border-dashed border rounded-lg">
                         <MudText Typo="Typo.body2" Class="mb-3">
-                            @TA("No model is set for security checks, neither for this agent nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.")
+                            @this.ProviderSelectionHint
                         </MudText>
                         <CascadingValue Value="Components.AGENT_ASSISTANT_PLUGIN_AUDIT">
                             <ProviderSelection @bind-ProviderSettings="@this.auditProviderSelection" ValidateProvider="@this.ValidatingProvider" Label="@T("Model")" Disabled="@this.isAuditing" />
