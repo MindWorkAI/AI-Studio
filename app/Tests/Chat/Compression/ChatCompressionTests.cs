@@ -167,9 +167,22 @@ public sealed class ChatCompressionTests
     [TestCase("Plan (continued 2)", "Plan (continued 3)")]
     [TestCase("Plan (continued 2) notes", "Plan (continued 2) notes (continued)")]
     [TestCase("(continued)", "(continued) (continued)")]
+    [TestCase("Plan (draft)", "Plan (draft) (continued)")]
+    [TestCase("Plan (continued 2) (continued 3)", "Plan (continued 2) (continued 4)")]
+    [TestCase("Plan (continued x)", "Plan (continued x) (continued)")]
+    [TestCase("Plan (continued 2147483647)", "Plan (continued 2147483647) (continued)")]
+    [TestCase("Plan (continued 99999999999)", "Plan (continued 99999999999) (continued)")]
     public void AContinuationCountsUpRatherThanRepeatingTheSuffix(string name, string expected)
     {
         Assert.That(ChatCompression.ContinuedName(name, "{0} (continued)", "{0} (continued {1})"), Is.EqualTo(expected));
+    }
+
+    [TestCase("Budget", "Fortsetzung von Budget")]
+    [TestCase("Fortsetzung von Budget", "Fortsetzung 2 von Budget")]
+    [TestCase("Fortsetzung 2 von Budget", "Fortsetzung 3 von Budget")]
+    public void TheNumberMayComeBeforeTheName(string name, string expected)
+    {
+        Assert.That(ChatCompression.ContinuedName(name, "Fortsetzung von {0}", "Fortsetzung {1} von {0}"), Is.EqualTo(expected), "A translation may put the name of the chat last.");
     }
 
     [Test]

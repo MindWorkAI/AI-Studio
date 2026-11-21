@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 using AIStudio.Tools.PluginSystem;
 
@@ -21,7 +20,15 @@ public static class ChatCompression
 
     private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ChatCompression).Namespace, nameof(ChatCompression));
 
-    private static readonly TimeSpan REGEX_TIMEOUT = TimeSpan.FromSeconds(1);
+    /// <summary>
+    /// Stands for the name of the chat in the formats of a continued name.
+    /// </summary>
+    private const string NAME_PLACEHOLDER = "{0}";
+
+    /// <summary>
+    /// Stands for the number of the continuation in the formats of a continued name.
+    /// </summary>
+    private const string NUMBER_PLACEHOLDER = "{1}";
 
     /// <summary>
     /// Replaces the messages of a copy of the compressed chat with the summary and the last exchange.
@@ -150,21 +157,85 @@ public static class ChatCompression
     /// <returns>The name of the continuation.</returns>
     internal static string ContinuedName(string name, string onceFormat, string countedFormat)
     {
-        var counted = MatchFormat(name, countedFormat);
-        if (counted is not null && int.TryParse(counted.Groups["number"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out var number) && number < int.MaxValue)
-            return string.Format(CultureInfo.InvariantCulture, countedFormat, counted.Groups["name"].Value, number + 1);
+        if (TryReadName(name, countedFormat, out var countedName, out var number) && number < int.MaxValue)
+            return string.Format(CultureInfo.InvariantCulture, countedFormat, countedName, number + 1);
 
-        var once = MatchFormat(name, onceFormat);
-        if (once is not null)
-            return string.Format(CultureInfo.InvariantCulture, countedFormat, once.Groups["name"].Value, 2);
+        if (TryReadName(name, onceFormat, out var onceName, out _))
+            return string.Format(CultureInfo.InvariantCulture, countedFormat, onceName, 2);
 
         return string.Format(CultureInfo.InvariantCulture, onceFormat, name);
     }
 
-    private static Match? MatchFormat(string name, string format)
+    /// <summary>
+    /// Reads the name of the compressed chat, and the number where the format has one, back out of a name written with the given format.
+    /// </summary>
+    /// <remarks>
+    /// The format comes from the translation, so it can only be known while the app runs: a regular
+    /// expression could not be generated while compiling, and none is needed. The text around the
+    /// placeholders is compared as it stands, with {0} for a name of at least one character and {1}
+    /// for digits, in whichever order the translation puts them. When the name holds the text between
+    /// the placeholders more than once, the name of the chat takes the most, as in "Plan (continued 2)
+    /// (continued 3)", whose chat is "Plan (continued 2)".
+    /// </remarks>
+    /// <param name="name">The name to read.</param>
+    /// <param name="format">The format, with {0} for the name of the chat and, optionally, {1} for the number.</param>
+    /// <param name="chatName">The name of the chat, when the name was written with the format; otherwise empty.</param>
+    /// <param name="number">The number, when the format has one and the name was written with it; otherwise 0.</param>
+    /// <returns>True when the name was written with the format.</returns>
+    private static bool TryReadName(string name, string format, out string chatName, out int number)
     {
-        var pattern = "^" + Regex.Escape(format).Replace(@"\{0}", "(?<name>.+)").Replace(@"\{1}", "(?<number>[0-9]+)") + "$";
-        var match = Regex.Match(name, pattern, RegexOptions.CultureInvariant, REGEX_TIMEOUT);
-        return match.Success && match.Groups["name"].Success ? match : null;
+        chatName = string.Empty;
+        number = 0;
+
+        var namePosition = format.IndexOf(NAME_PLACEHOLDER, StringComparison.Ordinal);
+        if (namePosition < 0)
+            return false;
+
+        // Both placeholders are equally long, so the length of the one steps over the other as well:
+        var numberPosition = format.IndexOf(NUMBER_PLACEHOLDER, StringComparison.Ordinal);
+        var firstPosition = numberPosition < 0 ? namePosition : Math.Min(namePosition, numberPosition);
+        var lastPosition = numberPosition < 0 ? namePosition : Math.Max(namePosition, numberPosition);
+        var prefix = format[..firstPosition];
+        var suffix = format[(lastPosition + NAME_PLACEHOLDER.Length)..];
+        if (name.Length < prefix.Length + suffix.Length || !name.StartsWith(prefix, StringComparison.Ordinal) || !name.EndsWith(suffix, StringComparison.Ordinal))
+            return false;
+
+        var inner = name[prefix.Length..^suffix.Length];
+        if (numberPosition < 0)
+        {
+            chatName = inner;
+            return chatName.Length > 0;
+        }
+
+        var separator = format[(firstPosition + NAME_PLACEHOLDER.Length)..lastPosition];
+        string digits;
+        if (numberPosition < namePosition)
+        {
+            var digitCount = 0;
+            while (digitCount < inner.Length && char.IsAsciiDigit(inner[digitCount]))
+                digitCount++;
+
+            var rest = inner[digitCount..];
+            if (digitCount is 0 || !rest.StartsWith(separator, StringComparison.Ordinal))
+                return false;
+
+            digits = inner[..digitCount];
+            chatName = rest[separator.Length..];
+        }
+        else
+        {
+            var digitCount = 0;
+            while (digitCount < inner.Length && char.IsAsciiDigit(inner[^(digitCount + 1)]))
+                digitCount++;
+
+            var rest = inner[..^digitCount];
+            if (digitCount is 0 || !rest.EndsWith(separator, StringComparison.Ordinal))
+                return false;
+
+            digits = inner[^digitCount..];
+            chatName = rest[..^separator.Length];
+        }
+
+        return chatName.Length > 0 && int.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out number);
     }
 }
