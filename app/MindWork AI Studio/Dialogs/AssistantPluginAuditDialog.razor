@@ -1,4 +1,4 @@
-@using AIStudio.Agents.AssistantAudit
+@using AIStudio.AIOperations.PluginAudit
 @inherits MSGComponentBase
 
 <MudDialog DefaultFocus="DefaultFocus.FirstChild">
@@ -210,7 +210,7 @@
                     <MudStack Spacing="2" Class="mt-4">
                         <MudText Typo="Typo.h6">@T("Audit Result")</MudText>
 
-                        @if (this.audit.Findings.Count == 0 && this.audit.Level is not AssistantAuditLevel.UNKNOWN)
+                        @if (this.audit.Findings.Count == 0 && this.audit.Level is not PluginAuditLevel.UNKNOWN)
                         {
                             <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true" Icon="@AppIcons.AUDIT_SAFE">
                                 <strong>@T("Safe")</strong><span>: @T("No security issues were found during this check.")</span>
@@ -241,22 +241,22 @@
                                 {
                                     var severityUi = finding.Severity switch
                                     {
-                                        AssistantAuditLevel.UNKNOWN => (
+                                        PluginAuditLevel.UNKNOWN => (
                                             AlertStyling: "color: rgb(12,128,223); background-color: rgba(33,150,243,0.06);",
                                             AlertIcon: AppIcons.UNKNOWN,
                                             ChipColor: Color.Info
                                         ),
-                                        AssistantAuditLevel.DANGEROUS => (
+                                        PluginAuditLevel.DANGEROUS => (
                                             AlertStyling: "color: rgb(242,28,13); background-color: rgba(244,67,54,0.06);",
                                             AlertIcon: AppIcons.SECURITY_DANGEROUS,
                                             ChipColor: Color.Error
                                         ),
-                                        AssistantAuditLevel.CAUTION => (
+                                        PluginAuditLevel.CAUTION => (
                                             AlertStyling: "color: rgb(214,129,0); background-color: rgba(255,152,0,0.06);",
                                             AlertIcon: AppIcons.WARNING,
                                             ChipColor: Color.Warning
                                         ),
-                                        AssistantAuditLevel.SAFE => (
+                                        PluginAuditLevel.SAFE => (
                                             AlertStyling: "color: rgb(0,163,68); background-color: rgba(0,200,83,0.06);",
                                             AlertIcon: AppIcons.AUDIT_SAFE,
                                             ChipColor: Color.Success

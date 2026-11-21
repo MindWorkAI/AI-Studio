@@ -1,4 +1,4 @@
-﻿using AIStudio.Agents.AssistantAudit;
+﻿using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
@@ -188,7 +188,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private bool PluginInstallCompleted => this.pluginInstallResult?.Success is true;
 
-    private bool AuditCompleted => this.pluginAudit is not null && this.pluginAudit.Level is not AssistantAuditLevel.UNKNOWN;
+    private bool AuditCompleted => this.pluginAudit is not null && this.pluginAudit.Level is not PluginAuditLevel.UNKNOWN;
 
     private bool AuditRequiredForActivation => this.SettingsManager.ConfigurationData.AssistantPluginAudit.RequireAuditBeforeActivation;
 
@@ -216,9 +216,9 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private Severity AuditSeverity => this.pluginAudit?.Level switch
     {
-        AssistantAuditLevel.DANGEROUS => Severity.Error,
-        AssistantAuditLevel.CAUTION => Severity.Warning,
-        AssistantAuditLevel.SAFE => Severity.Info,
+        PluginAuditLevel.DANGEROUS => Severity.Error,
+        PluginAuditLevel.CAUTION => Severity.Warning,
+        PluginAuditLevel.SAFE => Severity.Info,
         _ => Severity.Normal,
     };
 
@@ -743,7 +743,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         try
         {
             this.pluginAudit = await this.AssistantPluginAuditService.RunAuditAsync(this.installedAssistantPlugin, fallbackProvider: this.ProviderSettings);
-            if (this.pluginAudit.Level is AssistantAuditLevel.UNKNOWN)
+            if (this.pluginAudit.Level is PluginAuditLevel.UNKNOWN)
             {
                 this.FailInstallStep(BuilderInstallStep.SECURITY_CHECK, T("The security check could not determine a result."));
                 await this.MessageBus.SendError(new(AppIcons.SECURITY_WARNING, T("The security check could not be completed.")));

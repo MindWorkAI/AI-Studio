@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 
 namespace AIStudio.Agents;
 
@@ -8,5 +8,5 @@ namespace AIStudio.Agents;
 /// The contracts with which System.Text.Json reads the answers of the agents, built at compile time.
 /// </summary>
 [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(AssistantAuditResult))]
+[JsonSerializable(typeof(PluginAuditResult))]
 internal sealed partial class AgentJsonContext : JsonSerializerContext;

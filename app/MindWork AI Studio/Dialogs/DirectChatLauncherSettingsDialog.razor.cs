@@ -1,5 +1,5 @@
 using System.Text;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Components;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -231,7 +231,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
         try
         {
             var audit = await this.AssistantPluginAuditService.RunAuditAsync(updatedPlugin);
-            if (audit.Level is AssistantAuditLevel.UNKNOWN)
+            if (audit.Level is PluginAuditLevel.UNKNOWN)
                 return audit;
 
             UpsertAudit(this.SettingsManager.ConfigurationData.AssistantPluginAudits, audit);

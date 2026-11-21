@@ -1,7 +1,7 @@
 using AIStudio.Agents;
-using AIStudio.Agents.AssistantAudit;
 using AIStudio.AIOperations;
 using AIStudio.AIOperations.DataSourceChoice;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.AIOperations.RetrievalContextValidation;
 using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.Builder;
@@ -27,7 +27,7 @@ public static partial class JsonTestRoots
         // The AI operations and agents, which select data sources, check retrieved passages, and audit assistant plugins:
         yield return Case(new(typeof(List<SelectedDataSource>), AIOperationsJson.OPTIONS));
         yield return Case(new(typeof(RetrievalContextValidationResult), AIOperationsJson.OPTIONS));
-        yield return Case(new(typeof(AssistantAuditResult), AgentBase.JSON_SERIALIZER_OPTIONS));
+        yield return Case(new(typeof(PluginAuditResult), AgentBase.JSON_SERIALIZER_OPTIONS));
 
         // The Assistant Builder, for assistant plugins and for direct chat launchers:
         yield return Case(new(typeof(LuaResponse), LuaResponse.JSON_OPTIONS));

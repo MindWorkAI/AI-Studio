@@ -1,4 +1,5 @@
 using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
@@ -25,7 +26,7 @@ public sealed class AssistantPluginAuditService(AssistantAuditAgent auditAgent)
             AuditProviderName = provider == Settings.Provider.NONE
                 ? string.Empty
                 : provider.InstanceName,
-            Level = AssistantAuditLevel.ParseOrUnknown(result.Level),
+            Level = PluginAuditLevel.ParseOrUnknown(result.Level),
             Summary = result.Summary,
             Confidence = result.Confidence,
             PromptPreview = promptPreview,

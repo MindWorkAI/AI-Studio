@@ -1,5 +1,7 @@
 using System.Text;
 using System.Text.Json;
+
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Assistants;
 using AIStudio.Chat;
 using AIStudio.Provider;
@@ -157,7 +159,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// <returns>
     /// The parsed audit result, or an <c>UNKNOWN</c> result when no provider is configured or the model response cannot be used.
     /// </returns>
-    public async Task<AssistantAuditResult> AuditAsync(PluginAssistants plugin, Settings.Provider? fallbackProvider = null, CancellationToken token = default)
+    public async Task<PluginAuditResult> AuditAsync(PluginAssistants plugin, Settings.Provider? fallbackProvider = null, CancellationToken token = default)
     {
         var provider = this.ResolveProvider(fallbackProvider);
         if (provider == AIStudio.Settings.Provider.NONE)
@@ -174,9 +176,9 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
 
             await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, message));
 
-            return new AssistantAuditResult
+            return new PluginAuditResult
             {
-                Level = nameof(AssistantAuditLevel.UNKNOWN),
+                Level = nameof(PluginAuditLevel.UNKNOWN),
                 Summary = wasFallbackRejected
                     ? TB("The provider is not trusted enough for security checks.")
                     : TB("No audit provider is configured."),
@@ -274,9 +276,9 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             logger.LogWarning($"The assistant plugin audit agent did not return text: {response}");
             await MessageBus.INSTANCE.SendWarning(new (AppIcons.AUDIT_INCOMPLETE, string.Format(TA("The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later."))));
             
-            return new AssistantAuditResult
+            return new PluginAuditResult
             {
-                Level = nameof(AssistantAuditLevel.UNKNOWN),
+                Level = nameof(PluginAuditLevel.UNKNOWN),
                 Summary = TB("The audit agent did not return a usable response."),
             };
         }
@@ -284,11 +286,11 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         var json = ModelAnswerJson.ExtractObject(content.Text);
         try
         {
-            var result = JsonSerializer.Deserialize<AssistantAuditResult>(json, JSON_SERIALIZER_OPTIONS);
+            var result = JsonSerializer.Deserialize<PluginAuditResult>(json, JSON_SERIALIZER_OPTIONS);
             return result is null
-                ? new AssistantAuditResult
+                ? new PluginAuditResult
                 {
-                    Level = nameof(AssistantAuditLevel.UNKNOWN),
+                    Level = nameof(PluginAuditLevel.UNKNOWN),
                     Summary = TB("The audit result was empty."),
                 }
                 : NormalizeResult(result);
@@ -296,9 +298,9 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         catch
         {
             logger.LogWarning($"The assistant plugin audit agent returned invalid JSON: {json}");
-            return new AssistantAuditResult
+            return new PluginAuditResult
             {
-                Level = nameof(AssistantAuditLevel.UNKNOWN),
+                Level = nameof(PluginAuditLevel.UNKNOWN),
                 Summary = TB("The audit agent returned invalid JSON."),
             };
         }
@@ -307,15 +309,15 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// <summary>
     /// Normalizes the model output so deterministic policy rules can correct inconsistent level assignments.
     /// </summary>
-    private static AssistantAuditResult NormalizeResult(AssistantAuditResult result)
+    private static PluginAuditResult NormalizeResult(PluginAuditResult result)
     {
         var normalizedFindings = result.Findings;
-        var parsedLevel = AssistantAuditLevel.ParseOrUnknown(result.Level);
+        var parsedLevel = PluginAuditLevel.ParseOrUnknown(result.Level);
         var lowestFindingLevel = GetMostSevereFindingLevel(normalizedFindings);
-        if (lowestFindingLevel != AssistantAuditLevel.UNKNOWN && (parsedLevel == AssistantAuditLevel.UNKNOWN || lowestFindingLevel < parsedLevel))
+        if (lowestFindingLevel != PluginAuditLevel.UNKNOWN && (parsedLevel == PluginAuditLevel.UNKNOWN || lowestFindingLevel < parsedLevel))
             parsedLevel = lowestFindingLevel;
 
-        return new AssistantAuditResult
+        return new PluginAuditResult
         {
             Level = parsedLevel.ToString(),
             Summary = result.Summary,
@@ -383,16 +385,16 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// <summary>
     /// Returns the most severe finding level contained in the result, where DANGEROUS is more severe than CAUTION and SAFE.
     /// </summary>
-    private static AssistantAuditLevel GetMostSevereFindingLevel(IEnumerable<AssistantAuditFinding> findings)
+    private static PluginAuditLevel GetMostSevereFindingLevel(IEnumerable<PluginAuditFinding> findings)
     {
-        var mostSevere = AssistantAuditLevel.UNKNOWN;
+        var mostSevere = PluginAuditLevel.UNKNOWN;
 
         foreach (var finding in findings)
         {
-            if (finding.Severity == AssistantAuditLevel.UNKNOWN)
+            if (finding.Severity == PluginAuditLevel.UNKNOWN)
                 continue;
 
-            if (mostSevere == AssistantAuditLevel.UNKNOWN || finding.Severity < mostSevere)
+            if (mostSevere == PluginAuditLevel.UNKNOWN || finding.Severity < mostSevere)
                 mostSevere = finding.Severity;
         }
 

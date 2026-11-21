@@ -1,5 +1,5 @@
 using System.Text;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
@@ -304,7 +304,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         if (result.Data is not AssistantPluginRevisionDialogResult revisionResult)
             return;
 
-        this.Logger.LogInformation($"AssistantDynamic of plugin '{revisionResult.PluginName}' ({revisionResult.PluginName}) was successfully revised with audit result {revisionResult.Audit?.Level ?? AssistantAuditLevel.UNKNOWN}.");
+        this.Logger.LogInformation($"AssistantDynamic of plugin '{revisionResult.PluginName}' ({revisionResult.PluginName}) was successfully revised with audit result {revisionResult.Audit?.Level ?? PluginAuditLevel.UNKNOWN}.");
         var updatedPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == revisionResult.PluginId);
         if (updatedPlugin is not null && !updatedPlugin.StartsChatDirectly)
             this.ApplyUpdatedAssistantPlugin(updatedPlugin);

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Reflection;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
@@ -68,7 +68,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private DataAssistantPluginAudit AuditSettings => this.SettingsManager.ConfigurationData.AssistantPluginAudit;
 
-    private AssistantAuditLevel MinimumLevel => this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel;
+    private PluginAuditLevel MinimumLevel => this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel;
 
     private string MinimumLevelLabel => this.MinimumLevel.Name;
 
@@ -87,7 +87,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     /// audits. What the dialog shows the user still reads the raw result: a failed run is precisely
     /// what they need to see.
     /// </remarks>
-    private PluginAssistantAudit? ConclusiveAudit => this.audit is { Level: not AssistantAuditLevel.UNKNOWN } ? this.audit : null;
+    private PluginAssistantAudit? ConclusiveAudit => this.audit is { Level: not PluginAuditLevel.UNKNOWN } ? this.audit : null;
 
     private bool IsAuditBelowMinimum => this.ConclusiveAudit is not null && this.ConclusiveAudit.Level < this.MinimumLevel;
 
@@ -212,9 +212,9 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private Severity GetAuditResultSeverity() => this.audit?.Level switch
     {
-        AssistantAuditLevel.DANGEROUS => Severity.Error,
-        AssistantAuditLevel.CAUTION => Severity.Warning,
-        AssistantAuditLevel.SAFE => Severity.Success,
+        PluginAuditLevel.DANGEROUS => Severity.Error,
+        PluginAuditLevel.CAUTION => Severity.Warning,
+        PluginAuditLevel.SAFE => Severity.Success,
         _ => Severity.Normal,
     };
 

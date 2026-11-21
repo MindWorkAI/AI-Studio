@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
@@ -39,7 +39,7 @@ public sealed class DataAssistantPluginAudit(Expression<Func<Data, DataAssistant
     /// <summary>
     /// The minimum audit level assistant plugins should meet.
     /// </summary>
-    public AssistantAuditLevel MinimumLevel { get; set; } = ManagedConfiguration.Register(configSelection, n => n.MinimumLevel, AssistantAuditLevel.CAUTION);
+    public PluginAuditLevel MinimumLevel { get; set; } = ManagedConfiguration.Register(configSelection, n => n.MinimumLevel, PluginAuditLevel.CAUTION);
 
     /// <summary>
     /// Should activation be blocked when the audit result is below the minimum level?

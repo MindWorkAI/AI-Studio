@@ -1,5 +1,5 @@
 using AIStudio.Components;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -105,7 +105,7 @@ public partial class Assistants : MSGComponentBase
                     continue;
 
                 var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
-                if (audit.Level is AssistantAuditLevel.UNKNOWN)
+                if (audit.Level is PluginAuditLevel.UNKNOWN)
                 {
                     await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, string.Format(this.TA("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page."), assistantPlugin.Name)));
                     continue;

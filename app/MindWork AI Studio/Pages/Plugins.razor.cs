@@ -1,5 +1,5 @@
 using AIStudio.Components;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -152,7 +152,7 @@ public partial class Plugins : MSGComponentBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private async Task<bool> ConfirmActivationBelowMinimumAsync(string pluginName, AssistantAuditLevel actualLevel)
+    private async Task<bool> ConfirmActivationBelowMinimumAsync(string pluginName, PluginAuditLevel actualLevel)
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
@@ -579,7 +579,7 @@ public partial class Plugins : MSGComponentBase
                     continue;
 
                 var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
-                if (audit.Level is AssistantAuditLevel.UNKNOWN)
+                if (audit.Level is PluginAuditLevel.UNKNOWN)
                 {
                     await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, string.Format(this.TA("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."), assistantPlugin.Name)));
                     continue;
