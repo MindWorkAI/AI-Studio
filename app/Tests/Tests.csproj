@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="10.1.0" />
+        <PackageReference Include="coverlet.collector" Version="10.1.1" />
         <!--
             Held at the version the two analyzer projects build against, so that a test compiling a
             snippet uses the same Roslyn the analyzers themselves were written for. Raise all three
@@ -18,7 +18,7 @@
             10.0.1xx), even though the SDK in metadata.txt ships a newer one; SourceCodeRules explains why.
         -->
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
         <!--
             NUnit 4.6 broke Assert.That for plain values under C# 13: with Assert.That(Action, ...) added,
             even Assert.That(1, Is.EqualTo(1)) failed with "argument 1: cannot convert int to System.Action".
