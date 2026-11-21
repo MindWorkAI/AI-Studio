@@ -165,9 +165,9 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
 
             var summary = string.Empty;
             var summaryTokens = 0;
-            var (startMessage, startOffset) = (0, 0);
+            var position = ChatCompressionPosition.START;
             var part = 0;
-            while (startMessage < messages.Count)
+            while (position.Message < messages.Count)
             {
                 token.ThrowIfCancellationRequested();
 
@@ -175,12 +175,12 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
                 if (tokensPerPart < MIN_TOKENS_PER_PART)
                     return ChatCompressionResult.Failed(TA("The summary grew too long for the context window of the selected model. Please select a model which takes longer texts."));
 
-                var (conversation, nextMessage, nextOffset) = ChatCompressionInput.TakePart(messages, startMessage, startOffset, tokensPerPart);
-                var isLastPart = nextMessage >= messages.Count;
+                var conversation = ChatCompressionInput.TakePart(messages, position, tokensPerPart);
+                var isLastPart = conversation.Next.Message >= messages.Count;
                 part++;
                 progress?.Report(new(ChatCompressionStep.SUMMARIZING, part, isLastPart ? part : Math.Max(part + 1, expectedParts)));
 
-                var request = ChatCompressionPrompts.BuildRequest(conversation, part, isLastPart, summary, focus, maxWords);
+                var request = ChatCompressionPrompts.BuildRequest(conversation.Text, part, isLastPart, summary, focus, maxWords);
                 summary = await RequestSummaryAsync(sourceChat, provider, request, token);
                 token.ThrowIfCancellationRequested();
 
@@ -190,7 +190,7 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
                 if (!isLastPart && window.IsKnown)
                     summaryTokens = (await this.CountAsync(provider, summary, token)).Tokens;
 
-                (startMessage, startOffset) = (nextMessage, nextOffset);
+                position = conversation.Next;
             }
 
             return ChatCompressionResult.Succeeded(summary);

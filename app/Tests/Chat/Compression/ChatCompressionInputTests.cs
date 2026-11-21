@@ -99,15 +99,15 @@ public sealed class ChatCompressionInputTests
     {
         CountedMessage[] messages = [new("first", 40), new("second", 40), new("third", 40), new("fourth", 40)];
 
-        var (firstPart, firstNextMessage, firstNextOffset) = ChatCompressionInput.TakePart(messages, 0, 0, 100);
-        var (secondPart, secondNextMessage, _) = ChatCompressionInput.TakePart(messages, firstNextMessage, firstNextOffset, 50);
+        var firstPart = ChatCompressionInput.TakePart(messages, ChatCompressionPosition.START, 100);
+        var secondPart = ChatCompressionInput.TakePart(messages, firstPart.Next, 50);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(firstPart, Is.EqualTo("first\nsecond"));
-            Assert.That((firstNextMessage, firstNextOffset), Is.EqualTo((2, 0)));
-            Assert.That(secondPart, Is.EqualTo("third"), "The summary so far takes room in the second request, so the second part is smaller.");
-            Assert.That(secondNextMessage, Is.EqualTo(3));
+            Assert.That(firstPart.Text, Is.EqualTo("first\nsecond"));
+            Assert.That(firstPart.Next, Is.EqualTo(new ChatCompressionPosition(2, 0)));
+            Assert.That(secondPart.Text, Is.EqualTo("third"), "The summary so far takes room in the second request, so the second part is smaller.");
+            Assert.That(secondPart.Next.Message, Is.EqualTo(3));
         }
     }
 
@@ -116,12 +116,12 @@ public sealed class ChatCompressionInputTests
     {
         var text = new string('a', 85) + "\n" + new string('b', 200);
 
-        var (part, nextMessage, nextOffset) = ChatCompressionInput.TakePart([new(text, text.Length)], 0, 0, 100);
+        var part = ChatCompressionInput.TakePart([new(text, text.Length)], ChatCompressionPosition.START, 100);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(part, Is.EqualTo(new string('a', 85) + "\n" + ChatCompressionInput.TO_BE_CONTINUED_MARKER), "A line of a document stays whole when it ends close to where the part would.");
-            Assert.That((nextMessage, nextOffset), Is.EqualTo((0, 86)));
+            Assert.That(part.Text, Is.EqualTo(new string('a', 85) + "\n" + ChatCompressionInput.TO_BE_CONTINUED_MARKER), "A line of a document stays whole when it ends close to where the part would.");
+            Assert.That(part.Next, Is.EqualTo(new ChatCompressionPosition(0, 86)));
         }
     }
 
@@ -131,12 +131,12 @@ public sealed class ChatCompressionInputTests
         var text = string.Concat(Enumerable.Repeat("😀", 100));
 
         // Chosen so that the piece would end between the halves of a pair: 45 characters would fit:
-        var (part, _, nextOffset) = ChatCompressionInput.TakePart([new(text, 200)], 0, 0, 50);
+        var part = ChatCompressionInput.TakePart([new(text, 200)], ChatCompressionPosition.START, 50);
 
-        var piece = part.Replace(ChatCompressionInput.TO_BE_CONTINUED_MARKER, string.Empty);
+        var piece = part.Text.Replace(ChatCompressionInput.TO_BE_CONTINUED_MARKER, string.Empty);
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(nextOffset % 2, Is.Zero, "The next part begins with a whole character.");
+            Assert.That(part.Next.Offset % 2, Is.Zero, "The next part begins with a whole character.");
             Assert.That(piece.Where(char.IsHighSurrogate).Count(), Is.EqualTo(piece.Where(char.IsLowSurrogate).Count()), "Half a surrogate pair is no character, and no JSON writer takes it.");
         }
     }

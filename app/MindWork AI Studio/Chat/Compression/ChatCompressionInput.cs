@@ -93,12 +93,12 @@ public static class ChatCompressionInput
     public static IReadOnlyList<string> SplitIntoParts(IReadOnlyList<CountedMessage> messages, int tokensPerPart)
     {
         var parts = new List<string>();
-        var (message, offset) = (0, 0);
-        while (message < messages.Count)
+        var position = ChatCompressionPosition.START;
+        while (position.Message < messages.Count)
         {
-            var (part, nextMessage, nextOffset) = TakePart(messages, message, offset, tokensPerPart);
-            parts.Add(part);
-            (message, offset) = (nextMessage, nextOffset);
+            var part = TakePart(messages, position, tokensPerPart);
+            parts.Add(part.Text);
+            position = part.Next;
         }
 
         return parts;
@@ -118,22 +118,22 @@ public static class ChatCompressionInput
     /// never falls between the two halves of a surrogate pair.
     /// </remarks>
     /// <param name="messages">The rendered messages with their tokens, in the order of the conversation.</param>
-    /// <param name="startMessage">The index of the first message of the part.</param>
-    /// <param name="startOffset">Where in the text of that message the part begins: 0, unless the part before split it.</param>
+    /// <param name="start">Where the part begins: its first message, and the offset in its text, which is 0 unless the part before split the message.</param>
     /// <param name="tokensPerPart">How many tokens of messages the part may hold.</param>
-    /// <returns>The text of the part, and where the next part begins: the index of its first message, and the offset in the text of that message.</returns>
-    internal static (string Text, int NextMessage, int NextOffset) TakePart(IReadOnlyList<CountedMessage> messages, int startMessage, int startOffset, int tokensPerPart)
+    /// <returns>The text of the part, and where the next part begins.</returns>
+    internal static ChatCompressionPart TakePart(IReadOnlyList<CountedMessage> messages, ChatCompressionPosition start, int tokensPerPart)
     {
         var part = new StringBuilder();
         var partTokens = 0;
-        var index = startMessage;
-        var offset = startOffset;
+        var index = start.Message;
+        var offset = start.Offset;
         while (index < messages.Count)
         {
             var message = messages[index];
             if (offset >= message.Text.Length)
             {
-                (index, offset) = (index + 1, 0);
+                index++;
+                offset = 0;
                 continue;
             }
 
@@ -147,7 +147,8 @@ public static class ChatCompressionInput
 
                 part.Append(marker).Append(message.Text, offset, rest);
                 partTokens += tokens;
-                (index, offset) = (index + 1, 0);
+                index++;
+                offset = 0;
                 continue;
             }
 
@@ -158,10 +159,10 @@ public static class ChatCompressionInput
             // A message larger than a whole part is split, and the next part carries on with it:
             var length = PieceLength(message.Text, offset, rest, tokens, tokensPerPart);
             part.Append(marker).Append(message.Text, offset, length).Append(TO_BE_CONTINUED_MARKER);
-            return (part.ToString(), index, offset + length);
+            return new(part.ToString(), new(index, offset + length));
         }
 
-        return (part.ToString(), index, offset);
+        return new(part.ToString(), new(index, offset));
     }
 
     /// <summary>
