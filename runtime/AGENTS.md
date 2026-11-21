@@ -89,6 +89,18 @@ blocking handler can hold up the whole app. Therefore:
 - `runtime_api::test_support::assert_runtime_stays_free` tests a handler which waits for a lock. Run
   such a test with `#[tokio::test(flavor = "multi_thread", worker_threads = 1)]`.
 
+**The runtime builds with the Rust of the Flatpak, too.** Flathub builds the Flatpak with its own Rust,
+the extension `org.freedesktop.Sdk.Extension.rust-stable` of the branch named by
+`FLATPAK_FREEDESKTOP_VERSION` in the pipeline, and only after a release. That Rust often lags behind the
+toolchain in `metadata.txt` by a version or two. Therefore:
+
+- `rust-version` in `Cargo.toml` names the Rust of the Flatpak, not our toolchain. Clippy refuses every
+  API of the standard library which is newer (`incompatible_msrv`), so the quality gate catches it before
+  the release does.
+- Raise `rust-version` only once Flathub ships the newer Rust on that branch, never together with
+  `metadata.txt`. Keep the minor version only, such as `1.98`: the branches of Flathub differ in the patch.
+- Never silence `incompatible_msrv`. Write the code the way the older Rust allows instead.
+
 ## IPC Communication Flow
 1. Rust runtime starts and generates TLS certificate
 2. Rust starts internal HTTPS API on random port
