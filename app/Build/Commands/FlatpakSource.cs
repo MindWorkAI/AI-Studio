@@ -8,4 +8,5 @@ public enum FlatpakSource
     NONE,
 
     MAIN,
+    PULL_REQUEST,
 }

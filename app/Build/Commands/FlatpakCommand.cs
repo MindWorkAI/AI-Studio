@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Formats.Tar;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using Build.Tools;
@@ -73,15 +74,17 @@ public sealed partial class FlatpakCommand
         var source = new Option<string>("--source", "-s") { Description = $"Which state of AI Studio goes into the Flatpak: {string.Join("; ", FlatpakSource.All.Select(candidate => $"{candidate.Name}, {candidate.Description}"))}" };
         source.AcceptOnlyFromAmong([.. FlatpakSource.All.Select(candidate => candidate.Name)]);
 
+        var pullRequest = new Option<int?>("--pr", "-p") { Description = "The number of the pull request to build, e.g., 1219; implies --source pr" };
+
         var architecture = new Option<string>("--arch", "-a") { Description = "The CPU architecture of the Flatpak, aarch64 or x86_64. Defaults to the one of the Docker host; the other one needs an emulation such as Rosetta and takes much longer" };
         architecture.AcceptOnlyFromAmong(FlatpakArchitecture.AARCH64.FlatpakName, FlatpakArchitecture.X86_64.FlatpakName);
 
-        var command = new Command("flatpak", "Build the Flatpak of AI Studio and its Pandoc plugin in Docker, the way a release builds them") { output, source, architecture };
-        command.SetAction((parseResult, _) => new FlatpakCommand().BuildFlatpak(parseResult.GetRequiredValue(output), parseResult.GetValue(source), parseResult.GetValue(architecture)));
+        var command = new Command("flatpak", "Build the Flatpak of AI Studio and its Pandoc plugin in Docker, the way a release builds them. Without --source or --pr, the command asks what to build") { output, source, pullRequest, architecture };
+        command.SetAction((parseResult, _) => new FlatpakCommand().BuildFlatpak(parseResult.GetRequiredValue(output), parseResult.GetValue(source), parseResult.GetValue(pullRequest), parseResult.GetValue(architecture)));
         return command;
     }
 
-    public async Task<int> BuildFlatpak(string output, string? sourceName, string? architectureName)
+    public async Task<int> BuildFlatpak(string output, string? sourceName, int? pullRequestOption, string? architectureName)
     {
         if (!Environment.IsWorkingDirectoryValid())
             return 1;
@@ -90,25 +93,10 @@ public sealed partial class FlatpakCommand
         if (outputDirectory is null)
             return 1;
 
-        Console.CancelKeyPress += this.OnCancelKeyPress;
-        try
-        {
-            return await this.BuildInDockerAsync(outputDirectory, sourceName, architectureName);
-        }
-        finally
-        {
-            Console.CancelKeyPress -= this.OnCancelKeyPress;
-        }
-    }
-
-    private async Task<int> BuildInDockerAsync(string outputDirectory, string? sourceName, string? architectureName)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        var workingDirectory = Directory.GetCurrentDirectory();
-
         Console.WriteLine("==============================");
         Console.WriteLine("- Building the Flatpak of AI Studio in Docker ...");
 
+        var workingDirectory = Directory.GetCurrentDirectory();
         var dockerVersion = await CommandRunner.ReadOutputAsync(workingDirectory, "docker", ["version", "--format", "{{.Server.Version}}"]);
         if (dockerVersion.ExitCode is CommandRunner.COULD_NOT_START)
             return 1;
@@ -119,16 +107,55 @@ public sealed partial class FlatpakCommand
             return 1;
         }
 
-        var source = string.IsNullOrWhiteSpace(sourceName) ? FlatpakSource.MAIN : FlatpakSource.FromName(sourceName);
+        //
+        // The questions come before the command handles Ctrl+C itself: up to here, nothing needs to be cleaned
+        // up, so Ctrl+C may end the command at once, also while it waits for an answer.
+        //
+        var source = DetermineSource(sourceName, pullRequestOption);
+        if (source is FlatpakSource.NONE)
+            return 1;
+
+        int? pullRequestNumber = null;
+        if (source is FlatpakSource.PULL_REQUEST)
+        {
+            pullRequestNumber = pullRequestOption ?? AskForPullRequestNumber();
+            if (pullRequestNumber is null)
+                return 1;
+
+            if (pullRequestNumber <= 0)
+            {
+                Console.WriteLine($"- Error: {pullRequestNumber} is not the number of a pull request.");
+                return 1;
+            }
+        }
+
+        Console.CancelKeyPress += this.OnCancelKeyPress;
+        try
+        {
+            return await this.BuildInDockerAsync(workingDirectory, dockerVersion.Text.Trim(), outputDirectory, source, pullRequestNumber, architectureName);
+        }
+        finally
+        {
+            Console.CancelKeyPress -= this.OnCancelKeyPress;
+        }
+    }
+
+    private async Task<int> BuildInDockerAsync(string workingDirectory, string dockerVersion, string outputDirectory, FlatpakSource source, int? pullRequestNumber, string? architectureName)
+    {
+        var stopwatch = Stopwatch.StartNew();
         var architecture = await DetermineArchitectureAsync(workingDirectory, architectureName);
         if (architecture is FlatpakArchitecture.NONE || this.IsCancelled)
             return this.ExitCodeAfterFailure;
 
-        var aiStudioCommit = await ResolveRemoteCommitAsync(workingDirectory, AI_STUDIO_REPOSITORY, MAIN_BRANCH);
+        var aiStudioCommit = pullRequestNumber is { } number
+            ? await ResolveRemoteCommitAsync(workingDirectory, AI_STUDIO_REPOSITORY, $"refs/pull/{number}/head", $"no pull request #{number}")
+            : await ResolveRemoteCommitAsync(workingDirectory, AI_STUDIO_REPOSITORY, MAIN_BRANCH, "no branch main");
+
         if (aiStudioCommit is null || this.IsCancelled)
             return this.ExitCodeAfterFailure;
 
-        var flatpakCommit = await ResolveRemoteCommitAsync(workingDirectory, FLATPAK_REPOSITORY, MAIN_BRANCH);
+        var aiStudioDescription = pullRequestNumber is { } pullRequest ? await DescribePullRequestAsync(pullRequest) : source.Description;
+        var flatpakCommit = await ResolveRemoteCommitAsync(workingDirectory, FLATPAK_REPOSITORY, MAIN_BRANCH, "no branch main");
         if (flatpakCommit is null || this.IsCancelled)
             return this.ExitCodeAfterFailure;
 
@@ -136,8 +163,8 @@ public sealed partial class FlatpakCommand
         if (image is null || this.IsCancelled)
             return this.ExitCodeAfterFailure;
 
-        Console.WriteLine($"- Docker {dockerVersion.Text.Trim()} builds the Flatpak for {architecture.FlatpakName}:");
-        Console.WriteLine($"   - AI Studio: {source.Description}, commit {aiStudioCommit}");
+        Console.WriteLine($"- Docker {dockerVersion} builds the Flatpak for {architecture.FlatpakName}:");
+        Console.WriteLine($"   - AI Studio: {aiStudioDescription}, commit {aiStudioCommit}");
         Console.WriteLine($"   - Flatpak repository: main of MindWorkAI/Flatpak, commit {flatpakCommit}");
         Console.WriteLine($"   - Image: {image}");
         Console.WriteLine($"   - Output: {outputDirectory}");
@@ -439,8 +466,9 @@ public sealed partial class FlatpakCommand
     /// <param name="workingDirectory">Where git should run.</param>
     /// <param name="repository">The URL of the repository.</param>
     /// <param name="reference">The full name of the reference, e.g., refs/heads/main.</param>
+    /// <param name="whatIsMissing">What the repository lacks when the reference does not exist, e.g., "no branch main".</param>
     /// <returns>The hash of the commit, or null when the repository has no such reference.</returns>
-    private static async Task<string?> ResolveRemoteCommitAsync(string workingDirectory, string repository, string reference)
+    private static async Task<string?> ResolveRemoteCommitAsync(string workingDirectory, string repository, string reference, string whatIsMissing)
     {
         var references = await CommandRunner.ReadOutputAsync(workingDirectory, "git", ["ls-remote", repository, reference]);
         if (references.ExitCode is not 0)
@@ -456,8 +484,110 @@ public sealed partial class FlatpakCommand
                 return parts[0];
         }
 
-        Console.WriteLine($"- Error: {repository} has no '{reference}'.");
+        Console.WriteLine($"- Error: {repository} has {whatIsMissing}.");
         return null;
+    }
+
+    /// <summary>
+    /// Decides which state of AI Studio goes into the Flatpak, and asks when the options leave it open.
+    /// </summary>
+    /// <returns>The source, or NONE when the options contradict each other or nobody answered.</returns>
+    private static FlatpakSource DetermineSource(string? sourceName, int? pullRequestOption)
+    {
+        var source = string.IsNullOrWhiteSpace(sourceName) ? FlatpakSource.NONE : FlatpakSource.FromName(sourceName);
+        if (pullRequestOption is not null)
+        {
+            if (source is FlatpakSource.NONE or FlatpakSource.PULL_REQUEST)
+                return FlatpakSource.PULL_REQUEST;
+
+            Console.WriteLine($"- Error: --pr builds a pull request, while --source {source.Name} builds something else. Leave out one of them.");
+            return FlatpakSource.NONE;
+        }
+
+        return source is FlatpakSource.NONE ? AskForSource() : source;
+    }
+
+    private static FlatpakSource AskForSource()
+    {
+        var sources = FlatpakSource.All;
+        Console.WriteLine("- Which state of AI Studio should go into the Flatpak?");
+        for (var index = 0; index < sources.Count; index++)
+            Console.WriteLine($"   {index + 1}) {sources[index].Description}");
+
+        while (true)
+        {
+            Console.Write($"- Your choice (1-{sources.Count}): ");
+            var answer = Console.ReadLine();
+            if (answer is null)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"- Error: No answer arrived. Choose with --source {string.Join(", --source ", sources.Select(candidate => candidate.Name))}, or with --pr <number>.");
+                return FlatpakSource.NONE;
+            }
+
+            if (int.TryParse(answer.Trim(), out var choice) && choice >= 1 && choice <= sources.Count)
+                return sources[choice - 1];
+
+            Console.WriteLine($"   Please enter a number from 1 to {sources.Count}.");
+        }
+    }
+
+    private static int? AskForPullRequestNumber()
+    {
+        while (true)
+        {
+            Console.Write("- Number of the pull request: ");
+            var answer = Console.ReadLine();
+            if (answer is null)
+            {
+                Console.WriteLine();
+                Console.WriteLine("- Error: No answer arrived. Pass the number with --pr <number>.");
+                return null;
+            }
+
+            if (int.TryParse(answer.Trim().TrimStart('#'), out var number) && number > 0)
+                return number;
+
+            Console.WriteLine("   Please enter the number of a pull request, e.g., 1219.");
+        }
+    }
+
+    /// <summary>
+    /// Describes a pull request with its title and state, so that a mistyped number stands out before the build.
+    /// </summary>
+    /// <remarks>
+    /// The commit comes from git, which needs no token and knows no rate limit. The title is a courtesy on top: when
+    /// the GitHub API refuses to answer, e.g., after too many requests without a token, the build goes on without it.
+    /// </remarks>
+    private static async Task<string> DescribePullRequestAsync(int number)
+    {
+        var description = $"pull request #{number} of MindWorkAI/AI-Studio";
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/MindWorkAI/AI-Studio/pulls/{number}");
+            request.Headers.UserAgent.ParseAdd("MindWork-AI-Studio-Build-Script");
+            request.Headers.Accept.ParseAdd("application/vnd.github+json");
+
+            using var response = await CLIENT.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+                return $"{description} (GitHub did not tell its title: {(int)response.StatusCode} {response.ReasonPhrase})";
+
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            using var json = await JsonDocument.ParseAsync(stream);
+            var root = json.RootElement;
+            var title = root.GetProperty("title").GetString();
+            var state = root.GetProperty("merged").GetBoolean() ? "merged" : root.GetProperty("state").GetString() switch
+            {
+                "open" => "open",
+                _ => "closed without merging",
+            };
+
+            return $"{description}, \"{title}\" ({state})";
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            return $"{description} (GitHub did not tell its title: {exception.Message})";
+        }
     }
 
     /// <summary>
