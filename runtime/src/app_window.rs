@@ -1566,6 +1566,7 @@ mod tests {
         let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
         for address in [
             "file:///etc/passwd",
+            "about:blank",
             "javascript:alert(1)",
             "data:text/html,hello",
             "tauri://localhost/index.html",
