@@ -27,6 +27,7 @@ public sealed partial class FlatpakCommand
     private const string CONTAINER_SCRIPT_DIRECTORY = "Flatpak";
     private const string CONTAINER_SCRIPT_NAME = "build-in-container.sh";
     private const string CONTAINER_INPUT_DIRECTORY = "input";
+    private const string CONTAINER_CHECKOUT_DIRECTORY = "ai-studio";
     private const string CONTAINER_BUILD_DIRECTORY = "/build";
     private const string CONTAINER_OUTPUT_DIRECTORY = "/out";
 
@@ -147,14 +148,37 @@ public sealed partial class FlatpakCommand
         if (architecture is FlatpakArchitecture.NONE || this.IsCancelled)
             return this.ExitCodeAfterFailure;
 
-        var aiStudioCommit = pullRequestNumber is { } number
-            ? await ResolveRemoteCommitAsync(workingDirectory, AI_STUDIO_REPOSITORY, $"refs/pull/{number}/head", $"no pull request #{number}")
-            : await ResolveRemoteCommitAsync(workingDirectory, AI_STUDIO_REPOSITORY, MAIN_BRANCH, "no branch main");
+        string? aiStudioCommit;
+        var aiStudioDescription = source.Description;
+        IReadOnlyList<string> localFiles = [];
+        var repositoryDirectory = Environment.GetRepositoryDirectory();
+        switch (source)
+        {
+            case FlatpakSource.PULL_REQUEST when pullRequestNumber is { } number:
+                aiStudioCommit = await ResolveRemoteCommitAsync(workingDirectory, AI_STUDIO_REPOSITORY, $"refs/pull/{number}/head", $"no pull request #{number}");
+                if (aiStudioCommit is not null)
+                    aiStudioDescription = await DescribePullRequestAsync(number);
+
+                break;
+
+            case FlatpakSource.LOCAL:
+                aiStudioCommit = await ReadLocalHeadAsync(repositoryDirectory);
+                var files = await ListLocalFilesAsync(repositoryDirectory);
+                if (files is null)
+                    return 1;
+
+                localFiles = files;
+                aiStudioDescription = await DescribeLocalCheckoutAsync(repositoryDirectory);
+                break;
+
+            default:
+                aiStudioCommit = await ResolveRemoteCommitAsync(workingDirectory, AI_STUDIO_REPOSITORY, MAIN_BRANCH, "no branch main");
+                break;
+        }
 
         if (aiStudioCommit is null || this.IsCancelled)
             return this.ExitCodeAfterFailure;
 
-        var aiStudioDescription = pullRequestNumber is { } pullRequest ? await DescribePullRequestAsync(pullRequest) : source.Description;
         var flatpakCommit = await ResolveRemoteCommitAsync(workingDirectory, FLATPAK_REPOSITORY, MAIN_BRANCH, "no branch main");
         if (flatpakCommit is null || this.IsCancelled)
             return this.ExitCodeAfterFailure;
@@ -183,8 +207,6 @@ public sealed partial class FlatpakCommand
         {
             ["ARCH"] = architecture.FlatpakName,
             ["SOURCE"] = source.Name,
-            ["AI_STUDIO_URL"] = AI_STUDIO_REPOSITORY,
-            ["AI_STUDIO_COMMIT"] = aiStudioCommit,
             ["FLATPAK_URL"] = FLATPAK_REPOSITORY,
             ["FLATPAK_COMMIT"] = flatpakCommit,
             ["APP_BUNDLE"] = architecture.AppBundleName,
@@ -193,10 +215,22 @@ public sealed partial class FlatpakCommand
             ["OUT_DIRECTORY"] = CONTAINER_OUTPUT_DIRECTORY,
         };
 
+        //
+        // The local checkout has no commit which the container could fetch. The script commits the copied files in
+        // a repository of its own instead and builds from there:
+        //
+        if (source is FlatpakSource.LOCAL)
+            environment["LOCAL_CHECKOUT"] = $"/{CONTAINER_INPUT_DIRECTORY}/{CONTAINER_CHECKOUT_DIRECTORY}";
+        else
+        {
+            environment["AI_STUDIO_URL"] = AI_STUDIO_REPOSITORY;
+            environment["AI_STUDIO_COMMIT"] = aiStudioCommit;
+        }
+
         var name = $"aistudio-flatpak-{architecture.FlatpakName}-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
         try
         {
-            var exitCode = await this.BuildInContainerAsync(workingDirectory, name, image, architecture, environment, outputDirectory);
+            var exitCode = await this.BuildInContainerAsync(workingDirectory, name, image, architecture, environment, repositoryDirectory, localFiles, outputDirectory);
             if (exitCode is 0)
                 Console.WriteLine($"- Done after {(int)stopwatch.Elapsed.TotalMinutes} min {stopwatch.Elapsed.Seconds} s.");
 
@@ -208,7 +242,7 @@ public sealed partial class FlatpakCommand
         }
     }
 
-    private async Task<int> BuildInContainerAsync(string workingDirectory, string name, string image, FlatpakArchitecture architecture, IReadOnlyDictionary<string, string> environment, string outputDirectory)
+    private async Task<int> BuildInContainerAsync(string workingDirectory, string name, string image, FlatpakArchitecture architecture, IReadOnlyDictionary<string, string> environment, string repositoryDirectory, IReadOnlyList<string> localFiles, string outputDirectory)
     {
         var volume = await CommandRunner.ReadOutputAsync(workingDirectory, "docker", ["volume", "create", "--label", DOCKER_LABEL, name]);
         if (volume.ExitCode is not 0)
@@ -242,6 +276,19 @@ public sealed partial class FlatpakCommand
         {
             Console.WriteLine($"- Error: Docker could not copy the build script into the container {name}.");
             return 1;
+        }
+
+        if (localFiles.Count > 0)
+        {
+            var megabytes = localFiles.Sum(file => new FileInfo(Path.Join(repositoryDirectory, file)).Length) / 1024 / 1024;
+            Console.WriteLine($"- Copying {localFiles.Count} files ({megabytes} MB) of the local checkout into the container ...");
+            if (await CommandRunner.RunAsync(workingDirectory, "docker", ["cp", "-", $"{name}:/"], stream => WriteCheckoutArchiveAsync(stream, repositoryDirectory, localFiles)) is not 0 || this.IsCancelled)
+            {
+                if (!this.IsCancelled)
+                    Console.WriteLine($"- Error: Docker could not copy the local checkout into the container {name}.");
+
+                return this.ExitCodeAfterFailure;
+            }
         }
 
         lock (this.cancellationLock)
@@ -675,6 +722,72 @@ public sealed partial class FlatpakCommand
 
         using var data = new MemoryStream(script);
         await writer.WriteEntryAsync(new PaxTarEntry(TarEntryType.RegularFile, $"{CONTAINER_INPUT_DIRECTORY}/{CONTAINER_SCRIPT_NAME}") { Mode = EXECUTABLE_MODE, DataStream = data });
+    }
+
+    /// <summary>
+    /// Writes the files of the local checkout as a tar archive, which docker cp unpacks into the container.
+    /// </summary>
+    /// <remarks>
+    /// The archive reads one file after the other straight into the stream, so even a large checkout never sits in
+    /// memory as a whole.
+    /// </remarks>
+    private static async Task WriteCheckoutArchiveAsync(Stream stream, string repositoryDirectory, IReadOnlyList<string> files)
+    {
+        var checkoutDirectory = $"{CONTAINER_INPUT_DIRECTORY}/{CONTAINER_CHECKOUT_DIRECTORY}";
+        await using var writer = new TarWriter(stream, TarEntryFormat.Pax, leaveOpen: true);
+        await writer.WriteEntryAsync(new PaxTarEntry(TarEntryType.Directory, $"{checkoutDirectory}/") { Mode = EXECUTABLE_MODE });
+        foreach (var file in files)
+            await writer.WriteEntryAsync(Path.Join(repositoryDirectory, file), $"{checkoutDirectory}/{file}");
+    }
+
+    /// <summary>
+    /// Reads the commit the local checkout stands on, which the summary names before the build.
+    /// </summary>
+    /// <returns>The hash of the commit, or null when the checkout has none.</returns>
+    private static async Task<string?> ReadLocalHeadAsync(string repositoryDirectory)
+    {
+        var head = await CommandRunner.ReadOutputAsync(repositoryDirectory, "git", ["rev-parse", "HEAD"]);
+        if (head.ExitCode is 0 && CommitHashRegex().IsMatch(head.Text.Trim()))
+            return head.Text.Trim();
+
+        Console.WriteLine($"- Error: The local checkout in '{repositoryDirectory}' has no commit to start from.");
+        return null;
+    }
+
+    /// <summary>
+    /// Lists the files of the local checkout which go into the Flatpak.
+    /// </summary>
+    /// <remarks>
+    /// These are the files git knows plus the new ones which no ignore rule covers, the same files a commit of
+    /// everything would hold. Build outputs such as bin, obj, or target stay behind, and so do deleted files.
+    /// </remarks>
+    /// <returns>The paths relative to the repository, with forward slashes, or null when git fails.</returns>
+    private static async Task<IReadOnlyList<string>?> ListLocalFilesAsync(string repositoryDirectory)
+    {
+        var listing = await CommandRunner.ReadOutputAsync(repositoryDirectory, "git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"]);
+        if (listing.ExitCode is not 0)
+        {
+            Console.WriteLine($"- Error: git could not list the files of the local checkout in '{repositoryDirectory}'.");
+            return null;
+        }
+
+        return listing.Text.Split('\0', StringSplitOptions.RemoveEmptyEntries).Distinct().Where(file => File.Exists(Path.Join(repositoryDirectory, file))).ToList();
+    }
+
+    /// <summary>
+    /// Describes the local checkout with its branch and the number of files which differ from its commit.
+    /// </summary>
+    /// <remarks>
+    /// git status refreshes the index by default, which is a change to the repository. Without optional locks, it
+    /// only reads.
+    /// </remarks>
+    private static async Task<string> DescribeLocalCheckoutAsync(string repositoryDirectory)
+    {
+        var branch = await CommandRunner.ReadOutputAsync(repositoryDirectory, "git", ["rev-parse", "--abbrev-ref", "HEAD"]);
+        var status = await CommandRunner.ReadOutputAsync(repositoryDirectory, "git", ["--no-optional-locks", "status", "--porcelain", "--untracked-files=all"]);
+        var changedFiles = status.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length;
+        var changes = changedFiles is 0 ? "without uncommitted changes" : $"with {changedFiles} changed or new files";
+        return $"the local checkout on {branch.Text.Trim()}, {changes}";
     }
 
     /// <summary>

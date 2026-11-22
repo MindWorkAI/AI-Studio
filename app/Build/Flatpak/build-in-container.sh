@@ -12,12 +12,18 @@
 #   test build has none.
 # - It skips update-metainfo.py --check. The metainfo gets the entry of a release from the release command
 #   only, so a test build lacks it.
-# - It sets the URL of AI Studio as well, so the build fetches from wherever the command found the commit.
+# - It sets the URL of AI Studio as well. For the source "local", it points to a repository inside the
+#   container, which holds the copied files of the local checkout in a single commit.
 #
 set -euo pipefail
 
-: "${ARCH:?}" "${SOURCE:?}" "${AI_STUDIO_URL:?}" "${AI_STUDIO_COMMIT:?}" "${FLATPAK_URL:?}" "${FLATPAK_COMMIT:?}"
+: "${ARCH:?}" "${SOURCE:?}" "${FLATPAK_URL:?}" "${FLATPAK_COMMIT:?}"
 : "${APP_BUNDLE:?}" "${PANDOC_BUNDLE:?}" "${BUILD_DIRECTORY:?}" "${OUT_DIRECTORY:?}"
+if [ "$SOURCE" = "local" ]; then
+    : "${LOCAL_CHECKOUT:?}"
+else
+    : "${AI_STUDIO_URL:?}" "${AI_STUDIO_COMMIT:?}"
+fi
 
 # The same version of yq as the pipeline uses, see FLATPAK_YQ_VERSION and FLATPAK_YQ_SHA256 there:
 YQ_VERSION="4.44.6"
@@ -103,6 +109,27 @@ curl -fsSL -o "$BUILD_DIRECTORY/tools/yq" "https://github.com/mikefarah/yq/relea
 echo "${yq_sha256}  $BUILD_DIRECTORY/tools/yq" | sha256sum --check --strict
 chmod 755 "$BUILD_DIRECTORY/tools/yq"
 export PATH="$BUILD_DIRECTORY/tools:$PATH"
+
+if [ "$SOURCE" = "local" ]; then
+    stage "Committing the local checkout in a repository of its own"
+
+    # The files arrive with the owner of the checkout, and git refuses to work in a repository of another user:
+    chown -R root:root "$LOCAL_CHECKOUT"
+    git init --quiet "$LOCAL_CHECKOUT"
+
+    # A checkout on Windows may hold CR LF line endings, which a commit there would turn into LF. The fetches by
+    # commit, from update-dependencies and flatpak-builder alike, need the two uploadpack settings:
+    git -C "$LOCAL_CHECKOUT" config core.autocrlf input
+    git -C "$LOCAL_CHECKOUT" config core.safecrlf false
+    git -C "$LOCAL_CHECKOUT" config uploadpack.allowAnySHA1InWant true
+    git -C "$LOCAL_CHECKOUT" config uploadpack.allowFilter true
+    git -C "$LOCAL_CHECKOUT" add --all
+    git -C "$LOCAL_CHECKOUT" -c user.name="AI Studio build" -c user.email="build@localhost" commit --quiet --no-verify -m "Local checkout"
+
+    AI_STUDIO_URL="file://$LOCAL_CHECKOUT"
+    AI_STUDIO_COMMIT=$(git -C "$LOCAL_CHECKOUT" rev-parse HEAD)
+    echo "Committed $(git -C "$LOCAL_CHECKOUT" ls-files | wc -l) files as ${AI_STUDIO_COMMIT}"
+fi
 
 stage "Fetching the Flatpak repository at ${FLATPAK_COMMIT}"
 fetch_commit "$FLATPAK_URL" "$FLATPAK_COMMIT" "$BUILD_DIRECTORY/flatpak"

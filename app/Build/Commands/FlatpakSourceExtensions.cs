@@ -12,6 +12,7 @@ public static class FlatpakSourceExtensions
         {
             FlatpakSource.MAIN => "main",
             FlatpakSource.PULL_REQUEST => "pr",
+            FlatpakSource.LOCAL => "local",
 
             _ => string.Empty,
         };
@@ -23,6 +24,7 @@ public static class FlatpakSourceExtensions
         {
             FlatpakSource.MAIN => "main of MindWorkAI/AI-Studio, to simulate a pre-release",
             FlatpakSource.PULL_REQUEST => "a pull request of MindWorkAI/AI-Studio, to test its changes early",
+            FlatpakSource.LOCAL => "this local checkout with its uncommitted changes, to test work before there is a pull request",
 
             _ => string.Empty,
         };
@@ -30,7 +32,7 @@ public static class FlatpakSourceExtensions
         /// <summary>
         /// All sources the command offers, in the order of its menu.
         /// </summary>
-        public static IReadOnlyList<FlatpakSource> All => [FlatpakSource.MAIN, FlatpakSource.PULL_REQUEST];
+        public static IReadOnlyList<FlatpakSource> All => [FlatpakSource.MAIN, FlatpakSource.PULL_REQUEST, FlatpakSource.LOCAL];
 
         /// <summary>
         /// Finds the source for its name.

@@ -9,4 +9,5 @@ public enum FlatpakSource
 
     MAIN,
     PULL_REQUEST,
+    LOCAL,
 }
