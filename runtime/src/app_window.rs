@@ -325,6 +325,12 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
                 info!(Source = "Tauri"; "Run event: Tauri app is ready.");
             }
 
+            // When AI Studio restarts itself, Tauri would start the new instance in the background next:
+            #[cfg(target_os = "macos")]
+            RunEvent::Exit => {
+                crate::own_restart::start_new_instance_in_front();
+            }
+
             _ => {}
         }
     });
@@ -1000,7 +1006,7 @@ pub async fn install_update() {
 
                     if is_prod() {
                         if let Some(handle) = app_handle {
-                            handle.restart();
+                            crate::own_restart::restart(&handle);
                         } else {
                             warn!(Source = "Tauri"; "Cannot restart after update: main window not available.");
                         }
@@ -1013,7 +1019,7 @@ pub async fn install_update() {
                     if servers_stopped {
                         warn!(Source = "Tauri"; "The .NET server and Qdrant Edge are already stopped; try to restart the app now...");
                         if let Some(handle) = app_handle {
-                            handle.restart();
+                            crate::own_restart::restart(&handle);
                         } else {
                             warn!(Source = "Tauri"; "Cannot restart after the failed update: main window not available.");
                         }
@@ -1104,7 +1110,7 @@ pub async fn restart_app() -> Json<AppRestartResponse> {
     info!(Source = "Tauri"; "Controlled app restart was requested by the UI.");
     tauri::async_runtime::spawn(async move {
         time::sleep(Duration::from_millis(50)).await;
-        app_handle.request_restart();
+        crate::own_restart::request_restart(&app_handle);
     });
 
     Json(AppRestartResponse {
@@ -1562,6 +1568,7 @@ mod tests {
         let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
         for address in [
             "file:///etc/passwd",
+            "about:blank",
             "javascript:alert(1)",
             "data:text/html,hello",
             "tauri://localhost/index.html",

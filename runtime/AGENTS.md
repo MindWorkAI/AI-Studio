@@ -89,6 +89,20 @@ blocking handler can hold up the whole app. Therefore:
 - `runtime_api::test_support::assert_runtime_stays_free` tests a handler which waits for a lock. Run
   such a test with `#[tokio::test(flavor = "multi_thread", worker_threads = 1)]`.
 
+**AI Studio restarts itself only through `own_restart.rs`.** Since Tauri 2.12.6, a restart on macOS starts
+the new instance in the background, so that it takes no focus away from the app the user works in. AI
+Studio restarts itself only on behalf of the user, after an update or the restore of a backup, and the
+user then expects to see the app again. The new instance cannot bring its window to the front by itself:
+macOS lets an app become active only when the active app allows it. Therefore:
+
+- Call `own_restart::restart` or `own_restart::request_restart`, never `AppHandle::restart` or
+  `AppHandle::request_restart` directly. Both note that AI Studio restarts itself.
+- On `RunEvent::Exit`, which comes right before Tauri starts the new instance, `start_new_instance_in_front`
+  lets the old instance, which is still the active app, start the new one in the foreground and ends the
+  process.
+- Call `own_restart::restart` outside the main thread only. On the main thread, Tauri restarts the app at
+  once, without `RunEvent::Exit`, and therefore in the background.
+
 **The runtime builds with the Rust of the Flatpak, too.** Flathub builds the Flatpak with its own Rust,
 the extension `org.freedesktop.Sdk.Extension.rust-stable` of the branch named by
 `FLATPAK_FREEDESKTOP_VERSION` in the pipeline, and only after a release. That Rust often lags behind the
