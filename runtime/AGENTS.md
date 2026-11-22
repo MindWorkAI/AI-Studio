@@ -89,6 +89,16 @@ blocking handler can hold up the whole app. Therefore:
 - `runtime_api::test_support::assert_runtime_stays_free` tests a handler which waits for a lock. Run
   such a test with `#[tokio::test(flavor = "multi_thread", worker_threads = 1)]`.
 
+**AI Studio restarts itself only through `own_restart.rs`.** Since Tauri 2.12.6, a restart on macOS starts
+the new instance in the background, so that it takes no focus away from the app the user works in. AI
+Studio restarts itself only on behalf of the user, after an update or the restore of a backup, and the
+user then expects to see the app again. Therefore:
+
+- Call `own_restart::restart` or `own_restart::request_restart`, never `AppHandle::restart` or
+  `AppHandle::request_restart` directly. Both leave a marker in the data directory before the restart.
+- At the next start, `bring_to_front_after_own_restart` in `setup` removes the marker and brings the
+  window to the front when the marker is at most two minutes old.
+
 **The runtime builds with the Rust of the Flatpak, too.** Flathub builds the Flatpak with its own Rust,
 the extension `org.freedesktop.Sdk.Extension.rust-stable` of the branch named by
 `FLATPAK_FREEDESKTOP_VERSION` in the pipeline, and only after a release. That Rust often lags behind the

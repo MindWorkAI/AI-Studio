@@ -245,7 +245,8 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             // The screen shows in its default size from the start, long before the app sends the sizes the user chose:
             crate::interface_zoom::zoom_window(&window);
 
-            // Save the main window for later access:
+            // Save the main window for later access, but keep a handle for bringing it to the front below:
+            let front_window = window.clone();
             *MAIN_WINDOW.lock().unwrap() = Some(window);
 
             info!(Source = "Bootloader Tauri"; "Setup is running.");
@@ -260,6 +261,9 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             // A restore of a backup, below, writes to the log, so the log goes into the data directory first:
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path.clone()).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
+
+            // When AI Studio restarted itself, e.g., to finish an update, macOS starts it in the background:
+            crate::own_restart::bring_to_front_after_own_restart(&front_window);
 
             //
             // A restore replaces files which the .NET server and the vector database open. It
@@ -1000,7 +1004,7 @@ pub async fn install_update() {
 
                     if is_prod() {
                         if let Some(handle) = app_handle {
-                            handle.restart();
+                            crate::own_restart::restart(&handle);
                         } else {
                             warn!(Source = "Tauri"; "Cannot restart after update: main window not available.");
                         }
@@ -1013,7 +1017,7 @@ pub async fn install_update() {
                     if servers_stopped {
                         warn!(Source = "Tauri"; "The .NET server and Qdrant Edge are already stopped; try to restart the app now...");
                         if let Some(handle) = app_handle {
-                            handle.restart();
+                            crate::own_restart::restart(&handle);
                         } else {
                             warn!(Source = "Tauri"; "Cannot restart after the failed update: main window not available.");
                         }
@@ -1104,7 +1108,7 @@ pub async fn restart_app() -> Json<AppRestartResponse> {
     info!(Source = "Tauri"; "Controlled app restart was requested by the UI.");
     tauri::async_runtime::spawn(async move {
         time::sleep(Duration::from_millis(50)).await;
-        app_handle.request_restart();
+        crate::own_restart::request_restart(&app_handle);
     });
 
     Json(AppRestartResponse {
