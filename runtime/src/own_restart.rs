@@ -6,7 +6,8 @@ use log::{info, warn};
 use tauri::{AppHandle, WebviewWindow};
 use crate::environment::DATA_DIRECTORY;
 
-/// The file which AI Studio leaves in its data directory right before it restarts itself.
+/// The file which AI Studio leaves in its data directory right before it restarts itself. The list
+/// of backup contents in the app, `DataBackupContents.ENTRIES`, names it as a temporary file.
 const MARKER_FILE_NAME: &str = "restart_to_front";
 
 /// How old the marker may be and still bring the window to the front.
