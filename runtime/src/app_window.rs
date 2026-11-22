@@ -245,8 +245,7 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             // The screen shows in its default size from the start, long before the app sends the sizes the user chose:
             crate::interface_zoom::zoom_window(&window);
 
-            // Save the main window for later access, but keep a handle for bringing it to the front below:
-            let front_window = window.clone();
+            // Save the main window for later access:
             *MAIN_WINDOW.lock().unwrap() = Some(window);
 
             info!(Source = "Bootloader Tauri"; "Setup is running.");
@@ -261,9 +260,6 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             // A restore of a backup, below, writes to the log, so the log goes into the data directory first:
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path.clone()).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
-
-            // When AI Studio restarted itself, e.g., to finish an update, macOS starts it in the background:
-            crate::own_restart::bring_to_front_after_own_restart(&front_window);
 
             //
             // A restore replaces files which the .NET server and the vector database open. It
@@ -327,6 +323,12 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
 
             RunEvent::Ready => {
                 info!(Source = "Tauri"; "Run event: Tauri app is ready.");
+            }
+
+            // When AI Studio restarts itself, Tauri would start the new instance in the background next:
+            #[cfg(target_os = "macos")]
+            RunEvent::Exit => {
+                crate::own_restart::start_new_instance_in_front();
             }
 
             _ => {}

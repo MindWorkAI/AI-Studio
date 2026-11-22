@@ -62,7 +62,6 @@ public static class DataBackupContents
         new(DataBackupLocation.DATA_DIRECTORY, "media-staging/", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, "mailAttachments/", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, "mindwork_ai_studio.pid", DataBackupEntryKind.TEMPORARY_FILES),
-        new(DataBackupLocation.DATA_DIRECTORY, "restart_to_front", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, DataBackupFormat.STAGING_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, DataRestoreFormat.PENDING_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.CONFIG_DIRECTORY, DataRestoreFormat.PENDING_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),

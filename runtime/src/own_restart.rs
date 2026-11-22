@@ -1,133 +1,109 @@
-use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::sync::atomic::{AtomicBool, Ordering};
+use tauri::AppHandle;
+
+#[cfg(target_os = "macos")]
+use std::path::Path;
+
+#[cfg(target_os = "macos")]
 use log::{info, warn};
-use tauri::{AppHandle, WebviewWindow};
-use crate::environment::DATA_DIRECTORY;
 
-/// The file which AI Studio leaves in its data directory right before it restarts itself. The list
-/// of backup contents in the app, `DataBackupContents.ENTRIES`, names it as a temporary file.
-const MARKER_FILE_NAME: &str = "restart_to_front";
+/// Whether AI Studio restarts itself, see `restart` and `request_restart`.
+static RESTART_REQUESTED: AtomicBool = AtomicBool::new(false);
 
-/// How old the marker may be and still bring the window to the front.
-///
-/// The new instance starts within seconds after the old one left the marker. An older marker stems
-/// from a restart which never happened, e.g., because the app crashed on its way out. The next start
-/// is then one the user triggers, and that start brings the app to the front by itself.
-const MARKER_MAX_AGE: Duration = Duration::from_secs(120);
-
-/// Restarts the app at once, see `AppHandle::restart`, and brings its window to the front again.
+/// Restarts the app at once, see `AppHandle::restart`, and shows its window in the foreground again.
 ///
 /// On macOS, Tauri starts the new instance in the background, so that a restart in the background
 /// takes no focus away from the app the user works in. AI Studio restarts itself only on behalf of
-/// the user, e.g., to finish an update, who then expects to see the app again. Therefore, the next
-/// start finds the marker and brings the window to the front, see `bring_to_front_after_own_restart`.
+/// the user, e.g., to finish an update, who then expects to see the app again. Therefore, AI Studio
+/// starts the new instance itself, see `start_new_instance_in_front`.
+///
+/// Call it outside the main thread only: there, Tauri restarts the app at once, without the event
+/// `RunEvent::Exit`, and therefore in the background.
 pub fn restart(app_handle: &AppHandle) -> ! {
-    leave_marker_in_data_directory();
+    RESTART_REQUESTED.store(true, Ordering::SeqCst);
     app_handle.restart()
 }
 
-/// Requests a restart of the app, see `AppHandle::request_restart`, and brings its window to the
-/// front again, see `restart`.
+/// Requests a restart of the app, see `AppHandle::request_restart`, and shows its window in the
+/// foreground again, see `restart`.
 pub fn request_restart(app_handle: &AppHandle) {
-    leave_marker_in_data_directory();
+    RESTART_REQUESTED.store(true, Ordering::SeqCst);
     app_handle.request_restart();
 }
 
-/// Brings the window to the front when AI Studio restarted itself just before.
+/// Starts the new instance in the foreground and ends this one, when AI Studio restarts itself.
 ///
-/// Call it once at startup, as soon as the data directory is known. It removes the marker in any
-/// case, so that it takes effect at most once.
-pub fn bring_to_front_after_own_restart(window: &WebviewWindow) {
-    let Some(directory) = data_directory() else {
-        warn!(Source = "Tauri"; "Cannot check whether AI Studio restarted itself: the data directory is unknown.");
+/// Call it on `RunEvent::Exit`, which reaches the app right before Tauri starts the new instance in
+/// the background. The new instance cannot bring its window to the front by itself: macOS lets an app
+/// become active only when the active app allows it. The old instance, however, is still the active
+/// app, so the new instance it starts comes to the front.
+///
+/// Outside an app bundle, as in a development build, and when the start fails, Tauri restarts the
+/// app as usual.
+#[cfg(target_os = "macos")]
+pub fn start_new_instance_in_front() {
+    use std::process::{exit, Command, Stdio};
+
+    if !RESTART_REQUESTED.load(Ordering::SeqCst) {
+        return;
+    }
+
+    let Ok(binary) = std::env::current_exe() else {
         return;
     };
 
-    match take_fresh_marker(&directory, MARKER_MAX_AGE) {
-        Ok(true) => {
-            info!(Source = "Tauri"; "AI Studio restarted itself; bringing the window to the front.");
-            if let Err(error) = window.set_focus() {
-                warn!(Source = "Tauri"; "Failed to bring the window to the front after the restart: {error}");
-            }
+    let Some(bundle) = app_bundle(&binary) else {
+        return;
+    };
+
+    info!(Source = "Tauri"; "Starting the new instance of AI Studio in the foreground.");
+    let result = Command::new("/usr/bin/open")
+        .arg("-n")
+        .arg(bundle)
+        .arg("--args")
+        .args(std::env::args_os().skip(1))
+        .stdin(Stdio::null())
+        .output();
+
+    match result {
+        Ok(output) if output.status.success() => {
+            log::logger().flush();
+            exit(0);
         },
 
-        Ok(false) => {},
-        Err(error) => warn!(Source = "Tauri"; "Failed to check whether AI Studio restarted itself: {error}"),
+        Ok(output) => warn!(Source = "Tauri"; "Failed to start the new instance in the foreground ({}), so Tauri starts it in the background: {}", output.status, String::from_utf8_lossy(&output.stderr).trim()),
+        Err(error) => warn!(Source = "Tauri"; "Failed to start the new instance in the foreground, so Tauri starts it in the background: {error}"),
     }
 }
 
-fn data_directory() -> Option<PathBuf> {
-    DATA_DIRECTORY.get().map(PathBuf::from)
-}
-
-/// Leaves the marker for the next start. A failure costs only the window coming to the front, so
-/// the restart goes on anyway.
-fn leave_marker_in_data_directory() {
-    let Some(directory) = data_directory() else {
-        warn!(Source = "Tauri"; "The data directory is unknown, so the window may stay in the background after the restart.");
-        return;
-    };
-
-    if let Err(error) = leave_marker(&directory) {
-        warn!(Source = "Tauri"; "Failed to mark the restart, so the window may stay in the background afterward: {error}");
+/// Returns the app bundle which contains the binary, such as `/Applications/X.app` for
+/// `/Applications/X.app/Contents/MacOS/x`.
+#[cfg(target_os = "macos")]
+fn app_bundle(binary: &Path) -> Option<&Path> {
+    let macos_directory = binary.parent()?;
+    let contents_directory = macos_directory.parent()?;
+    if macos_directory.file_name()? != "MacOS" || contents_directory.file_name()? != "Contents" {
+        return None;
     }
+
+    contents_directory.parent()
 }
 
-fn leave_marker(directory: &Path) -> io::Result<()> {
-    fs::write(directory.join(MARKER_FILE_NAME), b"")
-}
-
-/// Removes the marker and tells whether it was there and at most `max_age` old.
-///
-/// A marker which seems to come from the future, because the clock went back, counts as fresh.
-fn take_fresh_marker(directory: &Path, max_age: Duration) -> io::Result<bool> {
-    let marker = directory.join(MARKER_FILE_NAME);
-    let modified = match fs::metadata(&marker) {
-        Ok(metadata) => metadata.modified(),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
-        Err(error) => return Err(error),
-    };
-
-    fs::remove_file(&marker)?;
-    let age = modified?.elapsed().unwrap_or(Duration::ZERO);
-    Ok(age <= max_age)
-}
-
-#[cfg(test)]
+#[cfg(all(test, target_os = "macos"))]
 mod tests {
-    use std::fs::File;
-    use std::time::SystemTime;
-    use super::*;
+    use std::path::Path;
+    use super::app_bundle;
 
     #[test]
-    fn a_fresh_marker_counts_once() {
-        let directory = tempfile::tempdir().unwrap();
-        leave_marker(directory.path()).unwrap();
-
-        assert!(take_fresh_marker(directory.path(), MARKER_MAX_AGE).unwrap());
-        assert!(!directory.path().join(MARKER_FILE_NAME).exists());
-        assert!(!take_fresh_marker(directory.path(), MARKER_MAX_AGE).unwrap());
+    fn finds_the_bundle_of_a_binary_inside_one() {
+        let binary = Path::new("/Applications/MindWork AI Studio.app/Contents/MacOS/mindwork-ai-studio");
+        assert_eq!(app_bundle(binary), Some(Path::new("/Applications/MindWork AI Studio.app")));
     }
 
     #[test]
-    fn an_old_marker_does_not_count_but_is_removed() {
-        let directory = tempfile::tempdir().unwrap();
-        leave_marker(directory.path()).unwrap();
-
-        let marker = directory.path().join(MARKER_FILE_NAME);
-        let long_ago = SystemTime::now() - MARKER_MAX_AGE - Duration::from_secs(60);
-        File::options().write(true).open(&marker).unwrap().set_modified(long_ago).unwrap();
-
-        assert!(!take_fresh_marker(directory.path(), MARKER_MAX_AGE).unwrap());
-        assert!(!marker.exists());
-    }
-
-    #[test]
-    fn no_marker_does_not_count() {
-        let directory = tempfile::tempdir().unwrap();
-
-        assert!(!take_fresh_marker(directory.path(), MARKER_MAX_AGE).unwrap());
+    fn finds_no_bundle_for_a_binary_outside_one() {
+        assert_eq!(app_bundle(Path::new("/Users/placeholder/runtime/target/debug/mindwork-ai-studio")), None);
+        assert_eq!(app_bundle(Path::new("/Applications/MindWork AI Studio.app/Contents/Resources/mindwork-ai-studio")), None);
+        assert_eq!(app_bundle(Path::new("/mindwork-ai-studio")), None);
     }
 }
