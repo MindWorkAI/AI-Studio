@@ -103,17 +103,17 @@ macOS lets an app become active only when the active app allows it. Therefore:
 - Call `own_restart::restart` outside the main thread only. On the main thread, Tauri restarts the app at
   once, without `RunEvent::Exit`, and therefore in the background.
 
-**The runtime builds with the Rust of the Flatpak, too.** Flathub builds the Flatpak with its own Rust,
-the extension `org.freedesktop.Sdk.Extension.rust-stable` of the branch named by
-`FLATPAK_FREEDESKTOP_VERSION` in the pipeline, and only after a release. That Rust often lags behind the
-toolchain in `metadata.txt` by a version or two. Therefore:
+**Every build uses the Rust toolchain of `metadata.txt`.** Line 6 names it for the pipeline, the cloud
+sessions, and, since MindWorkAI/Flatpak#41, the Flatpak as well, which installs that toolchain instead of
+the extension `org.freedesktop.Sdk.Extension.rust-stable` of Flathub, which lagged behind by several
+versions. Therefore:
 
-- `rust-version` in `Cargo.toml` names the Rust of the Flatpak, not our toolchain. Clippy refuses every
-  API of the standard library which is newer (`incompatible_msrv`), so the quality gate catches it before
-  the release does.
-- Raise `rust-version` only once Flathub ships the newer Rust on that branch, never together with
-  `metadata.txt`. Keep the minor version only, such as `1.98`: the branches of Flathub differ in the patch.
-- Never silence `incompatible_msrv`. Write the code the way the older Rust allows instead.
+- `rust-version` in `Cargo.toml` names the minor version of line 6, such as `1.100`. Clippy refuses every
+  API of the standard library which is newer (`incompatible_msrv`).
+- Raise both together when you upgrade Rust. The build script writes line 6 from the local `rustc` but
+  leaves `rust-version` alone. Never raise `rust-version` above line 6: Cargo then refuses the toolchain
+  of line 6, and the pipeline and the Flatpak fail.
+- Never silence `incompatible_msrv`. When the code needs a newer API, upgrade Rust first.
 
 ## IPC Communication Flow
 1. Rust runtime starts and generates TLS certificate
