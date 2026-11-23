@@ -1191,7 +1191,7 @@ fn enterprise_source_key_suffix<'a>(key_name: &'a str, prefix: &str) -> Option<&
 }
 
 fn normalize_enterprise_slot_suffix(raw_suffix: &str) -> Option<&str> {
-    let suffix = raw_suffix.strip_prefix('_').unwrap_or(raw_suffix);
+    let suffix = raw_suffix.trim_prefix('_');
     if is_enterprise_slot_suffix(suffix) {
         Some(suffix)
     } else {
