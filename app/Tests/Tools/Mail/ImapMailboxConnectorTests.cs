@@ -31,6 +31,8 @@ public sealed class ImapMailboxConnectorTests
         Username = "someone@example.org",
     };
 
+    private static readonly MailboxPasswordEncoding[] BOTH_ENCODINGS = [MailboxPasswordEncoding.UTF8, MailboxPasswordEncoding.WINDOWS_1252];
+
     private static IEnumerable<TestCaseData> ExceptionsWithTheirFailure()
     {
         yield return Case(new AuthenticationException("The server rejected the credentials."), MailboxConnectionFailure.AUTHENTICATION_FAILED);
@@ -142,6 +144,139 @@ public sealed class ImapMailboxConnectorTests
     public void ASignInUsesOnlyTheEncodingsWhichMakeADifference(MailboxPasswordEncoding storedEncoding, string username, string password, bool offersPlain, MailboxPasswordEncoding[] expected)
     {
         Assert.That(ImapMailboxConnector.GetSignInEncodings(storedEncoding, username, password, offersPlain), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public async Task ASynchronizationSignsInOnceInTheStoredEncoding()
+    {
+        // The server would accept the other encoding, but only a connection test may find that out:
+        var server = new SignInServer(accepted: MailboxPasswordEncoding.WINDOWS_1252);
+        var exception = await SignInExpectingFailureAsync(server, BOTH_ENCODINGS, mayTryOtherEncoding: false);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.AUTHENTICATION_FAILED));
+            Assert.That(server.Attempts, Is.EqualTo(new[] { MailboxPasswordEncoding.UTF8 }));
+            Assert.That(server.Reconnects, Is.Zero);
+        }
+    }
+
+    [Test]
+    public async Task AConnectionTestTriesTheOtherEncodingOnce()
+    {
+        var server = new SignInServer(accepted: MailboxPasswordEncoding.WINDOWS_1252);
+        var accepted = await ImapMailboxConnector.SignInWithEncodingsAsync(BOTH_ENCODINGS, mayTryOtherEncoding: true, server.SignInAsync, server.ReconnectAsync, CancellationToken.None);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(accepted, Is.EqualTo(MailboxPasswordEncoding.WINDOWS_1252));
+            Assert.That(server.Attempts, Is.EqualTo(BOTH_ENCODINGS));
+            Assert.That(server.Reconnects, Is.EqualTo(1), "Some servers hang up after a refused sign-in.");
+        }
+    }
+
+    [Test]
+    public async Task AConnectionTestStopsOnceEveryEncodingWasRefused()
+    {
+        var server = new SignInServer(accepted: null);
+        var exception = await SignInExpectingFailureAsync(server, BOTH_ENCODINGS, mayTryOtherEncoding: true);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.AUTHENTICATION_FAILED));
+            Assert.That(server.Attempts, Is.EqualTo(BOTH_ENCODINGS));
+            Assert.That(server.Reconnects, Is.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public async Task AConnectionTestWithASingleEncodingSignsInOnce()
+    {
+        // GetSignInEncodings offers one encoding for ASCII, where every encoding sends the same bytes:
+        var server = new SignInServer(accepted: null);
+        var exception = await SignInExpectingFailureAsync(server, [MailboxPasswordEncoding.UTF8], mayTryOtherEncoding: true);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.AUTHENTICATION_FAILED));
+            Assert.That(server.Attempts, Has.Count.EqualTo(1));
+            Assert.That(server.Reconnects, Is.Zero);
+        }
+    }
+
+    [Test]
+    public async Task OnlyARefusedSignInLeadsToTheOtherEncoding()
+    {
+        var server = new SignInServer(accepted: MailboxPasswordEncoding.WINDOWS_1252, failure: new IOException("The connection was reset."));
+        var exception = await SignInExpectingFailureAsync(server, BOTH_ENCODINGS, mayTryOtherEncoding: true);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.NETWORK_UNAVAILABLE));
+            Assert.That(server.Attempts, Has.Count.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public async Task AFailedReconnectEndsTheSignIn()
+    {
+        var server = new SignInServer(accepted: MailboxPasswordEncoding.WINDOWS_1252, reconnectFailure: new MailboxConnectionException(MailboxConnectionFailure.NETWORK_UNAVAILABLE, "The server is gone."));
+        var exception = await SignInExpectingFailureAsync(server, BOTH_ENCODINGS, mayTryOtherEncoding: true);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.NETWORK_UNAVAILABLE));
+            Assert.That(server.Attempts, Has.Count.EqualTo(1));
+        }
+    }
+
+    [Test]
+    public async Task WithoutAnEncodingNothingIsSent()
+    {
+        // No encoding has every character, e.g., of a password with a lone surrogate:
+        var server = new SignInServer(accepted: MailboxPasswordEncoding.UTF8);
+        var exception = await SignInExpectingFailureAsync(server, [], mayTryOtherEncoding: true);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.INVALID_SETTINGS));
+            Assert.That(server.Attempts, Is.Empty);
+        }
+    }
+
+    private static async Task<MailboxConnectionException?> SignInExpectingFailureAsync(SignInServer server, MailboxPasswordEncoding[] encodings, bool mayTryOtherEncoding) =>
+        await Assert.ThrowsAsync<MailboxConnectionException>(() => ImapMailboxConnector.SignInWithEncodingsAsync(encodings, mayTryOtherEncoding, server.SignInAsync, server.ReconnectAsync, CancellationToken.None));
+
+    /// <summary>
+    /// Stands in for an IMAP server: accepts a sign-in in one encoding only, and counts every attempt.
+    /// </summary>
+    /// <param name="accepted">The encoding the server accepts, or null for a wrong password.</param>
+    /// <param name="failure">What every sign-in throws instead of an answer, e.g., a lost connection.</param>
+    /// <param name="reconnectFailure">What connecting again throws.</param>
+    private sealed class SignInServer(MailboxPasswordEncoding? accepted, Exception? failure = null, Exception? reconnectFailure = null)
+    {
+        public List<MailboxPasswordEncoding> Attempts { get; } = [];
+
+        public int Reconnects { get; private set; }
+
+        public async Task SignInAsync(MailboxPasswordEncoding encoding)
+        {
+            await Task.Yield();
+            this.Attempts.Add(encoding);
+            if (failure is not null)
+                throw failure;
+
+            if (encoding != accepted)
+                throw new AuthenticationException("The server rejected the credentials.");
+        }
+
+        public async Task ReconnectAsync()
+        {
+            await Task.Yield();
+            this.Reconnects++;
+            if (reconnectFailure is not null)
+                throw reconnectFailure;
+        }
     }
 
     [TestCase("Projects", '/', ExpectedResult = true)]

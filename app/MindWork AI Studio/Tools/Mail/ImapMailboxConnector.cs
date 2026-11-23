@@ -116,22 +116,51 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
 
         var offersPlain = this.client.AuthenticationMechanisms.Contains(PLAIN_MECHANISM);
         var encodings = GetSignInEncodings(mailbox.PasswordEncoding, mailbox.Username, password, offersPlain);
-        if (encodings.Count == 0)
-            throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "No encoding has every character of the username and the password.");
-
-        var attempts = mayTryOtherEncoding ? encodings.Count : 1;
-        for (var attempt = 0; ; attempt++)
-        {
-            try
-            {
-                await this.SignInAsync(mailbox.Username, password, encodings[attempt], offersPlain, token);
-                return encodings[attempt];
-            }
-            catch (AuthenticationException) when (attempt + 1 < attempts)
+        return await SignInWithEncodingsAsync(
+            encodings,
+            mayTryOtherEncoding,
+            encoding => this.SignInAsync(mailbox.Username, password, encoding, offersPlain, token),
+            async () =>
             {
                 // Some servers hang up after a refused sign-in:
                 if (!this.client.IsConnected)
                     await this.ConnectToServerAsync(idnHost, mailbox.Port, socketOptions, token);
+            },
+            token);
+    }
+
+    /// <summary>
+    /// Signs in with the encodings GetSignInEncodings offered, at most one attempt each.
+    /// </summary>
+    /// <remarks>
+    /// Every attempt the server refuses counts on the way to locking the account, so this is where
+    /// their number is decided: one, unless the caller may try the other encoding, and then one per
+    /// encoding. Only a refused sign-in leads to the next attempt; any other failure ends the sign-in.
+    /// ImapMailboxConnectorTests counts the attempts.
+    /// </remarks>
+    /// <param name="encodings">The encodings to try, the best first; at least one.</param>
+    /// <param name="mayTryOtherEncoding">Whether a refused sign-in may be tried once more in the next encoding.</param>
+    /// <param name="signInAsync">Signs in once, in the given encoding.</param>
+    /// <param name="reconnectAsync">Connects again before the next attempt, when the server hung up.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The encoding the server accepted.</returns>
+    /// <exception cref="MailboxConnectionException">Every attempt failed, or another failure ended the sign-in.</exception>
+    internal static async Task<MailboxPasswordEncoding> SignInWithEncodingsAsync(IReadOnlyList<MailboxPasswordEncoding> encodings, bool mayTryOtherEncoding, Func<MailboxPasswordEncoding, Task> signInAsync, Func<Task> reconnectAsync, CancellationToken token)
+    {
+        var attempts = mayTryOtherEncoding ? encodings.Count : Math.Min(encodings.Count, 1);
+        if (attempts == 0)
+            throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "No encoding has every character of the username and the password.");
+
+        for (var attempt = 0; ; attempt++)
+        {
+            try
+            {
+                await signInAsync(encodings[attempt]);
+                return encodings[attempt];
+            }
+            catch (AuthenticationException) when (attempt + 1 < attempts)
+            {
+                await reconnectAsync();
             }
             catch (Exception e) when (Classify(e, token) is { } failure)
             {
@@ -526,15 +555,22 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     }
 
     /// <summary>
-    /// Signs in once, in the given encoding, which GetSignInEncodings offered.
+    /// Signs in once, in the given encoding.
     /// </summary>
+    /// <remarks>
+    /// Only for an encoding which GetSignInEncodings offered for this username, password, and server:
+    /// it made sure that the encoding has every character of both, and that the server offers PLAIN
+    /// unless the encoding is UTF-8. Should another encoding arrive here anyway, nothing is sent,
+    /// since the bytes would not be the password and the attempt would count as a failed sign-in.
+    /// </remarks>
     private async Task SignInAsync(string username, string password, MailboxPasswordEncoding encoding, bool offersPlain, CancellationToken token)
     {
-        encoding.TryPrepare(username, out var preparedUsername);
-        encoding.TryPrepare(password, out var preparedPassword);
+        if (encoding.TextEncoding is not { } textEncoding || !encoding.TryPrepare(username, out var preparedUsername) || !encoding.TryPrepare(password, out var preparedPassword) || (!offersPlain && encoding is not MailboxPasswordEncoding.UTF8))
+            throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "The encoding cannot carry the username and the password to this IMAP server.");
+
         if (offersPlain)
         {
-            await this.client.AuthenticateAsync(new SaslMechanismPlain(encoding.TextEncoding!, preparedUsername, preparedPassword), token);
+            await this.client.AuthenticateAsync(new SaslMechanismPlain(textEncoding, preparedUsername, preparedPassword), token);
             return;
         }
 

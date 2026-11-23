@@ -59,6 +59,17 @@ public sealed record DataMailboxProvider : ILivePluginContent
     public string HelpUrl { get; private init; } = string.Empty;
 
     /// <summary>
+    /// The encoding the mail server expects for a username or a password with characters beyond
+    /// ASCII, such as umlauts. Null when the organization did not say.
+    /// </summary>
+    /// <remarks>
+    /// The connection test in the mailbox dialog tries it first and the other encoding only when the
+    /// server refuses it, so that users of a server such as Microsoft Exchange, which expects
+    /// Windows-1252, spend no failed sign-in on UTF-8.
+    /// </remarks>
+    public MailboxPasswordEncoding? PasswordEncoding { get; private init; }
+
+    /// <summary>
     /// Reads a mail server from an entry of the table MAILBOX_PROVIDERS.
     /// </summary>
     /// <remarks>
@@ -131,6 +142,18 @@ public sealed record DataMailboxProvider : ILivePluginContent
             helpUrl = helpUri.OriginalString;
         }
 
+        MailboxPasswordEncoding? passwordEncoding = null;
+        if (table.TryGetValue("PasswordEncoding", out var passwordEncodingValue))
+        {
+            if (!passwordEncodingValue.TryRead<string>(out var passwordEncodingText) || !MailboxPasswordEncoding.TryParseName(passwordEncodingText, out var readPasswordEncoding) || readPasswordEncoding is MailboxPasswordEncoding.UNKNOWN)
+            {
+                logger.LogWarning("The configured mailbox provider {ProviderIndex} does not contain a valid PasswordEncoding field. Allowed values are UTF8 and WINDOWS_1252.", index);
+                return false;
+            }
+
+            passwordEncoding = readPasswordEncoding;
+        }
+
         provider = new DataMailboxProvider
         {
             Id = id.ToString(),
@@ -141,6 +164,7 @@ public sealed record DataMailboxProvider : ILivePluginContent
             TransportSecurity = transportSecurity,
             UsernameHint = usernameHint,
             HelpUrl = helpUrl,
+            PasswordEncoding = passwordEncoding,
         };
 
         return true;

@@ -22,8 +22,9 @@ namespace AIStudio.Dialogs;
 /// <remarks>
 /// Every connection test is one sign-in, started by the user, and a second one only when the username
 /// or the password holds a character beyond ASCII and the server refused the first encoding, cf.
-/// ImapMailboxConnector.GetSignInEncodings. The encoding the server accepted is kept and stored along
-/// with the mailbox. The outcome of a test only touches the recorded sign-in failure of the mailbox
+/// ImapMailboxConnector.GetSignInEncodings. The first one is the encoding a configuration plugin sets
+/// for the mail server, if any, and the one stored for the mailbox otherwise. The encoding the server
+/// accepted is kept and stored along with the mailbox. The outcome of a test only touches the recorded sign-in failure of the mailbox
 /// when the test used the settings and the password stored for it: a failure with a password the user
 /// is still typing says nothing about the stored one, and neither does a success. A success in
 /// another encoding clears the failure only once the mailbox is saved with it, since the
@@ -518,9 +519,17 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
 
         try
         {
+            //
+            // The organization knows which encoding its mail server expects, so the test tries that
+            // one first, and the other one only when the server refuses it:
+            //
+            var mailbox = this.CreateDataSource();
+            if (this.GetOrganizationPasswordEncoding(mailbox.Host) is { } organizationPasswordEncoding)
+                mailbox = mailbox with { PasswordEncoding = organizationPasswordEncoding };
+
             using var timeout = new CancellationTokenSource(CONNECTION_TEST_TIMEOUT);
             await using var connector = new ImapMailboxConnector();
-            this.dataPasswordEncoding = await connector.ConnectAsync(this.CreateDataSource(), settings.Password, MailServerPolicy.Read(this.SettingsManager), mayTryOtherEncoding: true, timeout.Token);
+            this.dataPasswordEncoding = await connector.ConnectAsync(mailbox, settings.Password, MailServerPolicy.Read(this.SettingsManager), mayTryOtherEncoding: true, timeout.Token);
             this.serverFolders = await connector.GetFoldersAsync(timeout.Token);
             this.testFailure = null;
             this.Logger.LogInformation($"Tested the connection of the mailbox '{this.dataId}' successfully.");
@@ -547,6 +556,18 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         await this.RecordSignInOutcomeAsync(settings, this.testFailure, serverAnswer);
         await this.form.ValidateAsync();
     }
+
+    /// <summary>
+    /// The encoding a configuration plugin sets for this mail server, cf. DataMailboxProvider.PasswordEncoding.
+    /// </summary>
+    /// <remarks>
+    /// Found by the host rather than by the chosen provider: the user may have typed another host since.
+    /// </remarks>
+    /// <param name="host">The host the connection goes to.</param>
+    /// <returns>The encoding, or null when no mail server of the organization on this host sets one.</returns>
+    private MailboxPasswordEncoding? GetOrganizationPasswordEncoding(string host) => this.organizationProviders
+        .FirstOrDefault(provider => provider.PasswordEncoding is not null && MailServerHosts.AreSame(provider.Host, host))?
+        .PasswordEncoding;
 
     private async Task<MailServerFolder?> CreateFolder(string parentFullName, string name)
     {
