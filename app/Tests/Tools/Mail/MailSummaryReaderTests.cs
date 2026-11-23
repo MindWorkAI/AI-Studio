@@ -42,6 +42,38 @@ public sealed class MailSummaryReaderTests
         }
     }
 
+    /// <remarks>
+    /// The keys come from what MimeKit reads out of the header block. A version of MimeKit which reads
+    /// a header in another way would give every mail it concerns a new key and embed it anew, so these
+    /// keys stay as MimeKit 4.18.2 made them. Change a pinned value only on purpose.
+    /// </remarks>
+    [TestCase("header-injection.eml", "mail:4ad6f665ee9a7b698d32276855cc2c8da31e5c7d25057c45d15484712ee045ad")]
+    [TestCase("priority-with-attachment.eml", "mail:797ac20c552b0aed439f87095a2345f38a5268a7656024b5394349652ac08e18")]
+    [TestCase("idn-sender.eml", "mail:e7284cb3afe9041918d344de00e01f55aebc7b29ebcd25967a8810eca13068d8")]
+    public void TheKeysOfIndexedMailsStayTheSame(string fixtureName, string expectedKey)
+    {
+        var summary = Summary(fixtureName);
+        summary.Size = 4096;
+
+        Assert.That(MailContentKey.Create(MailSummaryReader.ReadIdentity(summary)), Is.EqualTo(expectedKey));
+    }
+
+    [Test]
+    public void AnInternationalDomainIsReadInUnicode()
+    {
+        var summary = Summary("idn-sender.eml");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(MailSummaryReader.ReadIdentity(summary).FromAddresses, Is.EqualTo(new[] { "juergen@müller.example" }));
+            Assert.That(MailSummaryReader.ReadAddresses(summary.Headers!), Is.EqualTo(new[]
+            {
+                new MailAddressRecord(MailAddressRole.FROM, "juergen@müller.example", "Müller, Jürgen"),
+                new MailAddressRecord(MailAddressRole.TO, "team@example.org", "Team"),
+                new MailAddressRecord(MailAddressRole.CC, "info@bücher.example", "Library"),
+            }), "The index keeps an address in the form the mails indexed before keep it.");
+        }
+    }
+
     [Test]
     public void EveryAddressKeepsItsHeader()
     {
