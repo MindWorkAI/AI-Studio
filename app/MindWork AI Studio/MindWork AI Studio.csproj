@@ -68,6 +68,16 @@
         <RuntimeFrameworkVersion>$(MetaDotnetRuntimeVersion)</RuntimeFrameworkVersion>
     </PropertyGroup>
 
+    <!--
+        The trimmer is a .NET program of its own, which runs on the runtime of the SDK and needs a runtime at
+        least as new as itself. An SDK older than the pinned runtime, such as the one of the Flatpak, could not
+        start the trimmer of the pinned version. Then the trimmer of that SDK does the work. It ships with
+        nothing, so the app still brings the pinned runtime.
+    -->
+    <ItemGroup Condition="'$(MetaDotnetRuntimeVersion)' != '' And $([MSBuild]::VersionLessThan('$(BundledNETCoreAppPackageVersion)', '$(MetaDotnetRuntimeVersion)'))">
+        <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="$(BundledNETCoreAppPackageVersion)" PrivateAssets="all" />
+    </ItemGroup>
+
     <Import Project="..\Trimming.props" />
 
     <ItemGroup>
