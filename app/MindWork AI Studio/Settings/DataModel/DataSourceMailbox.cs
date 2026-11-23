@@ -78,7 +78,7 @@ public record struct DataSourceMailbox: IIndexedDataSource, ISecretId
     /// </summary>
     /// <remarks>
     /// A mailbox stored before this setting existed loads with UTF-8, which AI Studio always used
-    /// until then.
+    /// until then. The connection test finds out which one the server expects.
     /// </remarks>
     public MailboxPasswordEncoding PasswordEncoding { get; set; } = MailboxPasswordEncoding.UTF8;
 

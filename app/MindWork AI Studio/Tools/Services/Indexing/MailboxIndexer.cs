@@ -153,7 +153,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
         await using var connector = new ImapMailboxConnector();
         try
         {
-            await connector.ConnectAsync(mailbox, password, policy, token);
+            await connector.ConnectAsync(mailbox, password, policy, mayTryOtherEncoding: false, token);
         }
         catch (MailboxConnectionException e)
         {

@@ -20,7 +20,9 @@ namespace AIStudio.Tools.Mail;
 /// Every sign-in is exactly one attempt with the password. An IMAP client would otherwise try one
 /// mechanism after the other and the LOGIN command last, and a directory such as Active Directory
 /// counts each rejected attempt on its way to locking the account. For the same reason, nothing is
-/// sent at all when the password is empty or a setting is unknown to this version.<br/><br/>
+/// sent at all when the password is empty or a setting is unknown to this version. The one exception
+/// is a connection test the user started: when the username or the password holds a character beyond
+/// ASCII, such as an umlaut, it may try the other encoding once more, cf. GetSignInEncodings.<br/><br/>
 /// Before signing in, the caller has to make sure that no failed sign-in is on record for this
 /// mailbox. Whatever fails arrives as MailboxConnectionException with its failure code, and nothing
 /// here writes to the log: the answers of a server may name the user, so the caller logs the
@@ -97,9 +99,11 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// <param name="mailbox">The mailbox to connect to.</param>
     /// <param name="password">The password, as stored in the OS keyring or just typed in.</param>
     /// <param name="policy">Which mail servers the organization allows. Every connection passes here, so this is where a server it does not allow is refused.</param>
+    /// <param name="mayTryOtherEncoding">Whether a refused sign-in may be tried once more in the other encoding, cf. GetSignInEncodings. Only for a connection test the user started.</param>
     /// <param name="token">The cancellation token.</param>
+    /// <returns>The encoding the server accepted the username and the password in.</returns>
     /// <exception cref="MailboxConnectionException">The connection or the sign-in failed.</exception>
-    public async Task ConnectAsync(DataSourceMailbox mailbox, string password, MailServerPolicy policy, CancellationToken token)
+    public async Task<MailboxPasswordEncoding> ConnectAsync(DataSourceMailbox mailbox, string password, MailServerPolicy policy, bool mayTryOtherEncoding, CancellationToken token)
     {
         if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || mailbox.PasswordEncoding is MailboxPasswordEncoding.UNKNOWN || !MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
             throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "The mailbox settings are incomplete, or this version of AI Studio does not know them.");
@@ -108,27 +112,31 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
             throw new MailboxConnectionException(MailboxConnectionFailure.SERVER_NOT_ALLOWED, "The organization allows only its own mail servers, and the server of this mailbox is none of them.");
 
         this.client.ServerCertificateValidationCallback = ExternalHttpClientTimeout.CreateServerCertificateValidationCallback(idnHost, ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED);
-        try
-        {
-            await this.client.ConnectAsync(idnHost, mailbox.Port, socketOptions, token);
-        }
-        catch (NotSupportedException e)
-        {
-            // Thrown when the server does not offer STARTTLS. The connection never goes on without it:
-            throw new MailboxConnectionException(MailboxConnectionFailure.TLS_FAILED, "The IMAP server does not offer STARTTLS.", e);
-        }
-        catch (Exception e) when (Classify(e, token) is { } failure)
-        {
-            throw new MailboxConnectionException(failure, $"Connecting to the IMAP server failed: {failure}.", e);
-        }
+        await this.ConnectToServerAsync(idnHost, mailbox.Port, socketOptions, token);
 
-        try
+        var offersPlain = this.client.AuthenticationMechanisms.Contains(PLAIN_MECHANISM);
+        var encodings = GetSignInEncodings(mailbox.PasswordEncoding, mailbox.Username, password, offersPlain);
+        if (encodings.Count == 0)
+            throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "No encoding has every character of the username and the password.");
+
+        var attempts = mayTryOtherEncoding ? encodings.Count : 1;
+        for (var attempt = 0; ; attempt++)
         {
-            await this.SignInAsync(mailbox.Username, password, mailbox.PasswordEncoding, token);
-        }
-        catch (Exception e) when (Classify(e, token) is { } failure)
-        {
-            throw new MailboxConnectionException(failure, $"Signing in to the IMAP server failed: {failure}.", e);
+            try
+            {
+                await this.SignInAsync(mailbox.Username, password, encodings[attempt], offersPlain, token);
+                return encodings[attempt];
+            }
+            catch (AuthenticationException) when (attempt + 1 < attempts)
+            {
+                // Some servers hang up after a refused sign-in:
+                if (!this.client.IsConnected)
+                    await this.ConnectToServerAsync(idnHost, mailbox.Port, socketOptions, token);
+            }
+            catch (Exception e) when (Classify(e, token) is { } failure)
+            {
+                throw new MailboxConnectionException(failure, $"Signing in to the IMAP server failed: {failure}.", e);
+            }
         }
     }
 
@@ -500,14 +508,28 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         return Ascii.IsValid(username) && Ascii.IsValid(password) ? usable.Take(1).ToList() : usable;
     }
 
-    private async Task SignInAsync(string username, string password, MailboxPasswordEncoding storedEncoding, CancellationToken token)
+    private async Task ConnectToServerAsync(string idnHost, int port, SecureSocketOptions socketOptions, CancellationToken token)
     {
-        var offersPlain = this.client.AuthenticationMechanisms.Contains(PLAIN_MECHANISM);
-        var encodings = GetSignInEncodings(storedEncoding, username, password, offersPlain);
-        if (encodings.Count == 0)
-            throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "No encoding has every character of the username and the password.");
+        try
+        {
+            await this.client.ConnectAsync(idnHost, port, socketOptions, token);
+        }
+        catch (NotSupportedException e)
+        {
+            // Thrown when the server does not offer STARTTLS. The connection never goes on without it:
+            throw new MailboxConnectionException(MailboxConnectionFailure.TLS_FAILED, "The IMAP server does not offer STARTTLS.", e);
+        }
+        catch (Exception e) when (Classify(e, token) is { } failure)
+        {
+            throw new MailboxConnectionException(failure, $"Connecting to the IMAP server failed: {failure}.", e);
+        }
+    }
 
-        var encoding = encodings[0];
+    /// <summary>
+    /// Signs in once, in the given encoding, which GetSignInEncodings offered.
+    /// </summary>
+    private async Task SignInAsync(string username, string password, MailboxPasswordEncoding encoding, bool offersPlain, CancellationToken token)
+    {
         encoding.TryPrepare(username, out var preparedUsername);
         encoding.TryPrepare(password, out var preparedPassword);
         if (offersPlain)

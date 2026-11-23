@@ -91,7 +91,7 @@ public sealed class ImapMailboxConnectorTests
         // failure instead of this one.
         //
         await using var connector = new ImapMailboxConnector();
-        var exception = await Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(mailbox, password, MailServerPolicy.ANY_SERVER, CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(mailbox, password, MailServerPolicy.ANY_SERVER, mayTryOtherEncoding: true, CancellationToken.None));
         Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.INVALID_SETTINGS));
     }
 
@@ -104,7 +104,7 @@ public sealed class ImapMailboxConnectorTests
         //
         await using var connector = new ImapMailboxConnector();
         var policy = new MailServerPolicy(true, ["imap.intra.example.org"]);
-        var exception = await Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(MAILBOX, PASSWORD, policy, CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(MAILBOX, PASSWORD, policy, mayTryOtherEncoding: true, CancellationToken.None));
         Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.SERVER_NOT_ALLOWED));
     }
 

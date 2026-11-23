@@ -20,10 +20,14 @@ namespace AIStudio.Dialogs;
 /// Adds or edits a mailbox.
 /// </summary>
 /// <remarks>
-/// Every connection test is exactly one sign-in, started by the user. Its outcome only touches the
-/// recorded sign-in failure of the mailbox when the test used the settings and the password stored
-/// for it: a failure with a password the user is still typing says nothing about the stored one,
-/// and neither does a success.
+/// Every connection test is one sign-in, started by the user, and a second one only when the username
+/// or the password holds a character beyond ASCII and the server refused the first encoding, cf.
+/// ImapMailboxConnector.GetSignInEncodings. The encoding the server accepted is kept and stored along
+/// with the mailbox. The outcome of a test only touches the recorded sign-in failure of the mailbox
+/// when the test used the settings and the password stored for it: a failure with a password the user
+/// is still typing says nothing about the stored one, and neither does a success. A success in
+/// another encoding clears the failure only once the mailbox is saved with it, since the
+/// synchronization would sign in with the stored encoding until then.
 /// </remarks>
 public partial class DataSourceMailboxDialog : MSGComponentBase
 {
@@ -516,7 +520,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         {
             using var timeout = new CancellationTokenSource(CONNECTION_TEST_TIMEOUT);
             await using var connector = new ImapMailboxConnector();
-            await connector.ConnectAsync(this.CreateDataSource(), settings.Password, MailServerPolicy.Read(this.SettingsManager), timeout.Token);
+            this.dataPasswordEncoding = await connector.ConnectAsync(this.CreateDataSource(), settings.Password, MailServerPolicy.Read(this.SettingsManager), mayTryOtherEncoding: true, timeout.Token);
             this.serverFolders = await connector.GetFoldersAsync(timeout.Token);
             this.testFailure = null;
             this.Logger.LogInformation($"Tested the connection of the mailbox '{this.dataId}' successfully.");
@@ -555,7 +559,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         {
             using var timeout = new CancellationTokenSource(CONNECTION_TEST_TIMEOUT);
             await using var connector = new ImapMailboxConnector();
-            await connector.ConnectAsync(this.CreateDataSource(), settings.Password, MailServerPolicy.Read(this.SettingsManager), timeout.Token);
+            await connector.ConnectAsync(this.CreateDataSource(), settings.Password, MailServerPolicy.Read(this.SettingsManager), mayTryOtherEncoding: false, timeout.Token);
             var createdFolder = await connector.CreateFolderAsync(parentFullName, name, timeout.Token);
 
             this.serverFolders = [..this.serverFolders, createdFolder];
@@ -605,7 +609,10 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         switch (failure)
         {
             case null:
-                await indexStore.ClearMailboxAuthFailureAsync(this.dataId, CancellationToken.None);
+                // In another encoding, the failure stays on record until the mailbox is saved, cf. Store:
+                if (this.dataPasswordEncoding == this.DataSource.PasswordEncoding)
+                    await indexStore.ClearMailboxAuthFailureAsync(this.dataId, CancellationToken.None);
+
                 this.authFailure = null;
                 break;
 
@@ -673,8 +680,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
                 this.Logger.LogWarning($"Failed to delete the password of the mailbox '{this.dataId}' stored under its previous name: {deleteResponse.Issue}");
         }
 
-        // A new password earns the next synchronization one attempt to sign in:
-        if (this.IsEditing && isNewPassword)
+        // A new password, or the encoding a connection test found, earns the next synchronization one attempt to sign in:
+        var isNewPasswordEncoding = this.IsEditing && this.DataSource.PasswordEncoding != mailbox.PasswordEncoding;
+        if (this.IsEditing && (isNewPassword || isNewPasswordEncoding))
         {
             var indexStore = await this.DatabaseClientProvider.GetIndexStoreAsync();
             await indexStore.ClearMailboxAuthFailureAsync(this.dataId, CancellationToken.None);
