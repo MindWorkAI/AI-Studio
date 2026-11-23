@@ -66,7 +66,7 @@ fn load_pdfium() -> Result<Pdfium, String> {
                     },
                     Err(system_error) => {
                         let error_message = format!(
-                            "Failed to load PDFium from '{path}' and the system library. Developer action (from repo root): run the build script once to download the required PDFium version: `cd app/Build` and `dotnet run build`. Details: library error: '{library_error}'; system error: '{system_error}'."
+                            "Failed to load PDFium from '{path}' and the system library. Developer action (from repo root): run the build script once to download the required PDFium version: `cd app/Build` and `dotnet run -- build`. Details: library error: '{library_error}'; system error: '{system_error}'."
                         );
 
                         error!("{error_message}");
@@ -85,7 +85,7 @@ fn load_pdfium() -> Result<Pdfium, String> {
         },
         Err(system_error) => {
             let error_message = format!(
-                "Failed to load PDFium from the system library. Developer action (from repo root): run the build script once to download the required PDFium version: `cd app/Build` and `dotnet run build`. Details: '{system_error}'."
+                "Failed to load PDFium from the system library. Developer action (from repo root): run the build script once to download the required PDFium version: `cd app/Build` and `dotnet run -- build`. Details: '{system_error}'."
             );
 
             error!("{error_message}");

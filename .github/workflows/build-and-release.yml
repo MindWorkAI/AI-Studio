@@ -908,7 +908,7 @@ jobs:
       - name: Run the quality gate
         run: |
           cd "app/Build"
-          dotnet run verify
+          dotnet run -- verify
 
   build_main:
     name: Build app (${{ matrix.dotnet_runtime }})

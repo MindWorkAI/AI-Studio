@@ -99,7 +99,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 ### Build
 ```bash
 cd app/Build
-dotnet run build
+dotnet run -- build
 ```
 This builds the .NET app as a Tauri "sidecar" binary, which is required even for development.
 
@@ -109,7 +109,7 @@ instead; see "Cloud sessions" below.
 
 Agents must not start builds through their own shell: agent shells run sandboxed, and `.NET` builds
 hit a known sandbox issue there, typically surfacing as `CSSM_ModuleLoad()` or other sandbox-related
-failures (for reference: https://github.com/openai/codex/issues/4915). This applies to `dotnet run build`,
+failures (for reference: https://github.com/openai/codex/issues/4915). This applies to `dotnet run -- build`,
 `dotnet build`, `cargo build`, and similar commands.
 
 Instead, use the JetBrains IDE MCP servers. They execute in the IDE process, which runs outside the
@@ -130,8 +130,8 @@ triggering a new build.
 terminal, because they are more than a solution build:
 
 ```
-mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run build"
-mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run collect-i18n"
+mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run -- build"
+mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run -- collect-i18n"
 ```
 
 **Rust builds** work the same way through the matching `rustrover` tools.
@@ -140,7 +140,7 @@ Notes:
 - The IDE may ask the user to confirm a terminal command. Wait for the result instead of retrying the
   command in the agent shell.
 - When the IDE is not running or its MCP server is unavailable, fall back to asking the user to run
-  `cd app/Build && dotnet run build` locally, and wait for their feedback before diagnosing issues or
+  `cd app/Build && dotnet run -- build` locally, and wait for their feedback before diagnosing issues or
   making follow-up changes.
 - Treat the build output, error messages, or success confirmation as the source of truth for further
   troubleshooting, no matter whether it came from the MCP server or from the user.
@@ -169,12 +169,12 @@ again yourself when `metadata.txt` changes during the session, e.g., after a mer
 
 **Building and testing** happen in the shell:
 
-- The quality gate, the same as in the pipeline: `cd app/Build && dotnet run verify`. It compiles both
+- The quality gate, the same as in the pipeline: `cd app/Build && dotnet run -- verify`. It compiles both
   the .NET app and the Rust runtime on its way. Narrower checks: `dotnet build "app/MindWork AI Studio.slnx"`,
   `dotnet test` in `app/Tests`, and `cargo test` or `cargo clippy --all-targets -- -D warnings` in `runtime/`.
 - A cold build of the Rust runtime takes several minutes: run the gate and cargo in the background, or
   give them the longest timeout available.
-- Skip `dotnet run build`: it needs the Tauri CLI, which is not installed, and the app it produces
+- Skip `dotnet run -- build`: it needs the Tauri CLI, which is not installed, and the app it produces
   cannot start without a display.
 
 **Committing and pushing** is your job here:
