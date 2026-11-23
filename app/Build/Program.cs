@@ -8,7 +8,7 @@ using Build.Tools;
 // a root with the same name as one of its commands. Hence, the root is a command of its own, which
 // brings only the help option of a RootCommand along:
 //
-var rootCommand = new Command("build-script", "Build, check, and release MindWork AI Studio. Run the commands from app/Build with 'dotnet run <command>'.")
+var rootCommand = new Command("build-script", "Build, check, and release MindWork AI Studio. Run the commands from app/Build with 'dotnet run -- <command>'.")
 {
     new HelpOption(),
     CheckRidsCommand.CreateCommand(),

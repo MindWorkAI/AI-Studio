@@ -19,7 +19,7 @@ once it is done: that is our signal to take over. The automated check waits unti
 
 ## How did you test it?
 
-<!-- For example: ran `dotnet run verify`, ran the app locally, and tried out … -->
+<!-- For example: ran `dotnet run -- verify`, ran the app locally, and tried out … -->
 
 ## Wiki
 
