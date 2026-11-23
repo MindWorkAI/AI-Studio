@@ -88,6 +88,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private MailboxTransportSecurity dataTransportSecurity = MailboxTransportSecurity.SSL_ON_CONNECT;
     private string dataUsername = string.Empty;
     private string dataPassword = string.Empty;
+    private MailboxPasswordEncoding dataPasswordEncoding = MailboxPasswordEncoding.UTF8;
     private string dataRootFolder = string.Empty;
     private bool dataIncludeSentAndDrafts = true;
     private MailboxMaxAge dataMaxAge = MailboxMaxAge.LAST_12_MONTHS;
@@ -166,6 +167,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.dataPort = this.DataSource.Port;
             this.dataTransportSecurity = this.DataSource.TransportSecurity;
             this.dataUsername = this.DataSource.Username;
+            this.dataPasswordEncoding = this.DataSource.PasswordEncoding;
             this.dataRootFolder = this.DataSource.RootFolder;
             this.dataIncludeSentAndDrafts = this.DataSource.IncludeSentAndDrafts;
             this.dataMaxAge = this.DataSource.MaxAge;
@@ -401,6 +403,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         Port = this.dataPort,
         TransportSecurity = this.dataTransportSecurity,
         AuthMethod = MailboxAuthMethod.PASSWORD,
+        PasswordEncoding = this.dataPasswordEncoding,
         MaxAge = this.dataMaxAge,
         IndexAttachments = this.dataIndexAttachments,
         MaxAttachmentSizeMegabytes = this.dataMaxAttachmentSizeMegabytes,

@@ -74,6 +74,15 @@ public record struct DataSourceMailbox: IIndexedDataSource, ISecretId
     public MailboxAuthMethod AuthMethod { get; set; } = MailboxAuthMethod.PASSWORD;
 
     /// <summary>
+    /// How the username and the password are encoded when signing in.
+    /// </summary>
+    /// <remarks>
+    /// A mailbox stored before this setting existed loads with UTF-8, which AI Studio always used
+    /// until then.
+    /// </remarks>
+    public MailboxPasswordEncoding PasswordEncoding { get; set; } = MailboxPasswordEncoding.UTF8;
+
+    /// <summary>
     /// The username to sign in with, often the e-mail address.
     /// </summary>
     public string Username { get; set; } = string.Empty;

@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using System.Text;
 
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
@@ -100,7 +101,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// <exception cref="MailboxConnectionException">The connection or the sign-in failed.</exception>
     public async Task ConnectAsync(DataSourceMailbox mailbox, string password, MailServerPolicy policy, CancellationToken token)
     {
-        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
+        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || mailbox.PasswordEncoding is MailboxPasswordEncoding.UNKNOWN || !MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
             throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "The mailbox settings are incomplete, or this version of AI Studio does not know them.");
 
         if (!policy.IsAllowed(mailbox.Host))
@@ -123,7 +124,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
 
         try
         {
-            await this.SignInAsync(mailbox.Username, password, token);
+            await this.SignInAsync(mailbox.Username, password, mailbox.PasswordEncoding, token);
         }
         catch (Exception e) when (Classify(e, token) is { } failure)
         {
@@ -470,11 +471,48 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         return entity is TextPart textPart ? textPart.Text : null;
     }
 
-    private async Task SignInAsync(string username, string password, CancellationToken token)
+    /// <summary>
+    /// The encodings a sign-in may use, the best first.
+    /// </summary>
+    /// <remarks>
+    /// The stored encoding comes first, the other one second. An encoding is left out when it lacks
+    /// a character of the username or the password, e.g., Windows-1252 has no ẞ. Windows-1252 is
+    /// left out as well when the server does not offer PLAIN: MailKit sends the LOGIN command in
+    /// UTF-8, whatever encoding it is handed. When both are ASCII, every encoding sends the same
+    /// bytes, so only the first one is left: a second attempt would only fail the same way.
+    /// </remarks>
+    /// <param name="storedEncoding">The encoding stored for the mailbox.</param>
+    /// <param name="username">The username.</param>
+    /// <param name="password">The password.</param>
+    /// <param name="offersPlain">Whether the server offers the SASL mechanism PLAIN.</param>
+    /// <returns>The encodings, possibly none at all.</returns>
+    internal static IReadOnlyList<MailboxPasswordEncoding> GetSignInEncodings(MailboxPasswordEncoding storedEncoding, string username, string password, bool offersPlain)
     {
-        if (this.client.AuthenticationMechanisms.Contains(PLAIN_MECHANISM))
+        MailboxPasswordEncoding[] candidates = storedEncoding is MailboxPasswordEncoding.WINDOWS_1252
+            ? [MailboxPasswordEncoding.WINDOWS_1252, MailboxPasswordEncoding.UTF8]
+            : [MailboxPasswordEncoding.UTF8, MailboxPasswordEncoding.WINDOWS_1252];
+
+        var usable = candidates
+            .Where(candidate => candidate is MailboxPasswordEncoding.UTF8 || offersPlain)
+            .Where(candidate => candidate.TryPrepare(username, out _) && candidate.TryPrepare(password, out _))
+            .ToList();
+
+        return Ascii.IsValid(username) && Ascii.IsValid(password) ? usable.Take(1).ToList() : usable;
+    }
+
+    private async Task SignInAsync(string username, string password, MailboxPasswordEncoding storedEncoding, CancellationToken token)
+    {
+        var offersPlain = this.client.AuthenticationMechanisms.Contains(PLAIN_MECHANISM);
+        var encodings = GetSignInEncodings(storedEncoding, username, password, offersPlain);
+        if (encodings.Count == 0)
+            throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "No encoding has every character of the username and the password.");
+
+        var encoding = encodings[0];
+        encoding.TryPrepare(username, out var preparedUsername);
+        encoding.TryPrepare(password, out var preparedPassword);
+        if (offersPlain)
         {
-            await this.client.AuthenticateAsync(new SaslMechanismPlain(username, password), token);
+            await this.client.AuthenticateAsync(new SaslMechanismPlain(encoding.TextEncoding!, preparedUsername, preparedPassword), token);
             return;
         }
 
@@ -482,10 +520,11 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
             throw new MailboxConnectionException(MailboxConnectionFailure.SERVER_ERROR, "The IMAP server offers no way to sign in with a password.");
 
         //
-        // With no mechanism left to try, the client signs in with the LOGIN command alone:
+        // With no mechanism left to try, the client signs in with the LOGIN command alone, always in
+        // UTF-8, cf. GetSignInEncodings:
         //
         this.client.AuthenticationMechanisms.Clear();
-        await this.client.AuthenticateAsync(username, password, token);
+        await this.client.AuthenticateAsync(preparedUsername, preparedPassword, token);
     }
 
     private static bool TryGetSocketOptions(MailboxTransportSecurity transportSecurity, out SecureSocketOptions socketOptions)
