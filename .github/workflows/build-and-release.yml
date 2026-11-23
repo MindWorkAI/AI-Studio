@@ -362,6 +362,8 @@ jobs:
           "$tools_dir/uv" --version
           "$tools_dir/yq" --version
 
+      # The build command "flatpak" of app/Build repeats this step for local test builds, in
+      # app/Build/Flatpak/build-in-container.sh. Whoever changes one of them changes the other one as well.
       - name: Update Flatpak release sources
         working-directory: flatpak
         env:

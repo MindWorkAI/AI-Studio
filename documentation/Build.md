@@ -78,6 +78,30 @@ When a maintainer wants signed test builds for their own work, they push the bra
 
 Changes which touch only the documentation, such as the README or the files in `documentation/`, start no build at all: neither in a pull request, not even with the `run-pipeline` label, nor after the merge into `main`. The workflow lists these files under `paths-ignore`. Release tags always build.
 
+## Build the Flatpak locally
+Neither macOS nor Windows can build a Flatpak, and on Linux it takes the right Flatpak tools and runtimes. The build script therefore builds the Flatpak and its Pandoc plugin in Docker, with the container image of the CI of our [Flatpak repository](https://github.com/MindWorkAI/Flatpak), the same way a release does. All you need is Docker which allows privileged containers, such as Docker Desktop, OrbStack, or Docker on Linux. Podman has not been tested.
+
+1. Open a terminal.
+2. Navigate to the `/app/Build` directory within the repository.
+3. Run `dotnet run flatpak --output <folder>`, e.g., `dotnet run flatpak --output ~/Downloads/flatpak`. The folder has to lie outside the repository; the command creates it when it does not exist.
+
+The command asks which state of AI Studio goes into the Flatpak. You may also choose it right away:
+
+- `--source main` builds `main` of this repository, to simulate a pre-release.
+- `--pr <number>` builds a pull request, e.g., `--pr 1219`, to test its changes early. Pull requests from forks work as well.
+- `--source local` builds your local checkout with all its uncommitted changes, to test your work before there is a pull request. It takes the files git knows plus your new files which no ignore rule covers, and it changes nothing in your repository.
+
+The Flatpak repository always comes from its `main` branch. Before the build starts, the command fixes every commit and names it, together with the container image.
+
+At the end, the output folder holds `MindWork AI Studio_<arch>.flatpak` and `MindWork AI Studio Plugin Pandoc_<arch>.flatpak`, the same bundles our Flatpak workflow produces. Copy them to a Linux machine, e.g., a virtual machine, and install them there with `flatpak install --bundle <file>`, the app first.
+
+Some notes:
+- **Architecture:** The Flatpak is built for the architecture of the Docker host. `--arch x86_64` or `--arch aarch64` chooses the other one, which needs an emulation such as Rosetta, available in OrbStack and in Docker Desktop on Apple silicon, and takes considerably longer.
+- **Duration and disk space:** Every build downloads the SDKs and runtimes anew, several gigabytes, before it builds the Tauri CLI, the Rust runtime, and the .NET app. On a fast machine, a build takes between half an hour and 45 minutes, depending on the connection; under an emulation, it takes about twice as long. While the build runs, the container and its volume need about 15 GB of free space. The container image needs about 6 GB more, once for each architecture you build for.
+- **Firewalls:** The container fetches from GitHub (`github.com`, `ghcr.io`, `*.githubusercontent.com`), Flathub (`flathub.org`), PyPI, crates.io, and NuGet. A firewall on your machine, such as Little Snitch, may have to allow these connections for the processes of Docker.
+- **Cleaning up:** The command removes its container and volume at the end, also after a failure or when you press Ctrl+C. Pressing Ctrl+C a second time quits at once and prints the commands which remove what is left. A build which ends otherwise, e.g., because the terminal was closed, leaves both behind; the next build names them. The container image stays, so that the next build does not download it again.
+- **Differences from a release:** The script `app/Build/Flatpak/build-in-container.sh` prepares the Flatpak repository the way the job `sync_flatpak_repo` of our GitHub workflow does for a release. Whoever changes one of them changes the other one as well. On purpose, the script leaves out the tag of AI Studio, which flatpak-builder would check against the commit, and the check of the release entry in the metainfo, which only the release command writes.
+
 ## Create a release
 In order to create a release:
 1. To create a new release, you need to be a maintainer of the repository—see step 8.
