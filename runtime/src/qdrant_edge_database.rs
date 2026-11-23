@@ -734,7 +734,7 @@ impl QdrantEdgeDatabase {
 }
 
 fn store_directory_name(store_name: &str) -> String {
-    let stable_id = store_name.strip_prefix("rag_").unwrap_or(store_name);
+    let stable_id = store_name.trim_prefix("rag_");
     format!("store_{stable_id}")
 }
 
