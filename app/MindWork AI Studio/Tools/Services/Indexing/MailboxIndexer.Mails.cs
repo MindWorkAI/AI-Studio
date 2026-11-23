@@ -39,9 +39,9 @@ internal sealed partial class MailboxIndexer
     /// </summary>
     private async Task SyncNewMailAsync(IndexedRunContext context, DataSourceMailbox mailbox, ImapMailboxConnector connector, string folderPath, IMessageSummary summary, DocumentRunProgress progress, ISet<string> encounteredKeys, CancellationToken token)
     {
-        if (summary.Headers is not { } headers)
+        if (MailSummaryReader.ReadHeaders(summary) is not { } headers)
         {
-            logger.LogWarning("The server delivered a mail of mailbox '{MailboxId}' without its header block. The mail is skipped.", mailbox.Id);
+            logger.LogWarning("The server delivered a mail of mailbox '{MailboxId}' without a header block which could be read. The mail is skipped.", mailbox.Id);
             return;
         }
 
@@ -219,7 +219,7 @@ internal sealed partial class MailboxIndexer
     /// <returns>The mail as the index keeps it.</returns>
     internal static MailRecord CreateMailRecord(string mailId, IMessageSummary summary, MailText text, IReadOnlyList<MailAttachmentText> attachments, string mailHash, MailLocationRecord location, DateTimeOffset foundAtUtc)
     {
-        var headers = summary.Headers ?? throw new ArgumentException("The mail was fetched without its header block.", nameof(summary));
+        var headers = MailSummaryReader.ReadHeaders(summary) ?? throw new ArgumentException("The mail was fetched without a header block which could be read.", nameof(summary));
         var (sentAtUtc, receivedAtUtc) = ReadDates(summary, foundAtUtc);
 
         //
@@ -276,7 +276,7 @@ internal sealed partial class MailboxIndexer
     /// </remarks>
     private static (DateTimeOffset? SentAtUtc, DateTimeOffset ReceivedAtUtc) ReadDates(IMessageSummary summary, DateTimeOffset foundAtUtc)
     {
-        var sentAtUtc = summary.Headers is { } headers ? MailHeaders.ReadDate(headers)?.ToUniversalTime() : null;
+        var sentAtUtc = MailSummaryReader.ReadHeaders(summary) is { } headers ? MailHeaders.ReadDate(headers)?.ToUniversalTime() : null;
         return (sentAtUtc, summary.InternalDate?.ToUniversalTime() ?? sentAtUtc ?? foundAtUtc);
     }
 

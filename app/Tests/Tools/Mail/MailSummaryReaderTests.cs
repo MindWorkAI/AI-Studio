@@ -201,8 +201,20 @@ public sealed class MailSummaryReaderTests
     }
 
     [Test]
-    public void AMailFetchedWithoutItsHeaderBlockIsRefused() =>
-        Assert.That(() => MailSummaryReader.ReadIdentity(new MessageSummary(0)), Throws.InvalidOperationException);
+    public void AMailFetchedWithoutItsHeaderBlockIsRefused()
+    {
+        //
+        // The IMAP client hands over an empty header block when it cannot parse the one the server sent:
+        //
+        var withEmptyHeaderBlock = new MessageSummary(0) { Headers = new HeaderList() };
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(MailSummaryReader.ReadHeaders(new MessageSummary(0)), Is.Null);
+            Assert.That(MailSummaryReader.ReadHeaders(withEmptyHeaderBlock), Is.Null, "An empty header block counts as one which could be read.");
+            Assert.That(() => MailSummaryReader.ReadIdentity(new MessageSummary(0)), Throws.InvalidOperationException);
+            Assert.That(() => MailSummaryReader.ReadIdentity(withEmptyHeaderBlock), Throws.InvalidOperationException);
+        }
+    }
 
     private static MessageSummary Summary(string fixtureName) => new(0) { Headers = MailFixtures.Load(fixtureName).Headers };
 
