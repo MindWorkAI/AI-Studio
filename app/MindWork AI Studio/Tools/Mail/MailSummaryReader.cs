@@ -33,7 +33,7 @@ public static class MailSummaryReader
             summary.GMailMessageId,
             headers[HeaderId.MessageId],
             MailHeaders.ReadDate(headers),
-            MailHeaders.ReadMailboxes(headers, HeaderId.From).Select(mailbox => mailbox.Address).ToList(),
+            MailHeaders.ReadMailboxes(headers, HeaderId.From).Select(MailHeaders.ReadAddress).ToList(),
             headers[HeaderId.Subject],
             summary.Size ?? 0);
     }
@@ -83,7 +83,7 @@ public static class MailSummaryReader
         return roles
             .SelectMany(role => MailHeaders.ReadMailboxes(headers, role.HeaderId).Select(mailbox => new MailAddressRecord(
                 role.Role,
-                MailTextNormalization.NormalizeHeaderValue(mailbox.Address),
+                MailTextNormalization.NormalizeHeaderValue(MailHeaders.ReadAddress(mailbox)),
                 MailTextNormalization.NormalizeHeaderValue(mailbox.Name))))
             .Where(address => address.Address.Length > 0)
             .ToList();

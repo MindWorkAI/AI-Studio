@@ -40,6 +40,13 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     public const long MAX_TEXT_PART_BYTES = 4 * 1024 * 1024;
 
     /// <summary>
+    /// The longest single header field which is read, in bytes. MimeKit reads 16 KB by default, and the
+    /// IMAP client hands over a mail with a longer one with an empty header block. A mail to a few
+    /// hundred people has such a To field, and so has a long thread its References field.
+    /// </summary>
+    internal const int MAX_HEADER_FIELD_BYTES = 1024 * 1024;
+
+    /// <summary>
     /// How many UIDs go into one FETCH. A long list of scattered UIDs makes a long command line, and
     /// some servers refuse lines beyond a few kilobytes.
     /// </summary>
@@ -67,6 +74,15 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// </summary>
     private static readonly TimeSpan DISCONNECT_TIMEOUT = TimeSpan.FromSeconds(5);
 
+    static ImapMailboxConnector()
+    {
+        //
+        // The IMAP client reads every header block with the default options of MimeKit and takes no
+        // options of its own. Raised here, the limit holds before the first mail is fetched:
+        //
+        ParserOptions.Default.MaxHeaderLength = Math.Max(ParserOptions.Default.MaxHeaderLength, MAX_HEADER_FIELD_BYTES);
+    }
+
     private readonly ImapClient client = new()
     {
         Timeout = (int)COMMAND_TIMEOUT.TotalMilliseconds,
@@ -88,7 +104,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// Whether the server tells which mails changed since a point it handed out before (CONDSTORE).
     /// Without it, the flags of every mail have to be fetched to find the changed ones.
     /// </summary>
-    public bool SupportsChangeTracking => this.client.Capabilities.HasFlag(ImapCapabilities.CondStore);
+    public bool SupportsChangeTracking => this.client.Capabilities.Contains(ImapCapability.CondStore);
 
     /// <summary>
     /// Connects to the IMAP server of the mailbox and signs in.
@@ -292,10 +308,10 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     public async Task<IReadOnlyList<IMessageSummary>> FetchSummariesAsync(IReadOnlyCollection<long> uids, CancellationToken token)
     {
         var items = MessageSummaryItems.UniqueId | MessageSummaryItems.Flags | MessageSummaryItems.InternalDate | MessageSummaryItems.Size | MessageSummaryItems.BodyStructure | MessageSummaryItems.Headers;
-        if (this.client.Capabilities.HasFlag(ImapCapabilities.ObjectID))
+        if (this.client.Capabilities.Contains(ImapCapability.ObjectID))
             items |= MessageSummaryItems.EmailId;
 
-        if (this.client.Capabilities.HasFlag(ImapCapabilities.GMailExt1))
+        if (this.client.Capabilities.Contains(ImapCapability.GMailExt1))
             items |= MessageSummaryItems.GMailMessageId;
 
         return await this.FetchAsync(uids, new FetchRequest(items), token);
@@ -449,7 +465,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         return summaries;
     }
 
-    private static async Task<Stream> FetchAttachmentPieceAsync(IMailFolder folder, UniqueId uid, string section, int offset, CancellationToken token)
+    private static async Task<Stream> FetchAttachmentPieceAsync(IMailFolder folder, UniqueId uid, string section, long offset, CancellationToken token)
     {
         try
         {
@@ -478,7 +494,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
             return;
         }
 
-        if (this.client.Capabilities.HasFlag(ImapCapabilities.LoginDisabled))
+        if (this.client.Capabilities.Contains(ImapCapability.LoginDisabled))
             throw new MailboxConnectionException(MailboxConnectionFailure.SERVER_ERROR, "The IMAP server offers no way to sign in with a password.");
 
         //
