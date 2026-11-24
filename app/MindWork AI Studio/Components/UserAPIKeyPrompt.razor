@@ -7,9 +7,9 @@
     }
     else
     {
-        <MudText Typo="Typo.body1" Class="mb-3">
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @TA("Your organization has set up AI providers for you. To use them, AI Studio needs your personal API key. Please enter it below.")
-        </MudText>
+        </MudJustifiedText>
     }
 
     <SecretInputField Secret="@this.apiKey" SecretChanged="@(value => this.apiKey = value)" Label="@T("API key")" Validation="@ValidateAPIKey"/>
