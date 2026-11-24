@@ -13803,6 +13803,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1836253938"] = "Se
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1847791252"] = "Update"
 
+-- Your username or password contains characters beyond ASCII, such as umlauts or accents. Depending on its configuration, a mail server may expect them in another encoding than {0}, which this test used. Ask your IT department which encoding the server expects, and choose it in the server details. Every test is one attempt to sign in, and too many failed attempts may lock your account.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1885860334"] = "Your username or password contains characters beyond ASCII, such as umlauts or accents. Depending on its configuration, a mail server may expect them in another encoding than {0}, which this test used. Ask your IT department which encoding the server expects, and choose it in the server details. Every test is one attempt to sign in, and too many failed attempts may lock your account."
+
+-- Your username or password contains characters beyond ASCII, such as umlauts or accents. Depending on its configuration, a mail server may expect them in another encoding than {0}, which this test used. Ask your IT department which encoding the server expects, and choose it in the server details. Every test is one attempt to sign in, and too many failed attempts may lock your account.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1885860334::INFORMAL"] = "Your username or password contains characters beyond ASCII, such as umlauts or accents. Depending on its configuration, a mail server may expect them in another encoding than {0}, which this test used. Ask your IT department which encoding the server expects, and choose it in the server details. Every test is one attempt to sign in, and too many failed attempts may lock your account."
+
 -- Sign-in
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1936191160"] = "Sign-in"
 
@@ -13962,14 +13968,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3362621909"] = "Sh
 -- Hide Server Details
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3516057682"] = "Hide Server Details"
 
+-- Encoding of username and password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3611739483"] = "Encoding of username and password"
+
 -- Port
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3804576966"] = "Port"
+
+-- Test again with {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4041320769"] = "Test again with {0}"
 
 -- Not tested yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T417002657"] = "Not tested yet."
 
 -- Yes, also index the sent mails and the drafts
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4209023132"] = "Yes, also index the sent mails and the drafts"
+
+-- Your organization sets the encoding for this mail server.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4269875433"] = "Your organization sets the encoding for this mail server."
+
+-- Your organization sets the encoding for this mail server.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4269875433::INFORMAL"] = "Your organization sets the encoding for this mail server."
 
 -- Username
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T470340825"] = "Username"
@@ -21398,6 +21416,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T495100949"] = "Please use o
 
 -- Please use only single asterisks as wildcards, e.g., *.txt or report-*.md.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T495100949::INFORMAL"] = "Please use only single asterisks as wildcards, e.g., *.txt or report-*.md."
+
+-- The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked. Choose another encoding in the server details of the mailbox, or ask your IT department which one the server expects.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1203063005"] = "The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked. Choose another encoding in the server details of the mailbox, or ask your IT department which one the server expects."
+
+-- The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked. Choose another encoding in the server details of the mailbox, or ask your IT department which one the server expects.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1203063005::INFORMAL"] = "The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked. Choose another encoding in the server details of the mailbox, or ask your IT department which one the server expects."
 
 -- The server could not be reached. Please check the host and the port, and whether you need a VPN connection.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1314233926"] = "The server could not be reached. Please check the host and the port, and whether you need a VPN connection."

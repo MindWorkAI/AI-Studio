@@ -13803,6 +13803,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1836253938"] = "Se
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1847791252"] = "Aktualisieren"
 
+-- Your username or password contains characters beyond ASCII, such as umlauts or accents. Depending on its configuration, a mail server may expect them in another encoding than {0}, which this test used. Ask your IT department which encoding the server expects, and choose it in the server details. Every test is one attempt to sign in, and too many failed attempts may lock your account.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1885860334"] = "Ihr Benutzername oder Ihr Passwort enthält Zeichen außerhalb des ASCII-Zeichensatzes, etwa Umlaute oder Buchstaben mit Akzent. Je nach Konfiguration erwartet ein Mailserver diese möglicherweise in einer anderen Zeichenkodierung als {0}, die dieser Test verwendet hat. Fragen Sie in Ihrer IT-Abteilung nach, welche Zeichenkodierung der Server erwartet, und wählen Sie diese in den Servereinstellungen aus. Jeder Test entspricht einem Anmeldeversuch. Zu viele fehlgeschlagene Versuche können dazu führen, dass Ihr Konto gesperrt wird."
+
+-- Your username or password contains characters beyond ASCII, such as umlauts or accents. Depending on its configuration, a mail server may expect them in another encoding than {0}, which this test used. Ask your IT department which encoding the server expects, and choose it in the server details. Every test is one attempt to sign in, and too many failed attempts may lock your account.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1885860334::INFORMAL"] = "Dein Benutzername oder dein Passwort enthält Zeichen außerhalb des ASCII-Zeichensatzes, etwa Umlaute oder Buchstaben mit Akzent. Je nach Konfiguration erwartet ein Mailserver diese möglicherweise in einer anderen Zeichenkodierung als {0}, die dieser Test verwendet hat. Frag in deiner IT-Abteilung nach, welche Zeichenkodierung der Server erwartet, und wähle diese in den Servereinstellungen aus. Jeder Test entspricht einem Anmeldeversuch. Zu viele fehlgeschlagene Versuche können dazu führen, dass dein Konto gesperrt wird."
+
 -- Sign-in
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1936191160"] = "Anmeldung"
 
@@ -13962,14 +13968,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3362621909"] = "Se
 -- Hide Server Details
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3516057682"] = "Servereinstellungen ausblenden"
 
+-- Encoding of username and password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3611739483"] = "Zeichenkodierung von Benutzername und Passwort"
+
 -- Port
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3804576966"] = "Port"
+
+-- Test again with {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4041320769"] = "Mit {0} erneut testen"
 
 -- Not tested yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T417002657"] = "Noch nicht getestet."
 
 -- Yes, also index the sent mails and the drafts
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4209023132"] = "Ja, auch die gesendeten E-Mails und die Entwürfe indexieren"
+
+-- Your organization sets the encoding for this mail server.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4269875433"] = "Ihre Organisation legt die Zeichenkodierung für diesen Mailserver fest."
+
+-- Your organization sets the encoding for this mail server.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4269875433::INFORMAL"] = "Deine Organisation legt die Zeichenkodierung für diesen Mailserver fest."
 
 -- Username
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T470340825"] = "Benutzername"
@@ -21398,6 +21416,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T495100949"] = "Bitte verwen
 
 -- Please use only single asterisks as wildcards, e.g., *.txt or report-*.md.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T495100949::INFORMAL"] = "Bitte verwende als Platzhalter nur einzelne Sternchen, z. B. *.txt oder report-*.md."
+
+-- The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked. Choose another encoding in the server details of the mailbox, or ask your IT department which one the server expects.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1203063005"] = "Die ausgewählte Zeichenkodierung kann Ihren Benutzernamen oder Ihr Passwort nicht an diesen Server übertragen: Sie unterstützt mindestens eines der darin enthaltenen Zeichen nicht, oder der Server akzeptiert ausschließlich UTF-8. AI Studio hat deshalb keinen Anmeldeversuch unternommen, damit Ihr Konto nicht gesperrt wird. Wählen Sie in den Servereinstellungen des Postfachs eine andere Zeichenkodierung aus, oder fragen Sie Ihre IT-Abteilung, welche Zeichenkodierung der Server erwartet."
+
+-- The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked. Choose another encoding in the server details of the mailbox, or ask your IT department which one the server expects.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1203063005::INFORMAL"] = "Die ausgewählte Zeichenkodierung kann deinen Benutzernamen oder dein Passwort nicht an diesen Server übertragen: Sie unterstützt mindestens eines der darin enthaltenen Zeichen nicht, oder der Server akzeptiert ausschließlich UTF-8. AI Studio hat deshalb keinen Anmeldeversuch unternommen, damit dein Konto nicht gesperrt wird. Wähle in den Servereinstellungen des Postfachs eine andere Zeichenkodierung aus, oder frag deine IT-Abteilung, welche Zeichenkodierung der Server erwartet."
 
 -- The server could not be reached. Please check the host and the port, and whether you need a VPN connection.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1314233926"] = "Der Server konnte nicht erreicht werden. Bitte prüfen Sie Host und Port und ob Sie eine VPN-Verbindung benötigen."
