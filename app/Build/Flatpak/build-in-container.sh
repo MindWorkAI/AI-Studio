@@ -72,7 +72,7 @@ install_missing() {
 }
 
 # Prints the branch of an SDK extension: the version of the extension point which the SDK declares, e.g.,
-# 25.08 for org.freedesktop.Sdk.Extension.rust-stable in org.gnome.Sdk//50.
+# 26.08 for org.freedesktop.Sdk.Extension.dotnet10 in org.gnome.Sdk//51.
 extension_branch() {
     local sdk_ref="$1" extension="$2"
     flatpak info --system --show-metadata "$sdk_ref" | awk -v section="[Extension ${extension%.*}]" '

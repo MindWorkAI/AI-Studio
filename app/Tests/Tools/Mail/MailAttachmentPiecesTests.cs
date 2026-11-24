@@ -47,7 +47,7 @@ public sealed class MailAttachmentPiecesTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(written, Is.EqualTo(file));
-            Assert.That(server.RequestedOffsets, Is.EqualTo(new[] { 0, 7, 14, 21 }));
+            Assert.That(server.RequestedOffsets, Is.EqualTo(new long[] { 0, 7, 14, 21 }));
         }
     }
 
@@ -93,12 +93,12 @@ public sealed class MailAttachmentPiecesTests
     /// <param name="deliveredBytes">How many bytes it delivers per piece. A correct server delivers what it was asked for.</param>
     private sealed class PieceServer(byte[] content, int deliveredBytes = PIECE_BYTES)
     {
-        public List<int> RequestedOffsets { get; } = [];
+        public List<long> RequestedOffsets { get; } = [];
 
-        public Task<Stream> FetchAsync(int offset, CancellationToken token)
+        public Task<Stream> FetchAsync(long offset, CancellationToken token)
         {
             this.RequestedOffsets.Add(offset);
-            var start = Math.Min(offset, content.Length);
+            var start = (int)Math.Min(offset, content.Length);
             var length = Math.Min(deliveredBytes, content.Length - start);
             return Task.FromResult<Stream>(new MemoryStream(content, start, length, writable: false));
         }

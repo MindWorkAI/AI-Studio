@@ -56,6 +56,32 @@ public sealed class MailEncryptionDetectionTests
         }
     }
 
+    [Test]
+    public void AStructureOfAnyDepthIsRead()
+    {
+        //
+        // Deep enough to overflow the stack of a recursive walk. The IMAP client reads a structure of
+        // any depth, so a mail nested this deeply on purpose must not end AI Studio:
+        //
+        BodyPart encrypted = Part("application", "pkcs7-mime", smimeType: "enveloped-data");
+        BodyPart readable = PLAIN_TEXT;
+        for (var depth = 0; depth < 100_000; depth++)
+        {
+            encrypted = Multipart("mixed", PLAIN_TEXT, encrypted);
+            readable = Multipart("mixed", readable, PLAIN_TEXT);
+        }
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(MailEncryptionDetection.Detect(encrypted), Is.EqualTo(MailEncryptionKind.SMIME));
+            Assert.That(MailEncryptionDetection.Detect(readable), Is.EqualTo(MailEncryptionKind.NONE));
+        }
+    }
+
+    [Test]
+    public void TheFirstEncryptedPartDecides() =>
+        Assert.That(MailEncryptionDetection.Detect(Multipart("mixed", PLAIN_TEXT, Multipart("mixed", Part("application", "x-microsoft-rpmsg-message")), Part("application", "pkcs7-mime", smimeType: "enveloped-data"))), Is.EqualTo(MailEncryptionKind.MICROSOFT_IRM), "The parts are not visited in their order.");
+
     [TestCase("-----BEGIN PGP MESSAGE-----\n\nhQEMA\n-----END PGP MESSAGE-----", ExpectedResult = true)]
     [TestCase("<p>-----BEGIN PGP MESSAGE-----<br>hQEMA</p>", ExpectedResult = true)]
     [TestCase("-----BEGIN PGP SIGNED MESSAGE-----\nHash: SHA256\n\nReadable text.", ExpectedResult = false)]

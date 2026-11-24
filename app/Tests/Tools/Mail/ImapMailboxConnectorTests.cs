@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Mail;
@@ -6,6 +9,8 @@ using AIStudio.Tools.Mail;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Security;
+
+using MimeKit;
 
 namespace AIStudio.Tests.Tools.Mail;
 
@@ -314,4 +319,33 @@ public sealed class ImapMailboxConnectorTests
     [TestCase(FolderAttributes.Trash | FolderAttributes.HasNoChildren, ExpectedResult = MailFolderSpecialUse.TRASH)]
     [TestCase(FolderAttributes.Junk | FolderAttributes.Important, ExpectedResult = MailFolderSpecialUse.JUNK)]
     public MailFolderSpecialUse AFolderIsForWhatTheServerAnnounces(FolderAttributes attributes) => ImapMailboxConnector.ToSpecialUse(attributes);
+
+    [Test]
+    public void AHeaderBlockWithAVeryLongFieldIsReadAsAWhole()
+    {
+        //
+        // The IMAP client parses every header block like this, with the default options of MimeKit,
+        // whose limit the connector raises before the first mail is fetched:
+        //
+        RuntimeHelpers.RunClassConstructor(typeof(ImapMailboxConnector).TypeHandle);
+
+        var recipients = string.Join(",\r\n ", Enumerable.Range(1, 1000).Select(number => $"recipient{number.ToString(CultureInfo.InvariantCulture)}@example.org"));
+        var headerBlock = Encoding.ASCII.GetBytes($"From: alice@example.org\r\nTo: {recipients}\r\nSubject: All hands\r\n\r\n");
+
+        var headers = Parse(headerBlock, ParserOptions.Default);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(() => Parse(headerBlock, new ParserOptions()), Throws.TypeOf<FormatException>(), "MimeKit reads such a field by default, so the limit needs no raising.");
+            Assert.That(headers[HeaderId.Subject], Is.EqualTo("All hands"));
+            Assert.That(MailHeaders.ReadMailboxes(headers, HeaderId.To), Has.Count.EqualTo(1000));
+        }
+
+        return;
+
+        static HeaderList Parse(byte[] headerBlock, ParserOptions options)
+        {
+            using var stream = new MemoryStream(headerBlock);
+            return new MimeParser(options, stream).ParseHeaders();
+        }
+    }
 }
