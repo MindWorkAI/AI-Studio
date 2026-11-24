@@ -1,5 +1,6 @@
 using AIStudio.Tools.Services;
 using AIStudio.Tools.UserAPIKeys;
+using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
@@ -42,11 +43,19 @@ public partial class UserAPIKeyPrompt : MSGComponentBase
 
     private string Title => string.IsNullOrWhiteSpace(this.Group.Prompt?.Title) ? TA("Your API key is missing") : this.Group.Prompt.Title;
 
+    /// <summary>
+    /// Whether the entered key can be checked and stored: it is there, and it can be sent.
+    /// </summary>
+    private bool CanStoreAPIKey => !this.isBusy && !string.IsNullOrWhiteSpace(this.apiKey) && !APIKeyValidation.Check(this.apiKey).IsProblem;
+
+    private static string? ValidateAPIKey(string apiKey) => APIKeyValidation.Validate(apiKey);
+
     private async Task StoreAPIKeyAsync()
     {
-        var enteredAPIKey = this.apiKey.Trim();
-        if (this.isBusy || string.IsNullOrWhiteSpace(enteredAPIKey))
+        if (!this.CanStoreAPIKey)
             return;
+
+        var enteredAPIKey = APIKeyValidation.Normalize(this.apiKey);
 
         this.isBusy = true;
         this.issue = string.Empty;

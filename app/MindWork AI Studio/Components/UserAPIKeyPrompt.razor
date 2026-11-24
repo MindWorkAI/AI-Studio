@@ -12,7 +12,7 @@
         </MudText>
     }
 
-    <SecretInputField Secret="@this.apiKey" SecretChanged="@(value => this.apiKey = value)" Label="@T("API key")"/>
+    <SecretInputField Secret="@this.apiKey" SecretChanged="@(value => this.apiKey = value)" Label="@T("API key")" Validation="@ValidateAPIKey"/>
 
     @if (!string.IsNullOrWhiteSpace(this.issue))
     {
@@ -22,7 +22,7 @@
     }
 
     <MudStack Row="@true" AlignItems="AlignItems.Center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.SAVE" Disabled="@(this.isBusy || string.IsNullOrWhiteSpace(this.apiKey))" OnClick="@this.StoreAPIKeyAsync">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.SAVE" Disabled="@(!this.CanStoreAPIKey)" OnClick="@this.StoreAPIKeyAsync">
             @T("Check and save API key")
         </MudButton>
         @if (this.isBusy)
