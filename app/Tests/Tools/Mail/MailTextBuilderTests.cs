@@ -96,6 +96,15 @@ public sealed class MailTextBuilderTests
         }
     }
 
+    [Test]
+    public void AnInternationalDomainIsShownInUnicode() =>
+        Assert.That(Build("idn-sender.eml").HeaderBlock, Is.EqualTo(string.Join('\n',
+            "From: Müller, Jürgen <juergen@müller.example>",
+            "To: Team <team@example.org>",
+            "Cc: Library <info@bücher.example>",
+            "Subject: Quarterly report Q3 – please review",
+            "Date: 2026-11-16 09:30 +01:00")), "The text shows an address in another form than the mails indexed before.");
+
     [TestCase("smime-enveloped.eml", MailEncryptionKind.SMIME)]
     [TestCase("smime-opaque-signed.eml", MailEncryptionKind.SMIME_OPAQUE_SIGNED)]
     [TestCase("pgp-mime.eml", MailEncryptionKind.PGP_MIME)]
