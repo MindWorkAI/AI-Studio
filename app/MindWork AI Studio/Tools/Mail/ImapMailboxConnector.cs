@@ -119,7 +119,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// <exception cref="MailboxConnectionException">The connection or the sign-in failed.</exception>
     public async Task ConnectAsync(DataSourceMailbox mailbox, string password, MailServerPolicy policy, CancellationToken token)
     {
-        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !MailboxPasswordEncodings.TryGet(policy.GetPasswordEncoding(mailbox), out var textEncoding) ||!MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
+        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !MailboxPasswordEncodings.TryGet(policy.GetPasswordEncoding(mailbox), out var textEncoding) || !MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
             throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "The mailbox settings are incomplete, or this version of AI Studio does not know them.");
 
         if (!policy.IsAllowed(mailbox.Host))
