@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Staan;
 
@@ -126,6 +127,13 @@ public sealed class StaanSearchBackend : IWebSearchBackend
             throw new InvalidOperationException(TB("A Staan API key is required."));
 
         //
+        // A key stored before AI Studio checked keys, or one the organization provides, may hold a
+        // character the header cannot carry. The dispatcher asks the other services all the same:
+        //
+        if (!APIKeyValidation.TryPrepareForHeader(apiKey, out var headerAPIKey))
+            throw new InvalidOperationException(APIKeyValidation.GetUnusableKeyMessage("Staan"));
+
+        //
         // Staan refuses a longer query outright. Shortening it here would search for something
         // other than what was asked, so the model is told and can search again instead:
         //
@@ -141,7 +149,7 @@ public sealed class StaanSearchBackend : IWebSearchBackend
         var market = ResolveMarket(query.Language, settingsValues, notes);
 
         var searchRequest = new StaanSearchRequest { Query = query.Query, Market = market, Offset = ReadOffset(query.Page) };
-        var response = await this.searchClient.SearchAsync(apiKey.Trim(), searchRequest, query.TimeoutSeconds, token);
+        var response = await this.searchClient.SearchAsync(headerAPIKey, searchRequest, query.TimeoutSeconds, token);
 
         //
         // Staan corrects an obvious mistake in a query and says so. Which query actually ran is

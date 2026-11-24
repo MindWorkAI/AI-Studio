@@ -12,7 +12,8 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 /// The settings dialog checks a key while the user enters it, so the fields of the keys have to say
 /// that they hold one. The settings validation must not refuse such a key, though: it decides whether
 /// the web search is offered at all, and one key stored before AI Studio checked keys would switch
-/// off every search service, those which work included.
+/// off every search service, those which work included. Such a key fails when its service is asked,
+/// before any request, so that the dispatcher reports it and asks the other services.
 /// </remarks>
 [TestFixture]
 public sealed class ToolSettingsAPIKeyTests
@@ -53,6 +54,17 @@ public sealed class ToolSettingsAPIKeyTests
         var apiKeyField = SecretFields(backend).Single().Key;
         var settings = new Dictionary<string, string> { [apiKeyField] = $"key{ZERO_WIDTH_SPACE}AbC123" };
         Assert.That(backend.TryValidateConfiguration(settings, out _), Is.True);
+    }
+
+    [TestCaseSource(nameof(Backends))]
+    public async Task AStoredKeyWhichCannotBeSentFailsBeforeAnyRequest(IWebSearchBackend backend)
+    {
+        var apiKeyField = SecretFields(backend).Single().Key;
+        var settings = new Dictionary<string, string> { [apiKeyField] = $"key{ZERO_WIDTH_SPACE}AbC123" };
+        var query = new WebSearchQuery("weather", null, null, null, null, 5, 10);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => backend.SearchAsync(query, settings));
+        Assert.That(exception?.Message, Does.Contain(backend.Backend.ToString()).IgnoreCase.And.Not.Contain("AbC123"));
     }
 
     private static List<KeyValuePair<string, ToolSettingsFieldDefinition>> SecretFields(IWebSearchBackend backend)
