@@ -172,6 +172,27 @@ public sealed class MailboxPasswordEncodingsTests
         }
     }
 
+    [TestCase("de-DE", "utf-8", "müller", "Grüße-2026", ExpectedResult = "windows-1252")]
+    [TestCase("fr-FR", "utf-8", "someone", "Été-2026", ExpectedResult = "windows-1252")]
+    [TestCase("tr-TR", "utf-8", "kişi", "şifre-2026", ExpectedResult = "windows-1254")]
+    [TestCase("pl-PL", "utf-8", "someone", "Łódź-2026", ExpectedResult = "windows-1250")]
+    [TestCase("ru-RU", "utf-8", "someone", "пароль-2026", ExpectedResult = "windows-1251")]
+    [TestCase("ja-JP", "utf-8", "someone", "日本-2026", ExpectedResult = "shift_jis")]
+    [TestCase("de-DE", "windows-1252", "someone", "Grüße-2026", ExpectedResult = "utf-8")]
+    [TestCase("de-DE", "utf-8", "someone", "STRAẞE", ExpectedResult = null)]
+    [TestCase("de-DE", "utf-8", "someone", "Sommer-2026!", ExpectedResult = null)]
+    [TestCase("", "utf-8", "someone", "Grüße-2026", ExpectedResult = null)]
+    [TestCase("", "windows-1252", "someone", "Grüße-2026", ExpectedResult = "utf-8")]
+    public string? AfterARefusedSignInTheEncodingOfTheRegionIsOffered(string localeTag, string testedEncoding, string username, string password)
+    {
+        return MailboxPasswordEncodings.Suggest(localeTag, testedEncoding, username, password);
+    }
+
+    [TestCase("someone", "Sommer-2026!", ExpectedResult = false)]
+    [TestCase("müller", "Sommer-2026!", ExpectedResult = true)]
+    [TestCase("someone", "日本", ExpectedResult = true)]
+    public bool OnlyCharactersBeyondAsciiDependOnTheEncoding(string username, string password) => MailboxPasswordEncodings.DependsOnEncoding(username, password);
+
     /// <summary>
     /// The encoding of a name which a mailbox may use; fails the test for any other name.
     /// </summary>

@@ -21,7 +21,7 @@ public static class MailboxConnectionFailureExtensions
             MailboxConnectionFailure.SERVER_ERROR => TA("The server reported an error. Please try again later."),
             MailboxConnectionFailure.INVALID_SETTINGS => TB("The settings of this mailbox are incomplete, or they were made by a newer version of AI Studio."),
             MailboxConnectionFailure.SERVER_NOT_ALLOWED => TA("Your organization allows mailboxes only on its own mail servers, and this server is none of them. AI Studio does not connect to it, and the AI does not read this mailbox."),
-            MailboxConnectionFailure.UNSUITABLE_ENCODING => TA("The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked."),
+            MailboxConnectionFailure.UNSUITABLE_ENCODING => TA("The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked. Choose another encoding in the server details of the mailbox, or ask your IT department which one the server expects."),
 
             _ => TB("The connection to the server failed for an unknown reason."),
         };

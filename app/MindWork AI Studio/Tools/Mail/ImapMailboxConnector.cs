@@ -517,7 +517,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         if (!MailboxPasswordEncodings.TryPrepare(encoding, username, out preparedUsername) || !MailboxPasswordEncodings.TryPrepare(encoding, password, out preparedPassword))
             return false;
 
-        return offersPlain || MailboxPasswordEncodings.IsUtf8(encoding) || (Ascii.IsValid(preparedUsername) && Ascii.IsValid(preparedPassword));
+        return offersPlain || MailboxPasswordEncodings.IsUtf8(encoding) || !MailboxPasswordEncodings.DependsOnEncoding(preparedUsername, preparedPassword);
     }
 
     /// <summary>

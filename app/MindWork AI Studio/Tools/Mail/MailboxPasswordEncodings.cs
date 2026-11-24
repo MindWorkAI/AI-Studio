@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 
 namespace AIStudio.Tools.Mail;
@@ -94,6 +95,48 @@ public static class MailboxPasswordEncodings
     }
 
     /// <summary>
+    /// Whether the bytes of a username and a password depend on the encoding: only characters beyond ASCII do.
+    /// </summary>
+    /// <param name="username">The username.</param>
+    /// <param name="password">The password.</param>
+    /// <returns>True when either holds a character beyond ASCII.</returns>
+    public static bool DependsOnEncoding(string username, string password) => !Ascii.IsValid(username) || !Ascii.IsValid(password);
+
+    /// <summary>
+    /// The encoding to offer for one more connection test after the server refused a username or a
+    /// password with characters beyond ASCII.
+    /// </summary>
+    /// <remarks>
+    /// A server which expects another encoding than UTF-8 mostly expects the code page of the Windows
+    /// system it runs on, and that is mostly the code page of the region its users live in: the ANSI
+    /// code page of Windows for the language of the operating system, e.g., windows-1252 for de-DE or
+    /// windows-1254 for tr-TR. When the test used that one already, UTF-8 comes next. An encoding which
+    /// lacks a character of the username or the password is never offered. It is only an offer: the
+    /// user decides, and every test is one attempt to sign in.
+    /// </remarks>
+    /// <param name="localeTag">The language of the operating system, e.g., "de-DE".</param>
+    /// <param name="testedEncoding">The name of the encoding the refused test used.</param>
+    /// <param name="username">The username.</param>
+    /// <param name="password">The password.</param>
+    /// <returns>The name of the encoding, or null when there is none to offer.</returns>
+    public static string? Suggest(string localeTag, string testedEncoding, string username, string password)
+    {
+        if (!DependsOnEncoding(username, password))
+            return null;
+
+        foreach (var candidate in new[] { GetRegionalEncoding(localeTag), DEFAULT })
+        {
+            if (candidate is null || string.Equals(candidate, testedEncoding, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (TryGet(candidate, out var encoding) && TryPrepare(encoding, username, out _) && TryPrepare(encoding, password, out _))
+                return candidate;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Whether an encoding is UTF-8, the only one the LOGIN command of the IMAP client sends.
     /// </summary>
     /// <param name="encoding">The encoding.</param>
@@ -130,6 +173,30 @@ public static class MailboxPasswordEncodings
         {
             prepared = text;
             return false;
+        }
+    }
+
+    /// <summary>
+    /// The ANSI code page of Windows for a language, cf. Suggest.
+    /// </summary>
+    /// <param name="localeTag">The language, e.g., "tr-TR".</param>
+    /// <returns>The name of the code page, or null for an unknown language and for one without a code page of its own, such as Hindi.</returns>
+    private static string? GetRegionalEncoding(string localeTag)
+    {
+        if (string.IsNullOrWhiteSpace(localeTag))
+            return null;
+
+        try
+        {
+            var codePage = CultureInfo.GetCultureInfo(localeTag.Trim()).TextInfo.ANSICodePage;
+            return codePage is 0 ? null : Encoding.GetEncoding(codePage).WebName;
+        }
+
+        // Thrown for a language .NET does not know, and for a code page it does not support.
+        // CultureNotFoundException is one of them:
+        catch (Exception e) when (e is ArgumentException or NotSupportedException)
+        {
+            return null;
         }
     }
 }

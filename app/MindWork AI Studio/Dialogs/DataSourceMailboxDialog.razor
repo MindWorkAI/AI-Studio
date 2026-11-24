@@ -222,6 +222,16 @@
                             </MudSelectItem>
                         }
                     </MudSelect>
+
+                    @* Not part of the source: the encoding only decides how the password travels, so it stays open once the mails are prepared. *@
+                    <MudSelect T="string" Value="@this.PasswordEncoding" ValueChanged="@this.SelectPasswordEncoding" Label="@T("Encoding of username and password")" Class="mt-3" ReadOnly="@this.IsPasswordEncodingSetByOrganization" HelperText="@this.PasswordEncodingHelperText" OpenIcon="@AppIcons.EXPAND_MORE" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.PASSWORD_ENCODING">
+                        @foreach (var passwordEncoding in MailboxPasswordEncodings.ALL)
+                        {
+                            <MudSelectItem T="string" Value="@passwordEncoding">
+                                @passwordEncoding
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
                 </div>
             </MudCollapse>
 
@@ -258,6 +268,20 @@
                         @this.TestResultText
                     </MudText>
                 </MudStack>
+                @if (this.ShowsPasswordEncodingHint)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="mt-3">
+                        <MudJustifiedText Typo="Typo.body2">
+                            @string.Format(TA("Your username or password contains characters beyond ASCII, such as umlauts or accents. Depending on its configuration, a mail server may expect them in another encoding than {0}, which this test used. Ask your IT department which encoding the server expects, and choose it in the server details. Every test is one attempt to sign in, and too many failed attempts may lock your account."), this.PasswordEncoding)
+                        </MudJustifiedText>
+                        @if (this.SuggestedPasswordEncoding is { } suggestedPasswordEncoding)
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@AppIcons.PASSWORD_ENCODING" Class="mt-2" Disabled="@(!this.CanTestConnection)" OnClick="@this.TestWithSuggestedPasswordEncoding">
+                                @string.Format(T("Test again with {0}"), suggestedPasswordEncoding)
+                            </MudButton>
+                        }
+                    </MudAlert>
+                }
             </div>
 
             <MudText Typo="Typo.h6" Class="mb-1">

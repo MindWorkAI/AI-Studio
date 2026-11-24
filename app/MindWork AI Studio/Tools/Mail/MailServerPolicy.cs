@@ -65,5 +65,13 @@ public sealed record MailServerPolicy(bool AllowsOnlyOrganizationMailServers, IR
     /// </remarks>
     /// <param name="mailbox">The mailbox.</param>
     /// <returns>The name of the encoding.</returns>
-    public string GetPasswordEncoding(DataSourceMailbox mailbox) => this.GetOrganizationPasswordEncoding(mailbox.Host) ?? mailbox.PasswordEncoding;
+    public string GetPasswordEncoding(DataSourceMailbox mailbox) => this.GetPasswordEncoding(mailbox.Host, mailbox.PasswordEncoding);
+
+    /// <summary>
+    /// The encoding in which a mailbox on a server sends its username and password, cf. GetPasswordEncoding of a mailbox.
+    /// </summary>
+    /// <param name="host">The host of the server.</param>
+    /// <param name="mailboxEncoding">The name of the encoding of the mailbox.</param>
+    /// <returns>The name of the encoding.</returns>
+    public string GetPasswordEncoding(string host, string mailboxEncoding) => this.GetOrganizationPasswordEncoding(host) ?? mailboxEncoding;
 }

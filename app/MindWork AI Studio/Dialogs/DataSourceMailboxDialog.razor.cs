@@ -21,12 +21,13 @@ namespace AIStudio.Dialogs;
 /// </summary>
 /// <remarks>
 /// Every connection test is exactly one sign-in, started by the user, in the encoding which
-/// MailServerPolicy.GetPasswordEncoding decides on, like every other sign-in. The encoding of a
-/// successful test is stored along with the mailbox. The outcome of a test only touches
-/// the recorded sign-in failure of the mailbox when the test used the settings and the password stored
-/// for it: a failure with a password the user is still typing says nothing about the stored one, and
-/// neither does a success. A success in another encoding clears the failure only once the mailbox is
-/// saved with it, since the synchronization would sign in with the stored encoding until then.
+/// MailServerPolicy.GetPasswordEncoding decides on, like every other sign-in. AI Studio never tries
+/// another encoding on its own: after a refused sign-in, it offers one, cf. SuggestedPasswordEncoding,
+/// and the user decides. The encoding of a successful test is stored along with the mailbox.<br/><br/>
+/// The outcome of a test only touches the recorded sign-in failure of the mailbox when the test used
+/// the settings, the encoding, and the password stored for it: a failure with a password the user is
+/// still typing says nothing about the stored one, and neither does a success. A success in another
+/// encoding clears the failure once the mailbox is saved with it, cf. Store.
 /// </remarks>
 public partial class DataSourceMailboxDialog : MSGComponentBase
 {
@@ -120,6 +121,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private IReadOnlyList<MailServerFolder> serverFolders = [];
     private string folderIssue = string.Empty;
 
+    // The language of the operating system, which tells the encoding to offer after a refused sign-in, cf. MailboxPasswordEncodings.Suggest:
+    private string osLanguage = string.Empty;
+
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
 
@@ -200,6 +204,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         }
 
         this.ApplyOrganizationRules();
+        this.osLanguage = await this.RustService.ReadUserLanguage();
 
         await base.OnInitializedAsync();
 
@@ -248,13 +253,41 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     #endregion
 
     /// <summary>
-    /// What a connection test depends on. A test only counts for the settings it was made with.
+    /// What a connection test depends on. A test only counts for the settings it was made with. The
+    /// encoding is the one the sign-in uses, cf. MailServerPolicy.GetPasswordEncoding.
     /// </summary>
-    private readonly record struct ConnectionSettings(string Host, int Port, MailboxTransportSecurity TransportSecurity, string Username, string Password);
+    private readonly record struct ConnectionSettings(string Host, int Port, MailboxTransportSecurity TransportSecurity, string Username, string Password, string PasswordEncoding);
 
-    private ConnectionSettings CurrentSettings => new(this.dataHost.Trim(), this.dataPort, this.dataTransportSecurity, this.dataUsername.Trim(), this.dataPassword);
+    private ConnectionSettings CurrentSettings => new(this.dataHost.Trim(), this.dataPort, this.dataTransportSecurity, this.dataUsername.Trim(), this.dataPassword, this.PasswordEncoding);
 
-    private ConnectionSettings StoredSettings => new(this.DataSource.Host.Trim(), this.DataSource.Port, this.DataSource.TransportSecurity, this.DataSource.Username.Trim(), this.storedPassword);
+    private ConnectionSettings StoredSettings => new(this.DataSource.Host.Trim(), this.DataSource.Port, this.DataSource.TransportSecurity, this.DataSource.Username.Trim(), this.storedPassword, this.mailServerPolicy.GetPasswordEncoding(this.DataSource));
+
+    /// <summary>
+    /// The encoding the next sign-in uses: the one the organization names for the server, if any, and the chosen one otherwise.
+    /// </summary>
+    private string PasswordEncoding => this.mailServerPolicy.GetPasswordEncoding(this.dataHost.Trim(), this.dataPasswordEncoding);
+
+    /// <summary>
+    /// Whether the organization names the encoding for the server, so that the user cannot choose another one.
+    /// </summary>
+    private bool IsPasswordEncodingSetByOrganization => this.mailServerPolicy.GetOrganizationPasswordEncoding(this.dataHost.Trim()) is not null;
+
+    private string PasswordEncodingHelperText => this.IsPasswordEncodingSetByOrganization ? TA("Your organization sets the encoding for this mail server.") : string.Empty;
+
+    /// <summary>
+    /// Whether the last test failed because the server refused a username or a password with
+    /// characters beyond ASCII, which may be the encoding's fault. Not when the organization names
+    /// the encoding: then it is not the user's to choose.
+    /// </summary>
+    private bool ShowsPasswordEncodingHint => this.testedSettings == this.CurrentSettings
+        && this.testFailure is MailboxConnectionFailure.AUTHENTICATION_FAILED
+        && !this.IsPasswordEncodingSetByOrganization
+        && MailboxPasswordEncodings.DependsOnEncoding(this.dataUsername.Trim(), this.dataPassword);
+
+    /// <summary>
+    /// The encoding to offer for one more test, cf. MailboxPasswordEncodings.Suggest, or null for none.
+    /// </summary>
+    private string? SuggestedPasswordEncoding => MailboxPasswordEncodings.Suggest(this.osLanguage, this.PasswordEncoding, this.dataUsername.Trim(), this.dataPassword);
 
     /// <summary>
     /// Whether the settings to connect with are the ones stored for this mailbox.
@@ -505,6 +538,26 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         this.dataTransportSecurity = transportSecurity;
     }
 
+    private void SelectPasswordEncoding(string? passwordEncoding)
+    {
+        // The select hands over null only when cleared, which it does not allow:
+        if (passwordEncoding is not null)
+            this.dataPasswordEncoding = passwordEncoding;
+    }
+
+    /// <summary>
+    /// Tests the connection once more, in the encoding SuggestedPasswordEncoding offers. Like every
+    /// test, it is exactly one sign-in, and only the user starts it.
+    /// </summary>
+    private async Task TestWithSuggestedPasswordEncoding()
+    {
+        if (this.SuggestedPasswordEncoding is not { } suggestedPasswordEncoding)
+            return;
+
+        this.dataPasswordEncoding = suggestedPasswordEncoding;
+        await this.TestConnection();
+    }
+
     private async Task TestConnection()
     {
         if (!this.CanTestConnection)
@@ -611,10 +664,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         switch (failure)
         {
             case null:
-                // In another encoding, the failure stays on record until the mailbox is saved, cf. Store:
-                if (this.dataPasswordEncoding == this.DataSource.PasswordEncoding)
-                    await indexStore.ClearMailboxAuthFailureAsync(this.dataId, CancellationToken.None);
-
+                await indexStore.ClearMailboxAuthFailureAsync(this.dataId, CancellationToken.None);
                 this.authFailure = null;
                 break;
 
