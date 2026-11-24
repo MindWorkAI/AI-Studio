@@ -1,3 +1,6 @@
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
+
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
@@ -15,14 +18,22 @@ namespace AIStudio.Tests.Tools;
 /// cannot carry, and what it says instead.
 /// </summary>
 /// <remarks>
+/// <para>
 /// The data source points to port 1 of the own machine, where nothing listens: a request which the
 /// client sends fails right away, with a message of its own. A message about the credentials thus
 /// shows that the client stopped before sending. Nothing here asserts on the wording of a message:
 /// I18N is process-wide state without a reset.
+/// </para>
+/// <para>
+/// The messages of the client end up in the log. .NET quotes a header value in its exception only
+/// when it parses the header and fails, as it does for an Authorization header with a line break
+/// in the token. The other headers of ERI, i.e., user, password, and the session token, go unparsed,
+/// and .NET names no value when it refuses them.
+/// </para>
 /// </remarks>
 [TestFixture]
 [NonParallelizable]
-public sealed class ERIClientV1AuthenticationTests
+public sealed partial class ERIClientV1AuthenticationTests
 {
     private const string NAME = "Intranet";
 
@@ -133,6 +144,18 @@ public sealed class ERIClientV1AuthenticationTests
     }
 
     [Test]
+    public async Task APasswordWithALineBreakIsNotQuoted()
+    {
+        var dataSource = UNREACHABLE with { AuthMethod = AuthMethod.USERNAME_PASSWORD, Username = "max" };
+        var response = await this.AuthenticateAsync(dataSource, $"Pass\n{SECRET_PART} 2024");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(response.Message, Is.EqualTo(ERICredentialValidation.GetUnusableSecretMessage(AuthMethod.USERNAME_PASSWORD, NAME)));
+            Assert.That(response.Message, Does.Not.Contain(SECRET_PART));
+        }
+    }
+
+    [Test]
     public async Task ATokenOfPrintableAsciiIsSent()
     {
         var response = await this.AuthenticateAsync(UNREACHABLE, "eyJhbGciOiJIUzI1NiJ9.e30.abc-_~+/=\n");
@@ -142,4 +165,48 @@ public sealed class ERIClientV1AuthenticationTests
             Assert.That(response.Message, Is.Not.EqualTo(ERICredentialValidation.GetUnusableSecretMessage(AuthMethod.TOKEN, NAME)), "The client has to send the request.");
         }
     }
+
+    [Test]
+    public async Task ATokenWithALineBreakIsNotQuoted()
+    {
+        // Parsed as an Authorization header, this token made .NET quote it in its exception:
+        var response = await this.AuthenticateAsync(UNREACHABLE, $"tok\n{SECRET_PART}");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(response.Message, Is.EqualTo(ERICredentialValidation.GetUnusableSecretMessage(AuthMethod.TOKEN, NAME)));
+            Assert.That(response.Message, Does.Not.Contain(SECRET_PART));
+        }
+    }
+
+    [Test]
+    public async Task ASessionTokenWithALineBreakIsNotQuoted()
+    {
+        using var server = new LoopbackERIServer($"Sitzung\n{SECRET_PART}");
+        using var client = new ERIClientV1(UNREACHABLE with { AuthMethod = AuthMethod.NONE, Port = server.Port });
+        var authentication = await client.AuthenticateAsync(this.rustService);
+        var securityRequirements = await client.GetSecurityRequirementsAsync();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(authentication.Successful, Is.True, "The server has to hand out its session token.");
+            Assert.That(securityRequirements.Successful, Is.False);
+            Assert.That(securityRequirements.Message, Is.Not.Empty);
+            Assert.That(securityRequirements.Message, Does.Not.Contain(SECRET_PART));
+        }
+    }
+
+    [Test]
+    public void NoERIClientParsesAnAuthorizationHeader()
+    {
+        var clientDirectory = Path.Combine(AppSourceDirectory(), "Tools", "ERIClient");
+        var files = Directory.EnumerateFiles(clientDirectory, "*.cs", SearchOption.AllDirectories)
+            .Where(path => ValidatedAuthorizationRegex().IsMatch(File.ReadAllText(path)))
+            .Select(path => Path.GetRelativePath(clientDirectory, path));
+
+        Assert.That(files, Is.Empty, "Headers.Add quotes an Authorization header it cannot parse, i.e., the token, in its exception; use AuthenticationHeaderValue.");
+    }
+
+    [GeneratedRegex(@"\.Headers\.Add\(\s*""Authorization""")]
+    private static partial Regex ValidatedAuthorizationRegex();
+
+    private static string AppSourceDirectory([CallerFilePath] string sourceFilePath = "") => Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFilePath)!, "..", "..", "MindWork AI Studio"));
 }
