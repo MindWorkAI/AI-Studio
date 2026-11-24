@@ -59,15 +59,15 @@ public sealed record DataMailboxProvider : ILivePluginContent
     public string HelpUrl { get; private init; } = string.Empty;
 
     /// <summary>
-    /// The encoding the mail server expects for a username or a password with characters beyond
-    /// ASCII, such as umlauts. Null when the organization did not say.
+    /// The name of the encoding the mail server expects for a username or a password with characters
+    /// beyond ASCII, e.g., "windows-1252", cf. MailboxPasswordEncodings. Null when the organization did not say.
     /// </summary>
     /// <remarks>
-    /// The connection test in the mailbox dialog tries it first and the other encoding only when the
-    /// server refuses it, so that users of a server such as Microsoft Exchange, which expects
-    /// Windows-1252, spend no failed sign-in on UTF-8.
+    /// Depending on its configuration, a mail server may expect another encoding than UTF-8, e.g.,
+    /// Microsoft Exchange the code page of its Windows system. The organization knows which one, so
+    /// its users spend no failed sign-in on finding out.
     /// </remarks>
-    public MailboxPasswordEncoding? PasswordEncoding { get; private init; }
+    public string? PasswordEncoding { get; private init; }
 
     /// <summary>
     /// Reads a mail server from an entry of the table MAILBOX_PROVIDERS.
@@ -142,16 +142,16 @@ public sealed record DataMailboxProvider : ILivePluginContent
             helpUrl = helpUri.OriginalString;
         }
 
-        MailboxPasswordEncoding? passwordEncoding = null;
+        string? passwordEncoding = null;
         if (table.TryGetValue("PasswordEncoding", out var passwordEncodingValue))
         {
-            if (!passwordEncodingValue.TryRead<string>(out var passwordEncodingText) || !MailboxPasswordEncoding.TryParseName(passwordEncodingText, out var readPasswordEncoding) || readPasswordEncoding is MailboxPasswordEncoding.UNKNOWN)
+            if (!passwordEncodingValue.TryRead<string>(out var passwordEncodingText) || !MailboxPasswordEncodings.TryGet(passwordEncodingText, out var encoding))
             {
-                logger.LogWarning("The configured mailbox provider {ProviderIndex} does not contain a valid PasswordEncoding field. Allowed values are UTF8 and WINDOWS_1252.", index);
+                logger.LogWarning("The configured mailbox provider {ProviderIndex} does not contain a valid PasswordEncoding field. It needs the name of an encoding which keeps ASCII as it is, such as utf-8, windows-1252, or shift_jis.", index);
                 return false;
             }
 
-            passwordEncoding = readPasswordEncoding;
+            passwordEncoding = encoding.WebName;
         }
 
         provider = new DataMailboxProvider

@@ -119,7 +119,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// <exception cref="MailboxConnectionException">The connection or the sign-in failed.</exception>
     public async Task ConnectAsync(DataSourceMailbox mailbox, string password, MailServerPolicy policy, CancellationToken token)
     {
-        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || mailbox.PasswordEncoding.TextEncoding is not { } textEncoding || !MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
+        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !MailboxPasswordEncodings.TryGet(mailbox.PasswordEncoding, out var textEncoding) ||!MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
             throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "The mailbox settings are incomplete, or this version of AI Studio does not know them.");
 
         if (!policy.IsAllowed(mailbox.Host))
@@ -141,7 +141,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         }
 
         var offersPlain = this.client.AuthenticationMechanisms.Contains(PLAIN_MECHANISM);
-        if (!TryPrepareSignIn(mailbox.PasswordEncoding, mailbox.Username, password, offersPlain, out var preparedUsername, out var preparedPassword))
+        if (!TryPrepareSignIn(textEncoding, mailbox.Username, password, offersPlain, out var preparedUsername, out var preparedPassword))
             throw new MailboxConnectionException(MailboxConnectionFailure.UNSUITABLE_ENCODING, "The encoding of the mailbox cannot carry the username and the password to this IMAP server.");
 
         try
@@ -501,23 +501,23 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// password. So nothing may be sent when the encoding cannot carry the username and the password:
     /// when it lacks one of their characters, e.g., Windows-1252 has no ẞ, and when the server does not
     /// offer PLAIN and the encoding is not UTF-8, since MailKit sends the LOGIN command in UTF-8,
-    /// whatever encoding it is handed. Text in ASCII has the same bytes in every encoding this
-    /// version knows, so it goes through the LOGIN command as well.
+    /// whatever encoding it is handed. Text in ASCII has the same bytes in every encoding a mailbox
+    /// may use, cf. MailboxPasswordEncodings, so it goes through the LOGIN command as well.
     /// </remarks>
-    /// <param name="encoding">The encoding of the mailbox.</param>
+    /// <param name="encoding">The encoding of the mailbox, as MailboxPasswordEncodings.TryGet returns it.</param>
     /// <param name="username">The username.</param>
     /// <param name="password">The password.</param>
     /// <param name="offersPlain">Whether the server offers the SASL mechanism PLAIN.</param>
     /// <param name="preparedUsername">The username to sign in with.</param>
     /// <param name="preparedPassword">The password to sign in with.</param>
     /// <returns>Whether the sign-in may go ahead.</returns>
-    internal static bool TryPrepareSignIn(MailboxPasswordEncoding encoding, string username, string password, bool offersPlain, out string preparedUsername, out string preparedPassword)
+    internal static bool TryPrepareSignIn(Encoding encoding, string username, string password, bool offersPlain, out string preparedUsername, out string preparedPassword)
     {
         preparedPassword = password;
-        if (!encoding.TryPrepare(username, out preparedUsername) || !encoding.TryPrepare(password, out preparedPassword))
+        if (!MailboxPasswordEncodings.TryPrepare(encoding, username, out preparedUsername) || !MailboxPasswordEncodings.TryPrepare(encoding, password, out preparedPassword))
             return false;
 
-        return offersPlain || encoding is MailboxPasswordEncoding.UTF8 || (Ascii.IsValid(preparedUsername) && Ascii.IsValid(preparedPassword));
+        return offersPlain || MailboxPasswordEncodings.IsUtf8(encoding) || (Ascii.IsValid(preparedUsername) && Ascii.IsValid(preparedPassword));
     }
 
     /// <summary>

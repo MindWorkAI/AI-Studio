@@ -351,13 +351,15 @@ CONFIG["DATA_SOURCES"] = {}
 --   UsernameHint       Optional text telling users what to enter as their username.
 --   HelpUrl            Optional http or https address of your instructions, e.g., on how to
 --                      enable IMAP for a mailbox.
---   PasswordEncoding   Optional encoding your mail server expects for usernames and passwords
---                      with characters beyond ASCII, such as German umlauts: UTF8, which most
---                      servers expect, or WINDOWS_1252, which Microsoft Exchange expects. The
---                      connection test in the mailbox dialog tries this encoding first and the
---                      other one only when the server refuses it. Without this field, a new
---                      mailbox starts with UTF8, and on an Exchange server, every user whose
---                      password holds such a character spends one failed sign-in on it.
+--   PasswordEncoding   Optional name of the encoding your mail server expects for usernames and
+--                      passwords with characters beyond ASCII, such as umlauts, accents, Turkish,
+--                      Cyrillic, or Asian characters. Most servers expect utf-8, the default.
+--                      Depending on its configuration, a server may expect another one, e.g.,
+--                      Microsoft Exchange the code page of its Windows system: windows-1252 in
+--                      Western Europe, windows-1250 in Central Europe, windows-1251 for Cyrillic,
+--                      windows-1254 in Turkey, or shift_jis in Japan. Any encoding .NET knows by
+--                      name works, as long as it keeps ASCII as it is; utf-16 does not. The
+--                      connection test in the mailbox dialog signs in with this encoding.
 -- An entry with an invalid field is left out as a whole, and the log names the field.
 -- To allow mailboxes on these mail servers only, see DataMailboxes.AllowOnlyOrganizationMailServers.
 CONFIG["MAILBOX_PROVIDERS"] = {}
@@ -371,7 +373,7 @@ CONFIG["MAILBOX_PROVIDERS"] = {}
 --     ["Port"] = 993,
 --     ["UsernameHint"] = "Your account as DOMAIN\\username",
 --     ["HelpUrl"] = "https://intranet.example.org/mail/imap",
---     ["PasswordEncoding"] = "WINDOWS_1252",
+--     ["PasswordEncoding"] = "windows-1252",
 -- }
 
 CONFIG["SETTINGS"] = {}

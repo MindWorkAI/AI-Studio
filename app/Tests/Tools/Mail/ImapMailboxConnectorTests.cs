@@ -55,7 +55,8 @@ public sealed class ImapMailboxConnectorTests
     {
         yield return Case("unknown transport security", MAILBOX with { TransportSecurity = MailboxTransportSecurity.UNKNOWN }, PASSWORD);
         yield return Case("unknown auth method", MAILBOX with { AuthMethod = MailboxAuthMethod.UNKNOWN }, PASSWORD);
-        yield return Case("unknown password encoding", MAILBOX with { PasswordEncoding = MailboxPasswordEncoding.UNKNOWN }, PASSWORD);
+        yield return Case("unknown password encoding", MAILBOX with { PasswordEncoding = "EBCDIC" }, PASSWORD);
+        yield return Case("password encoding which changes ASCII", MAILBOX with { PasswordEncoding = "utf-16" }, PASSWORD);
         yield return Case("no host", MAILBOX with { Host = " " }, PASSWORD);
         yield return Case("a URL as host", MAILBOX with { Host = "imaps://imap.example.org" }, PASSWORD);
         yield return Case("port 0", MAILBOX with { Port = 0 }, PASSWORD);
@@ -115,14 +116,16 @@ public sealed class ImapMailboxConnectorTests
 
     private static IEnumerable<TestCaseData> SignInPreparations()
     {
-        const MailboxPasswordEncoding UTF8 = MailboxPasswordEncoding.UTF8;
-        const MailboxPasswordEncoding WINDOWS_1252 = MailboxPasswordEncoding.WINDOWS_1252;
+        const string UTF8 = "utf-8";
+        const string WINDOWS_1252 = "windows-1252";
 
         yield return Case("ASCII", UTF8, "someone", "Sommer-2026!", true, true);
         yield return Case("umlaut in the password", UTF8, "someone", "Grüße-2026", true, true);
         yield return Case("umlaut in the username", WINDOWS_1252, @"FIRMA\müller", "Sommer-2026!", true, true);
         yield return Case("Windows-1252 with umlaut and euro sign", WINDOWS_1252, "someone", "Grüße-100€", true, true);
         yield return Case("UTF-8 with Turkish and Japanese", UTF8, "kişi", "şifre-日本", true, true);
+        yield return Case("Windows-1254 with Turkish", "windows-1254", "kişi", "şifre-2026", true, true);
+        yield return Case("Shift-JIS with Japanese", "shift_jis", "利用者", "日本-2026", true, true);
 
         // Windows-1252 lacks the capital sharp s and the Turkish s with cedilla, and AI Studio never switches to UTF-8 on its own:
         yield return Case("capital sharp s in Windows-1252", WINDOWS_1252, "someone", "STRAẞE", true, false);
@@ -135,18 +138,15 @@ public sealed class ImapMailboxConnectorTests
 
         // No encoding has a lone surrogate:
         yield return Case("lone surrogate", UTF8, "someone", "abc\uD800", true, false);
-
-        // An encoding this version does not know encodes nothing:
-        yield return Case("unknown encoding", MailboxPasswordEncoding.UNKNOWN, "someone", "Sommer-2026!", true, false);
         yield break;
 
-        static TestCaseData Case(string name, MailboxPasswordEncoding encoding, string username, string password, bool offersPlain, bool expected) => new TestCaseData(encoding, username, password, offersPlain).Returns(expected).SetArgDisplayNames(name);
+        static TestCaseData Case(string name, string encoding, string username, string password, bool offersPlain, bool expected) => new TestCaseData(encoding, username, password, offersPlain).Returns(expected).SetArgDisplayNames(name);
     }
 
     [TestCaseSource(nameof(SignInPreparations))]
-    public bool ASignInGoesAheadOnlyWhenTheEncodingCarriesTheUsernameAndThePassword(MailboxPasswordEncoding encoding, string username, string password, bool offersPlain)
+    public bool ASignInGoesAheadOnlyWhenTheEncodingCarriesTheUsernameAndThePassword(string encoding, string username, string password, bool offersPlain)
     {
-        return ImapMailboxConnector.TryPrepareSignIn(encoding, username, password, offersPlain, out _, out _);
+        return ImapMailboxConnector.TryPrepareSignIn(MailboxPasswordEncodingsTests.GetKnownEncoding(encoding), username, password, offersPlain, out _, out _);
     }
 
     [Test]
@@ -156,7 +156,7 @@ public sealed class ImapMailboxConnectorTests
         const string DECOMPOSED = "Ka\u0308se";
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(ImapMailboxConnector.TryPrepareSignIn(MailboxPasswordEncoding.WINDOWS_1252, "müller", DECOMPOSED, true, out var username, out var password), Is.True);
+            Assert.That(ImapMailboxConnector.TryPrepareSignIn(MailboxPasswordEncodingsTests.GetKnownEncoding("windows-1252"), "müller", DECOMPOSED, true, out var username, out var password), Is.True);
             Assert.That(username, Is.EqualTo("müller"));
             Assert.That(password, Is.EqualTo("Käse"));
         }

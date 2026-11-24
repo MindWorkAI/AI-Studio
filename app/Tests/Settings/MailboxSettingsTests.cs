@@ -3,6 +3,7 @@ using System.Text.Json;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Mail;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -40,7 +41,7 @@ public sealed class MailboxSettingsTests
         Port = 143,
         TransportSecurity = MailboxTransportSecurity.STARTTLS,
         AuthMethod = MailboxAuthMethod.PASSWORD,
-        PasswordEncoding = MailboxPasswordEncoding.WINDOWS_1252,
+        PasswordEncoding = "windows-1252",
         Username = "someone@example.org",
         RootFolder = "INBOX/Projects",
         IncludeSentAndDrafts = false,
@@ -139,11 +140,23 @@ public sealed class MailboxSettingsTests
     }
 
     [Test]
-    public void AMailboxStoredBeforeThePasswordEncodingSignsInWithUTF8()
+    public void AMailboxStoredBeforeThePasswordEncodingSignsInWithUtf8()
     {
         // UTF-8 is what every sign-in used until then:
         var mailbox = JsonSerializer.Deserialize<DataSourceMailbox>("""{"RootFolder": "INBOX"}""", SettingsManager.JSON_OPTIONS);
-        Assert.That(mailbox.PasswordEncoding, Is.EqualTo(MailboxPasswordEncoding.UTF8));
+        Assert.That(mailbox.PasswordEncoding, Is.EqualTo(MailboxPasswordEncodings.DEFAULT));
+    }
+
+    [Test]
+    public void AnEncodingThisVersionDoesNotKnowIsKeptButSignsInNowhere()
+    {
+        // The name stays, so that it works again with the version that wrote it; ImapMailboxConnectorTests checks that nothing is sent:
+        var mailbox = JsonSerializer.Deserialize<DataSourceMailbox>("""{"PasswordEncoding": "x-encoding-of-the-future"}""", SettingsManager.JSON_OPTIONS);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(mailbox.PasswordEncoding, Is.EqualTo("x-encoding-of-the-future"));
+            Assert.That(MailboxPasswordEncodings.TryGet(mailbox.PasswordEncoding, out _), Is.False);
+        }
     }
 
     [Test]
@@ -160,7 +173,6 @@ public sealed class MailboxSettingsTests
                                 "ConfidenceLevel": "EXTREMELY_HIGH",
                                 "TransportSecurity": "QUANTUM_TLS",
                                 "AuthMethod": "PASSKEY",
-                                "PasswordEncoding": "EBCDIC",
                                 "MaxAge": "LAST_36_MONTHS",
                                 "OutboundDataRestriction": "NOTHING_AT_ALL"
                             }
@@ -172,7 +184,6 @@ public sealed class MailboxSettingsTests
             Assert.That(mailbox.ConfidenceLevel, Is.EqualTo(ConfidenceLevel.NONE));
             Assert.That(mailbox.TransportSecurity, Is.EqualTo(MailboxTransportSecurity.UNKNOWN));
             Assert.That(mailbox.AuthMethod, Is.EqualTo(MailboxAuthMethod.UNKNOWN));
-            Assert.That(mailbox.PasswordEncoding, Is.EqualTo(MailboxPasswordEncoding.UNKNOWN));
             Assert.That(mailbox.MaxAge, Is.EqualTo(MailboxMaxAge.LAST_3_MONTHS));
             Assert.That(mailbox.OutboundDataRestriction, Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
         }

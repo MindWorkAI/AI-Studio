@@ -91,7 +91,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private MailboxTransportSecurity dataTransportSecurity = MailboxTransportSecurity.SSL_ON_CONNECT;
     private string dataUsername = string.Empty;
     private string dataPassword = string.Empty;
-    private MailboxPasswordEncoding dataPasswordEncoding = MailboxPasswordEncoding.UTF8;
+    private string dataPasswordEncoding = MailboxPasswordEncodings.DEFAULT;
     private string dataRootFolder = string.Empty;
     private bool dataIncludeSentAndDrafts = true;
     private MailboxMaxAge dataMaxAge = MailboxMaxAge.LAST_12_MONTHS;
@@ -561,7 +561,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     /// </remarks>
     /// <param name="host">The host the connection goes to.</param>
     /// <returns>The encoding, or null when no mail server of the organization on this host sets one.</returns>
-    private MailboxPasswordEncoding? GetOrganizationPasswordEncoding(string host) => this.organizationProviders
+    private string? GetOrganizationPasswordEncoding(string host) => this.organizationProviders
         .FirstOrDefault(provider => provider.PasswordEncoding is not null && MailServerHosts.AreSame(provider.Host, host))?
         .PasswordEncoding;
 
