@@ -23,7 +23,7 @@ namespace AIStudio.Dialogs;
 /// Every connection test is exactly one sign-in, started by the user, in the encoding which
 /// MailServerPolicy.GetPasswordEncoding decides on, like every other sign-in. AI Studio never tries
 /// another encoding on its own: after a refused sign-in, it offers one, cf. SuggestedPasswordEncoding,
-/// and the user decides. The encoding of a successful test is stored along with the mailbox.<br/><br/>
+/// and the user decides. It offers none on the server of a well-known provider, cf. ShowsPasswordEncodingHint. The encoding of a successful test is stored along with the mailbox.<br/><br/>
 /// The outcome of a test only touches the recorded sign-in failure of the mailbox when the test used
 /// the settings, the encoding, and the password stored for it: a failure with a password the user is
 /// still typing says nothing about the stored one, and neither does a success. A success in another
@@ -188,7 +188,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
 
             // A mail server of the organization goes first, see FitProviderSelection:
-            this.selectedTemplate = MailboxProviderTemplates.ALL.FirstOrDefault(template => template.Host.Length > 0 && template.Host.Equals(this.DataSource.Host.Trim(), StringComparison.OrdinalIgnoreCase));
+            this.selectedTemplate = MailboxProviderTemplates.FindByHost(this.DataSource.Host);
 
             var requestedSecret = await this.RustService.GetSecret(this.DataSource, SecretStoreType.DATA_SOURCE, isTrying: true);
             if (requestedSecret.Success)
@@ -277,11 +277,14 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     /// <summary>
     /// Whether the last test failed because the server refused a username or a password with
     /// characters beyond ASCII, which may be the encoding's fault. Not when the organization names
-    /// the encoding: then it is not the user's to choose.
+    /// the encoding: then it is not the user's to choose. Nor on the server of a well-known provider,
+    /// also when the user typed its host: there is no IT department to ask, and the server serves
+    /// users of every language rather than one region.
     /// </summary>
     private bool ShowsPasswordEncodingHint => this.testedSettings == this.CurrentSettings
         && this.testFailure is MailboxConnectionFailure.AUTHENTICATION_FAILED
         && !this.IsPasswordEncodingSetByOrganization
+        && MailboxProviderTemplates.FindByHost(this.dataHost) is null
         && MailboxPasswordEncodings.DependsOnEncoding(this.dataUsername.Trim(), this.dataPassword);
 
     /// <summary>
