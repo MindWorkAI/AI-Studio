@@ -24,6 +24,11 @@ namespace AIStudio.Tests.Provider;
 /// load their models on their own ways check the key they get from there.
 /// </para>
 /// <para>
+/// Headers.Add parses an Authorization header and quotes the whole value in its exception when it
+/// cannot, e.g., for a bare key with a '/'. A provider therefore sets this header through
+/// AuthenticationHeaderValue or, for a bare key, through TryAddWithoutValidation.
+/// </para>
+/// <para>
 /// The models are loaded with a key the user is entering, which needs neither the keyring nor the
 /// network: a key which cannot be sent is refused before any request. Building a provider reads the
 /// settings, so they are reached through Program.SERVICE_PROVIDER, as in the app.
@@ -34,6 +39,11 @@ namespace AIStudio.Tests.Provider;
 public sealed partial class APIKeyHeaderTests
 {
     private static readonly string ZERO_WIDTH_SPACE = ((char)0x200B).ToString();
+
+    /// <summary>
+    /// A key as Fireworks issues them, which its transcription gets without the scheme 'Bearer'.
+    /// </summary>
+    private const string BARE_KEY = "fw_3ZAbC123xyz";
 
     private ServiceProvider serviceProvider = null!;
     private IServiceProvider previousServiceProvider = null!;
@@ -63,6 +73,29 @@ public sealed partial class APIKeyHeaderTests
             .ToDictionary(file => file.Item1, file => file.Item2);
 
         Assert.That(decryptions, Is.EqualTo(new Dictionary<string, int> { ["BaseProvider.cs"] = 2 }), "A stored key goes into a header through DecryptAPIKey only; GetModelLoadingSecretKey is the other place which may decrypt one.");
+    }
+
+    [Test]
+    public void NoProviderParsesAKeyAsAnAuthorizationHeader()
+    {
+        var providerDirectory = Path.Combine(AppSourceDirectory(), "Provider");
+        var files = Directory.EnumerateFiles(providerDirectory, "*.cs", SearchOption.AllDirectories)
+            .Where(path => ValidatedAuthorizationRegex().IsMatch(File.ReadAllText(path)))
+            .Select(path => Path.GetRelativePath(providerDirectory, path));
+
+        Assert.That(files, Is.Empty, "Headers.Add quotes an Authorization header it cannot parse, i.e., the key, in its exception; use AuthenticationHeaderValue, or TryAddWithoutValidation for a bare key.");
+    }
+
+    [Test]
+    public void ABareKeyGoesOutAsBefore()
+    {
+        using var validated = new HttpRequestMessage();
+        validated.Headers.Add("Authorization", BARE_KEY);
+
+        using var unvalidated = new HttpRequestMessage();
+        unvalidated.Headers.TryAddWithoutValidation("Authorization", BARE_KEY);
+
+        Assert.That(unvalidated.Headers.ToString(), Is.EqualTo(validated.Headers.ToString()));
     }
 
     private static IEnumerable<TestCaseData> ProvidersWhichLoadModels()
@@ -97,6 +130,9 @@ public sealed partial class APIKeyHeaderTests
 
     [GeneratedRegex(@"\.Decrypt\(Program\.ENCRYPTION\)")]
     private static partial Regex DecryptionRegex();
+
+    [GeneratedRegex(@"\.Headers\.Add\(\s*""Authorization""")]
+    private static partial Regex ValidatedAuthorizationRegex();
 
     private static string AppSourceDirectory([CallerFilePath] string sourceFilePath = "") => Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFilePath)!, "..", "..", "MindWork AI Studio"));
 }

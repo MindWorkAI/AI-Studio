@@ -1701,7 +1701,13 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return TranscriptionResult.Failure();
                     }
                     
-                    request.Headers.Add("Authorization", await this.DecryptAPIKey(requestedSecret));
+                    //
+                    // Fireworks gets the bare key, without the scheme 'Bearer'. Headers.Add would parse the key as
+                    // an Authorization header, refuse one with a character such as '/' or '=', and quote the whole
+                    // key in its exception. DecryptAPIKey already made sure that the key holds only printable ASCII,
+                    // so it goes out as it is:
+                    //
+                    request.Headers.TryAddWithoutValidation("Authorization", await this.DecryptAPIKey(requestedSecret));
                     break;
                 
                 default:
