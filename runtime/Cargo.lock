@@ -10084,8 +10084,3 @@ dependencies = [
  "syn 3.0.10",
  "winnow 1.0.5",
 ]
-
-[[patch.unused]]
-name = "permutation_iterator"
-version = "0.1.2"
-source = "git+https://github.com/SommerEngineering/permutation-iterator-rs.git?rev=76836ed316d18dfef530ba908f58481c343e80d7#76836ed316d18dfef530ba908f58481c343e80d7"
