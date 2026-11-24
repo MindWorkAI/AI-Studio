@@ -58,7 +58,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
 
     public void DeclareSettings(ToolSettingsSchemaBuilder builder) => builder
         .InGroup(SETTINGS_GROUP)
-        .OptionalSecret(API_KEY_SETTING)
+        .OptionalAPIKey(API_KEY_SETTING)
         .OptionalEnum(SEARCH_DEPTH_SETTING, SUPPORTED_SEARCH_DEPTHS)
         .InGroup(string.Empty);
 

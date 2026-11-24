@@ -1,4 +1,6 @@
+using AIStudio.Components;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
@@ -173,6 +175,50 @@ public partial class ToolSettingsDialog : SettingsDialogBase
 
     private bool IsFieldDisabled(ToolSection section, string fieldName) => this.ToolSettingsService.IsFieldLocked(section.Definition, fieldName);
 
+    /// <summary>
+    /// Checks an API key while the user types it, and leaves every other field alone.
+    /// </summary>
+    private static Func<string, string?>? GetFieldValidation(ToolSettingsFieldDefinition fieldDefinition) => fieldDefinition.IsAPIKey ? APIKeyValidation.Validate : null;
+
+    /// <summary>
+    /// Lets an API key field pass its text on while the user types, so that its check follows the typing.
+    /// </summary>
+    /// <remarks>
+    /// Every other field keeps passing its text on only when the user leaves it, as it always did.
+    /// </remarks>
+    private static double GetFieldDebounceInterval(ToolSettingsFieldDefinition fieldDefinition) => fieldDefinition.IsAPIKey ? TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS : 0;
+
+    /// <summary>
+    /// Finds the first API key the user entered which cannot be sent.
+    /// </summary>
+    /// <remarks>
+    /// Only a key the user can change stops the save. A key the organization locked is not theirs
+    /// to fix, and refusing to save would block every other setting of the collection as well.
+    /// </remarks>
+    /// <param name="message">The field and what is wrong with its key, or empty when every key can be sent.</param>
+    /// <returns>True when a key cannot be sent.</returns>
+    private bool TryFindAPIKeyIssue(out string message)
+    {
+        foreach (var section in this.sections)
+        {
+            foreach (var (fieldName, fieldDefinition) in section.Definition.SettingsSchema.Properties)
+            {
+                if (!fieldDefinition.IsAPIKey || this.IsFieldDisabled(section, fieldName))
+                    continue;
+
+                var issue = APIKeyValidation.Validate(GetValue(section, fieldName));
+                if (issue is null)
+                    continue;
+
+                message = $"{GetFieldLabel(section, fieldName, fieldDefinition)}: {issue}";
+                return true;
+            }
+        }
+
+        message = string.Empty;
+        return false;
+    }
+
     private static string GetFieldPlaceholder(ToolSection section, string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
         string.IsNullOrWhiteSpace(GetValue(section, fieldName)) ? GetFieldDefaultValue(section, fieldName, fieldDefinition) : string.Empty;
 
@@ -193,6 +239,12 @@ public partial class ToolSettingsDialog : SettingsDialogBase
     {
         if (this.item is null)
             return;
+
+        if (this.TryFindAPIKeyIssue(out var apiKeyIssue))
+        {
+            this.validationMessage = apiKeyIssue;
+            return;
+        }
 
         foreach (var section in this.sections)
         {

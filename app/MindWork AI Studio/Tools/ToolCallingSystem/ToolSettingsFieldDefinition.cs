@@ -27,6 +27,18 @@ public sealed class ToolSettingsFieldDefinition
     public bool Secret { get; init; }
 
     /// <summary>
+    /// Whether the field holds an API key, which is always a secret as well.
+    /// </summary>
+    /// <remarks>
+    /// An API key goes into an HTTP header, which carries nothing but ASCII. The settings dialog
+    /// therefore checks what the user enters there. Settings validation leaves the key alone on
+    /// purpose, since it decides whether the tool is offered at all: a key which was stored before,
+    /// or which the organization provides, would switch off the whole tool without a word. The
+    /// tool checks a stored key again before sending it.
+    /// </remarks>
+    public bool IsAPIKey { get; init; }
+
+    /// <summary>
     /// Name of the group this field belongs to, or empty when it stands on its own.
     /// </summary>
     /// <remarks>

@@ -65,7 +65,7 @@ public sealed class StaanSearchBackend : IWebSearchBackend
 
     public void DeclareSettings(ToolSettingsSchemaBuilder builder) => builder
         .InGroup(SETTINGS_GROUP)
-        .OptionalSecret(API_KEY_SETTING)
+        .OptionalAPIKey(API_KEY_SETTING)
         .OptionalEnum(MARKET_SETTING, SUPPORTED_MARKETS)
         .InGroup(string.Empty);
 
