@@ -90,7 +90,7 @@ tempfile = "3.27.0"
 strum_macros = "0.28.0"
 sysinfo = "0.39.6"
 bytes = "1.12.2"
-qdrant-edge = "0.8.0"
+qdrant-edge = "0.9.0"
 
 # Prompt-injection detection. `regex` gives us linear-time matching without backtracking, so
 # a hostile document cannot make a scan blow up, and `aho-corasick` matches the ~1600 fixed

@@ -32,7 +32,10 @@ const STORE_INITIALIZATION_MARKER_TEMP: &str = "store_name.tmp";
 const STORE_DISPLAY_NAME_MARKER: &str = "data_source_name.txt";
 const STORE_DISPLAY_NAME_MARKER_TEMP: &str = "data_source_name.tmp";
 const WAL_DIRECTORY: &str = "wal";
-const CLOSED_WAL_SEGMENT_PREFIX: &str = "closed-";
+
+/// The file in which Qdrant Edge notes how far its WAL is acknowledged, see `acknowledge_legacy_wal`.
+const WAL_FIRST_INDEX_FILE: &str = "first-index";
+const WAL_FIRST_INDEX_FILE_TEMP: &str = "first-index.tmp";
 
 /// The directory below the data directory in which a backup collects its copies, one directory per
 /// backup. The app removes a backup's directory once the backup is written.
@@ -338,7 +341,7 @@ impl QdrantEdgeDatabase {
         }
 
         let shard = if is_initialized {
-            compact_wal(&path, store_name);
+            acknowledge_legacy_wal(&path, store_name);
             match EdgeShard::load(&path, None) {
                 Ok(shard) => shard,
                 Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
@@ -380,7 +383,7 @@ impl QdrantEdgeDatabase {
             return Ok(None);
         }
 
-        compact_wal(&path, store_name);
+        acknowledge_legacy_wal(&path, store_name);
         let shard = match EdgeShard::load(&path, None) {
             Ok(shard) => shard,
             Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
@@ -618,16 +621,6 @@ impl QdrantEdgeDatabase {
             info!(Source = "Qdrant Edge"; "Optimized vector store '{}'.", store_name);
         }
         shard.flush()?;
-
-        // Temporary compatibility shim, see compact_wal: without this, the WAL of a long session
-        // keeps growing until the next start. The store has to be unloaded first, because Windows
-        // cannot delete memory-mapped files. The next request loads it again.
-        let path = self.store_path(store_name)?;
-        if has_obsolete_wal_segments(&path) {
-            drop(self.shards.remove(store_name));
-            compact_wal(&path, store_name);
-        }
-
         Ok(())
     }
 
@@ -1140,15 +1133,25 @@ fn remove_obsolete_qdrant_path(path: &Path) {
     }
 }
 
+// `on_disk` and `on_disk_payload` are deprecated in favor of `memory` and `payload_memory`. We keep
+// them on purpose, so that a new store looks exactly like the existing ones. Older versions of AI
+// Studio use qdrant-edge 0.8, which knows no `memory` for vectors: it would take such a store for
+// one kept in RAM, find that its segments disagree, and refuse to open it. Leaving the flags unset is
+// not an option either: the effective placement would fall back to cached instead of on-disk, which
+// is a real change and would have the optimizers rebuild the HNSW graph.
+#[allow(deprecated)]
 fn edge_config(vector_size: usize) -> EdgeConfig {
     EdgeConfig {
         on_disk_payload: Some(true),
+        payload_memory: None,
+        id_tracker_memory: None,
         vectors: HashMap::from([(
             VECTOR_NAME.to_string(),
             EdgeVectorParams {
                 size: vector_size,
                 distance: Distance::Cosine,
                 on_disk: Some(true),
+                memory: None,
                 quantization_config: None,
                 multivector_config: None,
                 datatype: None,
@@ -1160,15 +1163,15 @@ fn edge_config(vector_size: usize) -> EdgeConfig {
         quantization_config: None,
         optimizers: Some(edge_optimizers_config()),
         wal_options: None,
+
+        // Keeps the WAL, like every existing store. Qdrant Edge fixes this choice when it creates a store.
+        wal_enabled: None,
         max_search_threads: None,
         search_pool_core: None,
     }
 }
 
-// `on_disk` is deprecated in favor of `memory`, but Qdrant Edge does not re-export the `Memory`
-// type, so the new field cannot be named from here. Leaving both unset is not an option either:
-// the effective placement would fall back to cached instead of on-disk, which is a real change
-// and would have the optimizers rebuild the HNSW graph.
+// See edge_config for why this sets the deprecated `on_disk`.
 #[allow(deprecated)]
 fn hnsw_config() -> HnswIndexConfig {
     HnswIndexConfig {
@@ -1240,77 +1243,27 @@ fn remove_partial_store(path: &Path) -> String {
     }
 }
 
-// Temporary compatibility shim until a qdrant-edge release acknowledges its WAL by itself:
-// documentation/compatibility-shims/2026-10-qdrant-edge-wal-compaction.md
+// Temporary compatibility shim until a qdrant-edge release skips already persisted operations when
+// it loads a store: documentation/compatibility-shims/2026-11-qdrant-edge-legacy-wal.md
 //
-// Qdrant Edge writes every update to its WAL, but never acknowledges the WAL and never replays it,
-// so the WAL grows with every update. We flush after every update, which means the segments already
-// hold everything the WAL contains. The store must not be loaded while this runs.
-fn compact_wal(store_path: &Path, store_name: &str) {
-    match remove_obsolete_wal_segments(&store_path.join(WAL_DIRECTORY)) {
-        Ok((0, _)) => {},
-        Ok((removed_segments, removed_bytes)) => info!(Source = "Qdrant Edge"; "Removed {removed_segments} obsolete WAL segment(s) with {:.1} MiB from vector store '{store_name}'.", removed_bytes as f64 / (1024.0 * 1024.0)),
-        Err(error) => warn!(Source = "Qdrant Edge"; "Could not remove the obsolete WAL segments of vector store '{store_name}': {error}"),
-    }
-}
-
-/// Whether the store's WAL holds segments which `compact_wal` would remove.
-fn has_obsolete_wal_segments(store_path: &Path) -> bool {
-    wal_file_names(&store_path.join(WAL_DIRECTORY))
-        .is_ok_and(|file_names| !obsolete_wal_segments(&file_names).is_empty())
-}
-
-/// Removes the obsolete closed segments, oldest first, and returns their number and size. When a
-/// removal fails, the segments left over are still contiguous, so Qdrant Edge can open the WAL.
-fn remove_obsolete_wal_segments(wal_path: &Path) -> std::io::Result<(usize, u64)> {
-    let mut removed_segments = 0;
-    let mut removed_bytes = 0;
-    for file_name in obsolete_wal_segments(&wal_file_names(wal_path)?) {
-        let segment_path = wal_path.join(file_name);
-        let segment_size = fs::metadata(&segment_path)?.len();
-        fs::remove_file(&segment_path)?;
-        removed_segments += 1;
-        removed_bytes += segment_size;
+// Up to qdrant-edge 0.8, Qdrant Edge never acknowledged its WAL. Since 0.9, loading a store applies
+// every operation of the WAL again which is not marked as acknowledged, so the first load of a store
+// from an older version would apply its whole WAL once more. Each deletion of a document in there
+// reads every payload of the store, which takes minutes to hours for a large one, and all requests
+// to the vector database wait meanwhile. We flush after every update, so the segments already hold
+// everything the WAL contains, and marking all of it as acknowledged loses nothing. Qdrant Edge
+// lowers the mark to the last entry of the WAL. The store must not be loaded while this runs.
+fn acknowledge_legacy_wal(store_path: &Path, store_name: &str) {
+    let wal_path = store_path.join(WAL_DIRECTORY);
+    if !wal_path.is_dir() || wal_path.join(WAL_FIRST_INDEX_FILE).exists() {
+        return;
     }
 
-    Ok((removed_segments, removed_bytes))
-}
-
-fn wal_file_names(wal_path: &Path) -> std::io::Result<Vec<String>> {
-    if !wal_path.is_dir() {
-        return Ok(Vec::new());
+    let acknowledged_everything = json!({ "ack_index": u64::MAX }).to_string();
+    match write_store_marker(&wal_path, WAL_FIRST_INDEX_FILE, WAL_FIRST_INDEX_FILE_TEMP, &acknowledged_everything) {
+        Ok(()) => info!(Source = "Qdrant Edge"; "Marked the WAL of vector store '{store_name}' as acknowledged, since an older version of AI Studio wrote it."),
+        Err(error) => warn!(Source = "Qdrant Edge"; "Could not mark the WAL of vector store '{store_name}' as acknowledged, so loading the store applies the whole WAL once more: {error}"),
     }
-
-    // Every file counts: a closed segment missing from this list would leave a gap behind.
-    let mut file_names = Vec::new();
-    for entry in fs::read_dir(wal_path)? {
-        let entry = entry?;
-        if entry.file_type()?.is_file() && let Ok(file_name) = entry.file_name().into_string() {
-            file_names.push(file_name);
-        }
-    }
-
-    Ok(file_names)
-}
-
-/// The closed WAL segments which may go, oldest first. That is all of them except the newest:
-/// Qdrant Edge numbers its operations from the first closed segment and would start again at zero
-/// without one. The segments then ignore every later update of a point they already know.
-fn obsolete_wal_segments(file_names: &[String]) -> Vec<String> {
-    let mut closed_segments = file_names
-        .iter()
-        .filter_map(|file_name| {
-            let start_index = file_name.strip_prefix(CLOSED_WAL_SEGMENT_PREFIX)?.parse::<u64>().ok()?;
-            Some((start_index, file_name.clone()))
-        })
-        .collect::<Vec<_>>();
-
-    closed_segments.sort_unstable_by_key(|(start_index, _)| *start_index);
-    closed_segments.pop();
-    closed_segments
-        .into_iter()
-        .map(|(_, file_name)| file_name)
-        .collect()
 }
 
 fn validate_vector_size(vector_size: usize) -> QdrantEdgeResult<()> {
@@ -1845,85 +1798,79 @@ mod tests {
     }
 
     #[test]
-    fn obsolete_wal_segments_keeps_the_newest_closed_segment() {
-        let file_names = ["closed-120", "open-7", "closed-0", "tmp-open-8", "closed-40", ".wal", "first-index", "closed-abc"].map(String::from);
+    fn the_wal_keeps_only_the_newest_closed_segment() {
+        let test_directory = test_directory("wal-acknowledged");
+        let (database, _, most_closed_segments_at_once) = store_with_a_rolled_over_wal(&test_directory);
 
-        // Sorted by number, not by name: as text, "closed-40" would come after "closed-120".
-        assert_eq!(obsolete_wal_segments(&file_names), vec!["closed-0", "closed-40"]);
+        // Qdrant Edge acknowledges its WAL when it flushes, and keeps the newest closed segment to
+        // number its operations on. Should this fail, the WAL grows with every update again, as it
+        // did up to qdrant-edge 0.8.
+        assert_eq!(most_closed_segments_at_once, 1);
 
-        assert!(obsolete_wal_segments(&["closed-0", "open-1"].map(String::from)).is_empty());
-        assert!(obsolete_wal_segments(&["open-1"].map(String::from)).is_empty());
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
     }
 
     #[test]
-    fn a_reloaded_store_drops_obsolete_wal_segments_and_keeps_its_points() {
+    fn an_update_after_a_reload_replaces_the_existing_point() {
         let test_directory = test_directory("wal-reload");
-        let (database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
-        let store_path = database.store_path(SEARCH_STORE).unwrap();
-        drop(database);
-
-        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
-        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None, &[]).unwrap();
-
-        assert_eq!(closed_wal_segments(&store_path).len(), 1);
-        assert_eq!(
-            found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
-            point_ids.iter().map(String::as_str).collect::<HashSet<_>>(),
-            "the points live in the segments, so removing WAL segments must not lose any of them"
-        );
-
-        drop(database);
-        fs::remove_dir_all(test_directory).unwrap();
-    }
-
-    #[test]
-    fn an_update_after_wal_compaction_replaces_the_existing_point() {
-        let test_directory = test_directory("wal-update");
-        let (database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
-        drop(database);
-
-        // The newest point carries the highest operation number so far. Should the numbering start
-        // again after the compaction, the segment would ignore this update as outdated.
-        let newest_point_id = point_ids.last().unwrap();
-        let mut updated_point = test_point(newest_point_id, vec![0.0, 0.0, 1.0]);
-        updated_point.text = "Updated text.".to_string();
-
-        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
-        database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
-
-        let found = database
-            .search_embedding(SEARCH_STORE, search_vector(), 1, Some(vec![newest_point_id.clone()]), &[])
-            .unwrap();
-        assert_eq!(found.len(), 1);
-        assert_eq!(found[0].text, "Updated text.");
-
-        drop(database);
-        fs::remove_dir_all(test_directory).unwrap();
-    }
-
-    #[test]
-    fn optimize_removes_obsolete_wal_segments_of_a_loaded_store() {
-        let test_directory = test_directory("wal-optimize");
-        let (mut database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
-        let store_path = database.store_path(SEARCH_STORE).unwrap();
-
+        let (mut database, point_ids, _) = store_with_a_rolled_over_wal(&test_directory);
         database.optimize_store(SEARCH_STORE).unwrap();
-        assert_eq!(closed_wal_segments(&store_path).len(), 1);
+        drop(database);
 
-        // The next request loads the store again, with all its points and still taking updates.
-        let newest_point_id = point_ids.last().unwrap();
-        let mut updated_point = test_point(newest_point_id, vec![0.0, 0.0, 1.0]);
-        updated_point.text = "Updated text.".to_string();
-        database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
-
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
         let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None, &[]).unwrap();
         assert_eq!(
             found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
             point_ids.iter().map(String::as_str).collect::<HashSet<_>>()
         );
 
-        let updated = found.iter().find(|result| &result.point_id == newest_point_id).unwrap();
-        assert_eq!(updated.text, "Updated text.");
+        // The newest point carries the highest operation number so far. Should the numbering start
+        // again after the reload, the segment would ignore this update as outdated.
+        assert_update_of_the_newest_point_takes_effect(&mut database, &point_ids);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_store_of_an_older_version_gets_its_wal_acknowledged_and_keeps_its_points() {
+        let test_directory = test_directory("wal-legacy");
+        let (database, point_ids, _) = store_with_a_rolled_over_wal(&test_directory);
+        let first_index_path = database.store_path(SEARCH_STORE).unwrap().join(WAL_DIRECTORY).join(WAL_FIRST_INDEX_FILE);
+        drop(database);
+
+        // Up to qdrant-edge 0.8, a WAL had no such file.
+        fs::remove_file(&first_index_path).unwrap();
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None, &[]).unwrap();
+        let first_index: Value = fs::read_to_string(&first_index_path).unwrap().parse().unwrap();
+        assert_eq!(first_index["ack_index"].as_u64(), Some(u64::MAX));
+        assert_eq!(
+            found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
+            point_ids.iter().map(String::as_str).collect::<HashSet<_>>(),
+            "the points live in the segments, so marking the WAL as acknowledged must not lose any of them"
+        );
+
+        // Marking the WAL must not start the numbering of operations again.
+        assert_update_of_the_newest_point_takes_effect(&mut database, &point_ids);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn an_acknowledged_wal_stays_as_it_is() {
+        let test_directory = test_directory("wal-first-index");
+        let database = store_with_one_point_per_axis(&test_directory);
+        let first_index_path = database.store_path(SEARCH_STORE).unwrap().join(WAL_DIRECTORY).join(WAL_FIRST_INDEX_FILE);
+        drop(database);
+        let first_index = fs::read_to_string(&first_index_path).unwrap();
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(fs::read_to_string(&first_index_path).unwrap(), first_index);
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
@@ -2118,9 +2065,10 @@ mod tests {
         database
     }
 
-    /// A store with tiny WAL segments, filled one point at a time until the WAL has closed several
-    /// of them. Returns the database with the store still loaded, and the IDs in insertion order.
-    fn store_with_several_closed_wal_segments(test_directory: &Path) -> (QdrantEdgeDatabase, Vec<String>) {
+    /// A store with tiny WAL segments, filled one point at a time until the WAL has closed three of
+    /// them. Returns the database with the store still loaded, the IDs in insertion order, and the
+    /// most closed segments the WAL kept at once.
+    fn store_with_a_rolled_over_wal(test_directory: &Path) -> (QdrantEdgeDatabase, Vec<String>, usize) {
         const SMALL_WAL_SEGMENT_CAPACITY: usize = 8 * 1024;
         const MAX_POINTS: usize = 1_000;
 
@@ -2141,7 +2089,9 @@ mod tests {
         write_store_initialization_marker(&store_path, SEARCH_STORE).unwrap();
 
         let mut point_ids = Vec::new();
-        while closed_wal_segments(&store_path).len() < 3 {
+        let mut closed_segments_seen = HashSet::new();
+        let mut most_closed_segments_at_once = 0;
+        while closed_segments_seen.len() < 3 {
             assert!(point_ids.len() < MAX_POINTS, "the WAL never closed enough segments");
 
             let point_id = Uuid::from_u128(point_ids.len() as u128 + 1).to_string();
@@ -2149,17 +2099,35 @@ mod tests {
                 .insert_embedding(SEARCH_STORE, vec![test_point(&point_id, vec![1.0, point_ids.len() as f32, 1.0])])
                 .unwrap();
             point_ids.push(point_id);
+
+            let closed_segments = closed_wal_segments(&store_path);
+            most_closed_segments_at_once = most_closed_segments_at_once.max(closed_segments.len());
+            closed_segments_seen.extend(closed_segments);
         }
 
-        (database, point_ids)
+        (database, point_ids, most_closed_segments_at_once)
     }
 
     fn closed_wal_segments(store_path: &Path) -> Vec<String> {
         fs::read_dir(store_path.join(WAL_DIRECTORY))
             .unwrap()
             .map(|entry| entry.unwrap().file_name().into_string().unwrap())
-            .filter(|file_name| file_name.starts_with(CLOSED_WAL_SEGMENT_PREFIX))
+            .filter(|file_name| file_name.starts_with("closed-"))
             .collect()
+    }
+
+    /// Updates the newest of the given points and checks that a search finds its new text.
+    fn assert_update_of_the_newest_point_takes_effect(database: &mut QdrantEdgeDatabase, point_ids: &[String]) {
+        let newest_point_id = point_ids.last().unwrap();
+        let mut updated_point = test_point(newest_point_id, vec![0.0, 0.0, 1.0]);
+        updated_point.text = "Updated text.".to_string();
+        database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
+
+        let found = database
+            .search_embedding(SEARCH_STORE, search_vector(), 1, Some(vec![newest_point_id.clone()]), &[])
+            .unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].text, "Updated text.");
     }
 
     /// Closest to the point on the x axis, then the one on the y axis, then the one on the z axis.
