@@ -12,7 +12,8 @@ public enum APIKeyIssueKind
     /// </summary>
     /// <remarks>
     /// No provider issues keys with whitespace, so the user most likely copied more than the key,
-    /// e.g., two lines of a table or the key together with its name.
+    /// e.g., two lines of a table or the key together with its name. Values which people choose
+    /// themselves, such as a password, may contain a plain space, but no other whitespace.
     /// </remarks>
     WHITESPACE,
 

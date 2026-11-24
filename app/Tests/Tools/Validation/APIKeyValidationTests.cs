@@ -74,6 +74,25 @@ public sealed class APIKeyValidationTests
     [TestCase("\u3000")]
     public void WhitespaceInsideTheKeyIsReported(string whitespace) => Assert.That(APIKeyValidation.Check($"sk-proj{whitespace}AbC123").Kind, Is.EqualTo(APIKeyIssueKind.WHITESPACE));
 
+    [Test]
+    public void AValueWhichAllowsSpacesKeepsThem()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(APIKeyValidation.Check("my secret  phrase", allowsSpaces: true), Is.EqualTo(APIKeyIssue.NONE));
+            Assert.That(APIKeyValidation.Check(" my secret phrase\n", allowsSpaces: true), Is.EqualTo(APIKeyIssue.NONE), "The whitespace around the value goes, as for a key.");
+            Assert.That(APIKeyValidation.Check("my secret phrase", allowsSpaces: false).Kind, Is.EqualTo(APIKeyIssueKind.WHITESPACE));
+            Assert.That(APIKeyValidation.Check("my secret phrase").Kind, Is.EqualTo(APIKeyIssueKind.WHITESPACE), "A key allows no spaces.");
+        }
+    }
+
+    [TestCase("\t")]
+    [TestCase("\n")]
+    [TestCase("\r\n")]
+    [TestCase("\u00A0")]
+    [TestCase("\u3000")]
+    public void AValueWhichAllowsSpacesStillReportsOtherWhitespace(string whitespace) => Assert.That(APIKeyValidation.Check($"my{whitespace}secret", allowsSpaces: true).Kind, Is.EqualTo(APIKeyIssueKind.WHITESPACE));
+
     [TestCase(0x200B)]
     [TestCase(0x200D)]
     [TestCase(0x2060)]

@@ -58,12 +58,25 @@ public static class APIKeyValidation
     /// </remarks>
     /// <param name="key">The key as the user entered it.</param>
     /// <returns>The first issue, or NONE when the key can be sent.</returns>
-    public static APIKeyIssue Check(string? key)
+    public static APIKeyIssue Check(string? key) => Check(key, allowsSpaces: false);
+
+    /// <summary>
+    /// Finds the first character of a value for an HTTP header which cannot be sent.
+    /// </summary>
+    /// <remarks>
+    /// The same check as for an API key, for values which people choose themselves, such as the
+    /// password of an ERI server: there, a space inside the value is fine and goes into the header
+    /// as it is. Every other whitespace inside the value is still an issue, the no-break space included.
+    /// </remarks>
+    /// <param name="value">The value as the user entered it.</param>
+    /// <param name="allowsSpaces">Whether a plain space inside the value is fine.</param>
+    /// <returns>The first issue, or NONE when the value can be sent.</returns>
+    public static APIKeyIssue Check(string? value, bool allowsSpaces)
     {
-        var characters = StringInfo.GetTextElementEnumerator(Normalize(key));
+        var characters = StringInfo.GetTextElementEnumerator(Normalize(value));
         while (characters.MoveNext())
         {
-            var issue = CheckCharacter(characters.GetTextElement());
+            var issue = CheckCharacter(characters.GetTextElement(), allowsSpaces);
             if (issue.IsProblem)
                 return issue;
         }
@@ -124,9 +137,9 @@ public static class APIKeyValidation
     /// <returns>The message.</returns>
     public static string GetUnusableKeyMessage(string ownerName) => string.Format(TA("The API key for '{0}' contains a character which an API key cannot contain, such as a line break or an invisible character. Please enter the key again in the settings. If your organization provides the key, please contact your IT department."), ownerName);
 
-    private static APIKeyIssue CheckCharacter(string character)
+    private static APIKeyIssue CheckCharacter(string character, bool allowsSpaces)
     {
-        if (character.Length is 1 && character[0] is >= '!' and <= '~')
+        if (character.Length is 1 && (character[0] is >= '!' and <= '~' || (allowsSpaces && character[0] is ' ')))
             return APIKeyIssue.NONE;
 
         //

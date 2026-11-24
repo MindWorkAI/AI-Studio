@@ -9358,7 +9358,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3525663993"] = "In
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3549650120"] = "Noch keine Datenquellen konfiguriert."
 
 -- Export Access Token?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3595669127"] = "Zugriffstoken exportieren?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3595669127"] = "Zugangstoken exportieren?"
 
 -- Local data sources refresh when files change.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3687976654"] = "Lokale Datenquellen werden aktualisiert, wenn sich Dateien ändern."
@@ -9373,10 +9373,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3831281036"] = "ER
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3865031940"] = "Aktionen"
 
 -- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4027572258"] = "Für diese ERI-Datenquelle ist ein Zugriffstoken konfiguriert. Möchten Sie das verschlüsselte Zugriffstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugriffstoken verwenden zu können."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4027572258"] = "Für diese ERI-Datenquelle ist ein Zugangstoken konfiguriert. Möchten Sie das verschlüsselte Zugangstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugangstoken verwenden zu können."
 
 -- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4027572258::INFORMAL"] = "Für diese ERI-Datenquelle ist ein Zugriffstoken konfiguriert. Möchtest du das verschlüsselte Zugriffstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugriffstoken verwenden zu können."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4027572258::INFORMAL"] = "Für diese ERI-Datenquelle ist ein Zugangstoken konfiguriert. Möchtest du das verschlüsselte Zugangstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugangstoken verwenden zu können."
 
 -- Waiting for indexing status
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4108252513"] = "Warten auf Indexierungsstatus"
@@ -25235,6 +25235,66 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876"]
 
 -- Please enter the secret necessary for authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876::INFORMAL"] = "Bitte gib das für die Authentifizierung benötigte Geheimnis ein."
+
+-- The username contains the character '{0}', which the ERI server cannot receive: only letters without accents, digits, spaces, and common punctuation get through. Please check the username. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1126605556"] = "Der Benutzername enthält das Zeichen „{0}“, das der ERI-Server nicht empfangen kann: Übertragen werden nur Buchstaben ohne Akzente, Ziffern, Leerzeichen und gängige Satzzeichen. Bitte überprüfen Sie den Benutzernamen. Falls er tatsächlich ein solches Zeichen enthält, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The username contains the character '{0}', which the ERI server cannot receive: only letters without accents, digits, spaces, and common punctuation get through. Please check the username. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1126605556::INFORMAL"] = "Der Benutzername enthält das Zeichen „{0}“, das der ERI-Server nicht empfangen kann: Übertragen werden nur Buchstaben ohne Akzente, Ziffern, Leerzeichen und gängige Satzzeichen. Bitte überprüfe den Benutzernamen. Falls er tatsächlich ein solches Zeichen enthält, wende dich bitte an deine IT-Abteilung."
+
+-- The password of the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut, a line break, or an invisible character. Please enter the password again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1321099029"] = "Das Passwort der Datenquelle „{0}“ enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut, einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte geben Sie das Passwort in den Einstellungen der Datenquelle erneut ein. Wenn Ihre Organisation die Datenquelle bereitstellt, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The password of the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut, a line break, or an invisible character. Please enter the password again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1321099029::INFORMAL"] = "Das Passwort der Datenquelle „{0}“ enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut, einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte gib das Passwort in den Einstellungen der Datenquelle erneut ein. Wenn deine Organisation die Datenquelle bereitstellt, wende dich bitte an deine IT-Abteilung."
+
+-- The access token contains a space or a line break, which an access token cannot contain. Please check whether you copied more than the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2361316190"] = "Das Zugangstoken enthält ein Leerzeichen oder einen Zeilenumbruch. Beides kann in einem Zugangstoken nicht vorkommen. Bitte überprüfen Sie, ob Sie mehr als nur das Token kopiert haben."
+
+-- The access token contains a space or a line break, which an access token cannot contain. Please check whether you copied more than the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2361316190::INFORMAL"] = "Das Zugangstoken enthält ein Leerzeichen oder einen Zeilenumbruch. Beides kann in einem Zugangstoken nicht vorkommen. Bitte überprüfe, ob du mehr als nur das Token kopiert hast."
+
+-- The access token of the data source '{0}' contains a character which an access token cannot contain, such as a line break or an invisible character. Please enter the token again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2819602693"] = "Das Zugangstoken der Datenquelle „{0}“ enthält ein Zeichen, das in einem Zugangstoken nicht vorkommen kann, etwa einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte geben Sie das Token in den Einstellungen der Datenquelle erneut ein. Wenn Ihre Organisation die Datenquelle bereitstellt, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The access token of the data source '{0}' contains a character which an access token cannot contain, such as a line break or an invisible character. Please enter the token again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2819602693::INFORMAL"] = "Das Zugangstoken der Datenquelle „{0}“ enthält ein Zeichen, das in einem Zugangstoken nicht vorkommen kann, etwa einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte gib das Token in den Einstellungen der Datenquelle erneut ein. Wenn deine Organisation die Datenquelle bereitstellt, wende dich bitte an deine IT-Abteilung."
+
+-- The access token contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the token and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2930207847"] = "Das Zugangstoken enthält ein unsichtbares Zeichen. Solche Zeichen kommen oft mit, wenn Sie Text von einer Webseite oder aus einem Dokument kopieren. Bitte löschen Sie das Token und geben Sie es erneut ein."
+
+-- The access token contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the token and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2930207847::INFORMAL"] = "Das Zugangstoken enthält ein unsichtbares Zeichen. Solche Zeichen kommen oft mit, wenn du Text von einer Webseite oder aus einem Dokument kopierst. Bitte lösche das Token und gib es erneut ein."
+
+-- The password contains a character which the ERI server cannot receive, such as an umlaut, 'ß', or a typographic quotation mark: only letters without accents, digits, spaces, and common punctuation get through. Please check the password. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3440410256"] = "Das Passwort enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut, ein „ß“ oder ein typografisches Anführungszeichen: Übertragen werden nur Buchstaben ohne Akzente, Ziffern, Leerzeichen und gängige Satzzeichen. Bitte überprüfen Sie das Passwort. Falls es tatsächlich ein solches Zeichen enthält, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The password contains a character which the ERI server cannot receive, such as an umlaut, 'ß', or a typographic quotation mark: only letters without accents, digits, spaces, and common punctuation get through. Please check the password. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3440410256::INFORMAL"] = "Das Passwort enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut, ein „ß“ oder ein typografisches Anführungszeichen: Übertragen werden nur Buchstaben ohne Akzente, Ziffern, Leerzeichen und gängige Satzzeichen. Bitte überprüfe das Passwort. Falls es tatsächlich ein solches Zeichen enthält, wende dich bitte an deine IT-Abteilung."
+
+-- The password contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the password again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3690718143"] = "Das Passwort enthält einen Zeilenumbruch, einen Tabulator, ein besonderes Leerzeichen wie das geschützte Leerzeichen oder ein unsichtbares Zeichen. Solche Zeichen kann der ERI-Server nicht empfangen. Normale Leerzeichen sind in Ordnung. Bitte geben Sie das Passwort erneut ein."
+
+-- The password contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the password again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3690718143::INFORMAL"] = "Das Passwort enthält einen Zeilenumbruch, einen Tabulator, ein besonderes Leerzeichen wie das geschützte Leerzeichen oder ein unsichtbares Zeichen. Solche Zeichen kann der ERI-Server nicht empfangen. Normale Leerzeichen sind in Ordnung. Bitte gib das Passwort erneut ein."
+
+-- The access token contains the character '{0}', which an access token cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3718710191"] = "Das Zugangstoken enthält das Zeichen „{0}“, das in einem Zugangstoken nicht vorkommen kann. Textverarbeitungsprogramme machen zum Beispiel aus Anführungszeichen und Bindestrichen solche Zeichen. Bitte überprüfen Sie das Token."
+
+-- The access token contains the character '{0}', which an access token cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3718710191::INFORMAL"] = "Das Zugangstoken enthält das Zeichen „{0}“, das in einem Zugangstoken nicht vorkommen kann. Textverarbeitungsprogramme machen zum Beispiel aus Anführungszeichen und Bindestrichen solche Zeichen. Bitte überprüfe das Token."
+
+-- The username for the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut. Please check the username in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T4013716977"] = "Der Benutzername für die Datenquelle „{0}“ enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut. Bitte überprüfen Sie den Benutzernamen in den Einstellungen der Datenquelle. Wenn Ihre Organisation die Datenquelle bereitstellt, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The username for the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut. Please check the username in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T4013716977::INFORMAL"] = "Der Benutzername für die Datenquelle „{0}“ enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut. Bitte überprüfe den Benutzernamen in den Einstellungen der Datenquelle. Wenn deine Organisation die Datenquelle bereitstellt, wende dich bitte an deine IT-Abteilung."
+
+-- The username contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the username again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T588839531"] = "Der Benutzername enthält einen Zeilenumbruch, einen Tabulator, ein besonderes Leerzeichen wie das geschützte Leerzeichen oder ein unsichtbares Zeichen. Solche Zeichen kann der ERI-Server nicht empfangen. Normale Leerzeichen sind in Ordnung. Bitte geben Sie den Benutzernamen erneut ein."
+
+-- The username contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the username again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T588839531::INFORMAL"] = "Der Benutzername enthält einen Zeilenumbruch, einen Tabulator, ein besonderes Leerzeichen wie das geschützte Leerzeichen oder ein unsichtbares Zeichen. Solche Zeichen kann der ERI-Server nicht empfangen. Normale Leerzeichen sind in Ordnung. Bitte gib den Benutzernamen erneut ein."
 
 -- AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1578559061"] = "AI Studio kann keine Bilder im Format {0} an ein KI-Modell übergeben. Bitte konvertieren Sie das Bild in JPG oder PNG."
