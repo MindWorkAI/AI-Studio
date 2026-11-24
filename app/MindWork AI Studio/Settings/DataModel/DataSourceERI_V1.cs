@@ -326,6 +326,19 @@ public record struct DataSourceERI_V1: IERIDataSource
                 LOGGER.LogWarning($"The configured data source {idx} must specify a username. (Plugin ID: {configPluginId})");
                 return false;
             }
+
+            //
+            // The username goes to the ERI server in an HTTP header, which carries nothing but ASCII.
+            // Nobody on the device could change it, so the data source would fail with every search:
+            //
+            var usernameIssue = ERICredentialValidation.CheckUsername(username);
+            if (usernameIssue.IsProblem)
+            {
+                LOGGER.LogWarning($"The username of the configured data source {idx} contains a character which the ERI server cannot receive ({usernameIssue.Kind}). (Plugin ID: {configPluginId})");
+                return false;
+            }
+
+            username = ERICredentialValidation.Normalize(username);
         }
 
         dataSource = new DataSourceERI_V1
@@ -452,6 +465,18 @@ public record struct DataSourceERI_V1: IERIDataSource
         }
 
         //
+        // The secret goes to the ERI server in an HTTP header, as the username does. One which the
+        // header cannot carry counts like one which cannot be decrypted. A dry run checks it as well,
+        // so that it writes the warning, too:
+        //
+        var secretIssue = ERICredentialValidation.CheckSecret(dataSource.AuthMethod, decryptedSecret);
+        if (secretIssue.IsProblem)
+        {
+            LOGGER.LogWarning($"The {secretFieldName} for data source {idx} contains a character which the ERI server cannot receive ({secretIssue.Kind}). (Plugin ID: {configPluginId})");
+            return false;
+        }
+
+        //
         // A dry run only checks the configuration, so it queues nothing: the start which follows it
         // would otherwise store the secret once more for every dry run before it:
         //
@@ -461,7 +486,7 @@ public record struct DataSourceERI_V1: IERIDataSource
         PendingEnterpriseSecrets.Add(new(
             $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{dataSource.Id}",
             dataSource.Name,
-            decryptedSecret,
+            ERICredentialValidation.Normalize(decryptedSecret),
             SecretStoreType.DATA_SOURCE));
         LOGGER.LogDebug($"Successfully decrypted the {secretFieldName} for data source {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
         return true;
