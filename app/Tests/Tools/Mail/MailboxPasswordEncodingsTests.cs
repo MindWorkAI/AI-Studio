@@ -1,5 +1,6 @@
 using System.Text;
 
+using AIStudio.Tools;
 using AIStudio.Tools.Mail;
 
 using MailKit.Security;
@@ -169,6 +170,24 @@ public sealed class MailboxPasswordEncodingsTests
         {
             Assert.That(MailboxPasswordEncodings.TryPrepare(GetKnownEncoding(MailboxPasswordEncodings.DEFAULT), DECOMPOSED, out var prepared), Is.True);
             Assert.That(prepared, Is.EqualTo(DECOMPOSED));
+        }
+    }
+
+    [Test]
+    public async Task APasswordFromTheSecretStoreBecomesTheBytesOfTheChosenEncoding()
+    {
+        //
+        // The runtime reads the password from the OS keyring and hands it over encrypted, as here.
+        // Only the keyring itself is left out: it takes and returns the text as Unicode. Wherever
+        // the password was stored, it arrives as text, and only signing in turns it into bytes:
+        //
+        var encryption = await EncryptionTests.CreateEncryptionAsync();
+        var password = await encryption.Decrypt(new EncryptedText("oKGio6SlpqeoqaqrrK2urw==0NrfOsjWs3R9d/zzOA5Mvw=="));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(password, Is.EqualTo("Grüße-100€"));
+            Assert.That(GetPlainPasswordBytes("windows-1252", password), Is.EqualTo("47 72 FC DF 65 2D 31 30 30 80"));
+            Assert.That(GetPlainPasswordBytes(MailboxPasswordEncodings.DEFAULT, password), Is.EqualTo("47 72 C3 BC C3 9F 65 2D 31 30 30 E2 82 AC"));
         }
     }
 
