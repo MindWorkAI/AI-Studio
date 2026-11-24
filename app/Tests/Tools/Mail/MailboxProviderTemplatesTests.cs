@@ -46,6 +46,17 @@ public sealed class MailboxProviderTemplatesTests
         }
     }
 
+    [TestCase("imap.gmail.com", "Gmail")]
+    [TestCase(" IMAP.Mailbox.ORG. ", "mailbox.org")]
+    [TestCase("posteo.de", "Posteo")]
+    public void AHostFindsItsProvider(string host, string expectedName) => Assert.That(MailboxProviderTemplates.FindByHost(host)?.Name, Is.EqualTo(expectedName));
+
+    [TestCase("")]
+    [TestCase("exchange.intra.example.org")]
+    [TestCase("imap.gmail.com.example.org")]
+    [TestCase("not a host")]
+    public void AnotherHostFindsNoProvider(string host) => Assert.That(MailboxProviderTemplates.FindByHost(host), Is.Null);
+
     [Test]
     public void EveryRequirementHasItsOwnDescription()
     {

@@ -827,6 +827,9 @@ public static class AppIcons
     /// <summary>Marks the check of which retrieved passages fit the question.</summary>
     public const string PASSAGE_RELEVANCE_CHECK = LucideIcons.LIST_CHECKS;
 
+    /// <summary>Marks the encoding in which a username and a password travel, such as when signing in to a mailbox.</summary>
+    public const string PASSWORD_ENCODING = LucideIcons.BINARY;
+
     /// <summary>Marks the component that reads PDF files, such as the PDFium version on the information page.</summary>
     public const string PDF_READER = LucideIcons.FILE_SCAN;
 

@@ -351,6 +351,16 @@ CONFIG["DATA_SOURCES"] = {}
 --   UsernameHint       Optional text telling users what to enter as their username.
 --   HelpUrl            Optional http or https address of your instructions, e.g., on how to
 --                      enable IMAP for a mailbox.
+--   PasswordEncoding   Optional name of the encoding your mail server expects for usernames and
+--                      passwords with characters beyond ASCII, such as umlauts, accents, Turkish,
+--                      Cyrillic, or Asian characters. Most servers expect utf-8, the default.
+--                      Depending on its configuration, a server may expect another one, e.g.,
+--                      Microsoft Exchange the code page of its Windows system: windows-1252 in
+--                      Western Europe, windows-1250 in Central Europe, windows-1251 for Cyrillic,
+--                      windows-1254 in Turkey, or shift_jis in Japan. Any encoding .NET knows by
+--                      name works, as long as it keeps ASCII as it is; utf-16 does not. Every
+--                      mailbox on this server signs in with this encoding, also one added
+--                      before you set it, and users cannot change it.
 -- An entry with an invalid field is left out as a whole, and the log names the field.
 -- To allow mailboxes on these mail servers only, see DataMailboxes.AllowOnlyOrganizationMailServers.
 CONFIG["MAILBOX_PROVIDERS"] = {}
@@ -364,6 +374,7 @@ CONFIG["MAILBOX_PROVIDERS"] = {}
 --     ["Port"] = 993,
 --     ["UsernameHint"] = "Your account as DOMAIN\\username",
 --     ["HelpUrl"] = "https://intranet.example.org/mail/imap",
+--     ["PasswordEncoding"] = "windows-1252",
 -- }
 
 CONFIG["SETTINGS"] = {}
