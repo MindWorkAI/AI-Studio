@@ -114,12 +114,12 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// </summary>
     /// <param name="mailbox">The mailbox to connect to.</param>
     /// <param name="password">The password, as stored in the OS keyring or just typed in.</param>
-    /// <param name="policy">Which mail servers the organization allows. Every connection passes here, so this is where a server it does not allow is refused.</param>
+    /// <param name="policy">Which mail servers the organization allows, and which encodings it names for them. Every connection passes here, so this is where a server it does not allow is refused, and where its encoding takes effect.</param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="MailboxConnectionException">The connection or the sign-in failed.</exception>
     public async Task ConnectAsync(DataSourceMailbox mailbox, string password, MailServerPolicy policy, CancellationToken token)
     {
-        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !MailboxPasswordEncodings.TryGet(mailbox.PasswordEncoding, out var textEncoding) ||!MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
+        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !MailboxPasswordEncodings.TryGet(policy.GetPasswordEncoding(mailbox), out var textEncoding) ||!MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
             throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "The mailbox settings are incomplete, or this version of AI Studio does not know them.");
 
         if (!policy.IsAllowed(mailbox.Host))
@@ -494,7 +494,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     }
 
     /// <summary>
-    /// Prepares the username and the password for one sign-in in the encoding of the mailbox.
+    /// Prepares the username and the password for one sign-in in the encoding of the mailbox, cf. MailServerPolicy.GetPasswordEncoding.
     /// </summary>
     /// <remarks>
     /// A sign-in in bytes which are not the password counts as a failed attempt, just like a wrong

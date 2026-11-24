@@ -109,7 +109,7 @@ public sealed class ImapMailboxConnectorTests
         // a network failure instead of this one.
         //
         await using var connector = new ImapMailboxConnector();
-        var policy = new MailServerPolicy(true, ["imap.intra.example.org"]);
+        var policy = new MailServerPolicy(true, [new("imap.intra.example.org", null)]);
         var exception = await Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(MAILBOX, PASSWORD, policy, CancellationToken.None));
         Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.SERVER_NOT_ALLOWED));
     }

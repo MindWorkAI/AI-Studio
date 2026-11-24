@@ -65,7 +65,8 @@ public sealed record DataMailboxProvider : ILivePluginContent
     /// <remarks>
     /// Depending on its configuration, a mail server may expect another encoding than UTF-8, e.g.,
     /// Microsoft Exchange the code page of its Windows system. The organization knows which one, so
-    /// its users spend no failed sign-in on finding out.
+    /// its users spend no failed sign-in on finding out: every mailbox on this server signs in with
+    /// it, cf. MailServerPolicy.GetPasswordEncoding.
     /// </remarks>
     public string? PasswordEncoding { get; private init; }
 
