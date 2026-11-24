@@ -25236,6 +25236,66 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876"]
 -- Please enter the secret necessary for authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876::INFORMAL"] = "Please enter the secret necessary for authentication."
 
+-- The username contains the character '{0}', which the ERI server cannot receive: only letters without accents, digits, spaces, and common punctuation get through. Please check the username. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1126605556"] = "The username contains the character '{0}', which the ERI server cannot receive: only letters without accents, digits, spaces, and common punctuation get through. Please check the username. If it really contains such a character, please contact your IT department."
+
+-- The username contains the character '{0}', which the ERI server cannot receive: only letters without accents, digits, spaces, and common punctuation get through. Please check the username. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1126605556::INFORMAL"] = "The username contains the character '{0}', which the ERI server cannot receive: only letters without accents, digits, spaces, and common punctuation get through. Please check the username. If it really contains such a character, please contact your IT department."
+
+-- The password of the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut, a line break, or an invisible character. Please enter the password again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1321099029"] = "The password of the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut, a line break, or an invisible character. Please enter the password again in the settings of the data source. If your organization provides the data source, please contact your IT department."
+
+-- The password of the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut, a line break, or an invisible character. Please enter the password again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1321099029::INFORMAL"] = "The password of the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut, a line break, or an invisible character. Please enter the password again in the settings of the data source. If your organization provides the data source, please contact your IT department."
+
+-- The access token contains a space or a line break, which an access token cannot contain. Please check whether you copied more than the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2361316190"] = "The access token contains a space or a line break, which an access token cannot contain. Please check whether you copied more than the token."
+
+-- The access token contains a space or a line break, which an access token cannot contain. Please check whether you copied more than the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2361316190::INFORMAL"] = "The access token contains a space or a line break, which an access token cannot contain. Please check whether you copied more than the token."
+
+-- The access token of the data source '{0}' contains a character which an access token cannot contain, such as a line break or an invisible character. Please enter the token again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2819602693"] = "The access token of the data source '{0}' contains a character which an access token cannot contain, such as a line break or an invisible character. Please enter the token again in the settings of the data source. If your organization provides the data source, please contact your IT department."
+
+-- The access token of the data source '{0}' contains a character which an access token cannot contain, such as a line break or an invisible character. Please enter the token again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2819602693::INFORMAL"] = "The access token of the data source '{0}' contains a character which an access token cannot contain, such as a line break or an invisible character. Please enter the token again in the settings of the data source. If your organization provides the data source, please contact your IT department."
+
+-- The access token contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the token and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2930207847"] = "The access token contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the token and enter it again."
+
+-- The access token contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the token and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2930207847::INFORMAL"] = "The access token contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the token and enter it again."
+
+-- The password contains a character which the ERI server cannot receive, such as an umlaut, 'ß', or a typographic quotation mark: only letters without accents, digits, spaces, and common punctuation get through. Please check the password. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3440410256"] = "The password contains a character which the ERI server cannot receive, such as an umlaut, 'ß', or a typographic quotation mark: only letters without accents, digits, spaces, and common punctuation get through. Please check the password. If it really contains such a character, please contact your IT department."
+
+-- The password contains a character which the ERI server cannot receive, such as an umlaut, 'ß', or a typographic quotation mark: only letters without accents, digits, spaces, and common punctuation get through. Please check the password. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3440410256::INFORMAL"] = "The password contains a character which the ERI server cannot receive, such as an umlaut, 'ß', or a typographic quotation mark: only letters without accents, digits, spaces, and common punctuation get through. Please check the password. If it really contains such a character, please contact your IT department."
+
+-- The password contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the password again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3690718143"] = "The password contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the password again."
+
+-- The password contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the password again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3690718143::INFORMAL"] = "The password contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the password again."
+
+-- The access token contains the character '{0}', which an access token cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3718710191"] = "The access token contains the character '{0}', which an access token cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the token."
+
+-- The access token contains the character '{0}', which an access token cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3718710191::INFORMAL"] = "The access token contains the character '{0}', which an access token cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the token."
+
+-- The username for the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut. Please check the username in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T4013716977"] = "The username for the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut. Please check the username in the settings of the data source. If your organization provides the data source, please contact your IT department."
+
+-- The username for the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut. Please check the username in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T4013716977::INFORMAL"] = "The username for the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut. Please check the username in the settings of the data source. If your organization provides the data source, please contact your IT department."
+
+-- The username contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the username again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T588839531"] = "The username contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the username again."
+
+-- The username contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the username again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T588839531::INFORMAL"] = "The username contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the username again."
+
 -- AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1578559061"] = "AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG."
 
