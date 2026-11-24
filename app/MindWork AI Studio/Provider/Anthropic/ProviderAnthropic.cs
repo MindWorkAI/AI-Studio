@@ -139,7 +139,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             var request = new HttpRequestMessage(HttpMethod.Post, "messages");
 
             // Set the authorization header:
-            request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Headers.Add("x-api-key", await this.DecryptAPIKey(requestedSecret));
 
             // Set the Anthropic version:
             request.Headers.Add("anthropic-version", "2023-06-01");
@@ -166,7 +166,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
         async Task<HttpRequestMessage> RequestBuilder()
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "messages");
-            request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Headers.Add("x-api-key", await this.DecryptAPIKey(requestedSecret));
             request.Headers.Add("anthropic-version", "2023-06-01");
             request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
             return request;

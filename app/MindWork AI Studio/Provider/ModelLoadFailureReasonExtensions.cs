@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Validation;
 
 namespace AIStudio.Provider;
 
@@ -13,6 +14,7 @@ public static class ModelLoadFailureReasonExtensions
         public string ToUserMessage(string providerName) => failureReason switch
         {
             ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY => string.Format(TB("We could not load models from '{0}'. The API key is probably missing, invalid, or expired."), providerName),
+            ModelLoadFailureReason.INVALID_API_KEY_CHARACTERS => APIKeyValidation.GetUnusableKeyMessage(providerName),
             ModelLoadFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => string.Format(TB("We could not load models from '{0}'. The account or API key does not have the required permissions."), providerName),
             ModelLoadFailureReason.INSUFFICIENT_QUOTA => string.Format(TB("We could not load models from '{0}' because the account appears to have no API credits left."), providerName),
             ModelLoadFailureReason.TOO_MANY_REQUESTS => string.Format(TA("We could not load models from '{0}' because too many requests were sent. Please wait a moment and try again."), providerName),

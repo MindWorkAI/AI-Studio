@@ -126,13 +126,16 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
     private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional);
-        if (string.IsNullOrWhiteSpace(secretKey))
+        if (secretKey.IsUnusable)
+            return UnusableAPIKeyModelLoadResult();
+
+        if (string.IsNullOrWhiteSpace(secretKey.Key))
             return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, "No API key available for model loading.");
 
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey.Key);
 
             using var response = await this.HttpClient.SendAsync(request, token);
             var body = await response.Content.ReadAsStringAsync(token);

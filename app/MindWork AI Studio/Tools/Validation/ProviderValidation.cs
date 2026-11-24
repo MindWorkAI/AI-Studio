@@ -59,13 +59,11 @@ public sealed class ProviderValidation
             return apiKeyStorageIssue;
 
         // A self-hosted server may well run without any key, so an empty field is fine for it:
-        if(this.GetProvider() is LLMProviders.SELF_HOSTED)
-            return null;
-
         if(string.IsNullOrWhiteSpace(apiKey))
-            return TA("Please enter an API key.");
+            return this.GetProvider() is LLMProviders.SELF_HOSTED ? null : TA("Please enter an API key.");
 
-        return null;
+        // A key which is there has to be one we can send, also the optional key of a self-hosted server:
+        return APIKeyValidation.Validate(apiKey);
     }
 
     public string? ValidatingInstanceName(string instanceName)

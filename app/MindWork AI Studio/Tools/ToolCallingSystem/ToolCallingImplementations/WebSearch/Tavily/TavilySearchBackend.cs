@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Tavily;
 
@@ -58,7 +59,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
 
     public void DeclareSettings(ToolSettingsSchemaBuilder builder) => builder
         .InGroup(SETTINGS_GROUP)
-        .OptionalSecret(API_KEY_SETTING)
+        .OptionalAPIKey(API_KEY_SETTING)
         .OptionalEnum(SEARCH_DEPTH_SETTING, SUPPORTED_SEARCH_DEPTHS)
         .InGroup(string.Empty);
 
@@ -118,6 +119,13 @@ public sealed class TavilySearchBackend : IWebSearchBackend
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException(TB("A Tavily API key is required."));
 
+        //
+        // A key stored before AI Studio checked keys, or one the organization provides, may hold a
+        // character the header cannot carry. The dispatcher asks the other services all the same:
+        //
+        if (!APIKeyValidation.TryPrepareForHeader(apiKey, out var headerAPIKey))
+            throw new InvalidOperationException(APIKeyValidation.GetUnusableKeyMessage("Tavily"));
+
         var notes = new List<string>();
         var language = ResolveLanguage(query.Language, notes);
         var searchRequest = new TavilySearchRequest
@@ -138,7 +146,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
             SafeSearch = query.SafeSearch?.TavilyValue,
         };
 
-        var response = await this.searchClient.SearchAsync(apiKey.Trim(), searchRequest, query.TimeoutSeconds, token);
+        var response = await this.searchClient.SearchAsync(headerAPIKey, searchRequest, query.TimeoutSeconds, token);
         var hits = response.Results.Select(result => new SearchHit(result.Url, result.Title, result.Content));
         var candidates = SearchCandidateCollector.Collect(WebSearchBackend.TAVILY, hits, query.Limit, out var candidateCount);
         return new WebSearchBackendResult(WebSearchBackend.TAVILY, candidates, candidateCount, notes);

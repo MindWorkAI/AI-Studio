@@ -9,7 +9,7 @@
             @foreach (var issue in this.IssuesData)
             {
                 <MudListItem Icon="@AppIcons.WARNING" IconColor="Color.Error">
-                    @issue
+                    <MudJustifiedText Typo="Typo.body1">@issue</MudJustifiedText>
                 </MudListItem>
             }
         </MudList>

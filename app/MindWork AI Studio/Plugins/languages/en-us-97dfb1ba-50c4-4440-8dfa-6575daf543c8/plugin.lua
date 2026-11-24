@@ -25032,6 +25032,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSSERVICE::T40310
 -- The file path is null or empty and the file therefore can not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T932243993"] = "The file path is null or empty and the file therefore can not be loaded."
 
+-- The API key for '{0}' contains a character which an API key cannot contain, such as a line break or an invisible character. Please enter the key again in the settings. If your organization provides the key, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3169974238"] = "The API key for '{0}' contains a character which an API key cannot contain, such as a line break or an invisible character. Please enter the key again in the settings. If your organization provides the key, please contact your IT department."
+
+-- The API key for '{0}' contains a character which an API key cannot contain, such as a line break or an invisible character. Please enter the key again in the settings. If your organization provides the key, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3169974238::INFORMAL"] = "The API key for '{0}' contains a character which an API key cannot contain, such as a line break or an invisible character. Please enter the key again in the settings. If your organization provides the key, please contact your IT department."
+
+-- The API key contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the key and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3476635333"] = "The API key contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the key and enter it again."
+
+-- The API key contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the key and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3476635333::INFORMAL"] = "The API key contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the key and enter it again."
+
+-- The API key contains the character '{0}', which an API key cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3728920309"] = "The API key contains the character '{0}', which an API key cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the key."
+
+-- The API key contains the character '{0}', which an API key cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3728920309::INFORMAL"] = "The API key contains the character '{0}', which an API key cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the key."
+
+-- The API key contains a space or a line break, which an API key cannot contain. Please check whether you copied more than the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T839628124"] = "The API key contains a space or a line break, which an API key cannot contain. Please check whether you copied more than the key."
+
+-- The API key contains a space or a line break, which an API key cannot contain. Please check whether you copied more than the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T839628124::INFORMAL"] = "The API key contains a space or a line break, which an API key cannot contain. Please check whether you copied more than the key."
+
 -- The hostname is not a valid HTTP(S) URL.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1013354736"] = "The hostname is not a valid HTTP(S) URL."
 

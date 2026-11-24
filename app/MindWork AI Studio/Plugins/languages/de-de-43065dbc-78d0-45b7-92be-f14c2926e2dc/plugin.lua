@@ -25032,6 +25032,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSSERVICE::T40310
 -- The file path is null or empty and the file therefore can not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T932243993"] = "Der Dateipfad ist leer, daher kann die Datei nicht geladen werden."
 
+-- The API key for '{0}' contains a character which an API key cannot contain, such as a line break or an invisible character. Please enter the key again in the settings. If your organization provides the key, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3169974238"] = "Der API-Schlüssel für „{0}“ enthält ein Zeichen, das in einem API-Schlüssel nicht vorkommen kann, etwa einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte geben Sie den Schlüssel in den Einstellungen erneut ein. Wenn Ihre Organisation den Schlüssel bereitstellt, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The API key for '{0}' contains a character which an API key cannot contain, such as a line break or an invisible character. Please enter the key again in the settings. If your organization provides the key, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3169974238::INFORMAL"] = "Der API-Schlüssel für „{0}“ enthält ein Zeichen, das in einem API-Schlüssel nicht vorkommen kann, etwa einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte gib den Schlüssel in den Einstellungen erneut ein. Wenn deine Organisation den Schlüssel bereitstellt, wende dich bitte an deine IT-Abteilung."
+
+-- The API key contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the key and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3476635333"] = "Der API-Schlüssel enthält ein unsichtbares Zeichen. Solche Zeichen kommen oft mit, wenn Sie Text von einer Webseite oder aus einem Dokument kopieren. Bitte löschen Sie den Schlüssel und geben Sie ihn erneut ein."
+
+-- The API key contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the key and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3476635333::INFORMAL"] = "Der API-Schlüssel enthält ein unsichtbares Zeichen. Solche Zeichen kommen oft mit, wenn du Text von einer Webseite oder aus einem Dokument kopierst. Bitte lösche den Schlüssel und gib ihn erneut ein."
+
+-- The API key contains the character '{0}', which an API key cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3728920309"] = "Der API-Schlüssel enthält das Zeichen „{0}“, das in einem API-Schlüssel nicht vorkommen kann. Textverarbeitungsprogramme machen zum Beispiel aus Anführungszeichen und Bindestrichen solche Zeichen. Bitte überprüfen Sie den Schlüssel."
+
+-- The API key contains the character '{0}', which an API key cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3728920309::INFORMAL"] = "Der API-Schlüssel enthält das Zeichen „{0}“, das in einem API-Schlüssel nicht vorkommen kann. Textverarbeitungsprogramme machen zum Beispiel aus Anführungszeichen und Bindestrichen solche Zeichen. Bitte überprüfe den Schlüssel."
+
+-- The API key contains a space or a line break, which an API key cannot contain. Please check whether you copied more than the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T839628124"] = "Der API-Schlüssel enthält ein Leerzeichen oder einen Zeilenumbruch. Beides kann in einem API-Schlüssel nicht vorkommen. Bitte überprüfen Sie, ob Sie mehr als nur den Schlüssel kopiert haben."
+
+-- The API key contains a space or a line break, which an API key cannot contain. Please check whether you copied more than the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T839628124::INFORMAL"] = "Der API-Schlüssel enthält ein Leerzeichen oder einen Zeilenumbruch. Beides kann in einem API-Schlüssel nicht vorkommen. Bitte überprüfe, ob du mehr als nur den Schlüssel kopiert hast."
+
 -- The hostname is not a valid HTTP(S) URL.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1013354736"] = "Der Hostname ist keine gültige HTTP(S)-URL."
 
