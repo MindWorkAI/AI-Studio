@@ -8,7 +8,7 @@
         <MudList T="string">
             @foreach (var issue in this.IssuesData)
             {
-                <MudListItem Icon="@AppIcons.WARNING" IconColor="Color.Error" Style="@LIST_ITEM_STYLE">
+                <MudListItem Icon="@AppIcons.WARNING" IconColor="Color.Error">
                     <MudJustifiedText Typo="Typo.body1">@issue</MudJustifiedText>
                 </MudListItem>
             }
