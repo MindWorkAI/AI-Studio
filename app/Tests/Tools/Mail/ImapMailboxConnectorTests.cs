@@ -36,8 +36,6 @@ public sealed class ImapMailboxConnectorTests
         Username = "someone@example.org",
     };
 
-    private static readonly MailboxPasswordEncoding[] BOTH_ENCODINGS = [MailboxPasswordEncoding.UTF8, MailboxPasswordEncoding.WINDOWS_1252];
-
     private static IEnumerable<TestCaseData> ExceptionsWithTheirFailure()
     {
         yield return Case(new AuthenticationException("The server rejected the credentials."), MailboxConnectionFailure.AUTHENTICATION_FAILED);
@@ -98,7 +96,7 @@ public sealed class ImapMailboxConnectorTests
         // failure instead of this one.
         //
         await using var connector = new ImapMailboxConnector();
-        var exception = await Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(mailbox, password, MailServerPolicy.ANY_SERVER, mayTryOtherEncoding: true, CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(mailbox, password, MailServerPolicy.ANY_SERVER, CancellationToken.None));
         Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.INVALID_SETTINGS));
     }
 
@@ -111,176 +109,56 @@ public sealed class ImapMailboxConnectorTests
         //
         await using var connector = new ImapMailboxConnector();
         var policy = new MailServerPolicy(true, ["imap.intra.example.org"]);
-        var exception = await Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(MAILBOX, PASSWORD, policy, mayTryOtherEncoding: true, CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(MAILBOX, PASSWORD, policy, CancellationToken.None));
         Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.SERVER_NOT_ALLOWED));
     }
 
-    private static IEnumerable<TestCaseData> SignInEncodings()
+    private static IEnumerable<TestCaseData> SignInPreparations()
     {
         const MailboxPasswordEncoding UTF8 = MailboxPasswordEncoding.UTF8;
         const MailboxPasswordEncoding WINDOWS_1252 = MailboxPasswordEncoding.WINDOWS_1252;
 
-        // ASCII sends the same bytes in every encoding, so a second attempt would fail the same way:
-        yield return Case("ASCII", UTF8, "someone", "Sommer-2026!", true, [UTF8]);
-        yield return Case("ASCII, Windows-1252 stored", WINDOWS_1252, "someone", "Sommer-2026!", true, [WINDOWS_1252]);
+        yield return Case("ASCII", UTF8, "someone", "Sommer-2026!", true, true);
+        yield return Case("umlaut in the password", UTF8, "someone", "Grüße-2026", true, true);
+        yield return Case("umlaut in the username", WINDOWS_1252, @"FIRMA\müller", "Sommer-2026!", true, true);
+        yield return Case("Windows-1252 with umlaut and euro sign", WINDOWS_1252, "someone", "Grüße-100€", true, true);
+        yield return Case("UTF-8 with Turkish and Japanese", UTF8, "kişi", "şifre-日本", true, true);
 
-        yield return Case("umlaut in the password", UTF8, "someone", "Grüße-2026", true, [UTF8, WINDOWS_1252]);
-        yield return Case("umlaut, Windows-1252 stored", WINDOWS_1252, "someone", "Grüße-2026", true, [WINDOWS_1252, UTF8]);
-        yield return Case("umlaut in the username", UTF8, @"FIRMA\müller", "Sommer-2026!", true, [UTF8, WINDOWS_1252]);
-        yield return Case("section sign", UTF8, "someone", "Abs§2", true, [UTF8, WINDOWS_1252]);
-        yield return Case("euro sign", UTF8, "someone", "100€", true, [UTF8, WINDOWS_1252]);
-
-        // Windows-1252 has no capital sharp s:
-        yield return Case("capital sharp s", UTF8, "someone", "STRAẞE", true, [UTF8]);
-        yield return Case("capital sharp s, Windows-1252 stored", WINDOWS_1252, "someone", "STRAẞE", true, [UTF8]);
+        // Windows-1252 lacks the capital sharp s and the Turkish s with cedilla, and AI Studio never switches to UTF-8 on its own:
+        yield return Case("capital sharp s in Windows-1252", WINDOWS_1252, "someone", "STRAẞE", true, false);
+        yield return Case("Turkish s in Windows-1252", WINDOWS_1252, "kişi", "Sommer-2026!", true, false);
 
         // Without PLAIN, MailKit sends the LOGIN command in UTF-8, whatever it is handed:
-        yield return Case("umlaut without PLAIN", UTF8, "someone", "Grüße-2026", false, [UTF8]);
-        yield return Case("umlaut without PLAIN, Windows-1252 stored", WINDOWS_1252, "someone", "Grüße-2026", false, [UTF8]);
+        yield return Case("umlaut without PLAIN in UTF-8", UTF8, "someone", "Grüße-2026", false, true);
+        yield return Case("umlaut without PLAIN in Windows-1252", WINDOWS_1252, "someone", "Grüße-2026", false, false);
+        yield return Case("ASCII without PLAIN in Windows-1252", WINDOWS_1252, "someone", "Sommer-2026!", false, true);
 
         // No encoding has a lone surrogate:
-        yield return Case("lone surrogate", UTF8, "someone", "abc\uD800", true, []);
+        yield return Case("lone surrogate", UTF8, "someone", "abc\uD800", true, false);
+
+        // An encoding this version does not know encodes nothing:
+        yield return Case("unknown encoding", MailboxPasswordEncoding.UNKNOWN, "someone", "Sommer-2026!", true, false);
         yield break;
 
-        static TestCaseData Case(string name, MailboxPasswordEncoding storedEncoding, string username, string password, bool offersPlain, MailboxPasswordEncoding[] expected) => new TestCaseData(storedEncoding, username, password, offersPlain, expected).SetArgDisplayNames(name);
+        static TestCaseData Case(string name, MailboxPasswordEncoding encoding, string username, string password, bool offersPlain, bool expected) => new TestCaseData(encoding, username, password, offersPlain).Returns(expected).SetArgDisplayNames(name);
     }
 
-    [TestCaseSource(nameof(SignInEncodings))]
-    public void ASignInUsesOnlyTheEncodingsWhichMakeADifference(MailboxPasswordEncoding storedEncoding, string username, string password, bool offersPlain, MailboxPasswordEncoding[] expected)
+    [TestCaseSource(nameof(SignInPreparations))]
+    public bool ASignInGoesAheadOnlyWhenTheEncodingCarriesTheUsernameAndThePassword(MailboxPasswordEncoding encoding, string username, string password, bool offersPlain)
     {
-        Assert.That(ImapMailboxConnector.GetSignInEncodings(storedEncoding, username, password, offersPlain), Is.EqualTo(expected));
-    }
-
-    [Test]
-    public async Task ASynchronizationSignsInOnceInTheStoredEncoding()
-    {
-        // The server would accept the other encoding, but only a connection test may find that out:
-        var server = new SignInServer(accepted: MailboxPasswordEncoding.WINDOWS_1252);
-        var exception = await SignInExpectingFailureAsync(server, BOTH_ENCODINGS, mayTryOtherEncoding: false);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.AUTHENTICATION_FAILED));
-            Assert.That(server.Attempts, Is.EqualTo(new[] { MailboxPasswordEncoding.UTF8 }));
-            Assert.That(server.Reconnects, Is.Zero);
-        }
+        return ImapMailboxConnector.TryPrepareSignIn(encoding, username, password, offersPlain, out _, out _);
     }
 
     [Test]
-    public async Task AConnectionTestTriesTheOtherEncodingOnce()
+    public void APreparedSignInComposesADecomposedUmlautForWindows1252()
     {
-        var server = new SignInServer(accepted: MailboxPasswordEncoding.WINDOWS_1252);
-        var accepted = await ImapMailboxConnector.SignInWithEncodingsAsync(BOTH_ENCODINGS, mayTryOtherEncoding: true, server.SignInAsync, server.ReconnectAsync, CancellationToken.None);
-
+        // An a followed by a combining diaeresis, as some password managers deliver an ä:
+        const string DECOMPOSED = "Ka\u0308se";
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(accepted, Is.EqualTo(MailboxPasswordEncoding.WINDOWS_1252));
-            Assert.That(server.Attempts, Is.EqualTo(BOTH_ENCODINGS));
-            Assert.That(server.Reconnects, Is.EqualTo(1), "Some servers hang up after a refused sign-in.");
-        }
-    }
-
-    [Test]
-    public async Task AConnectionTestStopsOnceEveryEncodingWasRefused()
-    {
-        var server = new SignInServer(accepted: null);
-        var exception = await SignInExpectingFailureAsync(server, BOTH_ENCODINGS, mayTryOtherEncoding: true);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.AUTHENTICATION_FAILED));
-            Assert.That(server.Attempts, Is.EqualTo(BOTH_ENCODINGS));
-            Assert.That(server.Reconnects, Is.EqualTo(1));
-        }
-    }
-
-    [Test]
-    public async Task AConnectionTestWithASingleEncodingSignsInOnce()
-    {
-        // GetSignInEncodings offers one encoding for ASCII, where every encoding sends the same bytes:
-        var server = new SignInServer(accepted: null);
-        var exception = await SignInExpectingFailureAsync(server, [MailboxPasswordEncoding.UTF8], mayTryOtherEncoding: true);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.AUTHENTICATION_FAILED));
-            Assert.That(server.Attempts, Has.Count.EqualTo(1));
-            Assert.That(server.Reconnects, Is.Zero);
-        }
-    }
-
-    [Test]
-    public async Task OnlyARefusedSignInLeadsToTheOtherEncoding()
-    {
-        var server = new SignInServer(accepted: MailboxPasswordEncoding.WINDOWS_1252, failure: new IOException("The connection was reset."));
-        var exception = await SignInExpectingFailureAsync(server, BOTH_ENCODINGS, mayTryOtherEncoding: true);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.NETWORK_UNAVAILABLE));
-            Assert.That(server.Attempts, Has.Count.EqualTo(1));
-        }
-    }
-
-    [Test]
-    public async Task AFailedReconnectEndsTheSignIn()
-    {
-        var server = new SignInServer(accepted: MailboxPasswordEncoding.WINDOWS_1252, reconnectFailure: new MailboxConnectionException(MailboxConnectionFailure.NETWORK_UNAVAILABLE, "The server is gone."));
-        var exception = await SignInExpectingFailureAsync(server, BOTH_ENCODINGS, mayTryOtherEncoding: true);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.NETWORK_UNAVAILABLE));
-            Assert.That(server.Attempts, Has.Count.EqualTo(1));
-        }
-    }
-
-    [Test]
-    public async Task WithoutAnEncodingNothingIsSent()
-    {
-        // No encoding has every character, e.g., of a password with a lone surrogate:
-        var server = new SignInServer(accepted: MailboxPasswordEncoding.UTF8);
-        var exception = await SignInExpectingFailureAsync(server, [], mayTryOtherEncoding: true);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.INVALID_SETTINGS));
-            Assert.That(server.Attempts, Is.Empty);
-        }
-    }
-
-    private static async Task<MailboxConnectionException?> SignInExpectingFailureAsync(SignInServer server, MailboxPasswordEncoding[] encodings, bool mayTryOtherEncoding) =>
-        await Assert.ThrowsAsync<MailboxConnectionException>(() => ImapMailboxConnector.SignInWithEncodingsAsync(encodings, mayTryOtherEncoding, server.SignInAsync, server.ReconnectAsync, CancellationToken.None));
-
-    /// <summary>
-    /// Stands in for an IMAP server: accepts a sign-in in one encoding only, and counts every attempt.
-    /// </summary>
-    /// <param name="accepted">The encoding the server accepts, or null for a wrong password.</param>
-    /// <param name="failure">What every sign-in throws instead of an answer, e.g., a lost connection.</param>
-    /// <param name="reconnectFailure">What connecting again throws.</param>
-    private sealed class SignInServer(MailboxPasswordEncoding? accepted, Exception? failure = null, Exception? reconnectFailure = null)
-    {
-        public List<MailboxPasswordEncoding> Attempts { get; } = [];
-
-        public int Reconnects { get; private set; }
-
-        public async Task SignInAsync(MailboxPasswordEncoding encoding)
-        {
-            await Task.Yield();
-            this.Attempts.Add(encoding);
-            if (failure is not null)
-                throw failure;
-
-            if (encoding != accepted)
-                throw new AuthenticationException("The server rejected the credentials.");
-        }
-
-        public async Task ReconnectAsync()
-        {
-            await Task.Yield();
-            this.Reconnects++;
-            if (reconnectFailure is not null)
-                throw reconnectFailure;
+            Assert.That(ImapMailboxConnector.TryPrepareSignIn(MailboxPasswordEncoding.WINDOWS_1252, "müller", DECOMPOSED, true, out var username, out var password), Is.True);
+            Assert.That(username, Is.EqualTo("müller"));
+            Assert.That(password, Is.EqualTo("Käse"));
         }
     }
 
