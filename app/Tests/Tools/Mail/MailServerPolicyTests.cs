@@ -18,7 +18,7 @@ public sealed class MailServerPolicyTests
 {
     private static readonly MailServerPolicy ORGANIZATION_ONLY = new(true, [new("imap.intra.example.org", null), new("mail.müller.example", null)]);
 
-    private static readonly MailServerPolicy WITH_ENCODINGS = new(false, [new("imap.intra.example.org", null), new("exchange.müller.example", "windows-1254")]);
+    private static readonly MailServerPolicy WITH_ENCODINGS = new(false, [new("imap.intra.example.org", null), new("exchange.müller.example", MailboxPasswordEncoding.FromName("windows-1254"))]);
 
     [TestCase("imap.example.com")]
     [TestCase("imap.gmail.com")]
@@ -42,14 +42,14 @@ public sealed class MailServerPolicyTests
     [TestCase("EXCHANGE.xn--mller-kva.example", ExpectedResult = "windows-1254")]
     [TestCase("imap.intra.example.org", ExpectedResult = null)]
     [TestCase("imap.gmail.com", ExpectedResult = null)]
-    public string? TheOrganizationNamesTheEncodingOfItsServers(string host) => WITH_ENCODINGS.GetOrganizationPasswordEncoding(host);
+    public string? TheOrganizationNamesTheEncodingOfItsServers(string host) => WITH_ENCODINGS.GetOrganizationPasswordEncoding(host)?.Name;
 
     [TestCase("exchange.müller.example", "utf-8", ExpectedResult = "windows-1254")]
     [TestCase("exchange.müller.example", "x-encoding-of-the-future", ExpectedResult = "windows-1254")]
     [TestCase("imap.intra.example.org", "windows-1252", ExpectedResult = "windows-1252")]
     [TestCase("imap.gmail.com", "utf-8", ExpectedResult = "utf-8")]
-    public string AMailboxSignsInWithTheEncodingOfTheOrganizationFirst(string host, string mailboxEncoding) => WITH_ENCODINGS.GetPasswordEncoding(new DataSourceMailbox { Host = host, PasswordEncoding = mailboxEncoding });
+    public string AMailboxSignsInWithTheEncodingOfTheOrganizationFirst(string host, string mailboxEncoding) => WITH_ENCODINGS.GetPasswordEncoding(new DataSourceMailbox { Host = host, PasswordEncoding = MailboxPasswordEncoding.FromName(mailboxEncoding) }).Name;
 
     [Test]
-    public void WithoutAnOrganizationAMailboxKeepsItsEncoding() => Assert.That(MailServerPolicy.ANY_SERVER.GetPasswordEncoding(new DataSourceMailbox { Host = "imap.gmail.com", PasswordEncoding = "iso-8859-15" }), Is.EqualTo("iso-8859-15"));
+    public void WithoutAnOrganizationAMailboxKeepsItsEncoding() => Assert.That(MailServerPolicy.ANY_SERVER.GetPasswordEncoding(new DataSourceMailbox { Host = "imap.gmail.com", PasswordEncoding = MailboxPasswordEncoding.FromName("iso-8859-15") }).Name, Is.EqualTo("iso-8859-15"));
 }

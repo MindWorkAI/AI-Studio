@@ -75,16 +75,15 @@ public record struct DataSourceMailbox: IIndexedDataSource, ISecretId
     public MailboxAuthMethod AuthMethod { get; set; } = MailboxAuthMethod.PASSWORD;
 
     /// <summary>
-    /// The name of the encoding in which the username and the password are sent when signing in,
-    /// e.g., "utf-8" or "windows-1252", cf. MailboxPasswordEncodings.
+    /// The encoding in which the username and the password are sent when signing in, stored by its
+    /// name, e.g., "utf-8" or "windows-1252".
     /// </summary>
     /// <remarks>
     /// A mailbox stored before this setting existed loads with UTF-8, which AI Studio always used
-    /// until then. A name this version does not know, e.g., one written by a newer version, keeps the
-    /// mailbox from signing in at all: bytes which may not be the password would count as a failed
-    /// sign-in, which can lock the account.
+    /// until then. A name this version does not know, e.g., one written into the settings by hand, keeps
+    /// the mailbox from signing in at all, cf. MailboxPasswordEncoding.IsKnown.
     /// </remarks>
-    public string PasswordEncoding { get; set; } = MailboxPasswordEncodings.DEFAULT;
+    public MailboxPasswordEncoding PasswordEncoding { get; set; } = MailboxPasswordEncoding.DEFAULT;
 
     /// <summary>
     /// The username to sign in with, often the e-mail address.

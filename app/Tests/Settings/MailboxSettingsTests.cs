@@ -41,7 +41,7 @@ public sealed class MailboxSettingsTests
         Port = 143,
         TransportSecurity = MailboxTransportSecurity.STARTTLS,
         AuthMethod = MailboxAuthMethod.PASSWORD,
-        PasswordEncoding = "windows-1252",
+        PasswordEncoding = MailboxPasswordEncoding.FromName("windows-1252"),
         Username = "someone@example.org",
         RootFolder = "INBOX/Projects",
         IncludeSentAndDrafts = false,
@@ -144,19 +144,38 @@ public sealed class MailboxSettingsTests
     {
         // UTF-8 is what every sign-in used until then:
         var mailbox = JsonSerializer.Deserialize<DataSourceMailbox>("""{"RootFolder": "INBOX"}""", SettingsManager.JSON_OPTIONS);
-        Assert.That(mailbox.PasswordEncoding, Is.EqualTo(MailboxPasswordEncodings.DEFAULT));
+        Assert.That(mailbox.PasswordEncoding, Is.EqualTo(MailboxPasswordEncoding.DEFAULT));
     }
 
     [Test]
     public void AnEncodingThisVersionDoesNotKnowIsKeptButSignsInNowhere()
     {
-        // The name stays, so that it works again with the version that wrote it; ImapMailboxConnectorTests checks that nothing is sent:
+        // The name stays, so that it is stored as it was; ImapMailboxConnectorTests checks that nothing is sent:
         var mailbox = JsonSerializer.Deserialize<DataSourceMailbox>("""{"PasswordEncoding": "x-encoding-of-the-future"}""", SettingsManager.JSON_OPTIONS);
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(mailbox.PasswordEncoding, Is.EqualTo("x-encoding-of-the-future"));
-            Assert.That(MailboxPasswordEncodings.TryGet(mailbox.PasswordEncoding, out _), Is.False);
+            Assert.That(mailbox.PasswordEncoding.Name, Is.EqualTo("x-encoding-of-the-future"));
+            Assert.That(mailbox.PasswordEncoding.IsKnown, Is.False);
+            Assert.That(JsonSerializer.Serialize(mailbox, SettingsManager.JSON_OPTIONS), Does.Contain("\"PasswordEncoding\": \"x-encoding-of-the-future\""));
         }
+    }
+
+    [Test]
+    public void AnEncodingWhichIsNoNameSignsInNowhereButKeepsTheOtherSettings()
+    {
+        var mailbox = JsonSerializer.Deserialize<DataSourceMailbox>("""{"PasswordEncoding": {"CodePage": 1252}, "RootFolder": "INBOX"}""", SettingsManager.JSON_OPTIONS);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(mailbox.PasswordEncoding.IsKnown, Is.False);
+            Assert.That(mailbox.RootFolder, Is.EqualTo("INBOX"));
+        }
+    }
+
+    [Test]
+    public void AKnownEncodingIsStoredByTheNameDotNetGivesIt()
+    {
+        var mailbox = JsonSerializer.Deserialize<DataSourceMailbox>("""{"PasswordEncoding": " Windows-1254 "}""", SettingsManager.JSON_OPTIONS);
+        Assert.That(JsonSerializer.Serialize(mailbox, SettingsManager.JSON_OPTIONS), Does.Contain("\"PasswordEncoding\": \"windows-1254\""));
     }
 
     [Test]

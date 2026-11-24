@@ -50,8 +50,8 @@ public sealed record MailServerPolicy(bool AllowsOnlyOrganizationMailServers, IR
     /// mail servers.
     /// </remarks>
     /// <param name="host">The host of the server.</param>
-    /// <returns>The name of the encoding, or null when the organization names none for this server.</returns>
-    public string? GetOrganizationPasswordEncoding(string host) => this.OrganizationServers
+    /// <returns>The encoding, or null when the organization names none for this server.</returns>
+    public MailboxPasswordEncoding? GetOrganizationPasswordEncoding(string host) => this.OrganizationServers
         .FirstOrDefault(server => server.PasswordEncoding is not null && MailServerHosts.AreSame(server.Host, host))?
         .PasswordEncoding;
 
@@ -64,14 +64,14 @@ public sealed record MailServerPolicy(bool AllowsOnlyOrganizationMailServers, IR
     /// connection test and the synchronization alike, takes the encoding from here.
     /// </remarks>
     /// <param name="mailbox">The mailbox.</param>
-    /// <returns>The name of the encoding.</returns>
-    public string GetPasswordEncoding(DataSourceMailbox mailbox) => this.GetPasswordEncoding(mailbox.Host, mailbox.PasswordEncoding);
+    /// <returns>The encoding.</returns>
+    public MailboxPasswordEncoding GetPasswordEncoding(DataSourceMailbox mailbox) => this.GetPasswordEncoding(mailbox.Host, mailbox.PasswordEncoding);
 
     /// <summary>
     /// The encoding in which a mailbox on a server sends its username and password, cf. GetPasswordEncoding of a mailbox.
     /// </summary>
     /// <param name="host">The host of the server.</param>
-    /// <param name="mailboxEncoding">The name of the encoding of the mailbox.</param>
-    /// <returns>The name of the encoding.</returns>
-    public string GetPasswordEncoding(string host, string mailboxEncoding) => this.GetOrganizationPasswordEncoding(host) ?? mailboxEncoding;
+    /// <param name="mailboxEncoding">The encoding of the mailbox.</param>
+    /// <returns>The encoding.</returns>
+    public MailboxPasswordEncoding GetPasswordEncoding(string host, MailboxPasswordEncoding mailboxEncoding) => this.GetOrganizationPasswordEncoding(host) ?? mailboxEncoding;
 }

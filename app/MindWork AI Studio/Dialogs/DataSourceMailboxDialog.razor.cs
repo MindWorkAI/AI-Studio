@@ -92,7 +92,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private MailboxTransportSecurity dataTransportSecurity = MailboxTransportSecurity.SSL_ON_CONNECT;
     private string dataUsername = string.Empty;
     private string dataPassword = string.Empty;
-    private string dataPasswordEncoding = MailboxPasswordEncodings.DEFAULT;
+    private MailboxPasswordEncoding dataPasswordEncoding = MailboxPasswordEncoding.DEFAULT;
     private string dataRootFolder = string.Empty;
     private bool dataIncludeSentAndDrafts = true;
     private MailboxMaxAge dataMaxAge = MailboxMaxAge.LAST_12_MONTHS;
@@ -121,7 +121,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private IReadOnlyList<MailServerFolder> serverFolders = [];
     private string folderIssue = string.Empty;
 
-    // The language of the operating system, which tells the encoding to offer after a refused sign-in, cf. MailboxPasswordEncodings.Suggest:
+    // The language of the operating system, which tells the encoding to offer after a refused sign-in, cf. MailboxPasswordEncoding.Suggest:
     private string osLanguage = string.Empty;
 
     // We get the form reference from Blazor code to validate it manually:
@@ -256,7 +256,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     /// What a connection test depends on. A test only counts for the settings it was made with. The
     /// encoding is the one the sign-in uses, cf. MailServerPolicy.GetPasswordEncoding.
     /// </summary>
-    private readonly record struct ConnectionSettings(string Host, int Port, MailboxTransportSecurity TransportSecurity, string Username, string Password, string PasswordEncoding);
+    private readonly record struct ConnectionSettings(string Host, int Port, MailboxTransportSecurity TransportSecurity, string Username, string Password, MailboxPasswordEncoding PasswordEncoding);
 
     private ConnectionSettings CurrentSettings => new(this.dataHost.Trim(), this.dataPort, this.dataTransportSecurity, this.dataUsername.Trim(), this.dataPassword, this.PasswordEncoding);
 
@@ -265,7 +265,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     /// <summary>
     /// The encoding the next sign-in uses: the one the organization names for the server, if any, and the chosen one otherwise.
     /// </summary>
-    private string PasswordEncoding => this.mailServerPolicy.GetPasswordEncoding(this.dataHost.Trim(), this.dataPasswordEncoding);
+    private MailboxPasswordEncoding PasswordEncoding => this.mailServerPolicy.GetPasswordEncoding(this.dataHost.Trim(), this.dataPasswordEncoding);
 
     /// <summary>
     /// Whether the organization names the encoding for the server, so that the user cannot choose another one.
@@ -285,12 +285,12 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         && this.testFailure is MailboxConnectionFailure.AUTHENTICATION_FAILED
         && !this.IsPasswordEncodingSetByOrganization
         && MailboxProviderTemplates.FindByHost(this.dataHost) is null
-        && MailboxPasswordEncodings.DependsOnEncoding(this.dataUsername.Trim(), this.dataPassword);
+        && MailboxPasswordEncoding.DependsOnEncoding(this.dataUsername.Trim(), this.dataPassword);
 
     /// <summary>
-    /// The encoding to offer for one more test, cf. MailboxPasswordEncodings.Suggest, or null for none.
+    /// The encoding to offer for one more test, cf. MailboxPasswordEncoding.Suggest, or null for none.
     /// </summary>
-    private string? SuggestedPasswordEncoding => MailboxPasswordEncodings.Suggest(this.osLanguage, this.PasswordEncoding, this.dataUsername.Trim(), this.dataPassword);
+    private MailboxPasswordEncoding? SuggestedPasswordEncoding => MailboxPasswordEncoding.Suggest(this.osLanguage, this.PasswordEncoding, this.dataUsername.Trim(), this.dataPassword);
 
     /// <summary>
     /// Whether the settings to connect with are the ones stored for this mailbox.
@@ -541,12 +541,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         this.dataTransportSecurity = transportSecurity;
     }
 
-    private void SelectPasswordEncoding(string? passwordEncoding)
-    {
-        // The select hands over null only when cleared, which it does not allow:
-        if (passwordEncoding is not null)
-            this.dataPasswordEncoding = passwordEncoding;
-    }
+    private void SelectPasswordEncoding(MailboxPasswordEncoding passwordEncoding) => this.dataPasswordEncoding = passwordEncoding;
 
     /// <summary>
     /// Tests the connection once more, in the encoding SuggestedPasswordEncoding offers. Like every

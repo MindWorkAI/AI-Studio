@@ -59,8 +59,8 @@ public sealed record DataMailboxProvider : ILivePluginContent
     public string HelpUrl { get; private init; } = string.Empty;
 
     /// <summary>
-    /// The name of the encoding the mail server expects for a username or a password with characters
-    /// beyond ASCII, e.g., "windows-1252", cf. MailboxPasswordEncodings. Null when the organization did not say.
+    /// The encoding the mail server expects for a username or a password with characters beyond
+    /// ASCII, e.g., "windows-1252". Null when the organization did not say.
     /// </summary>
     /// <remarks>
     /// Depending on its configuration, a mail server may expect another encoding than UTF-8, e.g.,
@@ -68,7 +68,7 @@ public sealed record DataMailboxProvider : ILivePluginContent
     /// its users spend no failed sign-in on finding out: every mailbox on this server signs in with
     /// it, cf. MailServerPolicy.GetPasswordEncoding.
     /// </remarks>
-    public string? PasswordEncoding { get; private init; }
+    public MailboxPasswordEncoding? PasswordEncoding { get; private init; }
 
     /// <summary>
     /// Reads a mail server from an entry of the table MAILBOX_PROVIDERS.
@@ -143,16 +143,17 @@ public sealed record DataMailboxProvider : ILivePluginContent
             helpUrl = helpUri.OriginalString;
         }
 
-        string? passwordEncoding = null;
+        MailboxPasswordEncoding? passwordEncoding = null;
         if (table.TryGetValue("PasswordEncoding", out var passwordEncodingValue))
         {
-            if (!passwordEncodingValue.TryRead<string>(out var passwordEncodingText) || !MailboxPasswordEncodings.TryGet(passwordEncodingText, out var encoding))
+            var readPasswordEncoding = passwordEncodingValue.TryRead<string>(out var passwordEncodingText) ? MailboxPasswordEncoding.FromName(passwordEncodingText) : default;
+            if (!readPasswordEncoding.IsKnown)
             {
                 logger.LogWarning("The configured mailbox provider {ProviderIndex} does not contain a valid PasswordEncoding field. It needs the name of an encoding which keeps ASCII as it is, such as utf-8, windows-1252, or shift_jis.", index);
                 return false;
             }
 
-            passwordEncoding = encoding.WebName;
+            passwordEncoding = readPasswordEncoding;
         }
 
         provider = new DataMailboxProvider

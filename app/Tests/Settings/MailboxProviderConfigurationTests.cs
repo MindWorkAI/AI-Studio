@@ -53,7 +53,7 @@ public sealed class MailboxProviderConfigurationTests
             Assert.That(provider.Port, Is.EqualTo(1143));
             Assert.That(provider.UsernameHint, Is.EqualTo(@"Your account as DOMAIN\username"));
             Assert.That(provider.HelpUrl, Is.EqualTo("https://intranet.example.org/mail/imap"));
-            Assert.That(provider.PasswordEncoding, Is.EqualTo("windows-1254"));
+            Assert.That(provider.PasswordEncoding?.Name, Is.EqualTo("windows-1254"));
         }
     }
 

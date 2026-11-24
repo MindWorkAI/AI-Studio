@@ -55,8 +55,8 @@ public sealed class ImapMailboxConnectorTests
     {
         yield return Case("unknown transport security", MAILBOX with { TransportSecurity = MailboxTransportSecurity.UNKNOWN }, PASSWORD);
         yield return Case("unknown auth method", MAILBOX with { AuthMethod = MailboxAuthMethod.UNKNOWN }, PASSWORD);
-        yield return Case("unknown password encoding", MAILBOX with { PasswordEncoding = "EBCDIC" }, PASSWORD);
-        yield return Case("password encoding which changes ASCII", MAILBOX with { PasswordEncoding = "utf-16" }, PASSWORD);
+        yield return Case("unknown password encoding", MAILBOX with { PasswordEncoding = MailboxPasswordEncoding.FromName("EBCDIC") }, PASSWORD);
+        yield return Case("password encoding which changes ASCII", MAILBOX with { PasswordEncoding = MailboxPasswordEncoding.FromName("utf-16") }, PASSWORD);
         yield return Case("no host", MAILBOX with { Host = " " }, PASSWORD);
         yield return Case("a URL as host", MAILBOX with { Host = "imaps://imap.example.org" }, PASSWORD);
         yield return Case("port 0", MAILBOX with { Port = 0 }, PASSWORD);
@@ -146,7 +146,7 @@ public sealed class ImapMailboxConnectorTests
     [TestCaseSource(nameof(SignInPreparations))]
     public bool ASignInGoesAheadOnlyWhenTheEncodingCarriesTheUsernameAndThePassword(string encoding, string username, string password, bool offersPlain)
     {
-        return ImapMailboxConnector.TryPrepareSignIn(MailboxPasswordEncodingsTests.GetKnownEncoding(encoding), username, password, offersPlain, out _, out _);
+        return ImapMailboxConnector.TryPrepareSignIn(MailboxPasswordEncodingTests.GetKnownEncoding(encoding), username, password, offersPlain, out _, out _);
     }
 
     [Test]
@@ -156,7 +156,7 @@ public sealed class ImapMailboxConnectorTests
         const string DECOMPOSED = "Ka\u0308se";
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(ImapMailboxConnector.TryPrepareSignIn(MailboxPasswordEncodingsTests.GetKnownEncoding("windows-1252"), "müller", DECOMPOSED, true, out var username, out var password), Is.True);
+            Assert.That(ImapMailboxConnector.TryPrepareSignIn(MailboxPasswordEncodingTests.GetKnownEncoding("windows-1252"), "müller", DECOMPOSED, true, out var username, out var password), Is.True);
             Assert.That(username, Is.EqualTo("müller"));
             Assert.That(password, Is.EqualTo("Käse"));
         }

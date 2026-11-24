@@ -1,5 +1,3 @@
-using System.Text;
-
 using AIStudio.Tools;
 using AIStudio.Tools.Mail;
 
@@ -17,7 +15,7 @@ namespace AIStudio.Tests.Tools.Mail;
 /// come from the code page tables, not from .NET.
 /// </remarks>
 [TestFixture]
-public sealed class MailboxPasswordEncodingsTests
+public sealed class MailboxPasswordEncodingTests
 {
     private const string USERNAME = "u";
 
@@ -79,7 +77,7 @@ public sealed class MailboxPasswordEncodingsTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(GetPlainPasswordBytes(encodingName, character), Is.EqualTo(inEncoding));
-            Assert.That(GetPlainPasswordBytes(MailboxPasswordEncodings.DEFAULT, character), Is.EqualTo(inUtf8));
+            Assert.That(GetPlainPasswordBytes(MailboxPasswordEncoding.DEFAULT.Name, character), Is.EqualTo(inUtf8));
         }
     }
 
@@ -87,19 +85,20 @@ public sealed class MailboxPasswordEncodingsTests
     public void AsciiIsTheSameInEveryEncoding()
     {
         const string PASSWORD = "Sommer-2026!";
-        var utf8 = GetPlainPasswordBytes(MailboxPasswordEncodings.DEFAULT, PASSWORD);
-        Assert.That(MailboxPasswordEncodings.ALL.Select(name => GetPlainPasswordBytes(name, PASSWORD)), Is.All.EqualTo(utf8));
+        var utf8 = GetPlainPasswordBytes(MailboxPasswordEncoding.DEFAULT.Name, PASSWORD);
+        Assert.That(MailboxPasswordEncoding.ALL.Select(encoding => GetPlainPasswordBytes(encoding.Name, PASSWORD)), Is.All.EqualTo(utf8));
     }
 
     [Test]
     public void TheListStartsWithUtf8AndHoldsTheCodePagesOfWindows()
     {
+        var names = MailboxPasswordEncoding.ALL.Select(encoding => encoding.Name).ToList();
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(MailboxPasswordEncodings.ALL[0], Is.EqualTo(MailboxPasswordEncodings.DEFAULT));
-            Assert.That(MailboxPasswordEncodings.ALL, Is.Unique);
-            Assert.That(MailboxPasswordEncodings.ALL, Is.SupersetOf(new[] { "windows-1250", "windows-1251", "windows-1252", "windows-1254", "shift_jis", "gb2312", "big5", "iso-8859-15" }));
-            Assert.That(MailboxPasswordEncodings.ALL, Has.None.StartsWith("utf-16").And.None.StartsWith("utf-32").And.None.EqualTo("utf-7"));
+            Assert.That(names[0], Is.EqualTo(MailboxPasswordEncoding.DEFAULT.Name));
+            Assert.That(names, Is.Unique);
+            Assert.That(names, Is.SupersetOf(["windows-1250", "windows-1251", "windows-1252", "windows-1254", "shift_jis", "gb2312", "big5", "iso-8859-15"]));
+            Assert.That(names, Has.None.StartsWith("utf-16").And.None.StartsWith("utf-32").And.None.EqualTo("utf-7"));
         }
     }
 
@@ -109,7 +108,7 @@ public sealed class MailboxPasswordEncodingsTests
     [TestCase("latin1", ExpectedResult = "iso-8859-1")]
     public string? AKnownEncodingIsFoundByItsName(string name)
     {
-        return MailboxPasswordEncodings.TryGet(name, out var encoding) ? encoding.WebName : null;
+        return MailboxPasswordEncoding.FromName(name) is { IsKnown: true } encoding ? encoding.Name : null;
     }
 
     [TestCase(null)]
@@ -123,7 +122,34 @@ public sealed class MailboxPasswordEncodingsTests
     [TestCase("utf-8, windows-1252")]
     public void AnEncodingWhichChangesAsciiOrIsUnknownIsRefused(string? name)
     {
-        Assert.That(MailboxPasswordEncodings.TryGet(name, out _), Is.False);
+        Assert.That(MailboxPasswordEncoding.FromName(name).IsKnown, Is.False);
+    }
+
+    [Test]
+    public void AnUnknownEncodingKeepsItsNameButSignsInNowhere()
+    {
+        var encoding = MailboxPasswordEncoding.FromName("x-encoding-of-the-future");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(encoding.Name, Is.EqualTo("x-encoding-of-the-future"));
+            Assert.That(encoding.TextEncoding, Is.Null);
+            Assert.That(encoding.TryPrepare("Sommer-2026!", out _), Is.False);
+            Assert.That(default(MailboxPasswordEncoding).IsKnown, Is.False);
+            Assert.That(default(MailboxPasswordEncoding).Name, Is.Empty);
+        }
+    }
+
+    [Test]
+    public void TwoEncodingsAreEqualWhenTheirNamesAre()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(MailboxPasswordEncoding.FromName(" Windows-1252 "), Is.EqualTo(MailboxPasswordEncoding.FromName("windows-1252")));
+            Assert.That(MailboxPasswordEncoding.FromName("cp1252") == MailboxPasswordEncoding.FromName("windows-1252"), Is.True);
+            Assert.That(MailboxPasswordEncoding.FromName("windows-1252") != MailboxPasswordEncoding.DEFAULT, Is.True);
+            Assert.That(MailboxPasswordEncoding.FromName("windows-1252").GetHashCode(), Is.EqualTo(MailboxPasswordEncoding.FromName("CP1252").GetHashCode()));
+            Assert.That(MailboxPasswordEncoding.FromName("windows-1252").ToString(), Is.EqualTo("windows-1252"));
+        }
     }
 
     [TestCase("windows-1252", "ẞ")]
@@ -135,8 +161,8 @@ public sealed class MailboxPasswordEncodingsTests
     {
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(MailboxPasswordEncodings.TryPrepare(GetKnownEncoding(encodingName), text, out _), Is.False);
-            Assert.That(MailboxPasswordEncodings.TryPrepare(GetKnownEncoding(MailboxPasswordEncodings.DEFAULT), text, out var prepared), Is.True);
+            Assert.That(GetKnownEncoding(encodingName).TryPrepare(text, out _), Is.False);
+            Assert.That(MailboxPasswordEncoding.DEFAULT.TryPrepare(text, out var prepared), Is.True);
             Assert.That(prepared, Is.EqualTo(text));
         }
     }
@@ -145,7 +171,7 @@ public sealed class MailboxPasswordEncodingsTests
     public void ALoneSurrogateIsRefusedByEveryEncoding()
     {
         const string TEXT = "abc\uD800";
-        Assert.That(MailboxPasswordEncodings.ALL.Where(name => MailboxPasswordEncodings.TryPrepare(GetKnownEncoding(name), TEXT, out _)), Is.Empty);
+        Assert.That(MailboxPasswordEncoding.ALL.Where(encoding => encoding.TryPrepare(TEXT, out _)), Is.Empty);
     }
 
     [Test]
@@ -155,7 +181,7 @@ public sealed class MailboxPasswordEncodingsTests
         const string DECOMPOSED = "Ka\u0308se";
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(MailboxPasswordEncodings.TryPrepare(GetKnownEncoding("windows-1252"), DECOMPOSED, out var prepared), Is.True);
+            Assert.That(GetKnownEncoding("windows-1252").TryPrepare(DECOMPOSED, out var prepared), Is.True);
             Assert.That(prepared, Is.EqualTo("K\u00E4se"));
             Assert.That(GetPlainPasswordBytes("windows-1252", DECOMPOSED), Is.EqualTo("4B E4 73 65"));
         }
@@ -168,7 +194,7 @@ public sealed class MailboxPasswordEncodingsTests
         const string DECOMPOSED = "Ka\u0308se";
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(MailboxPasswordEncodings.TryPrepare(GetKnownEncoding(MailboxPasswordEncodings.DEFAULT), DECOMPOSED, out var prepared), Is.True);
+            Assert.That(MailboxPasswordEncoding.DEFAULT.TryPrepare(DECOMPOSED, out var prepared), Is.True);
             Assert.That(prepared, Is.EqualTo(DECOMPOSED));
         }
     }
@@ -187,7 +213,7 @@ public sealed class MailboxPasswordEncodingsTests
         {
             Assert.That(password, Is.EqualTo("Grüße-100€"));
             Assert.That(GetPlainPasswordBytes("windows-1252", password), Is.EqualTo("47 72 FC DF 65 2D 31 30 30 80"));
-            Assert.That(GetPlainPasswordBytes(MailboxPasswordEncodings.DEFAULT, password), Is.EqualTo("47 72 C3 BC C3 9F 65 2D 31 30 30 E2 82 AC"));
+            Assert.That(GetPlainPasswordBytes(MailboxPasswordEncoding.DEFAULT.Name, password), Is.EqualTo("47 72 C3 BC C3 9F 65 2D 31 30 30 E2 82 AC"));
         }
     }
 
@@ -204,21 +230,22 @@ public sealed class MailboxPasswordEncodingsTests
     [TestCase("", "windows-1252", "someone", "Grüße-2026", ExpectedResult = "utf-8")]
     public string? AfterARefusedSignInTheEncodingOfTheRegionIsOffered(string localeTag, string testedEncoding, string username, string password)
     {
-        return MailboxPasswordEncodings.Suggest(localeTag, testedEncoding, username, password);
+        return MailboxPasswordEncoding.Suggest(localeTag, GetKnownEncoding(testedEncoding), username, password)?.Name;
     }
 
     [TestCase("someone", "Sommer-2026!", ExpectedResult = false)]
     [TestCase("müller", "Sommer-2026!", ExpectedResult = true)]
     [TestCase("someone", "日本", ExpectedResult = true)]
-    public bool OnlyCharactersBeyondAsciiDependOnTheEncoding(string username, string password) => MailboxPasswordEncodings.DependsOnEncoding(username, password);
+    public bool OnlyCharactersBeyondAsciiDependOnTheEncoding(string username, string password) => MailboxPasswordEncoding.DependsOnEncoding(username, password);
 
     /// <summary>
     /// The encoding of a name which a mailbox may use; fails the test for any other name.
     /// </summary>
-    internal static Encoding GetKnownEncoding(string name)
+    internal static MailboxPasswordEncoding GetKnownEncoding(string name)
     {
-        Assert.That(MailboxPasswordEncodings.TryGet(name, out var encoding), Is.True, $"The encoding '{name}' should be known.");
-        return encoding!;
+        var encoding = MailboxPasswordEncoding.FromName(name);
+        Assert.That(encoding.IsKnown, Is.True, $"The encoding '{name}' should be known.");
+        return encoding;
     }
 
     /// <summary>
@@ -227,10 +254,10 @@ public sealed class MailboxPasswordEncodingsTests
     private static string GetPlainPasswordBytes(string encodingName, string password)
     {
         var encoding = GetKnownEncoding(encodingName);
-        Assert.That(MailboxPasswordEncodings.TryPrepare(encoding, password, out var preparedPassword), Is.True);
+        Assert.That(encoding.TryPrepare(password, out var preparedPassword), Is.True);
 
         // PLAIN sends the authorization identity, the username, and the password, each after a zero byte:
-        var mechanism = new SaslMechanismPlain(encoding, USERNAME, preparedPassword);
+        var mechanism = new SaslMechanismPlain(encoding.TextEncoding!, USERNAME, preparedPassword);
         var message = Convert.FromBase64String(mechanism.Challenge(null, CancellationToken.None));
         var passwordBytes = message.AsSpan(1 + USERNAME.Length + 1);
 
