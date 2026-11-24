@@ -21,6 +21,7 @@ public static class ProviderRequestFailureReasonExtensions
             ProviderRequestFailureReason.TOO_MANY_REQUESTS => TB("Too many requests"),
             ProviderRequestFailureReason.MODEL_NOT_SUPPORTED_BY_PROVIDER => TB("Model not offered"),
             ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY => TB("API key problem"),
+            ProviderRequestFailureReason.INVALID_API_KEY_CHARACTERS => TB("API key problem"),
             ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => TB("Not permitted"),
             ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => TB("Provider unreachable"),
             ProviderRequestFailureReason.MODEL_NOT_FOUND => TB("Model unknown"),
@@ -41,6 +42,7 @@ public static class ProviderRequestFailureReasonExtensions
         /// </remarks>
         public bool IsFixedInProviderSettings => failureReason is
             ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY or
+            ProviderRequestFailureReason.INVALID_API_KEY_CHARACTERS or
             ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR or
             ProviderRequestFailureReason.MODEL_NOT_FOUND or
             ProviderRequestFailureReason.MODEL_NOT_SUPPORTED_BY_PROVIDER or

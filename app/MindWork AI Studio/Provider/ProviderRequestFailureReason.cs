@@ -25,6 +25,16 @@ public enum ProviderRequestFailureReason
     INVALID_OR_MISSING_API_KEY,
 
     /// <summary>
+    /// The stored API key contains a character which an HTTP header cannot carry, so the request was never sent.
+    /// </summary>
+    /// <remarks>
+    /// Such a key was stored before AI Studio checked keys, or reached the keyring some other way.
+    /// The provider never saw it, so this is no rejection of its own: the user has to enter the key
+    /// again, or ask whoever provides it.
+    /// </remarks>
+    INVALID_API_KEY_CHARACTERS,
+
+    /// <summary>
     /// The key was accepted, but the account is not allowed to do what we asked for.
     /// </summary>
     /// <remarks>
