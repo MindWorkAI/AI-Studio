@@ -8407,6 +8407,21 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T12948066"] = "Co
 -- Cannot copy this content type to clipboard.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T3937637647"] = "Cannot copy this content type to clipboard."
 
+-- Start a new chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::NEWCHATBUTTON::T2017149536"] = "Start a new chat"
+
+-- in {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::NEWCHATBUTTON::T270647308"] = "in {0}"
+
+-- New chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::NEWCHATBUTTON::T3395183389"] = "New chat"
+
+-- No workspaces yet
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::NEWCHATBUTTON::T35587454"] = "No workspaces yet"
+
+-- Start a new chat in a workspace
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::NEWCHATBUTTON::T400916905"] = "Start a new chat in a workspace"
+
 -- Only self-hosted providers may use this data source. A chat which found something in it may therefore only use the services configured in AI Studio, such as the allowed private hosts of the tool 'Read Web Page'.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::OUTBOUNDDATARESTRICTIONSELECTION::T1911680179"] = "Only self-hosted providers may use this data source. A chat which found something in it may therefore only use the services configured in AI Studio, such as the allowed private hosts of the tool 'Read Web Page'."
 

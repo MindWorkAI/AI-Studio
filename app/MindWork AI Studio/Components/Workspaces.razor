@@ -176,7 +176,7 @@ else
                             <MudIconButton Icon="@AppIcons.NEW_CHAT_IN_THIS_PLACE" aria-label="@this.GetAddChatToWorkspaceTooltip(workspace.Name)" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
                         </MudTooltip>
                     }
-                    <CompactMenu Icon="@AppIcons.MORE_OPTIONS" AriaLabel="@T("Workspace options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(workspace.WorkspaceId, isOpen))">
+                    <CompactMenu Icon="@AppIcons.MORE_OPTIONS" AriaLabel="@T("Workspace options")" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(workspace.WorkspaceId, isOpen))">
                         @if (this.CanChatsGoIntoWorkspaces)
                         {
                             <MudMenuItem Icon="@AppIcons.NEW_CHAT_IN_THIS_PLACE" Label="@T("Start a new chat")" OnClick="@(() => this.AddChatAsync(workspace.WorkspacePath))"/>
@@ -275,13 +275,13 @@ else
                     }
                     @if ((chatInMemory is not null || this.IsNewChat(chat)) && !isNeverSaved)
                     {
-                        <CompactMenu Icon="@AppIcons.MORE_OPTIONS" AriaLabel="@T("Chat options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(chat.ChatId, isOpen))">
+                        <CompactMenu Icon="@AppIcons.MORE_OPTIONS" AriaLabel="@T("Chat options")" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(chat.ChatId, isOpen))">
                             <MudMenuItem Disabled="@this.IsChatBusy(chat.ChatId)" Icon="@AppIcons.DELETE" IconColor="Color.Error" Label="@T("Delete")" OnClick="@(() => chatInMemory is not null ? this.DeleteChatInMemoryAsync(chatInMemory) : this.DeleteChatAsync(chat.ChatPath))"/>
                         </CompactMenu>
                     }
                     else if (!isNeverSaved)
                     {
-                        <CompactMenu Icon="@AppIcons.MORE_OPTIONS" AriaLabel="@T("Chat options")" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(chat.ChatId, isOpen))">
+                        <CompactMenu Icon="@AppIcons.MORE_OPTIONS" AriaLabel="@T("Chat options")" OpenChanged="@(isOpen => this.ItemMenuOpenChanged(chat.ChatId, isOpen))">
                             @{
                                 var isBusy = this.IsChatBusy(chat.ChatId);
                             }

@@ -1,0 +1,71 @@
+@* The event directives such as @onclick exist only with this namespace. Without it, the compiler takes them for plain attributes. *@
+@using Microsoft.AspNetCore.Components.Web
+@inherits MSGComponentBase
+
+@if (this.IsRow)
+{
+    @* The first row of the list. Its main part starts the chat, and the arrow keeps a part of its own: *@
+    <div class="new-chat-row">
+        <button type="button" class="new-chat-row-main" @onclick="@(() => this.StartNewChatAsync(Guid.Empty))">
+            <MudIcon Icon="@AppIcons.NEW_CHAT"/>
+            <span class="mud-typography mud-typography-body1 new-chat-row-text">@T("New chat")</span>
+        </button>
+        @this.PlacesPart
+    </div>
+}
+else
+{
+    @* In the bar, the same gray button without its text, whose tooltip says what the text would: *@
+    <div class="new-chat-row is-compact">
+        <MudTooltip Text="@T("Start a new chat")" Placement="@TOOLTIP_PLACEMENT" RootClass="d-flex" RootStyle="height: 100%;">
+            <button type="button" class="new-chat-row-main" aria-label="@T("Start a new chat")" @onclick="@(() => this.StartNewChatAsync(Guid.Empty))">
+                <MudIcon Icon="@AppIcons.NEW_CHAT" Size="Size.Small"/>
+            </button>
+        </MudTooltip>
+        @this.PlacesPart
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// The arrow and its menu of every place a new chat can go, behind a line which separates it from the
+    /// main part. The menu opens below the arrow and to its right, as every menu of the list does, see
+    /// CompactMenu.
+    /// </summary>
+    /// <remarks>
+    /// The plain new chat stays at the top of the menu, and only the workspaces below it scroll, so the
+    /// menu stays within the window as every menu of data does, see MenuDefaults. The workspaces stand
+    /// indented below New chat and continue it, "in Project Alpha", so an entry reads as a new chat in that
+    /// workspace rather than as the workspace itself. The folder at its end says that the place is a
+    /// workspace.
+    /// </remarks>
+    private RenderFragment PlacesPart => @<text>
+        @if (this.CanChooseWorkspace)
+        {
+            <span class="new-chat-row-divider"></span>
+            <CompactMenu Icon="@AppIcons.DROPDOWN_MENU" Size="Size.Small" AriaLabel="@T("Start a new chat in a workspace")" OpenChanged="@this.MenuOpenChanged">
+                <MudMenuItem Icon="@AppIcons.NEW_CHAT" Label="@T("New chat")" OnClick="@(() => this.StartNewChatAsync(Guid.Empty))"/>
+                @if (this.workspaces is not null)
+                {
+                    <div class="new-chat-places" style="@WORKSPACES_STYLE">
+                        @if (this.workspaces.Count == 0)
+                        {
+                            <MudMenuItem Disabled="@true" Label="@T("No workspaces yet")"/>
+                        }
+
+                        @foreach (var workspace in this.workspaces)
+                        {
+                            var isCurrent = workspace.WorkspaceId == this.CurrentWorkspaceId;
+                            <MudMenuItem Class="@(isCurrent ? "mud-primary-text" : string.Empty)" OnClick="@(() => this.StartNewChatAsync(workspace.WorkspaceId))">
+                                <span class="new-chat-place">
+                                    <span class="new-chat-place-name">@string.Format(T("in {0}"), workspace.Name)</span>
+                                    <MudIcon Icon="@AppIcons.WORKSPACE" Size="Size.Small"/>
+                                </span>
+                            </MudMenuItem>
+                        }
+                    </div>
+                }
+            </CompactMenu>
+        }
+    </text>;
+}

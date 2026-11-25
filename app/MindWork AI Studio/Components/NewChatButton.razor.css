@@ -1,0 +1,130 @@
+/*
+ * The first row of the list: gray, as the new chat of other chat apps is, so it stands apart from the
+ * chats below. It fills the top of the list from border to border, where the rounded frame of the list
+ * cuts its corners, and is as tall as the title row of the chat beside the list, 40 pixels below the
+ * same line, so both read as one band, see ChatComponent. Its icon sits 16 pixels behind the border, as
+ * the icons of the rows below do. The yellow block of the search below it spans the list alike, see
+ * WorkspaceSearchBar.
+ *
+ * The row is one button in two parts: the main part starts a plain chat, and the arrow opens the menu
+ * of places. Under the pointer, each part doubles the gray across the whole of its own part, up to the
+ * line between them, so both read as halves of one button. The corners of the row round off both.
+ */
+.new-chat-row {
+    display: flex;
+    align-items: stretch;
+    height: 40px;
+    overflow: hidden;
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+/*
+ * In the bar above the chat, the row keeps its gray, which sets it apart from the round toggle beside
+ * it, but loses its text and takes the height and the corners of a compact button. Its pen takes the
+ * compact size of the arrow, so that the gray button looks no larger than the toggle. Both parts are
+ * square there.
+ */
+.new-chat-row.is-compact {
+    height: 32px;
+    border-radius: var(--mud-default-borderradius);
+}
+
+.new-chat-row.is-compact .new-chat-row-main {
+    padding: 0 6px;
+}
+
+.new-chat-row.is-compact ::deep .mud-menu .mud-icon-button {
+    padding: 0 6px;
+}
+
+/*
+ * The main part takes the icon color of the buttons for the pen, which the icon takes over, and the
+ * text color of the names for its text.
+ */
+.new-chat-row-main {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 0 8px 0 16px;
+    border: 0;
+    background: none;
+    color: var(--mud-palette-action-default);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.new-chat-row-main:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+/*
+ * The row cuts off what reaches beyond it, so the frame of the keyboard focus stays inside the part.
+ */
+.new-chat-row-main:focus-visible {
+    outline-offset: -2px;
+}
+
+/*
+ * The arrow is a round button of MudBlazor, which takes the shape of its part instead: as tall as the
+ * row and square in it, as the main part is in the bar. Its own gray under the pointer is the one of
+ * the main part.
+ */
+.new-chat-row ::deep .mud-menu {
+    align-self: stretch;
+}
+
+.new-chat-row ::deep .mud-menu .mud-icon-button {
+    padding: 0 10px;
+    border-radius: 0;
+}
+
+.new-chat-row-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--mud-palette-text-primary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.new-chat-row-divider {
+    flex-shrink: 0;
+    align-self: center;
+    width: 1px;
+    height: 20px;
+    background-color: var(--mud-palette-lines-default);
+}
+
+/*
+ * The workspaces of the menu stand below New chat and continue it, so their text starts where the text
+ * of New chat starts, behind its icon and the gap of 12, see app.css. MudBlazor moves the text of an
+ * entry without an icon behind the room of a usual icon of 24 instead; this rule has the same weight
+ * and wins by coming later. The folder at the end of an entry takes the color of its text, as the
+ * folders of the list do. The menu grows no wider than a wide list, and a longer name ends with an
+ * ellipsis, as it does in the list.
+ */
+.new-chat-places {
+    max-width: 20rem;
+}
+
+.new-chat-places ::deep .mud-menu-item:not(:has(.mud-menu-item-icon)) .mud-menu-item-text {
+    min-width: 0;
+    margin-inline-start: calc(var(--icon-size-compact) + 12px);
+}
+
+.new-chat-place {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.new-chat-place-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

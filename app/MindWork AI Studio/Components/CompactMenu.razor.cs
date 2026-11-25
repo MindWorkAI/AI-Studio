@@ -50,8 +50,13 @@ public partial class CompactMenu : ComponentBase
     /// <summary>
     /// The point of the button the menu opens at.
     /// </summary>
+    /// <remarks>
+    /// By default, the menu opens below its button and to the right of it, as text runs: the list of the
+    /// chat page stands at the left of the window, so there is room on the right, and the menu covers
+    /// little of the list and nothing of the row it acts on.
+    /// </remarks>
     [Parameter]
-    public Origin? AnchorOrigin { get; set; }
+    public Origin? AnchorOrigin { get; set; } = Origin.BottomLeft;
 
     /// <summary>
     /// The point of the menu which meets the anchor.

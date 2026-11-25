@@ -16,6 +16,13 @@
                 <MudIconButton Icon="@this.WorkspaceSidebarToggleIcon" Class="chat-list-toggle" aria-label="@this.WorkspaceSidebarToggleTooltip" OnClick="@this.ToggleWorkspaceSidebar"/>
             </MudTooltip>
         }
+        @* New chat, the first row of the list, comes here while the list is out of sight, right after
+           the toggle, so nothing else moves. A list which only peeks leaves it here, below the pointer
+           on its way from the toggle: *@
+        @if (!this.IsSidebarKept)
+        {
+            <NewChatButton StartNewChatRequested="@this.StartNewChatInPlace" CurrentWorkspaceId="@this.CurrentWorkspaceId" CanChooseWorkspace="@this.SettingsManager.ConfigurationData.Workspace.CanChatsGoIntoWorkspaces"/>
+        }
         <div class="flex-grow-1"></div>
         @* A list which only peeks leaves the field as it is: it hides as soon as the pointer moves on to
            the field. *@
@@ -33,7 +40,9 @@
             // element, so that a click on the toggle keeps the list which peeks as it is:
             <div class="@this.SidebarClasses" style="@this.SidebarWidthStyle" @ref="this.sidebarElement">
                 <InnerScrolling FillEntireHorizontalSpace="@true" Class="border border-solid rounded-lg mb-3 chat-sidebar-frame">
+                    @* New chat stays at the top while the list scrolls, above the results of the search: *@
                     <HeaderContent>
+                        <NewChatButton IsRow="@true" StartNewChatRequested="@this.StartNewChatInPlace" CurrentWorkspaceId="@this.CurrentWorkspaceId" CanChooseWorkspace="@this.SettingsManager.ConfigurationData.Workspace.CanChatsGoIntoWorkspaces"/>
                         <WorkspaceSearchBar Search="@this.workspaceSearch"/>
                     </HeaderContent>
                     <ChildContent>

@@ -1,10 +1,11 @@
 @inherits MSGComponentBase
 
-@* Only while the field holds words: before, the list has no results to count. The block keeps the
-   inset of the rows of the list. *@
+@* Only while the field holds words: before, the list has no results to count. The block spans the
+   width of the list, as the New chat row above it and the tints of the rows below do, and its
+   magnifier sits on the line of their icons, 16 pixels behind the border. *@
 @if (!string.IsNullOrWhiteSpace(this.Search.Text))
 {
-    <SearchStepRow Text="@this.ResultText" CanStep="@(this.Search.ResultCount > 0)" PreviousLabel="@T("Previous result in the list")" NextLabel="@T("Next result in the list")" StepRequested="@this.Search.Step" Style="margin: 6px 6px 4px;">
+    <SearchStepRow Text="@this.ResultText" CanStep="@(this.Search.ResultCount > 0)" PreviousLabel="@T("Previous result in the list")" NextLabel="@T("Next result in the list")" StepRequested="@this.Search.Step" Style="margin: 6px 0 4px; padding: 2px 6px 2px 16px; border-radius: 0;">
 
         @* Where the search found the current result, below the count it belongs to. One short line of
            fixed height, so the list below never moves when its text changes. The passage itself shows

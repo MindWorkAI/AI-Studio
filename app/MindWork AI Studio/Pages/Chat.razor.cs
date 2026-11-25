@@ -162,6 +162,11 @@ public partial class Chat : MSGComponentBase
     private string WorkspaceSidebarToggleTooltip => this.IsSidebarKept ? TA("Hide your workspaces") : TA("Show your workspaces");
 
     /// <summary>
+    /// The workspace of the open chat, which the menu of New chat marks, or Guid.Empty outside of workspaces.
+    /// </summary>
+    private Guid CurrentWorkspaceId => this.chatThread?.WorkspaceId ?? Guid.Empty;
+
+    /// <summary>
     /// Whether the sidebar shows beside the chat. It shows whenever it has something to list, the stored
     /// chats or the workspaces, the user did not hide it, and the window leaves room for it beside the chat.
     /// </summary>
