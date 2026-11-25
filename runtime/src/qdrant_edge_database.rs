@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::time::Instant;
 
 use axum::Json;
 use log::{error, info, warn};
@@ -9,9 +10,10 @@ use once_cell::sync::Lazy;
 use qdrant_edge::external::serde_json::{json, Value};
 use qdrant_edge::external::uuid::Uuid;
 use qdrant_edge::{
-    Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
-    FieldCondition, Filter, HasIdCondition, HnswIndexConfig, IsEmptyCondition, JsonPath, Match, MatchValue, NamedQuery,
-    Payload, PayloadOps, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
+    Condition, CreateIndex, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
+    FieldCondition, FieldIndexOperations, Filter, HasIdCondition, HnswIndexConfig, IsEmptyCondition, JsonPath,
+    KeywordIndexParamsBuilder, Match, MatchValue, Memory, NamedQuery, Payload, PayloadFieldSchema, PayloadOps,
+    PayloadSchemaParams, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
     QueryRequest, RetrieveRequest, ScoredPoint, ScoringQuery, UpdateOperation, ValueVariants,
     VectorInternal, VectorStructInternal, SetPayloadOp, Vectors, WithPayloadInterface, WithVector,
 };
@@ -32,6 +34,11 @@ const STORE_INITIALIZATION_MARKER_TEMP: &str = "store_name.tmp";
 const STORE_DISPLAY_NAME_MARKER: &str = "data_source_name.txt";
 const STORE_DISPLAY_NAME_MARKER_TEMP: &str = "data_source_name.tmp";
 const WAL_DIRECTORY: &str = "wal";
+
+/// The payload fields by which the requests find the points of a document: deleting a document
+/// filters by both, relocating it and hiding its chunks from a search by `parent_file_id`. Without
+/// an index on them, each of these requests reads every payload of the store.
+const INDEXED_PAYLOAD_FIELDS: [&str; 2] = ["parent_file_id", "file_path"];
 
 /// The file in which Qdrant Edge notes how far its WAL is acknowledged, see `acknowledge_legacy_wal`.
 const WAL_FIRST_INDEX_FILE: &str = "first-index";
@@ -357,6 +364,7 @@ impl QdrantEdgeDatabase {
                 },
             };
 
+            ensure_payload_indexes(&shard, store_name);
             if let Err(error) = write_store_initialization_marker(&path, store_name) {
                 drop(shard);
                 let cleanup_issue = remove_partial_store(&path);
@@ -1225,6 +1233,15 @@ fn edge_optimizers_config() -> EdgeOptimizersConfig {
     }
 }
 
+// The index of each field in INDEXED_PAYLOAD_FIELDS. Like the payloads, it stays on disk in the
+// optimized segments; only the appendable segment holds its index in RAM, whatever we set. Without
+// HNSW links for each value, which none of our searches uses, optimizing a store builds no further
+// graph. Keep this schema: `ensure_payload_indexes` leaves existing indexes as they are, so a change
+// would reach new stores only, and changing existing indexes would rebuild them in every store.
+fn payload_index_params() -> PayloadSchemaParams {
+    PayloadSchemaParams::Keyword(KeywordIndexParamsBuilder::new().memory(Memory::Cold).enable_hnsw(false).build())
+}
+
 fn store_is_initialized(path: &Path, store_name: &str) -> QdrantEdgeResult<bool> {
     if !path.join("edge_config.json").is_file() || !path.join("segments").is_dir() {
         return Ok(false);
@@ -1277,7 +1294,50 @@ fn remove_partial_store(path: &Path) -> String {
 /// Loads a store which was created completely.
 fn load_store(path: &Path, store_name: &str) -> QdrantEdgeResult<EdgeShard> {
     acknowledge_legacy_wal(path, store_name);
-    open_store(path, store_name, || EdgeShard::load(path, None))
+    let shard = open_store(path, store_name, || EdgeShard::load(path, None))?;
+    ensure_payload_indexes(&shard, store_name);
+    Ok(shard)
+}
+
+/// Gives a store the indexes of `INDEXED_PAYLOAD_FIELDS` which it lacks.
+///
+/// A store of an older version of AI Studio gets them on its first load. Building an index reads
+/// every payload of the store once, while all requests to the vector database wait; for a store of
+/// 300 MB, that took about half a second per field on a current laptop. A store which has its
+/// indexes stays as it is, so loading it writes nothing to its WAL. Should building an index fail,
+/// the store stays usable, since its requests find the same points without an index, only slower,
+/// and the next load tries again.
+fn ensure_payload_indexes(shard: &EdgeShard, store_name: &str) {
+    let started = Instant::now();
+    match create_missing_payload_indexes(shard) {
+        Ok(created_fields) if created_fields.is_empty() => {},
+        Ok(created_fields) => info!(Source = "Qdrant Edge"; "Created the payload indexes for {} of vector store '{store_name}', which took {} ms.", created_fields.join(", "), started.elapsed().as_millis()),
+        Err(error) => warn!(Source = "Qdrant Edge"; "Could not create the payload indexes of vector store '{store_name}', so deleting or moving a document reads every payload of the store until the next load: {error}"),
+    }
+}
+
+/// Creates the indexes of `INDEXED_PAYLOAD_FIELDS` which the store lacks and returns their fields.
+fn create_missing_payload_indexes(shard: &EdgeShard) -> QdrantEdgeResult<Vec<&'static str>> {
+    let indexed_fields = shard.info()?.payload_schema;
+    let mut created_fields = Vec::new();
+    for field_name in INDEXED_PAYLOAD_FIELDS {
+        let field_path = JsonPath::try_from(field_name).map_err(|_| format!("Invalid payload field name '{field_name}'."))?;
+        if indexed_fields.contains_key(&field_path) {
+            continue;
+        }
+
+        shard.update(UpdateOperation::FieldIndexOperation(FieldIndexOperations::CreateIndex(CreateIndex {
+            field_name: field_path,
+            field_schema: Some(PayloadFieldSchema::FieldParams(payload_index_params())),
+        })))?;
+        created_fields.push(field_name);
+    }
+
+    if !created_fields.is_empty() {
+        shard.flush()?;
+    }
+
+    Ok(created_fields)
 }
 
 /// Opens a store and reports it as unreadable when that fails, cf. `StoreUnreadableError`.
@@ -1587,8 +1647,10 @@ fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::BTreeMap;
+
     use crate::runtime_api::test_support::assert_runtime_stays_free;
-    use qdrant_edge::WalOptions;
+    use qdrant_edge::{PayloadIndexInfo, WalOptions};
 
     #[test]
     fn validate_store_name_allows_safe_store_names() {
@@ -1781,14 +1843,7 @@ mod tests {
     fn a_point_without_a_generation_counts_as_generation_0() {
         let test_directory = test_directory("no-generation");
         let mut database = QdrantEdgeDatabase::new(test_directory.clone());
-        let mut point = test_point(POINT_X, vec![1.0, 0.0, 0.0]);
-        point.parent_file_id = "report".to_string();
-        let mut point = to_qdrant_edge_point(point).unwrap();
-        point.payload.as_mut().unwrap().0.remove("generation");
-        let (shard, _) = database.get_or_create_store(SEARCH_STORE, 3).unwrap();
-        shard
-            .update(UpdateOperation::PointOperation(PointOperations::UpsertPoints(PointInsertOperations::PointsList(vec![point]))))
-            .unwrap();
+        insert_without_generation(&mut database, document_point(POINT_X, vec![1.0, 0.0, 0.0], "report", 0));
 
         let hidden = |searchable_generation: i32| [QdrantEdgeHiddenChunks {
             parent_file_id: "report".to_string(),
@@ -1897,6 +1952,241 @@ mod tests {
             .collect::<Vec<_>>();
         remaining.sort();
         assert_eq!(remaining, vec![POINT_X.to_string(), POINT_Z.to_string()], "only the point which is not kept goes");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_new_store_indexes_the_fields_its_requests_filter_on() {
+        let test_directory = test_directory("index-new");
+        let database = store_with_one_point_per_axis(&test_directory);
+
+        let indexes = payload_indexes(&database);
+        let mut indexed_fields = indexes.keys().map(String::as_str).collect::<Vec<_>>();
+        indexed_fields.sort();
+        assert_eq!(indexed_fields, vec!["file_path", "parent_file_id"], "an index on the generation would only cost");
+        for (field, index) in &indexes {
+            assert_eq!(index.params, Some(payload_index_params()), "the index of {field} has its schema");
+            assert_eq!(index.points, 3, "the index of {field} holds every point");
+        }
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// A store of an older version of AI Studio has no payload indexes yet.
+    #[test]
+    fn a_store_without_payload_indexes_gets_them_when_it_loads() {
+        let test_directory = test_directory("index-load");
+        let mut database = database_without_payload_indexes(&test_directory);
+        database
+            .insert_embedding(SEARCH_STORE, vec![
+                test_point(POINT_X, vec![1.0, 0.0, 0.0]),
+                test_point(POINT_Y, vec![0.0, 1.0, 0.0]),
+                test_point(POINT_Z, vec![0.0, 0.0, 1.0]),
+            ])
+            .unwrap();
+        assert!(payload_indexes(&database).is_empty());
+        drop(database);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        let indexes = payload_indexes(&database);
+        assert_eq!(indexes.len(), INDEXED_PAYLOAD_FIELDS.len());
+        for (field, index) in &indexes {
+            assert_eq!(index.params, Some(payload_index_params()), "the index of {field} has its schema");
+            assert_eq!(index.points, 3, "the index of {field} holds the points which were there before");
+        }
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// Otherwise, every load would write to the WAL and flush, cf. `ensure_payload_indexes`.
+    #[test]
+    fn loading_a_store_with_its_payload_indexes_writes_nothing() {
+        let test_directory = test_directory("index-reload");
+        let database = store_with_one_point_per_axis(&test_directory);
+        let wal_path = database.store_path(SEARCH_STORE).unwrap().join(WAL_DIRECTORY);
+        drop(database);
+        let wal = file_contents(&wal_path);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(payload_indexes(&database).len(), INDEXED_PAYLOAD_FIELDS.len());
+
+        // Not assert_eq: on failure, it would print every byte of the WAL.
+        assert!(file_contents(&wal_path) == wal, "loading the store left its WAL as it was");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// The same points in a store with and in a store without payload indexes, among them a point
+    /// without a generation, give the same results for every request which filters on the payload.
+    #[test]
+    fn the_payload_indexes_change_no_result() {
+        let indexed_directory = test_directory("index-results-indexed");
+        let plain_directory = test_directory("index-results-plain");
+        let mut indexed = QdrantEdgeDatabase::new(indexed_directory.clone());
+        indexed.ensure_store_exists(SEARCH_STORE, "Some source", 3).unwrap();
+        let mut plain = database_without_payload_indexes(&plain_directory);
+        assert_eq!(payload_indexes(&indexed).len(), INDEXED_PAYLOAD_FIELDS.len());
+        assert!(payload_indexes(&plain).is_empty());
+
+        let results = |database: &mut QdrantEdgeDatabase| {
+            let point_id = |number: u128| Uuid::from_u128(number).to_string();
+            insert_without_generation(database, document_point(&point_id(1), vec![1.0, 0.0, 0.0], "report", 0));
+            database
+                .insert_embedding(SEARCH_STORE, vec![
+                    document_point(&point_id(2), vec![0.9, 0.1, 0.0], "report", 1),
+                    document_point(&point_id(3), vec![0.5, 0.5, 0.0], "report", 1),
+                    document_point(&point_id(4), vec![0.0, 1.0, 0.0], "notes", 0),
+                    document_point(&point_id(5), vec![0.0, 0.0, 1.0], "notes", 0),
+                ])
+                .unwrap();
+
+            let hidden = |parent_file_id: &str, searchable_generation: Option<i32>| QdrantEdgeHiddenChunks {
+                parent_file_id: parent_file_id.to_string(),
+                searchable_generation,
+            };
+
+            let mut search = |hidden_chunks: &[QdrantEdgeHiddenChunks]| {
+                let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, hidden_chunks).unwrap();
+                found_point_ids(&found).into_iter().map(str::to_string).collect::<Vec<_>>()
+            };
+
+            let mut results = vec![
+                search(&[]),
+                search(&[hidden("report", Some(0))]),
+                search(&[hidden("report", Some(1))]),
+                search(&[hidden("notes", None)]),
+                search(&[hidden("report", Some(1)), hidden("notes", Some(0))]),
+            ];
+
+            database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/report.md", "report", &[point_id(2), point_id(3)]).unwrap();
+            let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+            results.push(found_point_ids(&found).into_iter().map(str::to_string).collect());
+            results
+        };
+
+        let indexed_results = results(&mut indexed);
+        assert_eq!(indexed_results, results(&mut plain));
+        assert_eq!(indexed_results[2].len(), 4, "the generation 0 of the report, which has no generation in its payload, is left out");
+        assert_eq!(indexed_results[5].len(), 4, "deleting the report kept its generation 1");
+
+        drop(indexed);
+        drop(plain);
+        fs::remove_dir_all(indexed_directory).unwrap();
+        fs::remove_dir_all(plain_directory).unwrap();
+    }
+
+    #[test]
+    fn deleting_a_document_leaves_the_other_documents_alone() {
+        let test_directory = test_directory("index-delete");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database
+            .insert_embedding(SEARCH_STORE, vec![
+                document_point(POINT_X, vec![1.0, 0.0, 0.0], "report", 0),
+                document_point(POINT_Y, vec![0.0, 1.0, 0.0], "report", 1),
+                document_point(POINT_Z, vec![0.0, 0.0, 1.0], "notes", 0),
+            ])
+            .unwrap();
+
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/report.md", "report", &[POINT_Y.to_string()]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_Y, POINT_Z], "only the point of the report which is not kept goes");
+        for (field, index) in payload_indexes(&database) {
+            assert_eq!(index.points, 2, "the index of {field} lost the deleted point");
+        }
+
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/notes.md", "notes", &[]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_Y], "deleting the notes leaves the report alone");
+        for (field, index) in payload_indexes(&database) {
+            assert_eq!(index.points, 1, "the index of {field} lost the notes");
+        }
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// The index of `file_path` follows a relocation, also once the store loads again.
+    #[test]
+    fn a_relocated_document_is_found_by_its_new_path_only() {
+        let test_directory = test_directory("index-relocation");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database
+            .insert_embedding(SEARCH_STORE, vec![
+                document_point(POINT_X, vec![1.0, 0.0, 0.0], "report", 0),
+                document_point(POINT_Y, vec![0.0, 1.0, 0.0], "report", 0),
+                document_point(POINT_Z, vec![0.0, 0.0, 1.0], "notes", 0),
+            ])
+            .unwrap();
+
+        database.relocate_embedding_file(RelocateQdrantEdgeEmbeddingFileRequest {
+            store_name: SEARCH_STORE.to_string(),
+            parent_file_id: "report".to_string(),
+            absolute_path: "/tmp/moved/report.md".to_string(),
+            file_name: "report.md".to_string(),
+            relative_path: "report.md".to_string(),
+            fingerprint: "new-fingerprint".to_string(),
+        }).unwrap();
+
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/report.md", "", &[]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z], "the old path no longer names the report");
+        drop(database);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/moved/report.md", "", &[]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_Z], "the new path names every point of the report");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// Optimizing a store builds new segments, which have to take the payload indexes along.
+    #[test]
+    fn the_payload_indexes_survive_an_optimization() {
+        const DOCUMENTS: u128 = 10;
+        const POINTS_PER_DOCUMENT: u128 = 20;
+
+        let test_directory = test_directory("index-optimization");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        fs::create_dir_all(&store_path).unwrap();
+
+        // The production config, except that a few points already make a segment worth optimizing.
+        let config = EdgeConfig {
+            optimizers: Some(EdgeOptimizersConfig {
+                indexing_threshold: Some(1),
+                ..edge_optimizers_config()
+            }),
+            ..edge_config(3)
+        };
+        drop(EdgeShard::new(&store_path, config).unwrap());
+        write_store_initialization_marker(&store_path, SEARCH_STORE).unwrap();
+
+        let points = (0..DOCUMENTS * POINTS_PER_DOCUMENT)
+            .map(|number| document_point(&Uuid::from_u128(number + 1).to_string(), vec![1.0, number as f32, 1.0], &format!("document-{}", number % DOCUMENTS), 0))
+            .collect::<Vec<_>>();
+        database.insert_embedding(SEARCH_STORE, points).unwrap();
+        assert!(database.shards[SEARCH_STORE].optimize().unwrap(), "the store is worth optimizing, or this test checks nothing");
+        database.shards[SEARCH_STORE].flush().unwrap();
+        drop(database);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/document-3.md", "document-3", &[]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), (DOCUMENTS * POINTS_PER_DOCUMENT) as usize, None, &[]).unwrap();
+        assert_eq!(found.len() as u128, (DOCUMENTS - 1) * POINTS_PER_DOCUMENT, "deleting a document removed its points from the optimized segment");
+        for (field, index) in payload_indexes(&database) {
+            assert_eq!(index.points as u128, (DOCUMENTS - 1) * POINTS_PER_DOCUMENT, "the index of {field} holds every remaining point");
+        }
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
@@ -2288,6 +2578,51 @@ mod tests {
         (database, point_ids, most_closed_segments_at_once)
     }
 
+    /// A store as older versions of AI Studio created it, without payload indexes, and loaded into
+    /// the database without getting them.
+    fn database_without_payload_indexes(test_directory: &Path) -> QdrantEdgeDatabase {
+        let mut database = QdrantEdgeDatabase::new(test_directory.to_path_buf());
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        fs::create_dir_all(&store_path).unwrap();
+        let shard = EdgeShard::new(&store_path, edge_config(3)).unwrap();
+        write_store_initialization_marker(&store_path, SEARCH_STORE).unwrap();
+        database.shards.insert(SEARCH_STORE.to_string(), shard);
+        database
+    }
+
+    /// The payload indexes of the loaded test store, by field.
+    fn payload_indexes(database: &QdrantEdgeDatabase) -> HashMap<String, PayloadIndexInfo> {
+        database.shards[SEARCH_STORE]
+            .info()
+            .unwrap()
+            .payload_schema
+            .into_iter()
+            .map(|(field, index)| (field.to_string(), index))
+            .collect()
+    }
+
+    /// Inserts a point the way it was written before points had a generation.
+    fn insert_without_generation(database: &mut QdrantEdgeDatabase, point: QdrantEdgeStoragePoint) {
+        let mut point = to_qdrant_edge_point(point).unwrap();
+        point.payload.as_mut().unwrap().0.remove("generation");
+        let (shard, _) = database.get_or_create_store(SEARCH_STORE, 3).unwrap();
+        shard
+            .update(UpdateOperation::PointOperation(PointOperations::UpsertPoints(PointInsertOperations::PointsList(vec![point]))))
+            .unwrap();
+        shard.flush().unwrap();
+    }
+
+    /// The content of each file in a directory, by file name.
+    fn file_contents(directory: &Path) -> BTreeMap<String, Vec<u8>> {
+        fs::read_dir(directory)
+            .unwrap()
+            .map(|entry| {
+                let entry = entry.unwrap();
+                (entry.file_name().into_string().unwrap(), fs::read(entry.path()).unwrap())
+            })
+            .collect()
+    }
+
     fn closed_wal_segments(store_path: &Path) -> Vec<String> {
         fs::read_dir(store_path.join(WAL_DIRECTORY))
             .unwrap()
@@ -2341,6 +2676,20 @@ mod tests {
             creation_utc: String::new(),
             last_write_utc: String::new(),
             embedded_at_utc: String::new(),
+        }
+    }
+
+    /// A point of the document `/tmp/test-data/<parent_file_id>.md`.
+    fn document_point(point_id: &str, vector: Vec<f32>, parent_file_id: &str, generation: i32) -> QdrantEdgeStoragePoint {
+        let path = format!("/tmp/test-data/{parent_file_id}.md");
+        QdrantEdgeStoragePoint {
+            parent_file_id: parent_file_id.to_string(),
+            file_path: path.clone(),
+            absolute_path: path,
+            file_name: format!("{parent_file_id}.md"),
+            relative_path: format!("{parent_file_id}.md"),
+            generation,
+            ..test_point(point_id, vector)
         }
     }
 }
