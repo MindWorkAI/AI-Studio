@@ -9799,6 +9799,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268"] = "Open the fi
 -- Open the file in the program your system uses for it
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268::INFORMAL"] = "Open the file in the program your system uses for it"
 
+-- Open the file. As a Flatpak, AI Studio cannot open it at page {0}, where the passage is.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T755778778"] = "Open the file. As a Flatpak, AI Studio cannot open it at page {0}, where the passage is."
+
 -- Exclusion help and examples
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T1309128010"] = "Exclusion help and examples"
 
@@ -24439,14 +24442,26 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCECODELANGUAGES::T1041509726"] = "Text"
 -- Could not open the file location.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1118835751"] = "Could not open the file location."
 
+-- As a Flatpak, AI Studio cannot open the document at its page: the sandbox of the Flatpak lets no page through to the program which shows the document. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1426315148"] = "As a Flatpak, AI Studio cannot open the document at its page: the sandbox of the Flatpak lets no page through to the program which shows the document. The passage is on page {0}."
+
 -- Could not open the file location: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1455637941"] = "Could not open the file location: {0}"
+
+-- AI Studio could not open the document at its page: the program which shows the document could not be started with the page, so it opened without it. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3168067729"] = "AI Studio could not open the document at its page: the program which shows the document could not be started with the page, so it opened without it. The passage is on page {0}."
 
 -- Unknown error
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3461425987"] = "Unknown error"
 
 -- Could not open the document.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3570758363"] = "Could not open the document."
+
+-- AI Studio cannot open the document at its page: the program your system shows it with does not allow choosing a page. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T932584602"] = "AI Studio cannot open the document at its page: the program your system shows it with does not allow choosing a page. The passage is on page {0}."
+
+-- AI Studio cannot open the document at its page: the program your system shows it with does not allow choosing a page. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T932584602::INFORMAL"] = "AI Studio cannot open the document at its page: the program your system shows it with does not allow choosing a page. The passage is on page {0}."
 
 -- Could not open the document: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T945417289"] = "Could not open the document: {0}"

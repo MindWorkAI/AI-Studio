@@ -53,7 +53,7 @@
 
             @if (this.ShowOpen)
             {
-                <MudTooltip Text="@GetOpenTooltip(this.PageNumber)" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
+                <MudTooltip Text="@GetOpenTooltip(this.PageNumber, this.CanOpenAtPage)" Placement="@this.TooltipPlacement" ShowOnFocus="@false">
                     <MudIconButton Icon="@AppIcons.OPEN_EXTERNAL" Size="Size.Small" Class="icon-button-compact" OnClick="@this.Open"/>
                 </MudTooltip>
             }
