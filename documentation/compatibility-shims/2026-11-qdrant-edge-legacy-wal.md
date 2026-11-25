@@ -18,10 +18,12 @@ Right before AI Studio loads a vector store, it checks whether the WAL directory
 
 This is safe because AI Studio flushes after every update, so the segments already hold everything the WAL contains, and because qdrant-edge 0.8 never applied its WAL anyway. A failed write is logged as a warning and does not block loading the store; the load then takes long, but nothing gets lost. The file has the same format in qdrant-edge 0.8 and 0.9, so an older version of AI Studio still opens the store.
 
+Since AI Studio v26.11.2, every store also gets payload indexes on the fields which these deletions filter on (`ensure_payload_indexes`). A store of an older version gets them only once Qdrant Edge has loaded it and applied its WAL, though, so the indexes do not replace this shim.
+
 ## Removal Checklist
 
 - Check that the new qdrant-edge release no longer applies operations which the segments already persisted, e.g., by starting the WAL replay at the highest version the segments persisted.
 - Remove `acknowledge_legacy_wal` and the constants `WAL_FIRST_INDEX_FILE` and `WAL_FIRST_INDEX_FILE_TEMP`, unless the tests still need them.
-- Remove the `acknowledge_legacy_wal` calls from `get_or_create_store` and `get_existing_store`.
+- Remove the `acknowledge_legacy_wal` call from `load_store`.
 - Remove the test `a_store_of_an_older_version_gets_its_wal_acknowledged_and_keeps_its_points`, and keep `an_acknowledged_wal_stays_as_it_is` only if it still checks something of AI Studio.
 - Update this document's status to `Removed`.
