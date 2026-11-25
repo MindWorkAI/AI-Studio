@@ -1,5 +1,6 @@
 using AIStudio.Dialogs;
 using AIStudio.Tools.RAG;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -38,6 +39,9 @@ public partial class SourcesList : MSGComponentBase
 
     [Inject]
     private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private RuntimeInfoResponse RuntimeInfo { get; init; }
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -111,6 +115,11 @@ public partial class SourcesList : MSGComponentBase
     private async Task ShowPassages(SourceEntry entry) => await SourcePassagesDialog.OpenDialogAsync(this.DialogService, entry.Passages, entry.Document);
 
     private async Task OpenDocument(SourceDocumentLocation document) => await document.OpenAsync(this.RustService);
+
+    /// <summary>
+    /// Whether a page can reach the program which opens a document, see RuntimeInfoResponseExtensions.
+    /// </summary>
+    private bool CanOpenAtPage => this.RuntimeInfo.CanOpenDocumentsAtPage;
 
     /// <summary>
     /// The files of sources which are no longer at their place, by their paths, as FileActions found out.

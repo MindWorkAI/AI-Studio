@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -82,6 +83,9 @@ public partial class FileActions : MSGComponentBase
     [Inject]
     private RustService RustService { get; init; } = null!;
 
+    [Inject]
+    private RuntimeInfoResponse RuntimeInfo { get; init; }
+
     private FileActionsKind kind;
 
     /// <summary>
@@ -95,13 +99,27 @@ public partial class FileActions : MSGComponentBase
     private bool isMissing;
 
     /// <summary>
+    /// Whether a page can reach the program which opens a file, see RuntimeInfoResponseExtensions.
+    /// </summary>
+    private bool CanOpenAtPage => this.RuntimeInfo.CanOpenDocumentsAtPage;
+
+    /// <summary>
     /// The tooltip of opening a file, at its page where there is one.
     /// </summary>
+    /// <remarks>
+    /// Inside a Flatpak, no page reaches the program, so the tooltip promises none and says why. Elsewhere,
+    /// whether the page arrives depends on the program, and the user hears afterwards when it did not, see
+    /// SourceDocumentLocationExtensions.GetPageNotice.
+    /// </remarks>
     /// <param name="pageNumber">The page the file opens at, or null when it opens at its beginning.</param>
+    /// <param name="canOpenAtPage">Whether a page can reach the program at all; false inside a Flatpak.</param>
     /// <returns>The tooltip.</returns>
-    internal static string GetOpenTooltip(int? pageNumber) => pageNumber is { } page
-        ? string.Format(TB("Open the file at page {0}"), page)
-        : TA("Open the file in the program your system uses for it");
+    internal static string GetOpenTooltip(int? pageNumber, bool canOpenAtPage) => pageNumber switch
+    {
+        { } page when canOpenAtPage => string.Format(TB("Open the file at page {0}"), page),
+        { } page => string.Format(TB("Open the file. As a Flatpak, AI Studio cannot open it at page {0}, where the passage is."), page),
+        _ => TA("Open the file in the program your system uses for it"),
+    };
 
     #region Overrides of ComponentBase
 
