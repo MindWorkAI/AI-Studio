@@ -9,6 +9,16 @@ public sealed class NumericCheckTests
 {
     private static NumericCheckOutcome Check(string left, string right) => NumericCheck.AreEqual(MathExpressionReader.Read(left, "left"), MathExpressionReader.Read(right, "right"));
 
+    /// <summary>
+    /// The values an index takes across the sample points.
+    /// </summary>
+    private static List<Entity> ValuesOf(SolutionIndex index) => Enumerable.Range(0, 6)
+        .Select(point => NumericCheck.SampleAssignment(point, [index.Variable], [index]))
+        .Where(assignment => assignment.ContainsKey(index.Variable))
+        .Select(assignment => assignment[index.Variable])
+        .Distinct()
+        .ToList();
+
     [Test]
     public void PassesWhatIsEqual()
     {
@@ -103,6 +113,24 @@ public sealed class NumericCheckTests
             Assert.That(NumericCheck.IsIntegerParameter(MathS.Var("n_12")), Is.True);
             Assert.That(NumericCheck.IsIntegerParameter(MathS.Var("n")), Is.False);
             Assert.That(NumericCheck.IsIntegerParameter(MathS.Var("n_x")), Is.False);
+        }
+    }
+
+    [Test]
+    public void GivesAnIndexIntegersOfItsSet()
+    {
+        var n = MathS.Var("n");
+        var integers = new SolutionIndex(n, MathS.Sets.Z);
+        var withoutZero = new SolutionIndex(n, (Entity.Set)MathExpressionReader.Read("ZZ \\ { 0 }", "set"));
+        var none = new SolutionIndex(n, (Entity.Set)MathExpressionReader.Read("{ 1/2 }", "set"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ValuesOf(integers), Is.EquivalentTo(new Entity[] { -1, 0, 1 }));
+            Assert.That(ValuesOf(withoutZero), Is.EquivalentTo(new Entity[] { -1, 1, 2 }));
+            Assert.That(ValuesOf(none), Is.Empty);
+            Assert.That(NumericCheck.AreEqual(MathExpressionReader.Read("sin(pi/6 + 2*pi*n)", "left"), MathExpressionReader.Read("1/2", "right"), [integers]), Is.EqualTo(NumericCheckOutcome.PASSED));
+            Assert.That(NumericCheck.AreEqual(MathExpressionReader.Read("sin(pi/6 + pi*n)", "left"), MathExpressionReader.Read("1/2", "right"), [integers]), Is.EqualTo(NumericCheckOutcome.FAILED), "At n = -1 and 1, the sine is -1/2.");
+            Assert.That(NumericCheck.AreEqual(MathExpressionReader.Read("n", "left"), MathExpressionReader.Read("n", "right"), [none]), Is.EqualTo(NumericCheckOutcome.NOT_POSSIBLE), "An index which takes none of the integers tried leaves no point.");
         }
     }
 

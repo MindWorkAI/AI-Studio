@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using AIStudio.Tools.Mathematics;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mathematics;
 
+using AngouriMath;
 using AngouriMath.Core;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -33,6 +34,21 @@ public sealed class ComputeSymbolicallyToolTests
     }
 
     private static string RequestRefusal(string json) => Assert.Throws<ArgumentException>(() => ComputeSymbolicallyTool.ReadRequest(Arguments(json)))!.Message;
+
+    /// <summary>
+    /// Writes the solutions of an equation in x as the tool does, for a set of solutions given as text.
+    /// </summary>
+    private static Task<JsonObject> DescribeSolutions(string equation, string solutions) => SERVICE.ComputeAsync(_ =>
+    {
+        var statement = MathExpressionReader.Read(equation, "expression");
+        var json = new JsonObject();
+        var issues = new List<string>();
+        ComputeSymbolicallyTool.Solutions(json, issues, statement, statement, MathS.Var("x"), MathExpressionReader.Read(solutions, "solutions"));
+        json["issues"] = new JsonArray([..issues.Select(issue => JsonValue.Create(issue))]);
+        return json;
+    });
+
+    private static JsonNode Member(JsonObject json, int index) => json["solutions"]![index]!;
 
     [Test]
     public async Task SimplifiesAndStatesTheCondition()
@@ -159,6 +175,52 @@ public sealed class ComputeSymbolicallyToolTests
             Assert.That(Issues(periodic), Has.Member("n_1 stands for any integer."));
             Assert.That(Issues(withoutEquals), Has.Member("The expression has no '=', so it was solved for expression = 0."));
             Assert.That(withoutEquals["solutions"]!.AsArray(), Has.Count.EqualTo(2));
+        }
+    }
+
+    [Test]
+    public async Task ListsAndChecksTheMembersOfAFamilyOfSolutions()
+    {
+        var periodic = await DescribeSolutions("sin(x) = 1/2", "union({ pi/6 + 2*pi*n, pi - pi/6 + 2*pi*n }, n in ZZ)");
+        var exponential = await DescribeSolutions("2^x = 5", "union({ log(2, 5) + 2*pi*i*n/ln(2) }, n in ZZ)");
+        var wrong = await DescribeSolutions("sin(x) = 1/2", "union({ pi/5 + 2*pi*n }, n in ZZ)");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(periodic["solutions"]!.AsArray(), Has.Count.EqualTo(2));
+            Assert.That(Member(periodic, 0)["holds_for"]!.GetValue<string>(), Is.EqualTo("every integer n"));
+            Assert.That(Member(periodic, 0)["at_index_0"]!["value"]!.GetValue<string>(), Is.EqualTo("pi / 6"));
+            Assert.That(Member(periodic, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Does.StartWith("0.52359877559"));
+            Assert.That(Member(periodic, 0)["at_index_0"]!["real"]!.GetValue<bool>(), Is.True);
+            Assert.That(Member(periodic, 0).AsObject().ContainsKey("decimal"), Is.False, "A member with an index has no single value.");
+            Assert.That(Text(periodic, "verification"), Is.EqualTo("passed"), "The index takes integer values in the check.");
+            Assert.That(periodic["complete"]!.GetValue<bool>(), Is.True);
+            Assert.That(Member(exponential, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Does.StartWith("2.32192809488"), "The solution for the index 0 is the real one, which a model needs most.");
+            Assert.That(Text(exponential, "verification"), Is.EqualTo("passed"));
+            Assert.That(Text(wrong, "verification"), Is.EqualTo("failed"));
+        }
+    }
+
+    [Test]
+    public async Task TakesFamiliesOfSolutionsApart()
+    {
+        var withoutZero = await DescribeSolutions("sin(x)/x = 0", "union({ pi*n }, n in ZZ \\ { 0 })");
+        var nested = await DescribeSolutions("e^(sin(x)) = 1", "union(union({ arcsin(2*pi*i*n) + 2*pi*m, pi - arcsin(2*pi*i*n) + 2*pi*m }, m in ZZ), n in ZZ)");
+        var joined = await DescribeSolutions("sin(x)*(x - 7) = 0", "{ 7 } \\/ union({ pi*n }, n in ZZ)");
+        var unsolved = await DescribeSolutions("sin(x) = x^5", "{ x : sin(x) = x^5 } \\/ union({ pi*n }, n in ZZ)");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Member(withoutZero, 0)["holds_for"]!.GetValue<string>(), Does.StartWith("every n in ZZ"));
+            Assert.That(Member(withoutZero, 0).AsObject().ContainsKey("at_index_0"), Is.False, "0 is not among the values of the index.");
+            Assert.That(Text(withoutZero, "verification"), Is.EqualTo("passed"), "At 0, the index would take a value without a solution.");
+            Assert.That(Member(nested, 0)["holds_for"]!.GetValue<string>(), Is.EqualTo("every integer n and every integer m"), "The outer index comes first.");
+            Assert.That(Member(nested, 0)["at_index_0"]!["value"]!.GetValue<string>(), Is.EqualTo("0"));
+            Assert.That(Text(nested, "verification"), Is.EqualTo("passed"));
+            Assert.That(joined["solutions"]!.AsArray(), Has.Count.EqualTo(2));
+            Assert.That(Member(joined, 0).AsObject().ContainsKey("holds_for"), Is.False);
+            Assert.That(Member(joined, 1)["holds_for"]!.GetValue<string>(), Is.EqualTo("every integer n"));
+            Assert.That(Text(joined, "verification"), Is.EqualTo("passed"));
+            Assert.That(unsolved["complete"]!.GetValue<bool>(), Is.False, "A part without a closed form leaves the solutions incomplete.");
+            Assert.That(unsolved.ContainsKey("solutions"), Is.False);
         }
     }
 

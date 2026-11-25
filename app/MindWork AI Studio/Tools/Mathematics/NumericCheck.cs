@@ -17,8 +17,9 @@ namespace AIStudio.Tools.Mathematics;
 /// A point where either side has no value, such as a pole, is skipped. Agreement at the points
 /// supports the equality; it does not prove it.<br/><br/>
 /// A derivative is compared with the central difference of its function, over a step of 1e-20 at 60
-/// digits. The integer parameter of periodic solutions, which AngouriMath names n_1, takes the values
-/// -1, 0, and 1 instead, since such a solution holds at integers only.<br/><br/>
+/// digits. The index of a family of solutions takes three integers of its set instead, -1, 0, and 1 for
+/// any integer, since such a solution holds for those values only. So does the integer parameter which
+/// AngouriMath names n_1.<br/><br/>
 /// Call it inside a computation of MathComputationService.
 /// </remarks>
 public static class NumericCheck
@@ -53,6 +54,16 @@ public static class NumericCheck
     private static readonly EDecimal DERIVATIVE_TOLERANCE = EDecimal.FromString("1e-20");
 
     /// <summary>
+    /// The integers an index of a family of solutions may take, in the order they are tried.
+    /// </summary>
+    private static readonly int[] INDEX_CANDIDATES = [-1, 0, 1, 2, -2, 3, -3];
+
+    /// <summary>
+    /// How many integers of its set an index takes across the sample points.
+    /// </summary>
+    private const int INDEX_VALUES = 3;
+
+    /// <summary>
     /// Checks whether two expressions agree at every sample point where both have a value.
     /// </summary>
     /// <remarks>
@@ -62,17 +73,30 @@ public static class NumericCheck
     /// <param name="left">One expression.</param>
     /// <param name="right">The other expression.</param>
     /// <returns>What the check found.</returns>
-    public static NumericCheckOutcome AreEqual(Entity left, Entity right)
+    public static NumericCheckOutcome AreEqual(Entity left, Entity right) => AreEqual(left, right, []);
+
+    /// <summary>
+    /// Checks whether two expressions agree at every sample point where both have a value, with the indices of a
+    /// family of solutions taking integers of their sets.
+    /// </summary>
+    /// <param name="left">One expression.</param>
+    /// <param name="right">The other expression.</param>
+    /// <param name="indices">The indices which occur freely in the expressions, e.g., n for any integer.</param>
+    /// <returns>What the check found; not possible when an index takes none of the integers tried.</returns>
+    public static NumericCheckOutcome AreEqual(Entity left, Entity right, IReadOnlyList<SolutionIndex> indices)
     {
         left = WithoutCondition(left);
         right = WithoutCondition(right);
         var variables = MathVariables.FreeIn(left).Concat(MathVariables.FreeIn(right)).Distinct().OrderBy(variable => variable.Name, StringComparer.Ordinal).ToArray();
+        var indexValues = IndexValues(indices);
+        if (indexValues.Values.Any(values => values.Count == 0))
+            return NumericCheckOutcome.NOT_POSSIBLE;
 
         using var precision = MathS.Settings.DecimalPrecisionContext.Set(EContext.ForPrecision(PRECISION));
         var validPoints = 0;
         for (var point = 0; point < SAMPLE_POINTS; point++)
         {
-            var assignment = SampleAssignment(point, variables);
+            var assignment = SampleAssignment(point, variables, indexValues);
             var leftValue = ValueAt(left, assignment);
             var rightValue = ValueAt(right, assignment);
             if (leftValue is null || rightValue is null)
@@ -133,11 +157,43 @@ public static class NumericCheck
     /// <param name="point">The number of the point, from zero.</param>
     /// <param name="variables">The variables, in a fixed order.</param>
     /// <returns>Each variable with its exact value.</returns>
-    public static IReadOnlyDictionary<Entity.Variable, Entity> SampleAssignment(int point, IReadOnlyList<Entity.Variable> variables)
+    public static IReadOnlyDictionary<Entity.Variable, Entity> SampleAssignment(int point, IReadOnlyList<Entity.Variable> variables) => SampleAssignment(point, variables, new Dictionary<Entity.Variable, IReadOnlyList<Entity>>());
+
+    /// <summary>
+    /// The values of the variables at one sample point, where the indices of a family of solutions take integers of their sets.
+    /// </summary>
+    /// <param name="point">The number of the point, from zero.</param>
+    /// <param name="variables">The variables, in a fixed order.</param>
+    /// <param name="indices">The indices among the variables.</param>
+    /// <returns>Each variable with its exact value; an index which takes none of the integers tried is left out.</returns>
+    public static IReadOnlyDictionary<Entity.Variable, Entity> SampleAssignment(int point, IReadOnlyList<Entity.Variable> variables, IReadOnlyList<SolutionIndex> indices) => SampleAssignment(point, variables, IndexValues(indices));
+
+    /// <summary>
+    /// The integers each index takes, at most INDEX_VALUES of them.
+    /// </summary>
+    private static Dictionary<Entity.Variable, IReadOnlyList<Entity>> IndexValues(IReadOnlyList<SolutionIndex> indices)
+    {
+        var values = new Dictionary<Entity.Variable, IReadOnlyList<Entity>>(indices.Count);
+        foreach (var index in indices)
+            values[index.Variable] = [..INDEX_CANDIDATES.Where(index.Takes).Take(INDEX_VALUES).Select(Entity (candidate) => Entity.Number.Integer.Create(candidate))];
+
+        return values;
+    }
+
+    private static Dictionary<Entity.Variable, Entity> SampleAssignment(int point, IReadOnlyList<Entity.Variable> variables, IReadOnlyDictionary<Entity.Variable, IReadOnlyList<Entity>> indexValues)
     {
         var assignment = new Dictionary<Entity.Variable, Entity>(variables.Count);
         for (var index = 0; index < variables.Count; index++)
         {
+            // An index takes integers of its set, since a family of solutions holds only there:
+            if (indexValues.TryGetValue(variables[index], out var values))
+            {
+                if (values.Count > 0)
+                    assignment[variables[index]] = values[(point + index) % values.Count];
+
+                continue;
+            }
+
             // An integer parameter takes -1, 0, and 1, since a periodic solution holds only at integers:
             if (IsIntegerParameter(variables[index]))
             {
