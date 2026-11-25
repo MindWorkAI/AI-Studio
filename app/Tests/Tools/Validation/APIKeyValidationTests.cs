@@ -31,7 +31,7 @@ public sealed class APIKeyValidationTests
     private static readonly string DECOMPOSED_CAPITAL_U_UMLAUT = $"U{COMBINING_DIAERESIS}";
 
     [TestCase("sk-proj-AbC_123.xyz~")]
-    [TestCase("AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY")]
+    [TestCase("test-key_AbC-123_xyz-789")]
     [TestCase("dGhpcyBpcyBhIGtleQ+/==")]
     [TestCase("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")]
     public void KeysOfPrintableAsciiPass(string key) => Assert.That(APIKeyValidation.Check(key), Is.EqualTo(APIKeyIssue.NONE));
