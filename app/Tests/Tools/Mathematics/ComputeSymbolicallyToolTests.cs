@@ -232,6 +232,18 @@ public sealed class ComputeSymbolicallyToolTests
     }
 
     [Test]
+    public async Task ChecksAnAntiderivativeFarLargerThanTheIntegrand()
+    {
+        // The antiderivative -gamma(41, x) is about 40!, its derivative x^40 * e^(-x) about 1e-9:
+        var integrated = await Compute(SymbolicOperation.INTEGRATE, "x^40*e^(-x)");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Text(integrated, "result"), Is.EqualTo("-gamma(41, x) + C"));
+            Assert.That(Text(integrated, "verification"), Is.EqualTo("passed"));
+        }
+    }
+
+    [Test]
     public async Task ChecksNoSamplePointBeyondTheLimitsOfASpecialFunction()
     {
         // At x = 0.61, z is 6,100, which would take seconds without a way to stop it:

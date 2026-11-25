@@ -292,7 +292,7 @@ A definite integral always goes to `DoubleExponentialQuadrature`, never through 
 A symbolic answer is only as good as the library which gave it, and AngouriMath changes answers between releases. `compute_symbolically` therefore checks each result numerically where it can, and reports `passed`, `failed`, or `not_possible` in `verification`:
 
 - `simplify`, `expand`, and `factor`: the expression and the result are equal.
-- `differentiate`: each order agrees with a central difference of the order before, at 60 digits.
+- `differentiate`: each order agrees with a central difference of the order before, at 60 digits, and at one digit more for each power of ten by which the function exceeds its derivative, as for `100! + sin(x)`; the check of an antiderivative works the same way.
 - `integrate` without bounds: the derivative of the antiderivative is the integrand.
 - `integrate` with bounds: the value agrees with the quadrature.
 - `solve`: each solution satisfies the equation.

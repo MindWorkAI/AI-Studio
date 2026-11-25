@@ -103,6 +103,19 @@ public sealed class NumericCheckTests
     }
 
     [Test]
+    public void ChecksADerivativeOfAFunctionFarLargerThanIt()
+    {
+        var x = MathS.Var("x");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(NumericCheck.IsDerivativeOf(MathExpressionReader.Read("cos(x)", "derivative"), MathExpressionReader.Read("100! + sin(x)", "function"), x), Is.EqualTo(NumericCheckOutcome.PASSED), "100! has 158 digits, so 60 of them leave nothing of sin(x).");
+            Assert.That(NumericCheck.IsDerivativeOf(MathExpressionReader.Read("-x^99 * e^(-x)", "derivative"), MathExpressionReader.Read("gamma(100, x)", "function"), x), Is.EqualTo(NumericCheckOutcome.PASSED), "gamma(100, x) is about 99!, and its derivative about 1e-21.");
+            Assert.That(NumericCheck.IsDerivativeOf(MathExpressionReader.Read("cos(x) + 10^-15", "derivative"), MathExpressionReader.Read("100! + sin(x)", "function"), x), Is.EqualTo(NumericCheckOutcome.FAILED));
+            Assert.That(NumericCheck.IsDerivativeOf(MathExpressionReader.Read("cos(x)", "derivative"), MathExpressionReader.Read("10^2000 + sin(x)", "function"), x), Is.EqualTo(NumericCheckOutcome.NOT_POSSIBLE), "It would take over 2,000 digits.");
+        }
+    }
+
+    [Test]
     public void GivesAVariableNamedLikeAnIndexNoIntegers()
     {
         // The index of a family is known by its family, not by its name:

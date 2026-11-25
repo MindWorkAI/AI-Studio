@@ -40,7 +40,18 @@ public static class NumericCheck
     /// <summary>
     /// The precision of a derivative check: the central difference divides by its tiny step.
     /// </summary>
+    /// <remarks>
+    /// It suffices for a function no larger than its derivative, with 20 digits to spare. The difference
+    /// of a larger one, such as 100! + sin(x) or gamma(100, x), would be lost in the rounding of its
+    /// values, so the check takes one digit more for each power of ten by which the function exceeds its
+    /// derivative, see DerivativePrecisionAt.
+    /// </remarks>
     private const int DERIVATIVE_PRECISION = 60;
+
+    /// <summary>
+    /// The highest precision of a derivative check; a point which would need more is left out.
+    /// </summary>
+    private const int MAX_DERIVATIVE_PRECISION = 1_000;
 
     /// <summary>
     /// The step of the central difference: rounding at 60 digits costs about 1e-40 of it, and its own
@@ -129,18 +140,55 @@ public static class NumericCheck
             var assignment = SampleAssignment(point, variables);
             var at = assignment[variable];
             var claimed = ValueAt(derivative, assignment);
-            var above = ValueAt(function, With(assignment, variable, (at + DERIVATIVE_STEP).InnerSimplified));
-            var below = ValueAt(function, With(assignment, variable, (at - DERIVATIVE_STEP).InnerSimplified));
-            if (claimed is null || above is null || below is null)
+            var value = ValueAt(function, assignment);
+            if (claimed is null || value is null)
                 continue;
 
-            var difference = NumericEvaluator.EvaluateAt(((Entity)above - below) / TWO_DERIVATIVE_STEPS, DERIVATIVE_PRECISION);
+            var digits = DerivativePrecisionAt(value, claimed);
+            if (digits > MAX_DERIVATIVE_PRECISION)
+                continue;
+
+            using var pointPrecision = MathS.Settings.DecimalPrecisionContext.Set(EContext.ForPrecision(digits));
+            var above = ValueAt(function, With(assignment, variable, (at + DERIVATIVE_STEP).InnerSimplified));
+            var below = ValueAt(function, With(assignment, variable, (at - DERIVATIVE_STEP).InnerSimplified));
+            if (above is null || below is null)
+                continue;
+
+            var difference = NumericEvaluator.EvaluateAt(((Entity)above - below) / TWO_DERIVATIVE_STEPS, digits);
             validPoints++;
             if (!AreClose(claimed, difference, DERIVATIVE_TOLERANCE))
                 return NumericCheckOutcome.FAILED;
         }
 
         return validPoints >= MIN_VALID_POINTS ? NumericCheckOutcome.PASSED : NumericCheckOutcome.NOT_POSSIBLE;
+    }
+
+    /// <summary>
+    /// The precision a central difference needs at a point: DERIVATIVE_PRECISION, and one digit more for each
+    /// power of ten by which the function exceeds its derivative.
+    /// </summary>
+    /// <remarks>
+    /// Rounding to p digits changes each value of the function by about 10^-p of it, which the division by
+    /// the step of 1e-20 enlarges to 10^(20 - p) of it. To stay within DERIVATIVE_TOLERANCE of the derivative,
+    /// p has to exceed 40 plus the decimal logarithm of their ratio; DERIVATIVE_PRECISION keeps 20 digits
+    /// more. Against a derivative of 0, the tolerance is absolute.
+    /// </remarks>
+    private static int DerivativePrecisionAt(Entity.Number.Complex value, Entity.Number.Complex derivative)
+    {
+        var ratio = DecimalLogarithmOfSize(value) - (IsZero(derivative) ? 0 : DecimalLogarithmOfSize(derivative));
+        return DERIVATIVE_PRECISION + (int)Math.Max(0, Math.Ceiling(ratio));
+    }
+
+    /// <summary>
+    /// The decimal logarithm of the larger part of a number, roughly, also beyond the range of a double.
+    /// </summary>
+    private static double DecimalLogarithmOfSize(Entity.Number.Complex number)
+    {
+        var size = EDecimal.Max(number.RealPart.EDecimal.Abs(), number.ImaginaryPart.EDecimal.Abs());
+        if (size.IsZero)
+            return double.NegativeInfinity;
+
+        return size.Exponent.ToInt64Checked() + size.Mantissa.Abs().GetDigitCountAsInt64() - 1;
     }
 
     /// <summary>
