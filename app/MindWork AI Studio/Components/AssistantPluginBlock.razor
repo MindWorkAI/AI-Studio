@@ -11,10 +11,10 @@
                 Link="@this.LaunchLink"
                 OnClick="@this.StartAsync">
     <AdditionalActions>
-        <DirectChatLauncherSettingsAction Plugin="@this.Plugin" />
+        <DirectChatLauncherSettingsAction Plugin="@this.Plugin" Compact="@true" />
         @if (this.AvailablePlugin is not null)
         {
-            <PluginDeleteAction Plugin="@this.AvailablePlugin" />
+            <PluginDeleteAction Plugin="@this.AvailablePlugin" Compact="@true" />
         }
     </AdditionalActions>
     <SecurityBadge>

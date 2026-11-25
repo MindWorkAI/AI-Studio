@@ -23,6 +23,13 @@ public partial class PluginDeleteAction : MSGComponentBase
     [Parameter, EditorRequired]
     public IAvailablePlugin Plugin { get; set; } = null!;
 
+    /// <summary>
+    /// Shows the action as a small button. A tile of the assistants page needs it: next to a button
+    /// of the usual size, its start button would sit higher than on the other tiles.
+    /// </summary>
+    [Parameter]
+    public bool Compact { get; set; }
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
