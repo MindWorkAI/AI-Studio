@@ -96,7 +96,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
         false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
     };
 
-    private string BlockStyle => $"border-width: 3px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; max-width: 20em;";
+    private string BlockStyle => $"border-width: 3px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; width: 20em;";
 
     /// <inheritdoc />
     public bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
