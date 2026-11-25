@@ -325,9 +325,14 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
                 info!(Source = "Tauri"; "Run event: Tauri app is ready.");
             }
 
-            // When AI Studio restarts itself, Tauri would start the new instance in the background next:
-            #[cfg(target_os = "macos")]
             RunEvent::Exit => {
+                // Quitting through the menu of macOS, e.g., with Cmd+Q, skips RunEvent::ExitRequested.
+                // Qdrant Edge has to stop anyway, so that it unloads its stores. When it already
+                // stopped, this does nothing.
+                stop_qdrant_edge_database();
+
+                // When AI Studio restarts itself, Tauri would start the new instance in the background next:
+                #[cfg(target_os = "macos")]
                 crate::own_restart::start_new_instance_in_front();
             }
 
