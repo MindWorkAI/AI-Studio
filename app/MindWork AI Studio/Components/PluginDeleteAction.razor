@@ -6,7 +6,7 @@
         <MudIconButton Icon="@AppIcons.DELETE"
                        Color="Color.Error"
                        Variant="Variant.Text"
-                       Size="Size.Medium"
+                       Size="@(this.Compact ? Size.Small : Size.Medium)"
                        Disabled="@(this.isDeleting || this.IsBlockedByActiveWork)"
                        OnClick="@this.DeletePluginAsync" />
     </MudTooltip>
