@@ -103,17 +103,12 @@ public sealed class NumericCheckTests
     }
 
     [Test]
-    public void GivesAnIntegerParameterIntegerValues()
+    public void GivesAVariableNamedLikeAnIndexNoIntegers()
     {
+        // The index of a family is known by its family, not by its name:
         var parameter = MathS.Var("n_1");
         var values = Enumerable.Range(0, 6).Select(point => NumericCheck.SampleAssignment(point, [parameter])[parameter]).Distinct().ToList();
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(values, Is.EquivalentTo(new Entity[] { -1, 0, 1 }));
-            Assert.That(NumericCheck.IsIntegerParameter(MathS.Var("n_12")), Is.True);
-            Assert.That(NumericCheck.IsIntegerParameter(MathS.Var("n")), Is.False);
-            Assert.That(NumericCheck.IsIntegerParameter(MathS.Var("n_x")), Is.False);
-        }
+        Assert.That(values, Has.None.InstanceOf<Entity.Number.Integer>());
     }
 
     [Test]

@@ -171,8 +171,9 @@ public sealed class ComputeSymbolicallyToolTests
             Assert.That(Text(quadratic, "verification"), Is.EqualTo("passed"));
             Assert.That(complex["solutions"]![0]!["real"]!.GetValue<bool>(), Is.False);
             Assert.That(Text(complex, "verification"), Is.EqualTo("passed"));
-            Assert.That(Text(periodic, "verification"), Is.EqualTo("passed"), "n_1 takes integer values in the check.");
-            Assert.That(Issues(periodic), Has.Member("n_1 stands for any integer."));
+            Assert.That(Text(periodic, "verification"), Is.EqualTo("passed"), "The index takes integer values in the check.");
+            Assert.That(Member(periodic, 0)["holds_for"]!.GetValue<string>(), Is.EqualTo("every integer n"));
+            Assert.That(Member(periodic, 1)["at_index_0"]!["value"]!.GetValue<string>(), Is.EqualTo("5/6 * pi"));
             Assert.That(Issues(withoutEquals), Has.Member("The expression has no '=', so it was solved for expression = 0."));
             Assert.That(withoutEquals["solutions"]!.AsArray(), Has.Count.EqualTo(2));
         }
@@ -197,6 +198,39 @@ public sealed class ComputeSymbolicallyToolTests
             Assert.That(Member(exponential, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Does.StartWith("2.32192809488"), "The solution for the index 0 is the real one, which a model needs most.");
             Assert.That(Text(exponential, "verification"), Is.EqualTo("passed"));
             Assert.That(Text(wrong, "verification"), Is.EqualTo("failed"));
+        }
+    }
+
+    [Test]
+    public async Task GivesTheRealSolutionOfAnExponentialEquation()
+    {
+        // The decimals are those of Python's decimal module, to 15 significant digits:
+        var power = await Compute(SymbolicOperation.SOLVE, "2^x = 5");
+        var doubling = await Compute(SymbolicOperation.SOLVE, "1.05^x = 2");
+        var lambert = await Compute(SymbolicOperation.SOLVE, "x*e^x = 2");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Member(power, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Is.EqualTo("2.32192809488736"));
+            Assert.That(Text(power, "verification"), Is.EqualTo("passed"));
+            Assert.That(Member(doubling, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Is.EqualTo("14.2066990828905"), "The years in which 5 % interest doubles a sum.");
+            Assert.That(Member(doubling, 0)["at_index_0"]!["real"]!.GetValue<bool>(), Is.True);
+            Assert.That(Member(lambert, 0)["at_index_0"]!["value"]!.GetValue<string>(), Is.EqualTo("lambertw(2)"));
+            Assert.That(Member(lambert, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Is.EqualTo("0.852605502013725"));
+            Assert.That(Text(lambert, "verification"), Is.EqualTo("passed"));
+        }
+    }
+
+    [Test]
+    public async Task AnswersWhatRanPastTheBudgetBefore()
+    {
+        // Each of these took the whole budget of 10 seconds with version 2.6.0:
+        var mixedBases = await Compute(SymbolicOperation.SOLVE, "(-2)^x + 4^x = 0");
+        var quintic = await Compute(SymbolicOperation.SOLVE, "x^5 + x - sqrt(2) = 0");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(mixedBases["complete"]!.GetValue<bool>(), Is.True);
+            Assert.That(Text(mixedBases, "verification"), Is.EqualTo("passed"));
+            Assert.That(quintic["complete"]!.GetValue<bool>(), Is.False);
         }
     }
 

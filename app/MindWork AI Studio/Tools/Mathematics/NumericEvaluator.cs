@@ -82,9 +82,10 @@ public static class NumericEvaluator
         }
 
         //
-        // Where AngouriMath rounds to decimal places, a value far below 1 keeps only some of its digits, and a
-        // tiny one none at all. The precision therefore grows by the leading zeros of the value, and a value of
-        // zero is evaluated again with twice the digits, until MAX_PRECISION. More digits cannot change an
+        // Up to version 2.6.0, AngouriMath rounded to decimal places, so a value far below 1 kept only some of its
+        // digits, and a tiny one none at all. The precision therefore grows by the leading zeros of the value, and a
+        // value of zero is evaluated again with twice the digits, until MAX_PRECISION. Since version 2.7.0, a value
+        // keeps its digits, and this only costs time; it stays as a safeguard. More digits cannot change an
         // integral's value of zero, which comes from the quadrature:
         //
         var shift = 0;
@@ -229,10 +230,11 @@ public static class NumericEvaluator
     /// </summary>
     /// <remarks>
     /// By default, AngouriMath downcasts: it turns a number which looks like an integer at the precision into that
-    /// integer, and so a tiny value such as 1.380649e-23 * 300 into 0, see AngouriMathBehaviorTests. This evaluation
-    /// does without. Then AngouriMath rounds the quotient of two integers to as many decimal places as the precision
-    /// has digits, so 21/10^50 vanishes at 30 digits. The precision therefore grows by the leading zeros of the
-    /// smallest fraction in the expression, up to MAX_PRECISION.
+    /// integer, and so, at 30 digits, 1.380649e-23 * 300 into 0, see AngouriMathBehaviorTests. This evaluation
+    /// does without. Up to version 2.6.0, AngouriMath then rounded the quotient of two integers to as many decimal
+    /// places as the precision has digits, so 21/10^50 vanished at 30 digits. The precision therefore grows by the
+    /// leading zeros of the smallest fraction in the expression, up to MAX_PRECISION. Since version 2.7.0, the
+    /// quotient keeps its digits; the growth stays as a safeguard.
     /// </remarks>
     /// <param name="expression">The expression, without variables.</param>
     /// <param name="precision">How many significant digits to compute with, at least.</param>
@@ -252,8 +254,8 @@ public static class NumericEvaluator
     /// AngouriMath simplifies a value below about 1e-1000 to 0, e.g., pi/10^1500, see AngouriMathBehaviorTests.
     /// A fraction that small, such as 1e-2000, leaves the 0 in doubt. Otherwise, a true 0, as for sin(pi),
     /// evaluates to rounding noise which changes with the precision, but a tiny value, as for exp(-3000), keeps
-    /// its digits. A quotient such as pi/10^1500 evaluates to 0 as well, since AngouriMath rounds it to decimal
-    /// places; its 0 stands.
+    /// its digits. Up to version 2.6.0, a quotient such as pi/10^1500 evaluated to 0 as well, since AngouriMath
+    /// rounded it to decimal places; such a 0 stands.
     /// </remarks>
     private static bool MayBeTiny(Entity expression, int digits)
     {

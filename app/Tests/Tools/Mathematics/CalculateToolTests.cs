@@ -122,7 +122,7 @@ public sealed class CalculateToolTests
         var simplifiedToZero = Calculate("1e-2000 * pi");
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(RelativeError(quotient, "3.14159265358979323846264e-200"), Is.LessThan(1e-19), "AngouriMath rounds a quotient to decimal places, so the precision grows until the value shows.");
+            Assert.That(RelativeError(quotient, "3.14159265358979323846264e-200"), Is.LessThan(1e-19), "Up to version 2.6.0, AngouriMath rounded a quotient to decimal places, so the precision grows until the value shows.");
             Assert.That(simplifiedToZero.ContainsKey("exact"), Is.False, "AngouriMath simplifies the value to 0, see AngouriMathBehaviorTests.DowncastingWhileParsingLosesTinyLiterals.");
             Assert.That(RelativeError(simplifiedToZero, "3.14159265358979323846264e-2000"), Is.LessThan(1e-19));
             Assert.That(Text(photon, "decimal"), Is.EqualTo("3.9728917142978574e-19"));

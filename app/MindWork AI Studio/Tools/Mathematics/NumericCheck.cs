@@ -18,8 +18,7 @@ namespace AIStudio.Tools.Mathematics;
 /// supports the equality; it does not prove it.<br/><br/>
 /// A derivative is compared with the central difference of its function, over a step of 1e-20 at 60
 /// digits. The index of a family of solutions takes three integers of its set instead, -1, 0, and 1 for
-/// any integer, since such a solution holds for those values only. So does the integer parameter which
-/// AngouriMath names n_1.<br/><br/>
+/// any integer, since such a solution holds for those values only.<br/><br/>
 /// Call it inside a computation of MathComputationService.
 /// </remarks>
 public static class NumericCheck
@@ -145,13 +144,6 @@ public static class NumericCheck
     }
 
     /// <summary>
-    /// Whether AngouriMath named a variable as the integer parameter of periodic solutions, as in pi / 6 + 2 * pi * n_1.
-    /// </summary>
-    /// <param name="variable">The variable.</param>
-    /// <returns>True for n_1, n_2, and so on.</returns>
-    public static bool IsIntegerParameter(Entity.Variable variable) => variable.Name.StartsWith("n_", StringComparison.Ordinal) && variable.Name.Length > 2 && variable.Name[2..].All(char.IsAsciiDigit);
-
-    /// <summary>
     /// The values of the variables at one sample point.
     /// </summary>
     /// <param name="point">The number of the point, from zero.</param>
@@ -194,13 +186,6 @@ public static class NumericCheck
                 continue;
             }
 
-            // An integer parameter takes -1, 0, and 1, since a periodic solution holds only at integers:
-            if (IsIntegerParameter(variables[index]))
-            {
-                assignment[variables[index]] = Entity.Number.Integer.Create((point + index) % 3 - 1);
-                continue;
-            }
-
             var hundredths = SAMPLE_HUNDREDTHS[(point * 3 + index * 5) % SAMPLE_HUNDREDTHS.Length];
             assignment[variables[index]] = Entity.Number.Rational.Create(hundredths, 100);
         }
@@ -229,8 +214,9 @@ public static class NumericCheck
 
             //
             // A polynomial at a sample point stays exact. Anything else is evaluated without the downcasting which turns
-            // tiny values into 0, and so is an exact 0: simplifying takes a tiny value such as 6.62607015e-34 * sin(0.61)
-            // for 0 at this precision, see AngouriMathBehaviorTests:
+            // tiny values into 0, and so is an exact 0: simplifying takes a value below about 1e-1000 for 0, and up to
+            // version 2.6.0, it took a tiny value such as 6.62607015e-34 * sin(0.61) for 0 at this precision, see
+            // AngouriMathBehaviorTests:
             //
             var exact = NumericEvaluator.ExactValueOf(substituted);
             var number = exact is not null && !IsZero(exact) ? exact : NumericEvaluator.EvaluateAt(substituted, MathS.Settings.DecimalPrecisionContext.Value.Precision.ToInt32Checked());

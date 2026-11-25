@@ -90,10 +90,11 @@ public static partial class MathExpressionReader
     /// </summary>
     /// <remarks>
     /// AngouriMath downcasts while it parses: it reads 0.1 as 1/10, but 6.62607015e-34 as an inexact
-    /// decimal and 1e-60 as 0, see AngouriMathBehaviorTests. Simplifying then drops an inexact decimal
-    /// from a sum, so 1 + 1e-40 would be exactly 1. The reader therefore parses without downcasting,
-    /// which leaves every number a decimal, and turns each into its fraction or integer. A literal
-    /// with an exponent beyond MathLimits.MAX_EXACT_DIGITS stays a decimal.
+    /// decimal and 1e-60 as 0, see AngouriMathBehaviorTests. An inexact decimal leaves every value it
+    /// takes part in inexact, and up to version 2.6.0, simplifying even dropped it from a sum, so
+    /// 1 + 1e-40 was exactly 1. The reader therefore parses without downcasting, which leaves every
+    /// number a decimal, and turns each into its fraction or integer. A literal with an exponent beyond
+    /// MathLimits.MAX_EXACT_DIGITS stays a decimal.
     /// </remarks>
     private static Entity WithExactLiterals(Entity expression) => expression.Replace(node => node is Entity.Number.Real literal and not Entity.Number.Rational ? ExactValueOf(literal) : node);
 

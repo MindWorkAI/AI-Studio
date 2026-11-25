@@ -136,6 +136,16 @@ public static class MathematicsChecks
             ["verification"] = "passed",
         });
 
+        //
+        // A family of solutions, which takes the membership of its index set:
+        //
+        Expect(failures, "solve 2^x = 5", Symbolic(SymbolicOperation.SOLVE, "2^x = 5"), new()
+        {
+            ["solutions/0/holds_for"] = "every integer n",
+            ["solutions/0/at_index_0/decimal"] = "2.32192809488736",
+            ["verification"] = "passed",
+        });
+
         return failures;
     }
 

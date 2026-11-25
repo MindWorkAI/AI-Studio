@@ -520,9 +520,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
         var original = MathVariables.FreeIn(expression).Select(variable => variable.Name).ToHashSet(StringComparer.Ordinal);
         foreach (var variable in MathVariables.FreeIn(result).Where(variable => !original.Contains(variable.Name)))
         {
-            if (NumericCheck.IsIntegerParameter(variable))
-                issues.Add($"{variable.Name} stands for any integer.");
-            else if (variable.Name.StartsWith("r_", StringComparison.Ordinal))
+            if (variable.Name.StartsWith("r_", StringComparison.Ordinal))
                 issues.Add($"{variable.Name} stands for any real number.");
             else if (variable.Name == "C" || variable.Name.StartsWith("C_", StringComparison.Ordinal))
                 issues.Add($"{variable.Name} stands for any constant.");

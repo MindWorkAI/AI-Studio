@@ -13,8 +13,9 @@ namespace AIStudio.Tools.Mathematics;
 /// </summary>
 /// <remarks>
 /// AngouriMath computes an exact power or factorial in full, and an expansion term by term, without
-/// checking its cancellation token meanwhile: 9^9^9, (10^9)!, and the expansion of (x + y)^500 run
-/// on long past any budget, see AngouriMathBehaviorTests. The guards estimate the size of such a
+/// checking its cancellation token meanwhile: (10^9)! and the expansion of (x + y)^500 run on long
+/// past any budget, and so did 9^9^9 up to version 2.6.0; since version 2.7.0, AngouriMath leaves a
+/// power of more than sixteen million bits written instead. The guards estimate the size of such a
 /// result from the expression alone, before anything is computed, and refuse it when it would be
 /// larger than any result the tools return anyway.<br/><br/>
 /// The estimate works from the inside out, so the inner power of 9^9^9^9 is known before the outer
