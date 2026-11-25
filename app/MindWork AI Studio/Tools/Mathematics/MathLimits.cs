@@ -46,4 +46,36 @@ public static class MathLimits
     /// The most significant digits a decimal result may have.
     /// </summary>
     public const int MAX_DIGITS = 100;
+
+    /// <summary>
+    /// The highest order n of polygamma(n, x) which is computed.
+    /// </summary>
+    /// <remarks>
+    /// AngouriMath computes polygamma without checking its cancellation token, and its time grows with the
+    /// order: on a Mac, with 100 digits, order 100 takes 0.2 seconds at most, order 1,000 up to 1.5 seconds,
+    /// and order 3,000 over 2 seconds. A derivative of order 10 of digamma is polygamma(10, x).
+    /// </remarks>
+    public const int MAX_POLYGAMMA_ORDER = 100;
+
+    /// <summary>
+    /// The largest absolute value of z in the incomplete gamma function gamma(a, z) which is computed.
+    /// </summary>
+    /// <remarks>
+    /// AngouriMath computes gamma(a, z) without checking its cancellation token, and its time grows with z, the
+    /// more so for a parameter a which is negative or not real. Within the limits of z and a, it takes
+    /// 0.5 seconds at most on a Mac, with 100 digits, as for gamma(-1/2, 1000), while gamma(-199/2, 100)
+    /// takes 2 seconds, gamma(-14 + 14*i, 1000) 1.3 seconds, gamma(i, 2000) 3 seconds, and
+    /// gamma(10000, 10000) longer than the time budget.
+    /// </remarks>
+    public const int MAX_INCOMPLETE_GAMMA_ARGUMENT = 1_000;
+
+    /// <summary>
+    /// The smallest parameter a of gamma(a, z) which is computed; a has to be real.
+    /// </summary>
+    public const int MIN_INCOMPLETE_GAMMA_PARAMETER = -20;
+
+    /// <summary>
+    /// The largest parameter a of gamma(a, z) which is computed; a has to be real.
+    /// </summary>
+    public const int MAX_INCOMPLETE_GAMMA_PARAMETER = 200;
 }

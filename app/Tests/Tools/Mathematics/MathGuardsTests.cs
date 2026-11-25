@@ -44,12 +44,31 @@ public sealed class MathGuardsTests
     }
 
     [Test]
+    public void RefusesSpecialFunctionsBeyondTheirLimits()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ExactSizeRefusal("polygamma(101, 2)"), Is.EqualTo("'polygamma(101, 2)' has the order 101. The tool cannot stop the computation of polygamma midway, and its time grows with the order, so the order is limited to 100."));
+            Assert.That(ExactSizeRefusal("1 + polygamma(10^3, x)"), Does.StartWith("'polygamma(10 ^ 3, x)' has the order 1000."), "The order is a number even when the argument is a variable.");
+            Assert.That(ExactSizeRefusal("polygamma((10^9)!, 2)"), Does.StartWith("'(10 ^ 9)!' would have about"), "The order is judged before its value is needed.");
+            Assert.That(ExactSizeRefusal("gamma(1/2, 1001)"), Is.EqualTo("'gamma(1 / 2, 1001)' takes gamma(a, z) at a z of about 1001 in absolute value. The tool cannot stop this computation midway, and its time grows with z, so the absolute value of z is limited to 1,000."));
+            Assert.That(ExactSizeRefusal("gamma(1/2, 10 + 1000*i)"), Does.Contain("at a z of about 1000.05 in absolute value"));
+            Assert.That(ExactSizeRefusal("gamma(401/2, 2)"), Is.EqualTo("'gamma(401 / 2, 2)' takes gamma(a, z) for a = 401/2. The tool cannot stop this computation midway, and its time grows with z, the more so when a is negative or not real, so a is limited to the real numbers from -20 to 200."));
+            Assert.That(ExactSizeRefusal("gamma(-41/2, 2)"), Does.Contain("for a = -41/2."));
+            Assert.That(ExactSizeRefusal("gamma(1 + i, x)"), Does.Contain("for a = 1 + i."), "The parameter is a number even when z is a variable.");
+            Assert.That(() => MathGuards.CheckSpecialFunctions(Read("2 * gamma(1/2, 3001/3)")), Throws.InstanceOf<MathComputationException>());
+        }
+    }
+
+    [Test]
     public void LetsThroughWhatIsComputedQuickly()
     {
         using (Assert.EnterMultipleScope())
         {
-            foreach (var text in new[] { "2^10000", "10^19999", "5000!", "0.5!", "(3!)!", "x^1000000", "2^x", "pi^1000000", "e^(10^6)", "1^(10^100)", "0^(10^100)", "547 / 57576", "integral(x^3/(e^x-1), x, 0, +oo)" })
+            foreach (var text in new[] { "2^10000", "10^19999", "5000!", "0.5!", "(3!)!", "x^1000000", "2^x", "pi^1000000", "e^(10^6)", "1^(10^100)", "0^(10^100)", "547 / 57576", "integral(x^3/(e^x-1), x, 0, +oo)", "polygamma(100, 1/3)", "digamma(10^9)", "polygamma(n, x)", "gamma(200, 1000)", "gamma(-20, -1000)", "gamma(-20, 1000*i)", "gamma(x, 10^3)", "gamma(a, 1/2)", "lambertw(10^6, 2)" })
                 Assert.DoesNotThrow(() => MathGuards.CheckExactSize(Read(text)), text);
+
+            Assert.DoesNotThrow(() => MathGuards.CheckSpecialFunctions(Read("10^30000 + 30000!")), "Only CheckExactSize judges the size of a number.");
         }
     }
 

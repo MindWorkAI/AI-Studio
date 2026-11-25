@@ -241,6 +241,22 @@ public sealed class CalculateToolTests
     }
 
     [Test]
+    public void ComputesTheSpecialFunctionsWhichSolvingAndIntegratingReturn()
+    {
+        // The references are those of Python's decimal module:
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(RelativeError(Calculate("lambertw(0, 2)"), "0.85260550201372549134647241469531746689845330015140"), Is.LessThan(1e-19), "W(2) solves w * e^w = 2.");
+            Assert.That(RelativeError(Calculate("productlog(2)"), "0.85260550201372549134647241469531746689845330015140"), Is.LessThan(1e-19));
+            Assert.That(RelativeError(Calculate("gamma(2, 1)"), "0.73575888234288464319104754032292173489162226206354"), Is.LessThan(1e-19), "gamma(2, 1) is 2/e.");
+            Assert.That(RelativeError(Calculate("polygamma(1, 1)"), "1.64493406684822643647241516664602518921894990120680"), Is.LessThan(1e-19), "polygamma(1, 1) is pi^2/6.");
+            Assert.That(RelativeError(Calculate("integral(lambertw(0, x), x, 0, 1)"), "0.33036612476168058323"), Is.LessThan(1e-12), "The integrand compiles; the integral is W(1) - 2 + 1/W(1).");
+            Assert.That(Refusal("polygamma(101, 2)"), Does.EndWith("so the order is limited to 100."));
+            Assert.That(Refusal("gamma(1/2, 10^4)"), Does.EndWith("so the absolute value of z is limited to 1,000."));
+        }
+    }
+
+    [Test]
     public void RefusesAnIntegralItCannotIntegrate()
     {
         using (Assert.EnterMultipleScope())

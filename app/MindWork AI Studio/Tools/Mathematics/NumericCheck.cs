@@ -200,7 +200,7 @@ public static class NumericCheck
     /// </summary>
     /// <param name="expression">The expression.</param>
     /// <param name="assignment">The value of each variable.</param>
-    /// <returns>The value, or null for no value, an infinite one, or one AngouriMath cannot evaluate.</returns>
+    /// <returns>The value, or null for no value, an infinite one, one of a special function beyond its limits, or one AngouriMath cannot evaluate.</returns>
     public static Entity.Number.Complex? ValueAt(Entity expression, IReadOnlyDictionary<Entity.Variable, Entity> assignment)
     {
         try
@@ -211,6 +211,9 @@ public static class NumericCheck
 
             if (!substituted.EvaluableNumerical)
                 return null;
+
+            // A value of a variable may take a special function beyond its limits, as x = 2.23 in gamma(1/2, 1000 * x):
+            MathGuards.CheckSpecialFunctions(substituted);
 
             //
             // A polynomial at a sample point stays exact. Anything else is evaluated without the downcasting which turns

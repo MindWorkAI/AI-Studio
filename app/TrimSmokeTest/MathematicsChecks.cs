@@ -85,6 +85,21 @@ public static class MathematicsChecks
         });
 
         //
+        // The special functions which solving, integrating, and differentiating return, evaluated and compiled:
+        //
+        Expect(failures, "calculate lambertw(0, 2) + polygamma(1, 1) + gamma(2, 1)", Calculation("lambertw(0, 2) + polygamma(1, 1) + gamma(2, 1)", 20), new()
+        {
+            ["decimal"] = "3.233298451204836571",
+            ["digits"] = "20",
+        });
+
+        Expect(failures, "check the integral of lambertw(0, x) + polygamma(1, x) from 1 to 2", Calculation("integral(lambertw(0, x) + polygamma(1, x), x, 1, 2) = 2*(lambertw(2) - 1 + 1/lambertw(2)) - (lambertw(1) - 1 + 1/lambertw(1)) + 1", 20), new()
+        {
+            ["numerically_equal"] = "true",
+            ["left/approximate"] = "true",
+        });
+
+        //
         // The symbolic operations, each with its numerical check:
         //
         Expect(failures, "simplify (x^2 - 1)/(x - 1)", Symbolic(SymbolicOperation.SIMPLIFY, "(x^2 - 1)/(x - 1)"), new()

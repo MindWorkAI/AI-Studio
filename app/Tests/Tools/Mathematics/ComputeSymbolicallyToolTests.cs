@@ -221,6 +221,25 @@ public sealed class ComputeSymbolicallyToolTests
     }
 
     [Test]
+    public async Task GivesSolutionsCalculateTakes()
+    {
+        foreach (var equation in new[] { "2^x = 5", "x*e^x = 2", "sin(x) = 1/2" })
+        {
+            var solution = Member(await Compute(SymbolicOperation.SOLVE, equation), 0)["at_index_0"]!;
+            var value = await SERVICE.ComputeAsync(token => CalculateTool.Calculate(solution["value"]!.GetValue<string>(), 15, token));
+            Assert.That(value["decimal"]!.GetValue<string>(), Is.EqualTo(solution["decimal"]!.GetValue<string>()), equation);
+        }
+    }
+
+    [Test]
+    public async Task ChecksNoSamplePointBeyondTheLimitsOfASpecialFunction()
+    {
+        // At x = 0.61, z is 6,100, which would take seconds without a way to stop it:
+        var simplified = await Compute(SymbolicOperation.SIMPLIFY, "gamma(1/2, 10000*x)");
+        Assert.That(Text(simplified, "verification"), Is.EqualTo("not_possible"));
+    }
+
+    [Test]
     public async Task AnswersWhatRanPastTheBudgetBefore()
     {
         // Each of these took the whole budget of 10 seconds with version 2.6.0:
