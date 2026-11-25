@@ -24,6 +24,6 @@ Since AI Studio v26.11.2, every store also gets payload indexes on the fields wh
 
 - Check that the new qdrant-edge release no longer applies operations which the segments already persisted, e.g., by starting the WAL replay at the highest version the segments persisted.
 - Remove `acknowledge_legacy_wal` and the constants `WAL_FIRST_INDEX_FILE` and `WAL_FIRST_INDEX_FILE_TEMP`, unless the tests still need them.
-- Remove the `acknowledge_legacy_wal` calls from `get_or_create_store` and `get_existing_store`.
+- Remove the `acknowledge_legacy_wal` call from `load_store`.
 - Remove the test `a_store_of_an_older_version_gets_its_wal_acknowledged_and_keeps_its_points`, and keep `an_acknowledged_wal_stays_as_it_is` only if it still checks something of AI Studio.
 - Update this document's status to `Removed`.
