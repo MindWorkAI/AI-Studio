@@ -27,7 +27,7 @@ public class HighlightedMarkdown : MudMarkdown
     #region Overrides of MudMarkdown
 
     /// <inheritdoc />
-    protected override void RenderCodeBlock(in RenderTreeBuilder builder, ref int elementIndex, in Markdig.Syntax.CodeBlock code, in string? info)
+    protected override void RenderCodeBlock(in RenderTreeBuilder builder, ref int elementIndex, in Markdig.Syntax.CodeBlock code, in string? info, Typo typo)
     {
         var text = TextOf(code);
         var language = CodeLanguageDetector.FenceLanguageOf(info, text);
@@ -37,7 +37,7 @@ public class HighlightedMarkdown : MudMarkdown
             // The copy button of the library confirms in the language of the app, as ours does:
             //
             this.Styling.CodeBlock.CopyButtonText = CodeBlockCopyButton.ConfirmationText;
-            base.RenderCodeBlock(builder, ref elementIndex, code, language);
+            base.RenderCodeBlock(builder, ref elementIndex, code, language, typo);
             return;
         }
 
@@ -48,6 +48,7 @@ public class HighlightedMarkdown : MudMarkdown
         builder.OpenComponent<HighlightedCodeBlock>(0);
         builder.AddComponentParameter(1, nameof(HighlightedCodeBlock.Code), text);
         builder.AddComponentParameter(2, nameof(HighlightedCodeBlock.Language), language);
+        builder.AddComponentParameter(3, nameof(HighlightedCodeBlock.Typo), typo);
         builder.CloseComponent();
     }
 

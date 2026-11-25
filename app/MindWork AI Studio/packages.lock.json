@@ -16,11 +16,11 @@
       },
       "CodeBeam.MudBlazor.Extensions": {
         "type": "Direct",
-        "requested": "[9.2.0, )",
-        "resolved": "9.2.0",
-        "contentHash": "oA6TtFHh8uSA9Rk06aC9Bv9mvDiCfz5jI2QVYY2oogt5dZr2sHLHFdx3Z2shvn1i0gsTC35OjruKJJpWXPBcHA==",
+        "requested": "[9.14.0, )",
+        "resolved": "9.14.0",
+        "contentHash": "Xe95ljYZI6NQZejyUIoGn0nl7Fo9kSZRPjGWHPVTUS+pZ0/RBdUq3dmXXfO82VjQ3eCJLqIJwcBrnzCQxjAHUA==",
         "dependencies": {
-          "MudBlazor": "9.0.0"
+          "MudBlazor": "9.14.0"
         }
       },
       "DocumentFormat.OpenXml": {
@@ -98,18 +98,18 @@
       },
       "MudBlazor": {
         "type": "Direct",
-        "requested": "[9.12.0, )",
-        "resolved": "9.12.0",
-        "contentHash": "T6PQUCJe60UTSy3u1F8R2nuC06Cox6WEhon5GA2/AZNVI1WstlPSJZdGPyp6pHFpWdjPpla65piLpyJsbW+1rA=="
+        "requested": "[9.14.0, )",
+        "resolved": "9.14.0",
+        "contentHash": "VmMM/u4upqpc0lJoXmo30Zj1d/Zq3BjdS11+q/eB/+p20pV1WXbLS0C17WbV4xqLM1i9Kpco6emt6M4s2R/BUA=="
       },
       "MudBlazor.Markdown": {
         "type": "Direct",
-        "requested": "[9.10.0, )",
-        "resolved": "9.10.0",
-        "contentHash": "/uO8FrwS7NANxw6tI5F1fnHTD9r1g/1Xn5SBF2s2jdr6oS4CCnIGC8HSip6qNR/mzZaEx0Ioc0s7abYcMM50Wg==",
+        "requested": "[9.12.0, )",
+        "resolved": "9.12.0",
+        "contentHash": "oQH8sU4zFK6M4zBO0WemK0L5ZbV7oDhX4kmyPg6w91molrl+F3rjzfYYJie0tvQB8PfxijD/B1T2855z+2d/xQ==",
         "dependencies": {
-          "Markdig": "1.4.0",
-          "MudBlazor": "9.10.0"
+          "Markdig": "1.5.1",
+          "MudBlazor": "9.12.0"
         }
       },
       "ReverseMarkdown": {
@@ -166,8 +166,8 @@
       },
       "Markdig": {
         "type": "Transitive",
-        "resolved": "1.4.0",
-        "contentHash": "lLhaiI/mNDTNzgLqnmknhf4LjgTqOAyjx5+GNz0X3AxYMxUhmFppF2WVMdER+SDqwhE5wUF1pzs/cuLwFxs7xA=="
+        "resolved": "1.5.1",
+        "contentHash": "NtHwU5t5yKr6Gnylhs8/hlR0mOAftTFQURDz2ID8bkunxps1neOzKw0dYKKlwNuwiYIGLHjJTXK91f809Ko1ww=="
       },
       "Microsoft.EntityFrameworkCore": {
         "type": "Transitive",

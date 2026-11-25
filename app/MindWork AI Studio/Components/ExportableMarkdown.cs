@@ -51,11 +51,11 @@ public sealed class ExportableMarkdown : HighlightedMarkdown
     #region Overrides of HighlightedMarkdown
 
     /// <inheritdoc />
-    protected override void RenderCodeBlock(in RenderTreeBuilder builder, ref int elementIndex, in Markdig.Syntax.CodeBlock code, in string? info)
+    protected override void RenderCodeBlock(in RenderTreeBuilder builder, ref int elementIndex, in Markdig.Syntax.CodeBlock code, in string? info, Typo typo)
     {
         if (this.CodeBlockActions is null || FileAt(this.Files, this.ValueStart + code.Span.Start) is not { } file)
         {
-            base.RenderCodeBlock(builder, ref elementIndex, code, info);
+            base.RenderCodeBlock(builder, ref elementIndex, code, info, typo);
             return;
         }
 
@@ -65,7 +65,7 @@ public sealed class ExportableMarkdown : HighlightedMarkdown
         //
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", "code-block-with-actions");
-        base.RenderCodeBlock(builder, ref elementIndex, code, info);
+        base.RenderCodeBlock(builder, ref elementIndex, code, info, typo);
 
         builder.OpenElement(2, "div");
         builder.AddAttribute(3, "class", "code-block-actions");
