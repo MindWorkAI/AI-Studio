@@ -1,6 +1,9 @@
+using System.Reflection;
+
 using AIStudio.Tools.Mathematics;
 
 using AngouriMath;
+using AngouriMath.Core.Exceptions;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -102,6 +105,15 @@ public sealed class MathComputationServiceTests
         var service = CreateService();
         var request = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
         Assert.That(() => service.ComputeAsync(SpinUntilCanceled, request.Token), Throws.InstanceOf<OperationCanceledException>());
+    }
+
+    [Test]
+    public async Task ABugOfAngouriMathBecomesAMessageWithoutTheLibrary()
+    {
+        var service = CreateService();
+        var bug = (Exception)Activator.CreateInstance(typeof(AngouriBugException), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, ["please report about it to the official repository of AngouriMath"], null)!;
+        var exception = (await Assert.ThrowsAsync<MathComputationException>(() => service.ComputeAsync<int>(_ => throw bug)))!;
+        Assert.That(exception.Message, Is.EqualTo("The tool ran into an error of its own with this expression and could not compute it."));
     }
 
     [Test]

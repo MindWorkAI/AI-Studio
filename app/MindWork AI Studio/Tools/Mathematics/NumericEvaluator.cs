@@ -176,7 +176,8 @@ public static class NumericEvaluator
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            throw new MathComputationException($"The integrand of '{Show(integral)}' cannot be evaluated numerically: {exception.Message.Shorten(MAX_SHOWN_LENGTH)}");
+            // The message of AngouriMath addresses a developer, asking to call .Evaled or Simplify() first:
+            throw new MathComputationException($"The integrand of '{Show(integral)}' cannot be evaluated point by point, which a numerical integration needs, e.g., since it holds gamma(a, z), a derivative, or a limit.");
         }
 
         var result = DoubleExponentialQuadrature.Integrate(integrand, lower, upper, token);

@@ -1,13 +1,8 @@
-using System.Globalization;
-using System.Text.RegularExpressions;
-
 using AIStudio.Tools.Mathematics;
 
 using AngouriMath;
 using AngouriMath.Core;
 using AngouriMath.Core.Exceptions;
-
-using Antlr4.Runtime;
 
 using PeterO.Numbers;
 
@@ -23,7 +18,7 @@ namespace AIStudio.Tests.Tools.Mathematics;
 /// names what AngouriMath does; where the tools have to guard against it, the test says so.
 /// </remarks>
 [TestFixture]
-public sealed partial class AngouriMathBehaviorTests
+public sealed class AngouriMathBehaviorTests
 {
     private static readonly Entity.Variable X = MathS.Var("x");
 
@@ -269,15 +264,14 @@ public sealed partial class AngouriMathBehaviorTests
     [Test]
     public void EveryFunctionAndOperatorOfTheParserIsDecidedOn()
     {
-        var vocabulary = (IVocabulary)typeof(Entity).Assembly.GetType("AngouriMath.Core.Antlr.AngouriMathLexer", throwOnError: true)!.GetField("DefaultVocabulary")!.GetValue(null)!;
-        var tokens = Enumerable.Range(0, 1000).Select(vocabulary.GetLiteralName).Where(name => name is not null).Select(Unquote).ToList();
-        var functions = tokens.Where(token => token.Length > 1 && token.EndsWith('(')).Select(token => token[..^1]).ToList();
+        var tokens = ParserVocabulary.Tokens();
+        var functions = ParserVocabulary.FunctionNames();
 
         const string DECISION = "A new token of the parser needs a decision: either MathExpressionReader refuses it, or the tools support it, with a guard in MathGuards where it computes without checking the cancellation token. AngouriMath computes some functions while it parses, so a refusal by the kind of node comes too late for them.";
         using (Assert.EnterMultipleScope())
         {
             Assert.That(functions.Except(MathExpressionReader.UNSUPPORTED_FUNCTIONS).Order(StringComparer.Ordinal), Is.EqualTo(FUNCTIONS_PASSED_ON), DECISION);
-            Assert.That(tokens.Except(functions.Select(function => function + "(")).Order(StringComparer.Ordinal), Is.EqualTo(OPERATORS), DECISION);
+            Assert.That(tokens.Where(token => !ParserVocabulary.IsFunction(token)).Order(StringComparer.Ordinal), Is.EqualTo(OPERATORS), DECISION);
             Assert.That(MathExpressionReader.UNSUPPORTED_FUNCTIONS.Except(functions), Is.Empty, "MathExpressionReader refuses only names the parser reads as a function.");
         }
     }
@@ -292,14 +286,6 @@ public sealed partial class AngouriMathBehaviorTests
 
         Assert.That(passedOn, Is.EqualTo(NODE_TYPES_PASSED_ON), "A new kind of node needs a decision: either MathExpressionReader refuses it, or the tools support it, with a guard in MathGuards where it computes without checking the cancellation token.");
     }
-
-    /// <summary>
-    /// A literal name of the parser without its quotes, with its escapes, such as \u2026, decoded.
-    /// </summary>
-    private static string Unquote(string literalName) => UnicodeEscape().Replace(literalName[1..^1], match => ((char)int.Parse(match.Groups["code"].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString());
-
-    [GeneratedRegex(@"\\u(?<code>[0-9A-Fa-f]{4})")]
-    private static partial Regex UnicodeEscape();
 
     [Test]
     public void AParseExceptionNamesLineAndColumn()

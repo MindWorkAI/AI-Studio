@@ -9,6 +9,19 @@ public sealed class MathExpressionReaderTests
 {
     private static string Refusal(string text, string argumentName = "expression") => Assert.Throws<MathComputationException>(() => MathExpressionReader.Read(text, argumentName))!.Message;
 
+    private static string? RefusalOrNull(string text)
+    {
+        try
+        {
+            MathExpressionReader.Read(text, "expression");
+            return null;
+        }
+        catch (MathComputationException exception)
+        {
+            return exception.Message;
+        }
+    }
+
     [Test]
     public void ReadsTheSyntaxOfTheTools()
     {
@@ -64,6 +77,33 @@ public sealed class MathExpressionReaderTests
             Assert.That(Refusal("n!!"), Is.EqualTo("Argument 'expression' contains 'n!!', which the tool does not support."));
             Assert.That(Refusal("A[1, 2] + 1"), Is.EqualTo("Argument 'expression' contains 'A[1, 2]', which the tool does not support."));
             Assert.That(Refusal("product(k, k in { 1, 2, 3 })"), Is.EqualTo("Argument 'expression' contains 'product(k, k in { 1, 2, 3 })', which the tool does not support."));
+        }
+    }
+
+    [Test]
+    public void NamesAFunctionTheParserRefuses()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Refusal("trunc(2.5)"), Is.EqualTo("Argument 'expression' uses the function 'trunc', which the tool does not support."));
+            Assert.That(Refusal("1 + arcsinh(1)"), Is.EqualTo("Argument 'expression' uses the function 'arcsinh', which the tool does not support."));
+            Assert.That(Refusal("φ(12)"), Is.EqualTo("Argument 'expression' uses the function 'φ', which the tool does not support."));
+            Assert.That(Refusal("x!!!"), Is.EqualTo("Argument 'expression' uses a function or an operator which the tool does not support."));
+        }
+    }
+
+    [Test]
+    public void NoRefusalNamesTheLibrary()
+    {
+        var texts = ParserVocabulary.FunctionNames().SelectMany(name => new[] { $"{name}(2)", $"{name}(2, 3)", $"{name}(x)" }).Concat(["x!!!", "φ(12)", "ϕ(12)", "trunc(2.5)", "arcsinh(1)"]);
+        using (Assert.EnterMultipleScope())
+        {
+            foreach (var text in texts)
+            {
+                var refusal = RefusalOrNull(text);
+                if (refusal is not null)
+                    Assert.That(refusal, Does.Not.Contain("AngouriMath").And.Not.Contain("C#").And.Not.Contain(".Evaled").And.Not.Contain("Simplify()").And.Not.Contain("MathS"), text);
+            }
         }
     }
 

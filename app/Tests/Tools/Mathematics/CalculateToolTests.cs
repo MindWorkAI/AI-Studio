@@ -257,6 +257,16 @@ public sealed class CalculateToolTests
     }
 
     [Test]
+    public void RefusesAnIntegrandWithoutValuesPointByPointInItsOwnWords()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            foreach (var integral in new[] { "integral(gamma(2, x), x, 0, 1)", "integral(derivative(sin(x)*x, x), x, 0, 1)", "integral(limit(sin(x*t)/t, t, 0), x, 0, 1)" })
+                Assert.That(Refusal(integral), Does.EndWith("cannot be evaluated point by point, which a numerical integration needs, e.g., since it holds gamma(a, z), a derivative, or a limit."), integral);
+        }
+    }
+
+    [Test]
     public void RefusesAnIntegralItCannotIntegrate()
     {
         using (Assert.EnterMultipleScope())

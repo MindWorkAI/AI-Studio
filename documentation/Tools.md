@@ -277,7 +277,7 @@ Every decimal literal is the fraction it writes, so `0.1 + 0.2` is exactly `3/10
 
 AngouriMath computes `sum(f, k, a, b)` only in closed form, as for powers of `k`, so `sum(k, k, 1, 10^7)` takes no time, while `sum(1/k, k, 1, 1000)` has no value. Such a sum, an infinite one, or a matrix is refused by `NumericEvaluator` in its own words, since AngouriMath's message addresses a developer.
 
-No text the model reads names AngouriMath: neither the instructions and schemas of the tools, nor a refusal or an issue. Where a sentence needs someone who computes, it says "the tool", as in "The tool found no closed form for this integral.": a model would take the name of the library for something it may call or look up. The tests of both tools check their definitions for it.
+No text the model reads names AngouriMath: neither the instructions and schemas of the tools, nor a refusal or an issue. Where a sentence needs someone who computes, it says "the tool", as in "The tool found no closed form for this integral.": a model would take the name of the library for something it may call or look up. The tests of both tools check their definitions for it. AngouriMath's own messages name it in three places the tools reach: where it refuses a function by name, as `trunc`, `MathExpressionReader` states only the name; where an integrand has no form to evaluate point by point, as with `gamma(a, z)`, `NumericEvaluator` words the refusal itself instead of asking to call `.Evaled`; and an `AngouriBugException`, which asks to report it to the library, becomes a message of `MathComputationService`. `MathExpressionReaderTests` tries every function of the parser for it.
 
 ### Honest Digits
 

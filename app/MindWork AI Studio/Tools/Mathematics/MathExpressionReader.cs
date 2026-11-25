@@ -20,7 +20,8 @@ namespace AIStudio.Tools.Mathematics;
 /// even with it, a != b is the factorial of a equated to b. This reader refuses such spellings
 /// instead of letting a model compute what it did not mean, and states how AngouriMath writes the
 /// thing instead. Its parse errors list over a thousand characters of expected tokens; the reader
-/// keeps the column and the cause.<br/><br/>
+/// keeps the column and the cause. Where AngouriMath refuses a name of its own, its message names
+/// the library, its C# API, and functions the tools do not support; the reader keeps the name.<br/><br/>
 /// It also refuses the functions which AngouriMath reads since version 2.7.0 or 2.8.0, except those the
 /// tools return, see UNSUPPORTED_FUNCTIONS and UNSUPPORTED_NODE_TYPES.<br/><br/>
 /// Call it inside a computation of MathComputationService: the parser needs the stack of its thread.
@@ -131,6 +132,10 @@ public static partial class MathExpressionReader
         {
             throw new MathComputationException($"Argument '{argumentName}' cannot be read: {exception.Message}.");
         }
+        catch (UnrecognizedFunctionParseException exception)
+        {
+            throw new MathComputationException(DescribeUnrecognizedFunction(exception.Message, argumentName));
+        }
         catch (ParseException exception)
         {
             throw new MathComputationException(DescribeParseError(exception.Message, argumentName));
@@ -175,6 +180,14 @@ public static partial class MathExpressionReader
         return $"Argument '{argumentName}' has no operator between '{left}' and '{right}' at column {column}. Multiplication is written '*', as in 2*x, and a function takes its argument in parentheses, as in sin(x).";
     }
 
+    private static string DescribeUnrecognizedFunction(string message, string argumentName)
+    {
+        var match = UnrecognizedFunctionName().Match(message);
+        return match.Success
+            ? $"Argument '{argumentName}' uses the function '{match.Groups["name"].Value}', which the tool does not support."
+            : $"Argument '{argumentName}' uses a function or an operator which the tool does not support.";
+    }
+
     private static string DescribeParseError(string message, string argumentName)
     {
         var match = ParseErrorPosition().Match(message);
@@ -215,6 +228,10 @@ public static partial class MathExpressionReader
     // There should be an operator between [@0,0:0='2',<185>,1:0] and [@1,1:1='x',<189>,1:1], while parsing `2x`
     [GeneratedRegex(@"='(?<left>.*?)',<\d+>,\d+:\d+\] and \[@\d+,\d+:\d+='(?<right>.*?)',<\d+>,\d+:(?<column>\d+)\]")]
     private static partial Regex MissingOperatorTokens();
+
+    // there is no function trunc: AngouriMath has no rounding functions. …, or: isprime is not a function in AngouriMath: …
+    [GeneratedRegex(@"^(?:there is no function (?<name>[^\s:]+):|(?<name>[^\s:]+) is not a function\b)")]
+    private static partial Regex UnrecognizedFunctionName();
 
     // line 1:4 extraneous input '*' expecting {'-', '+', ...}, while parsing `2 + * 3`
     [GeneratedRegex(@"^line \d+:(?<column>\d+) (?<reason>.*?)(?: expecting .*)?(?:, while parsing `.*`)?$", RegexOptions.Singleline)]
