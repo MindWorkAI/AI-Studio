@@ -1,7 +1,8 @@
 # Qdrant Edge WAL Compaction
 
-- Status: Active
+- Status: Removed
 - Introduced: 2026-10-09
+- Removed: 2026-11-24, with qdrant-edge 0.9.0, which acknowledges its WAL in `EdgeShard::flush` ([qdrant/qdrant#11082](https://github.com/qdrant/qdrant/pull/11082)). Stores of older versions get their WAL marked as acknowledged instead, see `2026-11-qdrant-edge-legacy-wal.md`.
 - Remove after: when a qdrant-edge release acknowledges its WAL in `EdgeShard::flush` by itself, see [qdrant/qdrant#11068](https://github.com/qdrant/qdrant/issues/11068)
 - Code references:
   - `runtime/src/qdrant_edge_database.rs` (`compact_wal`, `has_obsolete_wal_segments`, `remove_obsolete_wal_segments`, `wal_file_names`, `obsolete_wal_segments`, `optimize_store`)
