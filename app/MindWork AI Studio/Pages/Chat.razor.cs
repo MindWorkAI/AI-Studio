@@ -57,6 +57,12 @@ public partial class Chat : MSGComponentBase
     /// </summary>
     private ChatListFloat listFloat = ChatListFloat.NONE;
 
+    /// <summary>
+    /// The part of the path above the chat which the list still has to show, or null, see
+    /// <see cref="this.ShowInList"/>.
+    /// </summary>
+    private BreadcrumbPart? partToShowInList;
+
     private DotNetObjectReference<Chat>? dotNetReference;
 
     #region Overrides of ComponentBase
@@ -120,6 +126,17 @@ public partial class Chat : MSGComponentBase
             {
                 this.Logger.LogWarning(ex, "Failed to let the user resize the workspace sidebar.");
             }
+        }
+
+        //
+        // A list which a click on the path above the chat just showed exists only after this render,
+        // so it learns only now what to show. Until the sidebar shows, the reference still points to
+        // the list it showed before:
+        //
+        if (this.partToShowInList is { } part && this.IsSidebarShown && this.workspaces is not null)
+        {
+            this.partToShowInList = null;
+            await this.workspaces.RevealAsync(part);
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -188,6 +205,37 @@ public partial class Chat : MSGComponentBase
         this.listFloat = ChatListFloat.NONE;
         this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible = !this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible;
         await this.SettingsManager.StoreSettings();
+    }
+
+    /// <summary>
+    /// Shows the open chat or its place in the list, once the user clicked that part of the path above
+    /// the chat.
+    /// </summary>
+    /// <remarks>
+    /// A hidden list shows up first, as a click on the toggle shows it: over the chat in a window too narrow
+    /// for it, and beside the chat otherwise. A list which only peeks stays as well. The list may come into
+    /// being only with the next render, so it learns what to show after that, see
+    /// <see cref="this.OnAfterRenderAsync"/>.
+    /// </remarks>
+    /// <param name="part">The part the user clicked.</param>
+    private async Task ShowInList(BreadcrumbPart part)
+    {
+        if (!this.SettingsManager.ConfigurationData.Workspace.IsChatListShown)
+            return;
+
+        if (!this.IsSidebarKept)
+        {
+            if (this.isWindowNarrow)
+                this.listFloat = ChatListFloat.OPEN;
+            else
+            {
+                this.listFloat = ChatListFloat.NONE;
+                this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible = true;
+                await this.SettingsManager.StoreSettings();
+            }
+        }
+
+        this.partToShowInList = part;
     }
 
     /// <summary>

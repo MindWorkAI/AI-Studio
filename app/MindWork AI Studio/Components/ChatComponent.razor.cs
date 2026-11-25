@@ -74,6 +74,13 @@ public partial class ChatComponent : MSGComponentBase
     public ChatSaveState? SaveState { get; set; }
 
     /// <summary>
+    /// Asks the page to show a part of the path above the chat in the list, once the user clicked it.
+    /// Without a receiver, the path is plain text.
+    /// </summary>
+    [Parameter]
+    public EventCallback<BreadcrumbPart> ShowInListRequested { get; set; }
+
+    /// <summary>
     /// The element around the messages, in which the search finds its words.
     /// </summary>
     private ElementReference messagesElement;
@@ -277,6 +284,12 @@ public partial class ChatComponent : MSGComponentBase
     private string BreadcrumbChatName => this.ChatThread is { Name: var name } && !string.IsNullOrWhiteSpace(name)
         ? name
         : this.IsNewChat ? T("New chat") : T("Empty chat");
+
+    /// <summary>
+    /// Whether the parts of the path above the chat are links, which show themselves in the list. While
+    /// chats are not stored, there is no list to show them in.
+    /// </summary>
+    private bool IsBreadcrumbLinked => this.ShowInListRequested.HasDelegate && this.SettingsManager.ConfigurationData.Workspace.IsChatListShown;
 
     /// <summary>
     /// Takes the provider the user chose above the chat, and tells the page, which keeps it for the

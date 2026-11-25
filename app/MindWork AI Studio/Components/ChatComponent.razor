@@ -6,17 +6,18 @@
 <InnerScrolling FillEntireHorizontalSpace="@true" @ref="@this.scrollingArea" MinWidth="36em" Style="height: 100%">
     <HeaderContent>
         @* Where the open chat is, at the top of the chat: its workspace, or the chats outside of
-           workspaces, and its own name, which follows the message being written into a new chat. *@
+           workspaces, and its own name, which follows the message being written into a new chat. Both
+           parts show themselves in the list on a click. *@
         <MudStack Row="@true" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1" Class="px-1" Style="height: 40px; min-width: 0;">
             @if (!string.IsNullOrWhiteSpace(this.BreadcrumbPlace))
             {
                 <MudText Typo="Typo.body1" Class="mud-text-secondary flex-shrink-0" Style="@BREADCRUMB_PLACE_STYLE">
-                    @this.BreadcrumbPlace
+                    @this.RenderBreadcrumbPart(this.BreadcrumbPlace, BreadcrumbPart.PLACE)
                 </MudText>
                 <MudIcon Icon="@AppIcons.BREADCRUMB_SEPARATOR" Size="Size.Small" Class="flex-shrink-0" Style="color: var(--mud-palette-text-disabled);"/>
             }
             <MudText Typo="Typo.body1" Style="@BREADCRUMB_CHAT_STYLE">
-                @this.BreadcrumbChatName
+                @this.RenderBreadcrumbPart(this.BreadcrumbChatName, BreadcrumbPart.CHAT)
             </MudText>
         </MudStack>
 
@@ -210,3 +211,27 @@
         </MudToolBar>
     </FooterContent>
 </InnerScrolling>
+
+@code {
+    /// <summary>
+    /// One part of the path above the chat: a link which shows the part in the list, or plain text while
+    /// there is no list, since chats are not stored.
+    /// </summary>
+    /// <remarks>
+    /// The link takes the look of the text around it and underlines itself only under the pointer, so the
+    /// path stays calm. The script finds it by its class, since a click on it keeps a list which floats
+    /// over the chat, see watchChatList in app.js.
+    /// </remarks>
+    /// <param name="text">The text of the part.</param>
+    /// <param name="part">Which part it is.</param>
+    private RenderFragment RenderBreadcrumbPart(string text, BreadcrumbPart part) => @<text>
+        @if (this.IsBreadcrumbLinked)
+        {
+            <MudLink Color="Color.Inherit" Typo="Typo.inherit" Class="chat-path-link" Style="cursor: pointer;" OnClick="@(() => this.ShowInListRequested.InvokeAsync(part))">@text</MudLink>
+        }
+        else
+        {
+            @text
+        }
+    </text>;
+}

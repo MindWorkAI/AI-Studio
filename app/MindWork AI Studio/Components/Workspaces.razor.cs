@@ -102,6 +102,12 @@ public partial class Workspaces : MSGComponentBase
     /// </summary>
     private const string CURRENT_ITEM_CLASSES = "is-current mud-selected-item mud-primary-text";
 
+    /// <summary>
+    /// The class of the workspace of the open chat, expanded or not, which the list scrolls to when the
+    /// user clicked that workspace in the path above the chat, see <see cref="this.RevealAsync"/>.
+    /// </summary>
+    private const string WORKSPACE_OF_CURRENT_CHAT_CLASS = "is-current-workspace";
+
     private readonly SemaphoreSlim treeLoadingSemaphore = new(1, 1);
     private readonly HashSet<Guid> loadingWorkspaceChatLists = [];
     private readonly HashSet<Guid> expandedWorkspaceIds = [];
@@ -215,6 +221,12 @@ public partial class Workspaces : MSGComponentBase
     /// </summary>
     private bool isScrollToCurrentChatPending;
 
+    /// <summary>
+    /// The part of the path above the chat which the list still has to show, once it drew that part, or
+    /// null. See <see cref="this.RevealAsync"/>.
+    /// </summary>
+    private BreadcrumbPart? partToReveal;
+
     private CancellationTokenSource? prefetchCancellationTokenSource;
     private CancellationTokenSource? searchCancellationTokenSource;
     private bool isInitialLoading = true;
@@ -256,6 +268,7 @@ public partial class Workspaces : MSGComponentBase
             return;
 
         this.lastCurrentChat = currentChat;
+        this.partToReveal = null;
         this.isScrollToCurrentChatPending = currentChat.ChatId != Guid.Empty;
         if (currentChat.WorkspaceId != Guid.Empty && this.expandedWorkspaceIds.Add(currentChat.WorkspaceId))
             await this.EnsureWorkspaceChatsLoadedAsync(currentChat.WorkspaceId);
@@ -274,6 +287,16 @@ public partial class Workspaces : MSGComponentBase
         {
             this.sectionToReveal = null;
             await this.TryRevealSectionAsync(sectionStart);
+        }
+
+        //
+        // A part of the path above the chat which the user clicked shows once the list drew it: the
+        // list may still be loading, or the workspace of the open chat its chats:
+        //
+        if (this.partToReveal is { } part && !this.isInitialLoading && this.IsCurrentChatMarked())
+        {
+            this.partToReveal = null;
+            await this.RevealDrawnPartAsync(part);
         }
 
         //
@@ -789,6 +812,97 @@ public partial class Workspaces : MSGComponentBase
         }
     }
 
+    /// <summary>
+    /// Shows the open chat or its place, once the user clicked that part of the path above the chat.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Whatever hides the part expands first: the section of the chat, and for the chat itself also its
+    /// workspace. The place of a chat in a workspace is the row of its workspace. The place of a chat
+    /// outside of workspaces is their section, and its click does what a click on the title of that
+    /// section does, see <see cref="this.ClickSectionTitleAsync"/>.
+    /// </para>
+    /// <para>
+    /// The list scrolls once it drew the part, see <see cref="this.OnAfterRenderAsync"/>, and only when
+    /// the part is out of sight. A list which just came into being shows the part instead of merely
+    /// scrolling to the open chat.
+    /// </para>
+    /// </remarks>
+    /// <param name="part">The part the user clicked.</param>
+    public async Task RevealAsync(BreadcrumbPart part)
+    {
+        if (this.CurrentChatThread is not { } openChat)
+            return;
+
+        var workspaceId = openChat.WorkspaceId;
+        if (workspaceId == Guid.Empty)
+        {
+            if (part is BreadcrumbPart.CHAT && this.IsTemporaryChatsSectionCollapsed)
+                await this.ToggleTemporaryChatsSectionAsync();
+        }
+        else
+        {
+            if (this.IsWorkspacesSectionCollapsed)
+                await this.ToggleWorkspacesSectionAsync();
+
+            if (part is BreadcrumbPart.CHAT && !this.IsWorkspaceExpanded(workspaceId))
+            {
+                if (this.isShowingSearchResults)
+                    this.searchExpandedWorkspaces[workspaceId] = true;
+                else
+                {
+                    this.expandedWorkspaceIds.Add(workspaceId);
+                    await this.EnsureWorkspaceChatsLoadedAsync(workspaceId);
+                }
+            }
+        }
+
+        this.isScrollToCurrentChatPending = false;
+        this.partToReveal = part;
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Scrolls the list to a part of the path above the chat, once the list drew it, see
+    /// <see cref="this.RevealAsync"/>.
+    /// </summary>
+    /// <param name="part">The part the user clicked.</param>
+    private async Task RevealDrawnPartAsync(BreadcrumbPart part)
+    {
+        if (this.CurrentChatThread is not { } openChat)
+            return;
+
+        if (part is BreadcrumbPart.CHAT)
+            await this.TryRevealRowAsync(".workspace-chat.is-current");
+
+        else if (openChat.WorkspaceId != Guid.Empty)
+            await this.TryRevealRowAsync($".{WORKSPACE_OF_CURRENT_CHAT_CLASS}");
+
+        else
+            await this.ClickSectionTitleAsync(this.temporaryChatsSectionStart, this.IsTemporaryChatsSectionCollapsed, this.IsCurrentChatAmongTemporaryChats, this.ToggleTemporaryChatsSectionAsync);
+    }
+
+    /// <summary>
+    /// Scrolls the first row of the list which matches the selector into the middle of the list, when it
+    /// is out of sight: beyond the list, or behind a title which sticks to its top or bottom.
+    /// </summary>
+    /// <param name="selector">The CSS selector of the row.</param>
+    private async Task TryRevealRowAsync(string selector)
+    {
+        try
+        {
+            await this.JsRuntime.InvokeVoidAsync("revealRow", this.listElement, selector);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Nobody is left to see the list.
+        }
+        catch (JSException ex)
+        {
+            this.Logger.LogWarning(ex, "Failed to reveal a row of the list.");
+        }
+    }
+
     private async Task ToggleWorkspacesSectionAsync()
     {
         this.SettingsManager.ConfigurationData.Workspace.IsWorkspacesSectionCollapsed = !this.SettingsManager.ConfigurationData.Workspace.IsWorkspacesSectionCollapsed;
@@ -916,7 +1030,7 @@ public partial class Workspaces : MSGComponentBase
     {
         var classes = CLICKABLE_ITEM_CLASSES;
         if (this.IsWorkspaceOfCurrentChat(workspace.WorkspaceId))
-            classes += isExpanded ? " mud-primary-text" : $" {CURRENT_ITEM_CLASSES}";
+            classes += isExpanded ? $" {WORKSPACE_OF_CURRENT_CHAT_CLASS} mud-primary-text" : $" {WORKSPACE_OF_CURRENT_CHAT_CLASS} {CURRENT_ITEM_CLASSES}";
 
         if (this.itemIdWithOpenMenu == workspace.WorkspaceId)
             classes += " is-menu-open";

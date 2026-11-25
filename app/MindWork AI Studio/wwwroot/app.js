@@ -154,18 +154,43 @@ const measureSections = function (scrollingBox) {
         section.isStuck = section.isStuckToTop || section.isStuckToBottom
     }
 
-    // What lies above the lowest header stuck to the top, or below the highest one stuck to the
-    // bottom, is out of sight:
-    const boxBounds = scrollingBox.getBoundingClientRect()
-    const sightTop = Math.max(boxBounds.top, ...sections.filter(section => section.isStuckToTop).map(section => section.header.getBoundingClientRect().bottom))
-    const sightBottom = Math.min(boxBounds.bottom, ...sections.filter(section => section.isStuckToBottom).map(section => section.header.getBoundingClientRect().top))
+    const sight = sightOf(scrollingBox, sections)
     for (const section of sections) {
         section.currentRow = currentRowOfSection(section.sectionStart)
-        const currentRowBounds = section.currentRow?.getBoundingClientRect()
-        section.isCurrentRowOutOfSight = !!currentRowBounds && (currentRowBounds.bottom <= sightTop || currentRowBounds.top >= sightBottom)
+        section.isCurrentRowOutOfSight = !!section.currentRow && isOutOfSight(section.currentRow, sight)
     }
 
     return sections
+}
+
+// The part of the scrolling box in which rows are in sight, given its measured sections: what lies
+// above the lowest header stuck to the top, or below the highest one stuck to the bottom, is out of
+// sight.
+const sightOf = function (scrollingBox, sections) {
+    const boxBounds = scrollingBox.getBoundingClientRect()
+    return {
+        top: Math.max(boxBounds.top, ...sections.filter(section => section.isStuckToTop).map(section => section.header.getBoundingClientRect().bottom)),
+        bottom: Math.min(boxBounds.bottom, ...sections.filter(section => section.isStuckToBottom).map(section => section.header.getBoundingClientRect().top)),
+    }
+}
+
+// Whether an element lies wholly outside of the sight of its scrolling box, see sightOf.
+const isOutOfSight = function (element, sight) {
+    const bounds = element.getBoundingClientRect()
+    return bounds.bottom <= sight.top || bounds.top >= sight.bottom
+}
+
+// Scrolls the first row of the list which matches the selector into the middle of the list, when the
+// row is out of sight: beyond the scrolling box, or behind the headers stuck to its top or bottom. A
+// row in sight leaves the list where it is. Tells whether it scrolled.
+window.revealRow = function (list, selector) {
+    const row = list?.querySelector(selector)
+    const scrollingBox = row ? findScrollingBox(list) : null
+    if (!scrollingBox || !isOutOfSight(row, sightOf(scrollingBox, measureSections(scrollingBox))))
+        return false
+
+    row.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    return true
 }
 
 // Shows what the header of a section points to, and tells whether it scrolled. When the open chat is
@@ -416,8 +441,9 @@ window.watchChatList = function (columns, dotNetReference) {
             return
 
         // The bar above belongs to the sidebar as well: its toggle shows and hides the sidebar, and its
-        // field searches the sidebar which a click on the toggle showed:
-        if (isOnSidebar(event.target) || event.target.closest('.chat-header-bar') !== null)
+        // field searches the sidebar which a click on the toggle showed. So do the links of the path
+        // above the chat, which show their part in the sidebar:
+        if (isOnSidebar(event.target) || event.target.closest('.chat-header-bar, .chat-path-link') !== null)
             return
 
         peekTimer = cancel(peekTimer)
