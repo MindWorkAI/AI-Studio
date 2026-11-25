@@ -146,7 +146,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
                 else
                 {
                     this.dataSecret = string.Empty;
-                    this.dataSecretStorageIssue = string.Format(T("Failed to load the auth. secret from the operating system. The message was: {0}. You might ignore this message and provide the secret again."), requestedSecret.Issue);
+                    this.dataSecretStorageIssue = string.Format(TA("Failed to load the auth. secret from the operating system. The message was: {0}. You might ignore this message and provide the secret again."), requestedSecret.Issue);
                     await this.form.ValidateAsync();
                 }
             }
@@ -198,7 +198,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             Name = this.dataName,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             AuthMethod = this.dataAuthMethod,
-            Username = this.dataUsername,
+            Username = ERICredentialValidation.Normalize(this.dataUsername),
             UsernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED,
             Type = DataSourceType.ERI_V1,
             SecurityPolicy = this.dataSecurityPolicy,
@@ -311,7 +311,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
                     this.dataSelectedRetrievalProcess = importedRetrieval;
                 else
                 {
-                    this.importRetrievalIssue = string.Format(T("The server does not offer the imported retrieval process '{0}'. Please select another one before you save."), this.importedRetrievalId);
+                    this.importRetrievalIssue = string.Format(TA("The server does not offer the imported retrieval process '{0}'. Please select another one before you save."), this.importedRetrievalId);
                     this.dataSelectedRetrievalProcess = default;
                 }
 
@@ -354,9 +354,9 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     private string GetTestResultIcon()
     {
         if (!this.connectionTested)
-            return Icons.Material.Outlined.HourglassEmpty;
+            return AppIcons.PENDING;
         
-        return this.connectionSuccessfulTested ? Icons.Material.Outlined.CheckCircle : Icons.Material.Outlined.Error;
+        return this.connectionSuccessfulTested ? AppIcons.SUCCESS : AppIcons.ERROR;
     }
     
     private bool NeedsSecret() => this.dataAuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD;
@@ -389,11 +389,14 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         var addedDataSource = this.CreateDataSource();
         if (!string.IsNullOrWhiteSpace(this.dataSecret))
         {
-            // Store the secret in the OS secure storage:
-            var storeResponse = await this.RustService.SetSecret(this, this.dataSecret, SecretStoreType.DATA_SOURCE);
+            //
+            // Store the secret in the OS secure storage, without the whitespace around it: it goes
+            // to the ERI server in an HTTP header, which drops that whitespace anyway:
+            //
+            var storeResponse = await this.RustService.SetSecret(this, ERICredentialValidation.Normalize(this.dataSecret), SecretStoreType.DATA_SOURCE);
             if (!storeResponse.Success)
             {
-                this.dataSecretStorageIssue = string.Format(T("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
+                this.dataSecretStorageIssue = string.Format(TA("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.ValidateAsync();
                 return;
             }

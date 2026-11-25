@@ -12,12 +12,12 @@
         @if (this.NumMissingResults > 0)
         {
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @(string.Format(T("Please note: the log lists {0} more document(s) as successfully processed, but their results no longer exist. They count as missing and are processed again when you continue the run."), this.NumMissingResults))
+                @(string.Format(TA("Please note: the log lists {0} more document(s) as successfully processed, but their results no longer exist. They count as missing and are processed again when you continue the run."), this.NumMissingResults))
             </MudJustifiedText>
         }
 
         <MudJustifiedText Typo="Typo.body1">
-            @T("Would you like to continue the previous run and process only the missing and failed documents? Or would you like to start a completely new run, which processes all documents again?")
+            @TA("Would you like to continue the previous run and process only the missing and failed documents? Or would you like to start a completely new run, which processes all documents again?")
         </MudJustifiedText>
     </DialogContent>
     <DialogActions>

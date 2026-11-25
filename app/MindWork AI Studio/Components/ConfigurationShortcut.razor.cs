@@ -27,7 +27,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
     /// The icon to display.
     /// </summary>
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.Keyboard;
+    public string Icon { get; set; } = AppIcons.KEYBOARD_SHORTCUT;
 
     /// <summary>
     /// The color of the icon.

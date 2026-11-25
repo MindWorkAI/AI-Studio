@@ -17,6 +17,7 @@ public static class LuaResponseParseErrorExtension
             LuaResponseParseError.MISSING_PLUGIN_METADATA => TB("The model's answer is missing the plugin metadata."),
             LuaResponseParseError.MISSING_ASSISTANT_METADATA => TB("The model's answer is missing the assistant metadata."),
             LuaResponseParseError.INCOMPLETE_PLUGIN_METADATA => TB("The model's answer contains incomplete plugin metadata."),
+            LuaResponseParseError.INVALID_CATEGORIES => TB("The model's answer names a category AI Studio does not know, or a custom category without its name."),
             LuaResponseParseError.INCOMPLETE_ASSISTANT_METADATA => TB("The model's answer contains incomplete assistant metadata."),
             LuaResponseParseError.MISSING_LUA => TB("The model response does not contain the generated Lua plugin code."),
             LuaResponseParseError.LUA_MISSING_ID => TB("The generated Lua plugin code does not contain a readable plugin ID."),

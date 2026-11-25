@@ -93,7 +93,7 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
         var route = destination.GetData().Route;
         if (destination.HasSingleSessionSlot && assistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
         {
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Apps, TB("This assistant is already running. AI Studio opens the running session instead.")));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.ASSISTANTS, TB("This assistant is already running. AI Studio opens the running session instead.")));
             navigationManager.NavigateTo(route);
             return;
         }
@@ -152,5 +152,11 @@ public sealed class AssistantLaunchService(SettingsManager settingsManager, Assi
         .OrderBy(destination => destination.Name.Length)
         .ToArray();
 
-    private bool IsVisible(Components destination) => settingsManager.IsAssistantVisible(destination, withLogging: false, requiredPreviewFeature: destination.RequiredPreviewFeature);
+    /// <summary>
+    /// Whether the menu offers a destination: the user sees the assistant at all, and its category on the
+    /// assistants page, collapsed or hidden, still offers it.
+    /// </summary>
+    private bool IsVisible(Components destination) =>
+        settingsManager.IsAssistantVisible(destination, withLogging: false, requiredPreviewFeature: destination.RequiredPreviewFeature) &&
+        settingsManager.ConfigurationData.AssistantsPage.IsOfferingAssistant(destination);
 }

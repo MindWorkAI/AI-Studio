@@ -1,4 +1,6 @@
+using System.Buffers;
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -13,6 +15,11 @@ namespace AIStudio.Tools.ToolCallingSystem;
 public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogger<ToolExecutor> logger)
 {
     private const string INVALID_TOOL_CALL_ERROR = "The tool call was invalid.";
+
+    /// <summary>
+    /// What the trace keeps of an argument the tool marked as sensitive, see IToolImplementation.SensitiveTraceArgumentNames.
+    /// </summary>
+    private const string MASKED_ARGUMENT = "*****";
 
     /// <summary>
     /// How the arguments are read for running a tool: every name only once per object.
@@ -90,10 +97,13 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
     {
         var runnableTool = runnableTools.FirstOrDefault(x => x.Definition.Function.Name.Equals(toolName, StringComparison.Ordinal));
         Dictionary<string, string> formattedArguments = [];
+        var traceArgumentsJson = string.Empty;
         try
         {
             using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
-            formattedArguments = FormatArguments(document.RootElement, runnableTool.Implementation?.SensitiveTraceArgumentNames ?? EmptySensitiveTraceArgumentNames.INSTANCE);
+            var sensitiveNames = runnableTool.Implementation?.SensitiveTraceArgumentNames ?? EmptySensitiveTraceArgumentNames.INSTANCE;
+            formattedArguments = FormatArguments(document.RootElement, sensitiveNames);
+            traceArgumentsJson = WriteTraceArgumentsJson(document.RootElement, sensitiveNames);
         }
         catch (JsonException)
         {
@@ -124,6 +134,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Status = ToolInvocationTraceStatus.BLOCKED,
                 StatusMessage = "Tool is not available in the current context.",
                 Arguments = formattedArguments,
+                ArgumentsJson = traceArgumentsJson,
                 Result = error,
             });
         }
@@ -170,6 +181,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 WasExecuted = true,
                 Arguments = FormatArguments(document.RootElement,
                     implementation.SensitiveTraceArgumentNames),
+                ArgumentsJson = WriteTraceArgumentsJson(document.RootElement, implementation.SensitiveTraceArgumentNames),
                 Result = result.TextContent ?? string.Empty,
                 JsonResult = result.JsonContent,
             };
@@ -203,6 +215,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Status = ToolInvocationTraceStatus.BLOCKED,
                 StatusMessage = exception.Message,
                 Arguments = formattedArguments,
+                ArgumentsJson = traceArgumentsJson,
                 Result = exception.Message,
             };
 
@@ -223,6 +236,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Status = ToolInvocationTraceStatus.ERROR,
                 StatusMessage = error,
                 Arguments = formattedArguments,
+                ArgumentsJson = traceArgumentsJson,
                 Result = error,
             };
 
@@ -277,7 +291,12 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         return requestKeys;
     }
 
-    private static void CollectStrings(JsonElement element, List<string> texts)
+    /// <summary>
+    /// Collects every text value of a JSON value, also those inside arrays and objects, but no property names.
+    /// </summary>
+    /// <param name="element">The JSON value.</param>
+    /// <param name="texts">Where the texts go.</param>
+    internal static void CollectStrings(JsonElement element, List<string> texts)
     {
         switch (element.ValueKind)
         {
@@ -330,7 +349,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         foreach (var property in rootElement.EnumerateObject())
         {
             arguments[property.Name] = sensitiveNames.Contains(property.Name)
-                ? "*****"
+                ? MASKED_ARGUMENT
                 : property.Value.ValueKind switch
                 {
                     JsonValueKind.String => property.Value.GetString() ?? string.Empty,
@@ -339,5 +358,36 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         }
 
         return arguments;
+    }
+
+    /// <summary>
+    /// The arguments of a call as one JSON object for its trace, without the values of the sensitive ones.
+    /// </summary>
+    /// <remarks>
+    /// Each value is written as the model passed it, so that its JSON type survives, see
+    /// ToolInvocationTrace.ArgumentsJson. A name which appears twice is written once: such a call
+    /// never runs, see EXECUTION_ARGUMENT_OPTIONS, and only the calls which ran show their arguments
+    /// to the model later on.
+    /// </remarks>
+    private static string WriteTraceArgumentsJson(JsonElement rootElement, IReadOnlySet<string> sensitiveNames)
+    {
+        if (rootElement.ValueKind is not JsonValueKind.Object)
+            return string.Empty;
+
+        var writtenNames = new HashSet<string>(StringComparer.Ordinal);
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer))
+        {
+            writer.WriteStartObject();
+            foreach (var property in rootElement.EnumerateObject())
+            {
+                if (!sensitiveNames.Contains(property.Name) && writtenNames.Add(property.Name))
+                    property.WriteTo(writer);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        return Encoding.UTF8.GetString(buffer.WrittenSpan);
     }
 }

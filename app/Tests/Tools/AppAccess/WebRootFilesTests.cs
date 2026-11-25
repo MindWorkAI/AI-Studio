@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using AIStudio.Assistants.ERI;
@@ -13,15 +14,47 @@ namespace AIStudio.Tests.Tools.AppAccess;
 /// can serve every file which the page of the app loads.
 /// </summary>
 /// <remarks>
+/// <para>
 /// The changelogs and the ERI specifications come from the files embedded into the app, not from a
 /// request to its own server. A file which is missing there would leave the changelog or the ERI
 /// assistant empty without any error. The release serves its static files from the same embedded
 /// files; one which is missing there leaves the window without styles, or without any interaction
 /// at all, while a debug build keeps working.
+/// </para>
+/// <para>
+/// The pipeline checks the repository out without Git LFS, and so does the Flatpak build. A file in
+/// Git LFS would therefore be embedded as its pointer, a short text, and the release would ship that
+/// pointer instead of the file: a font, for example, would turn every icon into a box. Locally, with
+/// Git LFS installed, the files are there and these checks pass anyway; the job verify of the
+/// pipeline, which every release build waits for, is where they catch it.
+/// </para>
 /// </remarks>
 [TestFixture]
 public sealed class WebRootFilesTests
 {
+    /// <summary>
+    /// The first line of every Git LFS pointer, see https://github.com/git-lfs/git-lfs/blob/main/docs/spec.md.
+    /// </summary>
+    private const string GIT_LFS_POINTER_START = "version https://git-lfs.github.com/spec/v1";
+
+    /// <summary>
+    /// The first four bytes of every WOFF2 font.
+    /// </summary>
+    private const string WOFF2_SIGNATURE = "wOF2";
+
+    private static string[] EmbeddedFiles() => typeof(WebRootFiles).Assembly.GetManifestResourceNames();
+
+    /// <summary>
+    /// Reads the start of an embedded file, never the whole of it, with one character per byte.
+    /// </summary>
+    private static string ReadStart(string resourceName, int length)
+    {
+        using var stream = typeof(WebRootFiles).Assembly.GetManifestResourceStream(resourceName)!;
+        var buffer = new byte[length];
+        var read = stream.ReadAtLeast(buffer, length, throwOnEndOfStream: false);
+        return Encoding.Latin1.GetString(buffer, 0, read);
+    }
+
     private static IEnumerable<string> ChangelogFiles() => Changelog.LOGS.Select(log => log.Filename);
 
     private static IEnumerable<ERIVersion> SpecificationVersions() => Enum.GetValues<ERIVersion>().Where(version => version.WasSpecificationSelected);
@@ -48,6 +81,34 @@ public sealed class WebRootFilesTests
         var file = new WebRootFiles().FileProvider.GetFileInfo(path);
         Assert.That(file.Exists, Is.True, $"The release would not serve '{path}', since it is not among the embedded files.");
         Assert.That(file.Length, Is.GreaterThan(0), $"The release would serve '{path}' as an empty file.");
+    }
+
+    [Test]
+    public void NoEmbeddedFileIsAGitLfsPointer()
+    {
+        var pointers = EmbeddedFiles()
+            .Where(name => ReadStart(name, GIT_LFS_POINTER_START.Length) == GIT_LFS_POINTER_START)
+            .ToList();
+
+        Assert.That(pointers, Is.Empty, "The release would ship these Git LFS pointers instead of the files. Take them out of Git LFS, see .gitattributes.");
+    }
+
+    [Test]
+    public void EveryEmbeddedFontIsAWoff2Font()
+    {
+        var fonts = EmbeddedFiles()
+            .Where(name => name.EndsWith(".woff2", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var broken = fonts
+            .Where(name => ReadStart(name, WOFF2_SIGNATURE.Length) != WOFF2_SIGNATURE)
+            .ToList();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(fonts, Has.Some.EndsWith("lucide.woff2"), "The test no longer finds the icon font among the embedded files.");
+            Assert.That(broken, Is.Empty, "The release would ship these fonts broken: the app would show no icons, and its texts in a font of the system.");
+        }
     }
 
     [TestCaseSource(nameof(ChangelogFiles))]

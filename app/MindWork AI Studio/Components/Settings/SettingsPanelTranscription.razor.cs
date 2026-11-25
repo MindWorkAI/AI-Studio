@@ -148,7 +148,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the transcription provider '{0}'?"), provider.Name) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the transcription provider '{0}'?"), provider.Name) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Transcription Provider"), dialogParameters, DialogOptions.FULLSCREEN);

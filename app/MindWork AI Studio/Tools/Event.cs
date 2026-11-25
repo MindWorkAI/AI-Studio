@@ -34,6 +34,11 @@ public enum Event
     COLOR_THEME_CHANGED,
 
     /// <summary>
+    /// Notifies receivers that the form of address changed, so that the texts of TA() show in the new form.
+    /// </summary>
+    ADDRESS_FORM_CHANGED,
+
+    /// <summary>
     /// Requests startup initialization of the plugin system.
     /// </summary>
     STARTUP_PLUGIN_SYSTEM,

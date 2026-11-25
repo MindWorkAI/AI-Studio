@@ -21,7 +21,7 @@ public sealed class DirectI18NGetTextAnalyzerTests
 {
     private const string CLASSIC_FORM =
         """
-        public static class ILangExtensions
+        public static class LangExtensions
         {
             public static string GetText(this ILang lang, string fallbackEN) => fallbackEN;
         }
@@ -29,7 +29,7 @@ public sealed class DirectI18NGetTextAnalyzerTests
 
     private const string EXTENSION_BLOCK_FORM =
         """
-        public static class ILangExtensions
+        public static class LangExtensions
         {
             extension(ILang lang)
             {
@@ -52,11 +52,11 @@ public sealed class DirectI18NGetTextAnalyzerTests
 
     [TestCase(CLASSIC_FORM, """public string Describe() => this.GetText("Hello");""", TestName = "A classic extension method called from another method")]
     [TestCase(CLASSIC_FORM, """public string T(string fallbackEN) => this.GetText("Hello");""", TestName = "A classic extension method called by a wrapper with a text of its own")]
-    [TestCase(CLASSIC_FORM, """public string Describe() => ILangExtensions.GetText(this, "Hello");""", TestName = "A classic extension method called as a static method")]
+    [TestCase(CLASSIC_FORM, """public string Describe() => LangExtensions.GetText(this, "Hello");""", TestName = "A classic extension method called as a static method")]
     [TestCase(EXTENSION_BLOCK_FORM, """public string Describe() => this.GetText("Hello");""", TestName = "The member of an extension block called from another method")]
     [TestCase(EXTENSION_BLOCK_FORM, """public string T(string fallbackEN) => this.GetText("Hello");""", TestName = "The member of an extension block called by a wrapper with a text of its own")]
     [TestCase(EXTENSION_BLOCK_FORM, """public string TA(string fallbackEN) => this.GetText("Hello");""", TestName = "The member of an extension block called by a TA wrapper with a text of its own")]
-    [TestCase(EXTENSION_BLOCK_FORM, """public string Describe() => ILangExtensions.GetText(this, "Hello");""", TestName = "The member of an extension block called as a static method")]
+    [TestCase(EXTENSION_BLOCK_FORM, """public string Describe() => LangExtensions.GetText(this, "Hello");""", TestName = "The member of an extension block called as a static method")]
     public async Task ADirectLookupIsRefused(string form, string member)
     {
         var reported = await AnalyzeAsync(form, member);
@@ -99,7 +99,7 @@ public sealed class DirectI18NGetTextAnalyzerTests
     private static async Task<IReadOnlyList<Diagnostic>> AnalyzeAsync(string form, string member)
     {
         //
-        // The snippet declares its own ILang and ILangExtensions where the analyzer looks for them. They take
+        // The snippet declares its own ILang and LangExtensions where the analyzer looks for them. They take
         // the place of those of the app, which the compilation references as well.
         //
         var source =

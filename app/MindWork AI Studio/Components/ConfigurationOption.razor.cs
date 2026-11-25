@@ -30,7 +30,25 @@ public partial class ConfigurationOption : ConfigurationBaseCore
     /// </summary>
     [Parameter]
     public Action<bool> StateUpdate { get; set; } = _ => { };
-    
+
+    /// <summary>
+    /// Asks before the option takes the new state, e.g., whether the user really wants to turn off a protection.
+    /// </summary>
+    /// <remarks>
+    /// It gets the new state and returns false to keep the old one.
+    /// </remarks>
+    [Parameter]
+    public Func<bool, Task<bool>> ConfirmChange { get; set; } = _ => Task.FromResult(true);
+
+    /// <summary>
+    /// The key of the switch, which changes whenever a change was rejected.
+    /// </summary>
+    /// <remarks>
+    /// The switch shows the state the user clicked, until its value changes. A rejected change leaves the value
+    /// as it was, so the switch is built anew to show it.
+    /// </remarks>
+    private int switchKey;
+
     #region Overrides of ConfigurationBase
 
     /// <inheritdoc />
@@ -46,6 +64,12 @@ public partial class ConfigurationOption : ConfigurationBaseCore
     
     private async Task OptionChanged(bool updatedState)
     {
+        if (!await this.ConfirmChange(updatedState))
+        {
+            this.switchKey++;
+            return;
+        }
+
         this.StateUpdate(updatedState);
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();

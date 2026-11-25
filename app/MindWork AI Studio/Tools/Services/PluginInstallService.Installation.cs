@@ -213,7 +213,7 @@ public sealed partial class PluginInstallService
             return string.Empty;
 
         if (existingPlugin.IsManagedByConfigServer)
-            return TB("Plugins deployed by your organization cannot be replaced.");
+            return TA("Plugins deployed by your organization cannot be replaced.");
 
         if (string.IsNullOrWhiteSpace(existingPlugin.LocalPath))
             return string.Empty;
@@ -232,7 +232,7 @@ public sealed partial class PluginInstallService
         };
 
         return isManagedByConfigServer
-            ? TB("Plugins deployed by your organization cannot be replaced.")
+            ? TA("Plugins deployed by your organization cannot be replaced.")
             : string.Empty;
     }
 

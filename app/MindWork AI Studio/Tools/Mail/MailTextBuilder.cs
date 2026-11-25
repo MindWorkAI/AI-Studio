@@ -111,7 +111,7 @@ public static class MailTextBuilder
 
     private static string FormatAddress(MailboxAddress mailbox)
     {
-        var address = MailTextNormalization.NormalizeHeaderValue(mailbox.Address);
+        var address = MailTextNormalization.NormalizeHeaderValue(MailHeaders.ReadAddress(mailbox));
         var name = MailTextNormalization.NormalizeHeaderValue(mailbox.Name);
         if (name.Length is 0 || name.Equals(address, StringComparison.OrdinalIgnoreCase))
             return address;

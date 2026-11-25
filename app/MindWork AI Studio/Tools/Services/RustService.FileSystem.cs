@@ -177,11 +177,11 @@ public sealed partial class RustService
     /// </summary>
     /// <remarks>
     /// The page is best effort and never decides whether this succeeded. Which programs can be
-    /// told a page is the runtime's business, and it says afterwards whether it managed to.
+    /// told a page is the runtime's business, and it says afterwards what became of the page.
     /// </remarks>
     /// <param name="path">The document to open.</param>
     /// <param name="pageNumber">The page to show, counted from one, or null when there is none.</param>
-    /// <returns>Whether the document was opened, whether the page was applied, and what went wrong.</returns>
+    /// <returns>Whether the document was opened, what became of the page, and what went wrong.</returns>
     public async Task<OpenDocumentResponse> TryOpenDocumentInSystemViewer(string path, int? pageNumber)
     {
         HttpResponseMessage result;
@@ -192,12 +192,12 @@ public sealed partial class RustService
         catch (HttpRequestException e)
         {
             this.logger!.LogWarning(e, "Failed to reach the Rust runtime document endpoint.");
-            return new OpenDocumentResponse(false, false, TB("The runtime document endpoint is not available."));
+            return new OpenDocumentResponse(false, DocumentPageOutcome.DOCUMENT_NOT_OPENED, TB("The runtime document endpoint is not available."));
         }
         catch (TaskCanceledException e)
         {
             this.logger!.LogWarning(e, "Timed out while reaching the Rust runtime document endpoint.");
-            return new OpenDocumentResponse(false, false, TB("The runtime document endpoint is not available."));
+            return new OpenDocumentResponse(false, DocumentPageOutcome.DOCUMENT_NOT_OPENED, TB("The runtime document endpoint is not available."));
         }
 
         try
@@ -205,28 +205,24 @@ public sealed partial class RustService
             if (!result.IsSuccessStatusCode)
             {
                 this.logger!.LogWarning("Failed to open a document through the Rust runtime: '{StatusCode}'", result.StatusCode);
-                return new OpenDocumentResponse(false, false, string.Format(TB("The runtime document endpoint returned '{0}'."), result.StatusCode));
+                return new OpenDocumentResponse(false, DocumentPageOutcome.DOCUMENT_NOT_OPENED, string.Format(TB("The runtime document endpoint returned '{0}'."), result.StatusCode));
             }
 
             var response = await result.Content.ReadFromJsonAsync<OpenDocumentResponse>(JSON_OPTIONS);
             if (response.Success)
             {
-                //
-                // A page which was asked for but not applied is noted here and nowhere else: the
-                // document is open, and the source the user clicked names the page anyway.
-                //
-                if (pageNumber is > 0 && !response.PageApplied)
-                    this.logger!.LogInformation("Opened a document without the requested page {PageNumber}, because the system uses a program which cannot be told one.", pageNumber);
+                if (pageNumber is > 0 && response.PageOutcome is not DocumentPageOutcome.APPLIED)
+                    this.logger!.LogInformation("Opened a document without the requested page {PageNumber}: {PageOutcome}.", pageNumber, response.PageOutcome);
 
                 return response;
             }
 
-            return new OpenDocumentResponse(false, false, string.IsNullOrWhiteSpace(response.Issue) ? TB("The runtime document endpoint failed without details.") : response.Issue);
+            return new OpenDocumentResponse(false, DocumentPageOutcome.DOCUMENT_NOT_OPENED, string.IsNullOrWhiteSpace(response.Issue) ? TB("The runtime document endpoint failed without details.") : response.Issue);
         }
         catch (Exception e)
         {
             this.logger!.LogWarning(e, "Failed to process the Rust runtime document endpoint response.");
-            return new OpenDocumentResponse(false, false, TB("The runtime document endpoint failed without details."));
+            return new OpenDocumentResponse(false, DocumentPageOutcome.DOCUMENT_NOT_OPENED, TB("The runtime document endpoint failed without details."));
         }
         finally
         {

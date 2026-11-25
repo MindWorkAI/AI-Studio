@@ -32,14 +32,6 @@ internal sealed class AssistantDropdown : StatefulAssistantComponentBase
         set => this.Props[nameof(this.Items)] = value;
     }
 
-    public string ValueType
-    {
-        get => this.Props.TryGetValue(nameof(this.ValueType), out var v) 
-            ? v.ToString() ?? "string" 
-            : "string";
-        set => this.Props[nameof(this.ValueType)] = value;
-    }
-    
     public bool IsMultiselect
     {
         get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.IsMultiselect));
@@ -113,7 +105,7 @@ internal sealed class AssistantDropdown : StatefulAssistantComponentBase
     public override string UserPromptFallback(AssistantState state)
     {
         if (this.IsMultiselect && state.MultiSelect.TryGetValue(this.Name, out var selections))
-            return this.BuildAuditPromptBlock(string.Join(Environment.NewLine, selections.OrderBy(static value => value, StringComparer.Ordinal)));
+            return this.BuildAuditPromptBlock(string.Join('\n', selections.OrderBy(static value => value, StringComparer.Ordinal)));
 
         state.SingleSelect.TryGetValue(this.Name, out var userInput);
         return this.BuildAuditPromptBlock(userInput);
@@ -139,28 +131,6 @@ internal sealed class AssistantDropdown : StatefulAssistantComponentBase
             return this.Items;
 
         return [this.Default, .. this.Items];
-    }
-
-    public IEnumerable<object> GetParsedDropdownValues()
-    {
-        foreach (var item in this.Items)
-        {
-            switch (this.ValueType.ToLowerInvariant())
-            {
-                case "int":
-                    if (int.TryParse(item.Value, out var i)) yield return i;
-                    break;
-                case "double":
-                    if (double.TryParse(item.Value, out var d)) yield return d;
-                    break;
-                case "bool":
-                    if (bool.TryParse(item.Value, out var b)) yield return b;
-                    break;
-                default:
-                    yield return item.Value;
-                    break;
-            }
-        }
     }
 
     public string Class

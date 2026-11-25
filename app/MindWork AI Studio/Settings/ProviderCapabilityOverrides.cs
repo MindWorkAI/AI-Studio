@@ -346,14 +346,14 @@ public sealed record ProviderCapabilityOverrides
             return string.Empty;
 
         var builder = new StringBuilder();
-        builder.AppendLine($@"{indentation}[""CapabilityOverrides""] = {{");
+        builder.AppendLineLF($@"{indentation}[""CapabilityOverrides""] = {{");
         foreach (var capability in SUPPORTED_CAPABILITIES)
         {
             var overrideValue = this.GetOverride(capability);
             if (overrideValue is null)
                 continue;
 
-            builder.AppendLine($@"{indentation}    [""{capability}""] = {overrideValue.Value.ToString().ToLowerInvariant()},");
+            builder.AppendLineLF($@"{indentation}    [""{capability}""] = {overrideValue.Value.ToString().ToLowerInvariant()},");
         }
 
         foreach (var key in NUMERIC_KEYS)
@@ -361,7 +361,7 @@ public sealed record ProviderCapabilityOverrides
             if (this.GetNumber(key) is not { } number)
                 continue;
 
-            builder.AppendLine($@"{indentation}    [""{key}""] = {number.ToString(CultureInfo.InvariantCulture)},");
+            builder.AppendLineLF($@"{indentation}    [""{key}""] = {number.ToString(CultureInfo.InvariantCulture)},");
         }
 
         builder.Append($@"{indentation}}},");

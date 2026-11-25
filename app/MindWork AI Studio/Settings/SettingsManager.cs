@@ -452,45 +452,28 @@ public sealed class SettingsManager
         }
 
         //
-        // We write the new settings next to the previous ones and replace them afterwards, so that
-        // no crash can leave a half-written settings file behind. The temporary file has to live in
-        // the configuration directory for that: replacing a file is a rename, and a rename across a
-        // file system boundary falls back to copying, which is exactly what we want to avoid. The
-        // temporary directory of the operating system is such another file system under Flatpak.
+        // AtomicFile writes the new settings next to the previous ones and replaces them afterwards,
+        // so that no crash can leave a half-written settings file behind. The settings also have to
+        // reach the disk first: the backup file is written at the same moment, so after a power
+        // failure, it would be no better off than the settings file, and falling back to it blocks
+        // storing the settings anyway.
         //
-        var tempFile = $"{settingsPath}.tmp-{Guid.NewGuid():N}";
-        try
-        {
-            await File.WriteAllTextAsync(tempFile, settingsJson);
-            File.Move(tempFile, settingsPath, true);
-        }
-        catch
-        {
-            try
-            {
-                if (File.Exists(tempFile))
-                    File.Delete(tempFile);
-            }
-            catch (Exception cleanupException)
-            {
-                this.logger.LogWarning(cleanupException, $"Failed to delete the temporary settings file '{tempFile}'.");
-            }
-
-            throw;
-        }
-
+        await AtomicFile.WriteTextAsync(settingsPath, settingsJson, new UTF8Encoding(false), CancellationToken.None, flushToDisk: true, logger: this.logger);
         this.logger.LogInformation($"Stored the settings to '{settingsPath}'.");
     }
     
     public void InjectSpellchecking(Dictionary<string, object?> attributes) => attributes["spellcheck"] = this.ConfigurationData.App.EnableSpellchecking ? "true" : "false";
 
+    /// <summary>
+    /// The global minimum confidence level; NONE when neither the user nor the organization enforces one.
+    /// </summary>
+    public ConfidenceLevel GlobalMinimumConfidenceLevel => this.ConfigurationData.Confidence is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN }
+        ? this.ConfigurationData.Confidence.GlobalMinimumConfidence
+        : ConfidenceLevel.NONE;
+
     public ConfidenceLevel GetMinimumConfidenceLevel(Tools.Components component)
     {
-        var minimumLevel = ConfidenceLevel.NONE;
-        var enforceGlobalMinimumConfidence = this.ConfigurationData.Confidence is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
-        if (enforceGlobalMinimumConfidence)
-            minimumLevel = this.ConfigurationData.Confidence.GlobalMinimumConfidence;
-        
+        var minimumLevel = this.GlobalMinimumConfidenceLevel;
         var componentMinimumLevel = component.MinimumConfidence(this);
         if (componentMinimumLevel > minimumLevel)
             minimumLevel = componentMinimumLevel;
@@ -631,6 +614,18 @@ public sealed class SettingsManager
         // When there is an app-wide preselected provider, and it has a confidence level that is high enough, we return it:
         return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && this.IsProviderUsable(x.UsedLLMProvider, minimumLevel)) ?? Provider.NONE;
     }
+
+    /// <summary>
+    /// The ID of the provider which serves as the app-wide default.
+    /// </summary>
+    /// <remarks>
+    /// With exactly one configured provider, that one is the default, whatever the settings name, as in
+    /// GetPreselectedProvider. Neither a prohibition nor the confidence level is checked here: whoever uses
+    /// the provider checks them, e.g., AIOperationProviderChoice. The ID is empty when no default is set.
+    /// </remarks>
+    public string AppDefaultProviderId => this.ConfigurationData.Providers.Count == 1
+        ? this.ConfigurationData.Providers[0].Id
+        : this.ConfigurationData.App.PreselectedProvider;
 
     public Provider GetChatProviderForLoadedChat(string? chatProviderId = null)
     {

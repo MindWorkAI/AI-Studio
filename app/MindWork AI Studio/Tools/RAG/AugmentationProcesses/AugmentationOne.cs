@@ -1,6 +1,7 @@
 using System.Text;
 
-using AIStudio.Agents;
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.RetrievalContextValidation;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -15,6 +16,8 @@ public sealed class AugmentationOne : IAugmentationProcess
     private static readonly ILogger<AugmentationOne> LOGGER = Program.LOGGER_FACTORY.CreateLogger<AugmentationOne>();
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AugmentationOne).Namespace, nameof(AugmentationOne));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(AugmentationOne).Namespace, nameof(AugmentationOne));
 
     #region Implementation of IAugmentationProcess
 
@@ -52,14 +55,21 @@ public sealed class AugmentationOne : IAugmentationProcess
         // Want the user to validate all retrieval contexts?
         if (settings.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && chatThread.DataSourceOptions.AutomaticValidation)
         {
-            // Let's get the validation agent & set up its provider:
-            var validationAgent = Program.SERVICE_PROVIDER.GetService<AgentRetrievalContextValidation>()!;
-            if (validationAgent.SetLLMProvider(provider, chatThread.DataSecurity, chatThread.RequiredProviderConfidence))
+            //
+            // Which provider validates? Only one which may see what the chat may see: the model reads
+            // the passages. One choice serves all passages of this answer.
+            //
+            var validation = Program.SERVICE_PROVIDER.GetRequiredService<RetrievalContextValidationOperation>();
+            var providerResolver = Program.SERVICE_PROVIDER.GetRequiredService<AIOperationProviderResolver>();
+            var validationRequest = new RetrievalContextValidationRequest(chatThread.SystemPrompt, lastUserPrompt, preparedContexts, chatThread.RequiredProviderConfidence);
+            var validationProviderOptions = ClassicRagProviderOptions.ForDataAccess(settings, provider.ConfiguredProviderId, chatThread.DataSecurity, chatThread.RequiredProviderConfidence);
+            var validationChoice = providerResolver.Resolve(validation, validationRequest, RetrievalContextValidationOperation.GetProviderSettings(settings), validationProviderOptions);
+            if (validationChoice.HasProvider)
             {
                 try
                 {
                     // Let's validate all retrieval contexts:
-                    var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, preparedContexts, token);
+                    var validationResults = await validation.RunAsync(validationRequest, new(validationChoice.Provider), token);
                     if (validationResults.Count == 0)
                         LOGGER.LogWarning("Retrieval context validation returned no results. Continuing augmentation with all retrieved contexts.");
                     else
@@ -67,11 +77,19 @@ public sealed class AugmentationOne : IAugmentationProcess
                         //
                         // Now, filter the retrieval contexts to the most relevant ones:
                         //
-                        var targetWindow = validationResults.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING);
-                        var threshold = validationResults.GetConfidenceThreshold(targetWindow);
+                        var validated = KeepFittingPassages(validationResults);
+                        usedContexts = validated.Contexts;
+                        LOGGER.LogInformation($"The check of which passages fit kept {validated.Contexts.Count:###,###,###,##0} of {validationResults.Count:###,###,###,##0} retrieved contexts: {validated.NumUnchecked:###,###,###,##0} without a usable judgment, {validated.NumRejected:###,###,###,##0} judged not to fit, {validated.NumBelowThreshold:###,###,###,##0} below the confidence threshold of {validated.Threshold:0.00}.");
 
-                        // Filter the retrieval contexts:
-                        usedContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
+                        //
+                        // The user switched this check on. When it failed for every passage, the answer
+                        // rests on unfiltered passages, just as when the check throws:
+                        //
+                        if (validated.IsUnchecked)
+                        {
+                            LOGGER.LogWarning("Retrieval context validation got no usable answer for any context. Continuing augmentation with all retrieved contexts.");
+                            await WarnThatTheCheckFailedAsync();
+                        }
                     }
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -86,7 +104,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                     // The user switched this check on. Continuing without it silently would hide
                     // that the answer rests on unfiltered passages:
                     //
-                    await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FactCheck, TB("The check of which passages fit your question failed. This answer uses all passages that were found.")));
+                    await WarnThatTheCheckFailedAsync();
                 }
             }
             else
@@ -96,7 +114,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                 // an event. It does not change between two answers, so a message would repeat itself
                 // with every single one until the setting changes.
                 //
-                LOGGER.LogWarning("Skipping retrieval context validation because no sufficiently trusted validation agent provider is available. Continuing augmentation with all retrieved contexts.");
+                LOGGER.LogWarning("Skipping retrieval context validation because no provider which is trusted enough is available for it. Continuing augmentation with all retrieved contexts.");
             }
         }
 
@@ -111,7 +129,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         // and each one may miss something else.
         //
         if (selection.LeftOutCount > 0)
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.ContentCut, string.Format(TB("Not every passage found in your data sources fits into what the selected model can read. This answer had to do without {0} of them. To give the AI every passage, switch on Semantic Search for this chat, lower the token limit of your data sources, or choose fewer data sources."), selection.LeftOutCount.CompactCount())));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.CONTENT_SHORTENED, string.Format(TA("Not every passage found in your data sources fits into what the selected model can read. This answer had to do without {0} of them. To give the AI every passage, switch on Semantic Search for this chat, lower the token limit of your data sources, or choose fewer data sources."), selection.LeftOutCount.CompactCount())));
 
         //
         // Add the augmented data to the chat thread, as the very last step: the caller restricts
@@ -123,6 +141,35 @@ public sealed class AugmentationOne : IAugmentationProcess
     }
 
     #endregion
+
+    /// <summary>
+    /// Keeps the passages which the check of which passages fit the user prompt let through.
+    /// </summary>
+    /// <remarks>
+    /// A passage judged not to fit is left out, however confident the judgment. Of the passages judged to fit,
+    /// those stay whose confidence reaches the threshold, which only they decide. A passage whose check failed
+    /// stays: the failure says nothing about the passage, neither that it fits nor that it does not. It does not
+    /// count for the threshold either, so that a failed check moves the line for none of the others.
+    /// </remarks>
+    /// <param name="validationResults">The results of the check, one for each passage.</param>
+    /// <returns>The passages left, in the order of the results, and why the others were left out.</returns>
+    internal static ValidatedPassages KeepFittingPassages(IReadOnlyList<RetrievalContextValidationResult> validationResults)
+    {
+        var numJudged = validationResults.Count(result => result.IsAnswered);
+        var fitting = validationResults.Where(result => result.IsAnswered && result.Decision).ToList();
+
+        //
+        // Without a passage which fits, there is no threshold to find; asking for one would only log a warning:
+        //
+        var threshold = fitting.Count is 0 ? 0f : fitting.GetConfidenceThreshold(fitting.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING));
+        var contexts = validationResults.Where(result => !result.IsAnswered || (result.Decision && result.Confidence >= threshold)).Select(result => result.RetrievalContext).ToList();
+        return new(contexts, numJudged, validationResults.Count - numJudged, numJudged - fitting.Count, fitting.Count(result => result.Confidence < threshold), threshold);
+    }
+
+    /// <summary>
+    /// Tells the user that the check of which passages fit failed, so that the answer uses all passages found.
+    /// </summary>
+    private static Task WarnThatTheCheckFailedAsync() => MessageBus.INSTANCE.SendWarning(new(AppIcons.PASSAGE_RELEVANCE_CHECK, TA("The check of which passages fit your question failed. This answer uses all passages that were found.")));
 
     /// <summary>
     /// Writes what the model reads along with the user prompt: the passages which fit, and how many did not.
@@ -138,8 +185,8 @@ public sealed class AugmentationOne : IAugmentationProcess
         var sb = new StringBuilder();
         if (selection.Contexts.Count > 0)
         {
-            sb.AppendLine("The following useful information will help you in processing the user prompt:");
-            sb.AppendLine();
+            sb.AppendLineLF("The following useful information will help you in processing the user prompt:");
+            sb.AppendLineLF();
 
             // Let's convert the retrieval contexts to Markdown:
             for (var index = 0; index < selection.Contexts.Count; index++)
@@ -147,7 +194,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         }
 
         if (selection.LeftOutCount > 0)
-            sb.AppendLine(selection.LeftOutCount is 1
+            sb.AppendLineLF(selection.LeftOutCount is 1
                 ? "Of the passages which the search found in the data sources, 1 did not fit into this request and was left out. An answer based on the data sources may therefore be incomplete."
                 : $"Of the passages which the search found in the data sources, {selection.LeftOutCount} did not fit into this request and were left out. An answer based on the data sources may therefore be incomplete.");
 

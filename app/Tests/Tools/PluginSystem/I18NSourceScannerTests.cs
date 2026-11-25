@@ -101,7 +101,8 @@ public sealed class I18NSourceScannerTests
 
         var texts = I18NSourceScanner.FindTexts(SOURCE, "Notice.cs", []);
 
-        Assert.That(texts.Select(text => text.Text), Is.EqualTo(new[] { "## Welcome!\n\nThe first paragraph." }));
+        // The scanner keeps the line endings of the checkout, as the compiler does, and the collector makes them equal:
+        Assert.That(texts.Select(text => I18NKeyHash.NormalizeLineEndings(text.Text)), Is.EqualTo(new[] { "## Welcome!\n\nThe first paragraph." }));
     }
 
     [Test]

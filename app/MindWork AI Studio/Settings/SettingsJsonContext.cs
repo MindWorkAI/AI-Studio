@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Settings.DataModel.PreviousModels;
+using AIStudio.Tools.PluginSystem;
 
 using EMailWritingStyles = AIStudio.Assistants.EMail.WritingStyles;
 using ERIContentType = AIStudio.Tools.ERIClient.DataModel.ContentType;
@@ -32,6 +33,7 @@ namespace AIStudio.Settings;
 [JsonSerializable(typeof(ISet<PreviewFeatures>))]
 [JsonSerializable(typeof(ISet<LLMProviders>))]
 [JsonSerializable(typeof(ISet<ConfigurableAssistant>))]
+[JsonSerializable(typeof(ISet<PluginCategory>))]
 [JsonSerializable(typeof(IList<string>))]
 [JsonSerializable(typeof(IList<DataAssistantPluginEnterpriseApproval>))]
 [JsonSerializable(typeof(IDictionary<string, string>))]

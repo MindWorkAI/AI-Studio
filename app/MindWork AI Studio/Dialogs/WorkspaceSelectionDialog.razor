@@ -7,7 +7,7 @@
         <MudList T="Guid" @bind-SelectedValue="@this.selectedWorkspace">
             @foreach (var workspace in this.workspaces)
             {
-                <MudListItem Text="@workspace.Name" Icon="@Icons.Material.Filled.Description" Value="@workspace.WorkspaceId" />
+                <MudListItem Text="@workspace.Name" Icon="@AppIcons.WORKSPACE" Value="@workspace.WorkspaceId" />
             }
         </MudList>
     </DialogContent>
@@ -34,7 +34,7 @@
             }
             else
             {
-                <MudButton StartIcon="@Icons.Material.Filled.LibraryAdd" Variant="Variant.Filled" OnClick="@this.ShowCreateWorkspaceForm">
+                <MudButton StartIcon="@AppIcons.ADD_WORKSPACE" Variant="Variant.Filled" OnClick="@this.ShowCreateWorkspaceForm">
                     @T("Create new workspace")
                 </MudButton>
             }

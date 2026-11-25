@@ -34,4 +34,9 @@ public enum MailboxConnectionFailure
     /// The organization allows only its own mail servers, and the server of the mailbox is none of them. Nothing was sent to the server.
     /// </summary>
     SERVER_NOT_ALLOWED,
+
+    /// <summary>
+    /// The encoding of the mailbox cannot carry the username or the password to the server: it lacks one of their characters, or the server takes no other encoding than UTF-8 for them. Nothing was sent to the server.
+    /// </summary>
+    UNSUITABLE_ENCODING,
 }

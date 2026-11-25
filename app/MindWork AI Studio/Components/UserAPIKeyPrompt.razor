@@ -1,18 +1,18 @@
 @inherits MSGComponentBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Key" IconColor="Color.Warning" HeaderText="@this.Title" IsExpanded="@this.IsExpanded" ExpandedChanged="@this.ExpandedChanged">
+<ExpansionPanel HeaderIcon="@AppIcons.KEY" IconColor="Color.Warning" HeaderText="@this.Title" IsExpanded="@this.IsExpanded" ExpandedChanged="@this.ExpandedChanged">
     @if (this.Group.Prompt is not null)
     {
         <MudJustifiedMarkdown Value="@this.Group.Prompt.Markdown"/>
     }
     else
     {
-        <MudText Typo="Typo.body1" Class="mb-3">
-            @T("Your organization has set up AI providers for you. To use them, AI Studio needs your personal API key. Please enter it below.")
-        </MudText>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @TA("Your organization has set up AI providers for you. To use them, AI Studio needs your personal API key. Please enter it below.")
+        </MudJustifiedText>
     }
 
-    <SecretInputField Secret="@this.apiKey" SecretChanged="@(value => this.apiKey = value)" Label="@T("API key")"/>
+    <SecretInputField Secret="@this.apiKey" SecretChanged="@(value => this.apiKey = value)" Label="@T("API key")" Validation="@ValidateAPIKey"/>
 
     @if (!string.IsNullOrWhiteSpace(this.issue))
     {
@@ -22,7 +22,7 @@
     }
 
     <MudStack Row="@true" AlignItems="AlignItems.Center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(this.isBusy || string.IsNullOrWhiteSpace(this.apiKey))" OnClick="@this.StoreAPIKeyAsync">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.SAVE" Disabled="@(!this.CanStoreAPIKey)" OnClick="@this.StoreAPIKeyAsync">
             @T("Check and save API key")
         </MudButton>
         @if (this.isBusy)

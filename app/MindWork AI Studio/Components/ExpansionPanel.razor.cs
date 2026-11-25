@@ -5,7 +5,7 @@ namespace AIStudio.Components;
 public partial class ExpansionPanel : ComponentBase
 {
     [Parameter]
-    public string HeaderIcon { get; set; } = Icons.Material.Filled.BugReport;
+    public string HeaderIcon { get; set; } = AppIcons.BUG;
     
     [Parameter]
     public Size IconSize { get; set; } = Size.Medium;
@@ -55,7 +55,7 @@ public partial class ExpansionPanel : ComponentBase
     public Func<ValueTask> EndButtonClickAsync { get; set; } = () => ValueTask.CompletedTask;
     
     [Parameter]
-    public string EndButtonIcon { get; set; } = Icons.Material.Filled.Delete;
+    public string EndButtonIcon { get; set; } = AppIcons.DELETE;
 
     [Parameter]
     public Color EndButtonColor { get; set; } = Color.Error;

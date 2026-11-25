@@ -191,7 +191,7 @@ public sealed class EmbeddingChangeImpactTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { Name = "Another name" }), Is.False, "The name is how the data source is offered, not how it was read.");
-            Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { Description = "Another description" }), Is.False, "The description is there for the agent which picks data sources.");
+            Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { Description = "Another description" }), Is.False, "The description is there for the AI operation which picks data sources.");
             Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { MaxMatches = 42 }), Is.False, "How many matches an answer may use is decided per query.");
             Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { ConfidenceLevel = ConfidenceLevel.HIGH }), Is.False, "The confidence level is enforced live on every request and changes no vector.");
         }

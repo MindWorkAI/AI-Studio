@@ -218,6 +218,14 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
 
     /// <summary>
+    /// Whether this block tells the user above the progress bar that the model is thinking.
+    /// </summary>
+    /// <remarks>
+    /// Not while a tool runs: the status of the tools tells what happens then.
+    /// </remarks>
+    private bool ShowsThinkingStatus => this.Content is ContentText { IsThinking: true, ToolRuntimeStatus.IsRunning: false };
+
+    /// <summary>
     /// The files this block holds, tables, code blocks, and formulas, so that the export menu can offer each of them.
     /// </summary>
     /// <remarks>
@@ -449,6 +457,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                 hash.Add(text.ToolInvocations.Count);
                 hash.Add(text.Presentation?.Kind);
                 hash.Add(text.Presentation?.GetDataHashCode() ?? 0);
+                hash.Add(text.IsThinking);
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);
                 hash.Add(this.showToolTrace);
@@ -621,7 +630,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         
         var remove = await this.DialogService.ShowMessageBoxAsync(
             T("Remove Message"),
-            T("Do you really want to remove this message?"),
+            TA("Do you really want to remove this message?"),
             T("Yes, remove it"),
             T("No, keep it"));
         
@@ -689,7 +698,7 @@ public partial class ContentBlockComponent : MSGComponentBase
 
     private async Task ReportUnknownExportFormat(ArgumentOutOfRangeException exception, FileExportFormat format)
     {
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Error, string.Format(this.T("Failed to export this message, because the file format '{0}' is unknown."), format)));
+        await this.MessageBus.SendError(new(AppIcons.ERROR, string.Format(this.T("Failed to export this message, because the file format '{0}' is unknown."), format)));
         this.Logger.LogError(exception, "Failed to export the content, because no exporter writes the format {ExportFormat}.", format);
     }
     
@@ -703,7 +712,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         
         var regenerate = await this.DialogService.ShowMessageBoxAsync(
             T("Regenerate Message"),
-            T("Do you really want to regenerate this message?"),
+            TA("Do you really want to regenerate this message?"),
             T("Yes, regenerate it"),
             T("No, keep it"));
         
@@ -718,7 +727,7 @@ public partial class ContentBlockComponent : MSGComponentBase
 
         var rollback = await this.DialogService.ShowMessageBoxAsync(
             T("Roll Back Chat"),
-            T("Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed."),
+            TA("Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed."),
             T("Yes, roll back the chat"),
             T("No, keep it"));
 
@@ -747,7 +756,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         
         var edit = await this.DialogService.ShowMessageBoxAsync(
             T("Edit Message"),
-            T("Do you really want to edit this message? In order to edit this message, the AI response will be deleted."),
+            TA("Do you really want to edit this message? In order to edit this message, the AI response will be deleted."),
             T("Yes, remove the AI response and edit it"),
             T("No, keep it"));
         

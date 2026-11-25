@@ -76,11 +76,13 @@ public partial class AssistantTranslation : DocumentAssistantBase<SettingsDialog
 
     protected override AssistantStartMode StartMode => this.SettingsManager.ConfigurationData.Translation.StartMode;
 
-    protected override IReadOnlyList<AssistantModeOption> ModeOptions =>
+    protected override IReadOnlyList<AssistantModeOption<AssistantContentMode>> ModeOptions =>
     [
-        new(AssistantContentMode.DOCUMENT, Icons.Material.Filled.Description, T("Translate document"), T("Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible."), T("Switch to document translation")),
-        new(AssistantContentMode.TEXT, Icons.Material.Filled.TextFields, T("Translate text"), T("Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here."), T("Switch to text translation")),
+        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Translate document"), T("Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
+        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Translate text"), T("Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here.")),
     ];
+
+    protected override string SwitchTooltip(AssistantContentMode target) => target is AssistantContentMode.DOCUMENT ? T("Switch to document translation") : T("Switch to text translation");
 
     protected override DocumentRequest CreateDocumentRequest()
     {
@@ -195,7 +197,7 @@ public partial class AssistantTranslation : DocumentAssistantBase<SettingsDialog
     private string? ValidatingText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -203,7 +205,7 @@ public partial class AssistantTranslation : DocumentAssistantBase<SettingsDialog
     private string? ValidatingTargetLanguage(CommonLanguages language)
     {
         if(language == CommonLanguages.AS_IS)
-            return T("Please select a target language.");
+            return TA("Please select a target language.");
         
         return null;
     }
@@ -211,7 +213,7 @@ public partial class AssistantTranslation : DocumentAssistantBase<SettingsDialog
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }

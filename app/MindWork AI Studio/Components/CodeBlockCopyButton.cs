@@ -48,7 +48,7 @@ public sealed class CodeBlockCopyButton : ComponentBase
             builder.OpenComponent<MudIconButton>(0);
             builder.AddComponentParameter(1, nameof(MudIconButton.OnClick), EventCallback.Factory.Create<MouseEventArgs>(this, this.CopyAsync));
             builder.AddComponentParameter(2, nameof(MudIconButton.Class), CSS_CLASS);
-            builder.AddComponentParameter(3, nameof(MudIconButton.Icon), Icons.Material.Rounded.ContentCopy);
+            builder.AddComponentParameter(3, nameof(MudIconButton.Icon), AppIcons.COPY);
             builder.AddComponentParameter(4, nameof(MudIconButton.Color), Color.Primary);
             builder.AddComponentParameter(5, nameof(MudIconButton.Variant), Variant.Filled);
             builder.AddComponentParameter(6, nameof(MudIconButton.Size), Size.Medium);
@@ -68,7 +68,7 @@ public sealed class CodeBlockCopyButton : ComponentBase
         builder.AddComponentParameter(19, nameof(MudTooltip.ChildContent), (RenderFragment)(content =>
         {
             content.OpenComponent<MudIconButton>(0);
-            content.AddComponentParameter(1, nameof(MudIconButton.Icon), Icons.Material.Rounded.DoneAll);
+            content.AddComponentParameter(1, nameof(MudIconButton.Icon), AppIcons.COPIED);
             content.AddComponentParameter(2, nameof(MudIconButton.Color), Color.Success);
             content.AddComponentParameter(3, nameof(MudIconButton.Variant), Variant.Filled);
             content.AddComponentParameter(4, nameof(MudIconButton.Size), Size.Medium);

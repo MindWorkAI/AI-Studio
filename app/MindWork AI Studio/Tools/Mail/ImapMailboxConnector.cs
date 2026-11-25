@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using System.Text;
 
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
@@ -19,7 +20,9 @@ namespace AIStudio.Tools.Mail;
 /// Every sign-in is exactly one attempt with the password. An IMAP client would otherwise try one
 /// mechanism after the other and the LOGIN command last, and a directory such as Active Directory
 /// counts each rejected attempt on its way to locking the account. For the same reason, nothing is
-/// sent at all when the password is empty or a setting is unknown to this version.<br/><br/>
+/// sent at all when the password is empty, a setting is unknown to this version, or the encoding of
+/// the mailbox cannot carry the username and the password, cf. TryPrepareSignIn. AI Studio never
+/// switches to another encoding on its own: only the user chooses another one.<br/><br/>
 /// Before signing in, the caller has to make sure that no failed sign-in is on record for this
 /// mailbox. Whatever fails arrives as MailboxConnectionException with its failure code, and nothing
 /// here writes to the log: the answers of a server may name the user, so the caller logs the
@@ -38,6 +41,13 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// block alone.
     /// </summary>
     public const long MAX_TEXT_PART_BYTES = 4 * 1024 * 1024;
+
+    /// <summary>
+    /// The longest single header field which is read, in bytes. MimeKit reads 16 KB by default, and the
+    /// IMAP client hands over a mail with a longer one with an empty header block. A mail to a few
+    /// hundred people has such a To field, and so has a long thread its References field.
+    /// </summary>
+    internal const int MAX_HEADER_FIELD_BYTES = 1024 * 1024;
 
     /// <summary>
     /// How many UIDs go into one FETCH. A long list of scattered UIDs makes a long command line, and
@@ -67,6 +77,15 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// </summary>
     private static readonly TimeSpan DISCONNECT_TIMEOUT = TimeSpan.FromSeconds(5);
 
+    static ImapMailboxConnector()
+    {
+        //
+        // The IMAP client reads every header block with the default options of MimeKit and takes no
+        // options of its own. Raised here, the limit holds before the first mail is fetched:
+        //
+        ParserOptions.Default.MaxHeaderLength = Math.Max(ParserOptions.Default.MaxHeaderLength, MAX_HEADER_FIELD_BYTES);
+    }
+
     private readonly ImapClient client = new()
     {
         Timeout = (int)COMMAND_TIMEOUT.TotalMilliseconds,
@@ -88,19 +107,19 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// Whether the server tells which mails changed since a point it handed out before (CONDSTORE).
     /// Without it, the flags of every mail have to be fetched to find the changed ones.
     /// </summary>
-    public bool SupportsChangeTracking => this.client.Capabilities.HasFlag(ImapCapabilities.CondStore);
+    public bool SupportsChangeTracking => this.client.Capabilities.Contains(ImapCapability.CondStore);
 
     /// <summary>
     /// Connects to the IMAP server of the mailbox and signs in.
     /// </summary>
     /// <param name="mailbox">The mailbox to connect to.</param>
     /// <param name="password">The password, as stored in the OS keyring or just typed in.</param>
-    /// <param name="policy">Which mail servers the organization allows. Every connection passes here, so this is where a server it does not allow is refused.</param>
+    /// <param name="policy">Which mail servers the organization allows, and which encodings it names for them. Every connection passes here, so this is where a server it does not allow is refused, and where its encoding takes effect.</param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="MailboxConnectionException">The connection or the sign-in failed.</exception>
     public async Task ConnectAsync(DataSourceMailbox mailbox, string password, MailServerPolicy policy, CancellationToken token)
     {
-        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
+        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || policy.GetPasswordEncoding(mailbox) is not { TextEncoding: { } textEncoding } passwordEncoding || !MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
             throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "The mailbox settings are incomplete, or this version of AI Studio does not know them.");
 
         if (!policy.IsAllowed(mailbox.Host))
@@ -121,9 +140,13 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
             throw new MailboxConnectionException(failure, $"Connecting to the IMAP server failed: {failure}.", e);
         }
 
+        var offersPlain = this.client.AuthenticationMechanisms.Contains(PLAIN_MECHANISM);
+        if (!TryPrepareSignIn(passwordEncoding, mailbox.Username, password, offersPlain, out var preparedUsername, out var preparedPassword))
+            throw new MailboxConnectionException(MailboxConnectionFailure.UNSUITABLE_ENCODING, "The encoding of the mailbox cannot carry the username and the password to this IMAP server.");
+
         try
         {
-            await this.SignInAsync(mailbox.Username, password, token);
+            await this.SignInAsync(textEncoding, preparedUsername, preparedPassword, offersPlain, token);
         }
         catch (Exception e) when (Classify(e, token) is { } failure)
         {
@@ -292,10 +315,10 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     public async Task<IReadOnlyList<IMessageSummary>> FetchSummariesAsync(IReadOnlyCollection<long> uids, CancellationToken token)
     {
         var items = MessageSummaryItems.UniqueId | MessageSummaryItems.Flags | MessageSummaryItems.InternalDate | MessageSummaryItems.Size | MessageSummaryItems.BodyStructure | MessageSummaryItems.Headers;
-        if (this.client.Capabilities.HasFlag(ImapCapabilities.ObjectID))
+        if (this.client.Capabilities.Contains(ImapCapability.ObjectID))
             items |= MessageSummaryItems.EmailId;
 
-        if (this.client.Capabilities.HasFlag(ImapCapabilities.GMailExt1))
+        if (this.client.Capabilities.Contains(ImapCapability.GMailExt1))
             items |= MessageSummaryItems.GMailMessageId;
 
         return await this.FetchAsync(uids, new FetchRequest(items), token);
@@ -449,7 +472,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         return summaries;
     }
 
-    private static async Task<Stream> FetchAttachmentPieceAsync(IMailFolder folder, UniqueId uid, string section, int offset, CancellationToken token)
+    private static async Task<Stream> FetchAttachmentPieceAsync(IMailFolder folder, UniqueId uid, string section, long offset, CancellationToken token)
     {
         try
         {
@@ -470,19 +493,50 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         return entity is TextPart textPart ? textPart.Text : null;
     }
 
-    private async Task SignInAsync(string username, string password, CancellationToken token)
+    /// <summary>
+    /// Prepares the username and the password for one sign-in in the encoding of the mailbox, cf. MailServerPolicy.GetPasswordEncoding.
+    /// </summary>
+    /// <remarks>
+    /// A sign-in in bytes which are not the password counts as a failed attempt, just like a wrong
+    /// password. So nothing may be sent when the encoding cannot carry the username and the password:
+    /// when it lacks one of their characters, e.g., Windows-1252 has no ẞ, and when the server does not
+    /// offer PLAIN and the encoding is not UTF-8, since MailKit sends the LOGIN command in UTF-8,
+    /// whatever encoding it is handed. Text in ASCII has the same bytes in every encoding a mailbox
+    /// may use, cf. MailboxPasswordEncoding, so it goes through the LOGIN command as well.
+    /// </remarks>
+    /// <param name="encoding">The encoding of the mailbox.</param>
+    /// <param name="username">The username.</param>
+    /// <param name="password">The password.</param>
+    /// <param name="offersPlain">Whether the server offers the SASL mechanism PLAIN.</param>
+    /// <param name="preparedUsername">The username to sign in with.</param>
+    /// <param name="preparedPassword">The password to sign in with.</param>
+    /// <returns>Whether the sign-in may go ahead.</returns>
+    internal static bool TryPrepareSignIn(MailboxPasswordEncoding encoding, string username, string password, bool offersPlain, out string preparedUsername, out string preparedPassword)
     {
-        if (this.client.AuthenticationMechanisms.Contains(PLAIN_MECHANISM))
+        preparedPassword = password;
+        if (!encoding.TryPrepare(username, out preparedUsername) || !encoding.TryPrepare(password, out preparedPassword))
+            return false;
+
+        return offersPlain || encoding.IsUtf8 || !MailboxPasswordEncoding.DependsOnEncoding(preparedUsername, preparedPassword);
+    }
+
+    /// <summary>
+    /// Signs in once, with a username and a password which TryPrepareSignIn prepared.
+    /// </summary>
+    private async Task SignInAsync(Encoding textEncoding, string username, string password, bool offersPlain, CancellationToken token)
+    {
+        if (offersPlain)
         {
-            await this.client.AuthenticateAsync(new SaslMechanismPlain(username, password), token);
+            await this.client.AuthenticateAsync(new SaslMechanismPlain(textEncoding, username, password), token);
             return;
         }
 
-        if (this.client.Capabilities.HasFlag(ImapCapabilities.LoginDisabled))
+        if (this.client.Capabilities.Contains(ImapCapability.LoginDisabled))
             throw new MailboxConnectionException(MailboxConnectionFailure.SERVER_ERROR, "The IMAP server offers no way to sign in with a password.");
 
         //
-        // With no mechanism left to try, the client signs in with the LOGIN command alone:
+        // With no mechanism left to try, the client signs in with the LOGIN command alone, always in
+        // UTF-8, cf. TryPrepareSignIn:
         //
         this.client.AuthenticationMechanisms.Clear();
         await this.client.AuthenticateAsync(username, password, token);

@@ -56,7 +56,7 @@ public abstract partial class ConfigurationBase : MSGComponentBase
 
     protected bool IsDisabled => this.Disabled() || this.IsLocked();
     
-    private string Classes => $"{this.GetClassForBase} {JUSTIFIED_HELP_CLASS} {this.MarginClass}";
+    private string Classes => $"{this.GetClassForBase} {this.MarginClass}";
 
     /// <summary>
     /// The bottom margin of the option. Options inside settings panels need the default
@@ -65,8 +65,6 @@ public abstract partial class ConfigurationBase : MSGComponentBase
     protected virtual string MarginClass => MARGIN_CLASS;
     
     private protected virtual RenderFragment? Body => null;
-
-    private const string JUSTIFIED_HELP_CLASS = "configuration-help-justified";
 
     private const string MARGIN_CLASS = "mb-6";
     
@@ -83,7 +81,11 @@ public abstract partial class ConfigurationBase : MSGComponentBase
 
     #endregion
     
-    private string TB(string fallbackEN) => this.T(fallbackEN, typeof(ConfigurationBase).Namespace, nameof(ConfigurationBase));
+    /// <summary>
+    /// Gets a text of this base class which addresses the reader; the collector files it under ConfigurationBase,
+    /// not under the component which derives from it.
+    /// </summary>
+    private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(ConfigurationBase).Namespace, nameof(ConfigurationBase));
     
     protected async Task InformAboutChange() => await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
 

@@ -35,6 +35,8 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SemanticSearchTool).Namespace, nameof(SemanticSearchTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(SemanticSearchTool).Namespace, nameof(SemanticSearchTool));
+
     private const string QUERY_ARGUMENT = "query";
     private const string DATA_SOURCE_IDS_ARGUMENT = "data_source_ids";
     private const string PAGE_ARGUMENT = "page";
@@ -70,7 +72,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// A chunk is as long as the embedding model takes at once, by default 8,192 tokens, so a
     /// single passage may already fill tens of thousands of characters. A passage which does not
     /// fit starts the next page, see SearchAsync. Only a passage longer than a whole page is
-    /// shortened, and filtered again, see IRetrievalContextExtensions.ShortenToFitAsync. The limit
+    /// shortened, and filtered again, see RetrievalContextExtensions.ShortenToFitAsync. The limit
     /// is the one a web search has by default, and it leaves room for about three searches within
     /// the budget of all tool results of an answer, see ToolSelectionRules.MAX_TOOL_RESULT_CHARACTERS:
     /// a question with several aspects gets one search per aspect.
@@ -84,11 +86,14 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         Id = ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID,
         ImplementationKey = ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID,
 
-        // Only a chat has data sources to search:
+        //
+        // Only a chat has data sources to search: the chat of the app, and the chats of a comparison series of the
+        // Model Comparison assistant. Its mode Answer Variance runs as the same component, but its chats keep
+        // the data sources switched off, see ModelComparisonProviderAdapter:
+        //
         VisibleIn = new()
         {
-            Chat = true,
-            Assistants = false,
+            AllowedComponents = [Components.CHAT, Components.MODEL_COMPARISON_ASSISTANT],
         },
 
         Activation = ToolActivation.CONTEXT,
@@ -202,9 +207,9 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// </summary>
     /// <remarks>
     /// When the AI selects the data sources, it may search every data source the provider may use:
-    /// the AI which selects is the chat model itself, no agent. Otherwise, it may search those the
+    /// the AI which selects is the chat model itself, no AI operation. Otherwise, it may search those the
     /// user selected, as far as the provider may use them. Only the chat provider counts, since no
-    /// agent takes part, see DataSourceService.GetParticipatingAgents.<br/><br/>
+    /// AI operation takes part, see DataSourceService.GetParticipatingOperations.<br/><br/>
     /// Preparing a request knows the provider by its settings, running a call by the provider
     /// itself. Both ask the same question, so both come here. The classic RAG process asks here as
     /// well while it steps back for this tool, so that it names the unreachable data sources in the
@@ -286,21 +291,21 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     internal static ToolFunctionDefinition DescribeDataSources(ToolFunctionDefinition function, IReadOnlyList<(IDataSource DataSource, string Description)> dataSources, IReadOnlyList<IDataSource>? unreachableDataSources = null)
     {
         var description = new StringBuilder(DESCRIPTION);
-        description.AppendLine();
-        description.AppendLine();
-        description.AppendLine($"The data sources you may search, by the ID to pass in {DATA_SOURCE_IDS_ARGUMENT}:");
+        description.AppendLineLF();
+        description.AppendLineLF();
+        description.AppendLineLF($"The data sources you may search, by the ID to pass in {DATA_SOURCE_IDS_ARGUMENT}:");
         foreach (var (dataSource, dataSourceDescription) in dataSources)
         {
             description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}");
             if (!string.IsNullOrWhiteSpace(dataSourceDescription))
                 description.Append($", description='{dataSourceDescription.Trim().Shorten(MAX_DESCRIPTION_CHARACTERS)}'");
 
-            description.AppendLine();
+            description.AppendLineLF();
         }
 
         if (unreachableDataSources is { Count: > 0 })
         {
-            description.AppendLine();
+            description.AppendLineLF();
             UnreachableDataSources.AppendTo(description, unreachableDataSources);
         }
 
@@ -326,7 +331,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         _ => "data source",
     };
 
-    public string Icon => Icons.Material.Filled.ManageSearch;
+    public string Icon => AppIcons.SEMANTIC_SEARCH;
 
     // An ERI data source is a server somebody else runs, and even a local document may hold text
     // written to steer a model:
@@ -345,7 +350,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
     public string GetDisplayName() => TB("Semantic Search");
 
-    public string GetDescription() => TB("Lets the AI search the data sources of your chat itself, whenever a question calls for it.");
+    public string GetDescription() => TA("Lets the AI search the data sources of your chat itself, whenever a question calls for it.");
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {
@@ -422,7 +427,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// </para>
     /// <para>
     /// A passage longer than a whole page would hold up every passage after it, so it is shortened
-    /// to fill a page of its own, see IRetrievalContextExtensions.ShortenToFitAsync.
+    /// to fill a page of its own, see RetrievalContextExtensions.ShortenToFitAsync.
     /// </para>
     /// </remarks>
     /// <param name="request">The search to run.</param>

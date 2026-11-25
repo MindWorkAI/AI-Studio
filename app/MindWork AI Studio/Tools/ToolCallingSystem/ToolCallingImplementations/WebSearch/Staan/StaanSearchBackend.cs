@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Staan;
 
@@ -17,6 +18,8 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.
 public sealed class StaanSearchBackend : IWebSearchBackend
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(StaanSearchBackend).Namespace, nameof(StaanSearchBackend));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(StaanSearchBackend).Namespace, nameof(StaanSearchBackend));
 
     private const string SETTINGS_GROUP = "staan";
 
@@ -63,7 +66,7 @@ public sealed class StaanSearchBackend : IWebSearchBackend
 
     public void DeclareSettings(ToolSettingsSchemaBuilder builder) => builder
         .InGroup(SETTINGS_GROUP)
-        .OptionalSecret(API_KEY_SETTING)
+        .OptionalAPIKey(API_KEY_SETTING)
         .OptionalEnum(MARKET_SETTING, SUPPORTED_MARKETS)
         .InGroup(string.Empty);
 
@@ -85,7 +88,7 @@ public sealed class StaanSearchBackend : IWebSearchBackend
 
     public string GetSettingsFieldDescription(string fieldName) => fieldName switch
     {
-        API_KEY_SETTING => TB("Your Staan API key. It is kept in your operating system's keyring, not in a settings file. Staan is a European search index; the first requests are free of charge, after which searching is billed per thousand requests."),
+        API_KEY_SETTING => TA("Your Staan API key. It is kept in your operating system's keyring, not in a settings file. Staan is a European search index; the first requests are free of charge, after which searching is billed per thousand requests."),
         MARKET_SETTING => TB("The market Staan searches in. Staan searches one market at a time and offers only these three. When the AI model asks for German, English, or French, the matching market is used no matter what is chosen here; this setting decides what happens for every other language and when no language is requested at all."),
 
         _ => string.Empty,
@@ -113,7 +116,7 @@ public sealed class StaanSearchBackend : IWebSearchBackend
         if (string.IsNullOrWhiteSpace(market) || IsSupportedMarket(market))
             return true;
 
-        error = string.Format(TB("The configured Staan market '{0}' is not one of the markets Staan offers. Please choose one of these: {1}."), market, string.Join(", ", SUPPORTED_MARKETS));
+        error = string.Format(TA("The configured Staan market '{0}' is not one of the markets Staan offers. Please choose one of these: {1}."), market, string.Join(", ", SUPPORTED_MARKETS));
         return false;
     }
 
@@ -122,6 +125,13 @@ public sealed class StaanSearchBackend : IWebSearchBackend
         var apiKey = settingsValues.GetValueOrDefault(API_KEY_SETTING);
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException(TB("A Staan API key is required."));
+
+        //
+        // A key stored before AI Studio checked keys, or one the organization provides, may hold a
+        // character the header cannot carry. The dispatcher asks the other services all the same:
+        //
+        if (!APIKeyValidation.TryPrepareForHeader(apiKey, out var headerAPIKey))
+            throw new InvalidOperationException(APIKeyValidation.GetUnusableKeyMessage("Staan"));
 
         //
         // Staan refuses a longer query outright. Shortening it here would search for something
@@ -139,7 +149,7 @@ public sealed class StaanSearchBackend : IWebSearchBackend
         var market = ResolveMarket(query.Language, settingsValues, notes);
 
         var searchRequest = new StaanSearchRequest { Query = query.Query, Market = market, Offset = ReadOffset(query.Page) };
-        var response = await this.searchClient.SearchAsync(apiKey.Trim(), searchRequest, query.TimeoutSeconds, token);
+        var response = await this.searchClient.SearchAsync(headerAPIKey, searchRequest, query.TimeoutSeconds, token);
 
         //
         // Staan corrects an obvious mistake in a query and says so. Which query actually ran is

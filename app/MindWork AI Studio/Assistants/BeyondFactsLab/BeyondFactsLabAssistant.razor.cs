@@ -30,10 +30,19 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     private BflConversationService ConversationService { get; init; } = null!;
 
     [Inject]
+    private BflMaterialService MaterialService { get; init; } = null!;
+
+    [Inject]
+    private BflWorkStateGenerator WorkStateGenerator { get; init; } = null!;
+
+    [Inject]
     private ILogger<BeyondFactsLabAssistant> Logger { get; init; } = null!;
 
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
+
+    [Inject]
+    private BflResearchRunner ResearchRunner { get; init; } = null!;
 
     /// <summary>
     /// Whether the person may open the lab, so that the page did not send them away.
@@ -46,9 +55,39 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
     private ElementReference stickyHeaderAnchor;
 
     /// <summary>
+    /// The header of the preparation, which stays at the top while the person scrolls.
+    /// </summary>
+    private ElementReference stickyHeader;
+
+    /// <summary>
+    /// The ID of the header element whose height the page follows, so that only a new header element needs following.
+    /// </summary>
+    private string? followedStickyHeaderId;
+
+    /// <summary>
     /// Whether the next render shows another step, which then starts at the top.
     /// </summary>
     private bool scrollToActiveStep;
+
+    /// <summary>
+    /// Whether the area which tells how to work with the lab is open.
+    /// </summary>
+    private bool introductionExpanded;
+
+    /// <summary>
+    /// Whether the area with the guidelines of the organization is open. It opens with every visit of the page, so
+    /// that the person has them in view while preparing.
+    /// </summary>
+    private bool organizationRulesExpanded = true;
+
+    /// <summary>
+    /// Gets the guidelines of the organization for public appearances, which only a configuration plugin sets; empty
+    /// without any.
+    /// </summary>
+    /// <remarks>
+    /// Read anew with every render, so that a reloaded configuration plugin shows right away.
+    /// </remarks>
+    private string OrganizationRules => this.SettingsManager.ConfigurationData.BeyondFactsLab.OrganizationRules;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -61,8 +100,13 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
         }
 
         this.ApplyFilters([], [Event.CONFIGURATION_CHANGED]);
+        this.MaterialService.MaterialsChanged += this.OnMaterialsChangedAsync;
+        this.WorkStateGenerator.WorkStateChanged += this.OnWorkStateChangedAsync;
         this.mayOpen = true;
         await this.RunStoreActionAsync(() => this.ReloadProjectsAsync(null));
+
+        // Whoever has no preparation yet needs to know how the lab works first:
+        this.introductionExpanded = this.projects.Count is 0;
     }
 
     /// <inheritdoc />
@@ -74,6 +118,16 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
             // The person scrolled down in one step and chose another one; it starts right under the header:
             this.scrollToActiveStep = false;
             await this.stickyHeaderAnchor.ScrollToStickyHeaderAsync(this.JsRuntime);
+        }
+
+        //
+        // The material sticks right below the header, so the page has to know how tall the header is. Opening a
+        // preparation after none, or after one which is unavailable, renders a new header element:
+        //
+        if (this.stickyHeader.Id is { } headerId && headerId != this.followedStickyHeaderId)
+        {
+            this.followedStickyHeaderId = headerId;
+            await this.stickyHeader.FollowStickyHeaderAsync(this.JsRuntime);
         }
 
         if (firstRender && this.mayOpen)
@@ -117,6 +171,53 @@ public partial class BeyondFactsLabAssistant : MSGComponentBase
         }
 
         await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+    }
+
+    /// <inheritdoc />
+    protected override void DisposeResources()
+    {
+        this.MaterialService.MaterialsChanged -= this.OnMaterialsChangedAsync;
+        this.WorkStateGenerator.WorkStateChanged -= this.OnWorkStateChangedAsync;
+        base.DisposeResources();
+    }
+
+    /// <summary>
+    /// Shows a preparation as changed once its material changed: material is work on the preparation.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation whose material changed.</param>
+    private Task OnMaterialsChangedAsync(Guid projectId)
+    {
+        if (this.projects.All(project => project.ProjectId != projectId))
+            return Task.CompletedTask;
+
+        return this.InvokeAsync(async () =>
+        {
+            if (await this.Store.LoadAsync(projectId) is not { } project)
+                return;
+
+            this.ReplaceProject(project);
+            this.StateHasChanged();
+        });
+    }
+
+    /// <summary>
+    /// Remembers whether the person opened or closed the area which tells how to work with the lab.
+    /// </summary>
+    /// <param name="isExpanded">Whether the area is open now.</param>
+    private Task IntroductionExpandedChanged(bool isExpanded)
+    {
+        this.introductionExpanded = isExpanded;
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Remembers whether the person opened or closed the area with the guidelines of the organization.
+    /// </summary>
+    /// <param name="isExpanded">Whether the area is open now.</param>
+    private Task OrganizationRulesExpandedChanged(bool isExpanded)
+    {
+        this.organizationRulesExpanded = isExpanded;
+        return Task.CompletedTask;
     }
 
     private async Task OpenSettingsDialogAsync() => await this.DialogService.ShowAsync<SettingsDialogBeyondFactsLab>(null, new DialogParameters(), DialogOptions.FULLSCREEN);

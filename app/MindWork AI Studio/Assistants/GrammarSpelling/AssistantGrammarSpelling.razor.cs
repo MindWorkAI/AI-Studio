@@ -78,11 +78,13 @@ public partial class AssistantGrammarSpelling : DocumentAssistantBase<SettingsDi
 
     protected override AssistantStartMode StartMode => this.SettingsManager.ConfigurationData.GrammarSpelling.StartMode;
 
-    protected override IReadOnlyList<AssistantModeOption> ModeOptions =>
+    protected override IReadOnlyList<AssistantModeOption<AssistantContentMode>> ModeOptions =>
     [
-        new(AssistantContentMode.DOCUMENT, Icons.Material.Filled.Description, T("Check document"), T("Check the spelling and grammar of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible."), T("Switch to checking a document")),
-        new(AssistantContentMode.TEXT, Icons.Material.Filled.TextFields, T("Check text"), T("Check the spelling and grammar of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked."), T("Switch to checking a text")),
+        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Check document"), T("Check the spelling and grammar of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
+        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Check text"), T("Check the spelling and grammar of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked.")),
     ];
+
+    protected override string SwitchTooltip(AssistantContentMode target) => target is AssistantContentMode.DOCUMENT ? T("Switch to checking a document") : T("Switch to checking a text");
 
     protected override DocumentRequest CreateDocumentRequest()
     {
@@ -168,7 +170,7 @@ public partial class AssistantGrammarSpelling : DocumentAssistantBase<SettingsDi
     private string? ValidateText(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a text as input. You might copy the desired text from a document or a website.");
+            return TA("Please provide a text as input. You might copy the desired text from a document or a website.");
         
         return null;
     }
@@ -176,7 +178,7 @@ public partial class AssistantGrammarSpelling : DocumentAssistantBase<SettingsDi
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }

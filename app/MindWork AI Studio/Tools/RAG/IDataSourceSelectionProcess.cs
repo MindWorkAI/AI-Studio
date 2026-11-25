@@ -23,7 +23,7 @@ public interface IDataSourceSelectionProcess
     /// <summary>
     /// Starts the data source selection process.
     /// </summary>
-    /// <param name="provider">The LLM provider. Used as default for data selection agents.</param>
+    /// <param name="provider">The LLM provider. Used as the fallback of the AI operation which selects data sources.</param>
     /// <param name="lastUserPrompt">The last prompt that was issued by the user.</param>
     /// <param name="chatThread">The chat thread.</param>
     /// <param name="dataSources">The allowed data sources yielded by the data source service.</param>

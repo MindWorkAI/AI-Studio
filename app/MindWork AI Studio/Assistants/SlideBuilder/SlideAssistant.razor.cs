@@ -15,7 +15,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     protected override string Title => T("Slide Assistant");
     
-    protected override string Description => T("This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also limit the number of bullet points per slide. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result.");
+    protected override string Description => TA("This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also limit the number of bullet points per slide. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result.");
     
     // The prompt of this assistant demands JSON for the layouts, so the chat gets a prompt of its own, which keeps the limits of the slides:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
@@ -148,7 +148,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     protected override IReadOnlyList<IButtonData> FooterButtons =>
     [
-        new ButtonData(T("Create PowerPoint file"), Icons.Material.Filled.Slideshow, Color.Default, this.CreatePresentationTooltip, this.CreatePresentationFileAsync, () => !this.CanCreatePresentation),
+        new ButtonData(T("Create PowerPoint file"), AppIcons.SLIDES, Color.Default, this.CreatePresentationTooltip, this.CreatePresentationFileAsync, () => !this.CanCreatePresentation),
     ];
 
     //
@@ -192,7 +192,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                         ContentType = ContentType.TEXT,
                         Content = new ContentText
                         {
-                            Text = this.T("The result of your previous Slide Assistant session."),
+                            Text = this.TA("The result of your previous Slide Assistant session."),
                             FileAttachments = [..this.loadedDocumentPaths, ..this.slidePictures],
                         }
                     },
@@ -446,14 +446,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private string? ValidatingTitle(string text)
     {
         if(string.IsNullOrWhiteSpace(text))
-            return T("Please provide a title");
+            return TA("Please provide a title");
         
         return null;
     }
     private string? ValidatingContext(string text)
     {
         if(string.IsNullOrWhiteSpace(text) && !this.HasValidInputDocuments())
-            return T("Please provide a text or at least one valid document or image.");
+            return TA("Please provide a text or at least one valid document or image.");
         
         return null;
     }
@@ -491,13 +491,13 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             return;
 
         this.loadedDocumentPaths.ExceptWith(displaced);
-        await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, string.Format(T("These files are already attached as pictures for the slides and were removed from the documents: {0}"), string.Join(", ", displaced.Select(document => document.FileName)))));
+        await this.MessageBus.SendWarning(new(AppIcons.WARNING, string.Format(T("These files are already attached as pictures for the slides and were removed from the documents: {0}"), string.Join(", ", displaced.Select(document => document.FileName)))));
     }
     
     private string? ValidateCustomLanguage(string language)
     {
         if(this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
         
         return null;
     }
@@ -505,7 +505,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private string? ValidateCustomOccasion(string occasion)
     {
         if(this.selectedOccasion == PresentationOccasion.OTHER && string.IsNullOrWhiteSpace(occasion))
-            return T("Please describe the occasion.");
+            return TA("Please describe the occasion.");
 
         return null;
     }
@@ -542,7 +542,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         if (prompts.Count == 0)
             return "            - Do not tailor the text to a specific audience.";
 
-        return string.Join(Environment.NewLine, prompts.Select(prompt => $"            - {prompt}"));
+        return string.Join('\n',prompts.Select(prompt => $"            - {prompt}"));
     }
     
     private string GetDocumentTaskDescription()
@@ -577,7 +577,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
         if (documents.Count > 0)
         {
-            sb.AppendLine("""
+            sb.AppendLineLF("""
                           # DOCUMENTS:
 
                           """);
@@ -596,25 +596,25 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             if (!extraction.HasUsableContent)
             {
                 this.Logger.LogError("Reading the document '{FilePath}' failed and it will not be used: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                await this.MessageBus.SendError(new(AppIcons.DOCUMENT, extraction.ToUserMessage(document.FileName)));
                 continue;
             }
 
             if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
             {
                 this.Logger.LogWarning("Parts of the document '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+                await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, extraction.ToPartialUserMessage(document.FileName)));
             }
 
             // The file was read correctly, but its extension lies about what it contains:
             if (extraction.HasExtensionMismatch)
             {
                 this.Logger.LogWarning("The document '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+                await this.MessageBus.SendWarning(new(AppIcons.FILE_TYPE_MISMATCH, extraction.ToExtensionMismatchUserMessage(document.FileName)));
             }
 
             var fileContent = extraction.Content;
-            sb.AppendLine($"""
+            sb.AppendLineLF($"""
                            
                            ## DOCUMENT {numDocuments}:
                            File path: {document.FilePath}
@@ -634,7 +634,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         {
             if (documents.Count == 0)
             {
-                sb.AppendLine($"""
+                sb.AppendLineLF($"""
 
                                There are {numImages} image file(s) attached as source material.
                                Please consider them as documents as well and use them to
@@ -644,7 +644,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             }
             else
             {
-                sb.AppendLine($"""
+                sb.AppendLineLF($"""
 
                                Additionally, there are {numImages} image file(s) attached as source material.
                                Please consider them as documents as well and use them to
@@ -777,14 +777,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         if (deck is null || deck.Slides.Count == 0 || deck.Slides.Any(slide => !SlideDeckSpecValidator.CanWrite(slide, catalog, chosenTemplateSlideUses)))
         {
             this.Logger.LogWarning("The slides the model planned cannot be used: {Issues}", string.Join(" | ", issues));
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model.")));
+            await this.MessageBus.SendError(new(AppIcons.SLIDES, TA("The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model.")));
             return;
         }
 
         if (issues.Count > 0)
         {
             this.Logger.LogInformation("The slides the model planned still have issues after the repair round: {Issues}", string.Join(" | ", issues));
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Slideshow, T("Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting.")));
+            await this.MessageBus.SendWarning(new(AppIcons.SLIDES, TA("Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting.")));
         }
 
         this.slideDeck = deck;

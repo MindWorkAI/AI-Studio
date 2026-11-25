@@ -48,7 +48,7 @@
                     }
                     @if (this.HasSettingsPanel)
                     {
-                        <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenSettingsDialog"/>
+                        <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SETTINGS" Color="Color.Default" OnClick="@this.OpenSettingsDialog"/>
                     }
                 </MudButtonGroup>
                 @if (this.SecurityBadge is not null || this.AdditionalActions is not null)

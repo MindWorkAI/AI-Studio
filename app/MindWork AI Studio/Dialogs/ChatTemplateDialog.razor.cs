@@ -282,7 +282,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private string? ValidateWorkspaceName(string workspaceName)
     {
         if (this.preselectWorkspace && string.IsNullOrWhiteSpace(workspaceName))
-            return T("Please enter the workspace for the chats of this template, or switch the preselection off.");
+            return TA("Please enter the workspace for the chats of this template, or switch the preselection off.");
 
         return null;
     }
@@ -290,7 +290,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private string? ValidatePreselectedProvider(string providerId)
     {
         if (this.preselectProvider && string.IsNullOrWhiteSpace(providerId))
-            return T("Please choose the provider this chat template preselects, or switch the preselection off.");
+            return TA("Please choose the provider this chat template preselects, or switch the preselection off.");
 
         return null;
     }
@@ -398,7 +398,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         {
             if (!IsExistingFile(replacementPath))
             {
-                this.relinkIssue = string.Format(T("Please relink the attachment '{0}' to a file on this computer or remove it before you save."), originalPath);
+                this.relinkIssue = string.Format(TA("Please relink the attachment '{0}' to a file on this computer or remove it before you save."), originalPath);
                 return;
             }
         }
@@ -432,7 +432,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private string? ValidateExampleTextMessage(string message)
     {
         if (string.IsNullOrWhiteSpace(message))
-            return T("Please enter a message for the example conversation.");
+            return TA("Please enter a message for the example conversation.");
 
         return null;
     }
@@ -440,7 +440,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private string? ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return T("Please enter a name for the chat template.");
+            return TA("Please enter a name for the chat template.");
 
         if (name.Length > 40)
             return T("The chat template name must not exceed 40 characters.");

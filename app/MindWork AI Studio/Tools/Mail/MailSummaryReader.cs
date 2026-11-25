@@ -33,7 +33,7 @@ public static class MailSummaryReader
             summary.GMailMessageId,
             headers[HeaderId.MessageId],
             MailHeaders.ReadDate(headers),
-            MailHeaders.ReadMailboxes(headers, HeaderId.From).Select(mailbox => mailbox.Address).ToList(),
+            MailHeaders.ReadMailboxes(headers, HeaderId.From).Select(MailHeaders.ReadAddress).ToList(),
             headers[HeaderId.Subject],
             summary.Size ?? 0);
     }
@@ -83,7 +83,7 @@ public static class MailSummaryReader
         return roles
             .SelectMany(role => MailHeaders.ReadMailboxes(headers, role.HeaderId).Select(mailbox => new MailAddressRecord(
                 role.Role,
-                MailTextNormalization.NormalizeHeaderValue(mailbox.Address),
+                MailTextNormalization.NormalizeHeaderValue(MailHeaders.ReadAddress(mailbox)),
                 MailTextNormalization.NormalizeHeaderValue(mailbox.Name))))
             .Where(address => address.Address.Length > 0)
             .ToList();
@@ -135,5 +135,18 @@ public static class MailSummaryReader
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(source)));
     }
 
-    private static HeaderList GetHeaders(IMessageSummary summary) => summary.Headers ?? throw new InvalidOperationException("The mail was fetched without its header block.");
+    /// <summary>
+    /// Reads the header block the server delivered with a mail.
+    /// </summary>
+    /// <remarks>
+    /// The IMAP client hands over an empty header block when it cannot parse the one the server sent,
+    /// e.g. because a field is longer than ImapMailboxConnector.MAX_HEADER_FIELD_BYTES. Every mail has a
+    /// header, so an empty one counts as missing: a mail read from it would have neither sender, nor
+    /// subject, nor date, and its key would rest on its size alone.
+    /// </remarks>
+    /// <param name="summary">The summary of the mail.</param>
+    /// <returns>The header block, or null when the mail was fetched without one, or with one which could not be read.</returns>
+    public static HeaderList? ReadHeaders(IMessageSummary summary) => summary.Headers is { Count: > 0 } headers ? headers : null;
+
+    private static HeaderList GetHeaders(IMessageSummary summary) => ReadHeaders(summary) ?? throw new InvalidOperationException("The mail was fetched without a header block which could be read.");
 }

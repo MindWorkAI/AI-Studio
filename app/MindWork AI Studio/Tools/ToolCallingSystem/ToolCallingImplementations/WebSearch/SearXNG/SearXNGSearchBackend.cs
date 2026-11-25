@@ -14,6 +14,8 @@ public sealed class SearXNGSearchBackend : IWebSearchBackend
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SearXNGSearchBackend).Namespace, nameof(SearXNGSearchBackend));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(SearXNGSearchBackend).Namespace, nameof(SearXNGSearchBackend));
+
     private const string SETTINGS_GROUP = "searxng";
 
     private const string BASE_URL_SETTING = $"{SETTINGS_GROUP}.baseUrl";
@@ -59,7 +61,7 @@ public sealed class SearXNGSearchBackend : IWebSearchBackend
 
     public string GetSettingsFieldDescription(string fieldName) => fieldName switch
     {
-        BASE_URL_SETTING => TB("Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint. The instance must have the JSON format enabled, which means 'json' has to be listed under 'search.formats' in its settings.yml. Public instances usually serve only the web interface and additionally block automated requests, so a self-hosted instance is the reliable option."),
+        BASE_URL_SETTING => TA("Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint. The instance must have the JSON format enabled, which means 'json' has to be listed under 'search.formats' in its settings.yml. Public instances usually serve only the web interface and additionally block automated requests, so a self-hosted instance is the reliable option."),
         _ => string.Empty,
     };
 

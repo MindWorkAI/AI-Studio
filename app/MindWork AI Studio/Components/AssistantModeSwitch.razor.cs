@@ -8,13 +8,23 @@ namespace AIStudio.Components;
 /// The button next to the settings of an assistant, which switches to the other option it offers at the
 /// start, e.g., from translating a document to translating a text.
 /// </summary>
+/// <remarks>
+/// It shows the icon of the option it switches to, so that the user sees where it leads, and names it in its
+/// tooltip.
+/// </remarks>
 public partial class AssistantModeSwitch : ComponentBase
 {
     /// <summary>
-    /// The option the button switches to, whose icon and tooltip it shows.
+    /// The option the button switches to, whose icon it shows.
     /// </summary>
     [Parameter, EditorRequired]
-    public AssistantModeOption Option { get; set; }
+    public AssistantModeOption<AssistantContentMode> Option { get; set; }
+
+    /// <summary>
+    /// The tooltip of the button, e.g., "Switch to text translation".
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Tooltip { get; set; } = string.Empty;
 
     /// <summary>
     /// Whether the button is disabled, e.g., while the assistant works.

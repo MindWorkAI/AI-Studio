@@ -38,6 +38,9 @@ public sealed class PluginMetadata(PluginBase plugin, string localPath, bool isM
     public PluginCategory[] Categories { get; } = plugin.Categories;
 
     /// <inheritdoc />
+    public string[] CustomCategories { get; } = plugin.CustomCategories;
+
+    /// <inheritdoc />
     public PluginTargetGroup[] TargetGroups { get; } = plugin.TargetGroups;
 
     /// <inheritdoc />

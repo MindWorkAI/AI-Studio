@@ -102,9 +102,10 @@ public sealed class SettingsStorageTests
         // Every store writes its settings next to the previous ones and renames afterwards. The
         // temporary file carries a name of its own, so two stores cannot collide over it -- but a
         // store which gave up halfway would leave one lying around, and the next start would find
-        // a configuration directory filling up with them.
+        // a configuration directory filling up with them. The pattern covers the names of AtomicFile,
+        // ending in ".tmp", and the earlier ones, ending in ".tmp-" and a GUID.
         //
-        var leftovers = Directory.GetFiles(this.testDirectory, "*.tmp-*").Select(Path.GetFileName).ToList();
+        var leftovers = Directory.GetFiles(this.testDirectory, "*.tmp*").Select(Path.GetFileName).ToList();
         Assert.That(leftovers, Is.Empty, $"Temporary settings files were left behind: {string.Join(", ", leftovers)}.");
     }
 

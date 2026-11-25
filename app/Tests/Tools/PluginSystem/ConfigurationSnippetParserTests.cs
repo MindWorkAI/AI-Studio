@@ -24,9 +24,12 @@ namespace AIStudio.Tests.Tools.PluginSystem;
 /// tables are compared value by value. A parser which read a single string differently than Lua
 /// would hand the import something the configuration plugin of the same snippet never contains.<br/><br/>
 /// Nothing here asserts on the wording of an issue: I18N is process-wide state without a reset, so
-/// an Init somewhere else would decide whether these pass.
+/// an Init somewhere else would decide whether these pass.<br/><br/>
+/// All cases run under de-DE, which writes a decimal comma: an export which wrote a number with the
+/// region settings of the computer would fail the comparison with Lua here.
 /// </remarks>
 [TestFixture]
+[SetCulture("de-DE")]
 public sealed class ConfigurationSnippetParserTests
 {
     /// <summary>

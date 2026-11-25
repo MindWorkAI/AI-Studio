@@ -30,7 +30,10 @@ public partial class PluginInfoDialog : MSGComponentBase
 
     private string AuthorsText => this.Plugin.Authors.Length > 0 ? string.Join(", ", this.Plugin.Authors) : this.T("No authors specified");
 
-    private string CategoriesText => this.Plugin.Categories.Length > 0 ? string.Join(", ", this.Plugin.Categories.Select(category => category.Name)) : this.T("No categories specified");
+    /// <summary>
+    /// The categories of the plugin, with the names it gives its custom categories in place of CUSTOM.
+    /// </summary>
+    private string CategoriesText => this.Plugin.Categories.Length > 0 ? string.Join(", ", this.Plugin.Categories.SelectMany(category => category is PluginCategory.CUSTOM ? this.Plugin.CustomCategories : [category.Name])) : this.T("No categories specified");
 
     private string TargetGroupsText => this.Plugin.TargetGroups.Length > 0 ? string.Join(", ", this.Plugin.TargetGroups.Select(targetGroup => targetGroup.Name)) : this.T("No target groups specified");
 
@@ -52,7 +55,7 @@ public partial class PluginInfoDialog : MSGComponentBase
 
     private string SourceLabel => this.IsSourceAMail ? this.T("Email contact") : this.T("Related link");
 
-    private string SourceIcon => this.IsSourceAMail ? Icons.Material.Filled.ContactMail : Icons.Material.Filled.Link;
+    private string SourceIcon => this.IsSourceAMail ? AppIcons.EMAIL : AppIcons.LINK;
 
     /// <summary>
     /// Shows a link the way the user recognizes it: a mail address without its scheme, and a placeholder

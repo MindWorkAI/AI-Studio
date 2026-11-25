@@ -1,0 +1,32 @@
+@inherits MSGComponentBase
+
+<MudChart T="double" ChartType="ChartType.StackedBar" ChartLabels="@ModelComparisonCharts.ModelLabels(this.Standings.Select(standing => standing.Model))" ChartSeries="@this.OutcomeSeries" ChartOptions="@this.ChartOptions" Width="100%" Height="300px"/>
+<MudSimpleTable Dense="@true" Hover="@true" Class="mt-3">
+    <thead>
+        <tr>
+            <th>@T("Model")</th>
+            <th>@T("Wins")</th>
+            <th>@T("Ties")</th>
+            <th>@T("Losses")</th>
+            <th>@T("Share of wins")</th>
+            <th>@T("Likely range")</th>
+            <th>@T("Assessment")</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var standing in this.Standings)
+        {
+            <tr @key="standing.Model.Key">
+                <td>@standing.Model.Label</td>
+                <td>@standing.Wins.CompactCount()</td>
+                <td>@standing.Ties.CompactCount()</td>
+                <td>@standing.Losses.CompactCount()</td>
+                <td>@ModelComparisonFormat.Share(standing.WinShare.Share)</td>
+                <td>@this.FormatRange(standing.WinShare)</td>
+                <td>
+                    <ModelComparisonAssessment Text="@this.SignificanceText(standing.WinShare.Significance)" Significance="@standing.WinShare.Significance"/>
+                </td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>

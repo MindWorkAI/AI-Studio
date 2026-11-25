@@ -17,7 +17,7 @@ public sealed class BflFieldCatalogTests
     {
         Assert.That(BflStep.All.Select(step => step.ToString()), Is.EqualTo(new[]
         {
-            "FRAMEWORK", "KNOWLEDGE", "GOALS_AND_ROLE", "VALUES_AND_PERSPECTIVES", "STRATEGY", "TEST_SITUATION", "RESULTS",
+            "FRAMEWORK", "GOALS_AND_ROLE", "KNOWLEDGE", "VALUES_AND_PERSPECTIVES", "STRATEGY", "TEST_SITUATION", "RESULTS",
         }));
     }
 
@@ -26,7 +26,7 @@ public sealed class BflFieldCatalogTests
     {
         Assert.That(BflStep.All.Select(step => step.FolderName), Is.EqualTo(new[]
         {
-            "01-framework", "02-knowledge", "03-goals", "04-values", "05-strategy", "06-test", "07-results",
+            "framework", "goals", "knowledge", "values", "strategy", "test", "results",
         }));
     }
 
@@ -35,9 +35,9 @@ public sealed class BflFieldCatalogTests
     {
         Assert.That(BflFieldCatalog.FIELDS.Select(field => field.Id), Is.EqualTo(new[]
         {
-            "format", "event_topic", "audience", "contribution_topic", "event_date", "event_location", "event_duration", "contribution_duration", "other_participants", "event_link",
-            "contribution_summary", "core_theses", "uncertainties", "material_notes",
+            "format", "event_topic", "audience", "event_visibility", "contribution_topic", "event_date", "event_location", "event_duration", "contribution_duration", "other_participants", "event_link",
             "goals", "goal_directions",
+            "contribution_summary", "core_theses", "uncertainties", "material_notes",
             "values_and_concerns", "personal_concern", "other_perspectives",
             "communication_worries",
             "question_type", "difficulty", "test_notes",
@@ -50,6 +50,7 @@ public sealed class BflFieldCatalogTests
     {
         Assert.That(BflFieldCatalog.FIELDS.SelectMany(field => field.Options).Select(option => option.Id), Is.EqualTo(new[]
         {
+            "event_public", "event_not_public",
             "goal_inform", "goal_moderate", "goal_take_position", "goal_raise_awareness", "goal_show_options", "goal_influence_policy",
             "questions_mixed", "questions_scientific_criticism", "questions_emotional_criticism", "questions_manipulative", "questions_political_instrumentalization",
             "difficulty_moderate", "difficulty_demanding", "difficulty_very_demanding",
@@ -70,6 +71,35 @@ public sealed class BflFieldCatalogTests
         var stepsInOrder = BflFieldCatalog.FIELDS.Select(field => field.Step).Distinct();
 
         Assert.That(stepsInOrder, Is.EqualTo(BflStep.All));
+    }
+
+    [Test]
+    public void TheValuesStepShowsTheThreeSectionsOfLarasDialogueLogicInTheirOrder()
+    {
+        var sections = BflFieldCatalog.ForStep(BflStep.VALUES_AND_PERSPECTIVES).Select(field => field.Section).Distinct();
+
+        Assert.That(sections, Is.EqualTo(new[] { BflFormSection.WHAT_MATTERS_TO_ME, BflFormSection.WHAT_TOUCHES_ME, BflFormSection.WHAT_MOVES_OTHERS }));
+    }
+
+    [Test]
+    public void TheFieldsOfASectionFollowEachOtherAndHaveAHeading()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            foreach (var step in BflStep.All)
+            {
+                var sections = BflFieldCatalog.ForStep(step).Select(field => field.Section).ToList();
+                var runs = sections.Where((section, index) => index == 0 || sections[index - 1] != section).ToList();
+                Assert.That(runs, Is.Unique, $"The fields of a section of {step} do not follow each other.");
+                Assert.That(runs.Where(section => section is not BflFormSection.NONE).Select(section => section.Title), Has.None.Empty, $"A section of {step} has no heading.");
+            }
+        }
+    }
+
+    [Test]
+    public void OnlyTheSectionAboutWhatMattersHoldsTheCardSort()
+    {
+        Assert.That(Enum.GetValues<BflFormSection>().Where(section => section.HasCardSort), Is.EqualTo(new[] { BflFormSection.WHAT_MATTERS_TO_ME }));
     }
 
     [Test]
@@ -164,7 +194,21 @@ public sealed class BflFieldCatalogTests
 
         Assert.That(keyDetails, Is.EquivalentTo(new[]
         {
-            BflFieldCatalog.FORMAT, BflFieldCatalog.EVENT_TOPIC, BflFieldCatalog.AUDIENCE, BflFieldCatalog.CONTRIBUTION_TOPIC, BflFieldCatalog.CONTRIBUTION_SUMMARY,
+            BflFieldCatalog.FORMAT, BflFieldCatalog.EVENT_TOPIC, BflFieldCatalog.AUDIENCE, BflFieldCatalog.EVENT_VISIBILITY, BflFieldCatalog.CONTRIBUTION_TOPIC, BflFieldCatalog.CONTRIBUTION_SUMMARY,
         }));
+    }
+
+    [Test]
+    public void WhetherTheEventIsPublicIsASingleChoiceWhichNeverReachesTheResearch()
+    {
+        var visibility = BflFieldCatalog.FIELDS.Single(field => field.Id == BflFieldCatalog.EVENT_VISIBILITY);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(visibility.Step, Is.EqualTo(BflStep.FRAMEWORK));
+            Assert.That(visibility.Kind, Is.EqualTo(BflFieldKind.CHOICE));
+            Assert.That(visibility.Options.Select(option => option.Id), Is.EqualTo(new[] { BflFieldCatalog.EVENT_PUBLIC, BflFieldCatalog.EVENT_NOT_PUBLIC }));
+            Assert.That(visibility.IsSharedWithResearch, Is.False, "The field decides about the research; it is no detail about the event.");
+        }
     }
 }

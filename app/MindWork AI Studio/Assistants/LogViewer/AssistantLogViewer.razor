@@ -16,18 +16,18 @@
                 <MudCheckBox T="bool" Value="@this.autoRefresh" ValueChanged="@this.AutoRefreshChanged" Label="@T("Auto-refresh")" Color="Color.Primary" />
                 @if (!this.autoRefresh)
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.RefreshLogAsync" Disabled="@this.isLoading">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.REFRESH" OnClick="@this.RefreshLogAsync" Disabled="@this.isLoading">
                         @T("Refresh")
                     </MudButton>
                 }
                 <MudNumericField T="int" Value="@this.maxLines" ValueChanged="@this.MaxLinesChanged" Label="@T("Max lines")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="@MIN_MAX_LINES" Max="@MAX_MAX_LINES" Step="500" Class="log-viewer-number" />
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FolderOpen" OnClick="@this.OpenCurrentLogInFileManager" Disabled="@(!this.CanOpenCurrentLogPath)">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@AppIcons.FOLDER_OPEN" OnClick="@this.OpenCurrentLogInFileManager" Disabled="@(!this.CanOpenCurrentLogPath)">
                     @T("Open in folder")
                 </MudButton>
             </MudStack>
 
             <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-1">
-                <MudSelect T="string" Label="@T("Log level")" MultiSelection="@true" SelectedValues="@this.selectedLogLevels" SelectedValuesChanged="@this.SelectedLogLevelsChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Label">
+                <MudSelect T="string" Label="@T("Log level")" MultiSelection="@true" SelectedValues="@this.selectedLogLevels" SelectedValuesChanged="@this.SelectedLogLevelsChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.LOG_LEVEL">
                     @foreach (var option in this.logLevelOptions)
                     {
                         <MudSelectItem T="string" Value="@option">
@@ -35,7 +35,7 @@
                         </MudSelectItem>
                     }
                 </MudSelect>
-                <MudSelect T="string" Label="@T("Logger")" MultiSelection="@true" SelectedValues="@this.selectedLoggers" SelectedValuesChanged="@this.SelectedLoggersChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Source">
+                <MudSelect T="string" Label="@T("Logger")" MultiSelection="@true" SelectedValues="@this.selectedLoggers" SelectedValuesChanged="@this.SelectedLoggersChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.LOGGER">
                     @foreach (var option in this.loggerOptions)
                     {
                         <MudSelectItem T="string" Value="@option">
@@ -43,7 +43,7 @@
                         </MudSelectItem>
                     }
                 </MudSelect>
-                <MudSelect T="string" Label="@T("Source details")" MultiSelection="@true" SelectedValues="@this.selectedSourceDetails" SelectedValuesChanged="@this.SelectedSourceDetailsChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Settings">
+                <MudSelect T="string" Label="@T("Source details")" MultiSelection="@true" SelectedValues="@this.selectedSourceDetails" SelectedValuesChanged="@this.SelectedSourceDetailsChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.LOG_SOURCE_DETAILS">
                     @foreach (var option in this.sourceDetailOptions)
                     {
                         <MudSelectItem T="string" Value="@option">
@@ -55,8 +55,8 @@
             </MudStack>
 
             <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-1">
-                <MudTextField T="string" @bind-Text="@this.FilterText" Immediate="@true" Label="@T("Find")" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="log-viewer-filter" />
-                <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Clear" Disabled="@(!this.HasActiveFilter)" OnClick="@this.ClearFilters">
+                <MudTextField T="string" @bind-Text="@this.FilterText" Immediate="@true" Label="@T("Find")" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.SEARCH" Class="log-viewer-filter" />
+                <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@AppIcons.CLEAR" Disabled="@(!this.HasActiveFilter)" OnClick="@this.ClearFilters">
                     @T("Clear")
                 </MudButton>
                 <MudCheckBox T="bool" @bind-Value="@this.FilterOnly" Label="@T("Filter only")" Color="Color.Primary" />
@@ -89,7 +89,7 @@
                 else if (this.displayLines.Count == 0)
                 {
                     <div class="log-viewer-empty">
-                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" />
+                        <MudIcon Icon="@AppIcons.SEARCH_NO_RESULTS" />
                         <MudText Typo="Typo.body2">@T("No matching log lines.")</MudText>
                     </div>
                 }

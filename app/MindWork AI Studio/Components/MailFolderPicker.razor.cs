@@ -169,7 +169,7 @@ public partial class MailFolderPicker : MSGComponentBase
             {
                 Value = string.Empty,
                 Text = wholeMailboxText,
-                Icon = Icons.Material.Filled.Mail,
+                Icon = AppIcons.MAILBOX,
                 Expanded = true,
                 Expandable = topLevelFolders.Count > 0,
                 Children = topLevelFolders,
@@ -215,20 +215,20 @@ public partial class MailFolderPicker : MSGComponentBase
     private static string GetIcon(MailServerFolder folder)
     {
         if (folder.IsInbox)
-            return Icons.Material.Filled.Inbox;
+            return AppIcons.MAIL_FOLDER_INBOX;
 
         return folder.SpecialUse switch
         {
-            MailFolderSpecialUse.ALL => Icons.Material.Filled.AllInbox,
-            MailFolderSpecialUse.ARCHIVE => Icons.Material.Filled.Archive,
-            MailFolderSpecialUse.DRAFTS => Icons.Material.Filled.Drafts,
-            MailFolderSpecialUse.FLAGGED => Icons.Material.Filled.Flag,
-            MailFolderSpecialUse.IMPORTANT => Icons.Material.Filled.LabelImportant,
-            MailFolderSpecialUse.JUNK => Icons.Material.Filled.Report,
-            MailFolderSpecialUse.SENT => Icons.Material.Filled.Send,
-            MailFolderSpecialUse.TRASH => Icons.Material.Filled.Delete,
+            MailFolderSpecialUse.ALL => AppIcons.MAIL_FOLDER_ALL,
+            MailFolderSpecialUse.ARCHIVE => AppIcons.MAIL_FOLDER_ARCHIVE,
+            MailFolderSpecialUse.DRAFTS => AppIcons.DRAFT,
+            MailFolderSpecialUse.FLAGGED => AppIcons.FLAGGED,
+            MailFolderSpecialUse.IMPORTANT => AppIcons.MAIL_FOLDER_IMPORTANT,
+            MailFolderSpecialUse.JUNK => AppIcons.MAIL_FOLDER_JUNK,
+            MailFolderSpecialUse.SENT => AppIcons.MAIL_FOLDER_SENT,
+            MailFolderSpecialUse.TRASH => AppIcons.MAIL_FOLDER_TRASH,
 
-            _ => Icons.Material.Filled.Folder,
+            _ => AppIcons.FOLDER,
         };
     }
 }

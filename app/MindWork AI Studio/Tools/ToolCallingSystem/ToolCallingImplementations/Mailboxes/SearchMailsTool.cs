@@ -31,6 +31,8 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SearchMailsTool).Namespace, nameof(SearchMailsTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(SearchMailsTool).Namespace, nameof(SearchMailsTool));
+
     private const string QUERY_ARGUMENT = "query";
     private const string PAGE_ARGUMENT = "page";
     private const string TOOL_ACTION = "search";
@@ -135,11 +137,11 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
     internal static ToolFunctionDefinition DescribeMailboxes(ToolFunctionDefinition function, IReadOnlyList<DataSourceMailbox> mailboxes)
     {
         var description = new StringBuilder(DESCRIPTION);
-        description.AppendLine();
-        description.AppendLine();
-        description.AppendLine($"The mailboxes you may search, by the ID to pass in {MailToolArguments.MAILBOX_IDS_ARGUMENT}:");
+        description.AppendLineLF();
+        description.AppendLineLF();
+        description.AppendLineLF($"The mailboxes you may search, by the ID to pass in {MailToolArguments.MAILBOX_IDS_ARGUMENT}:");
         foreach (var mailbox in mailboxes)
-            description.AppendLine($"- id={mailbox.Id}, name='{mailbox.Name}'");
+            description.AppendLineLF($"- id={mailbox.Id}, name='{mailbox.Name}'");
 
         return function with
         {
@@ -167,7 +169,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
         .Where(mailbox => mailbox.MaxMatches > 0)
         .ToList();
 
-    public string Icon => Icons.Material.Filled.Mail;
+    public string Icon => AppIcons.MAIL_SEARCH;
 
     // Only while both previews are switched on, the one for local RAG and the one for mailboxes:
     public bool IsAvailable => retrievalService.AreMailboxesEnabled;
@@ -187,7 +189,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 
     public string GetDisplayName() => TB("Search Mails");
 
-    public string GetDescription() => TB("Lets the AI search your mailboxes, list mails by sender, date, or flags, and quote what they say.");
+    public string GetDescription() => TA("Lets the AI search your mailboxes, list mails by sender, date, or flags, and quote what they say.");
 
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(ToolDefinition definition, IReadOnlyDictionary<string, string> settingsValues, CancellationToken token = default) =>
         Task.FromResult(MailToolConfiguration.GetState(settingsManager));

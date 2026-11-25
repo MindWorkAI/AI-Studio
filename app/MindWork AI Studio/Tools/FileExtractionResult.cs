@@ -46,6 +46,15 @@ public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome
     /// </summary>
     public bool HasFilteredPromptInjections => this.PromptInjectionRedactedCount > 0;
 
+    /// <summary>
+    /// Gets a value indicating whether the content holds only the beginning of the file, because the caller limited
+    /// how many characters it keeps.
+    /// </summary>
+    /// <remarks>
+    /// Not a failure either: the beginning is intact, and the caller asked for no more of it.
+    /// </remarks>
+    public bool IsShortened { get; init; }
+
     public static FileExtractionResult Success(string content, string? detectedFormat = null) => new(FileExtractionOutcome.SUCCESS, content, FileExtractionErrorCode.NONE, null, NO_FAILED_PAGES, detectedFormat);
 
     public static FileExtractionResult Partial(string content, IReadOnlyList<int> failedPages, string? detectedFormat = null) => new(FileExtractionOutcome.PARTIAL, content, FileExtractionErrorCode.PAGE_EXTRACTION_FAILED, null, failedPages, detectedFormat);

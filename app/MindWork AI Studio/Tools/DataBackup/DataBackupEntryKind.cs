@@ -47,6 +47,11 @@ public enum DataBackupEntryKind
     BEYOND_FACTS_LAB,
 
     /// <summary>
+    /// The presets, the results, and the comparison series with their chats of the Model Comparison assistant.
+    /// </summary>
+    MODEL_COMPARISONS,
+
+    /// <summary>
     /// The SQLite index of the data sources: which files are embedded, and their text chunks.
     /// </summary>
     DATA_SOURCE_INDEX,

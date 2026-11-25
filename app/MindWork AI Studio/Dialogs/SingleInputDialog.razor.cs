@@ -49,12 +49,12 @@ public partial class SingleInputDialog : MSGComponentBase
 
     #endregion
 
-    private string GetInputHeaderText => string.IsNullOrWhiteSpace(this.InputHeaderText) ? T("Your Input") : this.InputHeaderText;
+    private string GetInputHeaderText => string.IsNullOrWhiteSpace(this.InputHeaderText) ? TA("Your Input") : this.InputHeaderText;
     
     private string? ValidateUserInput(string? value)
     {
         if (!this.AllowEmptyInput && string.IsNullOrWhiteSpace(value))
-            return string.IsNullOrWhiteSpace(this.EmptyInputErrorMessage) ? T("Please enter a value.") : this.EmptyInputErrorMessage;
+            return string.IsNullOrWhiteSpace(this.EmptyInputErrorMessage) ? TA("Please enter a value.") : this.EmptyInputErrorMessage;
 
         return this.AdditionalValidation?.Invoke(value);
     }
@@ -63,15 +63,8 @@ public partial class SingleInputDialog : MSGComponentBase
     
     private async Task HandleUserInputKeyDown(KeyboardEventArgs keyEvent)
     {
-        var key = keyEvent.Key.ToLowerInvariant();
-        var code = keyEvent.Code.ToLowerInvariant();
-        if (key is not "enter" && code is not "enter" and not "numpadenter")
-            return;
-        
-        if (keyEvent is { AltKey: true } or { CtrlKey: true } or { MetaKey: true })
-            return;
-        
-        await this.Confirm();
+        if (keyEvent.IsPlainEnter)
+            await this.Confirm();
     }
 
     private async Task Confirm()

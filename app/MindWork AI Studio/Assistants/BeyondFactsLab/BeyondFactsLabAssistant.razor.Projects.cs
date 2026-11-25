@@ -87,6 +87,9 @@ public partial class BeyondFactsLabAssistant
             var project = await this.Store.CreateAsync(name);
             await this.Store.RememberSelectionAsync(project.ProjectId);
             await this.ReloadProjectsAsync(project.ProjectId);
+
+            // The new preparation comes into view:
+            this.introductionExpanded = false;
         });
     }
 
@@ -122,7 +125,7 @@ public partial class BeyondFactsLabAssistant
             {
                 dialog => dialog.Message,
                 project.IsAvailable
-                    ? string.Format(TA("Permanently delete the preparation '{0}' with all of its steps, chats, and work states?"), project.Name)
+                    ? string.Format(TA("Permanently delete the preparation '{0}' with all of its steps, chats, material, and work states?"), project.Name)
                     : TA("This preparation cannot be opened. Permanently delete it with all of its files?")
             },
         };
@@ -204,7 +207,7 @@ public partial class BeyondFactsLabAssistant
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException)
         {
             this.Logger.LogError(exception, "A change of the preparations of the BeyondFacts Lab failed.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.RecordVoiceOver, TA("AI Studio could not save the change of your preparations. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_BEYOND_FACTS_LAB, TA("AI Studio could not save the change to your preparations. Please try again.")));
             await this.ReloadAfterFailureAsync();
         }
         finally
@@ -234,9 +237,9 @@ public partial class BeyondFactsLabAssistant
     /// <param name="project">The preparation.</param>
     private static string ProjectIcon(BflProjectEntry project) => project switch
     {
-        { IsAvailable: false } => Icons.Material.Filled.WarningAmber,
-        { Project.HappenedAtUtc: not null } => Icons.Material.Filled.EventAvailable,
-        _ => Icons.Material.Filled.Event,
+        { IsAvailable: false } => AppIcons.WARNING,
+        { Project.HappenedAtUtc: not null } => AppIcons.EVENT_TOOK_PLACE,
+        _ => AppIcons.EVENT,
     };
 
     /// <summary>

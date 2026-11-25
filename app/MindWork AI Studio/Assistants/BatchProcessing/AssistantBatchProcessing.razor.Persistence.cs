@@ -106,9 +106,9 @@ public partial class AssistantBatchProcessing
     private async Task WriteLogAsync(string resolvedOutputDirectory)
     {
         var sb = new StringBuilder();
-        sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details"), T("Tools used")));
+        sb.Append(CsvWriter.ToRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details"), T("Tools used"))).Append(CsvWriter.ROW_END);
         foreach (var fileResult in this.fileResults.Where(x => x.Status is not BatchProcessingFileStatus.QUEUED and not BatchProcessingFileStatus.PROCESSING))
-            sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message, fileResult.UsedTools));
+            sb.Append(CsvWriter.ToRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message, fileResult.UsedTools)).Append(CsvWriter.ROW_END);
 
         await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, LOG_FILENAME), sb.ToString());
     }
@@ -120,40 +120,28 @@ public partial class AssistantBatchProcessing
     {
         var separator = this.csvSeparator.Character(this.customCsvSeparator);
         var sb = new StringBuilder();
-        sb.AppendLine(CsvWriter.ToRow(separator, T("File"), this.ResultColumnHeader));
+        sb.Append(CsvWriter.ToRow(separator, T("File"), this.ResultColumnHeader)).Append(CsvWriter.ROW_END);
         foreach (var fileResult in this.fileResults.Where(x => x.Status is BatchProcessingFileStatus.DONE))
-            sb.AppendLine(CsvWriter.ToRow(separator, fileResult.RelativePath, fileResult.ResultText));
+            sb.Append(CsvWriter.ToRow(separator, fileResult.RelativePath, fileResult.ResultText)).Append(CsvWriter.ROW_END);
 
         await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, this.ResolveResultsFileName()), sb.ToString());
     }
 
     private async Task WriteCsvFileAsync(string targetFilePath, string content)
     {
-        // Write to a sibling file first, then rename. This way, an aborted
-        // write can never destroy the results of the previous files:
-        var tempFilePath = targetFilePath + ".tmp";
         try
         {
-            // We write the CSV file with a byte order mark, so that spreadsheet
-            // applications recognize the UTF-8 encoding of, e.g., umlauts:
-            await File.WriteAllTextAsync(tempFilePath, content, new UTF8Encoding(true), CancellationToken.None);
-            File.Move(tempFilePath, targetFilePath, true);
+            // AtomicFile writes to a sibling file first, then renames it. This way, an aborted
+            // write can never destroy the results of the previous files. It also removes the
+            // sibling file when the write fails, so that it neither looks like a result to the
+            // user nor piles up over several runs. We write the CSV file with a byte order
+            // mark, so that spreadsheet applications recognize the UTF-8 encoding of, e.g.,
+            // umlauts:
+            await AtomicFile.WriteTextAsync(targetFilePath, content, new UTF8Encoding(true), CancellationToken.None, logger: this.Logger);
         }
         catch (Exception e)
         {
             this.Logger.LogError(e, "Was not able to write the batch output file '{TargetFilePath}'.", targetFilePath);
-
-            // Remove our leftover: a failing rename keeps the temporary file in
-            // the output folder, where it looks like a result to the user and
-            // piles up over several runs.
-            try
-            {
-                File.Delete(tempFilePath);
-            }
-            catch (Exception deleteError)
-            {
-                this.Logger.LogWarning(deleteError, "Was not able to remove the temporary file '{TempFilePath}'.", tempFilePath);
-            }
 
             // A failing write repeats for every document. We report it once per
             // run: without any message, the UI would show a successful run
@@ -162,7 +150,7 @@ public partial class AssistantBatchProcessing
                 return;
 
             this.hasReportedWriteFailure = true;
-            await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, string.Format(T("Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"), Path.GetFileName(targetFilePath), e.Message)));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, string.Format(TA("Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"), Path.GetFileName(targetFilePath), e.Message)));
         }
     }
 
@@ -195,7 +183,7 @@ public partial class AssistantBatchProcessing
 
             // Without this message, continuing the run would silently process
             // every document again, because we recognize nothing as completed:
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Was not able to read the log of the previous run. Continuing the run would process all documents again.")));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, T("Was not able to read the log of the previous run. Continuing the run would process all documents again.")));
         }
 
         return entries;
@@ -227,7 +215,7 @@ public partial class AssistantBatchProcessing
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Was not able to read the results table of the previous batch run at '{ResultsFilePath}'.", resultsFilePath);
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.")));
+            await this.MessageBus.SendWarning(new(AppIcons.WARNING, T("Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.")));
         }
 
         return results;

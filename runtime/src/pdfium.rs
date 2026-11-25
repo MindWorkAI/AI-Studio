@@ -66,7 +66,7 @@ fn load_pdfium() -> Result<Pdfium, String> {
                     },
                     Err(system_error) => {
                         let error_message = format!(
-                            "Failed to load PDFium from '{path}' and the system library. Developer action (from repo root): run the build script once to download the required PDFium version: `cd app/Build` and `dotnet run build`. Details: library error: '{library_error}'; system error: '{system_error}'."
+                            "Failed to load PDFium from '{path}' and the system library. Developer action (from repo root): run the build script once to download the required PDFium version: `cd app/Build` and `dotnet run -- build`. Details: library error: '{library_error}'; system error: '{system_error}'."
                         );
 
                         error!("{error_message}");
@@ -85,11 +85,48 @@ fn load_pdfium() -> Result<Pdfium, String> {
         },
         Err(system_error) => {
             let error_message = format!(
-                "Failed to load PDFium from the system library. Developer action (from repo root): run the build script once to download the required PDFium version: `cd app/Build` and `dotnet run build`. Details: '{system_error}'."
+                "Failed to load PDFium from the system library. Developer action (from repo root): run the build script once to download the required PDFium version: `cd app/Build` and `dotnet run -- build`. Details: '{system_error}'."
             );
 
             error!("{error_message}");
             Err(error_message)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    /// pdfium-render refuses a PDFium library which lacks a function of the version its feature names.
+    /// Its default features name the newest PDFium it knows, which changes with updates of the crate,
+    /// while we ship the PDFium of line 10 of metadata.txt. A mismatch makes every PDF fail to open,
+    /// and no other test notices, since none of them loads the library.
+    #[test]
+    fn binds_the_api_of_the_shipped_pdfium() {
+        let pdfium_version = include_str!("../../metadata.txt").lines().nth(9).expect("metadata.txt must name the PDFium version in line 10");
+        let chromium_revision = pdfium_version.trim().split('.').nth(2).expect("the PDFium version must have the form 148.0.7763.0");
+        let expected_feature = format!("pdfium_{chromium_revision}");
+
+        let manifest: toml::Table = toml::from_str(include_str!("../Cargo.toml")).expect("Cargo.toml must be valid TOML");
+        let dependency = &manifest["dependencies"]["pdfium-render"];
+        assert_eq!(
+            dependency.get("default-features").and_then(toml::Value::as_bool),
+            Some(false),
+            "pdfium-render must not use its default features: they bind the newest PDFium the crate knows, not the one we ship.",
+        );
+
+        let api_features: Vec<&str> = dependency.get("features")
+            .and_then(toml::Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(toml::Value::as_str)
+            .filter(|feature| feature.strip_prefix("pdfium_").is_some_and(|version| version == "latest" || version.chars().all(|c| c.is_ascii_digit())))
+            .collect();
+
+        assert_eq!(
+            api_features,
+            [expected_feature.as_str()],
+            "The feature of pdfium-render must name the PDFium version in metadata.txt. Change both together.",
+        );
     }
 }

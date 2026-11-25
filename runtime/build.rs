@@ -136,11 +136,11 @@ fn update_cargo_toml(cargo_path: &str, version: &str) {
     let cargo_toml_lines = cargo_toml.lines();
     let mut new_cargo_toml = String::new();
 
-    // Return early when the version already matches to avoid unnecessary rewrites.
+    // Return early when the version already matches to avoid unnecessary rewrites. The version of the
+    // package is the one line which starts with `version = `, the same line the loop below replaces:
+    //  version = "26.11.1"
     let current_version = cargo_toml.lines().find_map(|line| {
-        let trimmed = line.trim_start();
-        let rest = trimmed.strip_prefix("\"version\": ")?;
-        let quoted = rest.strip_prefix('"')?;
+        let quoted = line.strip_prefix("version = \"")?;
         let end_idx = quoted.find('"')?;
         Some(&quoted[..end_idx])
     });

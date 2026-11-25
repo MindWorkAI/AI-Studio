@@ -17,7 +17,7 @@ public partial class CompactExpansionPanel : ComponentBase
     public string HeaderText { get; set; } = string.Empty;
 
     [Parameter]
-    public string HeaderIcon { get; set; } = Icons.Material.Filled.Tune;
+    public string HeaderIcon { get; set; } = AppIcons.ADVANCED_SETTINGS;
 
     [Parameter]
     public Color IconColor { get; set; } = Color.Inherit;
@@ -33,6 +33,16 @@ public partial class CompactExpansionPanel : ComponentBase
 
     [Parameter]
     public EventCallback<bool> ExpandedChanged { get; set; }
+
+    /// <summary>
+    /// Whether the content stays rendered while the panel is collapsed.
+    /// </summary>
+    /// <remarks>
+    /// By default, a collapsed panel drops its content, and a form around it no longer knows the fields inside. A panel
+    /// with fields which the form has to check also while it is collapsed sets this.
+    /// </remarks>
+    [Parameter]
+    public bool KeepContentAlive { get; set; }
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }

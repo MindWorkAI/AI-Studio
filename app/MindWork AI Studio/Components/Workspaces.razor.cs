@@ -137,7 +137,7 @@ public partial class Workspaces : MSGComponentBase
                 workspace.WorkspaceId != excludedWorkspaceId &&
                 string.Equals(WorkspaceBehaviour.NormalizeWorkspaceName(workspace.Name), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
 
-            return nameExists ? T("There is already a workspace with this name. Please choose a different name.") : null;
+            return nameExists ? TA("There is already a workspace with this name. Please choose a different name.") : null;
         };
     }
 
@@ -152,7 +152,7 @@ public partial class Workspaces : MSGComponentBase
         workspaceChildren.Add(new TreeItemData<ITreeItem>
         {
             Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, T("Add workspace"), Icons.Material.Filled.LibraryAdd, this.AddWorkspaceAsync),
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 1, T("Add workspace"), AppIcons.ADD_WORKSPACE, this.AddWorkspaceAsync),
         });
 
         this.treeItems.Add(new TreeItemData<ITreeItem>
@@ -164,7 +164,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 0,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = T("Workspaces"),
-                Icon = Icons.Material.Filled.Folder,
+                Icon = AppIcons.FOLDER,
                 Expandable = true,
                 Path = "root",
                 Children = workspaceChildren,
@@ -179,7 +179,7 @@ public partial class Workspaces : MSGComponentBase
         
         var temporaryChatsChildren = new List<TreeItemData<ITreeItem>>();
         foreach (var temporaryChat in snapshot.TemporaryChats.OrderByDescending(x => x.LastEditTime))
-            temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
+            temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: AppIcons.TEMPORARY_CHAT));
 
         this.treeItems.Add(new TreeItemData<ITreeItem>
         {
@@ -190,7 +190,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 0,
                 Branch = WorkspaceBranch.TEMPORARY_CHATS,
                 Text = T("Disappearing Chats"),
-                Icon = Icons.Material.Filled.Timer,
+                Icon = AppIcons.TEMPORARY_CHAT,
                 Expandable = true,
                 Path = "temp",
                 Children = temporaryChatsChildren,
@@ -204,7 +204,7 @@ public partial class Workspaces : MSGComponentBase
         if (workspace.ChatsLoaded)
         {
             foreach (var workspaceChat in workspace.Chats.OrderByDescending(x => x.LastEditTime))
-                children.Add(this.CreateChatTreeItem(workspaceChat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
+                children.Add(this.CreateChatTreeItem(workspaceChat, WorkspaceBranch.WORKSPACES, depth: 2, icon: AppIcons.CHAT));
         }
         else if (this.loadingWorkspaceChatLists.Contains(workspace.WorkspaceId))
             children.AddRange(this.CreateLoadingRows(workspace.WorkspacePath));
@@ -212,7 +212,7 @@ public partial class Workspaces : MSGComponentBase
         children.Add(new TreeItemData<ITreeItem>
         {
             Expandable = false,
-            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, T("Add chat"), Icons.Material.Filled.AddComment, () => this.AddChatAsync(workspace.WorkspacePath)),
+            Value = new TreeButton(WorkspaceBranch.WORKSPACES, 2, T("Add chat"), AppIcons.NEW_CHAT, () => this.AddChatAsync(workspace.WorkspacePath)),
         });
 
         return new TreeItemData<ITreeItem>
@@ -224,7 +224,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 1,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = workspace.Name,
-                Icon = Icons.Material.Filled.Description,
+                Icon = AppIcons.WORKSPACE,
                 Expandable = true,
                 Path = workspace.WorkspacePath,
                 Children = children,
@@ -253,7 +253,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 2,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = T("Loading chats..."),
-                Icon = Icons.Material.Filled.HourglassTop,
+                Icon = AppIcons.PENDING,
                 Expandable = false,
                 Path = Path.Join(workspacePath, suffix),
             },
@@ -296,7 +296,7 @@ public partial class Workspaces : MSGComponentBase
                     Depth = 0,
                     Branch = WorkspaceBranch.NONE,
                     Text = T("No chats found"),
-                    Icon = Icons.Material.Filled.Search,
+                    Icon = AppIcons.SEARCH_NO_RESULTS,
                     Expandable = false,
                     Path = "search_empty",
                 },
@@ -320,7 +320,7 @@ public partial class Workspaces : MSGComponentBase
                     Depth = 0,
                     Branch = WorkspaceBranch.WORKSPACES,
                     Text = T("Workspaces"),
-                    Icon = Icons.Material.Filled.Folder,
+                    Icon = AppIcons.FOLDER,
                     Expandable = true,
                     Path = "search_workspaces",
                     Children = workspaceChildren,
@@ -341,7 +341,7 @@ public partial class Workspaces : MSGComponentBase
         {
             var temporaryChatsChildren = new List<TreeItemData<ITreeItem>>();
             foreach (var temporaryChat in snapshot.TemporaryChats)
-                temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat.Chat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
+                temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat.Chat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: AppIcons.TEMPORARY_CHAT));
 
             this.treeItems.Add(new TreeItemData<ITreeItem>
             {
@@ -352,7 +352,7 @@ public partial class Workspaces : MSGComponentBase
                     Depth = 0,
                     Branch = WorkspaceBranch.TEMPORARY_CHATS,
                     Text = T("Disappearing Chats"),
-                    Icon = Icons.Material.Filled.Timer,
+                    Icon = AppIcons.TEMPORARY_CHAT,
                     Expandable = true,
                     Path = "search_temp",
                     Children = temporaryChatsChildren,
@@ -365,7 +365,7 @@ public partial class Workspaces : MSGComponentBase
     {
         var children = new List<TreeItemData<ITreeItem>>();
         foreach (var chat in workspace.Chats)
-            children.Add(this.CreateChatTreeItem(chat.Chat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
+            children.Add(this.CreateChatTreeItem(chat.Chat, WorkspaceBranch.WORKSPACES, depth: 2, icon: AppIcons.CHAT));
 
         return new TreeItemData<ITreeItem>
         {
@@ -377,7 +377,7 @@ public partial class Workspaces : MSGComponentBase
                 Depth = 1,
                 Branch = WorkspaceBranch.WORKSPACES,
                 Text = workspace.Name,
-                Icon = Icons.Material.Filled.Description,
+                Icon = AppIcons.WORKSPACE,
                 Expandable = true,
                 Path = workspace.WorkspacePath,
                 Children = children,
@@ -437,12 +437,12 @@ public partial class Workspaces : MSGComponentBase
         {
             return mediaStatus switch
             {
-                MediaImportStatus.QUEUED => Icons.Material.Filled.HourglassTop,
-                MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => Icons.Material.Filled.ChangeCircle,
-                MediaImportStatus.SUCCEEDED => Icons.Material.Filled.TaskAlt,
-                MediaImportStatus.WARNING => Icons.Material.Filled.WarningAmber,
-                MediaImportStatus.FAILED => Icons.Material.Filled.Error,
-                MediaImportStatus.CANCELLED => Icons.Material.Filled.Cancel,
+                MediaImportStatus.QUEUED => AppIcons.PENDING,
+                MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => AppIcons.RUNNING,
+                MediaImportStatus.SUCCEEDED => AppIcons.SUCCESS,
+                MediaImportStatus.WARNING => AppIcons.WARNING,
+                MediaImportStatus.FAILED => AppIcons.ERROR,
+                MediaImportStatus.CANCELLED => AppIcons.CANCELED,
                 
                 _ => defaultIcon,
             };
@@ -454,11 +454,19 @@ public partial class Workspaces : MSGComponentBase
 
         return snapshot.Status switch
         {
-            AIJobStatus.WAITING_FOR_REMOTE => Icons.Material.Filled.HourglassTop,
-            AIJobStatus.RUNNING => Icons.Material.Filled.ChangeCircle,
+            AIJobStatus.WAITING_FOR_REMOTE => AppIcons.PENDING,
+            AIJobStatus.RUNNING => AppIcons.RUNNING,
             _ => defaultIcon,
         };
     }
+
+    /// <summary>
+    /// Colors the icon of a chat red when its media transcription failed, like every other error icon.
+    /// </summary>
+    /// <param name="treeItem">The chat in the tree.</param>
+    private Color GetChatTreeIconColor(TreeItemData treeItem) => this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(treeItem.ChatId))?.Status is MediaImportStatus.FAILED
+        ? Color.Error
+        : Color.Default;
 
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
@@ -696,6 +704,24 @@ public partial class Workspaces : MSGComponentBase
         return copy;
     }
 
+    /// <summary>
+    /// Copies the given chat under the given name, changes the copy before it is stored, and shows the copy in the tree.
+    /// </summary>
+    /// <remarks>
+    /// For a caller which already knows the name, such as compressing a chat. Like
+    /// CopyChatAsync(ChatThread), it neither asks about unsaved changes nor opens the copy.
+    /// </remarks>
+    /// <param name="sourceChat">The chat to copy, as it stands in memory.</param>
+    /// <param name="name">The name of the copy.</param>
+    /// <param name="reshape">Changes the copy before it is stored, see WorkspaceBehaviour.CopyChatAsync.</param>
+    /// <returns>The persisted copy.</returns>
+    public async Task<ChatThread> CopyChatAsync(ChatThread sourceChat, string name, Action<ChatThread> reshape)
+    {
+        var copy = await WorkspaceBehaviour.CopyChatAsync(sourceChat, name, reshape);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+        return copy;
+    }
+
     private async Task<ChatThread?> LoadChatAsync(string? chatPath, bool switchToChat)
     {
         if (string.IsNullOrWhiteSpace(chatPath))
@@ -708,7 +734,7 @@ public partial class Workspaces : MSGComponentBase
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
+                { x => x.Message, TA("Are you sure you want to load another chat? All unsaved changes will be lost.") },
             };
             
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Load Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -792,13 +818,13 @@ public partial class Workspaces : MSGComponentBase
         
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { x => x.Message, string.Format(T("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
+            { x => x.Message, string.Format(TA("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
             { x => x.InputHeaderText, T("Chat Name") },
             { x => x.UserInput, chat.Name },
             { x => x.ConfirmText, T("Rename") },
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
-            { x => x.EmptyInputErrorMessage, T("Please enter a chat name.") },
+            { x => x.EmptyInputErrorMessage, TA("Please enter a chat name.") },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -852,8 +878,8 @@ public partial class Workspaces : MSGComponentBase
                 {
                     x => x.Message, isCopyOfOpenChat switch
                     {
-                        true => T("Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with."),
-                        false => T("Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost."),
+                        true => TA("Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with."),
+                        false => TA("Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost."),
                     }
                 },
             };
@@ -882,13 +908,13 @@ public partial class Workspaces : MSGComponentBase
         var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(workspaceId);
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { x => x.Message, string.Format(T("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
+            { x => x.Message, string.Format(TA("Please enter a new or edit the name for your workspace '{0}':"), workspaceName) },
             { x => x.InputHeaderText, T("Workspace Name") },
             { x => x.UserInput, workspaceName },
             { x => x.ConfirmText, T("Rename") },
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
-            { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
+            { x => x.EmptyInputErrorMessage, TA("Please enter a workspace name.") },
             { x => x.AdditionalValidation, await this.CreateWorkspaceNameValidationAsync(workspaceId, workspaceName) },
         };
         
@@ -909,13 +935,13 @@ public partial class Workspaces : MSGComponentBase
     {
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { x => x.Message, T("Please name your workspace:") },
+            { x => x.Message, TA("Please name your workspace:") },
             { x => x.InputHeaderText, T("Workspace Name") },
             { x => x.UserInput, string.Empty },
             { x => x.ConfirmText, T("Add workspace") },
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
-            { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
+            { x => x.EmptyInputErrorMessage, TA("Please enter a workspace name.") },
             { x => x.AdditionalValidation, await this.CreateWorkspaceNameValidationAsync() },
         };
         
@@ -955,7 +981,7 @@ public partial class Workspaces : MSGComponentBase
         var chatCount = Directory.EnumerateDirectories(workspacePath).Count();
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace."), workspaceName, chatCount) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -999,7 +1025,7 @@ public partial class Workspaces : MSGComponentBase
         return chatIds;
     }
 
-    private Task WarnAboutBusyWorkspaceAsync(string workspaceName) => MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FolderDelete, string.Format(T("The workspace '{0}' cannot be deleted while one of its chats is being answered or transcribed. Please try again once that is finished."), workspaceName)));
+    private Task WarnAboutBusyWorkspaceAsync(string workspaceName) => MessageBus.INSTANCE.SendWarning(new(AppIcons.DELETE, string.Format(TA("The workspace '{0}' cannot be deleted while one of its chats is being answered or transcribed. Please try again once that is finished."), workspaceName)));
     
     /// <summary>
     /// Moves the given chat into another workspace and shows it there in the tree.
@@ -1039,7 +1065,7 @@ public partial class Workspaces : MSGComponentBase
         
         var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
-            { x => x.Message, T("Please select the workspace where you want to move the chat to.") },
+            { x => x.Message, TA("Please select the workspace where you want to move the chat to.") },
             { x => x.SelectedWorkspace, chat.WorkspaceId },
             { x => x.ConfirmText, T("Move chat") },
         };

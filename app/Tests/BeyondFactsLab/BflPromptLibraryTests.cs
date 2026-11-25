@@ -24,6 +24,16 @@ public sealed class BflPromptLibraryTests
     /// </remarks>
     private const int MAX_FIXED_PROMPT_CHARACTERS = 90_000;
 
+    /// <summary>
+    /// How many characters the fixed part of the prompt of the onboarding may have: the prompt and the longest form of
+    /// address.
+    /// </summary>
+    /// <remarks>
+    /// About 4,000 tokens. The onboarding asks for no minimum context window, unlike the steps, so it has to leave room
+    /// for a conversation in small models as well.
+    /// </remarks>
+    private const int MAX_ONBOARDING_PROMPT_CHARACTERS = 16_000;
+
     [Test]
     public async Task EveryPromptComesWithTheApp()
     {
@@ -46,6 +56,38 @@ public sealed class BflPromptLibraryTests
     }
 
     [Test]
+    public async Task EveryPromptUsesOnlyThePlaceholdersTheLabFillsInIt()
+    {
+        foreach (var path in BflPromptLibrary.AllPaths)
+            Assert.That(BflPromptTemplate.NamesIn(await BflPromptLibrary.ReadBuiltInAsync(path)), Is.SubsetOf(BflPromptLibrary.PlaceholdersOf(path)), path);
+    }
+
+    [Test]
+    public void TheComposerFillsEveryPlaceholderAPromptMayContain()
+    {
+        var core = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.CORE_PATH).Select(name => $"{{{{{name}}}}}"));
+        var onboarding = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.ONBOARDING_PATH).Select(name => $"{{{{{name}}}}}"));
+        var workState = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.WORK_STATE_PATH).Select(name => $"{{{{{name}}}}}"));
+        var result = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.ResultPath(BflResultKind.POSITION_PAPER)).Select(name => $"{{{{{name}}}}}"));
+        var research = string.Join("\n", BflPromptLibrary.PlaceholdersOf(BflPromptLibrary.RESEARCH_PATH).Select(name => $"{{{{{name}}}}}"));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflPromptComposer.Compose(new(core, "Leitfaden", "Schritt", "Anrede", "Vorgaben"), BflStep.FRAMEWORK, new Dictionary<BflStep, BflStepFormData>(), [], "Deutsch"), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.ComposeOnboarding(new(onboarding, "Anrede", "Vorgaben"), "Deutsch"), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.ComposeWorkStateRequest(workState, BflStep.FRAMEWORK, new BflStepFormData()), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.ComposeResultRequest(result, new Dictionary<BflStep, BflWorkState>()), Does.Not.Contain("{{"));
+            Assert.That(BflPromptComposer.ComposeResearch(new(research, "Auftrag"), [], "Deutsch"), Does.Not.Contain("{{"));
+        }
+    }
+
+    [Test]
+    public void EveryPromptLiesInTheFolderOfTheLab()
+    {
+        Assert.That(BflPromptLibrary.AllPaths.Select(BflPromptLibrary.RelativePath), Is.Unique.And.All.Not.StartWith("/"));
+    }
+
+    [Test]
     public async Task AMissingPromptIsAnError()
     {
         await Assert.ThrowsAsync<FileNotFoundException>(async () => await BflPromptLibrary.ReadAsync("Assistants/BeyondFactsLab/Prompts/does-not-exist.md"));
@@ -60,10 +102,43 @@ public sealed class BflPromptLibraryTests
         foreach (var step in BflStep.All)
             longestStep = Math.Max(longestStep, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.StepPath(step))).Length);
 
+        // The step "Test situation" carries the simulation of people from the research as well:
+        var longestSimulation = 0;
+        foreach (var mode in BflSimulationMode.All)
+            longestSimulation = Math.Max(longestSimulation, (await BflPromptLibrary.LoadPartsAsync(BflStep.TEST_SITUATION, AddressForm.FORMAL, simulation: mode)).Simulation.Length);
+
+        longestStep = Math.Max(longestStep, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.StepPath(BflStep.TEST_SITUATION))).Length + longestSimulation + 2);
+
         var longestAddress = 0;
         foreach (var addressForm in Enum.GetValues<AddressForm>())
             longestAddress = Math.Max(longestAddress, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.AddressPath(addressForm))).Length);
 
         Assert.That(core.Length + knowledge.Length + longestStep + longestAddress, Is.LessThanOrEqualTo(MAX_FIXED_PROMPT_CHARACTERS));
+    }
+
+    [Test]
+    public async Task EveryOpeningRequestNamesASectionOfItsPrompt()
+    {
+        var core = (await BflPromptLibrary.ReadAsync(BflPromptLibrary.CORE_PATH)).ReplaceLineEndings("\n");
+        var onboarding = (await BflPromptLibrary.ReadAsync(BflPromptLibrary.ONBOARDING_PATH)).ReplaceLineEndings("\n");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflConversationService.OpeningRequestFor(new BflStepThreadLocation(Guid.NewGuid(), BflStep.FRAMEWORK)), Does.Contain("„Dieser Schritt“"));
+            Assert.That(core, Does.Contain("\n# Dieser Schritt\n"));
+            Assert.That(BflConversationService.OpeningRequestFor(BflOnboardingThreadLocation.INSTANCE), Does.Contain("„Gesprächsführung“"));
+            Assert.That(onboarding, Does.Contain("\n# Gesprächsführung\n"));
+        }
+    }
+
+    [Test]
+    public async Task ThePromptOfTheOnboardingStaysShort()
+    {
+        var onboarding = await BflPromptLibrary.ReadAsync(BflPromptLibrary.ONBOARDING_PATH);
+        var longestAddress = 0;
+        foreach (var addressForm in Enum.GetValues<AddressForm>())
+            longestAddress = Math.Max(longestAddress, (await BflPromptLibrary.ReadAsync(BflPromptLibrary.AddressPath(addressForm))).Length);
+
+        Assert.That(onboarding.Length + longestAddress, Is.LessThanOrEqualTo(MAX_ONBOARDING_PROMPT_CHARACTERS));
     }
 }

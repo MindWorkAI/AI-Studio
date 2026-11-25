@@ -14,7 +14,7 @@ public sealed class ProviderHuggingFace : BaseProvider
 {
     private static readonly ILogger<ProviderHuggingFace> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHuggingFace>();
 
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderHuggingFace).Namespace, nameof(ProviderHuggingFace));
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ProviderHuggingFace).Namespace, nameof(ProviderHuggingFace));
 
     /// <summary>
     /// The OpenAI-compatible endpoint which serves every inference provider.
@@ -139,9 +139,9 @@ public sealed class ProviderHuggingFace : BaseProvider
         // nobody: they never picked it, and no other choice of provider is left to try:
         //
         if (this.hfProvider is HFInferenceProvider.NONE or HFInferenceProvider.AUTOMATIC or HFInferenceProvider.CHEAPEST or HFInferenceProvider.PREFERRED)
-            return TB("No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face.");
+            return TA("No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face.");
 
-        return string.Format(TB("The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you."), this.hfProvider.Name);
+        return string.Format(TA("The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you."), this.hfProvider.Name);
     }
 
     #endregion

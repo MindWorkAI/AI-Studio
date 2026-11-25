@@ -37,7 +37,7 @@ public partial class DataSourceAddButtons : MSGComponentBase
     /// The rule of the organization comes first: an embedding provider would not make the mailbox possible.
     /// </remarks>
     private string MailboxMenuText => !this.MayAddMailbox
-        ? T("Mailbox (IMAP), not allowed by your organization")
+        ? TA("Mailbox (IMAP), not allowed by your organization")
         : this.HasEmbeddingProvider
             ? T("Mailbox (IMAP)")
             : T("Mailbox (IMAP), requires an embedding provider");

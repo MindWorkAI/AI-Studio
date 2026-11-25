@@ -6,3 +6,5 @@ global using Microsoft.JSInterop;
 
 global using MudBlazor;
 global using MudExtensions;
+
+global using SharedTools.Text;

@@ -92,5 +92,5 @@ public sealed class ExportableMarkdownTests
 
     private static MarkdownDocument Render(string answer) => Markdig.Markdown.Parse(answer, Markdown.CHAT_MARKDOWN_PIPELINE);
 
-    private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);
+    private static string Lines(params string[] lines) => string.Join('\n', lines);
 }

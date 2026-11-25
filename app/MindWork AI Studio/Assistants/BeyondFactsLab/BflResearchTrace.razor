@@ -1,0 +1,32 @@
+@inherits MSGComponentBase
+
+@* What left AI Studio for a research: *@
+<MudText Typo="Typo.subtitle2">@T("Queries sent to the web search")</MudText>
+@if (this.Research.SearchQueries.Count is 0)
+{
+    <MudText Typo="Typo.body2" Class="mb-2">@T("None")</MudText>
+}
+else
+{
+    <ul class="ml-4 mb-2">
+        @foreach (var query in this.Research.SearchQueries)
+        {
+            <li><MudText Typo="Typo.body2">@query</MudText></li>
+        }
+    </ul>
+}
+
+<MudText Typo="Typo.subtitle2">@T("Web pages opened")</MudText>
+@if (this.Research.Pages.Count is 0)
+{
+    <MudText Typo="Typo.body2" Class="mb-2">@T("None")</MudText>
+}
+else
+{
+    <ul class="ml-4 mb-2">
+        @foreach (var webPage in this.Research.Pages)
+        {
+            <li><MudLink Href="@webPage.Url" Target="_blank" Typo="Typo.body2">@webPage.Title</MudLink></li>
+        }
+    </ul>
+}

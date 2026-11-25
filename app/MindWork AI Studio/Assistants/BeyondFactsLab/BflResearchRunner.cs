@@ -1,0 +1,372 @@
+using System.Collections.Frozen;
+
+using AIStudio.Provider;
+using AIStudio.Settings;
+using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.ToolCallingSystem;
+
+namespace AIStudio.Assistants.BeyondFactsLab;
+
+/// <summary>
+/// Researches the context of an event on the web, with one agent for each topic, see BflResearchTopic.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Each agent works in a hidden chat of its own, which the person never sees and the lab never stores. It receives
+/// nothing but the public details about the event, see BflPromptComposer.ComposeResearch: no other detail, no material,
+/// no work state, and no conversation of the preparation. That is the point of the separation: the chats of the steps
+/// know the whole preparation, which may be unpublished, and therefore never search the web themselves.
+/// </para>
+/// <para>
+/// A single answer may call tools only so often, see ToolSelectionRules.MAX_TOOL_CALLS, so each topic gets an agent and
+/// a budget of its own, and the agents run side by side. Like the conversations, a singleton, so that the work goes on
+/// while the person looks at another page.
+/// </para>
+/// <para>
+/// The research on single people from the list of participants runs here as well, in stages, see RunPersonAsync, and
+/// so does the suggestion whom of a long list to research, see SuggestSelectionAsync.
+/// </para>
+/// </remarks>
+/// <param name="store">The store of the lab.</param>
+/// <param name="conversations">The conversations of the lab, whose checks of a provider the research shares.</param>
+/// <param name="toolRegistry">The registry of the tools.</param>
+/// <param name="settingsManager">The settings.</param>
+/// <param name="sessionService">The registry of running assistant sessions.</param>
+/// <param name="messageBus">The message bus, for errors.</param>
+/// <param name="logger">The logger.</param>
+public sealed partial class BflResearchRunner(BeyondFactsLabStore store, BflConversationService conversations, ToolRegistry toolRegistry, SettingsManager settingsManager, AssistantSessionService sessionService, MessageBus messageBus, ILogger<BflResearchRunner> logger)
+{
+    /// <summary>
+    /// The request which lets an agent start its research. German, like the prompts.
+    /// </summary>
+    public const string REQUEST = "Recherchiere jetzt, wie es die Abschnitte „Dein Auftrag“ und „Vorgehen“ beschreiben, und antworte in der Form des Abschnitts „Form“.";
+
+    /// <summary>
+    /// The tools of a research agent: it searches the web and reads the pages it found.
+    /// </summary>
+    public static readonly FrozenSet<string> TOOL_IDS = FrozenSet.Create(StringComparer.Ordinal, ToolSelectionRules.WEB_SEARCH_TOOL_ID, ToolSelectionRules.READ_WEB_PAGE_TOOL_ID);
+
+    private static string TA(string fallbackEN) => Tools.PluginSystem.I18N.I.TA(fallbackEN, typeof(BflResearchRunner).Namespace, nameof(BflResearchRunner));
+
+    /// <summary>
+    /// Tells the person that an agent used up its tools before it wrote a result, see ContentText.EndedWithoutAnswer.
+    /// </summary>
+    private static string NoAnswerMessage => TA("The research agent used up its searches and pages before it wrote a result. Please try again, or try another provider.");
+
+    /// <summary>
+    /// The research the agents do right now.
+    /// </summary>
+    private readonly HashSet<BflResearchLocation> running = [];
+
+    /// <summary>
+    /// Guards the research the agents do right now.
+    /// </summary>
+    private readonly Lock runningLock = new();
+
+    /// <summary>
+    /// Happens when an agent starts or ends its research, and when a new research is stored.
+    /// </summary>
+    /// <remarks>
+    /// Called on the thread of the request. A page renders through InvokeAsync.
+    /// </remarks>
+    public event Func<BflResearchLocation, Task>? ResearchChanged;
+
+    /// <summary>
+    /// Tells whether an agent does a research right now.
+    /// </summary>
+    /// <param name="location">The research.</param>
+    public bool IsRunning(BflResearchLocation location)
+    {
+        lock (this.runningLock)
+            return this.running.Contains(location);
+    }
+
+    /// <summary>
+    /// Checks whether the research can search the web with a provider.
+    /// </summary>
+    /// <param name="provider">The provider of the preparation.</param>
+    /// <returns>What keeps each tool of the research from being offered.</returns>
+    public Task<BflResearchAvailability> CheckAvailabilityAsync(AIStudio.Settings.Provider provider) => BflResearchAvailability.CheckAsync(toolRegistry, provider);
+
+    /// <summary>
+    /// Lets the agents of every topic research side by side, each replacing its earlier research.
+    /// </summary>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="provider">The provider of the preparation.</param>
+    public Task RunAllAsync(Guid projectId, AIStudio.Settings.Provider provider) => Task.WhenAll(BflResearchTopic.All.Select(topic => this.RunAsync(new BflResearchLocation(projectId, topic), provider)));
+
+    /// <summary>
+    /// Starts the research on every topic which has none yet, or whose public details changed since, e.g., once the
+    /// person confirmed the event details.
+    /// </summary>
+    /// <remarks>
+    /// It starts nothing and tells nothing while the event is not public, while the research cannot search the web, or
+    /// while the person entered no public detail yet: then the area "Research" says why. It returns once the agents
+    /// started, not when they are done; what goes wrong in their work is reported through the message bus.
+    /// </remarks>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="provider">The provider of the preparation.</param>
+    /// <param name="forms">The forms of the preparation, by their steps.</param>
+    /// <returns>The topics whose research started.</returns>
+    public async Task<IReadOnlyList<BflResearchTopic>> StartWhenDueAsync(Guid projectId, AIStudio.Settings.Provider provider, IReadOnlyDictionary<BflStep, BflStepFormData> forms)
+    {
+        var details = BflPromptComposer.PublicDetailsOf(forms);
+        if (BflEventVisibility.IsNotPublic(forms) || details.Count is 0 || !(await this.CheckAvailabilityAsync(provider)).CanResearch)
+            return [];
+
+        var topics = TopicsDue(await store.LoadAllResearchAsync(projectId), details).Where(topic => !this.IsRunning(new BflResearchLocation(projectId, topic))).ToList();
+        if (topics.Count > 0)
+            _ = this.RunInBackgroundAsync(projectId, topics, provider);
+
+        return topics;
+    }
+
+    /// <summary>
+    /// Lets the agents of some topics research while nobody waits for them, and logs what nobody expected to fail.
+    /// </summary>
+    /// <remarks>
+    /// RunAsync reports the failures it expects itself. Anything else would otherwise vanish with the task, and with
+    /// it the reason why a page never learned that a research ended.
+    /// </remarks>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <param name="topics">The topics to research.</param>
+    /// <param name="provider">The provider of the preparation.</param>
+    private async Task RunInBackgroundAsync(Guid projectId, IReadOnlyList<BflResearchTopic> topics, AIStudio.Settings.Provider provider)
+    {
+        try
+        {
+            await Task.WhenAll(topics.Select(topic => this.RunAsync(new BflResearchLocation(projectId, topic), provider)));
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "The research of the preparation '{ProjectId}' of the BeyondFacts Lab failed unexpectedly.", projectId);
+        }
+    }
+
+    /// <summary>
+    /// Finds the topics which need a research: those without one, and those whose public details changed since.
+    /// </summary>
+    /// <param name="research">The research of the preparation, by its topics.</param>
+    /// <param name="details">The public details about the event as they are now.</param>
+    /// <returns>The topics, in their order.</returns>
+    public static IReadOnlyList<BflResearchTopic> TopicsDue(IReadOnlyDictionary<BflResearchTopic, BflResearch> research, IReadOnlyList<BflResearchDetail> details) =>
+        [.. BflResearchTopic.All.Where(topic => !research.TryGetValue(topic, out var found) || found.IsOutdated(details))];
+
+    /// <summary>
+    /// Lets the agent of a topic research and stores what it found, replacing its earlier research.
+    /// </summary>
+    /// <remarks>
+    /// What goes wrong is reported through the message bus; the method itself does not fail.
+    /// </remarks>
+    /// <param name="location">The research.</param>
+    /// <param name="provider">The provider of the preparation.</param>
+    public async Task RunAsync(BflResearchLocation location, AIStudio.Settings.Provider provider)
+    {
+        var hidden = BflThreadFactory.CreateHidden($"research-{location.Topic.FileStem}");
+        if (!await conversations.CheckProviderAsync(new BflStepThreadLocation(location.ProjectId, BflStep.STRATEGY), hidden, provider))
+            return;
+
+        var availability = await this.CheckAvailabilityAsync(provider);
+        if (!availability.CanResearch)
+        {
+            await messageBus.SendError(new(AppIcons.WEB_RESEARCH, availability.Message));
+            return;
+        }
+
+        lock (this.runningLock)
+        {
+            if (!this.running.Add(location))
+                return;
+        }
+
+        var sessionKey = SessionKey(location);
+        var sessionId = Guid.Empty;
+        var status = AssistantSessionStatus.FAILED;
+        try
+        {
+            if (await this.LoadPublicDetailsAsync(location.ProjectId) is not { } details)
+                return;
+
+            var language = (await settingsManager.GetActiveLanguagePlugin()).LangName;
+            var parts = await BflPromptLibrary.LoadResearchPartsAsync(location.Topic, conversations.PromptOverridesDirectory);
+            BflThreadFactory.PrepareForRequest(hidden, provider, BflPromptComposer.ComposeResearch(parts, details, language), TOOL_IDS);
+
+            var cancellation = new CancellationTokenSource();
+            sessionId = (await sessionService.TryBeginAsync(sessionKey, Tools.Components.BEYOND_FACTS_LAB_ASSISTANT.Name, cancellation, null, new(StringComparer.Ordinal))).SessionId;
+            await this.NotifyAsync(location);
+
+            // Neither the material nor the guidelines of the organization: the research learns the public details only.
+            var answer = await BflHiddenRequest.AskForAnswerAsync(hidden, provider, REQUEST, [], string.Empty, cancellation.Token);
+            if (cancellation.IsCancellationRequested)
+            {
+                status = AssistantSessionStatus.CANCELED;
+                return;
+            }
+
+            // A notice of the app in place of the answer is no research, and the earlier one stays:
+            if (answer.EndedWithoutAnswer)
+            {
+                logger.LogWarning("The agent of the research '{Location}' of the BeyondFacts Lab used up its tools without an answer.", location.Key);
+                await messageBus.SendError(new(AppIcons.ERROR, NoAnswerMessage));
+                return;
+            }
+
+            var research = BflResearch.Of(answer.Text, answer.ToolInvocations, answer.Sources, details, DateTimeOffset.UtcNow);
+
+            // The list of people is read once, from the answer itself, and travels with the research from then on:
+            if (location.Topic is BflResearchTopic.PARTICIPANTS)
+                research.Participants = [.. BflParticipant.ListIn(research.Text)];
+
+            if (research.Text.Length is 0)
+            {
+                logger.LogWarning("The agent wrote no text for the research '{Location}' of the BeyondFacts Lab.", location.Key);
+                await messageBus.SendError(new(AppIcons.ERROR, TA("The research ended without a result. Please try again, or try another provider.")));
+                return;
+            }
+
+            await store.SaveResearchAsync(location.ProjectId, location.Topic, research);
+
+            // A new list needs a new selection; for a long one, the lab suggests it right away:
+            if (location.Topic is BflResearchTopic.PARTICIPANTS && research.Participants.Count > BflParticipantSelection.MAX_SUGGESTED_PEOPLE)
+                await this.SuggestSelectionAsync(location.ProjectId, provider, cancellation.Token);
+
+            status = AssistantSessionStatus.COMPLETED;
+        }
+        catch (OperationCanceledException)
+        {
+            status = AssistantSessionStatus.CANCELED;
+        }
+        catch (Exception exception) when (IsReportedFailure(exception))
+        {
+            await this.ReportFailureAsync(exception, location.Key);
+        }
+        finally
+        {
+            lock (this.runningLock)
+                this.running.Remove(location);
+
+            if (sessionId != Guid.Empty)
+            {
+                await sessionService.CompleteAsync(sessionKey, sessionId, status, string.Empty, null, new(StringComparer.Ordinal));
+                await sessionService.ClearAsync(sessionKey);
+            }
+
+            await this.NotifyAsync(location);
+        }
+    }
+
+    /// <summary>
+    /// Loads the public details about the event, the only details a research receives.
+    /// </summary>
+    /// <remarks>
+    /// The forms on disk decide, since the person may have changed them since the research was asked for. While the
+    /// event is not public, or the person entered no public detail yet, the person learns why nothing is researched.
+    /// </remarks>
+    /// <param name="projectId">The ID of the preparation.</param>
+    /// <returns>The public details, or null when there is nothing to research with.</returns>
+    private async Task<IReadOnlyList<BflResearchDetail>?> LoadPublicDetailsAsync(Guid projectId)
+    {
+        var forms = await store.LoadFormsAsync(projectId);
+        if (BflEventVisibility.IsNotPublic(forms))
+        {
+            await messageBus.SendError(new(AppIcons.NOT_PUBLIC, BflEventVisibility.NotPublicMessage));
+            return null;
+        }
+
+        var details = BflPromptComposer.PublicDetailsOf(forms);
+        if (details.Count is 0)
+        {
+            await messageBus.SendError(new(AppIcons.WEB_RESEARCH, string.Format(TA("Please enter public details about the event first, in the step '{0}', such as its topic or its link. The research receives these details only."), BflStep.FRAMEWORK.Title)));
+            return null;
+        }
+
+        return details;
+    }
+
+    /// <summary>
+    /// Tells whether an agent may fail with an exception in the course of its work, which ReportFailureAsync then
+    /// reports: a faulty prompt override, a failed request, a preparation deleted meanwhile, or a file which cannot be
+    /// read or written.
+    /// </summary>
+    /// <param name="exception">The exception.</param>
+    private static bool IsReportedFailure(Exception exception) => exception is BflPromptOverrideException or ProviderRequestException or IOException or UnauthorizedAccessException or InvalidDataException or FormatException;
+
+    /// <summary>
+    /// Tells the person why an agent could not finish its research, see IsReportedFailure.
+    /// </summary>
+    /// <param name="exception">The exception.</param>
+    /// <param name="key">The key of the research, for the log.</param>
+    private async Task ReportFailureAsync(Exception exception, string key)
+    {
+        switch (exception)
+        {
+            case BflPromptOverrideException overrideException:
+                logger.LogWarning(overrideException, "A prompt override of the BeyondFacts Lab has a placeholder which the lab does not fill.");
+                await messageBus.SendError(new(AppIcons.ERROR, string.Format(TA("The file '{0}' in the test folder of the BeyondFacts Lab contains the placeholder '{1}', which the lab does not fill in this file. Please correct the file and try again."), overrideException.FileName, overrideException.Placeholder)));
+                break;
+
+            case ProviderRequestException requestException:
+                logger.LogError(requestException, "The provider request for a research of the BeyondFacts Lab failed. Status={StatusCode}, Reason='{ReasonPhrase}'.", requestException.StatusCode, requestException.ReasonPhrase);
+                await messageBus.SendError(new(AppIcons.PROVIDER_ERROR, requestException.UserMessage));
+                break;
+
+            case FileNotFoundException:
+                // The person deleted the preparation while the agent researched; nothing is left to store.
+                break;
+
+            default:
+                logger.LogError(exception, "The BeyondFacts Lab could not do the research '{Location}'.", key);
+                await messageBus.SendError(new(AppIcons.SAVE_FAILED, TA("AI Studio could not finish this research. Please try again.")));
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Stops the agent of a topic.
+    /// </summary>
+    /// <param name="location">The research.</param>
+    public Task CancelAsync(BflResearchLocation location) => sessionService.CancelAsync(SessionKey(location));
+
+    /// <summary>
+    /// Tells every page which listens that a research changed.
+    /// </summary>
+    /// <param name="location">The research.</param>
+    private Task NotifyAsync(BflResearchLocation location) => this.NotifyAsync(this.ResearchChanged, location);
+
+    /// <summary>
+    /// Tells every page which listens to an event of the runner that a research changed.
+    /// </summary>
+    /// <typeparam name="TLocation">The kind of research.</typeparam>
+    /// <param name="handlers">The handlers of the event, or null when nobody listens.</param>
+    /// <param name="location">The research.</param>
+    private async Task NotifyAsync<TLocation>(Func<TLocation, Task>? handlers, TLocation location)
+    {
+        if (handlers is null)
+        {
+            logger.LogDebug("No page of the BeyondFacts Lab listens to the change of the research '{Location}'.", location);
+            return;
+        }
+
+        var pages = handlers.GetInvocationList().Cast<Func<TLocation, Task>>().ToList();
+        foreach (var handler in pages)
+        {
+            try
+            {
+                await handler(location);
+            }
+            catch (Exception exception)
+            {
+                // A page which went away meanwhile must not stop the work:
+                logger.LogDebug(exception, "A page of the BeyondFacts Lab could not show a change of a research.");
+            }
+        }
+
+        logger.LogDebug("Told {Count} page(s) of the BeyondFacts Lab about the change of the research '{Location}'.", pages.Count, location);
+    }
+
+    /// <summary>
+    /// Gets the key under which a research registers in AssistantSessionService, beside the conversations.
+    /// </summary>
+    /// <param name="location">The research.</param>
+    private static AssistantSessionKey SessionKey(BflResearchLocation location) => new(Tools.Components.BEYOND_FACTS_LAB_ASSISTANT, location.Key);
+}

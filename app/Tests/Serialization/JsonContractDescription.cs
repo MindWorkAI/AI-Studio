@@ -2,6 +2,8 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
+using SharedTools.Text;
+
 namespace AIStudio.Tests.Serialization;
 
 /// <summary>
@@ -30,20 +32,20 @@ public static class JsonContractDescription
             : $"converter {ConverterName(typeInfo.Converter)}, created {(typeInfo.CreateObject is null ? "otherwise" : "without arguments")}";
 
         var text = new StringBuilder();
-        text.AppendLine($"{TypeName(typeInfo.Type)}: {typeInfo.Kind}, {creation}");
-        text.AppendLine($"  handling: numbers {typeInfo.NumberHandling}, unmapped members {typeInfo.UnmappedMemberHandling}, object creation {typeInfo.PreferredPropertyObjectCreationHandling}");
-        text.AppendLine($"  callbacks: serializing {typeInfo.OnSerializing is not null}, serialized {typeInfo.OnSerialized is not null}, deserializing {typeInfo.OnDeserializing is not null}, deserialized {typeInfo.OnDeserialized is not null}");
+        text.AppendLineLF($"{TypeName(typeInfo.Type)}: {typeInfo.Kind}, {creation}");
+        text.AppendLineLF($"  handling: numbers {typeInfo.NumberHandling}, unmapped members {typeInfo.UnmappedMemberHandling}, object creation {typeInfo.PreferredPropertyObjectCreationHandling}");
+        text.AppendLineLF($"  callbacks: serializing {typeInfo.OnSerializing is not null}, serialized {typeInfo.OnSerialized is not null}, deserializing {typeInfo.OnDeserializing is not null}, deserialized {typeInfo.OnDeserialized is not null}");
         if (typeInfo.KeyType is { } keyType)
-            text.AppendLine($"  key: {TypeName(keyType)}");
+            text.AppendLineLF($"  key: {TypeName(keyType)}");
 
         if (typeInfo.ElementType is { } elementType)
-            text.AppendLine($"  element: {TypeName(elementType)}");
+            text.AppendLineLF($"  element: {TypeName(elementType)}");
 
         if (typeInfo.PolymorphismOptions is { } polymorphism)
         {
-            text.AppendLine($"  polymorphism: discriminator {polymorphism.TypeDiscriminatorPropertyName}, unrecognized ignored {polymorphism.IgnoreUnrecognizedTypeDiscriminators}, unknown types {polymorphism.UnknownDerivedTypeHandling}");
+            text.AppendLineLF($"  polymorphism: discriminator {polymorphism.TypeDiscriminatorPropertyName}, unrecognized ignored {polymorphism.IgnoreUnrecognizedTypeDiscriminators}, unknown types {polymorphism.UnknownDerivedTypeHandling}");
             foreach (var derivedType in polymorphism.DerivedTypes)
-                text.AppendLine($"    derived: {TypeName(derivedType.DerivedType)} as {derivedType.TypeDiscriminator}");
+                text.AppendLineLF($"    derived: {TypeName(derivedType.DerivedType)} as {derivedType.TypeDiscriminator}");
         }
 
         foreach (var property in typeInfo.Properties)
@@ -53,7 +55,7 @@ public static class JsonContractDescription
             //
             if (IsIgnored(property))
             {
-                text.AppendLine($"  property {property.Name}: ignored");
+                text.AppendLineLF($"  property {property.Name}: ignored");
                 continue;
             }
 
@@ -61,7 +63,7 @@ public static class JsonContractDescription
                 ?$"set {property.Set is not null || property.AssociatedParameter is not null}"
                 : $"set {property.Set is not null}, constructor parameter {property.AssociatedParameter?.Name ?? "none"}";
 
-            text.AppendLine($"  property {property.Name}: {TypeName(property.PropertyType)}, order {property.Order}, get {property.Get is not null}, {setting}, required {property.IsRequired}, extension data {property.IsExtensionData}, conditional {property.ShouldSerialize is not null}, converter {ConverterName(property.CustomConverter)}, nullable get {property.IsGetNullable}, nullable set {property.IsSetNullable}, numbers {property.NumberHandling}, object creation {property.ObjectCreationHandling}");
+            text.AppendLineLF($"  property {property.Name}: {TypeName(property.PropertyType)}, order {property.Order}, get {property.Get is not null}, {setting}, required {property.IsRequired}, extension data {property.IsExtensionData}, conditional {property.ShouldSerialize is not null}, converter {ConverterName(property.CustomConverter)}, nullable get {property.IsGetNullable}, nullable set {property.IsSetNullable}, numbers {property.NumberHandling}, object creation {property.ObjectCreationHandling}");
         }
 
         return text.ToString();

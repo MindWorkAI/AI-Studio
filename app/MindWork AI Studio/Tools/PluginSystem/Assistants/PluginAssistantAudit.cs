@@ -1,4 +1,4 @@
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
@@ -9,9 +9,9 @@ public sealed class PluginAssistantAudit
     public DateTimeOffset AuditedAtUtc { get; set; }
     public string AuditProviderId { get; set; } = string.Empty;
     public string AuditProviderName { get; set; } = string.Empty;
-    public AssistantAuditLevel Level { get; set; } = AssistantAuditLevel.UNKNOWN;
+    public PluginAuditLevel Level { get; set; } = PluginAuditLevel.UNKNOWN;
     public string Summary { get; set; } = string.Empty;
     public float Confidence { get; set; }
     public string PromptPreview { get; set; } = string.Empty;
-    public List<AssistantAuditFinding> Findings { get; set; } = [];
+    public List<PluginAuditFinding> Findings { get; set; } = [];
 }

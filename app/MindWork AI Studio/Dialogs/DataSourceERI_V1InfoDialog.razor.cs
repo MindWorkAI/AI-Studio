@@ -103,9 +103,9 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, ISecretId
         foreach (var (paramName, description) in parameters)
         {
             sb.Append(T("Parameter: "));
-            sb.AppendLine(paramName);
-            sb.AppendLine(description);
-            sb.AppendLine();
+            sb.AppendLineLF(paramName);
+            sb.AppendLineLF(description);
+            sb.AppendLineLF();
         }
 
         return sb.ToString();

@@ -47,14 +47,14 @@ env:
   FLATPAK_YQ_SHA256: 0c2b24e645b57d8e7c0566d18643a6d4f5580feeea3878127354a46f2a1e4598
   FLATPAK_UV_VERSION: 0.11.28
   FLATPAK_UV_SHA256: e490a6464492183c5d4534a5527fb4440f7f2bb2f228162ad7e4afe076dc0224
-  FLATPAK_FREEDESKTOP_VERSION: "25.08"
+  FLATPAK_FREEDESKTOP_VERSION: "26.08"
   SSIGN_VERSION: 0.1.7
   SSIGN_SHA256: 4ee5389a74ddbeb67e18fe8c8b963734ca13de7b24beffbe430c3f427ecc5e40
 
   # The Tauri CLI which bundles the app, exactly this version on every platform. Keep it at the minor
   # version of the tauri crate in runtime/Cargo.toml. The version also names the cache of the CLI, so
   # changing it installs the new CLI once on each platform and caches it from then on:
-  TAURI_CLI_VERSION: "2.12.4"
+  TAURI_CLI_VERSION: "2.12.6"
 
 jobs:
   determine_run_mode:
@@ -362,6 +362,8 @@ jobs:
           "$tools_dir/uv" --version
           "$tools_dir/yq" --version
 
+      # The build command "flatpak" of app/Build repeats this step for local test builds, in
+      # app/Build/Flatpak/build-in-container.sh. Whoever changes one of them changes the other one as well.
       - name: Update Flatpak release sources
         working-directory: flatpak
         env:
@@ -793,7 +795,7 @@ jobs:
 
       - name: Read the toolchain versions from the metadata
         run: |
-          # The .NET SDK version. The format is '10.0.403 (commit 5a2162bea6)',
+          # The .NET SDK version. The format is '10.0.404 (commit 2ab2854867)',
           # so we extract the version number alone:
           dotnet_sdk_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
 
@@ -906,7 +908,7 @@ jobs:
       - name: Run the quality gate
         run: |
           cd "app/Build"
-          dotnet run verify
+          dotnet run -- verify
 
   build_main:
     name: Build app (${{ matrix.dotnet_runtime }})

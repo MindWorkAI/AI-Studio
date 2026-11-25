@@ -53,7 +53,13 @@ public abstract partial class DocumentAssistantBase<TSettings> : AssistantBaseCo
     /// <summary>
     /// The two options the user chooses from, one for the document and one for the text.
     /// </summary>
-    protected abstract IReadOnlyList<AssistantModeOption> ModeOptions { get; }
+    protected abstract IReadOnlyList<AssistantModeOption<AssistantContentMode>> ModeOptions { get; }
+
+    /// <summary>
+    /// The tooltip of the button next to the settings, which switches to the given mode, e.g., "Switch to text translation".
+    /// </summary>
+    /// <param name="target">The mode the button switches to.</param>
+    protected abstract string SwitchTooltip(AssistantContentMode target);
 
     /// <summary>
     /// What the model does with each text of a document, as the form stands when the run starts.
@@ -201,9 +207,9 @@ public abstract partial class DocumentAssistantBase<TSettings> : AssistantBaseCo
 
     private void RenderModeChoice(RenderTreeBuilder builder)
     {
-        builder.OpenComponent<AssistantModeChoice>(0);
-        builder.AddComponentParameter(1, nameof(AssistantModeChoice.Options), this.ModeOptions);
-        builder.AddComponentParameter(2, nameof(AssistantModeChoice.ModeChosen), EventCallback.Factory.Create<AssistantContentMode>(this, this.ChooseMode));
+        builder.OpenComponent<AssistantModeChoice<AssistantContentMode>>(0);
+        builder.AddComponentParameter(1, nameof(AssistantModeChoice<>.Options), this.ModeOptions);
+        builder.AddComponentParameter(2, nameof(AssistantModeChoice<>.ModeChosen), EventCallback.Factory.Create<AssistantContentMode>(this, this.ChooseMode));
         builder.CloseComponent();
     }
 
@@ -229,8 +235,9 @@ public abstract partial class DocumentAssistantBase<TSettings> : AssistantBaseCo
 
         builder.OpenComponent<AssistantModeSwitch>(0);
         builder.AddComponentParameter(1, nameof(AssistantModeSwitch.Option), option);
-        builder.AddComponentParameter(2, nameof(AssistantModeSwitch.Disabled), this.IsProcessing || this.SubmitDisabled);
-        builder.AddComponentParameter(3, nameof(AssistantModeSwitch.ModeChosen), EventCallback.Factory.Create<AssistantContentMode>(this, this.ChooseMode));
+        builder.AddComponentParameter(2, nameof(AssistantModeSwitch.Tooltip), this.SwitchTooltip(option.Mode));
+        builder.AddComponentParameter(3, nameof(AssistantModeSwitch.Disabled), this.IsProcessing || this.SubmitDisabled);
+        builder.AddComponentParameter(4, nameof(AssistantModeSwitch.ModeChosen), EventCallback.Factory.Create<AssistantContentMode>(this, this.ChooseMode));
         builder.CloseComponent();
     }
 
@@ -255,7 +262,7 @@ public abstract partial class DocumentAssistantBase<TSettings> : AssistantBaseCo
     /// <summary>
     /// The option of the mode the assistant does not work on right now, to which the button next to the settings switches.
     /// </summary>
-    private AssistantModeOption? SwitchOption
+    private AssistantModeOption<AssistantContentMode>? SwitchOption
     {
         get
         {

@@ -13,6 +13,7 @@ public static class BflFieldCatalog
     public const string FORMAT = "format";
     public const string EVENT_TOPIC = "event_topic";
     public const string AUDIENCE = "audience";
+    public const string EVENT_VISIBILITY = "event_visibility";
     public const string CONTRIBUTION_TOPIC = "contribution_topic";
     public const string EVENT_DATE = "event_date";
     public const string EVENT_LOCATION = "event_location";
@@ -21,15 +22,15 @@ public static class BflFieldCatalog
     public const string OTHER_PARTICIPANTS = "other_participants";
     public const string EVENT_LINK = "event_link";
 
+    // Goals and roles:
+    public const string GOALS = "goals";
+    public const string GOAL_DIRECTIONS = "goal_directions";
+
     // Knowledge and uncertainty:
     public const string CONTRIBUTION_SUMMARY = "contribution_summary";
     public const string CORE_THESES = "core_theses";
     public const string UNCERTAINTIES = "uncertainties";
     public const string MATERIAL_NOTES = "material_notes";
-
-    // Goals and role:
-    public const string GOALS = "goals";
-    public const string GOAL_DIRECTIONS = "goal_directions";
 
     // Values and perspectives:
     public const string VALUES_AND_CONCERNS = "values_and_concerns";
@@ -46,6 +47,10 @@ public static class BflFieldCatalog
 
     // Results and materials:
     public const string POSITION_CHANGES = "position_changes";
+
+    // The options of whether the event is public:
+    public const string EVENT_PUBLIC = "event_public";
+    public const string EVENT_NOT_PUBLIC = "event_not_public";
 
     // The options of the directions of a goal:
     public const string GOAL_INFORM = "goal_inform";
@@ -76,20 +81,22 @@ public static class BflFieldCatalog
         new(EVENT_TOPIC, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsKeyDetail = true, IsSharedWithResearch = true },
         new(AUDIENCE, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsKeyDetail = true },
 
+        // Whether the event is public, which decides whether the lab may research it on the web at all:
+        new(EVENT_VISIBILITY, BflStep.FRAMEWORK, BflFieldKind.CHOICE)
+        {
+            IsKeyDetail = true,
+            Options = [new(EVENT_PUBLIC), new(EVENT_NOT_PUBLIC)],
+        },
+
         // The topic of the contribution may be unpublished, so it never reaches the research:
         new(CONTRIBUTION_TOPIC, BflStep.FRAMEWORK, BflFieldKind.MULTI_LINE) { IsKeyDetail = true },
 
-        new(EVENT_DATE, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsSharedWithResearch = true },
-        new(EVENT_LOCATION, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsSharedWithResearch = true },
+        new(EVENT_DATE, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsSharedWithResearch = true, IdentifiesEvent = true },
+        new(EVENT_LOCATION, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE) { IsSharedWithResearch = true, IdentifiesEvent = true },
         new(EVENT_DURATION, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE),
         new(CONTRIBUTION_DURATION, BflStep.FRAMEWORK, BflFieldKind.SINGLE_LINE),
         new(OTHER_PARTICIPANTS, BflStep.FRAMEWORK, BflFieldKind.MULTI_LINE) { IsSharedWithResearch = true, NameRole = BflNameRole.PARTICIPANTS },
-        new(EVENT_LINK, BflStep.FRAMEWORK, BflFieldKind.LINK) { IsSharedWithResearch = true },
-
-        new(CONTRIBUTION_SUMMARY, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE) { IsKeyDetail = true },
-        new(CORE_THESES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
-        new(UNCERTAINTIES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
-        new(MATERIAL_NOTES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
+        new(EVENT_LINK, BflStep.FRAMEWORK, BflFieldKind.LINK) { IsSharedWithResearch = true, IdentifiesEvent = true },
 
         new(GOALS, BflStep.GOALS_AND_ROLE, BflFieldKind.MULTI_LINE),
         new(GOAL_DIRECTIONS, BflStep.GOALS_AND_ROLE, BflFieldKind.MULTI_CHOICE)
@@ -97,9 +104,14 @@ public static class BflFieldCatalog
             Options = [new(GOAL_INFORM), new(GOAL_MODERATE), new(GOAL_TAKE_POSITION), new(GOAL_RAISE_AWARENESS), new(GOAL_SHOW_OPTIONS), new(GOAL_INFLUENCE_POLICY)],
         },
 
-        new(VALUES_AND_CONCERNS, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE),
-        new(PERSONAL_CONCERN, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { IsPersonalDisclosure = true },
-        new(OTHER_PERSPECTIVES, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE),
+        new(CONTRIBUTION_SUMMARY, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE) { IsKeyDetail = true },
+        new(CORE_THESES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
+        new(UNCERTAINTIES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
+        new(MATERIAL_NOTES, BflStep.KNOWLEDGE, BflFieldKind.MULTI_LINE),
+
+        new(VALUES_AND_CONCERNS, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { Section = BflFormSection.WHAT_MATTERS_TO_ME },
+        new(PERSONAL_CONCERN, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { IsPersonalDisclosure = true, Section = BflFormSection.WHAT_TOUCHES_ME },
+        new(OTHER_PERSPECTIVES, BflStep.VALUES_AND_PERSPECTIVES, BflFieldKind.MULTI_LINE) { Section = BflFormSection.WHAT_MOVES_OTHERS },
 
         new(COMMUNICATION_WORRIES, BflStep.STRATEGY, BflFieldKind.MULTI_LINE),
 

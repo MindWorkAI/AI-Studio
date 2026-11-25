@@ -18,6 +18,8 @@ public sealed class MathematicsToolCollection : IToolCollection
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MathematicsToolCollection).Namespace, nameof(MathematicsToolCollection));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(MathematicsToolCollection).Namespace, nameof(MathematicsToolCollection));
+
     public ToolCollectionDefinition GetDefinition() => new()
     {
         Id = ToolSelectionRules.MATHEMATICS_COLLECTION_ID,
@@ -26,9 +28,9 @@ public sealed class MathematicsToolCollection : IToolCollection
         DescriptionForLLM = "Calculate exactly or to a stated number of digits, and work with formulas: simplify, factor, differentiate, integrate, take limits, and solve equations. Everything is computed locally, and each result is checked numerically where possible.",
     };
 
-    public string Icon => Icons.Material.Filled.Calculate;
+    public string Icon => AppIcons.MATHEMATICS;
 
     public string GetDisplayName() => TB("Mathematics");
 
-    public string GetDescription() => TB("Lets the AI calculate exactly and work with formulas, such as solving equations or checking an integral, right on your computer.");
+    public string GetDescription() => TA("Lets the AI calculate exactly and work with formulas, such as solving equations or checking an integral, right on your computer.");
 }

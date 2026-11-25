@@ -5,7 +5,7 @@ namespace AIStudio.Tools;
 /// </summary>
 public static class DroppedFolder
 {
-    private static string TB(string fallbackEN) => PluginSystem.I18N.I.T(fallbackEN, typeof(DroppedFolder).Namespace, nameof(DroppedFolder));
+    private static string TA(string fallbackEN) => PluginSystem.I18N.I.TA(fallbackEN, typeof(DroppedFolder).Namespace, nameof(DroppedFolder));
 
     /// <summary>
     /// Finds the first dropped path which leads to a folder.
@@ -29,8 +29,8 @@ public static class DroppedFolder
         // Naming the actual mistake beats a generic "that did not work". Dropping a file onto a
         // folder picker is the likeliest of them:
         if (paths.Any(File.Exists))
-            return TB("Please drop a folder, not a file.");
+            return TA("Please drop a folder, not a file.");
 
-        return TB("The dropped folder could not be accessed. Please choose it with the folder chooser instead.");
+        return TA("The dropped folder could not be accessed. Please choose it with the folder chooser instead.");
     }
 }

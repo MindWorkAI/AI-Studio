@@ -38,5 +38,5 @@ public partial class MathJaxBlock
         ? "formula-block"
         : $"formula-block {this.Class}";
 
-    private string MathText => $"$${Environment.NewLine}{this.Value}{Environment.NewLine}$$";
+    private string MathText => $"$$\n{this.Value}\n$$";
 }

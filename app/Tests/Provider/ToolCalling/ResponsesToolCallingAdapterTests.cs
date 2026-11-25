@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 using AIStudio.Provider;
 using AIStudio.Provider.OpenAI;
 
@@ -77,6 +75,23 @@ public sealed class ResponsesToolCallingAdapterTests
         }
     }
 
+    [Test]
+    public async Task ARoundWhoseStreamWasCutOffEndsWithoutAnOutcome()
+    {
+        //
+        // A reasoning model stopped before its first word, or a connection which broke while it was thinking: its
+        // reasoning item is finished, and nothing else is. Built from that item, the round would have neither text
+        // nor calls, and the loop would report a model which said nothing:
+        //
+        string[] thinking = ["""{"type":"response.output_item.done","output_index":0,"item":{"type":"reasoning","id":"rs_1","summary":[]}}"""];
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(await ScriptedStream.RoundCompletesAsync(Adapter([..thinking, ScriptedStream.CUT_OFF])), Is.False, "A stream which was cut off is a failed round, not a silent one.");
+            Assert.That(await ScriptedStream.RoundCompletesAsync(Adapter(thinking)), Is.True, "The same stream, closed by the provider, completes the round from its items, as for a gateway which never sends the closing event.");
+        }
+    }
+
     /// <summary>
     /// Runs the next round and returns the prompt of every usage it passed on.
     /// </summary>
@@ -96,17 +111,6 @@ public sealed class ResponsesToolCallingAdapterTests
     private static ResponsesToolCallingAdapter Adapter(params string[][] rounds)
     {
         var nextRound = 0;
-        return new(new Model("gpt-5", null), [], new Dictionary<string, object>(), [], (_, token) => Lines(rounds[nextRound++], token));
-    }
-
-    private static async IAsyncEnumerable<ServerSentEvent> Lines(string[] data, [EnumeratorCancellation] CancellationToken token = default)
-    {
-        foreach (var line in data)
-        {
-            token.ThrowIfCancellationRequested();
-            yield return new ServerSentEvent($"data: {line}", line);
-        }
-
-        await Task.CompletedTask;
+        return new(new Model("gpt-5", null), [], new Dictionary<string, object>(), [], (_, streamEnd, token) => ScriptedStream.Lines(rounds[nextRound++], streamEnd, token));
     }
 }

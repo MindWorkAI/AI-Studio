@@ -24,6 +24,35 @@ public readonly record struct ConversationTokens
     public static readonly ConversationTokens UNAVAILABLE = new();
 
     /// <summary>
+    /// From which share of the context window on AI Studio asks before it sends a message, see AsksBeforeSending.
+    /// </summary>
+    /// <remarks>
+    /// Not only once the window overflows: most models count their answer into the window, so the
+    /// last few percent leave little room for it, and the next message would no longer fit.
+    /// </remarks>
+    public const double SHARE_TO_ASK_BEFORE_SENDING = 0.95;
+
+    /// <summary>
+    /// How much of the context window of the model the counted parts take, e.g., 0.5 for half of it.
+    /// </summary>
+    /// <remarks>
+    /// Zero whenever nothing was counted or nobody wrote the window down. There is then nothing to be
+    /// full of, and a share of an unknown total would be a number made up on the spot.
+    /// </remarks>
+    public double FillShare => this.IsKnown && this.Window.IsKnown && this.Window.DefaultTokens > 0
+        ? (double) this.Tokens / this.Window.DefaultTokens
+        : 0d;
+
+    /// <summary>
+    /// Whether the counted parts take so much of the context window that AI Studio asks before it sends them.
+    /// </summary>
+    /// <remarks>
+    /// Never when the window is unknown, e.g., for many self-hosted models: the notice then stays
+    /// away, just as the number under the input field keeps its colour.
+    /// </remarks>
+    public bool AsksBeforeSending => this.FillShare >= SHARE_TO_ASK_BEFORE_SENDING;
+
+    /// <summary>
     /// Whether anything could be counted.
     /// </summary>
     public bool IsKnown { get; init; }

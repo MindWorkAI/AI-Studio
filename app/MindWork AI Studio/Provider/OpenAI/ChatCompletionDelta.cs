@@ -13,4 +13,12 @@ public sealed record ChatCompletionDelta
 
     [JsonIgnore]
     public string Content => ChatCompletionContent.GetText(this.RawContent) ?? string.Empty;
+
+    /// <summary>
+    /// The reasoning text some providers stream next to the answer.
+    /// </summary>
+    /// <remarks>
+    /// Read only to tell that the model is reasoning, see ContentStreamChunk.IsReasoning.
+    /// </remarks>
+    public string? ReasoningContent { get; set; }
 }

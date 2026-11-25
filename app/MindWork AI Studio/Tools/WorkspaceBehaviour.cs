@@ -63,6 +63,8 @@ public static partial class WorkspaceBehaviour
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WorkspaceBehaviour).Namespace, nameof(WorkspaceBehaviour));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(WorkspaceBehaviour).Namespace, nameof(WorkspaceBehaviour));
+
     public static readonly JsonSerializerOptions JSON_OPTIONS = new JsonSerializerOptions
     {
         WriteIndented = true,
@@ -936,13 +938,9 @@ public static partial class WorkspaceBehaviour
             Directory.CreateDirectory(chatDirectory);
 
             FinalizeStagedTranscripts(chat, chatDirectory);
-            var chatNamePath = Path.Join(chatDirectory, "name");
-            await File.WriteAllTextAsync(chatNamePath, chat.Name);
+            await StoreChatFilesAsync(chat, chatDirectory);
 
-            var chatPath = Path.Join(chatDirectory, "thread.json");
-            await File.WriteAllTextAsync(chatPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
-
-            var lastEditTime = File.GetLastWriteTimeUtc(chatPath);
+            var lastEditTime = File.GetLastWriteTimeUtc(Path.Join(chatDirectory, "thread.json"));
             await UpdateCacheAfterChatStored(chat.WorkspaceId, chat.ChatId, chatDirectory, chat.Name, lastEditTime);
             return true;
         }
@@ -972,13 +970,13 @@ public static partial class WorkspaceBehaviour
         var sourceName = string.IsNullOrWhiteSpace(sourceChat.Name) ? TB("Unnamed chat") : sourceChat.Name;
         var dialogParameters = new DialogParameters<SingleInputDialog>
         {
-            { x => x.Message, string.Format(TB("Please enter a name for the copy of your chat '{0}':"), sourceName) },
+            { x => x.Message, string.Format(TA("Please enter a name for the copy of your chat '{0}':"), sourceName) },
             { x => x.InputHeaderText, TB("Chat Name") },
             { x => x.UserInput, string.Format(TB("Copy of {0}"), sourceName) },
             { x => x.ConfirmText, TB("Copy") },
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
-            { x => x.EmptyInputErrorMessage, TB("Please enter a chat name.") },
+            { x => x.EmptyInputErrorMessage, TA("Please enter a chat name.") },
         };
 
         var dialogReference = await dialogService.ShowAsync<SingleInputDialog>(TB("Copy Chat"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
@@ -990,17 +988,36 @@ public static partial class WorkspaceBehaviour
     }
 
     /// <summary>
+    /// Copies a chat in memory, as it would be stored and read back, so that the copy shares nothing with the original.
+    /// </summary>
+    /// <remarks>
+    /// Keeps the ID and the name; only what is stored with a chat comes along, as when it is loaded.
+    /// Files stay where they are: the copy refers to the same ones.
+    /// </remarks>
+    /// <param name="chat">The chat to copy. It stays untouched.</param>
+    /// <returns>The copy.</returns>
+    internal static ChatThread CloneChat(ChatThread chat)
+    {
+        var serializedChat = JsonSerializer.Serialize(chat, JSON_OPTIONS);
+        return JsonSerializer.Deserialize<ChatThread>(serializedChat, JSON_OPTIONS) ?? throw new InvalidOperationException("The chat could not be copied.");
+    }
+
+    /// <summary>
     /// Copies a chat into a new chat of the same workspace, including its managed transcript files.
     /// </summary>
+    /// <remarks>
+    /// A caller which wants the copy to differ from the original, such as compressing a chat, see
+    /// ChatCompression.TurnIntoContinuation, changes it before anything of it is written: only the
+    /// transcripts the changed copy still refers to are copied, and the copy reaches the disk only
+    /// once, as it is meant to be. When the change fails, nothing of the copy stays behind.
+    /// </remarks>
     /// <param name="sourceChat">The chat to copy. Its own files and state stay untouched.</param>
     /// <param name="name">The name of the copy.</param>
+    /// <param name="reshape">Changes the copy before it is stored, or null to keep it as the original is.</param>
     /// <returns>The persisted copy.</returns>
-    internal static async Task<ChatThread> CopyChatAsync(ChatThread sourceChat, string name)
+    internal static async Task<ChatThread> CopyChatAsync(ChatThread sourceChat, string name, Action<ChatThread>? reshape = null)
     {
-        var serializedChat = JsonSerializer.Serialize(sourceChat, JSON_OPTIONS);
-        var copiedChat = JsonSerializer.Deserialize<ChatThread>(serializedChat, JSON_OPTIONS)
-                         ?? throw new InvalidOperationException("The chat could not be copied.");
-        copiedChat = copiedChat with
+        var copiedChat = CloneChat(sourceChat) with
         {
             ChatId = Guid.NewGuid(),
             Name = name,
@@ -1009,6 +1026,7 @@ public static partial class WorkspaceBehaviour
         var targetDirectory = GetChatDirectory(copiedChat.WorkspaceId, copiedChat.ChatId);
         try
         {
+            reshape?.Invoke(copiedChat);
             CopyManagedTranscriptAttachments(copiedChat, targetDirectory);
 
             //
@@ -1172,7 +1190,7 @@ public static partial class WorkspaceBehaviour
             movedChat.WorkspaceId = targetWorkspaceId;
             
             FinalizeStagedTranscripts(movedChat, targetDirectory);
-            await StoreMovedChatFilesAsync(movedChat, targetDirectory);
+            await StoreChatFilesAsync(movedChat, targetDirectory);
 
             var lastEditTime = File.GetLastWriteTimeUtc(Path.Join(targetDirectory, "thread.json"));
             await UpdateCacheAfterChatMoved(sourceWorkspaceId, targetWorkspaceId, chat.ChatId, targetDirectory, movedChat.Name, lastEditTime);
@@ -1200,7 +1218,7 @@ public static partial class WorkspaceBehaviour
                         Directory.Move(targetDirectory, sourceDirectory);
 
                     if (movedChat is not null && Directory.Exists(sourceDirectory))
-                        await StoreMovedChatFilesAsync(movedChat, sourceDirectory);
+                        await StoreChatFilesAsync(movedChat, sourceDirectory);
                 }
                 catch (Exception rollbackError)
                 {
@@ -1227,23 +1245,17 @@ public static partial class WorkspaceBehaviour
         return JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS) ?? throw new InvalidDataException($"The stored chat could not be read: '{chatDirectory}'.");
     }
 
-    /// <summary>Atomically stores the name and thread after a directory move.</summary>
-    private static async Task StoreMovedChatFilesAsync(ChatThread chat, string chatDirectory)
+    /// <summary>Stores the name and the thread of a chat into its directory.</summary>
+    /// <remarks>
+    /// Both files are written atomically: a crash of AI Studio while storing leaves each of them as it was before,
+    /// never half written. The thread keeps its UTF-8 byte order mark, the name has none, as before.
+    /// </remarks>
+    /// <param name="chat">The chat to store.</param>
+    /// <param name="chatDirectory">The directory of the chat, which has to exist.</param>
+    private static async Task StoreChatFilesAsync(ChatThread chat, string chatDirectory)
     {
-        await File.WriteAllTextAsync(Path.Join(chatDirectory, "name"), chat.Name);
-        var chatPath = Path.Join(chatDirectory, "thread.json");
-        var temporaryPath = Path.Join(chatDirectory, $".thread-{Guid.NewGuid():N}.tmp");
-        
-        try
-        {
-            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
-            File.Move(temporaryPath, chatPath, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-                File.Delete(temporaryPath);
-        }
+        await AtomicFile.WriteTextAsync(Path.Join(chatDirectory, "name"), chat.Name, new UTF8Encoding(false), CancellationToken.None, logger: LOG);
+        await AtomicFile.WriteTextAsync(Path.Join(chatDirectory, "thread.json"), JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8, CancellationToken.None, logger: LOG);
     }
 
     /// <summary>Rewrites absolute file paths after moving the complete chat directory.</summary>
@@ -1482,8 +1494,8 @@ public static partial class WorkspaceBehaviour
                 {
                     x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
                     {
-                        true => string.Format(TB("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
-                        false => string.Format(TB("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
+                        true => string.Format(TA("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
+                        false => string.Format(TA("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
                     }
                 },
             };

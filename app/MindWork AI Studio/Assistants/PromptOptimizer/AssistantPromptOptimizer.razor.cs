@@ -30,7 +30,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override string Title => T("Prompt Optimizer");
 
-    protected override string Description => T("Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt.");
+    protected override string Description => TA("Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt.");
 
     // Sending to a new chat puts the optimized prompt into its input field, so no chat continues this conversation:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
@@ -104,8 +104,8 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         new ButtonData
         {
             Text = T("Improve further"),
-            Tooltip = T("Moves the optimized prompt into the prompt field so you can optimize it again."),
-            Icon = Icons.Material.Filled.Input,
+            Tooltip = TA("Moves the optimized prompt into the prompt field so you can optimize it again."),
+            Icon = AppIcons.USE_AS_INPUT,
             Color = Color.Default,
             AsyncAction = this.UseOptimizedPromptAsInput,
             DisabledActionParam = () => !this.CanImproveFurther,
@@ -332,7 +332,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     private string? ValidateInputPrompt(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
-            return T("Please provide a prompt or prompt description.");
+            return TA("Please provide a prompt or prompt description.");
 
         return null;
     }
@@ -340,7 +340,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     private string? ValidateCustomLanguage(string language)
     {
         if (this.selectedTargetLanguage == CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom language.");
+            return TA("Please provide a custom language.");
 
         return null;
     }
@@ -374,11 +374,11 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         if (string.IsNullOrWhiteSpace(promptingGuideline))
         {
             if (this.useCustomPromptGuide && this.IsCustomPromptGuideLocked)
-                this.AddInputIssue(T("The prompt guide of your organization could not be loaded."));
+                this.AddInputIssue(TA("The prompt guide of your organization could not be loaded."));
             else if (this.useCustomPromptGuide)
-                this.AddInputIssue(T("Please attach and load a valid custom prompt guide file."));
+                this.AddInputIssue(TA("Please attach and load a valid custom prompt guide file."));
             else
-                this.AddInputIssue(T("The prompting guideline file could not be loaded. Please verify 'prompting_guideline.md' in Assistants/PromptOptimizer."));
+                this.AddInputIssue(TA("The prompting guideline file could not be loaded. Please verify 'prompting_guideline.md' in Assistants/PromptOptimizer."));
             return;
         }
 
@@ -497,12 +497,12 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     private void ApplyFallbackRecommendations()
     {
-        this.recClarityDirectness = T("Add clearer goals and explicit quality expectations.");
-        this.recExamplesContext = T("Add short examples and background context for your specific use case.");
-        this.recSequentialSteps = T("Break the task into numbered steps if order matters.");
-        this.recStructureMarkers = T("Use headings or markers to separate context, task, and constraints.");
-        this.recRoleDefinition = T("Define a role for the model to focus output style and expertise.");
-        this.recLanguageChoice = T("Use English for complex prompts and explicitly request response language if needed.");
+        this.recClarityDirectness = TA("Add clearer goals and explicit quality expectations.");
+        this.recExamplesContext = TA("Add short examples and background context for your specific use case.");
+        this.recSequentialSteps = TA("Break the task into numbered steps if order matters.");
+        this.recStructureMarkers = TA("Use headings or markers to separate context, task, and constraints.");
+        this.recRoleDefinition = TA("Define a role for the model to focus output style and expertise.");
+        this.recLanguageChoice = TA("Use English for complex prompts and explicitly request response language if needed.");
     }
 
     private string EmptyFallback(string text)
@@ -542,12 +542,12 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     private void ResetGuidelineSummaryToDefault()
     {
-        this.recClarityDirectness = T("Use clear, explicit instructions and directly state quality expectations.");
-        this.recExamplesContext = T("Include short examples and context that explain the purpose behind your requirements.");
-        this.recSequentialSteps = T("Prefer numbered steps when task order matters.");
-        this.recStructureMarkers = T("Separate context, task, constraints, and output format with headings or markers.");
-        this.recRoleDefinition = T("Assign a role to shape tone, expertise, and focus.");
-        this.recLanguageChoice = T("For complex tasks, write prompts in English.");
+        this.recClarityDirectness = TA("Use clear, explicit instructions and directly state quality expectations.");
+        this.recExamplesContext = TA("Include short examples and context that explain the purpose behind your requirements.");
+        this.recSequentialSteps = TA("Prefer numbered steps when task order matters.");
+        this.recStructureMarkers = TA("Separate context, task, constraints, and output format with headings or markers.");
+        this.recRoleDefinition = TA("Assign a role to shape tone, expertise, and focus.");
+        this.recLanguageChoice = TA("For complex tasks, write prompts in English.");
     }
 
     private void AddVisibleOptimizedPromptBlock()
@@ -626,7 +626,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.currentCustomPromptGuidePath = filePath;
 
         if (replacedPrevious)
-            await this.MessageBus.SendInfo(new(Icons.Material.Filled.SwapHoriz, T("Replaced the previously selected custom prompt guide file.")));
+            await this.MessageBus.SendInfo(new(AppIcons.REPLACE, T("Replaced the previously selected custom prompt guide file.")));
     }
 
     private async Task LoadCustomPromptGuidelineContentAsync(FileAttachment fileAttachment)
@@ -634,7 +634,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         if (!fileAttachment.Exists)
         {
             this.customPromptingGuidelineContent = string.Empty;
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.FindInPage, T("The selected custom prompt guide file could not be found.")));
+            await this.MessageBus.SendWarning(new(AppIcons.FILE_NOT_FOUND, T("The selected custom prompt guide file could not be found.")));
             return;
         }
 
@@ -649,7 +649,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         catch
         {
             this.customPromptingGuidelineContent = string.Empty;
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Description, T("Failed to load custom prompt guide content.")));
+            await this.MessageBus.SendError(new(AppIcons.DOCUMENT, T("Failed to load custom prompt guide content.")));
         }
         finally
         {
@@ -663,7 +663,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         var promptingGuideline = await ReadPromptingGuidelineAsync();
         if (string.IsNullOrWhiteSpace(promptingGuideline))
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.MenuBook, T("The prompting guideline file could not be loaded.")));
+            await this.MessageBus.SendWarning(new(AppIcons.PROMPT_GUIDE, T("The prompting guideline file could not be loaded.")));
             return;
         }
 

@@ -25,6 +25,19 @@ public sealed class BflModelRequirementsTests
     }
 
     [Test]
+    public void TheOnboardingRunsWithASmallWindow()
+    {
+        var smallWindow = ContextWindow.Of(8_192);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(BflModelRequirements.HasEnoughContext(BflOnboardingThreadLocation.INSTANCE, smallWindow), Is.True, "The onboarding leaves out the guide.");
+            Assert.That(BflModelRequirements.HasEnoughContext(new BflStepThreadLocation(Guid.NewGuid(), BflStep.FRAMEWORK), smallWindow), Is.False);
+            Assert.That(BflModelRequirements.HasEnoughContext(new BflStepThreadLocation(Guid.NewGuid(), BflStep.FRAMEWORK), ContextWindow.Of(BflModelRequirements.MINIMUM_CONTEXT_TOKENS)), Is.True);
+        }
+    }
+
+    [Test]
     public void AWindowWhichOnlyAnOperatorCouldRaiseIsNotEnough()
     {
         Assert.That(BflModelRequirements.HasEnoughContext(ContextWindow.Of(16_384, 131_072)), Is.False, "What a model reads as it ships counts, not what it might read.");

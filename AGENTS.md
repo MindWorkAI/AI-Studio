@@ -36,6 +36,7 @@ Therefore, before you plan, read, or change anything in one of these areas, read
 | a release, or crediting a contributor in a changelog entry or after a merge | `app/Build/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/PluginSystem/`, or a new capability of configuration plugins | `app/MindWork AI Studio/Tools/PluginSystem/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/ToolCallingSystem/` | `app/MindWork AI Studio/Tools/ToolCallingSystem/AGENTS.md` |
+| anything under `app/MindWork AI Studio/AIOperations/` or `app/Tests/AIOperations/`, or a new task which AI Studio hands to a model on its own | `app/MindWork AI Studio/AIOperations/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Models/` or `app/Tests/Models/` | `app/MindWork AI Studio/Models/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/Services/Indexing/`, or `DataSourceEmbeddingService` | `app/MindWork AI Studio/Tools/Services/Indexing/AGENTS.md` |
 | anything under `app/MindWork AI Studio/Tools/Databases/` | `app/MindWork AI Studio/Tools/Databases/AGENTS.md` |
@@ -99,7 +100,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 ### Build
 ```bash
 cd app/Build
-dotnet run build
+dotnet run -- build
 ```
 This builds the .NET app as a Tauri "sidecar" binary, which is required even for development.
 
@@ -109,7 +110,7 @@ instead; see "Cloud sessions" below.
 
 Agents must not start builds through their own shell: agent shells run sandboxed, and `.NET` builds
 hit a known sandbox issue there, typically surfacing as `CSSM_ModuleLoad()` or other sandbox-related
-failures (for reference: https://github.com/openai/codex/issues/4915). This applies to `dotnet run build`,
+failures (for reference: https://github.com/openai/codex/issues/4915). This applies to `dotnet run -- build`,
 `dotnet build`, `cargo build`, and similar commands.
 
 Instead, use the JetBrains IDE MCP servers. They execute in the IDE process, which runs outside the
@@ -130,8 +131,8 @@ triggering a new build.
 terminal, because they are more than a solution build:
 
 ```
-mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run build"
-mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run collect-i18n"
+mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run -- build"
+mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run -- collect-i18n"
 ```
 
 **Rust builds** work the same way through the matching `rustrover` tools.
@@ -140,7 +141,7 @@ Notes:
 - The IDE may ask the user to confirm a terminal command. Wait for the result instead of retrying the
   command in the agent shell.
 - When the IDE is not running or its MCP server is unavailable, fall back to asking the user to run
-  `cd app/Build && dotnet run build` locally, and wait for their feedback before diagnosing issues or
+  `cd app/Build && dotnet run -- build` locally, and wait for their feedback before diagnosing issues or
   making follow-up changes.
 - Treat the build output, error messages, or success confirmation as the source of truth for further
   troubleshooting, no matter whether it came from the MCP server or from the user.
@@ -169,12 +170,12 @@ again yourself when `metadata.txt` changes during the session, e.g., after a mer
 
 **Building and testing** happen in the shell:
 
-- The quality gate, the same as in the pipeline: `cd app/Build && dotnet run verify`. It compiles both
+- The quality gate, the same as in the pipeline: `cd app/Build && dotnet run -- verify`. It compiles both
   the .NET app and the Rust runtime on its way. Narrower checks: `dotnet build "app/MindWork AI Studio.slnx"`,
   `dotnet test` in `app/Tests`, and `cargo test` or `cargo clippy --all-targets -- -D warnings` in `runtime/`.
 - A cold build of the Rust runtime takes several minutes: run the gate and cargo in the background, or
   give them the longest timeout available.
-- Skip `dotnet run build`: it needs the Tauri CLI, which is not installed, and the app it produces
+- Skip `dotnet run -- build`: it needs the Tauri CLI, which is not installed, and the app it produces
   cannot start without a display.
 
 **Committing and pushing** is your job here:
@@ -199,6 +200,7 @@ again yourself when `metadata.txt` changes during the session, e.g., after a mer
 - **No automated formatting for Rust or .NET files** - Never run automated formatters on Rust files (`.rs`) or .NET files (`.cs`, `.razor`, `.csproj`, etc.). Only make the minimal manual formatting changes required for the specific edit.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
 - **Compatibility shims** - Temporary fallback or read-repair code must be documented in `documentation/compatibility-shims/` with an introduced date, remove-after date, code references, and removal checklist. Add a short code comment near the shim that references the document and remove-after date. Check this folder before adding similar fallback logic, and do not extend expired shims without explicit maintainer direction. Do not use this process for permanent settings schema migrations; those belong in `app/MindWork AI Studio/Settings/SettingsMigrations.cs`.
+- **Text beyond ASCII** - Users of AI Studio write in many languages and scripts, so never assume that a text is ASCII, nor that it fits one particular code page. Wherever text leaves or enters the app as bytes, e.g., passwords and usernames, file and folder names, mail folders and headers, URLs, CSV, command lines, and network protocols, check which encoding the other side expects. In UTF-8, a character beyond ASCII takes two to four bytes; a code page such as Windows-1252, Windows-1254, or Shift-JIS takes other bytes and lacks most characters of other scripts, e.g., Windows-1252 has no `ş` and no `ẞ`. Use the `Encoding` of .NET with an exception fallback, never one which silently replaces a missing character with `?`. Check the Unicode normalization as well: the same `ä` arrives as one code point (NFC) or as `a` with a combining diaeresis (NFD), e.g., in file names from macOS. Include characters of several scripts in the tests of such code, e.g., `ä ß € é ø ş ł ж 日本 한`, and a decomposed `ä`.
 
 ## Wiki
 

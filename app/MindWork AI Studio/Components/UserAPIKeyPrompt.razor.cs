@@ -1,5 +1,6 @@
 using AIStudio.Tools.Services;
 using AIStudio.Tools.UserAPIKeys;
+using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
@@ -40,13 +41,21 @@ public partial class UserAPIKeyPrompt : MSGComponentBase
     private string issue = string.Empty;
     private bool isBusy;
 
-    private string Title => string.IsNullOrWhiteSpace(this.Group.Prompt?.Title) ? T("Your API key is missing") : this.Group.Prompt.Title;
+    private string Title => string.IsNullOrWhiteSpace(this.Group.Prompt?.Title) ? TA("Your API key is missing") : this.Group.Prompt.Title;
+
+    /// <summary>
+    /// Whether the entered key can be checked and stored: it is there, and it can be sent.
+    /// </summary>
+    private bool CanStoreAPIKey => !this.isBusy && !string.IsNullOrWhiteSpace(this.apiKey) && !APIKeyValidation.Check(this.apiKey).IsProblem;
+
+    private static string? ValidateAPIKey(string apiKey) => APIKeyValidation.Validate(apiKey);
 
     private async Task StoreAPIKeyAsync()
     {
-        var enteredAPIKey = this.apiKey.Trim();
-        if (this.isBusy || string.IsNullOrWhiteSpace(enteredAPIKey))
+        if (!this.CanStoreAPIKey)
             return;
+
+        var enteredAPIKey = APIKeyValidation.Normalize(this.apiKey);
 
         this.isBusy = true;
         this.issue = string.Empty;
@@ -55,7 +64,7 @@ public partial class UserAPIKeyPrompt : MSGComponentBase
             var result = await PendingUserAPIKeys.StoreAsync(this.Group, enteredAPIKey, this.RustService, this.Logger);
             if (result.Check is UserAPIKeyCheckOutcome.REJECTED)
             {
-                this.issue = T("The provider did not accept this API key. Please check the key and try again.");
+                this.issue = TA("The provider did not accept this API key. Please check the key and try again.");
                 return;
             }
 
@@ -64,16 +73,16 @@ public partial class UserAPIKeyPrompt : MSGComponentBase
             // Hence, a failure to store the key goes into a message of its own instead of into this panel:
             //
             if (result.FailedProviderNames.Count > 0)
-                await this.MessageBus.SendError(new DataErrorMessage(Icons.Material.Filled.Key, string.Format(T("AI Studio could not store the API key for these providers: {0}"), string.Join(", ", result.FailedProviderNames))));
+                await this.MessageBus.SendError(new DataErrorMessage(AppIcons.KEY, string.Format(T("AI Studio could not store the API key for these providers: {0}"), string.Join(", ", result.FailedProviderNames))));
 
             if (result.FailedProviderNames.Count == this.Group.Targets.Count)
                 return;
 
             this.apiKey = string.Empty;
             if (result.Check is UserAPIKeyCheckOutcome.ACCEPTED)
-                await this.MessageBus.SendSuccess(new DataSuccessMessage(Icons.Material.Filled.Key, T("AI Studio checked your API key and stored it. You can now use the AI providers of your organization.")));
+                await this.MessageBus.SendSuccess(new DataSuccessMessage(AppIcons.KEY, TA("AI Studio checked your API key and stored it. You can now use the AI providers of your organization.")));
             else
-                await this.MessageBus.SendWarning(new DataWarningMessage(Icons.Material.Filled.Key, T("AI Studio stored your API key but could not check it. If the AI providers of your organization do not work, please correct the key in the settings.")));
+                await this.MessageBus.SendWarning(new DataWarningMessage(AppIcons.KEY, TA("AI Studio stored your API key but could not check it. If the AI providers of your organization do not work, please correct the key in the settings.")));
 
             // Tell everyone that the providers are usable now. The home page removes this panel once no provider waits any longer:
             await this.SendMessage<bool>(Event.CONFIGURATION_CHANGED);

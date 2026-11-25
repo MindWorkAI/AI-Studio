@@ -292,7 +292,7 @@ public static class LLMProvidersExtensions
         /// <remarks>
         /// The limit belongs to the API of the provider, not to the model: the same model may accept
         /// larger images through another provider. What we actually send is asked through
-        /// IImageSourceExtensions.MaxImageSizeBytesFor, which also applies our own limit.
+        /// ImageSourceExtensions.MaxImageSizeBytesFor, which also applies our own limit.
         /// </remarks>
         /// <value>The size limit of one image file, or null when the provider states none we know of.</value>
         public long? MaxImageSizeBytes => provider switch

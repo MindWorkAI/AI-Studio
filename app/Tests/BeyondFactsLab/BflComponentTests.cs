@@ -138,12 +138,6 @@ public sealed class BflComponentTests
         Assert.That(LAB.PreselectedProvider(settingsManager).Id, Is.EqualTo(provider.Id));
     }
 
-    [Test]
-    public void NewSettingsAddressFormally()
-    {
-        Assert.That(new DataBeyondFactsLab().AddressForm, Is.EqualTo(AddressForm.FORMAL), "The texts of AI Studio address the person formally as well.");
-    }
-
     private static SettingsManager CreateSettingsManager() => new(NullLogger<SettingsManager>.Instance, null!);
 
     private static AIStudio.Settings.Provider CreateProvider(LLMProviders llmProvider) => new(1, Guid.NewGuid().ToString(), "Test", llmProvider, new("test-model", null));

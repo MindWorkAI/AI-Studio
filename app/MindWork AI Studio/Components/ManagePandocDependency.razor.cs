@@ -49,8 +49,8 @@ public partial class ManagePandocDependency : MSGComponentBase
     private string ButtonText => this.IsOutdated ? T("Update Pandoc") : T("Install Pandoc");
 
     private string PromptText => this.IsOutdated
-        ? $"{this.IntroText} {T("Your Pandoc installation is outdated. Please update it to the latest version to ensure compatibility with all features.")}"
-        : $"{this.IntroText} {T("Pandoc is not installed or not available. Please install it to use the features that require Pandoc.")}";
+        ? $"{this.IntroText} {TA("Your Pandoc installation is outdated. Please update it to the latest version to ensure compatibility with all features.")}"
+        : $"{this.IntroText} {TA("Pandoc is not installed or not available. Please install it to use the features that require Pandoc.")}";
 
     private async Task ShowPandocDialogAsync()
     {

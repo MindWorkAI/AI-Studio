@@ -132,6 +132,24 @@ public sealed class ChatCompletionToolCallAccumulatorTests
     }
     
     [Test]
+    public void ReasoningSaysThatTheModelReasons()
+    {
+        var accumulator = new ChatCompletionToolCallAccumulator();
+        var parts = Lines(
+                """{"choices":[{"index":0,"delta":{"reasoning_content":"Thinking about it."}}]}""",
+                """{"choices":[{"index":0,"delta":{"content":"The answer."}}]}""")
+            .Select(accumulator.Process)
+            .ToList();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(parts[0].IsReasoning, Is.True, "A reasoning delta tells the user why no text arrives yet.");
+            Assert.That(parts[0].HasContent, Is.False, "The reasoning itself still does not show.");
+            Assert.That(parts[1].IsReasoning, Is.False, "Text is the answer, not reasoning.");
+        }
+    }
+
+    [Test]
     public void AToolWhichTakesNothingGetsAnEmptyObject()
     {
         //

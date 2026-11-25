@@ -1,5 +1,5 @@
 using AIStudio.Components;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -42,13 +42,6 @@ public partial class Plugins : MSGComponentBase
     
     private bool isSharingPlugin;
 
-    private const string IMPORT_ICON =
-        @"<svg class=""mud-icon-root mud-svg-icon mud-dark-text mud-icon-size-medium"" focusable=""false"" viewBox=""0 0 24 24"" aria-hidden=""true"" role=""img"">
-    <path d=""M0 0h24v24H0V0z"" fill=""none""></path>
-    <path d=""M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4z"" transform=""rotate(180 12 10)""></path>
-    <path d=""M20 10v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z""></path>
-  </svg>";
-
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -64,7 +57,7 @@ public partial class Plugins : MSGComponentBase
                 if (pluginMeta.IsInternal)
                     return GROUP_INTERNAL;
                 
-                return this.SettingsManager.IsPluginEnabled(pluginMeta)
+                return this.IsPluginWorking(pluginMeta)
                     ? GROUP_ENABLED
                     : GROUP_DISABLED;
             }
@@ -89,7 +82,7 @@ public partial class Plugins : MSGComponentBase
         // activation is decided live, but it would leave the settings in a state which claims the
         // opposite of what the user sees:
         //
-        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id) || this.IsDisabledByItsCategories(pluginMeta))
             return;
 
         if (this.SettingsManager.IsPluginEnabled(pluginMeta))
@@ -150,7 +143,7 @@ public partial class Plugins : MSGComponentBase
             return;
 
         if (auditResult.Audit is not null)
-            this.UpsertAuditCard(auditResult.Audit);
+            AssistantPluginAuditService.UpsertAudit(this.SettingsManager, auditResult.Audit);
 
         if (auditResult.ActivatePlugin)
             this.SettingsManager.ConfigurationData.EnabledPlugins.Add(pluginId);
@@ -159,14 +152,14 @@ public partial class Plugins : MSGComponentBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private async Task<bool> ConfirmActivationBelowMinimumAsync(string pluginName, AssistantAuditLevel actualLevel)
+    private async Task<bool> ConfirmActivationBelowMinimumAsync(string pluginName, PluginAuditLevel actualLevel)
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             {
                 x => x.Message,
                 string.Format(
-                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
+                    this.TA("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
                     pluginName,
                     actualLevel.Name,
                     this.AssistantPluginAuditSettings.MinimumLevel.Name)
@@ -179,10 +172,28 @@ public partial class Plugins : MSGComponentBase
         return dialogResult is not null && !dialogResult.Canceled;
     }
     
+    /// <summary>
+    /// Whether your organization disabled this assistant plugin through its categories.
+    /// </summary>
+    private bool IsDisabledByItsCategories(IPluginMetadata pluginMeta) =>
+        pluginMeta.Type is PluginType.ASSISTANT &&
+        this.TryGetAssistantPlugin(pluginMeta.Id) is { } assistantPlugin &&
+        this.SettingsManager.IsDisabledByItsCategories(assistantPlugin);
+
+    /// <summary>
+    /// Whether a plugin works: it is enabled, and your organization did not disable it through its categories.
+    /// </summary>
+    /// <remarks>
+    /// The switch shows this instead of the stored activation. The activation stays stored, so the plugin
+    /// works again as soon as your organization enables one of its categories again.
+    /// </remarks>
+    private bool IsPluginWorking(IPluginMetadata pluginMeta) => this.SettingsManager.IsPluginEnabled(pluginMeta) && !this.IsDisabledByItsCategories(pluginMeta);
+
     private bool IsActivationSwitchDisabled(IPluginMetadata pluginMeta, bool isEnabled)
     {
-        // An assistant plugin your organization requires to stay enabled has no switch to offer:
-        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+        // An assistant plugin your organization requires to stay enabled, or disabled through its
+        // categories, has no switch to offer:
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id) || this.IsDisabledByItsCategories(pluginMeta))
             return true;
 
         if (isEnabled || pluginMeta.Type is not PluginType.ASSISTANT)
@@ -199,7 +210,15 @@ public partial class Plugins : MSGComponentBase
     private string GetActivationTooltip(IPluginMetadata pluginMeta, bool isEnabled)
     {
         if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
-            return this.T("Your organization requires this assistant to stay enabled");
+            return this.TA("Your organization requires this assistant to stay enabled");
+
+        if (this.IsDisabledByItsCategories(pluginMeta))
+        {
+            var categoryNames = AssistantCategoryKey.AllOf(pluginMeta).Select(category => category.Name).ToList();
+            return categoryNames.Count == 1
+                ? string.Format(TA("Your organization disabled the category '{0}' of this assistant"), categoryNames[0])
+                : string.Format(TA("Your organization disabled all categories of this assistant: {0}"), string.Join(", ", categoryNames));
+        }
 
         if (isEnabled)
             return this.T("Disable plugin");
@@ -278,11 +297,11 @@ public partial class Plugins : MSGComponentBase
     /// user's choice instead: on Linux, which has none, and once the share sheet failed or did not
     /// respond, until AI Studio restarts. The action must be labeled accordingly.
     /// </summary>
-    private string SharePluginIcon => this.PluginShareService.UsesExport ? Icons.Material.Filled.FileDownload : Icons.Material.Filled.IosShare;
+    private string SharePluginIcon => this.PluginShareService.UsesExport ? AppIcons.EXPORT : AppIcons.SHARE;
 
     private string SharePluginTooltip => this.PluginShareService.UsesExport ? this.T("Export plugin archive") : this.T("Share plugin archive");
 
-    private string SharePluginLockText => this.PluginShareService.UsesExport ? this.T("Your organization has disabled exporting plugins.") : this.T("Your organization has disabled sharing plugins.");
+    private string SharePluginLockText => this.PluginShareService.UsesExport ? this.TA("Your organization has disabled exporting plugins.") : this.TA("Your organization has disabled sharing plugins.");
 
     private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
     {
@@ -297,7 +316,7 @@ public partial class Plugins : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not AssistantPluginEditorDialogResult result)
             return;
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The assistant plugin '{0}' has been successfully saved."), result.PluginName)));
+        await this.MessageBus.SendSuccess(new(AppIcons.SAVE, string.Format(this.T("The assistant plugin '{0}' has been successfully saved."), result.PluginName)));
         LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
 
         // Saving the plugin ran LoadAll, which already sent PLUGINS_RELOADED. Editing the plugin
@@ -329,7 +348,7 @@ public partial class Plugins : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not AssistantPluginRevisionDialogResult result)
             return;
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant plugin '{0}' has been successfully revised."), result.PluginName)));
+        await this.MessageBus.SendSuccess(new(AppIcons.REVISE_ASSISTANT, string.Format(this.T("The assistant plugin '{0}' has been successfully revised."), result.PluginName)));
         LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully revised.");
 
         // Saving the revision ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
@@ -351,7 +370,7 @@ public partial class Plugins : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not DirectChatLauncherSettingsDialogResult result)
             return;
 
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The tile '{0}' has been updated."), result.PluginName)));
+        await this.MessageBus.SendSuccess(new(AppIcons.SAVE, string.Format(this.T("The tile '{0}' has been updated."), result.PluginName)));
         LOG.LogInformation($"The chat launcher '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
 
         // Saving ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
@@ -395,12 +414,12 @@ public partial class Plugins : MSGComponentBase
                 // that would only unpack the archive, at least on macOS.
                 //
                 case PluginShareOutcome.EXPORTED:
-                    await exportFeedback.SucceededAsync(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath), shareResult.ArchivePath, false);
+                    await exportFeedback.SucceededAsync(AppIcons.EXPORT, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath), shareResult.ArchivePath, false);
                     break;
 
                 case PluginShareOutcome.FAILED:
                     LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
-                    await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, isExport ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
+                    await this.MessageBus.SendError(new(AppIcons.ERROR, isExport ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
                     break;
 
                 // The share sheet takes it from here, and a canceled export needs no message. The
@@ -428,7 +447,7 @@ public partial class Plugins : MSGComponentBase
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(this.T("{0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing."), issue) },
+            { x => x.Message, string.Format(this.TA("{0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing."), issue) },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Share dialog not available"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -490,7 +509,7 @@ public partial class Plugins : MSGComponentBase
             // We do not announce the reload ourselves: a successful installation ran LoadAll, which
             // already sent PLUGINS_RELOADED. The import changes no settings either, so there is
             // nothing to report as a configuration change:
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Extension, message));
+            await this.MessageBus.SendSuccess(new(AppIcons.PLUGIN, message));
         }
         finally
         {
@@ -521,7 +540,7 @@ public partial class Plugins : MSGComponentBase
         var dialogParameters = new DialogParameters<InformationDialog>
         {
             { x => x.Message, string.Format(this.T("The plugin could not be imported: {0}"), issue) },
-            { x => x.Icon, Icons.Material.Filled.ReportProblem },
+            { x => x.Icon, AppIcons.ERROR },
             { x => x.IconColor, Color.Error },
         };
 
@@ -551,27 +570,12 @@ public partial class Plugins : MSGComponentBase
 
         try
         {
-            var wasConfigurationChanged = false;
-            var assistantPlugins = PluginFactory.RunningPlugins.OfType<PluginAssistants>().ToList();
-            foreach (var assistantPlugin in assistantPlugins)
-            {
-                var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
-                if (!securityState.RequiresAudit)
-                    continue;
-
-                var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
-                if (audit.Level is AssistantAuditLevel.UNKNOWN)
-                {
-                    await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(this.T("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."), assistantPlugin.Name)));
-                    continue;
-                }
-
-                this.UpsertAuditCard(audit);
-                wasConfigurationChanged = true;
-            }
-
-            if (!wasConfigurationChanged)
+            var audits = await this.AssistantPluginAuditService.RunAutomaticAuditsAsync();
+            if (audits.Count == 0)
                 return;
+
+            foreach (var audit in audits)
+                AssistantPluginAuditService.UpsertAudit(this.SettingsManager, audit);
 
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
@@ -581,16 +585,6 @@ public partial class Plugins : MSGComponentBase
             this.isAutoAuditing = false;
             await this.InvokeAsync(this.StateHasChanged);
         }
-    }
-
-    private void UpsertAuditCard(PluginAssistantAudit audit)
-    {
-        var audits = this.SettingsManager.ConfigurationData.AssistantPluginAudits;
-        var existingIndex = audits.FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
     }
 
     #region Overrides of MSGComponentBase
@@ -629,11 +623,11 @@ public partial class Plugins : MSGComponentBase
         switch (archivePaths.Count)
         {
             case 0:
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.ReportProblem, string.Format(this.T("Please drop a plugin archive with the extension {0} or .zip."), PluginArchive.PLUGIN_FILE_EXTENSION)));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, string.Format(this.TA("Please drop a plugin archive with the extension {0} or .zip."), PluginArchive.PLUGIN_FILE_EXTENSION)));
                 return;
 
             case > 1:
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.ReportProblem, this.T("Please drop only one plugin archive at a time.")));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, this.TA("Please drop only one plugin archive at a time.")));
                 return;
         }
 

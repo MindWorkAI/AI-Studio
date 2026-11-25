@@ -57,11 +57,11 @@ public sealed class TemplateCopyTests
     }
 
     [Test]
-    public void AMissingTemplateLeavesNoCopyBehind()
+    public async Task AMissingTemplateLeavesNoCopyBehind()
     {
         var templatePath = Path.Join(this.testFolder, "missing.docx");
 
-        Assert.ThrowsAsync<FileNotFoundException>(() => TemplateCopy.CreateAsync(templatePath, this.temporaryDirectory, ".docx", NullLogger.Instance, CancellationToken.None));
+        await Assert.ThrowsAsync<FileNotFoundException>(() => TemplateCopy.CreateAsync(templatePath, this.temporaryDirectory, ".docx", NullLogger.Instance, CancellationToken.None));
         Assert.That(Directory.GetFiles(Path.Join(Path.GetTempPath(), this.temporaryDirectory)), Is.Empty);
     }
 }

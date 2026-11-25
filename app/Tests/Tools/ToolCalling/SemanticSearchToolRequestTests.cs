@@ -64,7 +64,7 @@ public sealed class SemanticSearchToolRequestTests
     [Test]
     public void AQueryOfSeveralLinesIsRefused()
     {
-        var message = Refusal(() => SemanticSearchTool.ReadRequest(Query($"travel expenses{Environment.NewLine}hotels"), OFFERED));
+        var message = Refusal(() => SemanticSearchTool.ReadRequest(Query("travel expenses\nhotels"), OFFERED));
         Assert.That(message, Does.Contain("'query'").And.Contain("single line"));
     }
 

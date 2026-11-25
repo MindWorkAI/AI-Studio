@@ -5,7 +5,7 @@ namespace AIStudio.Components;
 public partial class ConfigPluginInfoCard : ComponentBase
 {
     [Parameter]
-    public string HeaderIcon { get; set; } = Icons.Material.Filled.Extension;
+    public string HeaderIcon { get; set; } = AppIcons.PLUGIN;
 
     [Parameter]
     public string HeaderText { get; set; } = string.Empty;

@@ -3,6 +3,8 @@ using System.Text.Json;
 using AIStudio.Assistants.Builder;
 using AIStudio.Chat;
 using AIStudio.Provider;
+using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.ToolCallingSystem;
@@ -10,9 +12,11 @@ using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Tools.Services;
 
-public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, ILogger<AssistantPluginGenerationService> logger)
+public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, SettingsManager settingsManager, ILogger<AssistantPluginGenerationService> logger)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantPluginGenerationService).Namespace, nameof(AssistantPluginGenerationService));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(AssistantPluginGenerationService).Namespace, nameof(AssistantPluginGenerationService));
 
     // Internal rather than private, so that a test can check the JSON the models get:
     internal static readonly JsonSerializerOptions UNTRUSTED_PROMPT_JSON_OPTIONS = new JsonSerializerOptions
@@ -44,19 +48,19 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     public async Task<AssistantPluginDraftGenerationResult> GenerateAssistantDraftAsync(AssistantPluginDraftGenerationRequest request, ProviderSettings provider, CancellationToken token = default)
     {
         if (string.IsNullOrWhiteSpace(request.AssistantDescription))
-            return DraftFailure(TB("Please describe the assistant you want to create."));
+            return DraftFailure(TA("Please describe the assistant you want to create."));
 
         if (!IsValidChatLaunchRequest(request.ChatLaunch))
             return DraftFailure(TB("The chat launcher configuration is incomplete or invalid."));
 
         if (!ProviderIsUsable(provider))
-            return DraftFailure(TB("Please select a provider."));
+            return DraftFailure(TA("Please select a provider."));
 
         var context = await this.LoadAssistantBuilderContextAsync();
         if (string.IsNullOrWhiteSpace(context))
-            return DraftFailure(TB("The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."));
+            return DraftFailure(TA("The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."));
 
-        var prompt = BuildAssistantDraftPrompt(request, context);
+        var prompt = BuildAssistantDraftPrompt(request, context, settingsManager.ConfigurationData.App);
         var markdown = await this.GenerateTextAsync(provider, prompt, TB("Assistant Draft"), BuildDraftSystemPrompt(), token);
         if (string.IsNullOrWhiteSpace(markdown))
             return DraftFailure(TB("The draft model did not return a usable answer."));
@@ -67,13 +71,13 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
     public async Task<AssistantPluginGenerationDraft> GenerateInitialLuaAsync(AssistantPluginLuaGenerationRequest request, ProviderSettings provider, CancellationToken token = default)
     {
         if (string.IsNullOrWhiteSpace(request.ApprovedAssistantDraft))
-            return InitialFailure(TB("Please create an assistant draft first."));
+            return InitialFailure(TA("Please create an assistant draft first."));
 
         if (!IsValidChatLaunchRequest(request.ChatLaunch))
             return InitialFailure(TB("The chat launcher configuration is incomplete or invalid."));
 
         if (!ProviderIsUsable(provider))
-            return InitialFailure(TB("Please select a provider."));
+            return InitialFailure(TA("Please select a provider."));
 
         //
         // A launcher is fully described by the Builder form, so nothing about it is left for a
@@ -119,8 +123,14 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         if (!ResponseMetadataMatchesPlugin(parsedResponse.Assistant, generatedAssistant))
             return InitialFailure(TB("The generated assistant metadata does not match the generated plugin."));
 
+        if (!ResponseCategoriesMatchPlugin(parsedResponse.Plugin, generatedAssistant))
+            return InitialFailure(TB("The categories of the generated assistant do not match the generated plugin."));
+
+        if (this.DescribeDisabledCategories(generatedAssistant.Categories, generatedAssistant.CustomCategories) is { Length: > 0 } disabledCategoriesIssue)
+            return InitialFailure(disabledCategoriesIssue);
+
         if (this.FindUnknownToolIds(generatedAssistant) is { Count: > 0 } unknownToolIds)
-            return InitialFailure(string.Format(TB("The generated assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
+            return InitialFailure(string.Format(TA("The generated assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
 
         return new(true, fullLua, parsedResponse.Plugin?.Name ?? string.Empty, string.Empty);
     }
@@ -149,6 +159,11 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             return InitialFailure(error.GetMessage(technicalDetails));
         }
 
+        // The answer was checked while parsing, so reading it again cannot fail:
+        AssistantBuilderCategories.TryRead(texts.Categories, texts.CustomCategories, out var categories, out var customCategories);
+        if (this.DescribeDisabledCategories(categories, customCategories) is { Length: > 0 } disabledCategoriesIssue)
+            return InitialFailure(disabledCategoriesIssue);
+
         var metadata = new DirectChatLauncherPluginMetadata(
             request.PluginId,
             DEFAULT_VERSION,
@@ -156,7 +171,8 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             [DEFAULT_AUTHOR],
             DEFAULT_SUPPORT_CONTACT,
             DEFAULT_SOURCE_URL,
-            [PluginCategory.CORE],
+            categories,
+            customCategories,
             [PluginTargetGroup.EVERYONE],
             IsMaintained: true,
             DeprecationMessage: string.Empty,
@@ -200,10 +216,10 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             return RevisionFailure(TB("The current plugin.lua content is empty."));
 
         if (string.IsNullOrWhiteSpace(changeRequest))
-            return RevisionFailure(TB("Please describe what should be changed."));
+            return RevisionFailure(TA("Please describe what should be changed."));
 
         if (!ProviderIsUsable(provider))
-            return RevisionFailure(TB("Please select a provider."));
+            return RevisionFailure(TA("Please select a provider."));
 
         var context = await this.LoadAssistantBuilderContextAsync();
         if (string.IsNullOrWhiteSpace(context))
@@ -239,8 +255,14 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         if (!ResponseMetadataMatchesPlugin(parsedResponse.Assistant, revisedAssistant))
             return RevisionFailure(TB("The revised assistant metadata does not match the revised plugin."));
 
+        if (!ResponseCategoriesMatchPlugin(parsedResponse.Plugin, revisedAssistant))
+            return RevisionFailure(TB("The categories of the revised assistant do not match the revised plugin."));
+
+        if (this.DescribeDisabledCategories(revisedAssistant.Categories, revisedAssistant.CustomCategories) is { Length: > 0 } disabledCategoriesIssue)
+            return RevisionFailure(disabledCategoriesIssue);
+
         if (this.FindUnknownToolIds(revisedAssistant, plugin) is { Count: > 0 } unknownToolIds)
-            return RevisionFailure(string.Format(TB("The revised assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
+            return RevisionFailure(string.Format(TA("The revised assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
 
         return new(true, revisedLua, parsedResponse.Plugin?.Name ?? plugin.Name, string.Empty);
     }
@@ -261,24 +283,24 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
                 continue;
             }
 
-            builder.AppendLine($"# {contextFile.Title}");
-            builder.AppendLine($"Source: {contextFile.RelativePath}");
-            builder.AppendLine("<context>");
-            builder.AppendLine(content.Trim());
-            builder.AppendLine("</context>");
-            builder.AppendLine();
+            builder.AppendLineLF($"# {contextFile.Title}");
+            builder.AppendLineLF($"Source: {contextFile.RelativePath}");
+            builder.AppendLineLF("<context>");
+            builder.AppendLineLF(content.Trim());
+            builder.AppendLineLF("</context>");
+            builder.AppendLineLF();
         }
 
         //
         // Unlike the files above, this list is not the same on two installations. It is the only
         // place the model learns which tool IDs exist, so an assistant cannot name a tool without it:
         //
-        builder.AppendLine("# Available tools");
-        builder.AppendLine("Source: the tools installed in this AI Studio");
-        builder.AppendLine("<context>");
-        builder.AppendLine(await this.FormatAvailableToolsAsync());
-        builder.AppendLine("</context>");
-        builder.AppendLine();
+        builder.AppendLineLF("# Available tools");
+        builder.AppendLineLF("Source: the tools installed in this AI Studio");
+        builder.AppendLineLF("<context>");
+        builder.AppendLineLF(await this.FormatAvailableToolsAsync());
+        builder.AppendLineLF("</context>");
+        builder.AppendLineLF();
 
         return builder.ToString().Trim();
     }
@@ -302,7 +324,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         var builder = new StringBuilder();
         foreach (var tool in activeTools)
-            builder.AppendLine($"- {tool.Id}: {tool.DescriptionForLLM}");
+            builder.AppendLineLF($"- {tool.Id}: {tool.DescriptionForLLM}");
 
         return builder.ToString().TrimEnd();
     }
@@ -331,6 +353,26 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         Return exactly one JSON object. Do not wrap JSON in Markdown or code fences.
         """;
 
+    /// <summary>
+    /// The rule which carries the category of the approved draft into the plugin.
+    /// </summary>
+    /// <remarks>
+    /// The draft names the category in a fixed form, see AssistantBuilderCategories. The
+    /// user may have edited that line, though, so a name which is no key counts as a custom category
+    /// rather than a reason to give up. AI Studio checks the answer strictly afterward.
+    /// </remarks>
+    /// <param name="writesLua">True when the model writes the plugin.lua, false when it only answers with JSON fields.</param>
+    /// <returns>The rule as a line of a bullet list.</returns>
+    private static string CategoryRule(bool writesLua)
+    {
+        var keys = string.Join(", ", AssistantBuilderCategories.Offered.Select(category => Enum.GetName(category)));
+        var target = writesLua
+            ? $$"""A key such as BUSINESS becomes CATEGORIES = {"BUSINESS"}. "{{AssistantBuilderCategories.CUSTOM_PREFIX}} <name>" becomes CATEGORIES = {"CUSTOM"} together with CUSTOM_CATEGORIES = {"<name>"}; write CUSTOM_CATEGORIES only then. Repeat the keys as categories and the names as custom_categories in the JSON "plugin" object."""
+            : $$"""A key such as BUSINESS goes into categories as ["BUSINESS"]. "{{AssistantBuilderCategories.CUSTOM_PREFIX}} <name>" goes into categories as ["CUSTOM"] and its name into custom_categories. Leave custom_categories empty otherwise.""";
+
+        return $$"""- Take the category from the "## {{TB("Category")}}" section of the approved draft. {{target}} When the section names anything else than one of these keys, treat it as the name of a custom category. The keys are: {{keys}}.""";
+    }
+
     private static string BuildLauncherTextsPrompt(AssistantPluginLuaGenerationRequest request, AssistantBuilderChatLaunchRequest chatLaunch) =>
         $$"""
           Name a direct chat launcher tile for AI Studio, based on the approved draft below.
@@ -353,11 +395,14 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             "schema_version": "{{LauncherTextsResponse.SCHEMA_VERSION_VALUE}}",
             "plugin_name": "...",
             "title": "...",
-            "description": "..."
+            "description": "...",
+            "categories": ["..."],
+            "custom_categories": []
           }
 
           Rules:
           - Take plugin_name and title from the "## {{TB("Name")}}" section of the approved draft. Do not invent a different name and do not use placeholder text.
+          {{CategoryRule(writesLua: false)}}
           - Keep title short enough to read on a tile: two to four words.
           - Write description as one sentence that says which chat this tile opens and what it is for. Do not describe an input form, a prompt, or a submit button, because a launcher has none.
           - Write all three texts in the language of the approved draft.
@@ -434,7 +479,6 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
                  AUTHORS = {"{{DEFAULT_AUTHOR}}"}
                  SUPPORT_CONTACT = "{{DEFAULT_SUPPORT_CONTACT}}"
                  SOURCE_URL = "{{DEFAULT_SOURCE_URL}}"
-                 CATEGORIES = {"CORE"}
                  TARGET_GROUPS = {"EVERYONE"}
                  IS_MAINTAINED = true
                  DEPRECATION_MESSAGE = ""
@@ -455,6 +499,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
                  - Generate one self-contained plugin.lua only. Do not use require(...) or depend on icon.lua, assets, or any other companion file.
                  - The JSON "plugin" object describes the top-level Lua plugin metadata such as NAME, DESCRIPTION, and CATEGORIES.
                  - Take the plugin NAME and ASSISTANT.Title from the "## {{TB("Name")}}" section of the approved draft. Do not invent a different name and do not use placeholder text.
+                 {{CategoryRule(writesLua: true)}}
                  - A null value in the request JSON means the user did not specify that detail. Never write the word "null" or a field name into the plugin.
                  - The JSON "assistant" object describes either a form assistant or a direct chat launcher.
                  - The plugin must include all required top-level metadata and the ASSISTANT table.
@@ -466,7 +511,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
                  """;
     }
 
-    private static string BuildAssistantDraftPrompt(AssistantPluginDraftGenerationRequest request, string context)
+    private static string BuildAssistantDraftPrompt(AssistantPluginDraftGenerationRequest request, string context, DataApp app)
     {
         var draftSections = request.ChatLaunch is null
             ? $$"""
@@ -566,7 +611,11 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
           - Treat filled optional guidance as explicit user intent.
           - A null value means the user did not specify that detail. Derive it yourself from the assistant description. Never write the word "null", a field name, or placeholder text into the draft.
           - The "## {{TB("Name")}}" section is mandatory and must always name the assistant. Use assistant_title verbatim when it is not null. When it is null, invent a short, specific name of two to four words that says what the assistant does.
+          - The "## {{TB("Category")}}" section is mandatory and consists of exactly one line and nothing else: either one key from the "Categories" list below, spelled exactly as listed, or "{{AssistantBuilderCategories.CUSTOM_PREFIX}} " followed by the name of a category of the user's own. Use category verbatim when it is not null. When it is null, choose the one key which fits the assistant best. Never invent a custom category yourself, and never use a key which is not in the list.
           {{typeRequirements}}
+
+          Categories:
+          {{AssistantBuilderCategories.ListForPrompt(app)}}
           """;
     }
 
@@ -621,6 +670,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
           - A null value in the request JSON means that detail is not available. Never write the word "null" or a field name into the plugin.
           - Keep ID = "{{plugin.Id}}" exactly. Do not create a new plugin ID.
           - Keep TYPE = "ASSISTANT".
+          - Keep CATEGORIES and CUSTOM_CATEGORIES unless the requested change asks for another category. CUSTOM_CATEGORIES lists the names of custom categories and belongs to the key CUSTOM in CATEGORIES only. Repeat the keys as categories and the names as custom_categories in the JSON "plugin" object.
           - Set LAST_CHANGED = "{{NowAsLastChanged}}" right after VERSION, replacing any earlier value.
           - Keep the assistant locally managed. DEPLOYED_USING_CONFIG_SERVER must not be true.
           {{builderMetadataRule}}
@@ -729,11 +779,11 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         var builder = new StringBuilder();
         foreach (var (relativePath, content) in luaFiles)
         {
-            builder.AppendLine($"# {relativePath}");
-            builder.AppendLine("```lua");
-            builder.AppendLine(content.Trim());
-            builder.AppendLine("```");
-            builder.AppendLine();
+            builder.AppendLineLF($"# {relativePath}");
+            builder.AppendLineLF("```lua");
+            builder.AppendLineLF(content.Trim());
+            builder.AppendLineLF("```");
+            builder.AppendLineLF();
         }
 
         return builder.ToString().Trim();
@@ -806,6 +856,45 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         requested is null && actual is null ||
         requested is not null && actual is not null &&
         requested.ToHashSet(StringComparer.Ordinal).SetEquals(actual);
+
+    /// <summary>
+    /// Whether the categories of the answer are the ones the plugin states.
+    /// </summary>
+    /// <remarks>
+    /// The loader drops what it does not know from CATEGORIES, so a plugin.lua with a misspelled key may
+    /// still load with fewer categories than the model meant. Comparing it with the strictly checked
+    /// JSON catches that.
+    /// </remarks>
+    /// <param name="metadata">The plugin metadata of the answer.</param>
+    /// <param name="assistant">The plugin as AI Studio loaded it.</param>
+    /// <returns>True when both name the same categories.</returns>
+    private static bool ResponseCategoriesMatchPlugin(AssistantBuilderPluginMetadata? metadata, PluginAssistants assistant) =>
+        metadata is not null &&
+        AssistantBuilderCategories.TryRead(metadata.Categories, metadata.CustomCategories, out var categories, out var customCategories) &&
+        AssistantBuilderCategories.MatchPlugin(assistant, categories, customCategories);
+
+    /// <summary>
+    /// Describes the categories of a new or revised assistant which your organization disabled.
+    /// </summary>
+    /// <remarks>
+    /// The draft offers the model only the categories which are not disabled, but the user may edit the
+    /// draft, and a revision keeps the categories a plugin had before. See
+    /// AssistantBuilderCategories.FindDisabled.
+    /// </remarks>
+    /// <param name="categories">The categories of the assistant.</param>
+    /// <param name="customCategories">The names of its custom categories.</param>
+    /// <returns>The message for the user, or an empty string when your organization disabled none of the categories.</returns>
+    private string DescribeDisabledCategories(IEnumerable<PluginCategory> categories, IEnumerable<string> customCategories)
+    {
+        var disabledCategories = AssistantBuilderCategories.FindDisabled(settingsManager.ConfigurationData.App, categories, customCategories);
+        return disabledCategories.Count switch
+        {
+            0 => string.Empty,
+            1 => string.Format(TA("Your organization disabled the category '{0}'. Please choose another category for your assistant."), disabledCategories[0].Name),
+
+            _ => string.Format(TA("Your organization disabled these categories of your assistant: {0}. Please choose other categories."), string.Join(", ", disabledCategories.Select(category => category.Name))),
+        };
+    }
 
     private static bool ResponseMetadataMatchesPlugin(AssistantBuilderAssistantMetadata? metadata, PluginAssistants assistant)
     {

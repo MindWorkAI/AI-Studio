@@ -4,7 +4,9 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// The steps of a preparation in the BeyondFacts Lab, in the order the lab suggests.
 /// </summary>
 /// <remarks>
-/// The names are stored, e.g., as the step shown last, so they never change. People may jump to any step.
+/// The names are stored, e.g., as the step shown last, so they never change; the files store no position. The
+/// order of the members alone gives the order of the steps, so a step can move by moving its member. People may jump
+/// to any step.
 /// </remarks>
 public enum BflStep
 {
@@ -14,14 +16,17 @@ public enum BflStep
     FRAMEWORK,
 
     /// <summary>
+    /// What the person wants to achieve, and in which roles they speak.
+    /// </summary>
+    /// <remarks>
+    /// People often have more than one role; the name stays singular, since it is stored.
+    /// </remarks>
+    GOALS_AND_ROLE,
+
+    /// <summary>
     /// What the person knows for sure, what is uncertain, and where their expertise ends.
     /// </summary>
     KNOWLEDGE,
-
-    /// <summary>
-    /// What the person wants to achieve, and in which role they speak.
-    /// </summary>
-    GOALS_AND_ROLE,
 
     /// <summary>
     /// What matters to the person, what touches them, and what moves others.

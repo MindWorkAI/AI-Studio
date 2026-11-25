@@ -62,6 +62,28 @@ public sealed class I18NAddressPromptTests
     }
 
     [Test]
+    public void EveryInformalVariantTakesTheWordsOfItsFormalText()
+    {
+        var content = new Dictionary<string, string>
+        {
+            [KEY] = "Enter your name.",
+            [INFORMAL_KEY] = "Enter your name",
+            ["root::A::T1"] = "Save",
+            ["root::A::T2::INFORMAL"] = "A variant without its formal text.",
+        };
+
+        I18NAddressPrompt.AlignInformalVariants(content);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(content[INFORMAL_KEY], Is.EqualTo("Enter your name."), "The plugin worded the formal text differently than the source code.");
+            Assert.That(content[KEY], Is.EqualTo("Enter your name."));
+            Assert.That(content["root::A::T1"], Is.EqualTo("Save"));
+            Assert.That(content["root::A::T2::INFORMAL"], Is.EqualTo("A variant without its formal text."));
+        }
+    }
+
+    [Test]
     public void AUsualTextAddressesTheReaderFormally()
     {
         var section = I18NAddressPrompt.Section("German (Germany)", false, null);

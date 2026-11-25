@@ -12,7 +12,7 @@ changelog entries.
    `gh pr list -R MindWorkAI/AI-Studio --state merged --limit 1000 --search "merged:>=<YYYY-MM-DD>" --json author --jq '[.[].author.login] | unique | .[]'`,
    with the date of the last release tag from `git log -1 --format=%cs <last release tag>`; skip bots
 3. Commit changelog
-4. Run from `app/Build`: `dotnet run release --action <build|month|year>`
+4. Run from `app/Build`: `dotnet run -- release --action <build|month|year>`
 5. Create PR with version bump and changes
 6. After PR merge, maintainer creates git tag: `vX.Y.Z`
 7. GitHub Actions builds release binaries for all platforms

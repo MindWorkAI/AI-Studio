@@ -21,4 +21,9 @@ public readonly record struct ChatCompletionStreamPart(string TextDelta, IList<I
     /// all is the tool calling loop's decision, which knows which round this is.
     /// </remarks>
     public bool HasContent => this.TextDelta.Length > 0 || this.Sources.Count > 0;
+
+    /// <summary>
+    /// Whether this line carried reasoning of the model, see ContentStreamChunk.IsReasoning.
+    /// </summary>
+    public bool IsReasoning { get; init; }
 }

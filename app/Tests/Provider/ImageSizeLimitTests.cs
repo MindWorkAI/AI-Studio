@@ -20,7 +20,7 @@ public sealed class ImageSizeLimitTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(LLMProviders.ANTHROPIC.MaxImageSizeBytes, Is.EqualTo(3_932_160));
-            Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.ANTHROPIC)), Is.EqualTo(3_932_160));
+            Assert.That(ImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.ANTHROPIC)), Is.EqualTo(3_932_160));
         }
     }
 
@@ -30,7 +30,7 @@ public sealed class ImageSizeLimitTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(LLMProviders.OPEN_AI.MaxImageSizeBytes, Is.Null, "Nobody stated a limit, and no number stands in for that.");
-            Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.OPEN_AI)), Is.EqualTo(IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES));
+            Assert.That(ImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.OPEN_AI)), Is.EqualTo(ImageSourceExtensions.MAX_IMAGE_SIZE_BYTES));
         }
     }
 
@@ -40,8 +40,8 @@ public sealed class ImageSizeLimitTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(Host.LLMMAN.MaxImageSizeBytes, Is.EqualTo(1_048_576));
-            Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.SELF_HOSTED, Host.LLMMAN)), Is.EqualTo(1_048_576));
-            Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.SELF_HOSTED, Host.OLLAMA)), Is.EqualTo(IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES), "Ollama states no limit we know of.");
+            Assert.That(ImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.SELF_HOSTED, Host.LLMMAN)), Is.EqualTo(1_048_576));
+            Assert.That(ImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(LLMProviders.SELF_HOSTED, Host.OLLAMA)), Is.EqualTo(ImageSourceExtensions.MAX_IMAGE_SIZE_BYTES), "Ollama states no limit we know of.");
         }
     }
 
@@ -52,7 +52,7 @@ public sealed class ImageSizeLimitTests
         // to a cloud provider in the dialog:
         var cloudProviderWithAnOldHost = ProviderOf(LLMProviders.OPEN_AI, Host.LLMMAN);
 
-        Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(cloudProviderWithAnOldHost), Is.EqualTo(IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES));
+        Assert.That(ImageSourceExtensions.MaxImageSizeBytesFor(cloudProviderWithAnOldHost), Is.EqualTo(ImageSourceExtensions.MAX_IMAGE_SIZE_BYTES));
     }
 
     [Test]
@@ -62,7 +62,7 @@ public sealed class ImageSizeLimitTests
         {
             foreach (var llmProvider in Enum.GetValues<LLMProviders>())
                 foreach (var host in Enum.GetValues<Host>())
-                    Assert.That(IImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(llmProvider, host)), Is.LessThanOrEqualTo(IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES), $"{llmProvider} with {host}");
+                    Assert.That(ImageSourceExtensions.MaxImageSizeBytesFor(ProviderOf(llmProvider, host)), Is.LessThanOrEqualTo(ImageSourceExtensions.MAX_IMAGE_SIZE_BYTES), $"{llmProvider} with {host}");
         }
     }
 

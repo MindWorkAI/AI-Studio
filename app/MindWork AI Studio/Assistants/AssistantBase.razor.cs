@@ -1,4 +1,6 @@
 using AIStudio.Chat;
+using AIStudio.Chat.Compression;
+using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
@@ -51,6 +53,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     [Inject]
     private AssistantLaunchService AssistantLaunchService { get; init; } = null!;
+
+    [Inject]
+    private ConversationTokenCounter TokenCounter { get; init; } = null!;
 
     /// <summary>
     /// Gets the job service used to run assistant-created chats independently from the assistant UI.
@@ -141,6 +146,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual bool AddsAIGeneratedContentDisclosure => true;
 
     protected virtual bool ShowReset => true;
+
+    /// <summary>
+    /// Whether the footer shows the confidence card of the selected provider, and the submit button its confidence,
+    /// when the user wants to see confidences, see DataConfidence.ShowProviderConfidence.
+    /// </summary>
+    /// <remarks>
+    /// An assistant which works with several providers at once turns this off: the footer would show only one of them.
+    /// It shows the confidence next to each provider selection instead, see ProviderSelectionWithConfidence.
+    /// </remarks>
+    protected virtual bool ShowProviderConfidence => true;
 
     /// <summary>
     /// Whether the system prompt starts with the current date and time.
@@ -264,6 +279,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private Guid? assistantSessionId;
 
     /// <summary>
+    /// Whether the user decided already in this run to send a request which nearly fills the context window, see
+    /// ConfirmContextWindowAsync; reset whenever a run starts.
+    /// </summary>
+    private bool askedAboutContextWindow;
+
+    /// <summary>
     /// When the running session started, which the time below the progress bar counts from; null while
     /// no session runs. It comes from the session, so an instance which returns to a running session
     /// goes on counting where the first one was.
@@ -363,18 +384,26 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
 
-    private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
+    /// <summary>
+    /// Gets a text of this base class which addresses the reader; the collector files it under AssistantBase, not
+    /// under the assistant which derives from it.
+    /// </summary>
+    private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(AssistantBase<>).Namespace, nameof(AssistantBase<>));
+
+    private bool ShowsProviderConfidence => this.ShowProviderConfidence && this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence;
+
+    private string SubmitButtonStyle => this.ShowsProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
 
     private IReadOnlyList<Tools.Components> VisibleSendToAssistants => this.AssistantLaunchService.GetDestinationsFor(this.Component);
     
     protected string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
         if(provider.UsedLLMProvider == LLMProviders.NONE)
-            return this.TB("Please select a provider.");
+            return this.TA("Please select a provider.");
 
         // A provider which nothing else rules out may still be kept from the text sent here, because of where it came from:
         if (!this.transferredRestrictions.IsLLMProviderAllowed(provider) && ChatRestrictions.NONE.IsLLMProviderAllowed(provider))
-            return this.TB("This provider may not see the text sent to this assistant, because of where the text came from. Please select another provider.");
+            return this.TA("This provider may not see the text sent to this assistant, because of where the text came from. Please select another provider.");
 
         return null;
     }
@@ -404,6 +433,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         this.CancellationTokenSource = new();
         this.IsProcessing = true;
+        this.askedAboutContextWindow = false;
         var startedSession = await this.AssistantSessionService.TryBeginAsync(this.assistantSessionKey, this.Title, this.CancellationTokenSource, this.ChatThread, this.CaptureAssistantSessionState(), this);
         if (startedSession.IsActive is not true || startedSession.Key != this.assistantSessionKey)
         {
@@ -434,14 +464,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             sessionStatus = AssistantSessionStatus.FAILED;
             errorMessage = e.UserMessage;
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, e.UserMessage));
         }
         catch (Exception e)
         {
             sessionStatus = AssistantSessionStatus.FAILED;
             errorMessage = e.Message;
             this.Logger.LogError(e, "The assistant session '{AssistantTitle}' failed.", this.Title);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(this.TB("The assistant failed. The message is: '{0}'"), e.Message)));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.ANSWER_STREAM, string.Format(this.TB("The assistant failed. The message is: '{0}'"), e.Message)));
         }
         finally
         {
@@ -695,9 +725,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <param name="useSelectedTools">Whether the model may use the tools the user selected. False for a request
     /// which must rely on what the conversation holds already, e.g., one which reconciles results the tools
     /// gathered before.</param>
-    /// <returns>The answer, or an empty string when the provider failed.</returns>
+    /// <returns>The answer, or an empty string when the provider failed or the user kept the request from being
+    /// sent, see ConfirmContextWindowAsync.</returns>
     protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false, bool useSelectedTools = true)
     {
+        if (!await this.ConfirmContextWindowAsync(time))
+            return string.Empty;
+
         var manageCancellationLocally = this.CancellationTokenSource is null;
         this.CancellationTokenSource ??= new CancellationTokenSource();
         
@@ -792,7 +826,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         catch (ProviderRequestException e)
         {
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, e.UserMessage));
 
             if (this.ResultingContentBlock is not null && string.IsNullOrWhiteSpace(aiText.Text))
             {
@@ -820,6 +854,52 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             //
             aiText.ResetStreamingHandlers();
         }
+    }
+
+    /// <summary>
+    /// Asks the user what to do when the request about to be sent nearly fills the context window of the model, or no
+    /// longer fits into it, e.g., because of its files.
+    /// </summary>
+    /// <remarks>
+    /// Without it, the user hears only afterward that the request was too long, from the error of the provider, or not
+    /// at all, when the provider leaves out a part of it. It asks from the share on from which the chat asks as well,
+    /// see ConversationTokens.AsksBeforeSending, and only where the model states its window. The count takes the
+    /// conversation of the assistant with its files and the system prompt it stores, but neither what the request adds
+    /// to the system prompt nor the tools; it is an estimate, which rather asks too late than too early. A file which
+    /// the counter has not read yet is read for it once, so the first request with a large file waits a little longer.
+    /// <br/><br/>
+    ///
+    /// It asks at most once per run: a run with several requests which goes on after the user chose to send anyway
+    /// would otherwise ask again with every request. When the user does not send, the request leaves the conversation,
+    /// and the run stops as if the user had stopped it, so that no later request of the run goes out instead.
+    /// <br/><br/>
+    ///
+    /// Requests which do not go through AddAIResponseAsync are not covered: the SWOT analysis, the stages of the
+    /// Visual Briefing, the hidden requests of the BeyondFacts Lab, the batch processing, and the generation of
+    /// assistant plugins send on their own. The chats of assistants decide for themselves, see
+    /// EmbeddedChat.ShowsContextWindow.
+    /// </remarks>
+    /// <param name="time">When the request was added, see AddUserRequest.</param>
+    /// <returns>True when the request is to be sent.</returns>
+    private async Task<bool> ConfirmContextWindowAsync(DateTimeOffset time)
+    {
+        if (this.askedAboutContextWindow || this.ChatThread is not { } thread)
+            return true;
+
+        var parts = ConversationParts.Of(thread, thread.SystemPrompt, string.Empty, null, this.ProviderSettings.SupportsImageInput(), null);
+        var tokens = await this.TokenCounter.CountAsync(this.ProviderSettings, parts, thread.ReportedHistoryFor(this.ProviderSettings.Model), this.CancellationTokenSource?.Token ?? CancellationToken.None);
+        if (!tokens.AsksBeforeSending)
+            return true;
+
+        this.askedAboutContextWindow = true;
+        if (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokens, ContextWindowFullSubject.ASSISTANT_REQUEST, ChatCompressionOffer.NONE) is ContextWindowFullDecision.SEND_ANYWAY)
+            return true;
+
+        thread.Blocks.RemoveAll(block => block.Role is ChatRole.USER && block.Time == time);
+        if (this.CancellationTokenSource is { } cancellation)
+            await cancellation.CancelAsync();
+
+        return false;
     }
 
     /// <summary>
@@ -1113,23 +1193,23 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         if (outcome.Failures.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
         else if (outcome.Status is MediaImportStatus.FAILED)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.TB("The media file could not be transcribed.")));
+            await this.MessageBus.SendError(new(AppIcons.VOICE_TRANSCRIPTION, this.TB("The media file could not be transcribed.")));
         }
 
         if (outcome.Warnings.Count > 0)
         {
-            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+            var message = string.Join('\n',outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, message));
         }
 
         if (outcome.Status is MediaImportStatus.CANCELLED)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.TB("The media transcription was canceled.")));
+            await this.MessageBus.SendWarning(new(AppIcons.VOICE_TRANSCRIPTION, this.TB("The media transcription was canceled.")));
         }
     }
 

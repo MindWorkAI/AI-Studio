@@ -29,9 +29,23 @@ public sealed record BflFieldDefinition(string Id, BflStep Step, BflFieldKind Ki
     public bool IsSharedWithResearch { get; init; }
 
     /// <summary>
+    /// Gets whether the field pins down the event, such as its date, its place, or its web page, so that a session
+    /// shared with the research team of the lab leaves it out.
+    /// </summary>
+    /// <remarks>
+    /// The research team learns how the person worked with the lab; which event it was would tell who the person is.
+    /// </remarks>
+    public bool IdentifiesEvent { get; init; }
+
+    /// <summary>
     /// Gets whether the field holds names of people.
     /// </summary>
     public BflNameRole NameRole { get; init; } = BflNameRole.NONE;
+
+    /// <summary>
+    /// Gets the section of the form which shows the field under its heading.
+    /// </summary>
+    public BflFormSection Section { get; init; } = BflFormSection.NONE;
 
     /// <summary>
     /// Gets the options of a field which offers a choice, in the order to show them.

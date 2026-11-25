@@ -16,6 +16,8 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderSelfHosted).Namespace, nameof(ProviderSelfHosted));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ProviderSelfHosted).Namespace, nameof(ProviderSelfHosted));
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -193,6 +195,8 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret: true);
+        if (secretKey.IsUnusable)
+            return UnusableAPIKeyModelLoadResult();
 
         try
         {
@@ -202,8 +206,8 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             // rejects an empty bearer with 401, where it would have let a request without any
             // authorization header through. The dialogs hand us their key field as it stands, so
             // an empty string arrives here whenever the user stored no key:
-            if(!string.IsNullOrWhiteSpace(secretKey))
-                lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+            if(!string.IsNullOrWhiteSpace(secretKey.Key))
+                lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey.Key);
 
             using var lmStudioResponse = await this.HttpClient.SendAsync(lmStudioRequest, token);
             if(!lmStudioResponse.IsSuccessStatusCode)
@@ -260,7 +264,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             throw new ProviderRequestException(
                 ProviderRequestFailureReason.NONE,
                 string.Format(
-                    TB("The llama.cpp provider '{0}' does not offer a usable text model. Please check your provider settings."),
+                    TA("The llama.cpp provider '{0}' does not offer a usable text model. Please check your provider settings."),
                     this.InstanceName));
         }
 
@@ -276,7 +280,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             throw new ProviderRequestException(
                 ProviderRequestFailureReason.NONE,
                 string.Format(
-                    TB("The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use."),
+                    TA("The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use."),
                     this.InstanceName));
         }
 
@@ -286,12 +290,14 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     private async Task<ModelLoadResult> LoadLlamaCppTextModels(string? apiKeyProvisional, CancellationToken token)
     {
         var secretKey = await this.GetModelLoadingSecretKey(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, true);
+        if (secretKey.IsUnusable)
+            return UnusableAPIKeyModelLoadResult();
 
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-            if (!string.IsNullOrWhiteSpace(secretKey))
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+            if (!string.IsNullOrWhiteSpace(secretKey.Key))
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey.Key);
 
             using var response = await this.HttpClient.SendAsync(request, token);
             var responseBody = await response.Content.ReadAsStringAsync(token);

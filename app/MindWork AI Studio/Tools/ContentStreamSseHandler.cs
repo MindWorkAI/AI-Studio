@@ -43,8 +43,8 @@ public static class ContentStreamSseHandler
                         var spreadSheetResult = new StringBuilder();
                         if (rowNumber == 0)
                         {
-                            spreadSheetResult.AppendLine();
-                            spreadSheetResult.AppendLine($"# {sheetName}");
+                            spreadSheetResult.AppendLineLF();
+                            spreadSheetResult.AppendLineLF($"# {sheetName}");
                         }
 
                         spreadSheetResult.Append(sseEvent.Content);

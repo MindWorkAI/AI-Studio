@@ -1,5 +1,5 @@
 using System.Text;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Components;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -100,7 +100,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
             var currentLua = await File.ReadAllTextAsync(pluginFile, Encoding.UTF8);
             if (DirectChatLauncherLuaWriter.HasCompanionLuaFiles(this.assistantPlugin) || !DirectChatLauncherLuaWriter.IsCanonicalSource(currentLua))
             {
-                this.issue = T("This launcher contains its own icon or additional Lua code. Please edit it with the plugin code editor, so nothing of it gets lost.");
+                this.issue = TA("This launcher contains its own icon or additional Lua code. Please edit it with the plugin code editor, so nothing of it gets lost.");
                 return;
             }
 
@@ -231,10 +231,10 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
         try
         {
             var audit = await this.AssistantPluginAuditService.RunAuditAsync(updatedPlugin);
-            if (audit.Level is AssistantAuditLevel.UNKNOWN)
+            if (audit.Level is PluginAuditLevel.UNKNOWN)
                 return audit;
 
-            UpsertAudit(this.SettingsManager.ConfigurationData.AssistantPluginAudits, audit);
+            AssistantPluginAuditService.UpsertAudit(this.SettingsManager, audit);
             await this.SettingsManager.StoreSettings();
             return audit;
         }
@@ -244,24 +244,15 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
         }
     }
 
-    private string? ValidatePluginName(string value) => string.IsNullOrWhiteSpace(value) ? T("Please provide a name for this plugin.") : null;
+    private string? ValidatePluginName(string value) => string.IsNullOrWhiteSpace(value) ? TA("Please provide a name for this plugin.") : null;
 
-    private string? ValidateTitle(string value) => string.IsNullOrWhiteSpace(value) ? T("Please provide a title for this tile.") : null;
+    private string? ValidateTitle(string value) => string.IsNullOrWhiteSpace(value) ? TA("Please provide a title for this tile.") : null;
 
-    private string? ValidateDescription(string value) => string.IsNullOrWhiteSpace(value) ? T("Please provide a description for this tile.") : null;
+    private string? ValidateDescription(string value) => string.IsNullOrWhiteSpace(value) ? TA("Please provide a description for this tile.") : null;
 
     private void Cancel() => this.MudDialog.Cancel();
 
     private static Guid? ParseOptionalGuid(string value) => Guid.TryParse(value, out var parsed) ? parsed : null;
-
-    private static void UpsertAudit(IList<PluginAssistantAudit> audits, PluginAssistantAudit audit)
-    {
-        var existingIndex = audits.ToList().FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
-    }
 
     private static bool AreSamePath(string left, string right)
     {

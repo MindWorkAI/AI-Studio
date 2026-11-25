@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Tavily;
 
@@ -14,6 +15,8 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.
 public sealed class TavilySearchBackend : IWebSearchBackend
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(TavilySearchBackend).Namespace, nameof(TavilySearchBackend));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(TavilySearchBackend).Namespace, nameof(TavilySearchBackend));
 
     private const string SETTINGS_GROUP = "tavily";
 
@@ -56,7 +59,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
 
     public void DeclareSettings(ToolSettingsSchemaBuilder builder) => builder
         .InGroup(SETTINGS_GROUP)
-        .OptionalSecret(API_KEY_SETTING)
+        .OptionalAPIKey(API_KEY_SETTING)
         .OptionalEnum(SEARCH_DEPTH_SETTING, SUPPORTED_SEARCH_DEPTHS)
         .InGroup(string.Empty);
 
@@ -78,8 +81,8 @@ public sealed class TavilySearchBackend : IWebSearchBackend
 
     public string GetSettingsFieldDescription(string fieldName) => fieldName switch
     {
-        API_KEY_SETTING => TB("Your Tavily API key. It is kept in your operating system's keyring, not in a settings file. Tavily grants 1,000 requests per month without a credit card, which is enough for everyday use."),
-        SEARCH_DEPTH_SETTING => TB("How thoroughly Tavily searches. A basic search costs one of your monthly requests, an advanced search costs two and looks at more of each page before deciding how well it matches. Basic is the sensible choice unless you notice that results are missing the point."),
+        API_KEY_SETTING => TA("Your Tavily API key. It is kept in your operating system's keyring, not in a settings file. Tavily grants 1,000 requests per month without a credit card, which is enough for everyday use."),
+        SEARCH_DEPTH_SETTING => TA("How thoroughly Tavily searches. A basic search costs one of your monthly requests, an advanced search costs two and looks at more of each page before deciding how well it matches. Basic is the sensible choice unless you notice that results are missing the point."),
 
         _ => string.Empty,
     };
@@ -106,7 +109,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
         if (string.IsNullOrWhiteSpace(searchDepth) || IsSupportedSearchDepth(searchDepth))
             return true;
 
-        error = string.Format(TB("The configured Tavily search depth '{0}' is not one this app supports. Please choose one of these: {1}."), searchDepth, string.Join(", ", SUPPORTED_SEARCH_DEPTHS));
+        error = string.Format(TA("The configured Tavily search depth '{0}' is not one this app supports. Please choose one of these: {1}."), searchDepth, string.Join(", ", SUPPORTED_SEARCH_DEPTHS));
         return false;
     }
 
@@ -115,6 +118,13 @@ public sealed class TavilySearchBackend : IWebSearchBackend
         var apiKey = settingsValues.GetValueOrDefault(API_KEY_SETTING);
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException(TB("A Tavily API key is required."));
+
+        //
+        // A key stored before AI Studio checked keys, or one the organization provides, may hold a
+        // character the header cannot carry. The dispatcher asks the other services all the same:
+        //
+        if (!APIKeyValidation.TryPrepareForHeader(apiKey, out var headerAPIKey))
+            throw new InvalidOperationException(APIKeyValidation.GetUnusableKeyMessage("Tavily"));
 
         var notes = new List<string>();
         var language = ResolveLanguage(query.Language, notes);
@@ -136,7 +146,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
             SafeSearch = query.SafeSearch?.TavilyValue,
         };
 
-        var response = await this.searchClient.SearchAsync(apiKey.Trim(), searchRequest, query.TimeoutSeconds, token);
+        var response = await this.searchClient.SearchAsync(headerAPIKey, searchRequest, query.TimeoutSeconds, token);
         var hits = response.Results.Select(result => new SearchHit(result.Url, result.Title, result.Content));
         var candidates = SearchCandidateCollector.Collect(WebSearchBackend.TAVILY, hits, query.Limit, out var candidateCount);
         return new WebSearchBackendResult(WebSearchBackend.TAVILY, candidates, candidateCount, notes);

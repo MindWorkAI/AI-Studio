@@ -1,6 +1,7 @@
 use std::convert::Infallible;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use async_stream::stream;
 use axum::body::Body;
@@ -313,16 +314,19 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
 
             RunEvent::ExitRequested { .. } => {
                 warn!(Source = "Tauri"; "Run event: exit was requested.");
-                shutdown_clipboard();
-                stop_qdrant_edge_database();
-                if is_prod() {
-                    warn!("Try to stop the .NET server as well...");
-                    stop_dotnet_server();
-                }
+                stop_services();
             }
 
             RunEvent::Ready => {
                 info!(Source = "Tauri"; "Run event: Tauri app is ready.");
+            }
+
+            RunEvent::Exit => {
+                stop_services();
+
+                // When AI Studio restarts itself, Tauri would start the new instance in the background next:
+                #[cfg(target_os = "macos")]
+                crate::own_restart::start_new_instance_in_front();
             }
 
             _ => {}
@@ -330,6 +334,27 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
     });
 
     warn!(Source = "Tauri"; "Tauri app was stopped.");
+}
+
+/// Whether `stop_services` already ran.
+static SERVICES_STOPPED: AtomicBool = AtomicBool::new(false);
+
+/// Stops what AI Studio runs next to its window: the clipboard, Qdrant Edge, and, in a release, the
+/// .NET server.
+///
+/// Runs on `RunEvent::ExitRequested` and on `RunEvent::Exit`, whichever comes first: quitting
+/// through the menu of macOS, e.g., with Cmd+Q, skips `RunEvent::ExitRequested`.
+fn stop_services() {
+    if SERVICES_STOPPED.swap(true, Ordering::SeqCst) {
+        return;
+    }
+
+    shutdown_clipboard();
+    stop_qdrant_edge_database();
+    if is_prod() {
+        warn!("Try to stop the .NET server as well...");
+        stop_dotnet_server();
+    }
 }
 
 fn is_local_host(host: Option<&str>) -> bool {
@@ -1000,7 +1025,7 @@ pub async fn install_update() {
 
                     if is_prod() {
                         if let Some(handle) = app_handle {
-                            handle.restart();
+                            crate::own_restart::restart(&handle);
                         } else {
                             warn!(Source = "Tauri"; "Cannot restart after update: main window not available.");
                         }
@@ -1013,7 +1038,7 @@ pub async fn install_update() {
                     if servers_stopped {
                         warn!(Source = "Tauri"; "The .NET server and Qdrant Edge are already stopped; try to restart the app now...");
                         if let Some(handle) = app_handle {
-                            handle.restart();
+                            crate::own_restart::restart(&handle);
                         } else {
                             warn!(Source = "Tauri"; "Cannot restart after the failed update: main window not available.");
                         }
@@ -1104,7 +1129,7 @@ pub async fn restart_app() -> Json<AppRestartResponse> {
     info!(Source = "Tauri"; "Controlled app restart was requested by the UI.");
     tauri::async_runtime::spawn(async move {
         time::sleep(Duration::from_millis(50)).await;
-        app_handle.request_restart();
+        crate::own_restart::request_restart(&app_handle);
     });
 
     Json(AppRestartResponse {
@@ -1562,6 +1587,7 @@ mod tests {
         let approved = tauri::Url::parse("http://127.0.0.1:12345/").unwrap();
         for address in [
             "file:///etc/passwd",
+            "about:blank",
             "javascript:alert(1)",
             "data:text/html,hello",
             "tauri://localhost/index.html",

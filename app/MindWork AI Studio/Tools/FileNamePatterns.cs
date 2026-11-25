@@ -49,6 +49,8 @@ internal static class FileNamePatterns
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileNamePatterns).Namespace, nameof(FileNamePatterns));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(FileNamePatterns).Namespace, nameof(FileNamePatterns));
+
     /// <summary>
     /// Splits the list, ignoring empty entries, including a trailing semicolon.
     /// </summary>
@@ -125,10 +127,10 @@ internal static class FileNamePatterns
     public static string? Validate(string? patterns) => GetValidationIssue(patterns) switch
     {
         ValidationIssue.NONE => null,
-        ValidationIssue.MISSING => TB("Please provide at least one file pattern, e.g., :documents: or *.txt. Separate multiple patterns with a semicolon."),
-        ValidationIssue.UNKNOWN_SELECTOR => TB("One of the file patterns is an unknown selector. Please use :documents: or :text:, or a file name pattern such as *.txt."),
-        ValidationIssue.RECURSIVE_WILDCARD => TB("Please use only single asterisks as wildcards, e.g., *.txt or report-*.md."),
-        ValidationIssue.PATH => TB("Please use file name patterns without folder paths, e.g., *.txt or report-*.md."),
+        ValidationIssue.MISSING => TA("Please provide at least one file pattern, e.g., :documents: or *.txt. Separate multiple patterns with a semicolon."),
+        ValidationIssue.UNKNOWN_SELECTOR => TA("One of the file patterns is an unknown selector. Please use :documents: or :text:, or a file name pattern such as *.txt."),
+        ValidationIssue.RECURSIVE_WILDCARD => TA("Please use only single asterisks as wildcards, e.g., *.txt or report-*.md."),
+        ValidationIssue.PATH => TA("Please use file name patterns without folder paths, e.g., *.txt or report-*.md."),
         ValidationIssue.INVALID_CHARACTER => TB("One of the file patterns contains an invalid character."),
         _ => throw new ArgumentOutOfRangeException(nameof(patterns)),
     };

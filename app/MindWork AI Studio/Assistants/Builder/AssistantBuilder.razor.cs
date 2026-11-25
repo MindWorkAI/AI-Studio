@@ -1,4 +1,4 @@
-﻿using AIStudio.Agents.AssistantAudit;
+﻿using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
@@ -34,7 +34,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     
     protected override string Title => T("Assistant Builder");
     
-    protected override string Description => T("Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.");
+    protected override string Description => TA("Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.");
     
     // This assistant generates a plugin and has no conversation for a chat to continue:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.AI_STUDIO_DEFAULT;
@@ -97,7 +97,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private bool isAuditingPlugin;
     private bool isEnablingPlugin;
     private string assistantDescription = string.Empty;
-    private AssistantCategory selectedCategory;
+    private PluginCategory selectedCategory;
     private string customCategory = string.Empty;
     private string assistantName = string.Empty;
     private string typicalInput = string.Empty;
@@ -135,7 +135,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private static readonly AssistantSessionStateKey<bool> IS_AUDITING_PLUGIN_STATE_KEY = new(nameof(isAuditingPlugin));
     private static readonly AssistantSessionStateKey<bool> IS_ENABLING_PLUGIN_STATE_KEY = new(nameof(isEnablingPlugin));
     private static readonly AssistantSessionStateKey<string> ASSISTANT_DESCRIPTION_STATE_KEY = new(nameof(assistantDescription));
-    private static readonly AssistantSessionStateKey<AssistantCategory> SELECTED_CATEGORY_STATE_KEY = new(nameof(selectedCategory));
+    private static readonly AssistantSessionStateKey<PluginCategory> SELECTED_CATEGORY_STATE_KEY = new(nameof(selectedCategory));
     private static readonly AssistantSessionStateKey<string> CUSTOM_CATEGORY_STATE_KEY = new(nameof(customCategory));
     private static readonly AssistantSessionStateKey<string> ASSISTANT_NAME_STATE_KEY = new(nameof(assistantName));
     private static readonly AssistantSessionStateKey<string> TYPICAL_INPUT_STATE_KEY = new(nameof(typicalInput));
@@ -188,7 +188,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private bool PluginInstallCompleted => this.pluginInstallResult?.Success is true;
 
-    private bool AuditCompleted => this.pluginAudit is not null && this.pluginAudit.Level is not AssistantAuditLevel.UNKNOWN;
+    private bool AuditCompleted => this.pluginAudit is not null && this.pluginAudit.Level is not PluginAuditLevel.UNKNOWN;
 
     private bool AuditRequiredForActivation => this.SettingsManager.ConfigurationData.AssistantPluginAudit.RequireAuditBeforeActivation;
 
@@ -216,9 +216,9 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private Severity AuditSeverity => this.pluginAudit?.Level switch
     {
-        AssistantAuditLevel.DANGEROUS => Severity.Error,
-        AssistantAuditLevel.CAUTION => Severity.Warning,
-        AssistantAuditLevel.SAFE => Severity.Info,
+        PluginAuditLevel.DANGEROUS => Severity.Error,
+        PluginAuditLevel.CAUTION => Severity.Warning,
+        PluginAuditLevel.SAFE => Severity.Info,
         _ => Severity.Normal,
     };
 
@@ -241,7 +241,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         this.pluginId = Guid.NewGuid();
         this.step = BuilderStep.DESCRIBE;
         this.assistantDescription = string.Empty;
-        this.selectedCategory = AssistantCategory.AS_IS;
+        this.selectedCategory = PluginCategory.NONE;
         this.customCategory = string.Empty;
         this.assistantName = string.Empty;
         this.typicalInput = string.Empty;
@@ -334,7 +334,8 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         state.Restore(IS_AUDITING_PLUGIN_STATE_KEY, value => this.isAuditingPlugin = value);
         state.Restore(IS_ENABLING_PLUGIN_STATE_KEY, value => this.isEnablingPlugin = value);
         state.Restore(ASSISTANT_DESCRIPTION_STATE_KEY, value => this.assistantDescription = value);
-        state.Restore(SELECTED_CATEGORY_STATE_KEY, value => this.selectedCategory = value);
+        // A category your organization disabled meanwhile goes back to the choice of the model:
+        state.Restore(SELECTED_CATEGORY_STATE_KEY, value => this.selectedCategory = this.OfferedCategories.Contains(value) ? value : PluginCategory.NONE);
         state.Restore(CUSTOM_CATEGORY_STATE_KEY, value => this.customCategory = value);
         state.Restore(ASSISTANT_NAME_STATE_KEY, value => this.assistantName = value);
         state.Restore(TYPICAL_INPUT_STATE_KEY, value => this.typicalInput = value);
@@ -369,20 +370,45 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string? ValidateAssistantDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return T("Please describe the assistant you want to create.");
+            return TA("Please describe the assistant you want to create.");
 
         return null;
     }
 
-    private string? ValidatingCategory(AssistantCategory category)
+    /// <summary>
+    /// The choices of the category field: leaving it to the model, the categories of AI Studio in the
+    /// order of the assistants page, and a custom category last. Categories your organization disabled
+    /// are missing.
+    /// </summary>
+    private IReadOnlyList<PluginCategory> OfferedCategories
     {
-        return null;
+        get
+        {
+            var app = this.SettingsManager.ConfigurationData.App;
+            return AssistantBuilderCategories.IsCustomOfferedUnder(app)
+                ? [PluginCategory.NONE, ..AssistantBuilderCategories.OfferedUnder(app), PluginCategory.CUSTOM]
+                : [PluginCategory.NONE, ..AssistantBuilderCategories.OfferedUnder(app)];
+        }
     }
+
+    private string NameOfCategory(PluginCategory category) => category switch
+    {
+        PluginCategory.NONE => T("Let the model choose"),
+        PluginCategory.CUSTOM => T("Other"),
+
+        _ => category.Name,
+    };
 
     private string? ValidateCustomCategory(string category)
     {
-        if(this.selectedCategory is AssistantCategory.OTHER && string.IsNullOrWhiteSpace(category))
-            return T("Please provide a custom category.");
+        if (this.selectedCategory is not PluginCategory.CUSTOM)
+            return null;
+
+        if(string.IsNullOrWhiteSpace(category))
+            return TA("Please provide a custom category.");
+
+        if (this.SettingsManager.ConfigurationData.App.IsAssistantCategoryDisabled(new AssistantCategoryKey(PluginCategory.CUSTOM, category)))
+            return TA("Your organization disabled this category. Please choose another one.");
 
         return null;
     }
@@ -390,7 +416,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private string? ValidateCustomOutputLanguage(string language)
     {
         if(this.selectedOutputLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language))
-            return T("Please provide a custom output language.");
+            return TA("Please provide a custom output language.");
 
         return null;
     }
@@ -407,7 +433,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             var draft = await this.AssistantPluginGenerationService.GenerateAssistantDraftAsync(
                 new(
                     this.assistantDescription,
-                    this.GetSelectedCategoryName(),
+                    this.GetSelectedCategoryForDraft(),
                     this.assistantName,
                     this.createChatLauncher ? string.Empty : this.typicalInput,
                     this.createChatLauncher ? string.Empty : this.expectedOutput,
@@ -447,7 +473,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
         if (string.IsNullOrWhiteSpace(this.generatedAssistantSpec))
         {
-            this.AddInputIssue(T("Please create an assistant draft first."));
+            this.AddInputIssue(TA("Please create an assistant draft first."));
             return;
         }
 
@@ -522,12 +548,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         this.step = BuilderStep.REVIEW_SPEC;
     }
 
-    private string GetSelectedCategoryName() => this.selectedCategory switch
-    {
-        AssistantCategory.AS_IS => string.Empty,
-        AssistantCategory.OTHER => this.customCategory,
-        _ => this.selectedCategory.Name,
-    };
+    private string GetSelectedCategoryForDraft() => AssistantBuilderCategories.FormatForDraft(this.selectedCategory, this.customCategory);
 
     private string GetSelectedOutputLanguageName() => this.selectedOutputLanguage switch
     {
@@ -609,7 +630,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         if (!this.createChatLauncher || !this.MaySuggestDescription())
             return;
 
-        var suggestion = T("Create a tile that opens a preconfigured chat directly, without an input form of its own.");
+        var suggestion = TA("Create a tile that opens a preconfigured chat directly, without an input form of its own.");
         suggestion = string.IsNullOrWhiteSpace(this.launcherWorkspaceName)
             ? $"{suggestion} {T("The chat opens as a disappearing chat, without a workspace.")}"
             : $"{suggestion} {string.Format(T("Workspace: {0}"), this.launcherWorkspaceName.Trim())}";
@@ -640,7 +661,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     {
         if (string.IsNullOrWhiteSpace(this.generatedLuaAssistant))
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Extension, T("No assistant plugin was generated yet.")));
+            await this.MessageBus.SendError(new(AppIcons.PLUGIN, T("No assistant plugin was generated yet.")));
             return;
         }
 
@@ -655,11 +676,11 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 LOGGER.LogError($"The assistant plugin '{result.PluginName}' ({result.PluginId}) is not installable, because '{result.Issue}'");
                 this.FailInstallStep(BuilderInstallStep.CHECK_PLUGIN, result.Issue);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The generated assistant could not be checked.")));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, T("The generated assistant could not be checked.")));
                 return;
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.CheckCircle, T("The generated assistant can be installed.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.SUCCESS, T("The generated assistant can be installed.")));
             this.stepperIndex = (int)BuilderInstallStep.INSTALL_ASSISTANT;
         }
         finally
@@ -685,7 +706,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 LOGGER.LogError($"The assistant plugin {result.PluginName} ({result.PluginId}) could not be installed in the directory '{result.PluginDirectory}' with Issue: '{result.Issue}'.");
                 this.FailInstallStep(BuilderInstallStep.INSTALL_ASSISTANT, result.Issue);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The assistant could not be installed.")));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, T("The assistant could not be installed.")));
                 return;
             }
 
@@ -693,11 +714,11 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             if (this.installedAssistantPlugin is null)
             {
                 this.FailInstallStep(BuilderInstallStep.INSTALL_ASSISTANT, T("The installed assistant could not be loaded."));
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The installed assistant could not be loaded.")));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, T("The installed assistant could not be loaded.")));
                 return;
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Extension, result.ReplacedExisting ? T("Assistant updated.") : T("Assistant installed.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.PLUGIN, result.ReplacedExisting ? T("Assistant updated.") : T("Assistant installed.")));
             this.stepperIndex = this.AuditRequiredForActivation
                 ? (int)BuilderInstallStep.SECURITY_CHECK
                 : this.EnableCompleted
@@ -721,15 +742,15 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         this.isAuditingPlugin = true;
         try
         {
-            this.pluginAudit = await this.AssistantPluginAuditService.RunAuditAsync(this.installedAssistantPlugin, fallbackProvider: this.ProviderSettings);
-            if (this.pluginAudit.Level is AssistantAuditLevel.UNKNOWN)
+            this.pluginAudit = await this.AssistantPluginAuditService.RunAuditAsync(this.installedAssistantPlugin, providerAtHand: this.ProviderSettings);
+            if (this.pluginAudit.Level is PluginAuditLevel.UNKNOWN)
             {
                 this.FailInstallStep(BuilderInstallStep.SECURITY_CHECK, T("The security check could not determine a result."));
-                await this.MessageBus.SendError(new(Icons.Material.Filled.GppMaybe, T("The security check could not be completed.")));
+                await this.MessageBus.SendError(new(AppIcons.SECURITY_WARNING, T("The security check could not be completed.")));
                 return;
             }
 
-            this.UpsertAudit(this.pluginAudit);
+            AssistantPluginAuditService.UpsertAudit(this.SettingsManager, this.pluginAudit);
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendSuccess(new(
                 this.pluginAudit.Level.Icon,
@@ -740,8 +761,8 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             if (this.IsActivationBlockedBySettings)
             {
                 this.stepperIndex = (int)BuilderInstallStep.ENABLE_ASSISTANT;
-                this.FailInstallStep(BuilderInstallStep.ENABLE_ASSISTANT, T("This assistant cannot be enabled because the security check is below your required level."));
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Block, T("The assistant cannot be enabled because it is below your required security level.")));
+                this.FailInstallStep(BuilderInstallStep.ENABLE_ASSISTANT, TA("This assistant cannot be enabled because the security check is below your required level."));
+                await this.MessageBus.SendError(new(AppIcons.BLOCKED, TA("The assistant cannot be enabled because it is below your required security level.")));
                 return;
             }
 
@@ -774,7 +795,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.ToggleOn, T("Assistant enabled.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.ENABLE, T("Assistant enabled.")));
             this.stepperIndex = (int)BuilderInstallStep.OPEN_ASSISTANT;
         }
         finally
@@ -791,7 +812,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             {
                 x => x.Message,
                 string.Format(
-                    T("The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"),
+                    TA("The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"),
                     this.pluginInstallResult?.PluginName ?? T("Unknown assistant"),
                     this.pluginAudit?.Level.Name ?? T("Unknown"),
                     this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel.Name)
@@ -813,7 +834,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             var result = await this.DirectChatService.TryCreateAssistantChatAsync(launcherPlugin);
             if (result.Request is null)
             {
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, result.ErrorMessage));
+                await this.MessageBus.SendError(new(AppIcons.ERROR, result.ErrorMessage));
                 return;
             }
 
@@ -826,16 +847,6 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     }
 
     private static PluginAssistants? ResolveAssistantPlugin(Guid pluginId) => PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(plugin => plugin.Id == pluginId);
-
-    private void UpsertAudit(PluginAssistantAudit audit)
-    {
-        var audits = this.SettingsManager.ConfigurationData.AssistantPluginAudits;
-        var existingIndex = audits.FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
-    }
 
     private void FailInstallStep(BuilderInstallStep installStep, string issue)
     {

@@ -13,6 +13,8 @@ public static class ModelImageErrorCodeExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ModelImageErrorCodeExtensions).Namespace, nameof(ModelImageErrorCodeExtensions));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ModelImageErrorCodeExtensions).Namespace, nameof(ModelImageErrorCodeExtensions));
+
     /// <param name="code">Why the image could not be prepared.</param>
     extension(ModelImageErrorCode code)
     {
@@ -28,10 +30,10 @@ public static class ModelImageErrorCodeExtensions
     {
         ModelImageErrorCode.FILE_NOT_FOUND => TB("The image '{0}' does not exist anymore and was not sent."),
         ModelImageErrorCode.FILE_NOT_READABLE => TB("The image '{0}' could not be opened and was not sent. When the image is stored on a network drive, the drive might be unavailable."),
-        ModelImageErrorCode.UNSUPPORTED_FORMAT => TB("The image '{0}' uses a format which AI Studio cannot give to an AI model, so it was not sent. Please convert the image to JPG or PNG."),
-        ModelImageErrorCode.CONTENT_MISMATCH => TB("The image '{0}' is not what its file extension claims, so it was not sent. Please correct its file extension."),
+        ModelImageErrorCode.UNSUPPORTED_FORMAT => TA("The image '{0}' uses a format which AI Studio cannot give to an AI model, so it was not sent. Please convert the image to JPG or PNG."),
+        ModelImageErrorCode.CONTENT_MISMATCH => TA("The image '{0}' is not what its file extension claims, so it was not sent. Please correct its file extension."),
         ModelImageErrorCode.NOT_DECODABLE => TB("The image '{0}' could not be read and was not sent. It might be damaged or transferred incompletely."),
-        ModelImageErrorCode.TOO_MANY_PIXELS => TB("The image '{0}' has too many pixels for AI Studio to prepare it, so it was not sent. Please scale the image down first."),
+        ModelImageErrorCode.TOO_MANY_PIXELS => TA("The image '{0}' has too many pixels for AI Studio to prepare it, so it was not sent. Please scale the image down first."),
         ModelImageErrorCode.BUDGET_NOT_REACHABLE => TB("The image '{0}' could not be made small enough for the selected provider, so it was not sent."),
 
         _ => TB("AI Studio was not able to prepare the image '{0}' for the AI, so it was not sent."),

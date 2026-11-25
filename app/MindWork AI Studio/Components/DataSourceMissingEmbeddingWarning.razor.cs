@@ -51,14 +51,14 @@ public partial class DataSourceMissingEmbeddingWarning : MSGComponentBase
         {
             var problem = this.IsInDataSourceDialog
                 ? T("No embedding provider is configured yet, but this data source needs one.")
-                : T("No embedding provider is configured yet. Local data sources, such as your files and folders, need one: it prepares your data so that the AI can search it.");
+                : TA("No embedding provider is configured yet. Local data sources, such as your files and folders, need one: it prepares your data so that the AI can search it.");
 
             if (!this.MayAdd)
-                return $"{problem} {T("Your organization manages the embedding providers and has not provided one yet. Please ask your IT department.")}";
+                return $"{problem} {TA("Your organization manages the embedding providers and has not provided one yet. Please ask your IT department.")}";
 
             // Above the table, the buttons speak for themselves. In a dialog, the worry is about what was entered so far:
             return this.IsInDataSourceDialog
-                ? $"{problem} {T("You can add one right here; everything you entered in this dialog stays as it is.")}"
+                ? $"{problem} {TA("You can add one right here; everything you entered in this dialog stays as it is.")}"
                 : problem;
         }
     }

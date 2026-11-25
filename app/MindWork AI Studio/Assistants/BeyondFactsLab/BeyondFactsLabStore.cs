@@ -10,7 +10,8 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 /// Stores the preparations of the BeyondFacts Lab as files below the data directory.
 /// </summary>
 /// <remarks>
-/// Each preparation lives in a folder named by its ID. The store keeps no paths: it derives every path from
+/// Each preparation lives in a folder named by its ID; the conversation about whether the lab fits a task, which
+/// belongs to no preparation, lives in a folder of its own. The store keeps no paths: it derives every path from
 /// IDs, so a backup works on another computer as well. It writes each file atomically, guards each preparation
 /// with a lock of its own, and never deletes anything on its own; only the person deletes a preparation.
 /// </remarks>
@@ -73,44 +74,39 @@ public sealed partial class BeyondFactsLabStore(ILogger<BeyondFactsLabStore> log
         ROOT_DIRECTORY_NAME);
 
     /// <summary>
+    /// Gets the folder whose files replace the prompts of the lab while the person allows it, see BflPromptOverrides.
+    /// </summary>
+    public string PromptOverridesDirectory => Path.Combine(this.RootDirectory, BflPromptOverrides.DIRECTORY_NAME);
+
+    /// <summary>
     /// Writes a text file so that readers see either the old or the new content, never a part of it.
     /// </summary>
+    /// <remarks>
+    /// The content reaches the disk before it replaces the file: a preparation is the work of hours, and a power
+    /// failure must not take it away.
+    /// </remarks>
     /// <param name="targetPath">The file to write.</param>
     /// <param name="content">The new content.</param>
     /// <param name="token">The cancellation token.</param>
-    private static async Task WriteTextAtomicAsync(string targetPath, string content, CancellationToken token)
+    private static Task WriteTextAtomicAsync(string targetPath, string content, CancellationToken token)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-        var temporaryPath = $"{targetPath}.tmp-{Guid.NewGuid():N}";
-        try
-        {
-            await File.WriteAllTextAsync(temporaryPath, content, new UTF8Encoding(false), token);
-            await using (var stream = new FileStream(temporaryPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 4_096, true))
-                await stream.FlushAsync(token);
-
-            File.Move(temporaryPath, targetPath, overwrite: true);
-        }
-        finally
-        {
-            TryDeleteFile(temporaryPath);
-        }
+        return AtomicFile.WriteTextAsync(targetPath, content, new UTF8Encoding(false), token, flushToDisk: true);
     }
 
     /// <summary>
-    /// Deletes a file when it exists, without failing.
+    /// Writes a binary file so that readers see either the old or the new content, never a part of it.
     /// </summary>
-    /// <param name="path">The file to delete.</param>
-    private static void TryDeleteFile(string path)
+    /// <remarks>
+    /// Like WriteTextAtomicAsync, the content reaches the disk before it replaces the file.
+    /// </remarks>
+    /// <param name="targetPath">The file to write.</param>
+    /// <param name="content">The new content.</param>
+    /// <param name="token">The cancellation token.</param>
+    private static Task WriteBytesAtomicAsync(string targetPath, ReadOnlyMemory<byte> content, CancellationToken token)
     {
-        try
-        {
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            // Cleaning up a temporary file is best effort; the next start tries again.
-        }
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        return AtomicFile.WriteAsync(targetPath, (stream, writeToken) => stream.WriteAsync(content, writeToken).AsTask(), token, flushToDisk: true);
     }
 
     /// <summary>
@@ -175,8 +171,7 @@ public sealed partial class BeyondFactsLabStore(ILogger<BeyondFactsLabStore> log
                 return;
 
             Directory.CreateDirectory(this.RootDirectory);
-            foreach (var temporaryPath in Directory.EnumerateFiles(this.RootDirectory, "*.tmp-*", SearchOption.AllDirectories))
-                TryDeleteFile(temporaryPath);
+            AtomicFile.DeleteTemporaryFiles(this.RootDirectory, logger);
 
             await this.LoadSelectionAsync(token);
             this.initialized = true;

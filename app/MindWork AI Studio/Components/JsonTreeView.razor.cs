@@ -68,9 +68,9 @@ public partial class JsonTreeView : ComponentBase
 
     private static string GetIcon(JsonNode? value) => value switch
     {
-        JsonObject => Icons.Material.Filled.DataObject,
-        JsonArray => Icons.Material.Filled.DataArray,
-        _ => Icons.Material.Filled.Code,
+        JsonObject => AppIcons.DATA_OBJECT,
+        JsonArray => AppIcons.DATA_ARRAY,
+        _ => AppIcons.DATA_VALUE,
     };
 
     private sealed class JsonTreeNode

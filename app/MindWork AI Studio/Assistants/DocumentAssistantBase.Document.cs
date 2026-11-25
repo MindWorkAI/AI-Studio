@@ -92,14 +92,14 @@ public abstract partial class DocumentAssistantBase<TSettings>
         catch (Exception e) when (e is not OperationCanceledException)
         {
             this.Logger.LogError(e, "The assistant '{AssistantTitle}' could not read the document '{DocumentPath}'.", this.Title, sourcePath);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Description, this.TB("The document could not be read. Please check that it is a valid file and that no other program locks it.")));
+            await this.MessageBus.SendError(new(AppIcons.DOCUMENT, this.TB("The document could not be read. Please check that it is a valid file and that no other program locks it.")));
             return;
         }
 
         var segmentsWithWords = segments.Where(segment => segment.HasWords).DistinctBy(segment => segment.Key).ToList();
         if (segmentsWithWords.Count == 0)
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, this.TB("The document holds no text.")));
+            await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, this.TB("The document holds no text.")));
             return;
         }
 
@@ -161,7 +161,7 @@ public abstract partial class DocumentAssistantBase<TSettings>
         var targetPath = response.SaveFilePath;
         if (IsSameFile(targetPath, document.SourcePath))
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, this.TB("Please choose another file than the original document, which stays as it is.")));
+            await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, this.TB("Please choose another file than the original document, which stays as it is.")));
             return;
         }
 
@@ -176,20 +176,20 @@ public abstract partial class DocumentAssistantBase<TSettings>
             if (result.Outcome is SegmentWriteOutcome.SOURCE_CHANGED)
             {
                 this.Logger.LogWarning("The document '{DocumentPath}' changed since the assistant '{AssistantTitle}' worked on it, so the new document was not saved.", document.SourcePath, this.Title);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.Description, this.TB("The original document has changed in the meantime. Please start again.")));
+                await this.MessageBus.SendError(new(AppIcons.DOCUMENT, this.TB("The original document has changed in the meantime. Please start again.")));
                 return;
             }
 
             this.Logger.LogInformation("The assistant '{AssistantTitle}' saved '{TargetPath}' with {ExactCount} sections in full and {SimplifiedCount} simplified.", this.Title, targetPath, result.ExactCount, result.SimplifiedCount);
             if (result.SimplifiedCount > 0)
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.FormatClear, string.Format(this.TB("In {0} sections, the AI model did not keep all marks of the formatting, so parts of their formatting, such as links or bold words, are missing."), result.SimplifiedCount)));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, string.Format(this.TB("In {0} sections, the AI model did not keep all marks of the formatting, so parts of their formatting, such as links or bold words, are missing."), result.SimplifiedCount)));
 
-            await feedback.SucceededAsync(Icons.Material.Filled.Description, this.TB("The new document was saved."), targetPath, true);
+            await feedback.SucceededAsync(AppIcons.DOCUMENT, this.TB("The new document was saved."), targetPath, true);
         }
         catch (Exception e)
         {
             this.Logger.LogError(e, "The assistant '{AssistantTitle}' could not save the new document '{TargetPath}'.", this.Title, targetPath);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Description, this.TB("The new document could not be saved. Please check that the original document can be read and that the target file is not open in another program.")));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, this.TB("The new document could not be saved. Please check that the original document can be read and that the target file is not open in another program.")));
         }
         finally
         {

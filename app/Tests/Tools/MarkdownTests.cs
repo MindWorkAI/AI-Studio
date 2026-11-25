@@ -93,5 +93,5 @@ public sealed class MarkdownTests
         Assert.That(Markdown.AppendBlock(string.Empty, "**Notice**"), Is.EqualTo("**Notice**"), "With nothing above it, a blank line would only start the text with an empty line.");
     }
 
-    private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);
+    private static string Lines(params string[] lines) => string.Join('\n', lines);
 }

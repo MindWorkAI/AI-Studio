@@ -18,7 +18,7 @@
         <MudSpacer />
         <LockableButton Text="@T("Import")"
                         Tooltip="@T("Import plugin from a file")"
-                        Icon="@IMPORT_ICON"
+                        Icon="@AppIcons.IMPORT"
                         ButtonVariant="Variant.Outlined"
                         ButtonColor="Color.Default"
                         NoMargin="@true"
@@ -88,7 +88,7 @@
                             @if (context is IAvailablePlugin { IsInternal: false } infoPlugin)
                             {
                                 <MudTooltip Text="@T("Plugin information")">
-                                    <MudIconButton Icon="@Icons.Material.Outlined.Info" Size="Size.Small" OnClick="@(() => this.ShowPluginInfoAsync(infoPlugin))"/>
+                                    <MudIconButton Icon="@AppIcons.INFO" Size="Size.Small" OnClick="@(() => this.ShowPluginInfoAsync(infoPlugin))"/>
                                 </MudTooltip>
                             }
                         </MudStack>
@@ -108,7 +108,7 @@
                         @* A model plugin runs like a configuration plugin, without anybody switching it on: *@
                         @if (context is { IsInternal: false, Type: not (PluginType.CONFIGURATION or PluginType.MODEL) })
                         {
-                            var isEnabled = this.SettingsManager.IsPluginEnabled(context);
+                            var isEnabled = this.IsPluginWorking(context);
                             var activationSwitchDisabled = this.IsActivationSwitchDisabled(context, isEnabled);
                             <MudTooltip Text="@this.GetActivationTooltip(context, isEnabled)">
                                 <MudSwitch T="bool" Value="@isEnabled" ValueChanged="@(_ => this.PluginActivationStateChanged(context))" Disabled="@activationSwitchDisabled"/>
@@ -124,7 +124,7 @@
                             @if (context is IAvailablePlugin editablePlugin && CanEditAssistantPlugin(editablePlugin))
                             {
                                 <MudTooltip Text="@T("Edit assistant plugin")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Code" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginEditorDialogAsync(editablePlugin))"/>
+                                    <MudIconButton Icon="@AppIcons.CODE" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginEditorDialogAsync(editablePlugin))"/>
                                 </MudTooltip>
                             }
                             
@@ -142,7 +142,7 @@
                             {
                                 var isLauncher = IsDirectChatLauncher(revisionPlugin);
                                 <MudTooltip Text="@(isLauncher ? T("Change what this tile opens") : T("Revise assistant plugin with AI"))">
-                                    <MudIconButton Icon="@(isLauncher ? Icons.Material.Filled.Tune : Icons.Material.Filled.AutoMode)" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginRevisionDialogAsync(revisionPlugin))"/>
+                                    <MudIconButton Icon="@(isLauncher ? AppIcons.LAUNCHER_SETTINGS : AppIcons.REVISE_ASSISTANT)" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginRevisionDialogAsync(revisionPlugin))"/>
                                 </MudTooltip>
                             }
 

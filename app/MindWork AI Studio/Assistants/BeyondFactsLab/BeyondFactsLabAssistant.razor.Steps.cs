@@ -8,6 +8,12 @@ public partial class BeyondFactsLabAssistant
     private Dictionary<BflStep, BflStepFormData> forms = [];
 
     /// <summary>
+    /// The work states of the preparation shown, by their steps. A step missing here has a work state this version
+    /// cannot open.
+    /// </summary>
+    private Dictionary<BflStep, BflWorkState> workStates = [];
+
+    /// <summary>
     /// The step shown.
     /// </summary>
     private BflStep activeStep = BflStep.FRAMEWORK;
@@ -16,6 +22,14 @@ public partial class BeyondFactsLabAssistant
     /// Gets the position of the step shown in the stepper, which lists the steps in the order of their values.
     /// </summary>
     private int ActiveStepIndex => (int)this.activeStep;
+
+    /// <summary>
+    /// Gets a number which changes whenever the person chooses others to simulate in the step "Test situation", whose
+    /// research the prompt of its conversation carries, so that the conversation counts its tokens anew.
+    /// </summary>
+    private int ChatDetailsVersion => this.activeStep is BflStep.TEST_SITUATION && this.forms.GetValueOrDefault(BflStep.TEST_SITUATION)?.Simulation is { } simulation
+        ? HashCode.Combine(simulation.Mode, string.Join('\n', simulation.People))
+        : 0;
 
     /// <summary>
     /// Shows a preparation with its forms, at the step the person looked at last.
@@ -28,13 +42,83 @@ public partial class BeyondFactsLabAssistant
         if (project?.Project is { } openedProject)
         {
             this.forms = new(await this.Store.LoadFormsAsync(openedProject.ProjectId));
+            this.workStates = new(await this.Store.LoadWorkStatesAsync(openedProject.ProjectId));
             this.activeStep = openedProject.CurrentStep;
         }
         else
         {
             this.forms = [];
+            this.workStates = [];
             this.activeStep = BflStep.FRAMEWORK;
         }
+    }
+
+    /// <summary>
+    /// Shows the new time of change of a preparation after a work state or a result of it was stored.
+    /// </summary>
+    /// <param name="project">The preparation with its new time of change.</param>
+    private Task ProjectStoredAsync(BflProject project)
+    {
+        this.ReplaceProject(project);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Starts the research once the person confirmed the event details, on every topic without one and on every topic
+    /// whose public details changed since, and tells the person. Once the person confirmed the last step for the first
+    /// time, the lab offers to share the preparation with its research team instead.
+    /// </summary>
+    /// <remarks>
+    /// Nothing starts for an event which is not public, nor while the work state suggests whether the event is public
+    /// and the person has not decided yet; the person hears why. Taking over the suggestion changes the details, so
+    /// that the person confirms the work state again, and the research starts then if the event is public.
+    /// </remarks>
+    /// <param name="step">The step whose work state the person confirmed.</param>
+    private async Task WorkStateConfirmedAsync(BflStep step)
+    {
+        if (step is BflStep.RESULTS && this.selectedProject?.Project is { } finishedProject)
+        {
+            await this.OfferSharingAsync(finishedProject.ProjectId);
+            return;
+        }
+
+        if (step is not BflStep.FRAMEWORK || this.selectedProject?.Project is not { } project || this.ValidateProvider(this.providerSettings) is not null)
+            return;
+
+        if (BflEventVisibility.IsNotPublic(this.forms))
+        {
+            await this.MessageBus.SendInfo(new(AppIcons.NOT_PUBLIC, BflEventVisibility.NotPublicMessage));
+            return;
+        }
+
+        if (BflEventVisibility.IsSuggestionPending(this.workStates, this.forms))
+        {
+            await this.MessageBus.SendInfo(new(AppIcons.WEB_RESEARCH, string.Format(TA("The lab has not started the research on the web yet. First, decide on the suggestion below the work state whether the event is public. Afterward, you can start the research in the step '{0}'."), BflStep.STRATEGY.Title)));
+            return;
+        }
+
+        var started = await this.ResearchRunner.StartWhenDueAsync(project.ProjectId, this.providerSettings, this.forms);
+        if (started.Count > 0)
+            await this.MessageBus.SendInfo(new(AppIcons.WEB_RESEARCH, string.Format(TA("The lab now researches the event on the web, with the public details about it only. You find the result in the step '{0}'."), BflStep.STRATEGY.Title)));
+    }
+
+    /// <summary>
+    /// Reads the work states of the preparation shown again once the generator started, ended, or stored a draft.
+    /// </summary>
+    /// <param name="location">The step whose work state changed.</param>
+    private Task OnWorkStateChangedAsync(BflStepThreadLocation location)
+    {
+        if (this.selectedProject?.ProjectId != location.ProjectId)
+            return Task.CompletedTask;
+
+        return this.InvokeAsync(async () =>
+        {
+            this.workStates = new(await this.Store.LoadWorkStatesAsync(location.ProjectId));
+            if (await this.Store.LoadAsync(location.ProjectId) is { } project)
+                this.ReplaceProject(project);
+
+            this.StateHasChanged();
+        });
     }
 
     /// <summary>
@@ -87,7 +171,7 @@ public partial class BeyondFactsLabAssistant
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             this.Logger.LogError(exception, "Could not save the details of a step in the BeyondFacts Lab.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.RecordVoiceOver, TA("AI Studio could not save your details. Please try again.")));
+            await this.MessageBus.SendError(new(AppIcons.ASSISTANT_BEYOND_FACTS_LAB, TA("AI Studio could not save your details. Please try again.")));
         }
     }
 
@@ -112,6 +196,28 @@ public partial class BeyondFactsLabAssistant
         if (!this.forms.TryGetValue(step, out var form))
             return T("Cannot be opened");
 
-        return BflMissingDetails.Of(step, form).Count > 0 ? T("Details missing") : string.Empty;
+        var notes = new List<string>(2);
+        if (BflMissingDetails.Of(step, form).Count > 0)
+            notes.Add(T("Details missing"));
+
+        switch (BflStaleness.Of(step, this.workStates, this.forms))
+        {
+            case BflWorkStateStatus.OUTDATED:
+                notes.Add(T("Outdated"));
+                break;
+
+            case BflWorkStateStatus.DETAILS_CHANGED:
+                notes.Add(T("Details changed"));
+                break;
+        }
+
+        return string.Join(" · ", notes);
     }
+
+    /// <summary>
+    /// Tells whether the stepper shows a step as done: the person confirmed its work state, and no earlier step changed
+    /// since.
+    /// </summary>
+    /// <param name="step">The step.</param>
+    private bool IsStepCompleted(BflStep step) => BflStaleness.Of(step, this.workStates, this.forms) is BflWorkStateStatus.CONFIRMED or BflWorkStateStatus.DETAILS_CHANGED;
 }

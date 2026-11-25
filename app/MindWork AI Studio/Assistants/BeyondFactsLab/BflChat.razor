@@ -1,0 +1,21 @@
+@inherits MSGComponentBase
+
+<EmbeddedChat Store="@this.ConversationService.StoreOf(this.Location)"
+              Component="@Components.BEYOND_FACTS_LAB_ASSISTANT"
+              ChatId="@this.Location.ChatId"
+              CreateThread="@this.CreateThread"
+              Provider="@this.Provider"
+              PrepareAsync="@this.prepareAsync"
+              ProviderIssue="@this.ProviderIssue"
+              Heading="@(this.ShowHeading ? T("Conversation") : null)"
+              StartRequest="@BflConversationService.OpeningRequestFor(this.Location)"
+              Introduction="@this.Introduction"
+              ExportFileName="@this.ExportFileName"
+              AllowsReset="true"
+              ResetQuestion="@this.ResetQuestion"
+              AllowsAttachments="false"
+              ShowsContextWindow="true"
+              AllowsCompression="true"
+              SystemPromptForCountAsync="@this.systemPromptForCountAsync"
+              ContextVersion="@this.ContextVersion"
+              QuickMessage="@this.QuickMessage"/>

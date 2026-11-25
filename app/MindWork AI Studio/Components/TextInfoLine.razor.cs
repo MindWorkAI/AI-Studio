@@ -10,7 +10,7 @@ public partial class TextInfoLine : MSGComponentBase
     public string Label { get; set; } = string.Empty;
 
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.Info;
+    public string Icon { get; set; } = AppIcons.INFO;
 
     [Parameter]
     public string Value { get; set; } = string.Empty;

@@ -160,7 +160,7 @@ public sealed class SegmentTransformerTests
     }
 
     [Test]
-    public void CancellingStopsBeforeTheNextBatch()
+    public async Task CancellingStopsBeforeTheNextBatch()
     {
         using var cancellation = new CancellationTokenSource();
         var batches = SegmentBatchPlanner.Plan(Segments("a", "b"), maxCharacters: 1_000, maxSegments: 1);
@@ -170,7 +170,7 @@ public sealed class SegmentTransformerTests
             return Answer(batch, text => text);
         });
 
-        Assert.ThrowsAsync<OperationCanceledException>(() => new SegmentTransformer("Translate each text into German.", model.AskAsync, NullLogger.Instance).TransformAsync(batches, null, cancellation.Token));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => new SegmentTransformer("Translate each text into German.", model.AskAsync, NullLogger.Instance).TransformAsync(batches, null, cancellation.Token));
         Assert.That(model.Requests, Has.Count.EqualTo(1));
     }
 

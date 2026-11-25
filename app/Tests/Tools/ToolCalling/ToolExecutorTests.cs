@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using AIStudio.Chat;
@@ -174,6 +175,22 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task TheTraceKeepsTheArgumentsWithTheirTypesButWithoutTheSensitiveOnes()
+    {
+        var tool = new TestTool(Definition()) { SensitiveTraceArgumentNames = new HashSet<string>(StringComparer.Ordinal) { "token" } };
+
+        var outcome = await this.Execute(tool, new ChatThread(), """{"is_unread":true,"query":"2026","token":"secret-token"}""");
+        var note = ToolCallHistoryNote.Build(new ContentText { Text = "Answer.", ToolInvocations = [outcome.Trace] }, DateTimeOffset.UnixEpoch);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(outcome.Trace.Arguments["is_unread"], Is.EqualTo("True"), "The text for the user loses the type, which is why the trace keeps the JSON as well.");
+            Assert.That(outcome.Trace.ArgumentsJson, Does.Not.Contain("secret-token"), "The chat is stored, so a sensitive value must not be kept.");
+            Assert.That(note, Does.Contain($$"""{{TOOL_ID}} {"is_unread":true,"query":"2026","token":"{{ToolCallHistoryNote.HIDDEN_VALUE}}"}"""), "The model passes the arguments again as they were, so a tool does not refuse them.");
+        }
+    }
+
+    [Test]
     public async Task WhatAToolReturnedIsKnownToTheChatAfterwards()
     {
         var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult { TextContent = "The newsletter links to https://example.org/newsletter/2026-10." });
@@ -184,6 +201,37 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         }
 
         Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/newsletter/2026-10")), Is.True, "The user may ask in the next message to open the link.");
+    }
+
+    [Test]
+    public async Task WhatAToolReturnedIsKnownToTheChatAfterARestart()
+    {
+        var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult { TextContent = "The newsletter links to https://example.org/newsletter/2026-10." });
+        var answer = new ContentText();
+        var thread = new ChatThread
+        {
+            Blocks =
+            [
+                new ContentBlock { ContentType = ContentType.TEXT, Role = ChatRole.USER, Content = new ContentText { Text = "What does the newsletter link to?" } },
+                new ContentBlock { ContentType = ContentType.TEXT, Role = ChatRole.AI, Content = answer },
+            ],
+        };
+
+        await foreach (var _ in new ToolCallingLoop(NullLogger<ToolCallingLoop>.Instance).RunAsync(new OneToolCallAdapter(), this.LoopContext(tool, thread, answer)))
+        {
+        }
+
+        // The answer names the link, so a later message shows it to the model:
+        answer.Text = "The newsletter links to the October issue at https://example.org/newsletter/2026-10 and nothing else.";
+        answer.EndToolRun();
+
+        var loaded = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS), WorkspaceBehaviour.JSON_OPTIONS)!;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(answer.WebAddressesFromTools, Is.EquivalentTo(new[] { WebAddresses.CreateRequestKey(new Uri("https://example.org/newsletter/2026-10")) }));
+            Assert.That(loaded.IsWebAddressGivenToTheModel(new Uri("https://example.org/newsletter/2026-10")), Is.True, "The user may ask after a restart to read the link again.");
+        }
     }
 
     [Test]
@@ -238,13 +286,13 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         Assert.That(outcome.Passages, Is.Empty, REASON);
     }
 
-    private ToolCallingLoopContext LoopContext(TestTool tool, ChatThread thread) => new()
+    private ToolCallingLoopContext LoopContext(TestTool tool, ChatThread thread, ContentText? answer = null) => new()
     {
         ChatThread = thread,
         RunnableTools = [(tool.GetDefinition(), tool)],
         ToolExecutor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance),
         Provider = new NoProvider(),
-        CurrentAssistantContent = null,
+        CurrentAssistantContent = answer,
         ProviderInstanceName = "Test provider",
         ProviderType = LLMProviders.NONE,
         ModelId = "test-model",

@@ -24,12 +24,24 @@ public sealed class ContentText : IContent
     private static readonly ILogger<ContentText> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ContentText>();
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ContentText).Namespace, nameof(ContentText));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(ContentText).Namespace, nameof(ContentText));
     
     /// <summary>
     /// The minimum time between two streaming events, when the user
     /// enables the energy saving mode.
     /// </summary>
     private static readonly TimeSpan MIN_TIME = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    /// Whether the provider says that the model reasons, from a chunk which said so until the first text after it.
+    /// </summary>
+    private bool isReasoning;
+
+    /// <summary>
+    /// Whether the text holds anything to read besides a think block, see ApplyStreamChunk.
+    /// </summary>
+    private bool hasReadableText;
 
     #region Implementation of IContent
 
@@ -40,6 +52,29 @@ public sealed class ContentText : IContent
     /// <inheritdoc />
     [JsonIgnore]
     public bool IsStreaming { get; set; }
+
+    /// <summary>
+    /// Whether the model thinks right now, as far as the user can tell: its provider says that it reasons, or
+    /// nothing has arrived yet which the user may read, as while a model reasons inside think tags.
+    /// </summary>
+    /// <remarks>
+    /// Only while the answer streams, so that it holds however the stream ends: in this class, in the job service of
+    /// the chat, or without any stream at all. Both parts are decided once per chunk, see ApplyStreamChunk, and not
+    /// with every render of the answer.
+    /// </remarks>
+    [JsonIgnore]
+    public bool IsThinking => this.IsStreaming && (this.isReasoning || !this.hasReadableText);
+
+    /// <summary>
+    /// Tells whether the model ended its turn without an answer, so that the text holds a notice of the app rather
+    /// than a word of the model, see ContentStreamChunk.EndsWithoutAnswer.
+    /// </summary>
+    /// <remarks>
+    /// Only for whoever uses the answer right away, such as an agent which stores it as a result. A stored chat no
+    /// longer knows it, and shows the notice like any other text.
+    /// </remarks>
+    [JsonIgnore]
+    public bool EndedWithoutAnswer { get; set; }
 
     /// <inheritdoc />
     [JsonIgnore]
@@ -56,6 +91,45 @@ public sealed class ContentText : IContent
     public List<FileAttachment> FileAttachments { get; set; } = [];
 
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
+
+    /// <summary>
+    /// The web addresses the tools returned while this answer came about and which a later message
+    /// still shows the model, as request keys, see WebAddresses.CreateRequestKey.
+    /// </summary>
+    /// <remarks>
+    /// Stored with the answer, so that the model may read them again in a later message, also after
+    /// a restart, while its free address choice is off, see ChatThread.IsWebAddressGivenToTheModel.
+    /// A tool returned them, so the model neither made them up nor wrote anything of the chat into
+    /// them; addresses it wrote into the call itself are left out, see ToolCallOutcome.ReturnedWebAddresses.<br/><br/>
+    ///
+    /// Only those the model can still see later are kept: in the text of the answer, among its
+    /// sources, or in the arguments of a call which ran, see EndToolRun. A page a tool read returns
+    /// all of its links, often hundreds. Once the result is gone, the model has no way of knowing
+    /// them, short of reading the page again, which returns them once more. Storing them all would
+    /// only make the chat grow.<br/><br/>
+    ///
+    /// Kept per answer rather than per chat: an answer which is generated anew takes its addresses
+    /// along, and so does one which is deleted, once the chat is opened again, see
+    /// ChatThread.RuntimeWebAddressesFromTools.
+    /// </remarks>
+    public HashSet<string> WebAddressesFromTools { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The web addresses the tools of the running request returned so far, as request keys.
+    /// </summary>
+    /// <remarks>
+    /// Never stored: a chat is saved while its answer is still being written, and would hold every
+    /// link of every page read until then. EndToolRun keeps those which a later message shows, in
+    /// WebAddressesFromTools.
+    /// </remarks>
+    [JsonIgnore]
+    public HashSet<string> PendingWebAddressesFromTools { get; private set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Notes the web addresses a tool returned for this answer, see PendingWebAddressesFromTools.
+    /// </summary>
+    /// <param name="requestKeys">The addresses as request keys, see ToolCallOutcome.ReturnedWebAddresses.</param>
+    public void KeepWebAddressesFromTools(IEnumerable<string> requestKeys) => this.PendingWebAddressesFromTools.UnionWith(requestKeys);
 
     /// <summary>
     /// Optional structured data for a specialized visual presentation of this text.
@@ -126,7 +200,7 @@ public sealed class ContentText : IContent
     {
         try
         {
-            // Most answers, those of the agents among them, received nothing to store, and need no database:
+            // Most answers, those of the AI operations among them, received nothing to store, and need no database:
             if (!this.SourcePassages.Any(passage => passage.HoldsTextsToStore))
                 return;
 
@@ -139,7 +213,7 @@ public sealed class ContentText : IContent
         }
 
         if (Interlocked.Exchange(ref UNSTORED_CONTENT_REPORTED, 1) is 0)
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Storage, TB("AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.")));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.PROVENANCE_STORE, TA("AI Studio could not store what the AI received separately from your chat. It remains in the chat itself, so you can still read it.")));
     }
 
     /// <summary>
@@ -231,13 +305,15 @@ public sealed class ContentText : IContent
     /// Clears what the previous run of the tools left behind.
     /// </summary>
     /// <remarks>
-    /// Both parts at once, because both belong to one request: the traces the user reads and the
-    /// payload the counting needs. They were cleared separately for exactly as long as there was
-    /// only one of them.
+    /// All parts at once, because all belong to one request: the traces the user reads, the
+    /// payload the counting needs, and the web addresses the tools returned. They were cleared
+    /// separately for exactly as long as there was only one of them.
     /// </remarks>
     public void BeginToolRun()
     {
         this.ToolInvocations.Clear();
+        this.WebAddressesFromTools = new(StringComparer.Ordinal);
+        this.PendingWebAddressesFromTools = new(StringComparer.Ordinal);
         this.PendingToolConversation = [];
     }
 
@@ -246,9 +322,50 @@ public sealed class ContentText : IContent
     /// </summary>
     /// <remarks>
     /// The traces stay -- they are what the user reads afterwards to see how the answer came
-    /// about. What goes is the payload, which belonged to a request that is over.
+    /// about. What goes is the payload, which belonged to a request that is over.<br/><br/>
+    ///
+    /// Of the web addresses the tools returned, the answer keeps those which a later message still
+    /// shows the model, see WebAddressesFromTools. The set is replaced as a whole, since the chat
+    /// may be saved meanwhile. Whoever ends a request may call this once more, which keeps what the
+    /// first call kept.
     /// </remarks>
-    public void EndToolRun() => this.PendingToolConversation = [];
+    public void EndToolRun()
+    {
+        this.PendingToolConversation = [];
+
+        var shownLater = this.FindRequestKeysShownLater();
+        var kept = new HashSet<string>(StringComparer.Ordinal);
+        kept.UnionWith(this.WebAddressesFromTools.Where(shownLater.Contains));
+        kept.UnionWith(this.PendingWebAddressesFromTools.Where(shownLater.Contains));
+
+        this.WebAddressesFromTools = kept;
+        this.PendingWebAddressesFromTools = new(StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// The request keys of the web addresses a later message shows the model with this answer.
+    /// </summary>
+    /// <remarks>
+    /// Those in its text, those of its sources, and those in the arguments of its calls which ran,
+    /// as the note in front of the answer names them, see ToolCallHistoryNote. The values of
+    /// sensitive arguments do not count, since the note hides them.
+    /// </remarks>
+    private HashSet<string> FindRequestKeysShownLater()
+    {
+        var texts = new List<string> { this.Text };
+        texts.AddRange(this.Sources.Select(source => source.URL));
+        foreach (var trace in this.ToolInvocations.Where(trace => trace is { Status: ToolInvocationTraceStatus.SUCCESS, WasExecuted: true }))
+            texts.AddRange(trace.FindKeptTexts());
+
+        var requestKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var address in texts.SelectMany(WebAddresses.Find))
+        {
+            if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                requestKeys.Add(requestKey);
+        }
+
+        return requestKeys;
+    }
 
     /// <summary>
     /// Keeps what the provider says the request behind this answer cost.
@@ -292,7 +409,21 @@ public sealed class ContentText : IContent
         this.InitialRemoteWait = false;
         this.IsStreaming = true;
 
+        // Reasoning lasts until the first text after it:
+        if (chunk.IsReasoning)
+            this.isReasoning = true;
+        else if (!string.IsNullOrEmpty(chunk.Content))
+            this.isReasoning = false;
+
         this.Text += chunk;
+
+        // The text only grows while it streams, so once there is something to read, there always is:
+        if (!this.hasReadableText)
+            this.hasReadableText = this.Text.HasTextBeyondThinkTags;
+
+        if (chunk.EndsWithoutAnswer)
+            this.EndedWithoutAnswer = true;
+
         if (chunk.Sources.Count > 0 || chunk.Passages.Count > 0)
             this.AddSources(chunk.Sources, chunk.Passages);
 
@@ -347,7 +478,7 @@ public sealed class ContentText : IContent
                 // The answer is about to be created without the data the user expected it to use.
                 // Without this message, that answer is indistinguishable from one that did use it:
                 //
-                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("Your data sources could not be used. This answer was created without them.")));
+                await MessageBus.INSTANCE.SendWarning(new(AppIcons.DATA_SOURCE, TA("Your data sources could not be used. This answer was created without them.")));
             }
         }
 
@@ -489,9 +620,9 @@ public sealed class ContentText : IContent
             var modelLoadResult = await provider.GetTextModels(token: token);
             if (!modelLoadResult.Success)
             {
-                var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.InstanceName);
+                var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.NameForUser);
                 if (!string.IsNullOrWhiteSpace(userMessage))
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, userMessage));
 
                 LOGGER.LogWarning("Skipping selected model availability check for '{ProviderInstanceName}' (provider={ProviderType}) because loading the model list failed with reason {FailureReason}.", provider.InstanceName, provider.Provider, modelLoadResult.FailureReason);
                 return false;
@@ -514,9 +645,9 @@ public sealed class ContentText : IContent
         {
             var emptyModelsMessage = string.Format(
                 TB("We could load models from '{0}', but the provider did not return any usable text models."),
-                provider.InstanceName);
+                provider.NameForUser);
 
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, emptyModelsMessage));
+            await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, emptyModelsMessage));
             LOGGER.LogWarning("Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).", provider.InstanceName, provider.Provider);
             return false;
         }
@@ -525,12 +656,12 @@ public sealed class ContentText : IContent
             return true;
         
         var message = string.Format(
-            TB("The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."),
-            chatModel.Id,
-            provider.InstanceName,
-            provider.Provider);
+            TA("The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."),
+            provider.ModelNameForUser(chatModel),
+            provider.NameForUser,
+            provider.TypeForUser);
         
-        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, message));
+        await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, message));
         LOGGER.LogWarning("Skipping AI request because model '{ModelId}' is not available from '{ProviderInstanceName}' (provider={ProviderType}).", chatModel.Id, provider.InstanceName, provider.Provider);
         return false;
     }
@@ -547,9 +678,11 @@ public sealed class ContentText : IContent
         Text = this.Text,
         InitialRemoteWait = this.InitialRemoteWait,
         IsStreaming = this.IsStreaming,
+        EndedWithoutAnswer = this.EndedWithoutAnswer,
         Sources = [..this.Sources],
         SourcePassages = [..this.SourcePassages],
         FileAttachments = [..this.FileAttachments],
+        WebAddressesFromTools = new HashSet<string>(this.WebAddressesFromTools, StringComparer.Ordinal),
         Presentation = this.Presentation?.DeepClone(),
         ToolInvocations = [..this.ToolInvocations.Select(x => new ToolInvocationTrace
         {
@@ -562,6 +695,7 @@ public sealed class ContentText : IContent
             WasExecuted = x.WasExecuted,
             StatusMessage = x.StatusMessage,
             Arguments = new Dictionary<string, string>(x.Arguments, StringComparer.Ordinal),
+            ArgumentsJson = x.ArgumentsJson,
             Result = x.Result,
             JsonResult = x.JsonResult?.DeepClone(),
         })],
@@ -684,14 +818,14 @@ public sealed class ContentText : IContent
         if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
         {
             LOGGER.LogWarning("Parts of the file attachment '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.DOCUMENT, extraction.ToPartialUserMessage(document.FileName)));
         }
 
         // The file was read correctly, but its extension lies about what it contains:
         if (extraction.HasExtensionMismatch)
         {
             LOGGER.LogWarning("The file attachment '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
-            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+            await MessageBus.INSTANCE.SendWarning(new(AppIcons.FILE_TYPE_MISMATCH, extraction.ToExtensionMismatchUserMessage(document.FileName)));
         }
     }
 
@@ -775,7 +909,7 @@ public sealed class ContentText : IContent
     {
         var sb = new StringBuilder();
         var attachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal);
-        sb.AppendLine(this.Text);
+        sb.AppendLineLF(this.Text);
 
         if(this.FileAttachments.Count > 0)
         {
@@ -797,7 +931,7 @@ public sealed class ContentText : IContent
             foreach (var missingDocument in missingDocuments)
             {
                 LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.FindInPage, string.Format(TB("The file '{0}' is currently not available and was not sent."), missingDocument.FileName)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.FILE_NOT_FOUND, string.Format(TB("The file '{0}' is currently not available and was not sent."), missingDocument.FileName)));
             }
 
             // Only proceed if there are existing, allowed documents:
@@ -840,7 +974,7 @@ public sealed class ContentText : IContent
                         if (!pandocIsUsable && FileTypes.RequiresPandoc(document.FilePath))
                         {
                             LOGGER.LogWarning("The file attachment '{FilePath}' needs Pandoc and will be skipped.", document.FilePath);
-                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
+                            await MessageBus.INSTANCE.SendError(new(AppIcons.DOCUMENT, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
                             continue;
                         }
 
@@ -848,7 +982,7 @@ public sealed class ContentText : IContent
                         if (!extraction.HasUsableContent)
                         {
                             LOGGER.LogError("Reading the file attachment '{FilePath}' failed and it will not be sent: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
-                            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                            await MessageBus.INSTANCE.SendError(new(AppIcons.DOCUMENT, extraction.ToUserMessage(document.FileName)));
                             continue;
                         }
 
@@ -856,13 +990,13 @@ public sealed class ContentText : IContent
                         content = extraction.Content;
                     }
 
-                    documentBlocks.AppendLine();
-                    documentBlocks.AppendLine("---------------------------------------");
-                    documentBlocks.AppendLine($"File path: {document.FilePath}");
-                    documentBlocks.AppendLine("File content:");
-                    documentBlocks.AppendLine("````");
-                    documentBlocks.AppendLine(content);
-                    documentBlocks.AppendLine("````");
+                    documentBlocks.AppendLineLF();
+                    documentBlocks.AppendLineLF("---------------------------------------");
+                    documentBlocks.AppendLineLF($"File path: {document.FilePath}");
+                    documentBlocks.AppendLineLF("File content:");
+                    documentBlocks.AppendLineLF("````");
+                    documentBlocks.AppendLineLF(content);
+                    documentBlocks.AppendLineLF("````");
 
                     foreach (var address in WebAddresses.Find(content))
                         if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
@@ -871,17 +1005,17 @@ public sealed class ContentText : IContent
 
                 if (documentBlocks.Length > 0)
                 {
-                    sb.AppendLine();
-                    sb.AppendLine("The following files are attached to this message:");
+                    sb.AppendLineLF();
+                    sb.AppendLineLF("The following files are attached to this message:");
                     sb.Append(documentBlocks);
                 }
 
                 var numImages = normalizedAttachments.Count(x => x is { IsImage: true, Exists: true });
                 if (numImages > 0)
                 {
-                    sb.AppendLine();
-                    sb.AppendLine($"Additionally, there are {numImages} image file(s) attached to this message. ");
-                    sb.AppendLine("Please consider them as part of the message content and use them to answer accordingly.");
+                    sb.AppendLineLF();
+                    sb.AppendLineLF($"Additionally, there are {numImages} image file(s) attached to this message. ");
+                    sb.AppendLineLF("Please consider them as part of the message content and use them to answer accordingly.");
                 }
             }
 

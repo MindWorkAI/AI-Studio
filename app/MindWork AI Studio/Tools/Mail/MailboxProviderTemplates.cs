@@ -41,4 +41,14 @@ public static class MailboxProviderTemplates
         // Every organization runs a server of its own, and IMAP ships switched off:
         new("Microsoft Exchange Server", string.Empty, IMAPS_PORT, MailboxTransportSecurity.SSL_ON_CONNECT, MailboxUsernameFormat.DOMAIN_ACCOUNT, MailboxProviderRequirements.ADMIN_ACTIVATION, "https://learn.microsoft.com/en-us/exchange/clients/pop3-and-imap4/configure-imap4", string.Empty),
     ];
+
+    /// <summary>
+    /// Finds the well-known provider whose server a host names, however the host was written.
+    /// </summary>
+    /// <remarks>
+    /// Microsoft Exchange Server never matches: every organization runs a server of its own.
+    /// </remarks>
+    /// <param name="host">The host of a mailbox.</param>
+    /// <returns>The provider, or null when the host belongs to none of them.</returns>
+    public static MailboxProviderTemplate? FindByHost(string host) => ALL.FirstOrDefault(template => template.Host.Length > 0 && MailServerHosts.AreSame(template.Host, host));
 }

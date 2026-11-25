@@ -34,6 +34,8 @@ public static class DataSourceReindexWarning
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceReindexWarning).Namespace, nameof(DataSourceReindexWarning));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(DataSourceReindexWarning).Namespace, nameof(DataSourceReindexWarning));
+
     /// <summary>
     /// Asks before an edited embedding provider is saved.
     /// </summary>
@@ -122,18 +124,18 @@ public static class DataSourceReindexWarning
     private static async Task<bool> ConfirmNewLocationAsync(IDialogService dialogService, bool usesCloudEmbedding)
     {
         var body = new StringBuilder();
-        body.AppendLine(TB("AI Studio keeps what it has already prepared for every file it finds unchanged at the new location, that is, of the same type and with the same size and modification time. In a folder, such a file also has to keep its name and the subfolder it is in."));
-        body.AppendLine();
-        body.AppendLine(TB("Every other file goes to your embedding provider once more, which takes a while with many files. Files missing at the new location are removed from the index, while your files on disk stay as they are."));
+        body.AppendLineLF(TB("AI Studio keeps what it has already prepared for every file it finds unchanged at the new location, that is, of the same type and with the same size and modification time. In a folder, such a file also has to keep its name and the subfolder it is in."));
+        body.AppendLineLF();
+        body.AppendLineLF(TA("Every other file goes to your embedding provider once more, which takes a while with many files. Files missing at the new location are removed from the index, while your files on disk stay as they are."));
 
         if (usesCloudEmbedding)
         {
-            body.AppendLine();
-            body.AppendLine(TB("Your embedding provider runs in the cloud, so preparing files again costs money."));
+            body.AppendLineLF();
+            body.AppendLineLF(TA("Your embedding provider runs in the cloud, so preparing files again costs money."));
         }
 
-        body.AppendLine();
-        body.AppendLine(TB("Do you want to apply this change anyway?"));
+        body.AppendLineLF();
+        body.AppendLineLF(TA("Do you want to apply this change anyway?"));
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
@@ -173,11 +175,11 @@ public static class DataSourceReindexWarning
         var body = new StringBuilder();
 
         // Counted rather than put into a plural form: the I18N has no mechanism for one.
-        body.AppendLine(string.Format(TB("These data sources are set up with this embedding provider ({0}):"), affected.Count.CompactCount()));
-        body.AppendLine();
-        body.AppendLine(FormatDataSourceNames(affected));
-        body.AppendLine();
-        body.AppendLine(TB("They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one."));
+        body.AppendLineLF(string.Format(TB("These data sources are set up with this embedding provider ({0}):"), affected.Count.CompactCount()));
+        body.AppendLineLF();
+        body.AppendLineLF(FormatDataSourceNames(affected));
+        body.AppendLineLF();
+        body.AppendLineLF(TA("They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one."));
 
         return body.ToString();
     }
@@ -211,7 +213,7 @@ public static class DataSourceReindexWarning
         if (names.Count > MAX_NAMED_DATA_SOURCES)
             lines.Add($"- {string.Format(TB("and {0} more."), (names.Count - MAX_NAMED_DATA_SOURCES).CompactCount())}");
 
-        return string.Join(Environment.NewLine, lines);
+        return string.Join('\n', lines);
     }
 
     private static async Task<bool> ConfirmAsync(IDialogService dialogService, IReadOnlyList<IDataSourceBase> affected, bool usesCloudEmbedding)
@@ -222,20 +224,20 @@ public static class DataSourceReindexWarning
         var body = new StringBuilder();
 
         // Counted rather than put into a plural form: the I18N has no mechanism for one.
-        body.AppendLine(string.Format(TB("This change makes the prepared documents of the following data sources unusable ({0}):"), affected.Count.CompactCount()));
-        body.AppendLine();
-        body.AppendLine(FormatDataSourceNames(affected));
-        body.AppendLine();
-        body.AppendLine(TB("Everything prepared for them is thrown away, and every one of their documents goes to your embedding provider once more. With a large data source, this takes a while."));
+        body.AppendLineLF(string.Format(TB("This change makes the prepared documents of the following data sources unusable ({0}):"), affected.Count.CompactCount()));
+        body.AppendLineLF();
+        body.AppendLineLF(FormatDataSourceNames(affected));
+        body.AppendLineLF();
+        body.AppendLineLF(TA("Everything prepared for them is thrown away, and every one of their documents goes to your embedding provider once more. With a large data source, this takes a while."));
 
         if (usesCloudEmbedding)
         {
-            body.AppendLine();
-            body.AppendLine(TB("Your embedding provider runs in the cloud, so preparing everything again costs money."));
+            body.AppendLineLF();
+            body.AppendLineLF(TA("Your embedding provider runs in the cloud, so preparing everything again costs money."));
         }
 
-        body.AppendLine();
-        body.AppendLine(TB("Do you want to apply this change anyway?"));
+        body.AppendLineLF();
+        body.AppendLineLF(TA("Do you want to apply this change anyway?"));
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {

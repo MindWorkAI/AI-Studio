@@ -5,7 +5,7 @@ namespace AIStudio.Components;
 public partial class LockableButton : ConfigurationBaseCore
 {
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.Info;
+    public string Icon { get; set; } = AppIcons.INFO;
     
     [Parameter]
     public Func<Task> OnClickAsync { get; set; } = () => Task.CompletedTask;

@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::time::Instant;
 
 use axum::Json;
 use log::{error, info, warn};
@@ -9,9 +10,10 @@ use once_cell::sync::Lazy;
 use qdrant_edge::external::serde_json::{json, Value};
 use qdrant_edge::external::uuid::Uuid;
 use qdrant_edge::{
-    Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
-    FieldCondition, Filter, HasIdCondition, HnswIndexConfig, IsEmptyCondition, JsonPath, Match, MatchValue, NamedQuery,
-    Payload, PayloadOps, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
+    Condition, CreateIndex, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
+    FieldCondition, FieldIndexOperations, Filter, HasIdCondition, HnswIndexConfig, IsEmptyCondition, JsonPath,
+    KeywordIndexParamsBuilder, Match, MatchValue, Memory, NamedQuery, Payload, PayloadFieldSchema, PayloadOps,
+    PayloadSchemaParams, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
     QueryRequest, RetrieveRequest, ScoredPoint, ScoringQuery, UpdateOperation, ValueVariants,
     VectorInternal, VectorStructInternal, SetPayloadOp, Vectors, WithPayloadInterface, WithVector,
 };
@@ -32,7 +34,18 @@ const STORE_INITIALIZATION_MARKER_TEMP: &str = "store_name.tmp";
 const STORE_DISPLAY_NAME_MARKER: &str = "data_source_name.txt";
 const STORE_DISPLAY_NAME_MARKER_TEMP: &str = "data_source_name.tmp";
 const WAL_DIRECTORY: &str = "wal";
-const CLOSED_WAL_SEGMENT_PREFIX: &str = "closed-";
+
+/// The payload fields by which the requests find the points of a document: deleting a document
+/// filters by both, relocating it and hiding its chunks from a search by `parent_file_id`. Without
+/// an index on them, each of these requests reads every payload of the store.
+const INDEXED_PAYLOAD_FIELDS: [&str; 2] = ["parent_file_id", "file_path"];
+
+/// The file in which Qdrant Edge notes how far its WAL is acknowledged, see `acknowledge_legacy_wal`.
+const WAL_FIRST_INDEX_FILE: &str = "first-index";
+const WAL_FIRST_INDEX_FILE_TEMP: &str = "first-index.tmp";
+
+/// The file in which a storage of Qdrant Edge notes its pointer writes, see `remove_tracker_journals`.
+const TRACKER_JOURNAL_FILE: &str = "tracker_journal.dat";
 
 /// The directory below the data directory in which a backup collects its copies, one directory per
 /// backup. The app removes a backup's directory once the backup is written.
@@ -338,11 +351,7 @@ impl QdrantEdgeDatabase {
         }
 
         let shard = if is_initialized {
-            compact_wal(&path, store_name);
-            match EdgeShard::load(&path, None) {
-                Ok(shard) => shard,
-                Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
-            }
+            load_store(&path, store_name)?
         } else {
             fs::create_dir_all(&path).map_err(|error| {
                 format!("Failed to create directory for vector store '{store_name}' at '{}': {error}", path.display())
@@ -355,6 +364,7 @@ impl QdrantEdgeDatabase {
                 },
             };
 
+            ensure_payload_indexes(&shard, store_name);
             if let Err(error) = write_store_initialization_marker(&path, store_name) {
                 drop(shard);
                 let cleanup_issue = remove_partial_store(&path);
@@ -380,12 +390,7 @@ impl QdrantEdgeDatabase {
             return Ok(None);
         }
 
-        compact_wal(&path, store_name);
-        let shard = match EdgeShard::load(&path, None) {
-            Ok(shard) => shard,
-            Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
-        };
-
+        let shard = load_store(&path, store_name)?;
         self.reported_unreadable_stores.remove(store_name);
         self.shards.insert(store_name.to_string(), shard);
         Ok(self.shards.get(store_name))
@@ -618,16 +623,6 @@ impl QdrantEdgeDatabase {
             info!(Source = "Qdrant Edge"; "Optimized vector store '{}'.", store_name);
         }
         shard.flush()?;
-
-        // Temporary compatibility shim, see compact_wal: without this, the WAL of a long session
-        // keeps growing until the next start. The store has to be unloaded first, because Windows
-        // cannot delete memory-mapped files. The next request loads it again.
-        let path = self.store_path(store_name)?;
-        if has_obsolete_wal_segments(&path) {
-            drop(self.shards.remove(store_name));
-            compact_wal(&path, store_name);
-        }
-
         Ok(())
     }
 
@@ -685,10 +680,9 @@ impl QdrantEdgeDatabase {
 
     /// Copies one store into the directory of a backup's copies, and returns how many bytes it copied.
     ///
-    /// A loaded store is flushed and unloaded first: everything it holds is on the disk then, and
-    /// nothing changes its files while they are copied, since the lock of the database is held all
-    /// the while. The next request loads the store again. A store which was not created completely
-    /// is not copied.
+    /// A loaded store is unloaded first, see `unload_store`: everything it holds is on the disk then,
+    /// and nothing changes its files while they are copied, since the lock of the database is held
+    /// all the while. A store which was not created completely is not copied.
     fn copy_store_for_backup(&mut self, store_name: &str, data_directory: &Path, backup_id: &str) -> QdrantEdgeResult<u64> {
         let staging_path = backup_staging_path(data_directory, backup_id)?;
         if !staging_path.is_dir() {
@@ -700,11 +694,7 @@ impl QdrantEdgeDatabase {
             return Ok(0);
         }
 
-        if let Some(shard) = self.shards.get(store_name) {
-            shard.flush()?;
-        }
-
-        drop(self.shards.remove(store_name));
+        self.unload_store(store_name)?;
         let relative_path = path.strip_prefix(data_directory).map_err(|_| {
             format!("The vector store '{store_name}' at '{}' does not lie below the data directory '{}'.", path.display(), data_directory.display())
         })?;
@@ -715,6 +705,21 @@ impl QdrantEdgeDatabase {
         })?;
 
         Ok(copied_bytes)
+    }
+
+    /// Unloads a store: flushes it, closes it, and removes its journals, see `remove_tracker_journals`.
+    ///
+    /// When the flush fails, the store stays loaded, and its journals stay as well, since Qdrant Edge
+    /// then still needs them to repair the store. The next request loads an unloaded store again.
+    fn unload_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
+        let Some(shard) = self.shards.get(store_name) else {
+            return Ok(());
+        };
+
+        shard.flush()?;
+        drop(self.shards.remove(store_name));
+        remove_tracker_journals(&self.store_path(store_name)?, store_name);
+        Ok(())
     }
 
     fn delete_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
@@ -733,8 +738,21 @@ impl QdrantEdgeDatabase {
     }
 }
 
+impl Drop for QdrantEdgeDatabase {
+    // Unloads every store, e.g., when AI Studio quits, installs an update, or restarts after a
+    // restore, see unload_store.
+    fn drop(&mut self) {
+        let store_names = self.shards.keys().cloned().collect::<Vec<_>>();
+        for store_name in store_names {
+            if let Err(error) = self.unload_store(&store_name) {
+                warn!(Source = "Qdrant Edge"; "Could not flush vector store '{store_name}' while unloading it, so its journals stay for Qdrant Edge to repair the store: {error}");
+            }
+        }
+    }
+}
+
 fn store_directory_name(store_name: &str) -> String {
-    let stable_id = store_name.strip_prefix("rag_").unwrap_or(store_name);
+    let stable_id = store_name.trim_prefix("rag_");
     format!("store_{stable_id}")
 }
 
@@ -1032,7 +1050,21 @@ where
         });
     };
 
-    match operation(database) {
+    answer_request(database, operation)
+}
+
+/// Runs one request against the database and answers it.
+///
+/// A panic of Qdrant Edge becomes the error of this request alone. Otherwise, it would unwind
+/// through the lock of the database and poison it, and every further request would fail until AI
+/// Studio restarts.
+fn answer_request<T, F>(database: &mut QdrantEdgeDatabase, operation: F) -> Json<QdrantEdgeResponse<T>>
+where
+    T: Serialize,
+    F: FnOnce(&mut QdrantEdgeDatabase) -> QdrantEdgeResult<T>,
+{
+    let result = catch_panic(|| operation(&mut *database)).unwrap_or_else(|panic| Err(panic.into()));
+    match result {
         Ok(data) => Json(QdrantEdgeResponse {
             success: true,
             issue: String::new(),
@@ -1140,15 +1172,25 @@ fn remove_obsolete_qdrant_path(path: &Path) {
     }
 }
 
+// `on_disk` and `on_disk_payload` are deprecated in favor of `memory` and `payload_memory`. We keep
+// them on purpose, so that a new store looks exactly like the existing ones. Older versions of AI
+// Studio use qdrant-edge 0.8, which knows no `memory` for vectors: it would take such a store for
+// one kept in RAM, find that its segments disagree, and refuse to open it. Leaving the flags unset is
+// not an option either: the effective placement would fall back to cached instead of on-disk, which
+// is a real change and would have the optimizers rebuild the HNSW graph.
+#[allow(deprecated)]
 fn edge_config(vector_size: usize) -> EdgeConfig {
     EdgeConfig {
         on_disk_payload: Some(true),
+        payload_memory: None,
+        id_tracker_memory: None,
         vectors: HashMap::from([(
             VECTOR_NAME.to_string(),
             EdgeVectorParams {
                 size: vector_size,
                 distance: Distance::Cosine,
                 on_disk: Some(true),
+                memory: None,
                 quantization_config: None,
                 multivector_config: None,
                 datatype: None,
@@ -1160,15 +1202,15 @@ fn edge_config(vector_size: usize) -> EdgeConfig {
         quantization_config: None,
         optimizers: Some(edge_optimizers_config()),
         wal_options: None,
+
+        // Keeps the WAL, like every existing store. Qdrant Edge fixes this choice when it creates a store.
+        wal_enabled: None,
         max_search_threads: None,
         search_pool_core: None,
     }
 }
 
-// `on_disk` is deprecated in favor of `memory`, but Qdrant Edge does not re-export the `Memory`
-// type, so the new field cannot be named from here. Leaving both unset is not an option either:
-// the effective placement would fall back to cached instead of on-disk, which is a real change
-// and would have the optimizers rebuild the HNSW graph.
+// See edge_config for why this sets the deprecated `on_disk`.
 #[allow(deprecated)]
 fn hnsw_config() -> HnswIndexConfig {
     HnswIndexConfig {
@@ -1189,6 +1231,15 @@ fn edge_optimizers_config() -> EdgeOptimizersConfig {
         prevent_unoptimized: Some(false),
         ..Default::default()
     }
+}
+
+// The index of each field in INDEXED_PAYLOAD_FIELDS. Like the payloads, it stays on disk in the
+// optimized segments; only the appendable segment holds its index in RAM, whatever we set. Without
+// HNSW links for each value, which none of our searches uses, optimizing a store builds no further
+// graph. Keep this schema: `ensure_payload_indexes` leaves existing indexes as they are, so a change
+// would reach new stores only, and changing existing indexes would rebuild them in every store.
+fn payload_index_params() -> PayloadSchemaParams {
+    PayloadSchemaParams::Keyword(KeywordIndexParamsBuilder::new().memory(Memory::Cold).enable_hnsw(false).build())
 }
 
 fn store_is_initialized(path: &Path, store_name: &str) -> QdrantEdgeResult<bool> {
@@ -1240,77 +1291,144 @@ fn remove_partial_store(path: &Path) -> String {
     }
 }
 
-// Temporary compatibility shim until a qdrant-edge release acknowledges its WAL by itself:
-// documentation/compatibility-shims/2026-10-qdrant-edge-wal-compaction.md
+/// Loads a store which was created completely.
+fn load_store(path: &Path, store_name: &str) -> QdrantEdgeResult<EdgeShard> {
+    acknowledge_legacy_wal(path, store_name);
+    let shard = open_store(path, store_name, || EdgeShard::load(path, None))?;
+    ensure_payload_indexes(&shard, store_name);
+    Ok(shard)
+}
+
+/// Gives a store the indexes of `INDEXED_PAYLOAD_FIELDS` which it lacks.
+///
+/// A store of an older version of AI Studio gets them on its first load. Building an index reads
+/// every payload of the store once, while all requests to the vector database wait; for a store of
+/// 300 MB, that took about half a second per field on a current laptop. A store which has its
+/// indexes stays as it is, so loading it writes nothing to its WAL. Should building an index fail,
+/// the store stays usable, since its requests find the same points without an index, only slower,
+/// and the next load tries again.
+fn ensure_payload_indexes(shard: &EdgeShard, store_name: &str) {
+    let started = Instant::now();
+    match create_missing_payload_indexes(shard) {
+        Ok(created_fields) if created_fields.is_empty() => {},
+        Ok(created_fields) => info!(Source = "Qdrant Edge"; "Created the payload indexes for {} of vector store '{store_name}', which took {} ms.", created_fields.join(", "), started.elapsed().as_millis()),
+        Err(error) => warn!(Source = "Qdrant Edge"; "Could not create the payload indexes of vector store '{store_name}', so deleting or moving a document reads every payload of the store until the next load: {error}"),
+    }
+}
+
+/// Creates the indexes of `INDEXED_PAYLOAD_FIELDS` which the store lacks and returns their fields.
+fn create_missing_payload_indexes(shard: &EdgeShard) -> QdrantEdgeResult<Vec<&'static str>> {
+    let indexed_fields = shard.info()?.payload_schema;
+    let mut created_fields = Vec::new();
+    for field_name in INDEXED_PAYLOAD_FIELDS {
+        let field_path = JsonPath::try_from(field_name).map_err(|_| format!("Invalid payload field name '{field_name}'."))?;
+        if indexed_fields.contains_key(&field_path) {
+            continue;
+        }
+
+        shard.update(UpdateOperation::FieldIndexOperation(FieldIndexOperations::CreateIndex(CreateIndex {
+            field_name: field_path,
+            field_schema: Some(PayloadFieldSchema::FieldParams(payload_index_params())),
+        })))?;
+        created_fields.push(field_name);
+    }
+
+    if !created_fields.is_empty() {
+        shard.flush()?;
+    }
+
+    Ok(created_fields)
+}
+
+/// Opens a store and reports it as unreadable when that fails, cf. `StoreUnreadableError`.
+///
+/// Qdrant Edge may also panic while it opens a broken store, e.g., when it applies its WAL to a
+/// payload it cannot read. Such a store is just as unreadable, and it would fail the same way with
+/// every further request.
+fn open_store<T, E: std::fmt::Display>(path: &Path, store_name: &str, open: impl FnOnce() -> Result<T, E>) -> QdrantEdgeResult<T> {
+    match catch_panic(open) {
+        Ok(Ok(store)) => Ok(store),
+        Ok(Err(error)) => Err(StoreUnreadableError::new(store_name, path, error).into()),
+        Err(panic) => Err(StoreUnreadableError::new(store_name, path, panic).into()),
+    }
+}
+
+/// Runs an operation and turns a panic in it into an error which carries the panic's message.
+fn catch_panic<T>(operation: impl FnOnce() -> T) -> Result<T, String> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(operation)).map_err(|panic| {
+        let message = panic
+            .downcast_ref::<&str>()
+            .map(|message| message.to_string())
+            .or_else(|| panic.downcast_ref::<String>().cloned())
+            .unwrap_or_else(|| "no message".to_string());
+
+        format!("Qdrant Edge panicked: {message}")
+    })
+}
+
+// Temporary compatibility shim until a qdrant-edge release skips already persisted operations when
+// it loads a store, see https://github.com/qdrant/qdrant/issues/11732:
+// documentation/compatibility-shims/2026-11-qdrant-edge-legacy-wal.md
 //
-// Qdrant Edge writes every update to its WAL, but never acknowledges the WAL and never replays it,
-// so the WAL grows with every update. We flush after every update, which means the segments already
-// hold everything the WAL contains. The store must not be loaded while this runs.
-fn compact_wal(store_path: &Path, store_name: &str) {
-    match remove_obsolete_wal_segments(&store_path.join(WAL_DIRECTORY)) {
-        Ok((0, _)) => {},
-        Ok((removed_segments, removed_bytes)) => info!(Source = "Qdrant Edge"; "Removed {removed_segments} obsolete WAL segment(s) with {:.1} MiB from vector store '{store_name}'.", removed_bytes as f64 / (1024.0 * 1024.0)),
-        Err(error) => warn!(Source = "Qdrant Edge"; "Could not remove the obsolete WAL segments of vector store '{store_name}': {error}"),
+// Up to qdrant-edge 0.8, Qdrant Edge never acknowledged its WAL. Since 0.9, loading a store applies
+// every operation of the WAL again which is not marked as acknowledged, so the first load of a store
+// from an older version would apply its whole WAL once more. Each deletion of a document in there
+// reads every payload of the store, which takes minutes to hours for a large one, and all requests
+// to the vector database wait meanwhile. We flush after every update, so the segments already hold
+// everything the WAL contains, and marking all of it as acknowledged loses nothing. Qdrant Edge
+// lowers the mark to the last entry of the WAL. The store must not be loaded while this runs.
+fn acknowledge_legacy_wal(store_path: &Path, store_name: &str) {
+    let wal_path = store_path.join(WAL_DIRECTORY);
+    if !wal_path.is_dir() || wal_path.join(WAL_FIRST_INDEX_FILE).exists() {
+        return;
+    }
+
+    let acknowledged_everything = json!({ "ack_index": u64::MAX }).to_string();
+    match write_store_marker(&wal_path, WAL_FIRST_INDEX_FILE, WAL_FIRST_INDEX_FILE_TEMP, &acknowledged_everything) {
+        Ok(()) => info!(Source = "Qdrant Edge"; "Marked the WAL of vector store '{store_name}' as acknowledged, since an older version of AI Studio wrote it."),
+        Err(error) => warn!(Source = "Qdrant Edge"; "Could not mark the WAL of vector store '{store_name}' as acknowledged, so loading the store applies the whole WAL once more: {error}"),
     }
 }
 
-/// Whether the store's WAL holds segments which `compact_wal` would remove.
-fn has_obsolete_wal_segments(store_path: &Path) -> bool {
-    wal_file_names(&store_path.join(WAL_DIRECTORY))
-        .is_ok_and(|file_names| !obsolete_wal_segments(&file_names).is_empty())
+// Temporary compatibility shim until 2027-05-25:
+// documentation/compatibility-shims/2026-11-qdrant-edge-tracker-journal.md
+//
+// Since qdrant-edge 0.9, every storage of a store notes its pointer writes in a journal before it
+// writes them, and applies the journal again whenever it opens, which repairs pointers a crash tore.
+// Older versions of AI Studio use qdrant-edge 0.8, which knows no journal: when one of them writes
+// to the store, the journal keeps the pointers from before, and the next load under 0.9 sets them
+// again. They then point into freed blocks, so loading or searching the store fails. Once a flush
+// succeeded, the journal has nothing left to repair. The store must not be loaded while this runs.
+fn remove_tracker_journals(store_path: &Path, store_name: &str) {
+    let journals = match tracker_journals(store_path) {
+        Ok(journals) => journals,
+        Err(error) => {
+            warn!(Source = "Qdrant Edge"; "Could not look for the journals of vector store '{store_name}', which breaks the store should an older version of AI Studio write to it: {error}");
+            return;
+        },
+    };
+
+    for journal in journals {
+        if let Err(error) = fs::remove_file(&journal) {
+            warn!(Source = "Qdrant Edge"; "Could not remove the journal '{}' of vector store '{store_name}', which breaks the store should an older version of AI Studio write to it: {error}", journal.display());
+        }
+    }
 }
 
-/// Removes the obsolete closed segments, oldest first, and returns their number and size. When a
-/// removal fails, the segments left over are still contiguous, so Qdrant Edge can open the WAL.
-fn remove_obsolete_wal_segments(wal_path: &Path) -> std::io::Result<(usize, u64)> {
-    let mut removed_segments = 0;
-    let mut removed_bytes = 0;
-    for file_name in obsolete_wal_segments(&wal_file_names(wal_path)?) {
-        let segment_path = wal_path.join(file_name);
-        let segment_size = fs::metadata(&segment_path)?.len();
-        fs::remove_file(&segment_path)?;
-        removed_segments += 1;
-        removed_bytes += segment_size;
-    }
-
-    Ok((removed_segments, removed_bytes))
-}
-
-fn wal_file_names(wal_path: &Path) -> std::io::Result<Vec<String>> {
-    if !wal_path.is_dir() {
-        return Ok(Vec::new());
-    }
-
-    // Every file counts: a closed segment missing from this list would leave a gap behind.
-    let mut file_names = Vec::new();
-    for entry in fs::read_dir(wal_path)? {
+/// Every journal of Qdrant Edge below a directory, see `remove_tracker_journals`.
+fn tracker_journals(path: &Path) -> std::io::Result<Vec<PathBuf>> {
+    let mut journals = Vec::new();
+    for entry in fs::read_dir(path)? {
         let entry = entry?;
-        if entry.file_type()?.is_file() && let Ok(file_name) = entry.file_name().into_string() {
-            file_names.push(file_name);
+        let file_type = entry.file_type()?;
+        if file_type.is_dir() {
+            journals.extend(tracker_journals(&entry.path())?);
+        } else if file_type.is_file() && entry.file_name() == TRACKER_JOURNAL_FILE {
+            journals.push(entry.path());
         }
     }
 
-    Ok(file_names)
-}
-
-/// The closed WAL segments which may go, oldest first. That is all of them except the newest:
-/// Qdrant Edge numbers its operations from the first closed segment and would start again at zero
-/// without one. The segments then ignore every later update of a point they already know.
-fn obsolete_wal_segments(file_names: &[String]) -> Vec<String> {
-    let mut closed_segments = file_names
-        .iter()
-        .filter_map(|file_name| {
-            let start_index = file_name.strip_prefix(CLOSED_WAL_SEGMENT_PREFIX)?.parse::<u64>().ok()?;
-            Some((start_index, file_name.clone()))
-        })
-        .collect::<Vec<_>>();
-
-    closed_segments.sort_unstable_by_key(|(start_index, _)| *start_index);
-    closed_segments.pop();
-    closed_segments
-        .into_iter()
-        .map(|(_, file_name)| file_name)
-        .collect()
+    Ok(journals)
 }
 
 fn validate_vector_size(vector_size: usize) -> QdrantEdgeResult<()> {
@@ -1529,8 +1647,10 @@ fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::BTreeMap;
+
     use crate::runtime_api::test_support::assert_runtime_stays_free;
-    use qdrant_edge::WalOptions;
+    use qdrant_edge::{PayloadIndexInfo, WalOptions};
 
     #[test]
     fn validate_store_name_allows_safe_store_names() {
@@ -1723,14 +1843,7 @@ mod tests {
     fn a_point_without_a_generation_counts_as_generation_0() {
         let test_directory = test_directory("no-generation");
         let mut database = QdrantEdgeDatabase::new(test_directory.clone());
-        let mut point = test_point(POINT_X, vec![1.0, 0.0, 0.0]);
-        point.parent_file_id = "report".to_string();
-        let mut point = to_qdrant_edge_point(point).unwrap();
-        point.payload.as_mut().unwrap().0.remove("generation");
-        let (shard, _) = database.get_or_create_store(SEARCH_STORE, 3).unwrap();
-        shard
-            .update(UpdateOperation::PointOperation(PointOperations::UpsertPoints(PointInsertOperations::PointsList(vec![point]))))
-            .unwrap();
+        insert_without_generation(&mut database, document_point(POINT_X, vec![1.0, 0.0, 0.0], "report", 0));
 
         let hidden = |searchable_generation: i32| [QdrantEdgeHiddenChunks {
             parent_file_id: "report".to_string(),
@@ -1845,85 +1958,389 @@ mod tests {
     }
 
     #[test]
-    fn obsolete_wal_segments_keeps_the_newest_closed_segment() {
-        let file_names = ["closed-120", "open-7", "closed-0", "tmp-open-8", "closed-40", ".wal", "first-index", "closed-abc"].map(String::from);
+    fn a_new_store_indexes_the_fields_its_requests_filter_on() {
+        let test_directory = test_directory("index-new");
+        let database = store_with_one_point_per_axis(&test_directory);
 
-        // Sorted by number, not by name: as text, "closed-40" would come after "closed-120".
-        assert_eq!(obsolete_wal_segments(&file_names), vec!["closed-0", "closed-40"]);
-
-        assert!(obsolete_wal_segments(&["closed-0", "open-1"].map(String::from)).is_empty());
-        assert!(obsolete_wal_segments(&["open-1"].map(String::from)).is_empty());
-    }
-
-    #[test]
-    fn a_reloaded_store_drops_obsolete_wal_segments_and_keeps_its_points() {
-        let test_directory = test_directory("wal-reload");
-        let (database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
-        let store_path = database.store_path(SEARCH_STORE).unwrap();
-        drop(database);
-
-        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
-        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None, &[]).unwrap();
-
-        assert_eq!(closed_wal_segments(&store_path).len(), 1);
-        assert_eq!(
-            found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
-            point_ids.iter().map(String::as_str).collect::<HashSet<_>>(),
-            "the points live in the segments, so removing WAL segments must not lose any of them"
-        );
+        let indexes = payload_indexes(&database);
+        let mut indexed_fields = indexes.keys().map(String::as_str).collect::<Vec<_>>();
+        indexed_fields.sort();
+        assert_eq!(indexed_fields, vec!["file_path", "parent_file_id"], "an index on the generation would only cost");
+        for (field, index) in &indexes {
+            assert_eq!(index.params, Some(payload_index_params()), "the index of {field} has its schema");
+            assert_eq!(index.points, 3, "the index of {field} holds every point");
+        }
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
     }
 
+    /// A store of an older version of AI Studio has no payload indexes yet.
     #[test]
-    fn an_update_after_wal_compaction_replaces_the_existing_point() {
-        let test_directory = test_directory("wal-update");
-        let (database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
-        drop(database);
-
-        // The newest point carries the highest operation number so far. Should the numbering start
-        // again after the compaction, the segment would ignore this update as outdated.
-        let newest_point_id = point_ids.last().unwrap();
-        let mut updated_point = test_point(newest_point_id, vec![0.0, 0.0, 1.0]);
-        updated_point.text = "Updated text.".to_string();
-
-        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
-        database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
-
-        let found = database
-            .search_embedding(SEARCH_STORE, search_vector(), 1, Some(vec![newest_point_id.clone()]), &[])
+    fn a_store_without_payload_indexes_gets_them_when_it_loads() {
+        let test_directory = test_directory("index-load");
+        let mut database = database_without_payload_indexes(&test_directory);
+        database
+            .insert_embedding(SEARCH_STORE, vec![
+                test_point(POINT_X, vec![1.0, 0.0, 0.0]),
+                test_point(POINT_Y, vec![0.0, 1.0, 0.0]),
+                test_point(POINT_Z, vec![0.0, 0.0, 1.0]),
+            ])
             .unwrap();
-        assert_eq!(found.len(), 1);
-        assert_eq!(found[0].text, "Updated text.");
+        assert!(payload_indexes(&database).is_empty());
+        drop(database);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        let indexes = payload_indexes(&database);
+        assert_eq!(indexes.len(), INDEXED_PAYLOAD_FIELDS.len());
+        for (field, index) in &indexes {
+            assert_eq!(index.params, Some(payload_index_params()), "the index of {field} has its schema");
+            assert_eq!(index.points, 3, "the index of {field} holds the points which were there before");
+        }
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// Otherwise, every load would write to the WAL and flush, cf. `ensure_payload_indexes`.
+    #[test]
+    fn loading_a_store_with_its_payload_indexes_writes_nothing() {
+        let test_directory = test_directory("index-reload");
+        let database = store_with_one_point_per_axis(&test_directory);
+        let wal_path = database.store_path(SEARCH_STORE).unwrap().join(WAL_DIRECTORY);
+        drop(database);
+        let wal = file_contents(&wal_path);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(payload_indexes(&database).len(), INDEXED_PAYLOAD_FIELDS.len());
+
+        // Not assert_eq: on failure, it would print every byte of the WAL.
+        assert!(file_contents(&wal_path) == wal, "loading the store left its WAL as it was");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// The same points in a store with and in a store without payload indexes, among them a point
+    /// without a generation, give the same results for every request which filters on the payload.
+    #[test]
+    fn the_payload_indexes_change_no_result() {
+        let indexed_directory = test_directory("index-results-indexed");
+        let plain_directory = test_directory("index-results-plain");
+        let mut indexed = QdrantEdgeDatabase::new(indexed_directory.clone());
+        indexed.ensure_store_exists(SEARCH_STORE, "Some source", 3).unwrap();
+        let mut plain = database_without_payload_indexes(&plain_directory);
+        assert_eq!(payload_indexes(&indexed).len(), INDEXED_PAYLOAD_FIELDS.len());
+        assert!(payload_indexes(&plain).is_empty());
+
+        let results = |database: &mut QdrantEdgeDatabase| {
+            let point_id = |number: u128| Uuid::from_u128(number).to_string();
+            insert_without_generation(database, document_point(&point_id(1), vec![1.0, 0.0, 0.0], "report", 0));
+            database
+                .insert_embedding(SEARCH_STORE, vec![
+                    document_point(&point_id(2), vec![0.9, 0.1, 0.0], "report", 1),
+                    document_point(&point_id(3), vec![0.5, 0.5, 0.0], "report", 1),
+                    document_point(&point_id(4), vec![0.0, 1.0, 0.0], "notes", 0),
+                    document_point(&point_id(5), vec![0.0, 0.0, 1.0], "notes", 0),
+                ])
+                .unwrap();
+
+            let hidden = |parent_file_id: &str, searchable_generation: Option<i32>| QdrantEdgeHiddenChunks {
+                parent_file_id: parent_file_id.to_string(),
+                searchable_generation,
+            };
+
+            let mut search = |hidden_chunks: &[QdrantEdgeHiddenChunks]| {
+                let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, hidden_chunks).unwrap();
+                found_point_ids(&found).into_iter().map(str::to_string).collect::<Vec<_>>()
+            };
+
+            let mut results = vec![
+                search(&[]),
+                search(&[hidden("report", Some(0))]),
+                search(&[hidden("report", Some(1))]),
+                search(&[hidden("notes", None)]),
+                search(&[hidden("report", Some(1)), hidden("notes", Some(0))]),
+            ];
+
+            database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/report.md", "report", &[point_id(2), point_id(3)]).unwrap();
+            let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+            results.push(found_point_ids(&found).into_iter().map(str::to_string).collect());
+            results
+        };
+
+        let indexed_results = results(&mut indexed);
+        assert_eq!(indexed_results, results(&mut plain));
+        assert_eq!(indexed_results[2].len(), 4, "the generation 0 of the report, which has no generation in its payload, is left out");
+        assert_eq!(indexed_results[5].len(), 4, "deleting the report kept its generation 1");
+
+        drop(indexed);
+        drop(plain);
+        fs::remove_dir_all(indexed_directory).unwrap();
+        fs::remove_dir_all(plain_directory).unwrap();
+    }
+
+    #[test]
+    fn deleting_a_document_leaves_the_other_documents_alone() {
+        let test_directory = test_directory("index-delete");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database
+            .insert_embedding(SEARCH_STORE, vec![
+                document_point(POINT_X, vec![1.0, 0.0, 0.0], "report", 0),
+                document_point(POINT_Y, vec![0.0, 1.0, 0.0], "report", 1),
+                document_point(POINT_Z, vec![0.0, 0.0, 1.0], "notes", 0),
+            ])
+            .unwrap();
+
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/report.md", "report", &[POINT_Y.to_string()]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_Y, POINT_Z], "only the point of the report which is not kept goes");
+        for (field, index) in payload_indexes(&database) {
+            assert_eq!(index.points, 2, "the index of {field} lost the deleted point");
+        }
+
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/notes.md", "notes", &[]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_Y], "deleting the notes leaves the report alone");
+        for (field, index) in payload_indexes(&database) {
+            assert_eq!(index.points, 1, "the index of {field} lost the notes");
+        }
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// The index of `file_path` follows a relocation, also once the store loads again.
+    #[test]
+    fn a_relocated_document_is_found_by_its_new_path_only() {
+        let test_directory = test_directory("index-relocation");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database
+            .insert_embedding(SEARCH_STORE, vec![
+                document_point(POINT_X, vec![1.0, 0.0, 0.0], "report", 0),
+                document_point(POINT_Y, vec![0.0, 1.0, 0.0], "report", 0),
+                document_point(POINT_Z, vec![0.0, 0.0, 1.0], "notes", 0),
+            ])
+            .unwrap();
+
+        database.relocate_embedding_file(RelocateQdrantEdgeEmbeddingFileRequest {
+            store_name: SEARCH_STORE.to_string(),
+            parent_file_id: "report".to_string(),
+            absolute_path: "/tmp/moved/report.md".to_string(),
+            file_name: "report.md".to_string(),
+            relative_path: "report.md".to_string(),
+            fingerprint: "new-fingerprint".to_string(),
+        }).unwrap();
+
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/report.md", "", &[]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z], "the old path no longer names the report");
+        drop(database);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/moved/report.md", "", &[]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_Z], "the new path names every point of the report");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// Optimizing a store builds new segments, which have to take the payload indexes along.
+    #[test]
+    fn the_payload_indexes_survive_an_optimization() {
+        const DOCUMENTS: u128 = 10;
+        const POINTS_PER_DOCUMENT: u128 = 20;
+
+        let test_directory = test_directory("index-optimization");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        fs::create_dir_all(&store_path).unwrap();
+
+        // The production config, except that a few points already make a segment worth optimizing.
+        let config = EdgeConfig {
+            optimizers: Some(EdgeOptimizersConfig {
+                indexing_threshold: Some(1),
+                ..edge_optimizers_config()
+            }),
+            ..edge_config(3)
+        };
+        drop(EdgeShard::new(&store_path, config).unwrap());
+        write_store_initialization_marker(&store_path, SEARCH_STORE).unwrap();
+
+        let points = (0..DOCUMENTS * POINTS_PER_DOCUMENT)
+            .map(|number| document_point(&Uuid::from_u128(number + 1).to_string(), vec![1.0, number as f32, 1.0], &format!("document-{}", number % DOCUMENTS), 0))
+            .collect::<Vec<_>>();
+        database.insert_embedding(SEARCH_STORE, points).unwrap();
+        assert!(database.shards[SEARCH_STORE].optimize().unwrap(), "the store is worth optimizing, or this test checks nothing");
+        database.shards[SEARCH_STORE].flush().unwrap();
+        drop(database);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/document-3.md", "document-3", &[]).unwrap();
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), (DOCUMENTS * POINTS_PER_DOCUMENT) as usize, None, &[]).unwrap();
+        assert_eq!(found.len() as u128, (DOCUMENTS - 1) * POINTS_PER_DOCUMENT, "deleting a document removed its points from the optimized segment");
+        for (field, index) in payload_indexes(&database) {
+            assert_eq!(index.points as u128, (DOCUMENTS - 1) * POINTS_PER_DOCUMENT, "the index of {field} holds every remaining point");
+        }
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
     }
 
     #[test]
-    fn optimize_removes_obsolete_wal_segments_of_a_loaded_store() {
-        let test_directory = test_directory("wal-optimize");
-        let (mut database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
-        let store_path = database.store_path(SEARCH_STORE).unwrap();
+    fn the_wal_keeps_only_the_newest_closed_segment() {
+        let test_directory = test_directory("wal-acknowledged");
+        let (database, _, most_closed_segments_at_once) = store_with_a_rolled_over_wal(&test_directory);
 
+        // Qdrant Edge acknowledges its WAL when it flushes, and keeps the newest closed segment to
+        // number its operations on. Should this fail, the WAL grows with every update again, as it
+        // did up to qdrant-edge 0.8.
+        assert_eq!(most_closed_segments_at_once, 1);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn an_update_after_a_reload_replaces_the_existing_point() {
+        let test_directory = test_directory("wal-reload");
+        let (mut database, point_ids, _) = store_with_a_rolled_over_wal(&test_directory);
         database.optimize_store(SEARCH_STORE).unwrap();
-        assert_eq!(closed_wal_segments(&store_path).len(), 1);
+        drop(database);
 
-        // The next request loads the store again, with all its points and still taking updates.
-        let newest_point_id = point_ids.last().unwrap();
-        let mut updated_point = test_point(newest_point_id, vec![0.0, 0.0, 1.0]);
-        updated_point.text = "Updated text.".to_string();
-        database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
-
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
         let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None, &[]).unwrap();
         assert_eq!(
             found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
             point_ids.iter().map(String::as_str).collect::<HashSet<_>>()
         );
 
-        let updated = found.iter().find(|result| &result.point_id == newest_point_id).unwrap();
-        assert_eq!(updated.text, "Updated text.");
+        // The newest point carries the highest operation number so far. Should the numbering start
+        // again after the reload, the segment would ignore this update as outdated.
+        assert_update_of_the_newest_point_takes_effect(&mut database, &point_ids);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_store_of_an_older_version_gets_its_wal_acknowledged_and_keeps_its_points() {
+        let test_directory = test_directory("wal-legacy");
+        let (database, point_ids, _) = store_with_a_rolled_over_wal(&test_directory);
+        let first_index_path = database.store_path(SEARCH_STORE).unwrap().join(WAL_DIRECTORY).join(WAL_FIRST_INDEX_FILE);
+        drop(database);
+
+        // Up to qdrant-edge 0.8, a WAL had no such file.
+        fs::remove_file(&first_index_path).unwrap();
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None, &[]).unwrap();
+        let first_index: Value = fs::read_to_string(&first_index_path).unwrap().parse().unwrap();
+        assert_eq!(first_index["ack_index"].as_u64(), Some(u64::MAX));
+        assert_eq!(
+            found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
+            point_ids.iter().map(String::as_str).collect::<HashSet<_>>(),
+            "the points live in the segments, so marking the WAL as acknowledged must not lose any of them"
+        );
+
+        // Marking the WAL must not start the numbering of operations again.
+        assert_update_of_the_newest_point_takes_effect(&mut database, &point_ids);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn an_acknowledged_wal_stays_as_it_is() {
+        let test_directory = test_directory("wal-first-index");
+        let database = store_with_one_point_per_axis(&test_directory);
+        let first_index_path = database.store_path(SEARCH_STORE).unwrap().join(WAL_DIRECTORY).join(WAL_FIRST_INDEX_FILE);
+        drop(database);
+        let first_index = fs::read_to_string(&first_index_path).unwrap();
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(fs::read_to_string(&first_index_path).unwrap(), first_index);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// An older version of AI Studio which writes to the store in between would otherwise break it,
+    /// cf. remove_tracker_journals.
+    #[test]
+    fn unloading_a_store_removes_its_tracker_journals_and_keeps_its_points() {
+        let test_directory = test_directory("journal-unload");
+        let database = store_with_one_point_per_axis(&test_directory);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        assert!(!tracker_journals(&store_path).unwrap().is_empty(), "the flush after inserting leaves a journal behind, or this test checks nothing");
+
+        drop(database);
+        assert!(tracker_journals(&store_path).unwrap().is_empty());
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_backup_copies_a_store_without_its_tracker_journals() {
+        let data_directory = test_directory("backup-journal");
+        let base_path = data_directory.join("databases").join("vector_database");
+        let mut database = store_with_one_point_per_axis(&base_path);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        assert!(!tracker_journals(&store_path).unwrap().is_empty(), "the flush after inserting leaves a journal behind, or this test checks nothing");
+
+        let preparation = database.prepare_backup(&data_directory).unwrap();
+        database.copy_store_for_backup(SEARCH_STORE, &data_directory, &preparation.backup_id).unwrap();
+        let copy_base_path = PathBuf::from(&preparation.staging_path).join("databases").join("vector_database");
+        assert!(tracker_journals(&store_path).unwrap().is_empty(), "the store was unloaded for the copy");
+        assert!(tracker_journals(&copy_base_path).unwrap().is_empty(), "the copy takes no journal along");
+
+        let mut copy = QdrantEdgeDatabase::new(copy_base_path);
+        let found = copy.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        drop(copy);
+        drop(database);
+        fs::remove_dir_all(data_directory).unwrap();
+    }
+
+    #[test]
+    fn a_panic_while_opening_a_store_reports_it_as_unreadable() {
+        let test_directory = test_directory("open-panic");
+        let database = store_with_one_point_per_axis(&test_directory);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        drop(database);
+
+        let error = open_store::<(), String>(&store_path, SEARCH_STORE, || panic!("Payload storage is corrupted")).unwrap_err();
+        let unreadable = error.downcast_ref::<StoreUnreadableError>().expect("a store which makes Qdrant Edge panic is unreadable, like one which fails to open");
+        assert!(unreadable.to_string().contains("Payload storage is corrupted"));
+        assert!(store_path.join("segments").is_dir(), "the store stays until the user decides to rebuild it");
+
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_panic_in_a_request_fails_only_this_request() {
+        let test_directory = test_directory("request-panic");
+        let mut database = store_with_one_point_per_axis(&test_directory);
+
+        let failed = answer_request(&mut database, |_| -> QdrantEdgeResult<()> { panic!("Payload storage is corrupted") });
+        assert!(!failed.success);
+        assert!(failed.issue.contains("Payload storage is corrupted"));
+
+        let answered = answer_request(&mut database, |database| database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]));
+        assert!(answered.success, "the next request runs as usual");
+        assert_eq!(found_point_ids(answered.data.as_ref().unwrap()), vec![POINT_X, POINT_Y, POINT_Z]);
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
@@ -2118,9 +2535,10 @@ mod tests {
         database
     }
 
-    /// A store with tiny WAL segments, filled one point at a time until the WAL has closed several
-    /// of them. Returns the database with the store still loaded, and the IDs in insertion order.
-    fn store_with_several_closed_wal_segments(test_directory: &Path) -> (QdrantEdgeDatabase, Vec<String>) {
+    /// A store with tiny WAL segments, filled one point at a time until the WAL has closed three of
+    /// them. Returns the database with the store still loaded, the IDs in insertion order, and the
+    /// most closed segments the WAL kept at once.
+    fn store_with_a_rolled_over_wal(test_directory: &Path) -> (QdrantEdgeDatabase, Vec<String>, usize) {
         const SMALL_WAL_SEGMENT_CAPACITY: usize = 8 * 1024;
         const MAX_POINTS: usize = 1_000;
 
@@ -2141,7 +2559,9 @@ mod tests {
         write_store_initialization_marker(&store_path, SEARCH_STORE).unwrap();
 
         let mut point_ids = Vec::new();
-        while closed_wal_segments(&store_path).len() < 3 {
+        let mut closed_segments_seen = HashSet::new();
+        let mut most_closed_segments_at_once = 0;
+        while closed_segments_seen.len() < 3 {
             assert!(point_ids.len() < MAX_POINTS, "the WAL never closed enough segments");
 
             let point_id = Uuid::from_u128(point_ids.len() as u128 + 1).to_string();
@@ -2149,17 +2569,80 @@ mod tests {
                 .insert_embedding(SEARCH_STORE, vec![test_point(&point_id, vec![1.0, point_ids.len() as f32, 1.0])])
                 .unwrap();
             point_ids.push(point_id);
+
+            let closed_segments = closed_wal_segments(&store_path);
+            most_closed_segments_at_once = most_closed_segments_at_once.max(closed_segments.len());
+            closed_segments_seen.extend(closed_segments);
         }
 
-        (database, point_ids)
+        (database, point_ids, most_closed_segments_at_once)
+    }
+
+    /// A store as older versions of AI Studio created it, without payload indexes, and loaded into
+    /// the database without getting them.
+    fn database_without_payload_indexes(test_directory: &Path) -> QdrantEdgeDatabase {
+        let mut database = QdrantEdgeDatabase::new(test_directory.to_path_buf());
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        fs::create_dir_all(&store_path).unwrap();
+        let shard = EdgeShard::new(&store_path, edge_config(3)).unwrap();
+        write_store_initialization_marker(&store_path, SEARCH_STORE).unwrap();
+        database.shards.insert(SEARCH_STORE.to_string(), shard);
+        database
+    }
+
+    /// The payload indexes of the loaded test store, by field.
+    fn payload_indexes(database: &QdrantEdgeDatabase) -> HashMap<String, PayloadIndexInfo> {
+        database.shards[SEARCH_STORE]
+            .info()
+            .unwrap()
+            .payload_schema
+            .into_iter()
+            .map(|(field, index)| (field.to_string(), index))
+            .collect()
+    }
+
+    /// Inserts a point the way it was written before points had a generation.
+    fn insert_without_generation(database: &mut QdrantEdgeDatabase, point: QdrantEdgeStoragePoint) {
+        let mut point = to_qdrant_edge_point(point).unwrap();
+        point.payload.as_mut().unwrap().0.remove("generation");
+        let (shard, _) = database.get_or_create_store(SEARCH_STORE, 3).unwrap();
+        shard
+            .update(UpdateOperation::PointOperation(PointOperations::UpsertPoints(PointInsertOperations::PointsList(vec![point]))))
+            .unwrap();
+        shard.flush().unwrap();
+    }
+
+    /// The content of each file in a directory, by file name.
+    fn file_contents(directory: &Path) -> BTreeMap<String, Vec<u8>> {
+        fs::read_dir(directory)
+            .unwrap()
+            .map(|entry| {
+                let entry = entry.unwrap();
+                (entry.file_name().into_string().unwrap(), fs::read(entry.path()).unwrap())
+            })
+            .collect()
     }
 
     fn closed_wal_segments(store_path: &Path) -> Vec<String> {
         fs::read_dir(store_path.join(WAL_DIRECTORY))
             .unwrap()
             .map(|entry| entry.unwrap().file_name().into_string().unwrap())
-            .filter(|file_name| file_name.starts_with(CLOSED_WAL_SEGMENT_PREFIX))
+            .filter(|file_name| file_name.starts_with("closed-"))
             .collect()
+    }
+
+    /// Updates the newest of the given points and checks that a search finds its new text.
+    fn assert_update_of_the_newest_point_takes_effect(database: &mut QdrantEdgeDatabase, point_ids: &[String]) {
+        let newest_point_id = point_ids.last().unwrap();
+        let mut updated_point = test_point(newest_point_id, vec![0.0, 0.0, 1.0]);
+        updated_point.text = "Updated text.".to_string();
+        database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
+
+        let found = database
+            .search_embedding(SEARCH_STORE, search_vector(), 1, Some(vec![newest_point_id.clone()]), &[])
+            .unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].text, "Updated text.");
     }
 
     /// Closest to the point on the x axis, then the one on the y axis, then the one on the z axis.
@@ -2193,6 +2676,20 @@ mod tests {
             creation_utc: String::new(),
             last_write_utc: String::new(),
             embedded_at_utc: String::new(),
+        }
+    }
+
+    /// A point of the document `/tmp/test-data/<parent_file_id>.md`.
+    fn document_point(point_id: &str, vector: Vec<f32>, parent_file_id: &str, generation: i32) -> QdrantEdgeStoragePoint {
+        let path = format!("/tmp/test-data/{parent_file_id}.md");
+        QdrantEdgeStoragePoint {
+            parent_file_id: parent_file_id.to_string(),
+            file_path: path.clone(),
+            absolute_path: path,
+            file_name: format!("{parent_file_id}.md"),
+            relative_path: format!("{parent_file_id}.md"),
+            generation,
+            ..test_point(point_id, vector)
         }
     }
 }

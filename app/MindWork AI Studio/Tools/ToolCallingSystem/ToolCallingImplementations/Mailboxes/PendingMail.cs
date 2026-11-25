@@ -208,7 +208,7 @@ internal sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summar
     /// <remarks>
     /// The attachments are numbered the way the index numbers them, cf. MailSummary.AttachmentNames.
     /// Where in an attachment is worded like the location of any other passage, cf.
-    /// IRetrievalContextExtensions.DescribeLocation. A passage of the text of the mail names
+    /// RetrievalContextExtensions.DescribeLocation. A passage of the text of the mail names
     /// no attachment, and neither does one of a mail indexed before attachments were told apart.
     /// </remarks>
     /// <param name="texts">The filtered texts of the result.</param>
@@ -220,6 +220,6 @@ internal sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summar
 
         var type = DataSourceLocalRetrievalService.GetRetrievalContentType(Path.GetExtension(this.Summary.AttachmentNames[position]));
         var located = DataSourceLocalRetrievalService.LocatePassage(location, type, chunkNumber: 1);
-        return new(texts[attachment], IRetrievalContextExtensions.DescribeLocation(located.PageNumber, located.EndPageNumber, located.SheetName, located.StartRow, located.EndRow, located.StartLine, located.EndLine));
+        return new(texts[attachment], RetrievalContextExtensions.DescribeLocation(located.PageNumber, located.EndPageNumber, located.SheetName, located.StartRow, located.EndRow, located.StartLine, located.EndLine));
     }
 }

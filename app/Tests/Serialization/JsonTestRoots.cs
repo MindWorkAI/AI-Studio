@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using AIStudio.Assistants.BeyondFactsLab;
+using AIStudio.Assistants.ModelComparison;
 using AIStudio.Assistants.SWOTAnalysis;
 using AIStudio.Chat;
 using AIStudio.Settings;
@@ -61,10 +62,24 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(IReadOnlyList<string>), SqliteProvenanceStoreClientImplementation.JSON_OPTIONS));
         yield return Case(new(typeof(List<string>), SqliteProvenanceStoreClientImplementation.JSON_OPTIONS));
 
-        // The preparations of the BeyondFacts Lab, their forms, and the preparation selected last:
+        // The preparations of the BeyondFacts Lab, their forms, materials, work states, results, research on topics and on people, the selection of people, and the preparation selected last:
         yield return Case(new(typeof(BflProject), BeyondFactsLabJson.PERSISTENCE));
         yield return Case(new(typeof(BflStepFormData), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflMaterial), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflWorkState), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflResult), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflResearch), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflPersonResearch), BeyondFactsLabJson.PERSISTENCE));
+        yield return Case(new(typeof(BflParticipantSelection), BeyondFactsLabJson.PERSISTENCE));
         yield return Case(new(typeof(Guid?), BeyondFactsLabJson.PERSISTENCE), "selected preparation");
+
+        // The value deck of the BeyondFacts Lab, which comes with the app and is read like its files:
+        yield return Case(new(typeof(BflValueDeck), BeyondFactsLabJson.PERSISTENCE), "value deck");
+
+        // The presets and the stored results of the Model Comparison assistant:
+        yield return Case(new(typeof(ModelComparisonPreset), ModelComparisonJson.PERSISTENCE));
+        yield return Case(new(typeof(ModelComparisonRecord), ModelComparisonJson.PERSISTENCE));
+        yield return Case(new(typeof(ModelComparisonSeries), ModelComparisonJson.PERSISTENCE));
     }
 
     private static TestCaseData Case(JsonTestRoot root, string? purpose = null)

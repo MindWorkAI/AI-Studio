@@ -1,0 +1,30 @@
+@inherits MSGComponentBase
+
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
+    @T("The median time each model took, so that a single slow answer does not distort the picture. Only complete answers count. The times also depend on the length of the answers and on how busy the servers were.")
+</MudJustifiedText>
+@if (this.timedSpeeds.Count > 0)
+{
+    <MudChart T="double" ChartType="ChartType.Bar" ChartLabels="@ModelComparisonCharts.ModelLabels(this.timedSpeeds.Select(speed => speed.Model))" ChartSeries="@this.SpeedSeries" ChartOptions="@this.ChartOptions" Width="100%" Height="300px"/>
+}
+<MudSimpleTable Dense="@true" Hover="@true" Class="mt-3">
+    <thead>
+        <tr>
+            <th>@T("Model")</th>
+            <th>@T("Complete answers")</th>
+            <th>@T("Until the first token")</th>
+            <th>@T("Until the complete answer")</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var speed in this.Speeds)
+        {
+            <tr @key="speed.Model.Key">
+                <td>@speed.Model.Label</td>
+                <td>@speed.AnswerCount.CompactCount()</td>
+                <td>@ModelComparisonFormat.Duration(speed.MedianFirstTokenTime)</td>
+                <td>@ModelComparisonFormat.Duration(speed.MedianTotalTime)</td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>

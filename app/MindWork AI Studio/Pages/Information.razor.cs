@@ -80,7 +80,7 @@ public partial class Information : MSGComponentBase
         Tools.Rust.LinuxPackageType.FLATPAK => T("Flatpak installation, updates are handled outside of AI Studio"),
         _ => this.RuntimeInfo.InstallationKind switch
         {
-            Tools.Rust.InstallationKind.MANAGED => T("managed; updates are handled outside of AI Studio; contact whoever installed it and ask about updates"),
+            Tools.Rust.InstallationKind.MANAGED => TA("managed; updates are handled outside of AI Studio; contact whoever installed it and ask about updates"),
             Tools.Rust.InstallationKind.UNSUPPORTED_LOCATION => T("current installation location does not support automatic updates"),
             Tools.Rust.InstallationKind.DEVELOPMENT => T("development build, no support for automatic updates"),
             _ => T("standard; automatic updates supported")
@@ -190,9 +190,9 @@ public partial class Information : MSGComponentBase
     /// </summary>
     private readonly IReadOnlyList<DatabaseSection> databaseSections =
     [
-        new(DatabaseRole.VECTOR_STORE, Icons.Material.Outlined.Storage),
-        new(DatabaseRole.INDEX_STORE, Icons.Material.Outlined.ManageSearch),
-        new(DatabaseRole.PROVENANCE_STORE, Icons.Material.Outlined.Source),
+        new(DatabaseRole.VECTOR_STORE, AppIcons.VECTOR_STORE),
+        new(DatabaseRole.INDEX_STORE, AppIcons.SEARCH_INDEX),
+        new(DatabaseRole.PROVENANCE_STORE, AppIcons.PROVENANCE_STORE),
     ];
 
     private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
@@ -349,7 +349,7 @@ public partial class Information : MSGComponentBase
 
     private IReadOnlyList<ConfigInfoRowItem> BuildDatabaseInfoItems(DatabaseSection section) => section.DisplayInfo
         .Select((item, index) => new ConfigInfoRowItem(
-            Icons.Material.Filled.ArrowRightAlt,
+            AppIcons.INFO_ROW,
             $"{item.Label}: {item.Value}",
             item.Value,
             $"{T("Copies the following to the clipboard")}: {item.Value}",
@@ -441,18 +441,18 @@ public partial class Information : MSGComponentBase
     {
         var items = new List<ConfigInfoRowItem>
         {
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Enterprise configuration ID:")} {environment.ConfigurationId}",
                 environment.ConfigurationId.ToString(),
                 T("Copies the config ID to the clipboard")),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Configuration server:")} {environment.ConfigurationServerUrl}",
                 environment.ConfigurationServerUrl,
                 T("Copies the server URL to the clipboard"),
                 "margin-top: 4px;"),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Configuration source:")} {environment.Source}",
                 environment.Source,
                 T("Copies the configuration source to the clipboard"),
@@ -461,14 +461,14 @@ public partial class Information : MSGComponentBase
 
         if (!string.IsNullOrWhiteSpace(environment.SourceDetail))
         {
-            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+            items.Add(new ConfigInfoRowItem(AppIcons.INFO_ROW,
                 $"{T("Configuration origin:")} {environment.SourceDetail}",
                 environment.SourceDetail,
                 T("Copies the configuration origin to the clipboard"),
                 "margin-top: 4px;"));
         }
 
-        items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+        items.Add(new ConfigInfoRowItem(AppIcons.INFO_ROW,
             $"{T("Configuration slot:")} {environment.Slot}",
             environment.Slot,
             T("Copies the configuration slot to the clipboard"),
@@ -476,7 +476,7 @@ public partial class Information : MSGComponentBase
 
         if (plugin is not null)
         {
-            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+            items.Add(new ConfigInfoRowItem(AppIcons.INFO_ROW,
                 $"{T("Configuration plugin ID:")} {plugin.Id}",
                 plugin.Id.ToString(),
                 T("Copies the configuration plugin ID to the clipboard"),
@@ -500,12 +500,12 @@ public partial class Information : MSGComponentBase
     /// </remarks>
     private IReadOnlyList<ConfigInfoRowItem> BuildTestConfigurationItems(IAvailablePlugin plugin) =>
     [
-        new(Icons.Material.Filled.ArrowRightAlt,
+        new(AppIcons.INFO_ROW,
             $"{T("Configuration plugin ID:")} {plugin.Id}",
             plugin.Id.ToString(),
             T("Copies the configuration plugin ID to the clipboard")),
 
-        new(Icons.Material.Filled.ArrowRightAlt,
+        new(AppIcons.INFO_ROW,
             $"{T("Plugin directory:")} {plugin.LocalPath}",
             plugin.LocalPath,
             T("Copies the plugin directory to the clipboard"),
@@ -528,24 +528,24 @@ public partial class Information : MSGComponentBase
         var state = ExternalHttpClientTimeout.CustomRootCertificateState;
         var items = new List<ConfigInfoRowItem>
         {
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Status:")} {(state.IsUsable ? T("active") : T("not active"))}",
                 state.IsUsable ? T("active") : T("not active"),
                 T("Copies the status to the clipboard")),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Configuration source:")} {state.Source}",
                 state.Source,
                 T("Copies the configuration source to the clipboard"),
                 "margin-top: 4px;"),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Certificate bundle:")} {state.BundlePath}",
                 state.BundlePath,
                 T("Copies the certificate bundle path to the clipboard"),
                 "margin-top: 4px;"),
 
-            new(Icons.Material.Filled.ArrowRightAlt,
+            new(AppIcons.INFO_ROW,
                 $"{T("Loaded root certificates:")} {state.CertificateCount}",
                 state.CertificateCount.ToString(),
                 T("Copies the number of loaded root certificates to the clipboard"),
@@ -554,7 +554,7 @@ public partial class Information : MSGComponentBase
 
         if (state.AllowedHostPatterns.Count == 0)
         {
-            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+            items.Add(new ConfigInfoRowItem(AppIcons.INFO_ROW,
                 T("Allowed hosts: none configured"),
                 string.Empty,
                 T("Copies the allowed host configuration to the clipboard"),
@@ -564,7 +564,7 @@ public partial class Information : MSGComponentBase
         {
             foreach (var allowedHostPattern in state.AllowedHostPatterns)
             {
-                items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Dns,
+                items.Add(new ConfigInfoRowItem(AppIcons.SERVER,
                     $"{T("Allowed host:")} {allowedHostPattern}",
                     allowedHostPattern,
                     T("Copies the allowed host pattern to the clipboard"),
@@ -574,7 +574,7 @@ public partial class Information : MSGComponentBase
 
         foreach (var fingerprint in state.CertificateFingerprints)
         {
-            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Fingerprint,
+            items.Add(new ConfigInfoRowItem(AppIcons.IDENTIFIER,
                 $"{T("Root certificate fingerprint:")} {fingerprint}",
                 fingerprint,
                 T("Copies the root certificate fingerprint to the clipboard"),
@@ -605,7 +605,7 @@ public partial class Information : MSGComponentBase
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The log file path is not available yet.")));
+            await this.MessageBus.SendWarning(new(AppIcons.FOLDER_OPEN, T("The log file path is not available yet.")));
             return;
         }
 
@@ -617,18 +617,18 @@ public partial class Information : MSGComponentBase
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Could not open the log file location in the file manager.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the log file location.")));
+            await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, T("Could not open the log file location.")));
             return;
         }
 
         if (response.Success)
         {
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FolderOpen, T("Opened the log file location.")));
+            await this.MessageBus.SendSuccess(new(AppIcons.FOLDER_OPEN, T("Opened the log file location.")));
             return;
         }
 
         var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the log file location: {0}"), issue)));
+        await this.MessageBus.SendError(new(AppIcons.FOLDER_OPEN, string.Format(T("Could not open the log file location: {0}"), issue)));
     }
     
     private const string LICENSE = """
@@ -756,27 +756,27 @@ public partial class Information : MSGComponentBase
         var parameters = new DialogParameters<UpdateInstructionsDialog>();
         if (this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED)
         {
-            parameters.Add(x => x.Message, T("Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio."));
+            parameters.Add(x => x.Message, TA("Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio."));
         }
         else if (this.updatePolicyMode is UpdatePolicyMode.FLATPAK)
         {
-            parameters.Add(x => x.Message, T("AI Studio cannot update itself when installed as a Flatpak. A Flathub listing is planned. Until then, you can find the latest release on GitHub."));
+            parameters.Add(x => x.Message, TA("AI Studio cannot update itself when installed as a Flatpak. A Flathub listing is planned. Until then, you can find the latest release on GitHub."));
             parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
         }
         else if (this.updatePolicyMode is UpdatePolicyMode.MANAGED_INSTALLATION)
         {
             // No release link here: the app cannot tell how this installation receives updates,
             // and installing a second copy from GitHub next to it is exactly what we want to avoid.
-            parameters.Add(x => x.Message, T("This installation cannot update itself. Contact the person or organization that installed AI Studio for information about new versions."));
+            parameters.Add(x => x.Message, TA("This installation cannot update itself. Contact the person or organization that installed AI Studio for information about new versions."));
         }
         else if (this.updatePolicyMode is UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION)
         {
-            parameters.Add(x => x.Message, T("AI Studio cannot update itself from its current installation location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation."));
+            parameters.Add(x => x.Message, TA("AI Studio cannot update itself from its current installation location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation."));
             parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
         }
         else if (this.updatePolicyMode is UpdatePolicyMode.DEVELOPMENT)
         {
-            parameters.Add(x => x.Message, T("You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead."));
+            parameters.Add(x => x.Message, TA("You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead."));
         }
         else
             return;

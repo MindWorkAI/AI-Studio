@@ -15,7 +15,7 @@ namespace AIStudio.Provider.OpenAI;
 /// </remarks>
 public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> baseInput, IDictionary<string, object> apiParameters,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-    Func<ResponsesAPIRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync) : IToolCallingProviderAdapter
+    Func<ResponsesAPIRequest, ServerSentEventStreamEnd, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync) : IToolCallingProviderAdapter
 {
     private readonly List<object> internalItems = [];
     private readonly List<string> recordedRequestTexts = [];
@@ -37,7 +37,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
         {
             requestInput[0] = systemPrompt with
             {
-                Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
+                Content = $"{systemPrompt.Content}\n\n{finalResponseInstruction}",
             };
         }
 
@@ -59,13 +59,18 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
         // goes out with every round: which of them describes the conversation is the loop's
         // decision, which knows which round this is.
         //
+        var streamEnd = new ServerSentEventStreamEnd();
         var accumulator = new ResponsesStreamAccumulator();
-        await foreach (var serverSentEvent in streamRequestAsync(request, token))
+        await foreach (var serverSentEvent in streamRequestAsync(request, streamEnd, token))
         {
             var part = accumulator.Process(serverSentEvent);
-            if (part.HasContent || part.Usage.IsKnown)
-                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage));
+            if (part.HasContent || part.Usage.IsKnown || part.IsReasoning)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage) { IsReasoning = part.IsReasoning });
         }
+
+        // A stream which was cut off ends the round without an outcome, cf. IToolCallingProviderAdapter.ExecuteRoundAsync:
+        if (!streamEnd.IsReached)
+            yield break;
 
         var response = accumulator.Build();
         if (response is null)

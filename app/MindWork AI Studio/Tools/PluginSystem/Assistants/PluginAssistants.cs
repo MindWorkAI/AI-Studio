@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Globalization;
 using AIStudio.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
@@ -574,7 +575,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
     private static string BuildSecureSystemPrompt(string pluginSystemPrompt)
     {
-        var separator = $"{Environment.NewLine}{Environment.NewLine}";
+        var separator = "\n\n";
         return string.IsNullOrWhiteSpace(pluginSystemPrompt) ? $"{SECURITY_SYSTEM_PROMPT_PREAMBLE}{separator}{SECURITY_SYSTEM_PROMPT_POSTAMBLE}" : $"{SECURITY_SYSTEM_PROMPT_PREAMBLE}{separator}{pluginSystemPrompt.Trim()}{separator}{SECURITY_SYSTEM_PROMPT_POSTAMBLE}";
     }
 
@@ -856,21 +857,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         this.State.Environment["DateTime"] = new LuaFunction((context, _) =>
         {
             var format = context.ArgumentCount > 0 ? context.GetArgument<string>(0) : "yyyy-MM-dd HH:mm:ss";
-            var now = DateTime.Now;
-            var formattedDate = now.ToString(format);
-            
-            var table = new LuaTable
-            {
-                ["year"] = now.Year,
-                ["month"] = now.Month,
-                ["day"] = now.Day,
-                ["hour"] = now.Hour,
-                ["minute"] = now.Minute,
-                ["second"] = now.Second,
-                ["millisecond"] = now.Millisecond,
-                ["formatted"] = formattedDate,
-            };
-            return new(context.Return(table));
+            return new(context.Return(CreateDateTimeTable(DateTime.Now, format)));
         });
         
         this.State.Environment["Timestamp"] = new LuaFunction((context, _) =>
@@ -888,6 +875,29 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return new(context.Return(AssistantLuaConversion.InspectTable(table)));
         });
     }
+
+    /// <summary>
+    /// Builds the table which the Lua function DateTime returns for the given moment.
+    /// </summary>
+    /// <remarks>
+    /// The formatted text is the same on every computer. With the culture of the computer, the separators, the
+    /// calendar, and the names of months and days would follow its region settings, e.g., the year of the Buddhist
+    /// era in Thailand.
+    /// </remarks>
+    /// <param name="moment">The moment to describe.</param>
+    /// <param name="format">The .NET format of the formatted text.</param>
+    /// <returns>The parts of the moment and the formatted text.</returns>
+    internal static LuaTable CreateDateTimeTable(DateTime moment, string format) => new()
+    {
+        ["year"] = moment.Year,
+        ["month"] = moment.Month,
+        ["day"] = moment.Day,
+        ["hour"] = moment.Hour,
+        ["minute"] = moment.Minute,
+        ["second"] = moment.Second,
+        ["millisecond"] = moment.Millisecond,
+        ["formatted"] = moment.ToString(format, CultureInfo.InvariantCulture)
+    };
 
     private static void InitializeState(IEnumerable<IAssistantComponent> components, AssistantState state)
     {
@@ -939,7 +949,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 builder.Append(string.IsNullOrWhiteSpace(stateful.UserPrompt) ? "empty" : "set");
             }
 
-            builder.AppendLine();
+            builder.AppendLineLF();
 
             if (component.Children.Count > 0)
                 AppendComponentSummary(builder, component.Children, depth + 1);

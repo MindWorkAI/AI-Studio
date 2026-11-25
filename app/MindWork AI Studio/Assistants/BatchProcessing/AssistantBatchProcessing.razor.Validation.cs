@@ -8,7 +8,7 @@ public partial class AssistantBatchProcessing
     private string? ValidateInputDirectory(string directory)
     {
         if (string.IsNullOrWhiteSpace(directory))
-            return T("Please select the folder that contains the documents you want to process.");
+            return TA("Please select the folder that contains the documents you want to process.");
 
         if (!Directory.Exists(directory))
             return T("The selected folder does not exist.");
@@ -24,7 +24,7 @@ public partial class AssistantBatchProcessing
             return null;
 
         if (fileName.Trim().IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-            return T("Please provide a file name without a path, e.g., my-results.csv");
+            return TA("Please provide a file name without a path, e.g., my-results.csv");
 
         return null;
     }
@@ -36,7 +36,7 @@ public partial class AssistantBatchProcessing
             return null;
 
         if (!BatchProcessingCsvSeparator.IsValidCustomSeparator(separator))
-            return T("Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.");
+            return TA("Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.");
 
         return null;
     }
@@ -44,7 +44,7 @@ public partial class AssistantBatchProcessing
     private string? ValidateFreePrompt(string prompt)
     {
         if (this.promptSource is BatchProcessingPromptSource.FREE_PROMPT && string.IsNullOrWhiteSpace(prompt))
-            return T("Please describe what the AI should do with each document.");
+            return TA("Please describe what the AI should do with each document.");
 
         return null;
     }
@@ -54,10 +54,10 @@ public partial class AssistantBatchProcessing
     /// </summary>
     private string? ValidateInstructionSource() => this.promptSource switch
     {
-        BatchProcessingPromptSource.POLICY when this.ConfiguredPolicyIsMissing => T("The configured default policy no longer exists. Please select another document analysis policy."),
-        BatchProcessingPromptSource.POLICY when this.selectedPolicy is null => T("Please select a document analysis policy."),
+        BatchProcessingPromptSource.POLICY when this.ConfiguredPolicyIsMissing => TA("The configured default policy no longer exists. Please select another document analysis policy."),
+        BatchProcessingPromptSource.POLICY when this.selectedPolicy is null => TA("Please select a document analysis policy."),
         BatchProcessingPromptSource.FILE_IMPORT when !string.IsNullOrWhiteSpace(this.promptFileLoadIssue) => this.promptFileLoadIssue,
-        BatchProcessingPromptSource.FILE_IMPORT when string.IsNullOrWhiteSpace(this.importedPrompt) => T("Please select the file which contains your instructions."),
+        BatchProcessingPromptSource.FILE_IMPORT when string.IsNullOrWhiteSpace(this.importedPrompt) => TA("Please select the file which contains your instructions."),
 
         _ => null,
     };
@@ -165,7 +165,7 @@ public partial class AssistantBatchProcessing
         if (files.Count == 0)
         {
             this.AddInputIssue(this.numTooLargeFiles > 0
-                ? string.Format(T("Every matching file in the selected folder is larger than {0}. Raise the size limit to process them."), FolderFileSelection.MegabytesToBytes(this.maxFileSizeMegabytes).FileSize())
+                ? string.Format(TA("Every matching file in the selected folder is larger than {0}. Raise the size limit to process them."), FolderFileSelection.MegabytesToBytes(this.maxFileSizeMegabytes).FileSize())
                 : T("No matching files were found in the selected folder."));
             return null;
         }
@@ -173,7 +173,7 @@ public partial class AssistantBatchProcessing
         var requiresTranscription = files.Any(file => IsTranscribableMedia(file) && !HasReusableTranscript(file));
         if (requiresTranscription && !this.MediaTranscriptionService.HasUsableTranscriptionProvider)
         {
-            this.AddInputIssue(T("The selected files include audio or video without an existing transcript, but no usable transcription provider is configured. Configure one in the transcription settings or remove the media patterns."));
+            this.AddInputIssue(TA("The selected files include audio or video without an existing transcript, but no usable transcription provider is configured. Configure one in the transcription settings or remove the media patterns."));
             return null;
         }
 
@@ -184,7 +184,7 @@ public partial class AssistantBatchProcessing
         //
         if (files.All(IsImage) && !this.ProviderSettings.SupportsImageInput())
         {
-            this.AddInputIssue(T("All selected files are images, but the selected model cannot read images. Select a model with image support."));
+            this.AddInputIssue(TA("All selected files are images, but the selected model cannot read images. Select a model with image support."));
             return null;
         }
 

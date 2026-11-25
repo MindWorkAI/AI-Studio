@@ -65,9 +65,9 @@ public partial class ConfigurationInterfaceSize : MSGComponentBase
 
     private string SizeHelp => this.MeasuredScreen switch
     {
-        null => T("AI Studio cannot measure this screen right now, so you cannot set the interface size here."),
-        { } screen when this.OffersAppDefault => string.Format(I18N.I.Culture, T("Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop. System scaling follows your operating system."), this.DescribeScreen(screen)),
-        { } screen => string.Format(I18N.I.Culture, T("Applies to this screen only ({0}). System scaling follows your operating system."), this.DescribeScreen(screen)),
+        null => TA("AI Studio cannot measure this screen right now, so you cannot set the interface size here."),
+        { } screen when this.OffersAppDefault => string.Format(I18N.I.Culture, TA("Applies to this screen only ({0}). The app default shows AI Studio in the same size on every laptop. System scaling follows your operating system."), this.DescribeScreen(screen)),
+        { } screen => string.Format(I18N.I.Culture, TA("Applies to this screen only ({0}). System scaling follows your operating system."), this.DescribeScreen(screen)),
     };
 
     /// <summary>
@@ -85,8 +85,8 @@ public partial class ConfigurationInterfaceSize : MSGComponentBase
     /// a comparison, since the slider starts there when the user comes from the default.
     /// </summary>
     private string ScaleHelp(InterfaceSizeResponse screen) => this.OffersAppDefault
-        ? string.Format(I18N.I.Culture, T("You can choose from {0} % to {1} %. The app default on this screen is {2} %."), screen.MinPercent, screen.MaxPercent, screen.AppDefaultPercent)
-        : string.Format(I18N.I.Culture, T("You can choose from {0} % to {1} %. The system scaling on this screen is {2} %."), screen.MinPercent, screen.MaxPercent, screen.SystemPercent);
+        ? string.Format(I18N.I.Culture, TA("You can choose from {0} % to {1} %. The app default on this screen is {2} %."), screen.MinPercent, screen.MaxPercent, screen.AppDefaultPercent)
+        : string.Format(I18N.I.Culture, TA("You can choose from {0} % to {1} %. The system scaling on this screen is {2} %."), screen.MinPercent, screen.MaxPercent, screen.SystemPercent);
 
     private string DescribeScreen(InterfaceSizeResponse screen) => screen.ScreenDiagonalInches is { } diagonal
         ? string.Format(I18N.I.Culture, T("{0} × {1} pixels, {2:0.#} inches"), screen.ScreenWidth, screen.ScreenHeight, diagonal)

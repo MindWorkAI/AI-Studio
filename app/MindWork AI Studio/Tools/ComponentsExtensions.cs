@@ -28,6 +28,51 @@ public static class ComponentsExtensions
         };
 
         /// <summary>
+        /// Gets the category a built-in assistant belongs to, the same categories assistant plugins name.
+        /// </summary>
+        /// <remarks>
+        /// This is the single place that maps a built-in assistant to its category. The assistants page
+        /// shows the assistant in the section of this category, and whatever offers assistants elsewhere
+        /// asks it, too. Components which are no assistant of their own, such as the chat or the AI operations,
+        /// return PluginCategory.NONE.
+        /// </remarks>
+        /// <value>The category of the assistant.</value>
+        public PluginCategory Category => component switch
+        {
+            Components.TEXT_SUMMARIZER_ASSISTANT => PluginCategory.COMMON,
+            Components.TRANSLATION_ASSISTANT => PluginCategory.COMMON,
+            Components.GRAMMAR_SPELLING_ASSISTANT => PluginCategory.COMMON,
+            Components.REWRITE_ASSISTANT => PluginCategory.COMMON,
+            Components.PROMPT_OPTIMIZER_ASSISTANT => PluginCategory.COMMON,
+            Components.SYNONYMS_ASSISTANT => PluginCategory.COMMON,
+            Components.MODEL_COMPARISON_ASSISTANT => PluginCategory.COMMON,
+            Components.META_ASSISTANT => PluginCategory.COMMON,
+
+            Components.EMAIL_ASSISTANT => PluginCategory.BUSINESS,
+            Components.SWOT_ANALYSIS_ASSISTANT => PluginCategory.BUSINESS,
+            Components.DOCUMENT_ANALYSIS_ASSISTANT => PluginCategory.BUSINESS,
+            Components.BATCH_PROCESSING_ASSISTANT => PluginCategory.BUSINESS,
+            Components.MY_TASKS_ASSISTANT => PluginCategory.BUSINESS,
+            Components.AGENDA_ASSISTANT => PluginCategory.BUSINESS,
+            Components.JOB_POSTING_ASSISTANT => PluginCategory.BUSINESS,
+            Components.LEGAL_CHECK_ASSISTANT => PluginCategory.BUSINESS,
+            Components.ICON_FINDER_ASSISTANT => PluginCategory.BUSINESS,
+            Components.SLIDE_BUILDER_ASSISTANT => PluginCategory.BUSINESS,
+            Components.VISUAL_BRIEFING_ASSISTANT => PluginCategory.BUSINESS,
+
+            Components.BIAS_DAY_ASSISTANT => PluginCategory.EDUCATION,
+            Components.BEYOND_FACTS_LAB_ASSISTANT => PluginCategory.EDUCATION,
+
+            Components.CODING_ASSISTANT => PluginCategory.SOFTWARE_DEVELOPMENT,
+            Components.ERI_ASSISTANT => PluginCategory.SOFTWARE_DEVELOPMENT,
+
+            Components.I18N_ASSISTANT => PluginCategory.AI_STUDIO_DEVELOPMENT,
+            Components.LOG_VIEWER_ASSISTANT => PluginCategory.AI_STUDIO_DEVELOPMENT,
+
+            _ => PluginCategory.NONE,
+        };
+
+        /// <summary>
         /// Gets whether a component owns exactly one assistant session slot, so that a running session
         /// blocks starting another one and inactive sessions can be cleared as a group.
         /// </summary>
@@ -69,6 +114,7 @@ public static class ComponentsExtensions
             Components.I18N_ASSISTANT => false,
             Components.DOCUMENT_ANALYSIS_ASSISTANT => false,
             Components.BATCH_PROCESSING_ASSISTANT => false,
+            Components.MODEL_COMPARISON_ASSISTANT => false,
             Components.LOG_VIEWER_ASSISTANT => false,
 
             // The lab takes in nothing from other places, and its answers stay in its own steps:
@@ -106,6 +152,7 @@ public static class ComponentsExtensions
             Components.I18N_ASSISTANT => TB("Localization Assistant"),
             Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
             Components.BATCH_PROCESSING_ASSISTANT => TB("Batch Processing Assistant"),
+            Components.MODEL_COMPARISON_ASSISTANT => TB("Model Comparison Assistant"),
             Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Assistant"),
             Components.VISUAL_BRIEFING_ASSISTANT => TB("Visual Briefing Assistant"),
             Components.META_ASSISTANT => TB("Assistant Builder"),
@@ -174,6 +221,12 @@ public static class ComponentsExtensions
             // A policy-specific minimum is merged with this component default inside
             // the Batch Processing Assistant; the stricter level wins.
             Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence : default,
+            Components.MODEL_COMPARISON_ASSISTANT => settingsManager.ConfigurationData.ModelComparison.PreselectOptions ? settingsManager.ConfigurationData.ModelComparison.MinimumProviderConfidence : default,
+
+            Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.TextContentCleaner.MinimumProviderConfidence : default,
+            Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.ConfigurationData.AgentDataSourceSelection.MinimumProviderConfidence : default,
+            Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.ConfigurationData.AgentRetrievalContextValidation.MinimumProviderConfidence : default,
+            Components.AGENT_ASSISTANT_PLUGIN_AUDIT => settingsManager.ConfigurationData.AssistantPluginAudit.MinimumProviderConfidence,
 
             _ => default,
         };
@@ -208,14 +261,14 @@ public static class ComponentsExtensions
 
             Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.BatchProcessing.PreselectedProvider) : Settings.Provider.NONE,
 
+            // The first model of a new comparison. The assistant resolves its options itself, see ModelComparisonPreselection,
+            // because the option may also preselect no model at all, which GetPreselectedProvider cannot express:
+            Components.MODEL_COMPARISON_ASSISTANT => settingsManager.ConfigurationData.ModelComparison.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.ModelComparison.PreselectedProvider) : Settings.Provider.NONE,
+
             // Dynamic assistants have no dedicated settings yet, so they derive their defaults from the chat:
             Components.DYNAMIC_ASSISTANT or Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Chat.PreselectedProvider) : Settings.Provider.NONE,
 
-            Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider) : Settings.Provider.NONE,
-            Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider) : Settings.Provider.NONE,
-            Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectedAgentProvider) : Settings.Provider.NONE,
-            Components.AGENT_ASSISTANT_PLUGIN_AUDIT => settingsManager.GetProviderById(settingsManager.ConfigurationData.AssistantPluginAudit.PreselectedAgentProvider),
-
+            // The AI operations choose their provider through AIOperationProviderResolver, see AIOperations/AGENTS.md.
             _ => Settings.Provider.NONE,
         };
 

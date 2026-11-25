@@ -23,6 +23,13 @@ public partial class PluginDeleteAction : MSGComponentBase
     [Parameter, EditorRequired]
     public IAvailablePlugin Plugin { get; set; } = null!;
 
+    /// <summary>
+    /// Shows the action as a small button. A tile of the assistants page needs it: next to a button
+    /// of the usual size, its start button would sit higher than on the other tiles.
+    /// </summary>
+    [Parameter]
+    public bool Compact { get; set; }
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -112,11 +119,11 @@ public partial class PluginDeleteAction : MSGComponentBase
             if (!result.Success)
             {
                 this.Logger.LogError("Failed to delete {PluginType} plugin '{PluginName}' ({PluginId}) from '{PluginDirectory}' with issue '{Issue}'.", this.Plugin.Type, result.PluginName, result.PluginId, result.PluginDirectory, result.Issue);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.DeleteForever, string.Format(this.T("The plugin '{0}' could not be deleted: {1}"), this.Plugin.Name, result.Issue)));
+                await this.MessageBus.SendError(new(AppIcons.DELETE, string.Format(this.T("The plugin '{0}' could not be deleted: {1}"), this.Plugin.Name, result.Issue)));
                 return;
             }
 
-            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Check, string.Format(this.T("The plugin '{0}' has been successfully removed."), result.PluginName)));
+            await this.MessageBus.SendSuccess(new(AppIcons.SUCCESS, string.Format(this.T("The plugin '{0}' has been successfully removed."), result.PluginName)));
         }
         finally
         {
@@ -149,8 +156,8 @@ public partial class PluginDeleteAction : MSGComponentBase
             : this.T("Delete Language Plugin");
 
         var message = this.IsAssistant
-            ? string.Format(this.T("Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."), this.Plugin.Name)
-            : string.Format(this.T("Do you really want to delete the language plugin '{0}'? This permanently deletes its local plugin files. When it is your chosen language, AI Studio returns to choosing the language automatically."), this.Plugin.Name);
+            ? string.Format(this.TA("Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."), this.Plugin.Name)
+            : string.Format(this.TA("Do you really want to delete the language plugin '{0}'? This permanently deletes its local plugin files. When it is your chosen language, AI Studio returns to choosing the language automatically."), this.Plugin.Name);
 
         var parameters = new DialogParameters<ConfirmDialog>
         {

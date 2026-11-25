@@ -124,7 +124,7 @@ public partial class DataSourceManagement : MSGComponentBase
         if (status.SkippedDocuments == 0 || status.DataSourceType is DataSourceType.MAILBOX)
             return status.StateLabel;
 
-        return $"{status.StateLabel} — {string.Format(T("Skipped files: {0}. Open Background embeddings to see why and what you can do."), status.SkippedDocuments)}";
+        return $"{status.StateLabel} — {string.Format(TA("Skipped files: {0}. Open Background embeddings to see why and what you can do."), status.SkippedDocuments)}";
     }
 
     private string GetEmbeddingName(IDataSourceBase dataSource)
@@ -208,7 +208,7 @@ public partial class DataSourceManagement : MSGComponentBase
         {
             await this.DialogService.ShowMessageBoxAsync(
                 T("Export ERI Data Source"),
-                T("Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."),
+                TA("Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."),
                 T("Close"));
             return;
         }
@@ -248,7 +248,7 @@ public partial class DataSourceManagement : MSGComponentBase
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, T("This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.") },
+                { x => x.Message, TA("This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.") },
             };
 
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Export Access Token?"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -306,7 +306,7 @@ public partial class DataSourceManagement : MSGComponentBase
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type '{1}'?"), dataSource.Name, dataSource.Type.DisplayName) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the data source '{0}' of type '{1}'?"), dataSource.Name, dataSource.Type.DisplayName) },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Data Source"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -353,7 +353,7 @@ public partial class DataSourceManagement : MSGComponentBase
         if (!this.DataSourceEmbeddingService.IsIndexingPaused)
             return false;
 
-        await this.DialogService.ShowMessageBoxAsync(title, T("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), T("Close"));
+        await this.DialogService.ShowMessageBoxAsync(title, TA("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), T("Close"));
         return true;
     }
 
@@ -402,7 +402,7 @@ public partial class DataSourceManagement : MSGComponentBase
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the mailbox '{0}'? Your mails stay on the server as they are. AI Studio only deletes its index of them and the stored password."), mailbox.Name) },
+            { x => x.Message, string.Format(TA("Are you sure you want to delete the mailbox '{0}'? Your mails stay on the server as they are. AI Studio only deletes its index of them and the stored password."), mailbox.Name) },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Mailbox"), dialogParameters, DialogOptions.FULLSCREEN);

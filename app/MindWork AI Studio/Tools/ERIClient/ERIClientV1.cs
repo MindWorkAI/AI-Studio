@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
@@ -6,6 +7,7 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tools.ERIClient;
 
@@ -134,12 +136,22 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     else
                         password = temporarySecret;
 
+                    //
+                    // Both values go to the server in HTTP headers, which carry nothing but ASCII. A value
+                    // which cannot be sent fails here, with a message which names neither of them:
+                    //
+                    if (ERICredentialValidation.CheckUsername(username).IsProblem)
+                        return UnusableCredential(ERICredentialValidation.GetUnusableUsernameMessage(this.DataSource.Name));
+
+                    if (ERICredentialValidation.CheckSecret(AuthMethod.USERNAME_PASSWORD, password).IsProblem)
+                        return UnusableCredential(ERICredentialValidation.GetUnusableSecretMessage(AuthMethod.USERNAME_PASSWORD, this.DataSource.Name));
+
                     using (var request = new HttpRequestMessage(HttpMethod.Post, $"auth?authMethod={authMethod}"))
                     {
                         // We must send both values inside the header. The username field is named 'user'.
                         // The password field is named 'password'.
-                        request.Headers.Add("user", username);
-                        request.Headers.Add("password", password);
+                        request.Headers.Add("user", ERICredentialValidation.Normalize(username));
+                        request.Headers.Add("password", ERICredentialValidation.Normalize(password));
 
                         using var usernamePasswordAuthResponse = await this.HttpClient.SendAsync(request, cancellationToken);
                         if(!usernamePasswordAuthResponse.IsSuccessStatusCode)
@@ -188,9 +200,13 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     else
                         token = temporarySecret;
 
+                    if (ERICredentialValidation.CheckSecret(AuthMethod.TOKEN, token).IsProblem)
+                        return UnusableCredential(ERICredentialValidation.GetUnusableSecretMessage(AuthMethod.TOKEN, this.DataSource.Name));
+
                     using (var request = new HttpRequestMessage(HttpMethod.Post, $"auth?authMethod={authMethod}"))
                     {
-                        request.Headers.Add("Authorization", $"Bearer {token}");
+                        // Typed, so that .NET does not parse the header and quote the token when it cannot:
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ERICredentialValidation.Normalize(token));
                     
                         using var tokenAuthResponse = await this.HttpClient.SendAsync(request, cancellationToken);
                         if(!tokenAuthResponse.IsSuccessStatusCode)
@@ -506,4 +522,10 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
     }
 
     #endregion
+
+    private static APIResponse<AuthResponse> UnusableCredential(string message) => new()
+    {
+        Successful = false,
+        Message = message,
+    };
 }

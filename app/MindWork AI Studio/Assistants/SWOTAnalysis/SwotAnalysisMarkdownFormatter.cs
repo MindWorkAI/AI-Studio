@@ -18,50 +18,50 @@ internal static class SwotAnalysisMarkdownFormatter
         var markdown = new StringBuilder();
 
         AppendHeading(markdown, result.MatrixHeading);
-        markdown.AppendLine($"| | {EscapeTableCell(result.PositiveLabel)} | {EscapeTableCell(result.NegativeLabel)} |");
-        markdown.AppendLine("|---|---|---|");
-        markdown.AppendLine($"| **{EscapeTableCell(result.InternalLabel)}** | {FormatCategoryCell(result.Strengths)} | {FormatCategoryCell(result.Weaknesses)} |");
-        markdown.AppendLine($"| **{EscapeTableCell(result.ExternalLabel)}** | {FormatCategoryCell(result.Opportunities)} | {FormatCategoryCell(result.Threats)} |");
-        markdown.AppendLine();
+        markdown.AppendLineLF($"| | {EscapeTableCell(result.PositiveLabel)} | {EscapeTableCell(result.NegativeLabel)} |");
+        markdown.AppendLineLF("|---|---|---|");
+        markdown.AppendLineLF($"| **{EscapeTableCell(result.InternalLabel)}** | {FormatCategoryCell(result.Strengths)} | {FormatCategoryCell(result.Weaknesses)} |");
+        markdown.AppendLineLF($"| **{EscapeTableCell(result.ExternalLabel)}** | {FormatCategoryCell(result.Opportunities)} | {FormatCategoryCell(result.Threats)} |");
+        markdown.AppendLineLF();
 
         AppendHeading(markdown, result.OverallAssessment.Label);
         foreach (var paragraph in result.OverallAssessment.Paragraphs)
         {
-            markdown.AppendLine(Markdown.EscapeInlineText(paragraph));
-            markdown.AppendLine();
+            markdown.AppendLineLF(Markdown.EscapeInlineText(paragraph));
+            markdown.AppendLineLF();
         }
 
         AppendHeading(markdown, result.PrioritizedActions.Label);
         if (result.PrioritizedActions.Items.Count == 0)
-            markdown.AppendLine(Markdown.EscapeInlineText(result.PrioritizedActions.EmptyMessage));
+            markdown.AppendLineLF(Markdown.EscapeInlineText(result.PrioritizedActions.EmptyMessage));
         else
             for (var index = 0; index < result.PrioritizedActions.Items.Count; index++)
             {
                 var action = result.PrioritizedActions.Items[index];
                 var factors = string.Join("; ", action.AddressedFactors.Select(Markdown.EscapeInlineText));
-                markdown.AppendLine($"{index + 1}. **{Markdown.EscapeInlineText(action.Action)}** — {Markdown.EscapeInlineText(action.Rationale)}  ");
-                markdown.AppendLine($"   *{factors}*");
+                markdown.AppendLineLF($"{index + 1}. **{Markdown.EscapeInlineText(action.Action)}** — {Markdown.EscapeInlineText(action.Rationale)}  ");
+                markdown.AppendLineLF($"   *{factors}*");
             }
 
-        markdown.AppendLine();
+        markdown.AppendLineLF();
         foreach (var category in result.Categories)
         {
             AppendHeading(markdown, category.Label);
             if (category.Findings.Count == 0)
-                markdown.AppendLine(Markdown.EscapeInlineText(category.EmptyMessage));
+                markdown.AppendLineLF(Markdown.EscapeInlineText(category.EmptyMessage));
             else
                 foreach (var finding in category.Findings)
-                    markdown.AppendLine($"- **{Markdown.EscapeInlineText(finding.Summary)}** — {Markdown.EscapeInlineText(finding.Explanation)}");
+                    markdown.AppendLineLF($"- **{Markdown.EscapeInlineText(finding.Summary)}** — {Markdown.EscapeInlineText(finding.Explanation)}");
 
-            markdown.AppendLine();
+            markdown.AppendLineLF();
         }
 
         AppendHeading(markdown, result.ModerationNotes.Label);
         if (result.ModerationNotes.Items.Count == 0)
-            markdown.AppendLine(Markdown.EscapeInlineText(result.ModerationNotes.EmptyMessage));
+            markdown.AppendLineLF(Markdown.EscapeInlineText(result.ModerationNotes.EmptyMessage));
         else
             foreach (var note in result.ModerationNotes.Items)
-                markdown.AppendLine($"- **{Markdown.EscapeInlineText(note.Change)}** — {Markdown.EscapeInlineText(note.Reason)}");
+                markdown.AppendLineLF($"- **{Markdown.EscapeInlineText(note.Change)}** — {Markdown.EscapeInlineText(note.Reason)}");
 
         return markdown.ToString().TrimEnd();
     }
@@ -69,7 +69,7 @@ internal static class SwotAnalysisMarkdownFormatter
     private static void AppendHeading(StringBuilder markdown, string heading)
     {
         markdown.Append("## ");
-        markdown.AppendLine(Markdown.EscapeInlineText(heading));
+        markdown.AppendLineLF(Markdown.EscapeInlineText(heading));
     }
 
     private static string FormatCategoryCell(SwotCategory category)

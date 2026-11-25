@@ -15,6 +15,7 @@ using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Validation;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 
@@ -26,6 +27,8 @@ namespace AIStudio.Provider;
 public abstract class BaseProvider : IProvider, ISecretId
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(BaseProvider).Namespace, nameof(BaseProvider));
+
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(BaseProvider).Namespace, nameof(BaseProvider));
     
     /// <summary>
     /// The HTTP client to use it for all requests.
@@ -90,6 +93,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     public abstract string InstanceName { get; set; }
 
     /// <inheritdoc />
+    public bool HidesIdentity { get; set; }
+
+    /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     internal ProviderCapabilityOverrides? CapabilityOverrides { get; set; }
@@ -143,6 +149,11 @@ public abstract class BaseProvider : IProvider, ISecretId
 
     protected static ModelLoadResult FailedModelLoadResult(ModelLoadFailureReason failureReason, string? technicalDetails = null) => ModelLoadResult.Failure(failureReason, technicalDetails);
 
+    /// <summary>
+    /// The result of loading the models with a key which cannot be sent, so that nothing was requested.
+    /// </summary>
+    protected static ModelLoadResult UnusableAPIKeyModelLoadResult() => FailedModelLoadResult(ModelLoadFailureReason.INVALID_API_KEY_CHARACTERS, "The API key contains a character which an HTTP header cannot carry.");
+
     protected bool IsTimeoutException(Exception exception, CancellationToken token = default)
     {
         if (token.IsCancellationRequested)
@@ -152,23 +163,80 @@ public abstract class BaseProvider : IProvider, ISecretId
     }
 
     protected Task SendTimeoutError(string action) => MessageBus.INSTANCE.SendError(new(
-        Icons.Material.Filled.HourglassTop,
+        AppIcons.TIMEOUT,
         string.Format(
-            TB("The request to the LLM provider '{0}' (type={1}) timed out after {2} while {3}. Please try again or check whether the provider is still responding."),
+            TA("The request to the LLM provider '{0}' (type={1}) timed out after {2} while {3}. Please try again or check whether the provider is still responding."),
             this.InstanceName,
             this.Provider,
             ExternalHttpClientTimeout.GetTimeoutDescription(),
             action)));
 
-    protected async Task<string?> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false) => apiKeyProvisional switch
+    /// <summary>
+    /// Gets the API key for loading the models: the one the user is entering, or else the stored one.
+    /// </summary>
+    /// <remarks>
+    /// Either is checked before it goes into a header. A key which the header cannot carry would
+    /// otherwise fail in the HTTP stack, with a message nobody understands.
+    /// </remarks>
+    /// <param name="storeType">Where the stored key is kept.</param>
+    /// <param name="apiKeyProvisional">The key the user is entering and did not store yet, or null for the stored one.</param>
+    /// <param name="isTryingSecret">Whether a missing key is fine, so that the keyring logs no error for it.</param>
+    /// <returns>The key without the whitespace around it, or whether it cannot be sent.</returns>
+    protected async Task<ModelLoadingSecretKey> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false)
     {
-        not null => apiKeyProvisional,
-        _ => await Program.RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret) switch
+        var key = apiKeyProvisional;
+        if (key is null)
         {
-            { Success: true } result => await result.Secret.Decrypt(Program.ENCRYPTION),
-            _ => null,
+            var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret);
+            if (!requestedSecret.Success)
+                return ModelLoadingSecretKey.NONE;
+
+            key = await requestedSecret.Secret.Decrypt(Program.ENCRYPTION);
         }
-    };
+
+        var issue = APIKeyValidation.Check(key);
+        if (!issue.IsProblem)
+            return new(APIKeyValidation.Normalize(key), false);
+
+        this.logger.LogWarning("The API key for loading the models of '{ProviderInstanceName}' (provider={ProviderType}) contains a character which an API key cannot contain ({IssueKind}). The models were not requested.", this.InstanceName, this.Provider, issue.Kind);
+        return ModelLoadingSecretKey.UNUSABLE;
+    }
+
+    /// <summary>
+    /// Decrypts a stored API key for the header of a request.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Every stored key which goes into a header goes through here, so that a key with a character
+    /// the header cannot carry never reaches the HTTP stack: its messages about such keys mean
+    /// nothing to the user, and some of them even quote the key. Such a key was stored before AI
+    /// Studio checked keys, or it reached the keyring some other way. The request then fails with a
+    /// ProviderRequestException, which tells the user to enter the key again. APIKeyHeaderTests
+    /// checks that no provider decrypts a key on its own.
+    /// </para>
+    /// <para>
+    /// A key which is empty without the whitespace around it fails as a missing key: a header with
+    /// an empty key would only earn a rejection from the provider.
+    /// </para>
+    /// </remarks>
+    /// <param name="requestedSecret">The stored key as the keyring returned it.</param>
+    /// <returns>The key without the whitespace around it.</returns>
+    protected async Task<string> DecryptAPIKey(RequestedSecret requestedSecret)
+    {
+        var key = await requestedSecret.Secret.Decrypt(Program.ENCRYPTION);
+        var issue = APIKeyValidation.Check(key);
+        if (issue.IsProblem)
+        {
+            this.logger.LogWarning("The stored API key of '{ProviderInstanceName}' (provider={ProviderType}) contains a character which an API key cannot contain ({IssueKind}). The request was not sent.", this.InstanceName, this.Provider, issue.Kind);
+            throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_API_KEY_CHARACTERS, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_API_KEY_CHARACTERS));
+        }
+
+        var headerValue = APIKeyValidation.Normalize(key);
+        if (headerValue.Length is 0)
+            throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY));
+
+        return headerValue;
+    }
 
     protected static ModelLoadFailureReason GetDefaultModelLoadFailureReason(HttpResponseMessage response) => response.StatusCode switch
     {
@@ -198,14 +266,17 @@ public abstract class BaseProvider : IProvider, ISecretId
         CancellationToken token = default)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret);
-        if (string.IsNullOrWhiteSpace(secretKey) && !isTryingSecret)
+        if (secretKey.IsUnusable)
+            return UnusableAPIKeyModelLoadResult();
+
+        if (string.IsNullOrWhiteSpace(secretKey.Key) && !isTryingSecret)
             return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, "No API key available for model loading.");
 
         using var request = new HttpRequestMessage(HttpMethod.Get, requestPath);
         if (requestConfigurator is not null)
-            requestConfigurator(request, secretKey ?? string.Empty);
-        else if (!string.IsNullOrWhiteSpace(secretKey))
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+            requestConfigurator(request, secretKey.Key ?? string.Empty);
+        else if (!string.IsNullOrWhiteSpace(secretKey.Key))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey.Key);
 
         try
         {
@@ -262,11 +333,12 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <returns>The message to show, or an empty string when we have nothing to say.</returns>
     protected virtual string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default) => failureReason switch
     {
-        ProviderRequestFailureReason.TOO_MANY_REQUESTS => TB("The provider rejected the request because too many requests were sent. Please wait a moment and try again."),
-        ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY => string.Format(TB("The API key for the provider '{0}' is missing or was rejected. Please check the key in the settings."), this.InstanceName),
-        ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => string.Format(TB("The provider '{0}' refused the request. Your account might not be allowed to use the selected model, or the provider might not serve your region."), this.InstanceName),
-        ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => string.Format(TB("The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again."), this.InstanceName),
-        ProviderRequestFailureReason.MODEL_NOT_FOUND => string.Format(TB("The provider '{0}' does not know the selected model. Please select another model."), this.InstanceName),
+        ProviderRequestFailureReason.TOO_MANY_REQUESTS => TA("The provider rejected the request because too many requests were sent. Please wait a moment and try again."),
+        ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY => string.Format(TA("The API key for the provider '{0}' is missing or was rejected. Please check the key in the settings."), this.NameForUser),
+        ProviderRequestFailureReason.INVALID_API_KEY_CHARACTERS => APIKeyValidation.GetUnusableKeyMessage(this.NameForUser),
+        ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => string.Format(TA("The provider '{0}' refused the request. Your account might not be allowed to use the selected model, or the provider might not serve your region."), this.NameForUser),
+        ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => string.Format(TA("The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again."), this.NameForUser),
+        ProviderRequestFailureReason.MODEL_NOT_FOUND => string.Format(TA("The provider '{0}' does not know the selected model. Please select another model."), this.NameForUser),
         //
         // Naming the number is the whole point of knowing it: "too long" leaves the user guessing
         // by how much, while the window turns the next step into arithmetic. Where nobody knows the
@@ -274,13 +346,13 @@ public abstract class BaseProvider : IProvider, ISecretId
         //
         // Written out in full rather than shortened the way the chat shortens it. The sentence ends
         // by asking the user to set a chunk size, and 32.77k is not a number anybody types into a
-        // field.
+        // field. A provider which hides its identity names no number either, since the window tells models apart.
         //
-        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED when contextWindow.IsKnown => string.Format(TB("The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source."), contextWindow.DefaultTokens.ToString("N0", I18N.I.Culture)),
-        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED => TB("The text was longer than the selected model accepts. Please select a model which takes longer texts, or reduce the chunk size of the data source."),
-        ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED => string.Format(TB("The selected model is not able to use tools. Please select a model which can, or open the settings of the provider '{0}', show its expert settings, and switch the function calling capability off there."), this.InstanceName),
-        ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED => string.Format(TB("The provider '{0}' cannot create embeddings. Please select a provider which offers an embedding model."), this.InstanceName),
-        ProviderRequestFailureReason.INVALID_RESPONSE => string.Format(TB("The provider '{0}' sent an answer AI Studio was not able to read."), this.InstanceName),
+        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED when contextWindow.IsKnown && !this.HidesIdentity =>string.Format(TA("The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source."), contextWindow.DefaultTokens.ToString("N0", I18N.I.Culture)),
+        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED => TA("The text was longer than the selected model accepts. Please select a model which takes longer texts, or reduce the chunk size of the data source."),
+        ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED => string.Format(TA("The selected model is not able to use tools. Please select a model which can, or open the settings of the provider '{0}', show its expert settings, and switch the function calling capability off there."), this.NameForUser),
+        ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED => string.Format(TA("The provider '{0}' cannot create embeddings. Please select a provider which offers an embedding model."), this.NameForUser),
+        ProviderRequestFailureReason.INVALID_RESPONSE => string.Format(TB("The provider '{0}' sent an answer AI Studio was not able to read."), this.NameForUser),
         _ => string.Empty,
     };
 
@@ -320,8 +392,8 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             var providerMessage = ReadProviderErrorMessage(responseBody);
             userMessage = string.IsNullOrWhiteSpace(providerMessage)
-                ? string.Format(TB("The provider '{0}' rejected the embedding request with the status code {1}."), this.InstanceName, (int)statusCode)
-                : string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
+                ? string.Format(TB("The provider '{0}' rejected the embedding request with the status code {1}."), this.NameForUser, (int)statusCode)
+                : string.Format(TB("The provider '{0}' reported an error: {1}"), this.NameForUser, providerMessage);
         }
 
         return new(failureReason, userMessage, statusCode, reasonPhrase, responseBody);
@@ -337,7 +409,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         if (isTimeout)
             return new(ProviderRequestFailureReason.PROVIDER_UNAVAILABLE, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.PROVIDER_UNAVAILABLE), responseBody: exception.Message);
 
-        return new(ProviderRequestFailureReason.UNKNOWN, string.Format(TB("The embedding request to the provider '{0}' failed: {1}"), this.InstanceName, exception.Message), responseBody: exception.Message);
+        return new(ProviderRequestFailureReason.UNKNOWN, string.Format(TB("The embedding request to the provider '{0}' failed: {1}"), this.NameForUser, exception.Message), responseBody: exception.Message);
     }
 
     /// <summary>
@@ -511,8 +583,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (string.IsNullOrWhiteSpace(userMessage))
             {
                 userMessage = string.IsNullOrWhiteSpace(errorMessage)
-                    ? string.Format(TB("The provider '{0}' reported an error while streaming the response."), this.InstanceName)
-                    : string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, errorMessage);
+                    ? string.Format(TB("The provider '{0}' reported an error while streaming the response."), this.NameForUser)
+                    : string.Format(TB("The provider '{0}' reported an error: {1}"), this.NameForUser, errorMessage);
             }
 
             this.logger.LogError("The {ProviderName} stream returned an error for provider '{ProviderInstanceName}' (provider={ProviderType}). EventType={StreamEventType}, ErrorCode={ErrorCode}, ErrorType={ErrorType}, ErrorMessage='{ErrorMessage}', Body='{ErrorBody}'", providerName, this.InstanceName, this.Provider, eventType, errorCode, errorType, errorMessage, jsonData);
@@ -700,7 +772,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// </remarks>
     /// <param name="providerMessage">What the provider itself said about the failure.</param>
     /// <returns>The message to show.</returns>
-    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments and the passages of your data sources, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
+    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TA("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments and the passages of your data sources, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.NameForUser, this.TypeForUser,providerMessage);
 
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
@@ -774,7 +846,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.BLOCKED, string.Format(TA("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.NameForUser, this.TypeForUser,nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -799,7 +871,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 if (string.IsNullOrWhiteSpace(tooLargeMessage))
                     tooLargeMessage = nextResponse.ReasonPhrase;
 
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(tooLargeMessage)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, this.GetContextTooLargeUserMessage(tooLargeMessage)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -824,7 +896,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 var classifiedMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
                 if(!string.IsNullOrWhiteSpace(classifiedMessage))
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, classifiedMessage));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, classifiedMessage));
                 }
 
                 // Check if the error body contains "context" and "token" (case-insensitive),
@@ -832,11 +904,11 @@ public abstract class BaseProvider : IProvider, ISecretId
                 else if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
                    errorBody.Contains("token", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(badRequestMessage)));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, this.GetContextTooLargeUserMessage(badRequestMessage)));
                 }
                 else
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
+                    await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"), this.NameForUser, this.TypeForUser,badRequestMessage)));
                 }
 
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
@@ -847,7 +919,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.NotFound)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'"), this.NameForUser, this.TypeForUser,nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -856,7 +928,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.Unauthorized)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The API key might be invalid. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.KEY, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The API key might be invalid. The provider message is: '{2}'"), this.NameForUser, this.TypeForUser,nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -865,7 +937,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.InternalServerError)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'"), this.NameForUser, this.TypeForUser,nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -874,7 +946,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.ServiceUnavailable)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider is overloaded. The message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider is overloaded. The message is: '{2}'"), this.NameForUser, this.TypeForUser,nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -899,7 +971,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 if (string.IsNullOrWhiteSpace(refusalMessage))
                     refusalMessage = nextResponse.ReasonPhrase;
 
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider turned the request down with the status code {2} and would turn it down again, so we stopped trying. The provider message is: '{3}'"), this.InstanceName, this.Provider, (int)nextResponse.StatusCode, refusalMessage)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider turned the request down with the status code {2} and would turn it down again, so we stopped trying. The provider message is: '{3}'"), this.NameForUser, this.TypeForUser,(int)nextResponse.StatusCode, refusalMessage)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -940,7 +1012,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             // which explains nothing is the one arriving last.
             //
             if(!failureAlreadyExplained)
-                await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.InstanceName, this.Provider, MAX_RETRIES, errorMessage)));
+                await MessageBus.INSTANCE.SendError(new DataErrorMessage(AppIcons.PROVIDER_ERROR, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.NameForUser, this.TypeForUser,MAX_RETRIES, errorMessage)));
 
             return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
         }
@@ -959,9 +1031,13 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="providerName">The name of the provider, for logging and error reporting.</param>
     /// <param name="operationName">What is being streamed, for logging: a chat completion, say, or a responses call.</param>
     /// <param name="requestBuilder">A function that builds the request.</param>
+    /// <param name="streamEnd">
+    /// Marked once the provider closed the stream, and left alone when a stop, a timeout, or a
+    /// broken connection cut it off. Null for a caller to whom both are the same.
+    /// </param>
     /// <param name="token">The cancellation token to use.</param>
     /// <returns>The events of the stream, in the order they arrived.</returns>
-    protected async IAsyncEnumerable<ServerSentEvent> ReadServerSentEventsAsync(string providerName, string operationName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default)
+    protected async IAsyncEnumerable<ServerSentEvent> ReadServerSentEventsAsync(string providerName, string operationName, Func<Task<HttpRequestMessage>> requestBuilder, ServerSentEventStreamEnd? streamEnd, [EnumeratorCancellation] CancellationToken token = default)
     {
         StreamReader? streamReader = null;
         using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
@@ -999,7 +1075,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             }
             else
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
+                await MessageBus.INSTANCE.SendError(new(AppIcons.ANSWER_STREAM, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.NameForUser, e.Message)));
                 this.logger.LogError(e, "Failed to stream the {OperationName} from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", operationName, providerName, this.InstanceName, e.Message);
             }
         }
@@ -1044,16 +1120,22 @@ public abstract class BaseProvider : IProvider, ISecretId
                     }
                     else
                     {
-                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                        await MessageBus.INSTANCE.SendError(new(AppIcons.ANSWER_STREAM, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.NameForUser, e.Message)));
                         this.logger.LogError(e, "Failed to read the stream from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", providerName, this.InstanceName, e.Message);
                     }
 
                     break;
                 }
 
-                // The stream ended:
+                //
+                // The provider closed the stream. This is the only way to its end: every other
+                // way out of this loop cuts it off.
+                //
                 if (line is null)
+                {
+                    streamEnd?.MarkReached();
                     break;
+                }
 
                 // Skip empty lines:
                 if (string.IsNullOrWhiteSpace(line))
@@ -1090,7 +1172,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Check if annotations are supported:
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
-        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "chat completion", requestBuilder, token))
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "chat completion", requestBuilder, streamEnd: null, token))
         {
             // Skip lines without a payload. According to the specification,
             // we only want to read the data lines:
@@ -1192,7 +1274,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
         var isCompleted = false;
-        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, token))
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, streamEnd: null, token))
         {
             // Check if the line announces the end of the stream. This one is read off the raw
             // line rather than off a payload, because it has none:
@@ -1289,6 +1371,27 @@ public abstract class BaseProvider : IProvider, ISecretId
                 // Yield the response:
                 yield return new(string.Empty, providerResponse.GetSources());
             }
+
+            //
+            // Find the lines which say that the model reasons: the opening of a reasoning item,
+            // which is all the API tells about reasoning it keeps to itself, and the reasoning
+            // which does arrive as text. None of it is shown; the chunk only says that it happens.
+            //
+            else if (serverSentEvent.Data.StartsWith(
+                         """
+                         {"type":"response.reasoning
+                         """, StringComparison.InvariantCulture) ||
+                     (serverSentEvent.Data.StartsWith(
+                          """
+                          {"type":"response.output_item.added"
+                          """, StringComparison.InvariantCulture) &&
+                      serverSentEvent.Data.Contains(
+                          """
+                          "type":"reasoning"
+                          """, StringComparison.InvariantCulture)))
+            {
+                yield return new(string.Empty, []) { IsReasoning = true };
+            }
         }
     }
 
@@ -1381,7 +1484,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
                     runnableTools.Select(x => (object)ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
-                    (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, requestToken),
+                    (requestDto, streamEnd, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, streamEnd, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
 
@@ -1424,7 +1527,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             // Set the authorization header:
             if (requestedSecret.Success)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
 
             // Set provider-specific headers:
             requestHeadersAction?.Invoke(request.Headers);
@@ -1472,20 +1575,20 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// belongs to the shared stream reader, which the tool rounds used to go without.
     /// </remarks>
     private IAsyncEnumerable<ServerSentEvent> StreamChatCompletionRequest(ChatCompletionAPIRequest requestDto, string providerName, string requestPath,
-        RequestedSecret requestedSecret, Action<HttpRequestHeaders>? headersAction, CancellationToken token)
+        RequestedSecret requestedSecret, Action<HttpRequestHeaders>? headersAction, ServerSentEventStreamEnd streamEnd, CancellationToken token)
     {
         async Task<HttpRequestMessage> RequestBuilder()
         {
             var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
             if (requestedSecret.Success)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
 
             headersAction?.Invoke(request.Headers);
             request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
             return request;
         }
 
-        return this.ReadServerSentEventsAsync(providerName, "chat completion", RequestBuilder, token);
+        return this.ReadServerSentEventsAsync(providerName, "chat completion", RequestBuilder, streamEnd, token);
     }
 
     /// <summary>
@@ -1508,11 +1611,11 @@ public abstract class BaseProvider : IProvider, ISecretId
             return classifiedMessage;
 
         if (IsUndecodableFormatFailure(statusCode, responseBody))
-            return string.Format(TB("The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it."), this.InstanceName);
+            return string.Format(TA("The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it."), this.NameForUser);
 
         var providerMessage = ReadProviderErrorMessage(responseBody);
         if (!string.IsNullOrWhiteSpace(providerMessage))
-            return string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
+            return string.Format(TB("The provider '{0}' reported an error: {1}"), this.NameForUser, providerMessage);
 
         return string.Empty;
     }
@@ -1587,7 +1690,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 case LLMProviders.SELF_HOSTED:
                     if(requestedSecret.Success)
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
                     
                     break;
                 
@@ -1598,7 +1701,13 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return TranscriptionResult.Failure();
                     }
                     
-                    request.Headers.Add("Authorization", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                    //
+                    // Fireworks gets the bare key, without the scheme 'Bearer'. Headers.Add would parse the key as
+                    // an Authorization header, refuse one with a character such as '/' or '=', and quote the whole
+                    // key in its exception. DecryptAPIKey already made sure that the key holds only printable ASCII,
+                    // so it goes out as it is:
+                    //
+                    request.Headers.TryAddWithoutValidation("Authorization", await this.DecryptAPIKey(requestedSecret));
                     break;
                 
                 default:
@@ -1608,7 +1717,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return TranscriptionResult.Failure();
                     }
                     
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
                     break;
             }
 
@@ -1640,6 +1749,11 @@ public abstract class BaseProvider : IProvider, ISecretId
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             throw;
+        }
+        catch (ProviderRequestException e)
+        {
+            // We know what went wrong, e.g., a stored key which cannot be sent, and the user gets to read it:
+            return TranscriptionResult.Failure(e.UserMessage);
         }
         catch (Exception e)
         {
@@ -1677,7 +1791,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 case LLMProviders.SELF_HOSTED:
                     if(requestedSecret.Success)
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
                     
                     break;
                 
@@ -1688,7 +1802,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY));
                     }
 
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
                     break;
             }
             

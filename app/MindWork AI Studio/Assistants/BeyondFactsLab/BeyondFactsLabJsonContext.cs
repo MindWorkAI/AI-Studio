@@ -8,6 +8,15 @@ namespace AIStudio.Assistants.BeyondFactsLab;
 [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(BflProject))]
 [JsonSerializable(typeof(BflStepFormData))]
+[JsonSerializable(typeof(BflMaterial))]
+[JsonSerializable(typeof(BflWorkState))]
+[JsonSerializable(typeof(BflResult))]
+[JsonSerializable(typeof(BflResearch))]
+[JsonSerializable(typeof(BflPersonResearch))]
+[JsonSerializable(typeof(BflParticipantSelection))]
+
+// The value deck, which comes with the app:
+[JsonSerializable(typeof(BflValueDeck))]
 
 // The preparation selected last:
 [JsonSerializable(typeof(Guid?))]

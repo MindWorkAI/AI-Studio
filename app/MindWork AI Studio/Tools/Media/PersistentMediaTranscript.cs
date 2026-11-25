@@ -119,7 +119,6 @@ internal static class PersistentMediaTranscript
         if (!sourceBefore.StillMatches(mediaPath))
             return SourceChanged(slot);
 
-        var temporaryPath = $"{slot.Path}.{Guid.NewGuid():N}.tmp";
         try
         {
             var directory = Path.GetDirectoryName(slot.Path);
@@ -128,13 +127,18 @@ internal static class PersistentMediaTranscript
 
             //
             // The transcription is paid for at this point. Storing it is quick, so it is completed
-            // even when the caller cancelled meanwhile, and the next attempt can use it:
+            // even when the caller cancelled meanwhile, and the next attempt can use it. A transcript
+            // of a media file which changed meanwhile is discarded instead of replacing the old one:
             //
-            await File.WriteAllTextAsync(temporaryPath, transcription.Text, new UTF8Encoding(false), CancellationToken.None);
-            if (!sourceBefore.StillMatches(mediaPath))
+            var stored = await AtomicFile.WriteOrDiscardAsync(slot.Path, async (stream, writeToken) =>
+            {
+                await AtomicFile.WriteTextAsync(stream, transcription.Text, new UTF8Encoding(false), writeToken);
+                return sourceBefore.StillMatches(mediaPath);
+            }, CancellationToken.None, logger: logger);
+
+            if (!stored)
                 return SourceChanged(slot);
 
-            File.Move(temporaryPath, slot.Path, true);
             logger.LogInformation("Stored the transcript '{TranscriptFilePath}' of the media file '{MediaFilePath}'.", slot.Path, mediaPath);
             return PersistentMediaTranscriptResult.Ready(slot, reused: false);
         }
@@ -142,18 +146,6 @@ internal static class PersistentMediaTranscript
         {
             logger.LogWarning(exception, "Could not store the transcript '{TranscriptFilePath}' of the media file '{MediaFilePath}'.", slot.Path, mediaPath);
             return PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.STORE_FAILED, slot, string.Format(TB("Was not able to store the transcript: {0}"), exception.Message));
-        }
-        finally
-        {
-            try
-            {
-                if (File.Exists(temporaryPath))
-                    File.Delete(temporaryPath);
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(exception, "Could not remove the temporary transcript '{TempFilePath}'.", temporaryPath);
-            }
         }
     }
 
@@ -171,13 +163,14 @@ internal static class PersistentMediaTranscript
     /// <param name="mediaPath">The audio or video file the transcript belongs to.</param>
     /// <param name="reportingScope">The action the transcript is read for, or null when it is read for none.</param>
     /// <param name="token">The cancellation token.</param>
+    /// <param name="maxCharacters">How many characters of the transcript to keep at most; the result says whether it left out any.</param>
     /// <returns>The filtered text of the transcript, or why it could not be read.</returns>
-    public static Task<FileExtractionResult> ReadTranscriptAsync(RustService rustService, PersistentMediaTranscriptResult transcript, string mediaPath, PromptInjectionReportingScope? reportingScope, CancellationToken token)
+    public static Task<FileExtractionResult> ReadTranscriptAsync(RustService rustService, PersistentMediaTranscriptResult transcript, string mediaPath, PromptInjectionReportingScope? reportingScope, CancellationToken token, int maxCharacters = int.MaxValue)
     {
         if (transcript.Status is not PersistentMediaTranscriptStatus.READY)
             throw new ArgumentException($"Only a ready transcript can be read, but its status is {transcript.Status}.", nameof(transcript));
 
-        return rustService.ReadArbitraryFileData(transcript.TranscriptPath, int.MaxValue, reportAs: PromptInjectionSource.FileContent(mediaPath), reportingScope: reportingScope, token: token);
+        return rustService.ReadArbitraryFileData(transcript.TranscriptPath, int.MaxValue, reportAs: PromptInjectionSource.FileContent(mediaPath), reportingScope: reportingScope, maxCharacters: maxCharacters, token: token);
     }
 
     private static PersistentMediaTranscriptResult SourceChanged(MediaTranscriptSlot slot) => PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.SOURCE_CHANGED, slot, TB("The media file changed while it was being transcribed, so its transcript was not kept."));

@@ -31,6 +31,8 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(CountMailsTool).Namespace, nameof(CountMailsTool));
 
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(CountMailsTool).Namespace, nameof(CountMailsTool));
+
     private const string GROUP_BY_ARGUMENT = "group_by";
     private const string TOOL_ACTION = "count";
 
@@ -89,11 +91,11 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
     internal static ToolFunctionDefinition DescribeMailboxes(ToolFunctionDefinition function, IReadOnlyList<DataSourceMailbox> mailboxes)
     {
         var description = new StringBuilder(DESCRIPTION);
-        description.AppendLine();
-        description.AppendLine();
-        description.AppendLine($"The mailboxes you may count, by the ID to pass in {MailToolArguments.MAILBOX_IDS_ARGUMENT}:");
+        description.AppendLineLF();
+        description.AppendLineLF();
+        description.AppendLineLF($"The mailboxes you may count, by the ID to pass in {MailToolArguments.MAILBOX_IDS_ARGUMENT}:");
         foreach (var mailbox in mailboxes)
-            description.AppendLine($"- id={mailbox.Id}, name='{mailbox.Name}'");
+            description.AppendLineLF($"- id={mailbox.Id}, name='{mailbox.Name}'");
 
         return function with
         {
@@ -108,7 +110,7 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
         .OptionalEnum(GROUP_BY_ARGUMENT, $"Optional: break the number of each mailbox down by the folders the mails lie in, or by their senders. Shows the {MAX_GROUPS} largest groups. Leave it out for the totals only.", GROUP_BY_VALUES)
         .Build();
 
-    public string Icon => Icons.Material.Filled.Numbers;
+    public string Icon => AppIcons.MAIL_COUNT;
 
     // Only while both previews are switched on, the one for local RAG and the one for mailboxes:
     public bool IsAvailable => retrievalService.AreMailboxesEnabled;
@@ -124,7 +126,7 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
 
     public string GetDisplayName() => TB("Count Mails");
 
-    public string GetDescription() => TB("Lets the AI count the mails in your mailboxes, e.g., the unread ones or those in a project folder.");
+    public string GetDescription() => TA("Lets the AI count the mails in your mailboxes, e.g., the unread ones or those in a project folder.");
 
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(ToolDefinition definition, IReadOnlyDictionary<string, string> settingsValues, CancellationToken token = default) =>
         Task.FromResult(MailToolConfiguration.GetState(settingsManager));

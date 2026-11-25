@@ -268,7 +268,7 @@ public sealed class PlainFileExportTests
             "```");
 
         var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(answer), ',');
-        var partStart = answer.LastIndexOf("$$", StringComparison.Ordinal) + "$$".Length + Environment.NewLine.Length;
+        var partStart = answer.LastIndexOf("$$", StringComparison.Ordinal) + "$$\n".Length;
         var part = Markdig.Markdown.Parse(answer[partStart..], Markdown.CHAT_MARKDOWN_PIPELINE);
         var blockOfThePart = part.Descendants<FencedCodeBlock>().Single();
 
@@ -280,7 +280,19 @@ public sealed class PlainFileExportTests
         }
     }
 
-    private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);
+    [Test]
+    public void EveryRowOfATableEndsWithCrLfAsCsvAsksFor()
+    {
+        var files = PlainFileExport.ExtractFiles(MarkdownRenderPlanner.Build(Lines("| Quarter | Revenue |", "|---|---|", "| Q1 | 100 |")), ',');
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(files, Has.Count.EqualTo(1));
+            Assert.That(files.FirstOrDefault()?.Content, Is.EqualTo("Quarter,Revenue\r\nQ1,100\r\n"), "RFC 4180 ends every row with CR LF, on every system.");
+        }
+    }
+
+    private static string Lines(params string[] lines) => string.Join('\n', lines);
 
     /// <summary>
     /// Reads a file from the fixtures next to this test.

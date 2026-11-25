@@ -13,7 +13,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     
     protected override string Title => T("Coding Assistant");
     
-    protected override string Description => T("This coding assistant supports you in writing code. Ask your coding question and optionally attach source files as context. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.");
+    protected override string Description => TA("This coding assistant supports you in writing code. Ask your coding question and optionally attach source files as context. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.");
     
     // This prompt describes a developer for any coding question, which suits the follow-up questions of the chat:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.ASSISTANT;
@@ -149,7 +149,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
             return null;
         
         if(string.IsNullOrWhiteSpace(checkCompilerMessages))
-            return T("Please provide the compiler messages.");
+            return TA("Please provide the compiler messages.");
         
         return null;
     }
@@ -157,7 +157,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     private string? ValidateQuestions(string checkQuestions)
     {
         if(string.IsNullOrWhiteSpace(checkQuestions))
-            return T("Please provide your questions.");
+            return TA("Please provide your questions.");
         
         return null;
     }
@@ -197,12 +197,12 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
         var sbCompilerMessages = new StringBuilder();
         if (this.provideCompilerMessages)
         {
-            sbCompilerMessages.AppendLine("I have the following compiler messages:");
-            sbCompilerMessages.AppendLine();
-            sbCompilerMessages.AppendLine("```");
-            sbCompilerMessages.AppendLine(this.compilerMessages);
-            sbCompilerMessages.AppendLine("```");
-            sbCompilerMessages.AppendLine();
+            sbCompilerMessages.AppendLineLF("I have the following compiler messages:");
+            sbCompilerMessages.AppendLineLF();
+            sbCompilerMessages.AppendLineLF("```");
+            sbCompilerMessages.AppendLineLF(this.compilerMessages);
+            sbCompilerMessages.AppendLineLF("```");
+            sbCompilerMessages.AppendLineLF();
         }
 
         this.CreateChatThread();

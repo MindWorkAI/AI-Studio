@@ -55,7 +55,7 @@ public sealed class ModelImageService(RustService rustService, ILogger<ModelImag
             return PreparedModelImage.Failed(ModelImageErrorCode.FILE_NOT_FOUND);
         }
 
-        var maxBytes = IImageSourceExtensions.MaxImageSizeBytesFor(provider);
+        var maxBytes = ImageSourceExtensions.MaxImageSizeBytesFor(provider);
         var key = new CacheKey(file.FullName, file.LastWriteTimeUtc, file.Length, maxBytes);
         if (this.cache.TryGetValue(key, out PreparedModelImage? cached) && cached is not null)
         {

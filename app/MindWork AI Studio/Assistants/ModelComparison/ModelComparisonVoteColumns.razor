@@ -1,0 +1,44 @@
+@inherits MSGComponentBase
+
+@* From the breakpoint md on, both columns stand in the same row, which keeps them equally high, and the question with
+   its buttons follows below: the button of each column under it, the tie between them. In a narrower window, the
+   question comes first, and each column is followed by its own button, with a line between the two columns. The
+   order classes arrange both from the same markup. *@
+<MudGrid Spacing="3">
+    @if (!string.IsNullOrWhiteSpace(this.Heading))
+    {
+        <MudItem xs="12" Class="order-0 order-md-3">
+            <MudText Typo="Typo.h6">
+                @this.Heading
+            </MudText>
+        </MudItem>
+    }
+
+    <MudItem xs="12" md="6" Class="d-flex flex-column order-1 order-md-1">
+        @this.ColumnA
+    </MudItem>
+    <MudItem xs="12" md="4" Class="d-flex justify-center justify-md-start order-2 order-md-4">
+        <MudButton Variant="Variant.Filled" Disabled="@this.Disabled" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.COLUMN_A))">
+            @this.ALabel
+        </MudButton>
+    </MudItem>
+
+    <MudItem xs="12" Class="d-md-none order-3">
+        <MudDivider/>
+    </MudItem>
+
+    <MudItem xs="12" md="6" Class="d-flex flex-column order-4 order-md-2">
+        @this.ColumnB
+    </MudItem>
+    <MudItem xs="12" md="4" Class="d-flex justify-center justify-md-end order-5 order-md-6">
+        <MudButton Variant="Variant.Filled" Disabled="@this.Disabled" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.COLUMN_B))">
+            @this.BLabel
+        </MudButton>
+    </MudItem>
+
+    <MudItem xs="12" md="4" Class="d-flex justify-center order-6 order-md-5">
+        <MudButton Variant="Variant.Outlined" Disabled="@this.Disabled" OnClick="@(() => this.Vote.InvokeAsync(ModelComparisonVote.TIE))">
+            @this.TieLabel
+        </MudButton>
+    </MudItem>
+</MudGrid>

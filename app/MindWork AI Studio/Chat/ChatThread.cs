@@ -280,8 +280,11 @@ public sealed record ChatThread
     /// </summary>
     /// <remarks>
     /// Addresses the model wrote into the call itself are left out, see ToolCallOutcome.ReturnedWebAddresses.
-    /// Not stored, like the results of the tools themselves: after a restart, a chat knows fewer
-    /// addresses, never more.
+    /// Not stored: each answer stores those addresses its own tools returned which a later message
+    /// still shows the model, see ContentText.WebAddressesFromTools, so they outlast a restart. This
+    /// set covers the runs without an answer in the chat, such as those of the assistants, and the
+    /// addresses no later message shows, such as the links of a page read. It is never emptied, so
+    /// the addresses of an answer which was deleted or generated anew count until the chat is closed.
     /// </remarks>
     [JsonIgnore]
     public HashSet<string> RuntimeWebAddressesFromTools { get; } = new(StringComparer.Ordinal);
@@ -303,7 +306,8 @@ public sealed record ChatThread
     /// <remarks>
     /// Given means: it stands in the system prompt, see RuntimeSystemPromptWebAddresses, in a
     /// message of the user or a document attached to one, see ContentText.RuntimeAttachmentWebAddresses,
-    /// or a tool returned it, see RuntimeWebAddressesFromTools. What the model wrote itself never
+    /// or a tool returned it, see RuntimeWebAddressesFromTools and ContentText.WebAddressesFromTools
+    /// of the answers in this chat. What the model wrote itself never
     /// counts, its answers included, because the model could have put anything of the chat into it.
     /// Neither does what any model wrote and what reached this chat as a message of the user, such
     /// as an answer sent here from another chat, see WebAddressesWrittenByModels. The comparison is
@@ -318,6 +322,10 @@ public sealed record ChatThread
     {
         var requestKey = WebAddresses.CreateRequestKey(url);
         if (this.RuntimeWebAddressesFromTools.Contains(requestKey) || this.RuntimeSystemPromptWebAddresses.Contains(requestKey))
+            return true;
+
+        // A tool returned it for one of the answers, possibly before a restart:
+        if (this.Blocks.Any(block => block.Role is ChatRole.AI && block.Content is ContentText answer && answer.WebAddressesFromTools.Contains(requestKey)))
             return true;
 
         var messagesOfTheUser = this.Blocks
@@ -486,6 +494,22 @@ public sealed record ChatThread
                                 """;
 
             parts.Add(new(SystemPromptPartKind.TOOL_INSTRUCTIONS, toolPolicy) { Tools = instructedTools });
+        }
+
+        //
+        // Explain the notes in front of the earlier answers, see ToolCallHistoryNote. Also without
+        // tools: the note then tells the model what it read, and this tells it that it no longer
+        // has the content.
+        //
+        if (ToolCallHistoryNote.IsInAnyOf(this.Blocks))
+        {
+            systemPromptText = $"""
+                                {systemPromptText}
+
+                                {ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION}
+                                """;
+
+            parts.Add(new(SystemPromptPartKind.HISTORY_NOTES, ToolCallHistoryNote.SYSTEM_PROMPT_EXPLANATION));
         }
 
         var explanation = $"{logMessage} {profileNote}";
@@ -804,7 +828,10 @@ public sealed record ChatThread
     /// What goes unnoticed is a change beside the messages: another system prompt, profile, or
     /// selection of tools. That shows only with the next answer. Noticing it would take a
     /// fingerprint of the system prompt as it was sent, after the data sources added to it, which
-    /// is a lot of machinery for a number which corrects itself one answer later.
+    /// is a lot of machinery for a number which corrects itself one answer later. The same holds for
+    /// the explanation of the notes on earlier answers, which the system prompt gets once the first
+    /// answer has a note, see ToolCallHistoryNote. The note of the last answer itself is counted: it
+    /// changes with every answer, and the answer goes out with it, see ToolCallHistoryNote.TextForModel.
     /// </remarks>
     /// <param name="model">The model the next request would go to.</param>
     /// <returns>
@@ -825,7 +852,7 @@ public sealed record ChatThread
         if (!string.Equals(reported.ModelId, model.Id, StringComparison.Ordinal))
             return ReportedHistory.UNKNOWN;
 
-        return ReportedHistory.Of(reported.ToTokenUsage(), answer.Text);
+        return ReportedHistory.Of(reported.ToTokenUsage(), ToolCallHistoryNote.TextForModel(this.Blocks[^1], answer.Text));
     }
 
     private static void DeleteManagedAttachments(ContentBlock block)

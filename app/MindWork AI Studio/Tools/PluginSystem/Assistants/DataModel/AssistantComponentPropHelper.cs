@@ -1,29 +1,68 @@
+using System.Globalization;
+
 using AIStudio.Tools.PluginSystem.Assistants.Icons;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
 internal static class AssistantComponentPropHelper
 {
+    /// <summary>
+    /// The prefix with which an assistant plugin names a Lucide icon.
+    /// </summary>
+    private const string LUCIDE_PREFIX = "lucide:";
+
+    /// <summary>
+    /// Reads a prop as text. A number, which Lua hands over as a double, becomes the same text on every computer,
+    /// the one Lua itself writes: 12.5 stays "12.5", also where the region settings use a decimal comma.
+    /// </summary>
     public static string ReadString(Dictionary<string, object> props, string key)
     {
-        if (props.TryGetValue(key, out var value))
-            return value.ToString() ?? string.Empty;
+        if (!props.TryGetValue(key, out var value))
+            return string.Empty;
 
-        return string.Empty;
+        if (value is IFormattable formattable)
+            return formattable.ToString(null, CultureInfo.InvariantCulture);
+
+        return value.ToString() ?? string.Empty;
     }
 
     public static void WriteString(Dictionary<string, object> props, string key, string value) => props[key] = value;
 
-    public static int ReadInt(Dictionary<string, object> props, string key, int fallback = 0)
-    {
-        return props.TryGetValue(key, out var value) && int.TryParse(value.ToString(), out var i) ? i : fallback;
-    }
-    
+    public static int ReadInt(Dictionary<string, object> props, string key, int fallback = 0) => TryReadInt(props, key, out var number) ? number : fallback;
+
     public static void WriteInt(Dictionary<string, object> props, string key, int value) => props[key] = value;
 
-    public static int? ReadNullableInt(Dictionary<string, object> props, string key)
+    public static int? ReadNullableInt(Dictionary<string, object> props, string key) => TryReadInt(props, key, out var number) ? number : null;
+
+    /// <summary>
+    /// Reads a whole number, independent of the region settings of the computer.
+    /// </summary>
+    /// <remarks>
+    /// Lua hands over every number as a double, and the setters of the components store an int. A plugin may also
+    /// write the number as text. A number with a fraction, or one beyond the range of an int, counts as missing.
+    /// </remarks>
+    private static bool TryReadInt(Dictionary<string, object> props, string key, out int number)
     {
-        return props.TryGetValue(key, out var value) && int.TryParse(value.ToString(), out var i) ? i : null;
+        number = 0;
+        if (!props.TryGetValue(key, out var value))
+            return false;
+
+        switch (value)
+        {
+            case int whole:
+                number = whole;
+                return true;
+
+            case double real when double.IsInteger(real) && real is >= int.MinValue and <= int.MaxValue:
+                number = (int)real;
+                return true;
+
+            case string text:
+                return int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out number);
+
+            default:
+                return false;
+        }
     }
 
     public static void WriteNullableInt(Dictionary<string, object> props, string key, int? value)
@@ -52,7 +91,22 @@ internal static class AssistantComponentPropHelper
     public static Color GetColor(string value, Color fallback) => Enum.TryParse<Color>(value, out var color) ? color : fallback;
     public static Variant GetVariant(string value, Variant fallback) => Enum.TryParse<Variant>(value, out var variant) ? variant : fallback;
     public static Adornment GetAdornment(string value, Adornment fallback) => Enum.TryParse<Adornment>(value, out var adornment) ? adornment : fallback;
-    public static string GetIconSvg(string value) => MudBlazorIconRegistry.TryGetSvg(value.TrimStart('@'), out var svg) ? svg : string.Empty;
+    /// <summary>
+    /// Finds the icon an assistant plugin names: a Lucide icon as "lucide:" followed by its name on lucide.dev,
+    /// such as "lucide:house", or an icon of MudBlazor, such as "Icons.Material.Filled.Home".
+    /// </summary>
+    /// <param name="value">The icon as the plugin names it.</param>
+    /// <returns>The icon in the form MudBlazor renders, or an empty string for an unknown name.</returns>
+    public static string GetIcon(string value)
+    {
+        var name = value.TrimStart('@');
+        if (name.StartsWith(LUCIDE_PREFIX, StringComparison.Ordinal))
+            return LucideIconRegistry.TryGet(name[LUCIDE_PREFIX.Length..], out var lucideIcon) ? lucideIcon : string.Empty;
+
+        return MudBlazorIconRegistry.TryGetSvg(name, out var svg) ? svg : string.Empty;
+    }
+
+
     public static Size GetComponentSize(string value, Size fallback) => Enum.TryParse<Size>(value, out var size) ? size : fallback;
     public static Justify? GetJustify(string value) => Enum.TryParse<Justify>(value, out var justify) ? justify : null;
     public static AlignItems? GetItemsAlignment(string value) => Enum.TryParse<AlignItems>(value, out var alignment) ? alignment : null;
