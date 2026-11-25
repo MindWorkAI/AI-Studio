@@ -244,11 +244,27 @@ public sealed class ComputeSymbolicallyToolTests
     }
 
     [Test]
-    public async Task ChecksNoSamplePointBeyondTheLimitsOfASpecialFunction()
+    public async Task ChecksNoSamplePointWhichCouldNotBeStopped()
     {
-        // At x = 0.61, z is 6,100, which would take seconds without a way to stop it:
-        var simplified = await Compute(SymbolicOperation.SIMPLIFY, "gamma(1/2, 10000*x)");
-        Assert.That(Text(simplified, "verification"), Is.EqualTo("not_possible"));
+        // At x = 0.61, z is 6,100, the factorial that of 610,000, and the power a fraction of 378,000 digits; each
+        // would take seconds or minutes without a way to stop it:
+        var incompleteGamma = await Compute(SymbolicOperation.SIMPLIFY, "gamma(1/2, 10000*x)");
+        var factorial = await Compute(SymbolicOperation.SIMPLIFY, "(10^6*x)!");
+        var derivative = await Compute(SymbolicOperation.DIFFERENTIATE, "(10^6*x)!", "x");
+        var power = await Compute(SymbolicOperation.SIMPLIFY, "x^100000 + 1");
+
+        // The terms of the expansion each have a few hundred digits, which is no reason to leave a point out:
+        var expansion = await Compute(SymbolicOperation.EXPAND, "(x + 1)^200");
+        var smallerFactorial = await Compute(SymbolicOperation.SIMPLIFY, "(1000*x)!");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Text(incompleteGamma, "verification"), Is.EqualTo("not_possible"));
+            Assert.That(Text(factorial, "verification"), Is.EqualTo("not_possible"));
+            Assert.That(Text(derivative, "verification"), Is.EqualTo("not_possible"));
+            Assert.That(Text(power, "verification"), Is.EqualTo("not_possible"));
+            Assert.That(Text(expansion, "verification"), Is.EqualTo("passed"));
+            Assert.That(Text(smallerFactorial, "verification"), Is.EqualTo("passed"));
+        }
     }
 
     [Test]

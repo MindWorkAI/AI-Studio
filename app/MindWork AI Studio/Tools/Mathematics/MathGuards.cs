@@ -35,35 +35,23 @@ public static class MathGuards
     /// </summary>
     /// <param name="expression">The expression to be evaluated or simplified.</param>
     /// <exception cref="MathComputationException">A part of the expression would grow too large or take too long.</exception>
-    public static void CheckExactSize(Entity expression) => EstimateDigits(expression);
+    public static void CheckExactSize(Entity expression) => EstimateDigits(expression, false);
 
     /// <summary>
-    /// Refuses an expression which takes a special function beyond its limits, see MathLimits.
+    /// Refuses an expression whose variables have values, as at the sample points of NumericCheck, when one of its
+    /// powers or factorials would have more than MathLimits.MAX_EXACT_DIGITS digits, or when it takes a special
+    /// function beyond its limits.
     /// </summary>
     /// <remarks>
-    /// For an expression whose variables have values, as at the sample points of NumericCheck: a variable
-    /// may become the order of polygamma there, as in polygamma(1000 * x, 2). Unlike CheckExactSize, it leaves
-    /// the size of the other numbers alone, which it would only overestimate for a long sum, such as the
-    /// expansion of (x + 1)^200.
+    /// A value of a variable may turn a part which CheckExactSize let through into one which runs on long past
+    /// the budget: x = 0.61 makes (10^6 * x)! the factorial of 610,000, and x^100000 a fraction of hundreds of
+    /// thousands of digits; in polygamma(1000 * x, 2), x becomes the order. Unlike CheckExactSize, it takes the
+    /// largest of the parts of a sum, a product, or a quotient instead of adding up their digits: the checks
+    /// evaluate long sums, such as the expansion of (x + 1)^200, whose terms each have few digits.
     /// </remarks>
-    /// <param name="expression">The expression to be evaluated.</param>
-    /// <exception cref="MathComputationException">A special function would take too long, or its arguments would grow too large.</exception>
-    public static void CheckSpecialFunctions(Entity expression)
-    {
-        foreach (var node in expression.Nodes)
-        {
-            switch (node)
-            {
-                case Entity.Polygammaf polygamma:
-                    EstimatePolygamma(polygamma);
-                    break;
-
-                case Entity.IncompleteGammaf gamma:
-                    EstimateIncompleteGamma(gamma);
-                    break;
-            }
-        }
-    }
+    /// <param name="expression">The expression with the values of its variables in their place.</param>
+    /// <exception cref="MathComputationException">A part of the expression would grow too large or take too long.</exception>
+    public static void CheckValueAtPoint(Entity expression) => EstimateDigits(expression, true);
 
     /// <summary>
     /// Refuses an expression whose expansion would take a power of a sum beyond
@@ -93,16 +81,19 @@ public static class MathGuards
     /// An upper bound for sums, products, and quotients: the digits of numerator and denominator
     /// add up. A number which is not exact, such as a decimal of the current precision, needs none.
     /// </remarks>
-    private static double EstimateDigits(Entity node)
+    /// <param name="node">The node to be estimated.</param>
+    /// <param name="largestPart">Whether a sum, a product, or a quotient counts the digits of its largest part only, see CheckValueAtPoint.</param>
+    private static double EstimateDigits(Entity node, bool largestPart)
     {
         var digits = node switch
         {
             Entity.Number.Rational rational => DigitsOf(rational.ERational.Numerator) + DigitsOf(rational.ERational.Denominator),
-            Entity.Powf power => EstimatePower(power),
-            Entity.Factorialf factorial => EstimateFactorial(factorial),
-            Entity.Polygammaf polygamma => EstimatePolygamma(polygamma),
-            Entity.IncompleteGammaf gamma => EstimateIncompleteGamma(gamma),
-            _ => node.DirectChildren.Sum(EstimateDigits),
+            Entity.Powf power => EstimatePower(power, largestPart),
+            Entity.Factorialf factorial => EstimateFactorial(factorial, largestPart),
+            Entity.Polygammaf polygamma => EstimatePolygamma(polygamma, largestPart),
+            Entity.IncompleteGammaf gamma => EstimateIncompleteGamma(gamma, largestPart),
+            _ when largestPart => node.DirectChildren.Select(child => EstimateDigits(child, true)).DefaultIfEmpty(0).Max(),
+            _ => node.DirectChildren.Sum(child => EstimateDigits(child, false)),
         };
 
         if (digits > MathLimits.MAX_EXACT_DIGITS)
@@ -111,10 +102,10 @@ public static class MathGuards
         return digits;
     }
 
-    private static double EstimatePower(Entity.Powf power)
+    private static double EstimatePower(Entity.Powf power, bool largestPart)
     {
-        var baseDigits = EstimateDigits(power.Base);
-        var exponentDigits = EstimateDigits(power.Exponent);
+        var baseDigits = EstimateDigits(power.Base, largestPart);
+        var exponentDigits = EstimateDigits(power.Exponent, largestPart);
         if (MathVariables.HasAny(power.Base))
             return baseDigits + exponentDigits;
 
@@ -137,9 +128,9 @@ public static class MathGuards
         return magnitude * Math.Max(baseDigits, 0);
     }
 
-    private static double EstimateFactorial(Entity.Factorialf factorial)
+    private static double EstimateFactorial(Entity.Factorialf factorial, bool largestPart)
     {
-        var argumentDigits = EstimateDigits(factorial.Argument);
+        var argumentDigits = EstimateDigits(factorial.Argument, largestPart);
         var argument = ValueOf(factorial.Argument);
         if (argument is null)
             return argumentDigits;
@@ -152,9 +143,9 @@ public static class MathGuards
         return n * Math.Log10(n / Math.E) + Math.Log10(2 * Math.PI * n) / 2 + 1;
     }
 
-    private static double EstimatePolygamma(Entity.Polygammaf polygamma)
+    private static double EstimatePolygamma(Entity.Polygammaf polygamma, bool largestPart)
     {
-        var digits = EstimateDigits(polygamma.Order) + EstimateDigits(polygamma.Argument);
+        var digits = EstimateDigits(polygamma.Order, largestPart) + EstimateDigits(polygamma.Argument, largestPart);
         var order = ValueOf(polygamma.Order);
         if (order > MathLimits.MAX_POLYGAMMA_ORDER)
             throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(polygamma)}' has the order {order.Value:0.###}. The tool cannot stop the computation of polygamma midway, and its time grows with the order, so the order is limited to {MathLimits.MAX_POLYGAMMA_ORDER}."));
@@ -162,9 +153,9 @@ public static class MathGuards
         return digits;
     }
 
-    private static double EstimateIncompleteGamma(Entity.IncompleteGammaf gamma)
+    private static double EstimateIncompleteGamma(Entity.IncompleteGammaf gamma, bool largestPart)
     {
-        var digits = EstimateDigits(gamma.Parameter) + EstimateDigits(gamma.LowerLimit);
+        var digits = EstimateDigits(gamma.Parameter, largestPart) + EstimateDigits(gamma.LowerLimit, largestPart);
         var argument = NumberOf(gamma.LowerLimit);
         if (argument is not null && AbsoluteValueOf(argument) > MathLimits.MAX_INCOMPLETE_GAMMA_ARGUMENT)
             throw new MathComputationException(string.Create(CultureInfo.InvariantCulture, $"'{Show(gamma)}' takes gamma(a, z) at a z of about {AbsoluteValueOf(argument):0.###} in absolute value. The tool cannot stop this computation midway, and its time grows with z, so the absolute value of z is limited to {MathLimits.MAX_INCOMPLETE_GAMMA_ARGUMENT:N0}."));
