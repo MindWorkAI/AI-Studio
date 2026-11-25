@@ -344,11 +344,7 @@ impl QdrantEdgeDatabase {
         }
 
         let shard = if is_initialized {
-            acknowledge_legacy_wal(&path, store_name);
-            match EdgeShard::load(&path, None) {
-                Ok(shard) => shard,
-                Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
-            }
+            load_store(&path, store_name)?
         } else {
             fs::create_dir_all(&path).map_err(|error| {
                 format!("Failed to create directory for vector store '{store_name}' at '{}': {error}", path.display())
@@ -386,12 +382,7 @@ impl QdrantEdgeDatabase {
             return Ok(None);
         }
 
-        acknowledge_legacy_wal(&path, store_name);
-        let shard = match EdgeShard::load(&path, None) {
-            Ok(shard) => shard,
-            Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
-        };
-
+        let shard = load_store(&path, store_name)?;
         self.reported_unreadable_stores.remove(store_name);
         self.shards.insert(store_name.to_string(), shard);
         Ok(self.shards.get(store_name))
@@ -1051,7 +1042,21 @@ where
         });
     };
 
-    match operation(database) {
+    answer_request(database, operation)
+}
+
+/// Runs one request against the database and answers it.
+///
+/// A panic of Qdrant Edge becomes the error of this request alone. Otherwise, it would unwind
+/// through the lock of the database and poison it, and every further request would fail until AI
+/// Studio restarts.
+fn answer_request<T, F>(database: &mut QdrantEdgeDatabase, operation: F) -> Json<QdrantEdgeResponse<T>>
+where
+    T: Serialize,
+    F: FnOnce(&mut QdrantEdgeDatabase) -> QdrantEdgeResult<T>,
+{
+    let result = catch_panic(|| operation(&mut *database)).unwrap_or_else(|panic| Err(panic.into()));
+    match result {
         Ok(data) => Json(QdrantEdgeResponse {
             success: true,
             issue: String::new(),
@@ -1267,6 +1272,38 @@ fn remove_partial_store(path: &Path) -> String {
         Ok(()) => String::new(),
         Err(error) => format!(" The incomplete store could not be removed: {error}"),
     }
+}
+
+/// Loads a store which was created completely.
+fn load_store(path: &Path, store_name: &str) -> QdrantEdgeResult<EdgeShard> {
+    acknowledge_legacy_wal(path, store_name);
+    open_store(path, store_name, || EdgeShard::load(path, None))
+}
+
+/// Opens a store and reports it as unreadable when that fails, cf. `StoreUnreadableError`.
+///
+/// Qdrant Edge may also panic while it opens a broken store, e.g., when it applies its WAL to a
+/// payload it cannot read. Such a store is just as unreadable, and it would fail the same way with
+/// every further request.
+fn open_store<T, E: std::fmt::Display>(path: &Path, store_name: &str, open: impl FnOnce() -> Result<T, E>) -> QdrantEdgeResult<T> {
+    match catch_panic(open) {
+        Ok(Ok(store)) => Ok(store),
+        Ok(Err(error)) => Err(StoreUnreadableError::new(store_name, path, error).into()),
+        Err(panic) => Err(StoreUnreadableError::new(store_name, path, panic).into()),
+    }
+}
+
+/// Runs an operation and turns a panic in it into an error which carries the panic's message.
+fn catch_panic<T>(operation: impl FnOnce() -> T) -> Result<T, String> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(operation)).map_err(|panic| {
+        let message = panic
+            .downcast_ref::<&str>()
+            .map(|message| message.to_string())
+            .or_else(|| panic.downcast_ref::<String>().cloned())
+            .unwrap_or_else(|| "no message".to_string());
+
+        format!("Qdrant Edge panicked: {message}")
+    })
 }
 
 // Temporary compatibility shim until a qdrant-edge release skips already persisted operations when
@@ -1985,6 +2022,38 @@ mod tests {
         drop(copy);
         drop(database);
         fs::remove_dir_all(data_directory).unwrap();
+    }
+
+    #[test]
+    fn a_panic_while_opening_a_store_reports_it_as_unreadable() {
+        let test_directory = test_directory("open-panic");
+        let database = store_with_one_point_per_axis(&test_directory);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        drop(database);
+
+        let error = open_store::<(), String>(&store_path, SEARCH_STORE, || panic!("Payload storage is corrupted")).unwrap_err();
+        let unreadable = error.downcast_ref::<StoreUnreadableError>().expect("a store which makes Qdrant Edge panic is unreadable, like one which fails to open");
+        assert!(unreadable.to_string().contains("Payload storage is corrupted"));
+        assert!(store_path.join("segments").is_dir(), "the store stays until the user decides to rebuild it");
+
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_panic_in_a_request_fails_only_this_request() {
+        let test_directory = test_directory("request-panic");
+        let mut database = store_with_one_point_per_axis(&test_directory);
+
+        let failed = answer_request(&mut database, |_| -> QdrantEdgeResult<()> { panic!("Payload storage is corrupted") });
+        assert!(!failed.success);
+        assert!(failed.issue.contains("Payload storage is corrupted"));
+
+        let answered = answer_request(&mut database, |database| database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]));
+        assert!(answered.success, "the next request runs as usual");
+        assert_eq!(found_point_ids(answered.data.as_ref().unwrap()), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
