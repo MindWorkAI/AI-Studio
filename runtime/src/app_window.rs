@@ -1,6 +1,7 @@
 use std::convert::Infallible;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use async_stream::stream;
 use axum::body::Body;
@@ -313,21 +314,18 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
 
             RunEvent::ExitRequested { .. } => {
                 warn!(Source = "Tauri"; "Run event: exit was requested.");
-                shutdown_clipboard();
-                stop_qdrant_edge_database();
-                if is_prod() {
-                    warn!("Try to stop the .NET server as well...");
-                    stop_dotnet_server();
-                }
+                stop_services();
             }
 
             RunEvent::Ready => {
                 info!(Source = "Tauri"; "Run event: Tauri app is ready.");
             }
 
-            // When AI Studio restarts itself, Tauri would start the new instance in the background next:
-            #[cfg(target_os = "macos")]
             RunEvent::Exit => {
+                stop_services();
+
+                // When AI Studio restarts itself, Tauri would start the new instance in the background next:
+                #[cfg(target_os = "macos")]
                 crate::own_restart::start_new_instance_in_front();
             }
 
@@ -336,6 +334,27 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
     });
 
     warn!(Source = "Tauri"; "Tauri app was stopped.");
+}
+
+/// Whether `stop_services` already ran.
+static SERVICES_STOPPED: AtomicBool = AtomicBool::new(false);
+
+/// Stops what AI Studio runs next to its window: the clipboard, Qdrant Edge, and, in a release, the
+/// .NET server.
+///
+/// Runs on `RunEvent::ExitRequested` and on `RunEvent::Exit`, whichever comes first: quitting
+/// through the menu of macOS, e.g., with Cmd+Q, skips `RunEvent::ExitRequested`.
+fn stop_services() {
+    if SERVICES_STOPPED.swap(true, Ordering::SeqCst) {
+        return;
+    }
+
+    shutdown_clipboard();
+    stop_qdrant_edge_database();
+    if is_prod() {
+        warn!("Try to stop the .NET server as well...");
+        stop_dotnet_server();
+    }
 }
 
 fn is_local_host(host: Option<&str>) -> bool {

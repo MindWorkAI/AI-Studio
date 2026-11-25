@@ -37,6 +37,9 @@ const WAL_DIRECTORY: &str = "wal";
 const WAL_FIRST_INDEX_FILE: &str = "first-index";
 const WAL_FIRST_INDEX_FILE_TEMP: &str = "first-index.tmp";
 
+/// The file in which a storage of Qdrant Edge notes its pointer writes, see `remove_tracker_journals`.
+const TRACKER_JOURNAL_FILE: &str = "tracker_journal.dat";
+
 /// The directory below the data directory in which a backup collects its copies, one directory per
 /// backup. The app removes a backup's directory once the backup is written.
 const BACKUP_STAGING_DIRECTORY: &str = ".backup-staging";
@@ -341,11 +344,7 @@ impl QdrantEdgeDatabase {
         }
 
         let shard = if is_initialized {
-            acknowledge_legacy_wal(&path, store_name);
-            match EdgeShard::load(&path, None) {
-                Ok(shard) => shard,
-                Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
-            }
+            load_store(&path, store_name)?
         } else {
             fs::create_dir_all(&path).map_err(|error| {
                 format!("Failed to create directory for vector store '{store_name}' at '{}': {error}", path.display())
@@ -383,12 +382,7 @@ impl QdrantEdgeDatabase {
             return Ok(None);
         }
 
-        acknowledge_legacy_wal(&path, store_name);
-        let shard = match EdgeShard::load(&path, None) {
-            Ok(shard) => shard,
-            Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
-        };
-
+        let shard = load_store(&path, store_name)?;
         self.reported_unreadable_stores.remove(store_name);
         self.shards.insert(store_name.to_string(), shard);
         Ok(self.shards.get(store_name))
@@ -678,10 +672,9 @@ impl QdrantEdgeDatabase {
 
     /// Copies one store into the directory of a backup's copies, and returns how many bytes it copied.
     ///
-    /// A loaded store is flushed and unloaded first: everything it holds is on the disk then, and
-    /// nothing changes its files while they are copied, since the lock of the database is held all
-    /// the while. The next request loads the store again. A store which was not created completely
-    /// is not copied.
+    /// A loaded store is unloaded first, see `unload_store`: everything it holds is on the disk then,
+    /// and nothing changes its files while they are copied, since the lock of the database is held
+    /// all the while. A store which was not created completely is not copied.
     fn copy_store_for_backup(&mut self, store_name: &str, data_directory: &Path, backup_id: &str) -> QdrantEdgeResult<u64> {
         let staging_path = backup_staging_path(data_directory, backup_id)?;
         if !staging_path.is_dir() {
@@ -693,11 +686,7 @@ impl QdrantEdgeDatabase {
             return Ok(0);
         }
 
-        if let Some(shard) = self.shards.get(store_name) {
-            shard.flush()?;
-        }
-
-        drop(self.shards.remove(store_name));
+        self.unload_store(store_name)?;
         let relative_path = path.strip_prefix(data_directory).map_err(|_| {
             format!("The vector store '{store_name}' at '{}' does not lie below the data directory '{}'.", path.display(), data_directory.display())
         })?;
@@ -708,6 +697,21 @@ impl QdrantEdgeDatabase {
         })?;
 
         Ok(copied_bytes)
+    }
+
+    /// Unloads a store: flushes it, closes it, and removes its journals, see `remove_tracker_journals`.
+    ///
+    /// When the flush fails, the store stays loaded, and its journals stay as well, since Qdrant Edge
+    /// then still needs them to repair the store. The next request loads an unloaded store again.
+    fn unload_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
+        let Some(shard) = self.shards.get(store_name) else {
+            return Ok(());
+        };
+
+        shard.flush()?;
+        drop(self.shards.remove(store_name));
+        remove_tracker_journals(&self.store_path(store_name)?, store_name);
+        Ok(())
     }
 
     fn delete_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
@@ -723,6 +727,19 @@ impl QdrantEdgeDatabase {
 
     fn base_path(&self) -> PathBuf {
         self.base_path.clone()
+    }
+}
+
+impl Drop for QdrantEdgeDatabase {
+    // Unloads every store, e.g., when AI Studio quits, installs an update, or restarts after a
+    // restore, see unload_store.
+    fn drop(&mut self) {
+        let store_names = self.shards.keys().cloned().collect::<Vec<_>>();
+        for store_name in store_names {
+            if let Err(error) = self.unload_store(&store_name) {
+                warn!(Source = "Qdrant Edge"; "Could not flush vector store '{store_name}' while unloading it, so its journals stay for Qdrant Edge to repair the store: {error}");
+            }
+        }
     }
 }
 
@@ -1025,7 +1042,21 @@ where
         });
     };
 
-    match operation(database) {
+    answer_request(database, operation)
+}
+
+/// Runs one request against the database and answers it.
+///
+/// A panic of Qdrant Edge becomes the error of this request alone. Otherwise, it would unwind
+/// through the lock of the database and poison it, and every further request would fail until AI
+/// Studio restarts.
+fn answer_request<T, F>(database: &mut QdrantEdgeDatabase, operation: F) -> Json<QdrantEdgeResponse<T>>
+where
+    T: Serialize,
+    F: FnOnce(&mut QdrantEdgeDatabase) -> QdrantEdgeResult<T>,
+{
+    let result = catch_panic(|| operation(&mut *database)).unwrap_or_else(|panic| Err(panic.into()));
+    match result {
         Ok(data) => Json(QdrantEdgeResponse {
             success: true,
             issue: String::new(),
@@ -1243,8 +1274,41 @@ fn remove_partial_store(path: &Path) -> String {
     }
 }
 
+/// Loads a store which was created completely.
+fn load_store(path: &Path, store_name: &str) -> QdrantEdgeResult<EdgeShard> {
+    acknowledge_legacy_wal(path, store_name);
+    open_store(path, store_name, || EdgeShard::load(path, None))
+}
+
+/// Opens a store and reports it as unreadable when that fails, cf. `StoreUnreadableError`.
+///
+/// Qdrant Edge may also panic while it opens a broken store, e.g., when it applies its WAL to a
+/// payload it cannot read. Such a store is just as unreadable, and it would fail the same way with
+/// every further request.
+fn open_store<T, E: std::fmt::Display>(path: &Path, store_name: &str, open: impl FnOnce() -> Result<T, E>) -> QdrantEdgeResult<T> {
+    match catch_panic(open) {
+        Ok(Ok(store)) => Ok(store),
+        Ok(Err(error)) => Err(StoreUnreadableError::new(store_name, path, error).into()),
+        Err(panic) => Err(StoreUnreadableError::new(store_name, path, panic).into()),
+    }
+}
+
+/// Runs an operation and turns a panic in it into an error which carries the panic's message.
+fn catch_panic<T>(operation: impl FnOnce() -> T) -> Result<T, String> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(operation)).map_err(|panic| {
+        let message = panic
+            .downcast_ref::<&str>()
+            .map(|message| message.to_string())
+            .or_else(|| panic.downcast_ref::<String>().cloned())
+            .unwrap_or_else(|| "no message".to_string());
+
+        format!("Qdrant Edge panicked: {message}")
+    })
+}
+
 // Temporary compatibility shim until a qdrant-edge release skips already persisted operations when
-// it loads a store: documentation/compatibility-shims/2026-11-qdrant-edge-legacy-wal.md
+// it loads a store, see https://github.com/qdrant/qdrant/issues/11732:
+// documentation/compatibility-shims/2026-11-qdrant-edge-legacy-wal.md
 //
 // Up to qdrant-edge 0.8, Qdrant Edge never acknowledged its WAL. Since 0.9, loading a store applies
 // every operation of the WAL again which is not marked as acknowledged, so the first load of a store
@@ -1264,6 +1328,47 @@ fn acknowledge_legacy_wal(store_path: &Path, store_name: &str) {
         Ok(()) => info!(Source = "Qdrant Edge"; "Marked the WAL of vector store '{store_name}' as acknowledged, since an older version of AI Studio wrote it."),
         Err(error) => warn!(Source = "Qdrant Edge"; "Could not mark the WAL of vector store '{store_name}' as acknowledged, so loading the store applies the whole WAL once more: {error}"),
     }
+}
+
+// Temporary compatibility shim until 2027-05-25:
+// documentation/compatibility-shims/2026-11-qdrant-edge-tracker-journal.md
+//
+// Since qdrant-edge 0.9, every storage of a store notes its pointer writes in a journal before it
+// writes them, and applies the journal again whenever it opens, which repairs pointers a crash tore.
+// Older versions of AI Studio use qdrant-edge 0.8, which knows no journal: when one of them writes
+// to the store, the journal keeps the pointers from before, and the next load under 0.9 sets them
+// again. They then point into freed blocks, so loading or searching the store fails. Once a flush
+// succeeded, the journal has nothing left to repair. The store must not be loaded while this runs.
+fn remove_tracker_journals(store_path: &Path, store_name: &str) {
+    let journals = match tracker_journals(store_path) {
+        Ok(journals) => journals,
+        Err(error) => {
+            warn!(Source = "Qdrant Edge"; "Could not look for the journals of vector store '{store_name}', which breaks the store should an older version of AI Studio write to it: {error}");
+            return;
+        },
+    };
+
+    for journal in journals {
+        if let Err(error) = fs::remove_file(&journal) {
+            warn!(Source = "Qdrant Edge"; "Could not remove the journal '{}' of vector store '{store_name}', which breaks the store should an older version of AI Studio write to it: {error}", journal.display());
+        }
+    }
+}
+
+/// Every journal of Qdrant Edge below a directory, see `remove_tracker_journals`.
+fn tracker_journals(path: &Path) -> std::io::Result<Vec<PathBuf>> {
+    let mut journals = Vec::new();
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        if file_type.is_dir() {
+            journals.extend(tracker_journals(&entry.path())?);
+        } else if file_type.is_file() && entry.file_name() == TRACKER_JOURNAL_FILE {
+            journals.push(entry.path());
+        }
+    }
+
+    Ok(journals)
 }
 
 fn validate_vector_size(vector_size: usize) -> QdrantEdgeResult<()> {
@@ -1871,6 +1976,81 @@ mod tests {
         let mut database = QdrantEdgeDatabase::new(test_directory.clone());
         database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
         assert_eq!(fs::read_to_string(&first_index_path).unwrap(), first_index);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    /// An older version of AI Studio which writes to the store in between would otherwise break it,
+    /// cf. remove_tracker_journals.
+    #[test]
+    fn unloading_a_store_removes_its_tracker_journals_and_keeps_its_points() {
+        let test_directory = test_directory("journal-unload");
+        let database = store_with_one_point_per_axis(&test_directory);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        assert!(!tracker_journals(&store_path).unwrap().is_empty(), "the flush after inserting leaves a journal behind, or this test checks nothing");
+
+        drop(database);
+        assert!(tracker_journals(&store_path).unwrap().is_empty());
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_backup_copies_a_store_without_its_tracker_journals() {
+        let data_directory = test_directory("backup-journal");
+        let base_path = data_directory.join("databases").join("vector_database");
+        let mut database = store_with_one_point_per_axis(&base_path);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        assert!(!tracker_journals(&store_path).unwrap().is_empty(), "the flush after inserting leaves a journal behind, or this test checks nothing");
+
+        let preparation = database.prepare_backup(&data_directory).unwrap();
+        database.copy_store_for_backup(SEARCH_STORE, &data_directory, &preparation.backup_id).unwrap();
+        let copy_base_path = PathBuf::from(&preparation.staging_path).join("databases").join("vector_database");
+        assert!(tracker_journals(&store_path).unwrap().is_empty(), "the store was unloaded for the copy");
+        assert!(tracker_journals(&copy_base_path).unwrap().is_empty(), "the copy takes no journal along");
+
+        let mut copy = QdrantEdgeDatabase::new(copy_base_path);
+        let found = copy.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        drop(copy);
+        drop(database);
+        fs::remove_dir_all(data_directory).unwrap();
+    }
+
+    #[test]
+    fn a_panic_while_opening_a_store_reports_it_as_unreadable() {
+        let test_directory = test_directory("open-panic");
+        let database = store_with_one_point_per_axis(&test_directory);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        drop(database);
+
+        let error = open_store::<(), String>(&store_path, SEARCH_STORE, || panic!("Payload storage is corrupted")).unwrap_err();
+        let unreadable = error.downcast_ref::<StoreUnreadableError>().expect("a store which makes Qdrant Edge panic is unreadable, like one which fails to open");
+        assert!(unreadable.to_string().contains("Payload storage is corrupted"));
+        assert!(store_path.join("segments").is_dir(), "the store stays until the user decides to rebuild it");
+
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_panic_in_a_request_fails_only_this_request() {
+        let test_directory = test_directory("request-panic");
+        let mut database = store_with_one_point_per_axis(&test_directory);
+
+        let failed = answer_request(&mut database, |_| -> QdrantEdgeResult<()> { panic!("Payload storage is corrupted") });
+        assert!(!failed.success);
+        assert!(failed.issue.contains("Payload storage is corrupted"));
+
+        let answered = answer_request(&mut database, |database| database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]));
+        assert!(answered.success, "the next request runs as usual");
+        assert_eq!(found_point_ids(answered.data.as_ref().unwrap()), vec![POINT_X, POINT_Y, POINT_Z]);
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
