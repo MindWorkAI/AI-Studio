@@ -1541,7 +1541,7 @@ public partial class ChatComponent : MSGComponentBase
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, TA("Your message holds the transcript of an audio or video file. Clearing the message deletes the transcript, which would have to be made anew. Do you want to clear your message?") },
+                { x => x.Message, TA("Clearing the message also deletes its transcript, which would have to be created again. Do you want to clear the message?") },
             };
 
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Clear Message"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -1824,7 +1824,7 @@ public partial class ChatComponent : MSGComponentBase
     {
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
         {
-            await this.MessageBus.SendWarning(new(AppIcons.PENDING, TA("This chat template belongs to another workspace. Please pick it again once the transcript is done, so that your message can go along.")));
+            await this.MessageBus.SendWarning(new(AppIcons.PENDING, T("This chat template opens its chats in another workspace. It can be picked again once the file is transcribed.")));
             return;
         }
 
@@ -2036,7 +2036,7 @@ public partial class ChatComponent : MSGComponentBase
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, TA("Chats here are not stored. Starting a new chat deletes the current one, together with everything in it. Do you want to start a new chat?") },
+            { x => x.Message, TA("The current chat is not stored and is deleted when a new chat is started. Do you want to start a new chat?") },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Start New Chat"), dialogParameters, DialogOptions.FULLSCREEN);

@@ -10,6 +10,6 @@ public partial class SettingsPaneChat : SettingsPanelBase
     /// by a choice of their own, and the note must not promise more than holds.
     /// </summary>
     private string PrivacyNote => this.SettingsManager.ConfigurationData.Workspace.CanChatsGoIntoWorkspaces
-        ? TA("Private: your chats outside of workspaces are never stored. Such a chat exists only while it is open, and once you start a new chat or close AI Studio, it is gone. Chats in workspaces follow their own choice in the workspace settings.")
-        : TA("Private: your chats are never stored. A chat exists only while it is open, and once you start a new chat or close AI Studio, it is gone.");
+        ? T("Private: chats outside of workspaces are never stored, and each one is deleted once another chat is started or AI Studio is closed. Workspaces have their own setting for this.")
+        : T("Private: chats are never stored, and each one is deleted once another chat is started or AI Studio is closed.");
 }

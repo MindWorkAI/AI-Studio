@@ -32,8 +32,8 @@ public partial class WorkspaceSearchField : MSGComponentBase
     /// name it: its messages, the one being written included, the names of its attached files, and its sources.
     /// </summary>
     private string CoverageText => this.IsListSearched
-        ? T("Searches the names of chats and workspaces, and the content of the chats: their messages, attached files, and sources.")
-        : T("Searches the content of the open chat: its messages and their sources.");
+        ? T("Searches the names of chats and workspaces, and the content of the chats")
+        : T("Searches the content of the open chat");
 
     private void TextChanged(string? text) => this.Search.SetText(text);
 

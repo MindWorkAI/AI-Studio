@@ -281,6 +281,167 @@ window.watchSidebarResize = function (handle, sidebar, dotNetReference) {
     })
 }
 
+// Lets the workspace sidebar of the chat page float over the chat. The page decides what the sidebar
+// does; this tells the page what the window and the pointer do, and reads from the classes of the
+// sidebar whether it shows and whether it floats, see Chat.razor:
+// - A window too narrow for the sidebar beside the chat shows it over the chat instead, once the user
+//   clicks the toggle above. The page learns whenever the window becomes too narrow or wide enough.
+// - While the sidebar is hidden, the pointer resting on the toggle lets it peek over the chat, until
+//   the pointer leaves toggle and sidebar. A click on the toggle keeps it.
+// - A click outside of the floating sidebar hides it.
+// The watch ends by itself once the page is gone. Watching the columns a second time changes nothing.
+window.watchChatList = function (columns, dotNetReference) {
+    if (!columns || columns.dataset.chatListWatched)
+        return
+
+    columns.dataset.chatListWatched = 'true'
+
+    // The pointer rests on the toggle for a moment before the sidebar peeks, since it passes the toggle
+    // on its way to the navigation beside it. Leaving toggle and sidebar, it may stray for a moment, as
+    // it does on its way from the toggle into the sidebar, before the sidebar hides:
+    const PEEK_DELAY_MS = 400
+    const LEAVE_DELAY_MS = 300
+
+    let isNarrow = null
+    let peekTimer = null
+    let leaveTimer = null
+
+    // After a click on the toggle, which showed or hid the sidebar for good, the sidebar peeks no more
+    // until the pointer left the toggle. Otherwise, it would come back right after the user hid it:
+    let isPeekHeld = false
+
+    const call = function (method, ...args) {
+        dotNetReference.invokeMethodAsync(method, ...args).catch(() => {})
+    }
+
+    const cancel = function (timer) {
+        if (timer !== null)
+            clearTimeout(timer)
+
+        return null
+    }
+
+    // The least widths of sidebar and chat together, from Chat.razor.css, where both are given in rem:
+    const leastWidth = function () {
+        const style = getComputedStyle(columns)
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize)
+        return (parseFloat(style.getPropertyValue('--chat-list-least-width')) + parseFloat(style.getPropertyValue('--chat-least-width'))) * rem
+    }
+
+    const sidebar = function (classes) {
+        return columns.querySelector(`:scope > .chat-sidebar${classes}`)
+    }
+
+    const isOnToggle = function (element) {
+        return element.closest('.chat-list-toggle') !== null
+    }
+
+    // The menus and dialogs which the sidebar opens lie outside of it, but belong to it:
+    const isOnSidebar = function (element) {
+        return element.closest('.chat-sidebar.is-floating, .mud-popover-open, .mud-overlay, .mud-dialog-container') !== null
+    }
+
+    const resizeObserver = new ResizeObserver(function () {
+        if (!columns.isConnected) {
+            stop()
+            return
+        }
+
+        const narrow = columns.clientWidth < leastWidth()
+        if (narrow === isNarrow)
+            return
+
+        isNarrow = narrow
+        columns.toggleAttribute('data-narrow', narrow)
+        call('SetWindowNarrow', narrow)
+    })
+
+    // Follows the pointer onto an element, or out of the window for null:
+    const pointTo = function (element) {
+        if (element !== null && isOnToggle(element)) {
+            leaveTimer = cancel(leaveTimer)
+            if (peekTimer === null && !isPeekHeld && sidebar('') === null)
+                peekTimer = setTimeout(function () {
+                    peekTimer = null
+                    call('PeekAtList')
+                }, PEEK_DELAY_MS)
+
+            return
+        }
+
+        isPeekHeld = false
+        peekTimer = cancel(peekTimer)
+        if (element !== null && isOnSidebar(element)) {
+            leaveTimer = cancel(leaveTimer)
+            return
+        }
+
+        if (leaveTimer === null && sidebar('.is-peeking') !== null)
+            leaveTimer = setTimeout(function () {
+                leaveTimer = null
+                call('EndListPeek')
+            }, LEAVE_DELAY_MS)
+    }
+
+    const pointerOver = function (event) {
+        if (!columns.isConnected) {
+            stop()
+            return
+        }
+
+        pointTo(event.target instanceof Element ? event.target : null)
+    }
+
+    const pointerOut = function (event) {
+        if (event.relatedTarget === null && columns.isConnected)
+            pointTo(null)
+    }
+
+    const pointerDown = function (event) {
+        if (!columns.isConnected) {
+            stop()
+            return
+        }
+
+        if (!(event.target instanceof Element))
+            return
+
+        if (isOnToggle(event.target)) {
+            peekTimer = cancel(peekTimer)
+            isPeekHeld = true
+            return
+        }
+
+        if (sidebar('.is-floating') === null)
+            return
+
+        // The bar above belongs to the sidebar as well: its toggle shows and hides the sidebar, and its
+        // field searches the sidebar which a click on the toggle showed:
+        if (isOnSidebar(event.target) || event.target.closest('.chat-header-bar') !== null)
+            return
+
+        peekTimer = cancel(peekTimer)
+        leaveTimer = cancel(leaveTimer)
+        call('CloseFloatingList')
+    }
+
+    const stop = function () {
+        resizeObserver.disconnect()
+        document.removeEventListener('pointerover', pointerOver)
+        document.removeEventListener('pointerout', pointerOut)
+        document.removeEventListener('pointerdown', pointerDown, true)
+        peekTimer = cancel(peekTimer)
+        leaveTimer = cancel(leaveTimer)
+    }
+
+    document.addEventListener('pointerover', pointerOver)
+    document.addEventListener('pointerout', pointerOut)
+
+    // Before anything else sees the click, which may keep it to itself:
+    document.addEventListener('pointerdown', pointerDown, true)
+    resizeObserver.observe(columns)
+}
+
 // Finding the words of the chat search in the messages of the open chat, and in the message the user is
 // writing. The CSS Custom Highlight API paints the matches as ranges, without changing the DOM, which
 // Blazor renders and expects unchanged.

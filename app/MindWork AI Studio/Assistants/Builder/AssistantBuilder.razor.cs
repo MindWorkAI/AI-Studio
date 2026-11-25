@@ -611,7 +611,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
         var suggestion = TA("Create a tile that opens a preconfigured chat directly, without an input form of its own.");
         suggestion = string.IsNullOrWhiteSpace(this.launcherWorkspaceName)
-            ? $"{suggestion} {T("The chat opens outside of the workspaces.")}"
+            ? $"{suggestion} {T("The chat opens outside of workspaces.")}"
             : $"{suggestion} {string.Format(T("Workspace: {0}"), this.launcherWorkspaceName.Trim())}";
 
         this.assistantDescription = suggestion;

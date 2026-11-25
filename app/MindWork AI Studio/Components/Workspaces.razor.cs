@@ -1030,7 +1030,7 @@ public partial class Workspaces : MSGComponentBase
     /// <summary>
     /// What the mark of a chat which is never stored tells.
     /// </summary>
-    private string NotStoredText => TA("Not stored: this chat is gone when you close AI Studio or start a new chat here");
+    private string NotStoredText => T("Not stored: this chat is deleted once AI Studio is closed or a new chat is started here");
 
     /// <summary>
     /// The open chat, while it holds messages but was never saved, as the row which stands in for it

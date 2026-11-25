@@ -37,6 +37,7 @@ public partial class Chat : MSGComponentBase
     /// </summary>
     private readonly ChatSaveState chatSaveState = new();
 
+    private ElementReference columnsElement;
     private ElementReference sidebarElement;
     private ElementReference sidebarHandle;
 
@@ -44,6 +45,17 @@ public partial class Chat : MSGComponentBase
     /// Whether the script lets the user drag the handle beside the sidebar shown now.
     /// </summary>
     private bool isSidebarResizeWatched;
+
+    /// <summary>
+    /// Whether the window is too narrow for the list beside the chat, which the script measures, see
+    /// watchChatList in app.js.
+    /// </summary>
+    private bool isWindowNarrow;
+
+    /// <summary>
+    /// Whether the list floats over the chat, and why.
+    /// </summary>
+    private ChatListFloat listFloat = ChatListFloat.NONE;
 
     private DotNetObjectReference<Chat>? dotNetReference;
 
@@ -57,6 +69,28 @@ public partial class Chat : MSGComponentBase
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            this.dotNetReference ??= DotNetObjectReference.Create(this);
+
+            //
+            // Without the script, the list keeps standing beside the chat, as before. An exception from
+            // here would end the whole circuit, though, see below:
+            //
+            try
+            {
+                await this.JsRuntime.InvokeVoidAsync("watchChatList", this.columnsElement, this.dotNetReference);
+            }
+            catch (JSDisconnectedException)
+            {
+                // Nobody is left to see the list.
+            }
+            catch (JSException ex)
+            {
+                this.Logger.LogWarning(ex, "Failed to let the workspace sidebar float over the chat.");
+            }
+        }
+
         //
         // The sidebar and its handle are created anew whenever the sidebar shows up again, and the
         // script then has to watch the new handle:
@@ -95,27 +129,141 @@ public partial class Chat : MSGComponentBase
     
     /// <summary>
     /// Whether the bar offers to show and hide the list: whenever the list has something to show, unless
-    /// the user wants to see it all the time.
+    /// the user wants to see it all the time and the window leaves room for it beside the chat.
     /// </summary>
     private bool IsSidebarToggleShown => this.SettingsManager.ConfigurationData.Workspace.IsChatListShown
-                                         && this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR;
+                                         && (this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR || this.isWindowNarrow);
 
-    private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? AppIcons.HIDE_SIDEBAR : AppIcons.SHOW_SIDEBAR;
+    /// <summary>
+    /// Whether the list stays in sight until the user hides it: beside the chat, or over it after a click
+    /// on the toggle. A list which only peeks does not, and a click on the toggle keeps it.
+    /// </summary>
+    private bool IsSidebarKept => this.IsSidebarDocked || (this.IsSidebarFloating && this.listFloat is ChatListFloat.OPEN);
 
-    private string WorkspaceSidebarToggleTooltip => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? TA("Hide your workspaces") : TA("Show your workspaces");
+    private string WorkspaceSidebarToggleIcon => this.IsSidebarKept ? AppIcons.HIDE_SIDEBAR : AppIcons.SHOW_SIDEBAR;
+
+    private string WorkspaceSidebarToggleTooltip => this.IsSidebarKept ? TA("Hide your workspaces") : TA("Show your workspaces");
 
     /// <summary>
     /// Whether the sidebar shows beside the chat. It shows whenever it has something to list, the stored
-    /// chats or the workspaces, and the user did not hide it.
+    /// chats or the workspaces, the user did not hide it, and the window leaves room for it beside the chat.
     /// </summary>
-    private bool IsSidebarShown => this.SettingsManager.ConfigurationData.Workspace.IsChatListShown
-                                   && ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
-                                   || this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
+    private bool IsSidebarDocked => !this.isWindowNarrow
+                                    && this.SettingsManager.ConfigurationData.Workspace.IsChatListShown
+                                    && ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
+                                    || this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.SIDEBAR_ALWAYS_VISIBLE);
+
+    /// <summary>
+    /// Whether the list floats over the chat. It does so only where the toggle could show it as well.
+    /// </summary>
+    private bool IsSidebarFloating => this.listFloat is not ChatListFloat.NONE && this.IsSidebarToggleShown && !this.IsSidebarDocked;
+
+    /// <summary>
+    /// Whether the list shows, beside the chat or over it.
+    /// </summary>
+    private bool IsSidebarShown => this.IsSidebarDocked || this.IsSidebarFloating;
+
+    private string SidebarClasses => !this.IsSidebarFloating
+        ? "chat-sidebar"
+        : this.listFloat is ChatListFloat.PEEK
+            ? "chat-sidebar is-floating is-peeking"
+            : "chat-sidebar is-floating";
 
     private async Task ToggleWorkspaceSidebar()
     {
+        //
+        // In a window too narrow for the list beside the chat, the toggle shows the list over the chat
+        // and hides it again. What the user chose for a wider window stays as it is:
+        //
+        if (this.isWindowNarrow)
+        {
+            this.listFloat = this.listFloat is ChatListFloat.OPEN ? ChatListFloat.NONE : ChatListFloat.OPEN;
+            return;
+        }
+
+        //
+        // A click while the list peeks keeps it: the list moves beside the chat, as the same element,
+        // which therefore keeps what the user sees in it:
+        //
+        this.listFloat = ChatListFloat.NONE;
         this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible = !this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible;
         await this.SettingsManager.StoreSettings();
+    }
+
+    /// <summary>
+    /// Learns whether the window is too narrow for the list beside the chat, whenever that changes.
+    /// </summary>
+    /// <remarks>
+    /// A list which floats over the chat then closes. In a wider window, the list stands beside the chat
+    /// again as the user chose, and in a narrower one, it waits for the toggle.
+    /// </remarks>
+    /// <param name="isNarrow">Whether the window is too narrow.</param>
+    [JSInvokable]
+    public void SetWindowNarrow(bool isNarrow)
+    {
+        if (this.isWindowNarrow == isNarrow)
+            return;
+
+        this.isWindowNarrow = isNarrow;
+        this.listFloat = ChatListFloat.NONE;
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Lets the hidden list peek over the chat, once the pointer rested on the toggle for a moment.
+    /// </summary>
+    [JSInvokable]
+    public void PeekAtList()
+    {
+        if (!this.IsSidebarToggleShown || this.IsSidebarShown)
+            return;
+
+        this.listFloat = ChatListFloat.PEEK;
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Hides the list which peeks over the chat, once the pointer left it and the toggle. A list which the
+    /// user kept by a click stays.
+    /// </summary>
+    [JSInvokable]
+    public void EndListPeek()
+    {
+        if (this.listFloat is not ChatListFloat.PEEK)
+            return;
+
+        this.listFloat = ChatListFloat.NONE;
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Hides the list which floats over the chat, once the user clicked outside of it.
+    /// </summary>
+    [JSInvokable]
+    public void CloseFloatingList()
+    {
+        if (this.listFloat is ChatListFloat.NONE)
+            return;
+
+        this.listFloat = ChatListFloat.NONE;
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Takes the chat the list opened, or null once the list closed the open chat, such as by deleting it.
+    /// </summary>
+    /// <remarks>
+    /// A list which a click showed over the chat has done its job once the user opened another chat, and
+    /// makes way for it. A list which only peeks stays until the pointer leaves it, so the user may look
+    /// at one chat after another.
+    /// </remarks>
+    /// <param name="chat">The chat which is open now.</param>
+    private void TakeChatFromList(ChatThread? chat)
+    {
+        var isAnotherChat = chat is not null && chat.ChatId != this.chatThread?.ChatId;
+        this.chatThread = chat;
+        if (isAnotherChat && this.listFloat is ChatListFloat.OPEN)
+            this.listFloat = ChatListFloat.NONE;
     }
 
     /// <summary>
@@ -145,7 +293,8 @@ public partial class Chat : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// The page reads its reference to the chat component only now, when the user clicked, since the
-    /// reference arrives only once the chat component rendered.
+    /// reference arrives only once the chat component rendered. A list which a click showed over the
+    /// chat makes way for the new chat, as it does for a chat the user opened in it.
     /// </remarks>
     /// <param name="workspaceId">The ID of the workspace, or Guid.Empty for a chat outside of workspaces.</param>
     private async Task StartNewChatInPlace(Guid workspaceId)
@@ -154,6 +303,8 @@ public partial class Chat : MSGComponentBase
             return;
 
         await this.chatComponent.StartNewChatInPlaceAsync(workspaceId);
+        if (this.listFloat is ChatListFloat.OPEN)
+            this.listFloat = ChatListFloat.NONE;
     }
 
     /// <summary>
@@ -187,9 +338,13 @@ public partial class Chat : MSGComponentBase
         {
             //
             // Whether chats are stored and whether workspaces are used decide whether the sidebar shows,
-            // and the user may change both in the settings window while the chat page lies behind it:
+            // and the user may change both in the settings window while the chat page lies behind it.
+            // A list which floated over the chat and now stands beside it floats no more:
             //
             case Event.CONFIGURATION_CHANGED:
+                if (this.IsSidebarDocked)
+                    this.listFloat = ChatListFloat.NONE;
+
                 this.StateHasChanged();
                 break;
         }

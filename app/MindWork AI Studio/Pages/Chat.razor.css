@@ -22,7 +22,8 @@
  * The column may get narrower than what the chat holds: otherwise it would never be narrower than the
  * widest line in the chat, such as a long line of code, and push the list out of the window, while
  * the find row scrolled the columns sideways to reach a match. The chat keeps its own least width,
- * see ChatComponent, so a window too narrow for both cuts the chat off as before.
+ * see ChatComponent: a window too narrow for both shows the list over the chat, see below, and only
+ * one too narrow for the chat alone cuts it off.
  */
 .chat-column {
     display: flex;
@@ -34,8 +35,15 @@
 /*
  * The workspace sidebar and the chat side by side. The columns take the height left below the bar
  * of the page.
+ *
+ * The least widths of both: the sidebar's, see below, and the 36em the chat needs, see ChatComponent,
+ * plus the gap of 1rem between both. A window narrower than both together shows the sidebar over the
+ * chat instead, see watchChatList in app.js, which reads both widths in rem.
  */
 .chat-columns {
+    --chat-list-least-width: 17.5rem;
+    --chat-least-width: 37rem;
+    position: relative;
     display: flex;
     flex-grow: 1;
     min-height: 0;
@@ -44,9 +52,7 @@
 
 /*
  * The sidebar keeps the width the user dragged it to, which the page passes as --sidebar-width, but
- * within limits: never wider than 32rem, and always leaving the chat the 36em it needs at least, see
- * ChatComponent, plus the gap of 1rem between both. On a window too narrow for both, the sidebar keeps
- * its least width.
+ * within limits: never wider than 32rem, and always leaving the chat its least width.
  *
  * The least width fits the titles of the sections in one line. The longest we ship is the German
  * "Selbstlöschende Chats": 185 pixels in Roboto, plus 16 of padding around the text, 16 around the
@@ -57,16 +63,59 @@
 .chat-sidebar {
     position: relative;
     display: flex;
-    flex: 0 0 clamp(17.5rem, var(--sidebar-width, 18rem), min(32rem, 100% - 37rem));
+    flex: 0 0 clamp(var(--chat-list-least-width), var(--sidebar-width, 18rem), min(32rem, 100% - var(--chat-least-width)));
     min-width: 0;
     margin-right: 1rem;
+}
+
+/*
+ * As soon as the script measured a window too narrow for the sidebar beside the chat, the sidebar goes,
+ * before the page renders without it.
+ */
+.chat-columns[data-narrow] > .chat-sidebar:not(.is-floating) {
+    display: none;
+}
+
+/*
+ * The sidebar floats over the chat in a window too narrow for both side by side, and while it peeks,
+ * see watchChatList in app.js. It keeps the width the user gave it, as far as the window allows, and
+ * sets itself apart from the chat by the background of the page and a shadow. It slides in a little
+ * when it shows up. The menus and dialogs it opens lie above it.
+ */
+.chat-sidebar.is-floating {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(clamp(var(--chat-list-least-width), var(--sidebar-width, 18rem), 32rem), 100%);
+    z-index: var(--mud-zindex-drawer);
+    animation: chat-sidebar-float-in 120ms ease-out;
+}
+
+.chat-sidebar.is-floating ::deep .chat-sidebar-frame {
+    background-color: var(--mud-palette-background);
+    box-shadow: var(--mud-elevation-8);
+}
+
+@keyframes chat-sidebar-float-in {
+    from {
+        opacity: 0;
+        transform: translateX(-0.5rem);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-sidebar.is-floating {
+        animation: none;
+    }
 }
 
 /*
  * The right border of the sidebar is its handle: on the border, the cursor tells that it resizes, and
  * dragging moves the border. The handle lies over the border and reaches mostly into the gap, so that
  * it leaves the scrollbar of the list alone. It ends where the border ends, above the bottom margin of
- * the panel.
+ * the panel. Floating over the chat, the sidebar has no handle: its width is the one it has beside the
+ * chat.
  */
 .chat-sidebar-handle {
     position: absolute;
@@ -77,4 +126,8 @@
     z-index: 1;
     cursor: col-resize;
     touch-action: none;
+}
+
+.chat-sidebar.is-floating > .chat-sidebar-handle {
+    display: none;
 }
