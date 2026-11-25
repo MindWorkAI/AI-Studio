@@ -9801,6 +9801,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268"] = "Datei in de
 -- Open the file in the program your system uses for it
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268::INFORMAL"] = "Datei in dem Programm öffnen, das dein System dafür verwendet"
 
+-- Open the file. As a Flatpak, AI Studio cannot open it at page {0}, where the passage is.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T755778778"] = "Öffnen Sie die Datei. Als Flatpak kann AI Studio sie nicht auf der Seite {0} öffnen, auf der sich die Passage befindet."
+
 -- Exclusion help and examples
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T1309128010"] = "Hilfe und Beispiele zu Ausschlussregeln"
 
@@ -24441,14 +24444,26 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCECODELANGUAGES::T1041509726"] = "Text"
 -- Could not open the file location.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1118835751"] = "Der Speicherort der Datei konnte nicht geöffnet werden."
 
+-- As a Flatpak, AI Studio cannot open the document at its page: the sandbox of the Flatpak lets no page through to the program which shows the document. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1426315148"] = "Als Flatpak kann AI Studio das Dokument nicht direkt auf der betreffenden Seite öffnen: Die Flatpak-Sandbox übergibt die Seitenzahl nicht an das Programm, das das Dokument anzeigt. Die Passage befindet sich auf Seite {0}."
+
 -- Could not open the file location: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1455637941"] = "Der Speicherort der Datei konnte nicht geöffnet werden: {0}"
+
+-- AI Studio could not open the document at its page: the program which shows the document could not be started with the page, so it opened without it. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3168067729"] = "AI Studio konnte das Dokument nicht auf der entsprechenden Seite öffnen: Das Programm zur Anzeige des Dokuments konnte nicht mit der Seitenzahl gestartet werden, daher wurde das Dokument ohne Seitenangabe geöffnet. Die betreffende Stelle befindet sich auf Seite {0}."
 
 -- Unknown error
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3461425987"] = "Unbekannter Fehler"
 
 -- Could not open the document.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3570758363"] = "Das Dokument konnte nicht geöffnet werden."
+
+-- AI Studio cannot open the document at its page: the program your system shows it with does not allow choosing a page. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T932584602"] = "AI Studio kann das Dokument nicht auf der angegebenen Seite öffnen: Das Programm, das Ihr System zum Öffnen des Dokuments verwendet, unterstützt keine Seitenauswahl. Die Stelle befindet sich auf Seite {0}."
+
+-- AI Studio cannot open the document at its page: the program your system shows it with does not allow choosing a page. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T932584602::INFORMAL"] = "AI Studio kann das Dokument nicht auf der angegebenen Seite öffnen: Das Programm, das dein System zum Öffnen des Dokuments verwendet, unterstützt keine Seitenauswahl. Die Stelle befindet sich auf Seite {0}."
 
 -- Could not open the document: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T945417289"] = "Das Dokument konnte nicht geöffnet werden: {0}"
