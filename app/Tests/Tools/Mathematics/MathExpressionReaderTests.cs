@@ -39,6 +39,35 @@ public sealed class MathExpressionReaderTests
     }
 
     [Test]
+    public void ReadsTheFunctionsTheToolsReturn()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(MathExpressionReader.Read("lambertw(0, 2)", "expression"), Is.TypeOf<Entity.LambertWf>());
+            Assert.That(MathExpressionReader.Read("productlog(2)", "expression"), Is.TypeOf<Entity.LambertWf>());
+            Assert.That(MathExpressionReader.Read("gamma(2, 1)", "expression"), Is.TypeOf<Entity.IncompleteGammaf>());
+            Assert.That(MathExpressionReader.Read("polygamma(1, 1)", "expression"), Is.TypeOf<Entity.Polygammaf>());
+            Assert.That(MathExpressionReader.Read("digamma(1)", "expression"), Is.TypeOf<Entity.Polygammaf>());
+            Assert.That(MathExpressionReader.Read("real + zeta_2", "expression"), Is.TypeOf<Entity.Sumf>(), "A variable may carry the name of a function the tools do not support.");
+        }
+    }
+
+    [Test]
+    public void RefusesTheFunctionsTheToolsDoNotSupport()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            foreach (var name in MathExpressionReader.UNSUPPORTED_FUNCTIONS)
+                Assert.That(Refusal($"1 + {name}(2)"), Is.EqualTo($"Argument 'expression' uses the function '{name}', which the tool does not support."));
+
+            Assert.That(Refusal("det([[1, 2], [3, 4]])", "lower_bound"), Is.EqualTo("Argument 'lower_bound' uses the function 'det', which the tool does not support."), "AngouriMath computes the determinant of a matrix written out while it parses.");
+            Assert.That(Refusal("n!!"), Is.EqualTo("Argument 'expression' contains 'n!!', which the tool does not support."));
+            Assert.That(Refusal("A[1, 2] + 1"), Is.EqualTo("Argument 'expression' contains 'A[1, 2]', which the tool does not support."));
+            Assert.That(Refusal("product(k, k in { 1, 2, 3 })"), Is.EqualTo("Argument 'expression' contains 'product(k, k in { 1, 2, 3 })', which the tool does not support."));
+        }
+    }
+
+    [Test]
     public void NamesTheMissingOperator()
     {
         using (Assert.EnterMultipleScope())
