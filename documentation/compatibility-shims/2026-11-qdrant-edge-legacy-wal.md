@@ -2,7 +2,7 @@
 
 - Status: Active
 - Introduced: 2026-11-24
-- Remove after: when a qdrant-edge release skips the operations of the WAL which its segments already persisted when it loads a store
+- Remove after: when a qdrant-edge release skips the operations of the WAL which its segments already persisted when it loads a store, see [qdrant/qdrant#11732](https://github.com/qdrant/qdrant/issues/11732)
 - Code references:
   - `runtime/src/qdrant_edge_database.rs` (`acknowledge_legacy_wal`, `WAL_FIRST_INDEX_FILE`, `WAL_FIRST_INDEX_FILE_TEMP`)
 
@@ -10,7 +10,7 @@
 
 Up to qdrant-edge 0.8.0, Qdrant Edge wrote every update of a vector store to its write-ahead log (WAL), but never acknowledged the WAL. Since 0.9.0, loading a store applies every operation of the WAL again which is not marked as acknowledged. The first load of a store written by an older version of AI Studio therefore applies its whole WAL once more.
 
-That WAL holds thousands of operations. Each deletion of a document in there reads and parses every payload of the store, because the fields it filters on have no payload index. For a real store of 317 MB with 20,316 operations in its WAL, the first load had not finished after more than 12 minutes. Meanwhile, every request to the vector database waits, and when the user quits AI Studio before the load is done, the next start begins again.
+That WAL holds thousands of operations. Each deletion of a document in there reads and parses every payload of the store, because the fields it filters on have no payload index. For a real store of 317 MB with 20,316 operations in its WAL, the first load had not finished after 39 minutes. Meanwhile, every request to the vector database waits, and when the user quits AI Studio before the load is done, the next start begins again.
 
 ## Compatibility Behavior
 

@@ -1244,7 +1244,8 @@ fn remove_partial_store(path: &Path) -> String {
 }
 
 // Temporary compatibility shim until a qdrant-edge release skips already persisted operations when
-// it loads a store: documentation/compatibility-shims/2026-11-qdrant-edge-legacy-wal.md
+// it loads a store, see https://github.com/qdrant/qdrant/issues/11732:
+// documentation/compatibility-shims/2026-11-qdrant-edge-legacy-wal.md
 //
 // Up to qdrant-edge 0.8, Qdrant Edge never acknowledged its WAL. Since 0.9, loading a store applies
 // every operation of the WAL again which is not marked as acknowledged, so the first load of a store
