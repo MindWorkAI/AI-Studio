@@ -101,14 +101,42 @@ pub struct OpenPathResponse {
 pub struct OpenDocumentResponse {
     success: bool,
 
-    /// Whether the document was handed to a program together with the page it should show.
+    /// What became of the page the document was to be shown at.
     ///
-    /// False means the document opens on its first page: no page was asked for, the system uses a
-    /// program we cannot tell a page, or the attempt to start that program failed. None of these
-    /// is an error — the document opens either way — so the app only notes it in its log.
-    page_applied: bool,
+    /// A page which did not arrive is no error — the document opens either way — but the app tells
+    /// the user why, so that they know where to look and that AI Studio could not do otherwise.
+    page_outcome: PageOutcome,
 
     issue: String,
+}
+
+/// What became of the page a document was to be shown at.
+///
+/// The app reads these names as `DocumentPageOutcome`, and tells the user from them why a document
+/// opened without its page.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub enum PageOutcome {
+    /// The document was handed to its program together with the page.
+    Applied,
+
+    /// No page was asked for: a slide and a spreadsheet row are no pages, and neither is a passage
+    /// whose page the index never learned.
+    NotRequested,
+
+    /// AI Studio runs as a Flatpak. Its sandbox lets it start no program itself, and the desktop
+    /// portal, which opens the document instead, knows no pages.
+    Sandboxed,
+
+    /// The program which shows the document cannot be told a page, or the document is no PDF,
+    /// the only kind of document a page is ever sent to.
+    ProgramTakesNoPage,
+
+    /// The program takes a page, but it could not be started with one, so the document opened
+    /// without it.
+    ProgramFailed,
+
+    /// The document did not open at all; the issue of the response says why.
+    DocumentNotOpened,
 }
 
 #[derive(Clone, Deserialize)]
@@ -410,7 +438,8 @@ async fn open_file_manager_target(requested_path: &Path) -> Result<(), String> {
 /// Opens a document in the program the system uses for it, on the given page where that is possible.
 ///
 /// The page is best effort and never decides whether this succeeded: a viewer which cannot be told
-/// a page still shows the document, which is what the user asked for by clicking a source.
+/// a page still shows the document, which is what the user asked for by clicking a source. The
+/// response says what became of the page, so the app can tell the user why it did not arrive.
 pub async fn open_document(
     payload: Json<OpenDocumentOptions>,
 ) -> Json<OpenDocumentResponse> {
@@ -419,7 +448,7 @@ pub async fn open_document(
         error!(Source = "Tauri"; "Refused to open a document: {issue}");
         return Json(OpenDocumentResponse {
             success: false,
-            page_applied: false,
+            page_outcome: PageOutcome::DocumentNotOpened,
             issue,
         });
     }
@@ -429,21 +458,26 @@ pub async fn open_document(
     // pages, and neither is a passage whose page the index never learned.
     //
     let page = payload.page.filter(|page| *page > 0);
-    if let Some(page) = page && try_open_at_page(&requested_path, page).await {
+    let page_outcome = match page {
+        Some(page) => try_open_at_page(&requested_path, page).await,
+        None => PageOutcome::NotRequested,
+    };
+
+    if let Some(page) = page && page_outcome == PageOutcome::Applied {
         info!("Opened document at page {page}: {requested_path:?}");
         return Json(OpenDocumentResponse {
             success: true,
-            page_applied: true,
+            page_outcome,
             issue: String::new(),
         });
     }
 
     match tauri_plugin_opener::open_path(&requested_path, None::<&str>) {
         Ok(()) => {
-            info!("Opened document: {requested_path:?}");
+            info!("Opened document without a page ({page_outcome:?}): {requested_path:?}");
             Json(OpenDocumentResponse {
                 success: true,
-                page_applied: false,
+                page_outcome,
                 issue: String::new(),
             })
         },
@@ -453,7 +487,7 @@ pub async fn open_document(
             error!(Source = "Tauri"; "{issue}");
             Json(OpenDocumentResponse {
                 success: false,
-                page_applied: false,
+                page_outcome: PageOutcome::DocumentNotOpened,
                 issue,
             })
         },
@@ -514,28 +548,42 @@ fn refuse_document(requested_path: &Path) -> Option<String> {
     }
 }
 
-/// Tries to show the document on the given page, and says whether it did.
+/// Tries to show the document on the given page, and says what became of the page.
 ///
 /// On macOS, `open` drops the fragment of a URL before the program it starts ever sees it, with and
 /// without `-a`, so neither a browser nor Preview can be told a page from the command line. Only a
-/// program which takes the page as an argument of its own gets there; with any other, the document
-/// opens on its first page, and the source names the page for the reader.
-async fn try_open_at_page(path: &Path, page: u32) -> bool {
-    let DocumentOpenPlan::WithPage { program, arguments } = resolve_document_open_plan(path, page).await else {
-        return false;
+/// program which takes the page as an argument of its own gets there; with any other, the caller
+/// opens the document plainly, and the app tells the user the page and why it did not arrive.
+async fn try_open_at_page(path: &Path, page: u32) -> PageOutcome {
+    let plan = resolve_document_open_plan(path, page).await;
+    let DocumentOpenPlan::WithPage { program, arguments } = &plan else {
+        return page_outcome_of(&plan, false);
     };
 
-    match start_page_aware_viewer(&program, &arguments).await {
+    let started = match start_page_aware_viewer(program, arguments).await {
         Ok(()) => true,
 
         //
-        // Failing to start the viewer ourselves is not something the user has to hear about: the
-        // caller opens the document plainly afterwards, only without the page.
+        // The caller opens the document plainly afterwards, only without the page, and the app
+        // tells the user that the program could not be started with it.
         //
         Err(issue) => {
             warn!(Source = "Tauri"; "Could not open '{}' at page {page}, opening it without a page instead: {issue}", path.to_string_lossy());
             false
         },
+    };
+
+    page_outcome_of(&plan, started)
+}
+
+/// What became of the page, from how the document was to be opened and whether a program which
+/// takes the page was started with it.
+fn page_outcome_of(plan: &DocumentOpenPlan, started: bool) -> PageOutcome {
+    match plan {
+        DocumentOpenPlan::Plain => PageOutcome::ProgramTakesNoPage,
+        DocumentOpenPlan::Sandboxed => PageOutcome::Sandboxed,
+        DocumentOpenPlan::WithPage { .. } if started => PageOutcome::Applied,
+        DocumentOpenPlan::WithPage { .. } => PageOutcome::ProgramFailed,
     }
 }
 
@@ -582,8 +630,15 @@ enum PageArgument {
 /// What it takes to show a document on a page.
 #[derive(Debug, PartialEq, Eq)]
 enum DocumentOpenPlan {
-    /// Hand the file to the system and let it decide. The document opens on its first page.
+    /// Hand the file to the system and let it decide. Its program cannot be told a page, or the
+    /// document is no PDF, so it opens without one.
     Plain,
+
+    /// Hand the file to the system, because AI Studio runs as a Flatpak. Its sandbox has its own list
+    /// of registered programs rather than the desktop's, and even the right answer would name a
+    /// program which is not in the sandbox to be started. The desktop portal opens the document
+    /// instead, and it knows no pages.
+    Sandboxed,
 
     /// Start this program ourselves, because it takes the page as an argument.
     WithPage { program: String, arguments: Vec<String> },
@@ -676,6 +731,10 @@ async fn start_page_aware_viewer(program: &str, arguments: &[String]) -> Result<
 async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan {
     if !is_pdf_document(path) {
         return DocumentOpenPlan::Plain;
+    }
+
+    if crate::environment::is_flatpak() {
+        return DocumentOpenPlan::Sandboxed;
     }
 
     #[cfg(windows)]
@@ -860,16 +919,9 @@ fn windows_page_argument(prog_id: &str) -> Option<PageArgument> {
 
 /// Reads which program the desktop opens PDFs with.
 ///
-/// Inside a Flatpak there is nothing to read: the sandbox has its own list of registered programs
-/// rather than the desktop's, and even the right answer would name a program which is not in the
-/// sandbox to be started. The document is handed to the desktop portal instead, which opens it on
-/// its first page.
+/// Never asked inside a Flatpak, which has nothing to read, see DocumentOpenPlan::Sandboxed.
 #[cfg(target_os = "linux")]
 async fn linux_default_pdf_handler() -> Option<String> {
-    if crate::environment::is_flatpak() {
-        return None;
-    }
-
     let output = tokio::process::Command::new("xdg-mime")
         .args(["query", "default", "application/pdf"])
         .output()
@@ -1454,6 +1506,59 @@ mod tests {
             vec![String::from("--page"), String::from("12"), String::from("/docs/handbook.pdf")],
             "PdfCraft counts from one, so page twelve stays twelve.",
         );
+    }
+
+    /// The app tells the user why a page did not arrive, so every way of opening has to name its reason.
+    #[test]
+    fn every_way_of_opening_names_what_became_of_the_page() {
+        let with_page = DocumentOpenPlan::WithPage {
+            program: String::from("pdfcraft"),
+            arguments: vec![String::from("--page"), String::from("12"), String::from("/docs/handbook.pdf")],
+        };
+
+        assert_eq!(page_outcome_of(&with_page, true), PageOutcome::Applied);
+        assert_eq!(page_outcome_of(&with_page, false), PageOutcome::ProgramFailed, "A program which takes the page but did not start leaves the document without it.");
+        assert_eq!(page_outcome_of(&DocumentOpenPlan::Plain, false), PageOutcome::ProgramTakesNoPage);
+        assert_eq!(page_outcome_of(&DocumentOpenPlan::Sandboxed, false), PageOutcome::Sandboxed, "Inside a Flatpak, the sandbox is the reason, not the program.");
+    }
+
+    #[tokio::test]
+    async fn a_document_which_is_no_pdf_gets_no_page() {
+        let plan = resolve_document_open_plan(Path::new("/docs/handbook.docx"), 12).await;
+        assert_eq!(plan, DocumentOpenPlan::Plain, "Only PDFs are ever sent to a page, also inside a Flatpak.");
+    }
+
+    /// The app reads these names as DocumentPageOutcome; renaming one breaks it without any compiler noticing.
+    #[test]
+    fn the_app_reads_the_page_outcome_by_these_names() {
+        let response = OpenDocumentResponse {
+            success: true,
+            page_outcome: PageOutcome::ProgramTakesNoPage,
+            issue: String::new(),
+        };
+
+        assert_eq!(
+            serde_json::to_string(&response).unwrap(),
+            r#"{"success":true,"page_outcome":"ProgramTakesNoPage","issue":""}"#,
+        );
+
+        let names = [
+            PageOutcome::Applied,
+            PageOutcome::NotRequested,
+            PageOutcome::Sandboxed,
+            PageOutcome::ProgramTakesNoPage,
+            PageOutcome::ProgramFailed,
+            PageOutcome::DocumentNotOpened,
+        ].map(|outcome| serde_json::to_string(&outcome).unwrap());
+
+        assert_eq!(names, [
+            r#""Applied""#,
+            r#""NotRequested""#,
+            r#""Sandboxed""#,
+            r#""ProgramTakesNoPage""#,
+            r#""ProgramFailed""#,
+            r#""DocumentNotOpened""#,
+        ]);
     }
 
     #[test]
