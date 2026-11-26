@@ -227,6 +227,10 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             return false;
         }
 
+        // Compatibility shim, remove after 2027-05-26, see FormerSettingNames. Everything below reads the
+        // settings under their current names only:
+        settingsTable = FormerSettingNames.Resolve(settingsTable, this.Name, !dryRun);
+
         if (!TryValidateMinimumProviderConfidenceConfiguration(settingsTable, out message))
             return false;
 

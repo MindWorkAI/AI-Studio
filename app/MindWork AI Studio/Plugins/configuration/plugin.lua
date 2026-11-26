@@ -1616,6 +1616,12 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 
+-- Before v26.11.2, seven of the following settings had "Agent" in their names, such as
+-- "DataAgentDataSourceSelection.PreselectedAgentProvider" for "DataDataSourceSelection.PreselectedProvider".
+-- AI Studio reads these former names until May 2027 and names the new one in its log. Devices with
+-- v26.11.1 read only the former names: set both until every device runs v26.11.2 or newer. When a
+-- plugin sets both, v26.11.2 and newer take the new name.
+
 -- Configure the text content cleaner, an AI task.
 -- It removes navigation, advertisements, and other clutter from web pages which an assistant reads.
 -- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
