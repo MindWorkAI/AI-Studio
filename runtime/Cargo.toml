@@ -30,7 +30,7 @@ tokio = { version = "1.54.1", features = ["rt", "rt-multi-thread", "macros", "pr
 tokio-stream = { version = "0.1.19", features = ["sync"] }
 futures = "0.3.34"
 async-stream = "0.3.6"
-flexi_logger = "0.31.10"
+flexi_logger = "0.32.0"
 chrono = "0.4.45"
 dirs = "7.0.0"
 log = { version = "0.4.35", features = ["kv"] }
