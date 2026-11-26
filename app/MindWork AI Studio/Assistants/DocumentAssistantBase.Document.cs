@@ -54,10 +54,10 @@ public abstract partial class DocumentAssistantBase<TSettings>
     private string? ValidateDocument(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            return this.TB("Please choose a document.");
+            return this.TA("Please choose a document.");
 
         if (!FileTypes.IsAllowedPath(path, FileTypes.EDITABLE_DOCUMENT))
-            return this.TB("This kind of file is not supported. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file.");
+            return this.TA("This kind of file is not supported. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file.");
 
         if (DocumentSegmentFormats.For(path) is null)
             return this.TB("Documents of this kind are not supported yet.");
@@ -92,7 +92,7 @@ public abstract partial class DocumentAssistantBase<TSettings>
         catch (Exception e) when (e is not OperationCanceledException)
         {
             this.Logger.LogError(e, "The assistant '{AssistantTitle}' could not read the document '{DocumentPath}'.", this.Title, sourcePath);
-            await this.MessageBus.SendError(new(AppIcons.DOCUMENT, this.TB("The document could not be read. Please check that it is a valid file and that no other program locks it.")));
+            await this.MessageBus.SendError(new(AppIcons.DOCUMENT, this.TA("The document could not be read. Please check that it is a valid file and that no other program locks it.")));
             return;
         }
 
@@ -161,7 +161,7 @@ public abstract partial class DocumentAssistantBase<TSettings>
         var targetPath = response.SaveFilePath;
         if (IsSameFile(targetPath, document.SourcePath))
         {
-            await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, this.TB("Please choose another file than the original document, which stays as it is.")));
+            await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, this.TA("Please choose another file than the original document, which stays as it is.")));
             return;
         }
 
@@ -176,7 +176,7 @@ public abstract partial class DocumentAssistantBase<TSettings>
             if (result.Outcome is SegmentWriteOutcome.SOURCE_CHANGED)
             {
                 this.Logger.LogWarning("The document '{DocumentPath}' changed since the assistant '{AssistantTitle}' worked on it, so the new document was not saved.", document.SourcePath, this.Title);
-                await this.MessageBus.SendError(new(AppIcons.DOCUMENT, this.TB("The original document has changed in the meantime. Please start again.")));
+                await this.MessageBus.SendError(new(AppIcons.DOCUMENT, this.TA("The original document has changed in the meantime. Please start again.")));
                 return;
             }
 
@@ -189,7 +189,7 @@ public abstract partial class DocumentAssistantBase<TSettings>
         catch (Exception e)
         {
             this.Logger.LogError(e, "The assistant '{AssistantTitle}' could not save the new document '{TargetPath}'.", this.Title, targetPath);
-            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, this.TB("The new document could not be saved. Please check that the original document can be read and that the target file is not open in another program.")));
+            await this.MessageBus.SendError(new(AppIcons.SAVE_FAILED, this.TA("The new document could not be saved. Please check that the original document can be read and that the target file is not open in another program.")));
         }
         finally
         {

@@ -80,8 +80,8 @@ public partial class AssistantGrammarSpelling : DocumentAssistantBase<SettingsDi
 
     protected override IReadOnlyList<AssistantModeOption<AssistantContentMode>> ModeOptions =>
     [
-        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Check document"), T("Check the spelling and grammar of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
-        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Check text"), T("Check the spelling and grammar of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked.")),
+        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Check document"), TA("Check the spelling and grammar of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
+        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Check text"), TA("Check the spelling and grammar of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked.")),
     ];
 
     protected override string SwitchTooltip(AssistantContentMode target) => target is AssistantContentMode.DOCUMENT ? T("Switch to checking a document") : T("Switch to checking a text");

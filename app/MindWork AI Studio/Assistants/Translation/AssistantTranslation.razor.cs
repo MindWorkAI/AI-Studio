@@ -78,8 +78,8 @@ public partial class AssistantTranslation : DocumentAssistantBase<SettingsDialog
 
     protected override IReadOnlyList<AssistantModeOption<AssistantContentMode>> ModeOptions =>
     [
-        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Translate document"), T("Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
-        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Translate text"), T("Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here.")),
+        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Translate document"), TA("Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
+        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Translate text"), TA("Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here.")),
     ];
 
     protected override string SwitchTooltip(AssistantContentMode target) => target is AssistantContentMode.DOCUMENT ? T("Switch to document translation") : T("Switch to text translation");

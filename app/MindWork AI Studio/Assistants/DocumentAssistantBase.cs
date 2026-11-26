@@ -43,6 +43,8 @@ public abstract partial class DocumentAssistantBase<TSettings> : AssistantBaseCo
 
     private string TB(string fallbackEN) => this.T(fallbackEN, typeof(DocumentAssistantBase<>).Namespace, nameof(DocumentAssistantBase<>));
 
+    private new string TA(string fallbackEN) => this.TA(fallbackEN, typeof(DocumentAssistantBase<>).Namespace, nameof(DocumentAssistantBase<>));
+
     #region What the assistant brings
 
     /// <summary>

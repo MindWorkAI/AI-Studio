@@ -199,8 +199,9 @@ assistant brings only its prompts, the texts which name what it does, and its fi
 - **Overrides call the base.** `ResetForm`, `CaptureCustomAssistantSessionState`, and
   `RestoreCustomAssistantSessionState` of such an assistant call the base, which keeps the mode and the document.
   A text sent to it goes into `ApplyTextLaunchPayloadToText`, after the base switched to the text.
-- **Texts of the base use `TB()`.** `T()` takes the key from the type at runtime, which is the derived assistant,
-  while the I18N collector files the text under the base.
+- **Texts of the base use `TB()`, or `TA()` when they address the reader.** `T()` takes the key from the type at
+  runtime, which is the derived assistant, while the I18N collector files the text under the base. The base
+  therefore declares its own `TA()`, as `AssistantBase` does.
 
 **Area guide:** `app/MindWork AI Studio/Tools/DocumentSegments/AGENTS.md`, with how such a document comes
 about and the rules which are easy to break.

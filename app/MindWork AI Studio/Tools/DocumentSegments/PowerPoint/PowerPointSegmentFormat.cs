@@ -16,7 +16,7 @@ namespace AIStudio.Tools.DocumentSegments.PowerPoint;
 /// </remarks>
 public sealed class PowerPointSegmentFormat : IDocumentSegmentFormat
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PowerPointSegmentFormat).Namespace, nameof(PowerPointSegmentFormat));
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(PowerPointSegmentFormat).Namespace, nameof(PowerPointSegmentFormat));
 
     /// <summary>
     /// The folder below the temporary folder of the system, where the documents come about.
@@ -27,7 +27,7 @@ public sealed class PowerPointSegmentFormat : IDocumentSegmentFormat
     public FileTypeFilter FileType => FileTypes.POWER_POINT_PRESENTATION;
 
     /// <inheritdoc />
-    public string LimitsNotice => TB("Charts, SmartArt, the alternative texts of pictures, the properties of the presentation, such as its title, and the masters and layouts of the slides stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check the text boxes on your slides.");
+    public string LimitsNotice => TA("Charts, SmartArt, the alternative texts of pictures, the properties of the presentation, such as its title, and the masters and layouts of the slides stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check the text boxes on your slides.");
 
     /// <inheritdoc />
     public Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token) => Task.Run<IReadOnlyList<DocumentSegment>>(() =>

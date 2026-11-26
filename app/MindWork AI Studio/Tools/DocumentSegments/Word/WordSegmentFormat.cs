@@ -16,7 +16,7 @@ namespace AIStudio.Tools.DocumentSegments.Word;
 /// </remarks>
 public sealed class WordSegmentFormat : IDocumentSegmentFormat
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WordSegmentFormat).Namespace, nameof(WordSegmentFormat));
+    private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(WordSegmentFormat).Namespace, nameof(WordSegmentFormat));
 
     /// <summary>
     /// The folder below the temporary folder of the system, where the documents come about.
@@ -27,7 +27,7 @@ public sealed class WordSegmentFormat : IDocumentSegmentFormat
     public FileTypeFilter FileType => FileTypes.MS_WORD;
 
     /// <inheritdoc />
-    public string LimitsNotice => TB("Charts, SmartArt, comments, the alternative texts of pictures, and the properties of the document, such as its title, stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.");
+    public string LimitsNotice => TA("Charts, SmartArt, comments, the alternative texts of pictures, and the properties of the document, such as its title, stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.");
 
     /// <inheritdoc />
     public Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token) => Task.Run<IReadOnlyList<DocumentSegment>>(() =>

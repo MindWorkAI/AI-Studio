@@ -83,8 +83,8 @@ public partial class AssistantRewriteImprove : DocumentAssistantBase<SettingsDia
 
     protected override IReadOnlyList<AssistantModeOption<AssistantContentMode>> ModeOptions =>
     [
-        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Improve document"), T("Rewrite and improve a Word, PowerPoint, LaTeX, Markdown, or HTML file paragraph by paragraph. The improved document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
-        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Improve text"), T("Rewrite and improve a text which you type or paste, or which you load from a file. The improved text appears right here, with the changes marked.")),
+        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Improve document"), TA("Rewrite and improve a Word, PowerPoint, LaTeX, Markdown, or HTML file paragraph by paragraph. The improved document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
+        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Improve text"), TA("Rewrite and improve a text which you type or paste, or which you load from a file. The improved text appears right here, with the changes marked.")),
     ];
 
     protected override string SwitchTooltip(AssistantContentMode target) => target is AssistantContentMode.DOCUMENT ? T("Switch to improving a document") : T("Switch to improving a text");
