@@ -104,4 +104,29 @@ public partial class WorkspaceNameField : MSGComponentBase
         this.WorkspaceName = workspaceName ?? string.Empty;
         await this.WorkspaceNameChanged.InvokeAsync(this.WorkspaceName);
     }
+
+    /// <summary>
+    /// Counts the characters of a name the user may still change, see
+    /// WorkspaceBehaviour.MAX_WORKSPACE_NAME_LENGTH.
+    /// </summary>
+    private int? NameCounter => this.ReadOnly ? null : WorkspaceBehaviour.MAX_WORKSPACE_NAME_LENGTH;
+
+    /// <summary>
+    /// Checks a new name against the longest name a workspace may get, and then hands it to the
+    /// validation of the form around the field.
+    /// </summary>
+    /// <remarks>
+    /// The name of an existing workspace passes, however long it is: the template or the tile finds its
+    /// workspace by that name, and a name cut short would no longer find it.
+    /// </remarks>
+    /// <param name="workspaceName">The name in the text field.</param>
+    private string? ValidateName(string workspaceName)
+    {
+        var normalizedWorkspaceName = WorkspaceBehaviour.NormalizeWorkspaceName(workspaceName);
+        var isExisting = this.availableWorkspaces.Any(workspace => string.Equals(WorkspaceBehaviour.NormalizeWorkspaceName(workspace.Name), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
+        if (!isExisting && WorkspaceBehaviour.CheckWorkspaceNameLength(normalizedWorkspaceName) is { } tooLong)
+            return tooLong;
+
+        return this.Validation?.Invoke(workspaceName);
+    }
 }

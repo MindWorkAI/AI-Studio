@@ -789,6 +789,25 @@ public static partial class WorkspaceBehaviour
 
     public static string NormalizeWorkspaceName(string workspaceName) => workspaceName.Trim();
 
+    /// <summary>
+    /// The most characters the user may give a workspace, as many as a chat template may have.
+    /// </summary>
+    /// <remarks>
+    /// Only what the user types is checked. A longer name from before the limit, or one an organization's
+    /// chat template names, stays as it is: cutting it short would cut the workspace off from the templates
+    /// which name it, and the list and its menus end every long name with an ellipsis anyway.
+    /// </remarks>
+    public const int MAX_WORKSPACE_NAME_LENGTH = 40;
+
+    /// <summary>
+    /// Tells why a name the user typed for a workspace is too long, or returns null for one which fits,
+    /// see <see cref="MAX_WORKSPACE_NAME_LENGTH"/>.
+    /// </summary>
+    /// <param name="workspaceName">The name, which counts without the spaces around it.</param>
+    public static string? CheckWorkspaceNameLength(string? workspaceName) => NormalizeWorkspaceName(workspaceName ?? string.Empty).Length > MAX_WORKSPACE_NAME_LENGTH
+        ? string.Format(I18N.I.Culture, TB("The workspace name must not exceed {0} characters."), MAX_WORKSPACE_NAME_LENGTH)
+        : null;
+
     public static async Task<bool> IsWorkspaceNameExistingAsync(string workspaceName, Guid excludedWorkspaceId = default)
     {
         var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);

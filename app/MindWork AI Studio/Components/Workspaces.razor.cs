@@ -429,6 +429,10 @@ public partial class Workspaces : MSGComponentBase
                 string.Equals(WorkspaceBehaviour.NormalizeWorkspaceName(originalWorkspaceName), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase))
                 return null;
 
+            // A name from before the limit passes above as long as it stays as it is:
+            if (WorkspaceBehaviour.CheckWorkspaceNameLength(normalizedWorkspaceName) is { } tooLong)
+                return tooLong;
+
             var nameExists = snapshot.Workspaces.Any(workspace =>
                 workspace.WorkspaceId != excludedWorkspaceId &&
                 string.Equals(WorkspaceBehaviour.NormalizeWorkspaceName(workspace.Name), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
@@ -1767,6 +1771,7 @@ public partial class Workspaces : MSGComponentBase
             { x => x.AllowEmptyInput, false },
             { x => x.EmptyInputErrorMessage, TA("Please enter a workspace name.") },
             { x => x.AdditionalValidation, await this.CreateWorkspaceNameValidationAsync(workspaceId, workspaceName) },
+            { x => x.Counter, WorkspaceBehaviour.MAX_WORKSPACE_NAME_LENGTH },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -1794,6 +1799,7 @@ public partial class Workspaces : MSGComponentBase
             { x => x.AllowEmptyInput, false },
             { x => x.EmptyInputErrorMessage, TA("Please enter a workspace name.") },
             { x => x.AdditionalValidation, await this.CreateWorkspaceNameValidationAsync() },
+            { x => x.Counter, WorkspaceBehaviour.MAX_WORKSPACE_NAME_LENGTH },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Add Workspace"), dialogParameters, DialogOptions.FULLSCREEN);

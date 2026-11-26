@@ -34,6 +34,13 @@ public partial class SingleInputDialog : MSGComponentBase
     [Parameter]
     public Func<string?, string?>? AdditionalValidation { get; set; }
 
+    /// <summary>
+    /// The most characters the input may have, which the field counts below itself, or null for no
+    /// counter. The limit itself is up to <see cref="AdditionalValidation"/>.
+    /// </summary>
+    [Parameter]
+    public int? Counter { get; set; }
+
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
     private MudForm form = null!;

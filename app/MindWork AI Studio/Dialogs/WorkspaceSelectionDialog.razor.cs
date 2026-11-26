@@ -76,6 +76,9 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
             return TA("Please enter a workspace name.");
 
+        if (WorkspaceBehaviour.CheckWorkspaceNameLength(normalizedWorkspaceName) is { } tooLong)
+            return tooLong;
+
         if (this.IsWorkspaceNameExisting(normalizedWorkspaceName))
             return TA("There is already a workspace with this name. Please choose a different name.");
 

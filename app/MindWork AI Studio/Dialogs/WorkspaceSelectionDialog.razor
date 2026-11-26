@@ -29,6 +29,7 @@
                                   Immediate="@true"
                                   Disabled="@this.isCreatingWorkspace"
                                   OnKeyDown="@this.HandleNewWorkspaceNameKeyDown"
+                                  Counter="@WorkspaceBehaviour.MAX_WORKSPACE_NAME_LENGTH"
                                   Validation="@this.ValidateNewWorkspaceName" />
                 </MudForm>
             }
