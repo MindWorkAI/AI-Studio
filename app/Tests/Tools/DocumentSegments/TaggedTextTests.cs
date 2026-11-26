@@ -8,6 +8,13 @@ namespace AIStudio.Tests.Tools.DocumentSegments;
 [TestFixture]
 public sealed class TaggedTextTests
 {
+    [TestCase("𞤀𞤣𞤤𞤢𞤥", ExpectedResult = true)]
+    [TestCase("𠮷野家", ExpectedResult = true)]
+    [TestCase("ä ß ж 日本 한", ExpectedResult = true)]
+    [TestCase("a\u0308", ExpectedResult = true)]
+    [TestCase("42 € 😀", ExpectedResult = false)]
+    public bool LettersBeyondTheBasicPlaneAreLetters(string words) => new TaggedTextBuilder().Words(words).Build().HasLetters;
+
     [Test]
     public void TheBuilderNumbersTheTagsAndMergesTheWords()
     {

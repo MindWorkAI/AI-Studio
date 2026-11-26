@@ -53,6 +53,8 @@ the repository root and to `app/AGENTS.md`, which apply here as well.
 file at the positions Markdig reports for them. Every format of documents which are text themselves works this way:
 `TextSegmentBuilder` puts a segment together with the markup of its tags, and `TextSegmentWriter` replaces the words
 of each segment in the source, so everything else stays byte for byte, and `TextDocumentFile` keeps the encoding.
+`TextSegmentFormat` puts these together, so that such a format brings only its reader, how new words fit into it, and,
+when its files name their encoding, how to find that name.
 
 - **Only Unicode, read strictly.** `TextDocumentFile` reads UTF-8, or the Unicode encoding a byte order mark
   announces (`ByteOrderMark`), with an exception fallback, and refuses a file whose bytes do not fit, or which names

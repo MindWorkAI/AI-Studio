@@ -302,6 +302,18 @@ public sealed class LatexSegmentFormatTests
         });
     }
 
+    [Test]
+    public async Task NewWordsKeepTheLineEndingsAndEveryScript()
+    {
+        const string WORDS = "Grüße: ä ß é ø ş ł ж 日本 한 a\u0308";
+        this.WriteSource($"\\begin{{document}}\r\n{WORDS}\r\n\r\nSecond paragraph.\r\n\\end{{document}}\r\n");
+
+        await this.format.WriteAsync(this.source, this.target, await this.ResultsAsync(key => key + " ok"), string.Empty, NullLogger.Instance, CancellationToken.None);
+        var written = await File.ReadAllTextAsync(this.target);
+
+        Assert.That(written, Is.EqualTo($"\\begin{{document}}\r\n{WORDS} ok\r\n\r\nSecond paragraph. ok\r\n\\end{{document}}\r\n"), "The line endings stay, and every character comes back as it was.");
+    }
+
     private void WriteSource(string text) => File.WriteAllText(this.source, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 
     private async Task<List<string>> KeysAsync() => (await this.format.ReadAsync(this.source, CancellationToken.None)).Select(segment => segment.Key).ToList();

@@ -10,7 +10,7 @@ namespace AIStudio.Tools.DocumentSegments;
 /// <param name="Openings">The markup which the opening tag of each pair stands for, e.g., "[" of a Markdown link.</param>
 /// <param name="Closings">The markup which the closing tag of each pair stands for, e.g., "](https://example.org)".</param>
 /// <param name="Placeholders">The markup which each tag of its own stands for, e.g., a code span.</param>
-/// <param name="FormatWords">Makes the words of this segment fit the format in place of what the writer gets, e.g., within an optional argument of LaTeX, which a closing bracket would end; null for the writer's.</param>
+/// <param name="FormatWords">Makes the words of this segment fit the format in place of what the writer gets, e.g., within an optional argument of LaTeX, which a closing bracket would end; null for the writer's. Like the writer's, it gets one run of words between two tags at a time, so its start may be the start of a line.</param>
 public sealed record TextSegment(
     int Start,
     int End,

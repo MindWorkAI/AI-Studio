@@ -66,7 +66,8 @@ public sealed class MarkdownSegmentFormatTests
             Assert.That(keys, Does.Contain("Install the <1>tools</1>"));
             Assert.That(keys, Does.Contain("Open <1/>"), "An autolink is an address, not words.");
             Assert.That(keys, Does.Contain("Quoted text on two lines."), "The quote mark of the second line belongs to the line break.");
-            Assert.That(keys, Is.SupersetOf(new[] { "Name", "Value", "Speed", "42" }));
+            Assert.That(keys, Is.SupersetOf(new[] { "Name", "Value", "Speed" }));
+            Assert.That(keys, Has.None.EqualTo("42"), "A cell without letters stays as it is, as in web pages and LaTeX.");
             Assert.That(keys, Does.Contain("Line one<1/>line two"), "A hard line break is a tag of its own.");
             Assert.That(keys, Has.None.Contains("title"), "The front matter stays out.");
             Assert.That(keys, Has.None.Contains("code stays"), "Code blocks stay out.");

@@ -42,7 +42,7 @@ internal static partial class MarkdownWords
     public static string Encoded(string words)
     {
         var result = new StringBuilder(words.Length + 8);
-        foreach (var character in words.ReplaceLineEndings(" "))
+        foreach (var character in TextSegmentWriter.InOneLine(words))
         {
             if (INLINE_MARKUP.Contains(character))
                 result.Append('\\');

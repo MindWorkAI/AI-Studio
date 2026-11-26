@@ -18,37 +18,29 @@ namespace AIStudio.Tools.DocumentSegments.Html;
 /// The page counts as UTF-8 unless a byte order mark says otherwise; a page in another encoding is refused, see TextDocumentFile.
 /// </para>
 /// </remarks>
-public sealed class HtmlSegmentFormat : IDocumentSegmentFormat
+public sealed class HtmlSegmentFormat : TextSegmentFormat
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(HtmlSegmentFormat).Namespace, nameof(HtmlSegmentFormat));
 
     /// <inheritdoc />
-    public FileTypeFilter FileType => FileTypes.HTML;
+    public override FileTypeFilter FileType => FileTypes.HTML;
 
     /// <inheritdoc />
-    public string LimitsNotice => TB("Scripts, styles, code, preformatted text, and embedded graphics stay as they are.");
+    public override string LimitsNotice => TB("Scripts, styles, code, preformatted text, and embedded graphics stay as they are.");
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token)
+    /// <remarks>
+    /// The attributes are written first, and the blocks of that page are read again, see the remarks of the class.
+    /// </remarks>
+    public override async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
     {
-        var file = await TextDocumentFile.ReadAsync(path, HtmlSegmentReader.DeclaredEncodingOf, token);
-        return HtmlSegmentReader.AttributeSegmentsOf(file.Text)
-            .Concat(HtmlSegmentReader.BlockSegmentsOf(file.Text))
-            .OrderBy(segment => segment.Start)
-            .Select(segment => segment.Segment)
-            .ToList();
-    }
-
-    /// <inheritdoc />
-    public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
-    {
-        var file = await TextDocumentFile.ReadAsync(sourcePath, HtmlSegmentReader.DeclaredEncodingOf, token);
+        var file = await this.ReadFileAsync(sourcePath, token);
         var attributes = HtmlSegmentReader.AttributeSegmentsOf(file.Text);
         if (HtmlSegmentReader.BlockSegmentsOf(file.Text).Concat(attributes).Any(segment => !results.Covers(segment.Segment)))
             return SegmentWriteResult.SOURCE_CHANGED;
 
         var attributesResult = TextSegmentWriter.Apply(file.Text, attributes, results, HtmlSegmentReader.EncodedAttribute, out var withAttributes);
-        var blocksResult = TextSegmentWriter.Apply(withAttributes, HtmlSegmentReader.BlockSegmentsOf(withAttributes), results, HtmlSegmentReader.EncodedText, out var withBlocks);
+        var blocksResult = TextSegmentWriter.Apply(withAttributes, HtmlSegmentReader.BlockSegmentsOf(withAttributes), results, this.EncodedWords, out var withBlocks);
         if (blocksResult.Outcome is SegmentWriteOutcome.SOURCE_CHANGED)
         {
             logger.LogWarning("The blocks of the page '{SourcePath}' differ once its attributes are replaced, so nothing is written.", sourcePath);
@@ -58,6 +50,15 @@ public sealed class HtmlSegmentFormat : IDocumentSegmentFormat
         await file.WriteAsync(targetPath, WithLanguage(withBlocks, languageTag), token);
         return new(SegmentWriteOutcome.WRITTEN, attributesResult.ExactCount + blocksResult.ExactCount, attributesResult.SimplifiedCount + blocksResult.SimplifiedCount);
     }
+
+    /// <inheritdoc />
+    protected override IReadOnlyList<TextSegment> ReadSegments(string text) => [.. HtmlSegmentReader.AttributeSegmentsOf(text), .. HtmlSegmentReader.BlockSegmentsOf(text)];
+
+    /// <inheritdoc />
+    protected override string EncodedWords(string words) => HtmlSegmentReader.EncodedText(words);
+
+    /// <inheritdoc />
+    protected override string? DeclaredEncodingOf(string text) => HtmlSegmentReader.DeclaredEncodingOf(text);
 
     /// <summary>
     /// Notes the language of the page in its root element, so that browsers and screen readers follow it.

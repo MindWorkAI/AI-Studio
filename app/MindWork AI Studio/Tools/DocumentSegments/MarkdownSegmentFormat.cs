@@ -29,7 +29,7 @@ namespace AIStudio.Tools.DocumentSegments;
 /// outside of it.
 /// </para>
 /// </remarks>
-public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
+public sealed class MarkdownSegmentFormat : TextSegmentFormat
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MarkdownSegmentFormat).Namespace, nameof(MarkdownSegmentFormat));
 
@@ -44,31 +44,19 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
         .Build();
 
     /// <inheritdoc />
-    public FileTypeFilter FileType => FileTypes.MARKDOWN;
+    public override FileTypeFilter FileType => FileTypes.MARKDOWN;
 
     /// <inheritdoc />
-    public string LimitsNotice => TB("Code, formulas, link targets, and embedded HTML stay as they are.");
+    public override string LimitsNotice => TB("Code, formulas, link targets, and embedded HTML stay as they are.");
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token)
-    {
-        var file = await TextDocumentFile.ReadAsync(path, null, token);
-        return SegmentsOf(file.Text).Select(segment => segment.Segment).ToList();
-    }
+    protected override IReadOnlyList<TextSegment> ReadSegments(string text) => SegmentsOf(text);
 
     /// <inheritdoc />
-    public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
-    {
-        var file = await TextDocumentFile.ReadAsync(sourcePath, null, token);
-        var result = TextSegmentWriter.Apply(file.Text, SegmentsOf(file.Text), results, MarkdownWords.Encoded, out var text);
-        if (result.Outcome is SegmentWriteOutcome.WRITTEN)
-            await file.WriteAsync(targetPath, text, token);
-
-        return result;
-    }
+    protected override string EncodedWords(string words) => MarkdownWords.Encoded(words);
 
     /// <summary>
-    /// Reads the segments of a Markdown text, in the order of the text.
+    /// Reads the segments of a Markdown text, in the order of Markdig, which puts the footnotes last.
     /// </summary>
     /// <remarks>
     /// A block whose words read as a tag stays out: a model could not tell them apart from the tags which
@@ -88,8 +76,6 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
                 segments.Add(segment);
         }
 
-        // Footnotes come last in the tree of Markdig, wherever they stand in the text:
-        segments.Sort((first, second) => first.Start.CompareTo(second.Start));
         return segments;
     }
 
@@ -124,10 +110,7 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
             this.position = this.segmentStart;
             this.VisitChildren(root);
 
-            if (!this.isConsistent || this.builder.HasTagLikeWords)
-                return null;
-
-            return this.builder.Build(this.segmentStart, this.position);
+            return this.isConsistent ? this.builder.TryBuild(this.segmentStart, this.position) : null;
         }
 
         private void VisitChildren(ContainerInline container)

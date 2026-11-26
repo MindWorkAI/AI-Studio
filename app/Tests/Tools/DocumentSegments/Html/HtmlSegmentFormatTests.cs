@@ -184,6 +184,24 @@ public sealed class HtmlSegmentFormatTests
         Assert.That(keys, Is.EqualTo(new[] { "Mars", "The red planet." }));
     }
 
+    [Test]
+    public async Task NewWordsKeepTheByteOrderMarkTheLineEndingsAndEveryScript()
+    {
+        const string WORDS = "Grüße: ä ß € é ø ş ł ж 日本 한 a\u0308";
+        var page = $"<p>{WORDS}</p>\r\n<p>Second line.</p>\r\n";
+        File.WriteAllText(this.source, page, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+
+        await this.format.WriteAsync(this.source, this.target, await this.ResultsAsync(key => key + " ✓"), string.Empty, NullLogger.Instance, CancellationToken.None);
+        var bytes = await File.ReadAllBytesAsync(this.target);
+        var written = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetString(bytes, 3, bytes.Length - 3);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(bytes.Take(3), Is.EqualTo(new byte[] { 0xEF, 0xBB, 0xBF }), "The byte order mark stays.");
+            Assert.That(written, Is.EqualTo($"<p>{WORDS} ✓</p>\r\n<p>Second line. ✓</p>\r\n"), "The line endings stay, and every character comes back as it was.");
+        });
+    }
+
     private async Task<SegmentResults> ResultsAsync(Func<string, string> transform)
     {
         var segments = await this.format.ReadAsync(this.source, CancellationToken.None);

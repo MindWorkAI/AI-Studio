@@ -137,13 +137,11 @@ internal static partial class HtmlSegmentReader
 
                 var builder = new TextSegmentBuilder();
                 builder.Words(Collapsed(text.Substring(attribute.ValueStartIndex, attribute.ValueLength)));
-                var segment = builder.Build(attribute.ValueStartIndex, attribute.ValueStartIndex + attribute.ValueLength, attribute.QuoteType is AttributeValueQuote.None ? QuotedAttribute : null);
-                if (!builder.HasTagLikeWords && segment.Segment.HasWords)
+                if (builder.TryBuild(attribute.ValueStartIndex, attribute.ValueStartIndex + attribute.ValueLength, attribute.QuoteType is AttributeValueQuote.None ? QuotedAttribute : null) is { } segment)
                     segments.Add(segment);
             }
         }
 
-        segments.Sort((first, second) => first.Start.CompareTo(second.Start));
         return segments;
     }
 
@@ -272,11 +270,7 @@ internal static partial class HtmlSegmentReader
             foreach (var node in nodes)
                 this.Visit(node, end);
 
-            if (!this.isConsistent || this.position != end || this.builder.HasTagLikeWords)
-                return null;
-
-            var segment = this.builder.Build(start, end);
-            return segment.Segment.HasWords ? segment : null;
+            return this.isConsistent && this.position == end ? this.builder.TryBuild(start, end) : null;
         }
 
         private void Visit(HtmlNode node, int limit)

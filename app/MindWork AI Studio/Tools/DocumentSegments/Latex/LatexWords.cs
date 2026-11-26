@@ -85,6 +85,8 @@ internal static class LatexWords
 
     private static string Encode(string words, bool isInBrackets)
     {
+        // A blank line would end the paragraph, a line break within it changes nothing:
+        words = TextSegmentWriter.InOneLine(words);
         var builder = new StringBuilder(words.Length + 16);
         for (var index = 0; index < words.Length; index++)
         {
@@ -114,14 +116,6 @@ internal static class LatexWords
                 // pdfLaTeX knows no thin spaces as characters:
                 case ' ' or ' ':
                     builder.Append(@"\,");
-                    break;
-
-                // A blank line would end the paragraph, a line break within it changes nothing:
-                case '\r' or '\n':
-                    if (character == '\r' && index + 1 < words.Length && words[index + 1] == '\n')
-                        index++;
-
-                    builder.Append(' ');
                     break;
 
                 // After a line break or an item, a bracket would open an optional argument:

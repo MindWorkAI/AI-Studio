@@ -68,6 +68,27 @@ public sealed class TextSegmentBuilder
     public void ExtendPlaceholder(int id, string markup) => this.placeholders[id] += markup;
 
     /// <summary>
+    /// Finishes the segment, when a model can work on it.
+    /// </summary>
+    /// <remarks>
+    /// A segment whose words read as a tag stays out: a model could not tell them apart from the tags which guard the
+    /// markup, see TaggedText.ContainsTagLikeText. So does a segment without letters, e.g., a number, which stays as
+    /// it is anyway.
+    /// </remarks>
+    /// <param name="start">Where the segment starts in the source.</param>
+    /// <param name="end">Where the segment ends in the source, exclusive.</param>
+    /// <param name="formatWords">Makes the words of this segment fit the format in place of what the writer gets; null for the writer's.</param>
+    /// <returns>The segment, or null when it stays out.</returns>
+    public TextSegment? TryBuild(int start, int end, Func<string, string>? formatWords = null)
+    {
+        if (this.HasTagLikeWords)
+            return null;
+
+        var segment = this.Build(start, end, formatWords);
+        return segment.Segment.HasWords ? segment : null;
+    }
+
+    /// <summary>
     /// Finishes the segment.
     /// </summary>
     /// <param name="start">Where the segment starts in the source.</param>

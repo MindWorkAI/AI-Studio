@@ -26,7 +26,7 @@ public static class FormatSpans
     /// <returns>The key of the most common formatting; the first one on a tie; empty for no words.</returns>
     public static string BaseKeyOf(IEnumerable<(string Text, string FormatKey)> words) => words
         .GroupBy(word => word.FormatKey)
-        .OrderByDescending(group => group.Sum(word => word.Text.Count(char.IsLetter)))
+        .OrderByDescending(group => group.Sum(word => word.Text.LetterCount))
         .Select(group => group.Key)
         .FirstOrDefault() ?? string.Empty;
 

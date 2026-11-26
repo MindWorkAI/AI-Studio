@@ -59,7 +59,6 @@ internal sealed partial class LatexSegmentReader
         }
 
         reader.CollectBlocks(BodyNodesOf(text, bodyStart), isTable: false);
-        reader.segments.Sort((first, second) => first.Start.CompareTo(second.Start));
         return reader.segments;
     }
 
@@ -403,8 +402,7 @@ internal sealed partial class LatexSegmentReader
         var builder = new TextSegmentBuilder();
         this.Emit(items, first, last, builder);
 
-        var segment = builder.Build(items[first].Start, items[last].End, isInBrackets ? LatexWords.EncodedInBrackets : null);
-        return builder.HasTagLikeWords || !segment.Segment.HasWords ? null : segment;
+        return builder.TryBuild(items[first].Start, items[last].End, isInBrackets ? LatexWords.EncodedInBrackets : null);
     }
 
     /// <summary>
@@ -495,7 +493,7 @@ internal sealed partial class LatexSegmentReader
 
     private static bool HasLetters(Item item) => item switch
     {
-        WordsItem words => words.Words.Any(char.IsLetter),
+        WordsItem words => words.Words.HasLetters,
         PairItem pair => pair.Children.Any(HasLetters),
 
         _ => false,

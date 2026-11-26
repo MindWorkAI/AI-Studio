@@ -12,14 +12,22 @@ public static class TextSegmentWriter
     /// Replaces the segments of a source with their new texts.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A new text whose tags do not fit those of its segment still gets written: its pairs whose both tags
     /// arrived go back, the others go, and the tags of their own which the model dropped follow the words.
     /// A segment whose new text equals its source stays exactly as the source holds it.
+    /// </para>
+    /// <para>
+    /// The segments may come in any order, but must not overlap, since each one replaces its own part of the source.
+    /// The words function gets one run of words between two tags at a time, so the start of what it gets may be the
+    /// start of a line, e.g., right after an item of a list; a function which treats that start apart relies on it.
+    /// </para>
     /// </remarks>
     /// <param name="source">The text of the document.</param>
-    /// <param name="segments">The segments of the document, as the format reads them from this source, in the order of the document.</param>
+    /// <param name="segments">The segments of the document, as the format reads them from this source.</param>
     /// <param name="results">What became of the segments.</param>
-    /// <param name="formatWords">Makes words fit the format, e.g., removes line breaks a model wrote into a Markdown paragraph; a segment may bring its own, see TextSegment.FormatWords.</param>
+    /// <param name="formatWords">Makes words fit the format, e.g., escapes the characters of markup; a segment may bring its own, see TextSegment.FormatWords.</param>
+    /// <exception cref="ArgumentException">Two segments overlap.</exception>
     /// <param name="text">The text of the new document, or the source when the results do not cover it.</param>
     /// <returns>How the segments were written, or SOURCE_CHANGED when the results miss one of them.</returns>
     public static SegmentWriteResult Apply(string source, IReadOnlyList<TextSegment> segments, SegmentResults results, Func<string, string> formatWords, out string text)
@@ -28,11 +36,18 @@ public static class TextSegmentWriter
         if (segments.Any(segment => !results.Covers(segment.Segment)))
             return SegmentWriteResult.SOURCE_CHANGED;
 
+        var ordered = segments.OrderBy(segment => segment.Start).ToList();
+        for (var index = 1; index < ordered.Count; index++)
+        {
+            if (ordered[index].Start < ordered[index - 1].End)
+                throw new ArgumentException($"The segments at {ordered[index - 1].Start} and {ordered[index].Start} overlap.", nameof(segments));
+        }
+
         var exactCount = 0;
         var simplifiedCount = 0;
         var builder = new StringBuilder(source.Length);
         var position = 0;
-        foreach (var segment in segments)
+        foreach (var segment in ordered)
         {
             builder.Append(source, position, segment.Start - position);
             position = segment.End;
@@ -52,6 +67,15 @@ public static class TextSegmentWriter
         text = builder.ToString();
         return new(SegmentWriteOutcome.WRITTEN, exactCount, simplifiedCount);
     }
+
+    /// <summary>
+    /// Puts new words into one line, for formats in which a blank line would end a paragraph or a table row, e.g., Markdown or LaTeX.
+    /// </summary>
+    /// <remarks>
+    /// Every kind of line break becomes a space, those of Unicode included, such as U+2028 or U+0085.
+    /// </remarks>
+    /// <param name="words">The new words.</param>
+    public static string InOneLine(string words) => words.ReplaceLineEndings(" ");
 
     /// <summary>
     /// Writes the new text of a segment with the markup of its tags.

@@ -18,31 +18,22 @@ namespace AIStudio.Tools.DocumentSegments.Latex;
 /// The document counts as UTF-8 unless a byte order mark says otherwise; a document in another encoding is refused, see TextDocumentFile.
 /// </para>
 /// </remarks>
-public sealed class LatexSegmentFormat : IDocumentSegmentFormat
+public sealed class LatexSegmentFormat : TextSegmentFormat
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(LatexSegmentFormat).Namespace, nameof(LatexSegmentFormat));
 
     /// <inheritdoc />
-    public FileTypeFilter FileType => FileTypes.TEX;
+    public override FileTypeFilter FileType => FileTypes.TEX;
 
     /// <inheritdoc />
-    public string LimitsNotice => TB("Formulas, code, drawings, comments, and the preamble apart from the title stay as they are, as does text in commands which the document defines itself. The language settings, e.g., of babel or polyglossia, stay unchanged, and a language with another script may need further packages.");
+    public override string LimitsNotice => TB("Formulas, code, drawings, comments, and the preamble apart from the title stay as they are, as does text in commands which the document defines itself. The language settings, e.g., of babel or polyglossia, stay unchanged, and a language with another script may need further packages.");
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token)
-    {
-        var file = await TextDocumentFile.ReadAsync(path, LatexSegmentReader.DeclaredEncodingOf, token);
-        return LatexSegmentReader.SegmentsOf(file.Text).Select(segment => segment.Segment).ToList();
-    }
+    protected override IReadOnlyList<TextSegment> ReadSegments(string text) => LatexSegmentReader.SegmentsOf(text);
 
     /// <inheritdoc />
-    public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
-    {
-        var file = await TextDocumentFile.ReadAsync(sourcePath, LatexSegmentReader.DeclaredEncodingOf, token);
-        var result = TextSegmentWriter.Apply(file.Text, LatexSegmentReader.SegmentsOf(file.Text), results, LatexWords.Encoded, out var text);
-        if (result.Outcome is SegmentWriteOutcome.WRITTEN)
-            await file.WriteAsync(targetPath, text, token);
+    protected override string EncodedWords(string words) => LatexWords.Encoded(words);
 
-        return result;
-    }
+    /// <inheritdoc />
+    protected override string? DeclaredEncodingOf(string text) => LatexSegmentReader.DeclaredEncodingOf(text);
 }

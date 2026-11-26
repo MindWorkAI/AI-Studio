@@ -47,7 +47,7 @@ public sealed class TaggedText
     /// <summary>
     /// Whether the text has any letter, i.e., whether a model has anything to work on.
     /// </summary>
-    public bool HasLetters => this.Tokens.Any(token => token.Kind is TaggedTokenKind.TEXT && token.Text.Any(char.IsLetter));
+    public bool HasLetters => this.Tokens.Any(token => token.Kind is TaggedTokenKind.TEXT && token.Text.HasLetters);
 
     /// <summary>
     /// Whether the text has any tag.
