@@ -137,6 +137,95 @@ public sealed class WordInlineFormattingTests
         });
     }
 
+    [Test]
+    public async Task ATagMovedIntoAnInsertionGoesRightBehindIt()
+    {
+        // A linked tab has no words, so it is a tag of its own, which the model may move; Word allows no link within an insertion:
+        var linkedTab = new W.Hyperlink(new W.Run(new W.TabChar())) { Id = LINK_ID };
+        Create(this.source, Paragraph(linkedTab, Run(" text "), new W.InsertedRun(Run("inserted")) { Id = "1", Author = "Tester" }));
+        var key = (await this.KeysAsync()).Single();
+
+        var result = await this.WriteAsync(key, "Text <2>eingefügt <1/>und mehr</2>");
+
+        using var document = WordprocessingDocument.Open(this.target, false);
+        var paragraph = document.MainDocumentPart!.Document!.Body!.Elements<W.Paragraph>().Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(key, Is.EqualTo("<1/> text <2>inserted</2>"));
+            Assert.That(ValidationErrorsOf(document), Is.EqualTo(this.SourceValidationErrors()), "The new document is as valid as the source.");
+            Assert.That(result.SimplifiedCount, Is.Zero, "Nothing got lost, the link only moved next to the insertion.");
+            Assert.That(paragraph.ChildElements.Select(child => child.LocalName), Is.EqualTo(new[] { "r", "ins", "hyperlink", "ins" }), "The insertion goes on behind the link.");
+            Assert.That(paragraph.Elements<W.InsertedRun>().Select(insertion => insertion.InnerText), Is.EqualTo(new[] { "eingefügt ", "und mehr" }));
+        });
+    }
+
+    [Test]
+    public async Task ANestingWhichWordForbidsKeepsTheWords()
+    {
+        Create(this.source, Paragraph(Run("See "), new W.Hyperlink(new W.InsertedRun(Run("link")) { Id = "1", Author = "Tester" }) { Id = LINK_ID }));
+        var key = (await this.KeysAsync()).Single();
+
+        // The model swapped the pairs, so that the link would lie within the insertion:
+        var result = await this.WriteAsync(key, "Siehe <2><1>Link</1></2>");
+
+        using var document = WordprocessingDocument.Open(this.target, false);
+        var paragraph = document.MainDocumentPart!.Document!.Body!.Elements<W.Paragraph>().Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(key, Is.EqualTo("See <1><2>link</2></1>"));
+            Assert.That(ValidationErrorsOf(document), Is.EqualTo(this.SourceValidationErrors()), "The new document is as valid as the source.");
+            Assert.That(result.SimplifiedCount, Is.EqualTo(1));
+            Assert.That(paragraph.InnerText, Is.EqualTo("Siehe Link"), "Words beat structure.");
+            Assert.That(paragraph.Descendants<W.InsertedRun>().Single().InnerText, Is.EqualTo("Link"));
+        });
+    }
+
+    [Test]
+    public async Task ASimpleFieldIsAPairAroundItsResult()
+    {
+        Create(this.source, Paragraph(Run("See "), new W.SimpleField(Run("Figure 1")) { Instruction = " REF _Ref1 \\h " }, Run(".")));
+        var key = (await this.KeysAsync()).Single();
+
+        var result = await this.WriteAsync(key, "Siehe <1>Abbildung 1</1>.");
+
+        using var document = WordprocessingDocument.Open(this.target, false);
+        var field = document.MainDocumentPart!.Document!.Body!.Descendants<W.SimpleField>().Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(key, Is.EqualTo("See <1>Figure 1</1>."));
+            Assert.That(ValidationErrorsOf(document), Is.EqualTo(this.SourceValidationErrors()), "The new document is as valid as the source.");
+            Assert.That(result.SimplifiedCount, Is.Zero);
+            Assert.That(field.InnerText, Is.EqualTo("Abbildung 1"));
+            Assert.That(field.Instruction?.Value, Is.EqualTo(" REF _Ref1 \\h "), "The field keeps its instruction.");
+        });
+    }
+
+    [Test]
+    public async Task CustomXmlKeepsItsPropertiesOnce()
+    {
+        var customXml = new W.CustomXmlRun(new W.CustomXmlProperties(new W.CustomXmlAttribute { Name = "role", Val = "author" }), Run("Alice")) { Element = "name" };
+        Create(this.source, Paragraph(customXml, Run(" wrote this.")));
+        var key = (await this.KeysAsync()).Single();
+
+        await this.WriteAsync(key, "<1>Alicia</1> schrieb das.");
+
+        using var document = WordprocessingDocument.Open(this.target, false);
+        var written = document.MainDocumentPart!.Document!.Body!.Descendants<W.CustomXmlRun>().Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(key, Is.EqualTo("<1>Alice</1> wrote this."), "The properties of custom XML are no tag of their own.");
+            Assert.That(ValidationErrorsOf(document), Is.EqualTo(this.SourceValidationErrors()), "The new document is as valid as the source.");
+            Assert.That(written.Elements<W.CustomXmlProperties>().Count(), Is.EqualTo(1));
+            Assert.That(written.FirstChild, Is.InstanceOf<W.CustomXmlProperties>(), "The properties come first, as the schema demands.");
+        });
+    }
+
+    private List<string> SourceValidationErrors()
+    {
+        using var document = WordprocessingDocument.Open(this.source, false);
+        return ValidationErrorsOf(document);
+    }
+
     private void CreateSentence() => Create(this.source, Paragraph(Run("This is "), Bold("very"), Run(" "), Italic("important"), Run(" and "), Link("linked"), Run(" text.")));
 
     private async Task<List<string>> KeysAsync() => (await this.format.ReadAsync(this.source, CancellationToken.None)).Select(segment => segment.Key).ToList();

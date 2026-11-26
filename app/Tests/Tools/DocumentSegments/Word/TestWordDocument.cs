@@ -1,5 +1,6 @@
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Validation;
 
 using W = DocumentFormat.OpenXml.Wordprocessing;
 
@@ -77,4 +78,13 @@ internal static class TestWordDocument
     public static W.Run Italic(string text) => Run(text, new W.RunProperties(new W.Italic()));
 
     public static W.Hyperlink Link(string text) => new(Run(text)) { Id = LINK_ID };
+
+    /// <summary>
+    /// What the validator finds, without where it finds it: new runs move the places of what the source already had.
+    /// </summary>
+    public static List<string> ValidationErrorsOf(WordprocessingDocument document) => new OpenXmlValidator(FileFormatVersions.Office2019)
+        .Validate(document)
+        .Select(error => $"{error.Part?.Uri}: {error.Description}")
+        .Order(StringComparer.Ordinal)
+        .ToList();
 }

@@ -12,7 +12,7 @@ public readonly record struct SegmentOutcome(SegmentStatus Status, string? Text)
     /// </summary>
     /// <remarks>
     /// The tags of the text may still differ from those of the source, when the model missed them twice:
-    /// the format then writes the words without the inline structure rather than nothing.
+    /// the format then writes the words with as much of the inline structure as fits rather than nothing.
     /// </remarks>
     /// <param name="text">The new text with tags.</param>
     public static SegmentOutcome Transformed(string text) => new(SegmentStatus.TRANSFORMED, text);

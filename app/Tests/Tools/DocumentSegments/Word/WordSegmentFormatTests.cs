@@ -3,7 +3,6 @@ using AIStudio.Tools.DocumentSegments.Word;
 
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Validation;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -79,7 +78,7 @@ public sealed class WordSegmentFormatTests
         var link = paragraphs[1].Descendants<W.Hyperlink>().SingleOrDefault();
         Assert.Multiple(() =>
         {
-            Assert.That(ValidationErrorsOf(document), Is.EqualTo(ValidationErrorsOf(sourceDocument)), "The new document is as valid as the source.");
+            Assert.That(TestWordDocument.ValidationErrorsOf(document), Is.EqualTo(TestWordDocument.ValidationErrorsOf(sourceDocument)), "The new document is as valid as the source.");
             Assert.That(result.SimplifiedCount, Is.Zero, "Every paragraph keeps its inline structure and formatting.");
 
             Assert.That(paragraphs[0].InnerText, Is.EqualTo("GETTING STARTED"));
@@ -148,13 +147,4 @@ public sealed class WordSegmentFormatTests
     }
 
     private static W.Body BodyOf(WordprocessingDocument document) => document.MainDocumentPart!.Document!.Body!;
-
-    /// <summary>
-    /// What the validator finds, without where it finds it: new runs move the places of what the source already had.
-    /// </summary>
-    private static List<string> ValidationErrorsOf(WordprocessingDocument document) => new OpenXmlValidator(FileFormatVersions.Office2019)
-        .Validate(document)
-        .Select(error => $"{error.Part?.Uri}: {error.Description}")
-        .Order(StringComparer.Ordinal)
-        .ToList();
 }

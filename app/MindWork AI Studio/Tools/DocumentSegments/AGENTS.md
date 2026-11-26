@@ -35,8 +35,11 @@ the repository root and to `app/AGENTS.md`, which apply here as well.
   this, so a format can nest its parts again as before. Whatever must keep its order, such as the start
   and the end of a field, belongs into one pair.
 - **Words beat structure.** A segment whose tags still do not fit after the second request keeps the words
-  of the model: the format writes them without the inline structure and counts the segment as simplified.
-  Only a segment without any answer keeps its original text.
+  of the model, and the format counts it as simplified. Every writer keeps what it can: the pairs whose both
+  tags arrived, nested as the model nested them, and the tags of their own where the model put them; what the
+  model dropped follows its words. Only words whose tags cannot be read at all are written without any inline
+  structure, and only a segment without any answer keeps its original text. A format whose parts may not
+  nest freely makes sure the result stays valid, see `WordParagraphWriter.Allows`.
 - **Prompt texts stay in English, the user's texts do not.** Requests and issues are written for the model.
   The texts of a document are data: they go into the request, never into the system prompt.
 - **Write only into the file the user chose.** The rules of `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md`
@@ -74,11 +77,15 @@ footers, and the notes as segments, and leaves everything else of the document a
 - **Move, never copy.** The writer moves the elements a tag stands for into the new paragraph. A text box
   holds paragraphs of its own, which are segments as well; only moving keeps their new words, whichever
   paragraph is written first.
-- **Containers are pairs, fields are pairs, the rest is a tag of its own.** Links, content controls, and the
-  insertions of the change tracking enclose runs, so the writer creates them anew around the new words. A field
-  whose result lies in the same paragraph is a pair around its result, which keeps its start, instruction,
-  and end in their order. Content controls bound to data, or offering a choice, a date, or a check box, stay
-  as they are.
+- **Containers are pairs, fields are pairs, the rest is a tag of its own.** Links, content controls, simple
+  fields, and the insertions of the change tracking enclose runs, so the writer creates them anew around the new
+  words, with their properties. A field whose result lies in the same paragraph is a pair around its result, which
+  keeps its start, instruction, and end in their order. Content controls bound to data, or offering a choice, a
+  date, or a check box, stay as they are.
+- **An insertion holds runs only.** Within an insertion or a move of the change tracking, Word allows no link,
+  simple field, custom XML, or subdocument. When the model moves such a tag of its own into an insertion, the
+  writer puts it right behind the insertion and goes on with a new one; a container which the model nests there
+  loses its container and keeps its words.
 - **Bookmarks and comment ranges are no tags.** Their starts go before the new words, their ends after them,
   so a range only widens to its paragraph.
 - **Changes of formatting are pairs as well.** Within a pair, or outside of any, the words in the most common

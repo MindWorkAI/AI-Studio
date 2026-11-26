@@ -375,7 +375,8 @@ internal static class WordSegmentReader
             {
                 switch (child)
                 {
-                    case W.ParagraphProperties:
+                    // The properties of a paragraph, of custom XML, or of a simple field go with their element, see WordParagraphWriter.ShellOf:
+                    case W.ParagraphProperties or W.CustomXmlProperties or W.FieldData:
                         break;
 
                     case W.Run run:
@@ -394,7 +395,8 @@ internal static class WordSegmentReader
                         items.Add(new PieceItem(new WordPiece(child, null, false), PieceKind.MARKER_END));
                         break;
 
-                    case W.Hyperlink or W.InsertedRun or W.MoveToRun or W.CustomXmlRun or W.BidirectionalOverride or W.BidirectionalEmbedding:
+                    // A simple field encloses its result, like a field of its own whose result lies in the paragraph:
+                    case W.Hyperlink or W.InsertedRun or W.MoveToRun or W.CustomXmlRun or W.SimpleField or W.BidirectionalOverride or W.BidirectionalEmbedding:
                         items.Add(new ContainerItem(child, ItemsOf(child)));
                         break;
 
@@ -402,7 +404,7 @@ internal static class WordSegmentReader
                         items.Add(new ContainerItem(child, ItemsOf(content)));
                         break;
 
-                    // Fields without a result of their own, formulas, deleted runs, and whatever else:
+                    // Formulas, deleted runs, and whatever else:
                     default:
                         items.Add(new PieceItem(new WordPiece(child, null, false), PieceKind.PLAIN));
                         break;
