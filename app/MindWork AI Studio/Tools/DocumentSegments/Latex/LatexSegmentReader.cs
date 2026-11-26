@@ -51,14 +51,14 @@ internal sealed partial class LatexSegmentReader
     public static List<TextSegment> SegmentsOf(string text)
     {
         var reader = new LatexSegmentReader(text);
-        var (preambleEnd, bodyStart, bodyEnd) = RegionsOf(text);
+        var (preambleEnd, bodyStart) = RegionsOf(text);
         foreach (var node in LatexParser.Parse(text, 0, preambleEnd))
         {
             if (node.Kind is LatexNodeKind.COMMAND && PREAMBLE_HEADINGS.Contains(node.Name))
                 reader.AddHeading(node);
         }
 
-        reader.CollectBlocks(LatexParser.Parse(text, bodyStart, bodyEnd), isTable: false);
+        reader.CollectBlocks(BodyNodesOf(text, bodyStart), isTable: false);
         reader.segments.Sort((first, second) => first.Start.CompareTo(second.Start));
         return reader.segments;
     }
@@ -98,18 +98,32 @@ internal sealed partial class LatexSegmentReader
     private static partial Regex InputEncodingRegex();
 
     /// <summary>
-    /// Finds the preamble and the body of a document.
+    /// Finds where the preamble ends and the body starts; a document without \begin{document}, e.g., a chapter, is all body.
     /// </summary>
-    private static (int PreambleEnd, int BodyStart, int BodyEnd) RegionsOf(string text)
+    private static (int PreambleEnd, int BodyStart) RegionsOf(string text)
     {
         var begin = IndexOutsideOfComments(text, BEGIN_DOCUMENT, 0);
-        if (begin < 0)
-            return (0, 0, text.Length);
-
-        var bodyStart = begin + BEGIN_DOCUMENT.Length;
-        var end = IndexOutsideOfComments(text, END_DOCUMENT, bodyStart);
-        return (begin, bodyStart, end < 0 ? text.Length : end);
+        return begin < 0 ? (0, 0) : (begin, begin + BEGIN_DOCUMENT.Length);
     }
+
+    /// <summary>
+    /// Reads the body up to its \end{document}.
+    /// </summary>
+    /// <remarks>
+    /// The parser finds that end, since it skips comments, verbatim environments, and \verb, where a tutorial may well
+    /// show \end{document} as code. It reads the end as an INVALID node: the end of an environment which is not open.
+    /// </remarks>
+    private static List<LatexNode> BodyNodesOf(string text, int bodyStart)
+    {
+        var nodes = LatexParser.Parse(text, bodyStart, text.Length).ToList();
+        var end = nodes.FindIndex(node => node.Kind is LatexNodeKind.INVALID && IsEndOfDocument(text, node));
+        return end < 0 ? nodes : nodes[..end];
+    }
+
+    private static bool IsEndOfDocument(string text, LatexNode node) => string.Equals(
+        string.Concat(text.AsSpan(node.Start, node.End - node.Start).ToString().Where(character => !char.IsWhiteSpace(character))),
+        END_DOCUMENT,
+        StringComparison.Ordinal);
 
     private static int IndexOutsideOfComments(string text, string value, int from)
     {

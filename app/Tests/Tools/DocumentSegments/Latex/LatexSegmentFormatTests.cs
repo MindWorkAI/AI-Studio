@@ -221,6 +221,69 @@ public sealed class LatexSegmentFormatTests
         });
     }
 
+    [Test]
+    public async Task AnUnclosedBraceLeavesOnlyItsParagraph()
+    {
+        this.WriteSource("\\documentclass{article}\n\\begin{document}\nA {broken paragraph.\n\nThe next paragraph.\n\\end{document}\n");
+
+        var keys = await this.KeysAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(keys, Does.Contain("The next paragraph."), "The paragraphs after the broken one are read as usual.");
+            Assert.That(keys, Has.None.Contains("broken"), "The broken paragraph stays as it is.");
+        });
+    }
+
+    [Test]
+    public async Task ArgumentsWithoutTheirEndAreReadOnce()
+    {
+        // Each argument without its end would double the work, if the parser read it again as a group:
+        var text = "\\begin{document}\n" + string.Concat(Enumerable.Repeat("\\emph{a ", 40)) + "\n\nThe next paragraph.\n\\end{document}";
+
+        var reading = Task.Run(() => LatexSegmentReader.SegmentsOf(text));
+        var finished = await Task.WhenAny(reading, Task.Delay(TimeSpan.FromSeconds(10))) == reading;
+
+        Assert.That(finished, Is.True, "Reading takes about as long as the document is.");
+        Assert.That(reading.Result.Select(segment => segment.Segment.Key), Does.Contain("The next paragraph."));
+    }
+
+    [Test]
+    public void DeeplyNestedGroupsKeepTheStack()
+    {
+        var text = "\\begin{document}\n" + new string('{', 50_000) + "x" + new string('}', 50_000) + "\n\nThe next paragraph.\n\\end{document}";
+
+        var keys = LatexSegmentReader.SegmentsOf(text).Select(segment => segment.Segment.Key).ToList();
+
+        Assert.That(keys, Is.EqualTo(new[] { "The next paragraph." }), "The nested groups stay as they are, and the next paragraph is read.");
+    }
+
+    [Test]
+    public async Task AnEndOfTheDocumentWithinCodeEndsNothing()
+    {
+        // A tutorial shows how a document ends:
+        this.WriteSource("""
+                         \begin{document}
+                         \begin{verbatim}
+                         \end{document}
+                         \end{verbatim}
+
+                         Type \verb|\end{document}| at the end.
+
+                         After the examples.
+                         \end{document}
+                         Ignored.
+                         """.ReplaceLineEndings("\n"));
+
+        var keys = await this.KeysAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(keys, Does.Contain("After the examples."), "Neither the verbatim environment nor \\verb ends the body.");
+            Assert.That(keys, Has.None.Contains("Ignored"), "What follows the real end stays out.");
+        });
+    }
+
     private void WriteSource(string text) => File.WriteAllText(this.source, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 
     private async Task<List<string>> KeysAsync() => (await this.format.ReadAsync(this.source, CancellationToken.None)).Select(segment => segment.Key).ToList();

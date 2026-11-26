@@ -148,6 +148,11 @@ expands no macro.
 - **Formulas, code, and drawings stay as they are.** A formula within a paragraph is a tag of its own. Verbatim and
   listing environments, TikZ pictures, and bibliographies stay out entirely, as does every paragraph whose markup
   the parser cannot follow, e.g., a closing brace without an opening one.
+- **Broken markup costs one paragraph, and no more time.** An opening brace without its closing one, or groups
+  nested deeper than `LatexParser.MAX_NESTING_DEPTH`, leave the rest of their paragraph as it is; the paragraphs
+  after it are read as usual. The parser notes each opening without an end, so that it reads every part of a
+  document about once, and the reader takes the end of the body from the parser, which skips `\end{document}`
+  within comments and code.
 - **The language settings stay.** The format leaves babel or polyglossia alone: a document may switch between
   languages on purpose, and another script may need packages which only its author can choose.
 

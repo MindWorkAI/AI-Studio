@@ -11,7 +11,14 @@ namespace AIStudio.Tools.DocumentSegments.Latex;
 /// </para>
 /// <para>
 /// It never fails. Markup it cannot follow, e.g., a closing brace without an opening one or a formula without its
-/// end, becomes an INVALID node, so that the reader leaves the paragraph around it as it is.
+/// end, becomes an INVALID node, so that the reader leaves the paragraph around it as it is. A group without its
+/// closing brace, or one nested deeper than MAX_NESTING_DEPTH, takes only the rest of its paragraph, so that the
+/// paragraphs after it are read as usual.
+/// </para>
+/// <para>
+/// It reads every part of a document about once, whatever the document holds. An argument without its closing
+/// brace is read once more as a group, see ParseArguments, so the parser notes each opening which turned out to
+/// have no end and does not read it again; otherwise, each further such opening within it would double the work.
 /// </para>
 /// </remarks>
 internal sealed class LatexParser
@@ -26,8 +33,21 @@ internal sealed class LatexParser
     /// </summary>
     private const int MAX_ENVIRONMENT_NAME_LENGTH = 64;
 
+    /// <summary>
+    /// How deep groups, arguments, and environments nest at most; far deeper than any document needs, but shallow
+    /// enough that the recursion of the parser and of the reader stays within the stack of a thread.
+    /// </summary>
+    private const int MAX_NESTING_DEPTH = 128;
+
     private readonly string text;
+
+    /// <summary>
+    /// The openings, i.e., braces and brackets, which turned out to have no end before the given limit.
+    /// </summary>
+    private readonly HashSet<(int Opening, int Limit)> unclosedOpenings = [];
+
     private int position;
+    private int depth;
 
     private LatexParser(string text, int start)
     {
@@ -50,23 +70,47 @@ internal sealed class LatexParser
     private List<LatexNode> ParseSequence(int limit, char? closing, string? environment)
     {
         var nodes = new List<LatexNode>();
-        while (this.position < limit && this.text[this.position] != closing)
+        this.depth++;
+        try
         {
-            if (this.TryReadEnd(this.position, limit, out var name, out var end))
+            while (this.position < limit && this.text[this.position] != closing)
             {
-                if (name == environment)
-                    break;
+                if (this.TryReadEnd(this.position, limit, out var name, out var end))
+                {
+                    if (name == environment)
+                        break;
 
-                // The end of an environment which is not open here:
-                nodes.Add(new(LatexNodeKind.INVALID, this.position, end));
-                this.position = end;
-                continue;
+                    // The end of an environment which is not open here:
+                    nodes.Add(new(LatexNodeKind.INVALID, this.position, end));
+                    this.position = end;
+                    continue;
+                }
+
+                nodes.Add(this.ParseNode(limit, closing));
             }
-
-            nodes.Add(this.ParseNode(limit, closing));
+        }
+        finally
+        {
+            this.depth--;
         }
 
         return nodes;
+    }
+
+    /// <summary>
+    /// Whether the content of an opening at the position may be read: it lies not too deep, and it did not turn out to have no end before.
+    /// </summary>
+    private bool MayRead(int opening, int limit) => this.depth < MAX_NESTING_DEPTH && !this.unclosedOpenings.Contains((opening, limit));
+
+    /// <summary>
+    /// Notes an opening without its end, and makes the rest of its paragraph an INVALID node.
+    /// </summary>
+    private LatexNode Unclosed(int opening, int limit)
+    {
+        this.unclosedOpenings.Add((opening, limit));
+        this.position = opening + 1;
+        this.position = this.ParagraphEnd(limit);
+        return new(LatexNodeKind.INVALID, opening, this.position);
     }
 
     private LatexNode ParseNode(int limit, char? closing)
@@ -124,10 +168,13 @@ internal sealed class LatexParser
     private LatexNode ParseGroup(int limit)
     {
         var start = this.position;
+        if (!this.MayRead(start, limit))
+            return this.Unclosed(start, limit);
+
         this.position++;
         var children = this.ParseSequence(limit, '}', null);
         if (this.position >= limit)
-            return new(LatexNodeKind.INVALID, start, this.position);
+            return this.Unclosed(start, limit);
 
         this.position++;
         return new(LatexNodeKind.GROUP, start, this.position) { Children = children };
@@ -360,6 +407,11 @@ internal sealed class LatexParser
         return new(LatexNodeKind.COMMAND, start, this.position) { Name = name, Arguments = arguments };
     }
 
+    /// <remarks>
+    /// An argument which turns out to have no end, e.g., a brace without its closing brace, ends the arguments: the
+    /// position goes back to its opening, which the sequence then reads as a group, i.e., as INVALID up to the end of
+    /// its paragraph. The opening is noted by then, see MayRead, so it is not read a second time.
+    /// </remarks>
     private List<LatexArgument> ParseArguments(LatexCommand command, int limit)
     {
         var arguments = new List<LatexArgument>();
@@ -397,10 +449,16 @@ internal sealed class LatexParser
     private LatexArgument? ParseMandatoryArgument(int limit)
     {
         var start = this.position;
+        if (!this.MayRead(start, limit))
+            return null;
+
         this.position++;
         var children = this.ParseSequence(limit, '}', null);
         if (this.position >= limit)
+        {
+            this.unclosedOpenings.Add((start, limit));
             return null;
+        }
 
         this.position++;
         return new(false, start + 1, this.position - 1, children);
@@ -413,10 +471,16 @@ internal sealed class LatexParser
     {
         var argumentLimit = this.ParagraphEnd(limit);
         var start = this.position;
+        if (!this.MayRead(start, argumentLimit))
+            return null;
+
         this.position++;
         var children = this.ParseSequence(argumentLimit, ']', null);
         if (this.position >= argumentLimit)
+        {
+            this.unclosedOpenings.Add((start, argumentLimit));
             return null;
+        }
 
         this.position++;
         return new(true, start + 1, this.position - 1, children);
@@ -485,6 +549,13 @@ internal sealed class LatexParser
 
             this.position = endIndex + endMarkup.Length;
             return new(LatexNodeKind.ENVIRONMENT, start, this.position) { Name = name };
+        }
+
+        // An environment nested too deep is markup the reader cannot follow anyway:
+        if (this.depth >= MAX_NESTING_DEPTH)
+        {
+            this.position = this.ParagraphEnd(limit);
+            return new(LatexNodeKind.INVALID, start, this.position);
         }
 
         this.SkipOverlay(limit);
