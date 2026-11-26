@@ -127,6 +127,34 @@ public sealed partial class RustService
     }
 
     /// <summary>
+    /// Asks the runtime whether it is alive, over a connection of its own.
+    /// </summary>
+    /// <remarks>
+    /// This check tells a runtime which is gone from a connection which failed: all other calls share one
+    /// HTTP/2 connection, which a flood of requests can congest and which the runtime may close while it
+    /// keeps running.
+    /// </remarks>
+    /// <param name="token">Ends the check when the server stops.</param>
+    /// <returns>True when the runtime answered.</returns>
+    public async Task<bool> IsRuntimeAliveAsync(CancellationToken token)
+    {
+        try
+        {
+            using var response = await this.aliveHttp.GetAsync("/system/alive", token);
+            if (response.IsSuccessStatusCode)
+                return true;
+
+            this.logger?.LogWarning("The runtime refused the check whether it is alive: '{StatusCode}'.", response.StatusCode);
+            return false;
+        }
+        catch (Exception e) when (!token.IsCancellationRequested)
+        {
+            this.logger?.LogWarning("The runtime did not answer the check whether it is alive: {Reason}", TerminalLogger.DescribeException(e));
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Requests the Rust runtime to exit the entire desktop application.
     /// </summary>
     public async Task<bool> ExitApplication()
