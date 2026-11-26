@@ -17,13 +17,19 @@ internal abstract record WordPair;
 internal sealed record WordContainerPair(OpenXmlElement Container) : WordPair;
 
 /// <summary>
-/// A field whose result shows words, e.g., an entry of a table of contents or a cross reference. The words
-/// are its result, which the model translates, while the start of the field with its instruction and the end
-/// of the field stay as they are, and in their order.
+/// Words between a start and an end which are elements of their own and stay as they are, and in their order:
 /// </summary>
-/// <param name="Opening">The start of the field, its instruction, and the mark which separates the result.</param>
-/// <param name="Closing">The end of the field.</param>
-internal sealed record WordFieldPair(WordAtom Opening, WordAtom Closing) : WordPair;
+/// <remarks>
+/// <list type="bullet">
+/// <item>A field whose result shows words, e.g., an entry of a table of contents or a cross reference. The words
+/// are its result, while the start of the field with its instruction and the end of the field stay.</item>
+/// <item>A bookmark around words, e.g., the one a cross reference to a caption points to. It encloses the same
+/// words afterward, so that the cross reference shows the new label and number, not the whole caption.</item>
+/// </list>
+/// </remarks>
+/// <param name="Opening">The start: of a field, with its instruction and the mark which separates the result, or of a bookmark.</param>
+/// <param name="Closing">The end of the field or of the bookmark.</param>
+internal sealed record WordBoundaryPair(WordAtom Opening, WordAtom Closing) : WordPair;
 
 /// <summary>
 /// Words in a formatting other than the most common one of their surroundings, e.g., a word in bold. The

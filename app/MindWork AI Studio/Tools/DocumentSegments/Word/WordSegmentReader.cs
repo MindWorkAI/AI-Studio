@@ -15,7 +15,8 @@ namespace AIStudio.Tools.DocumentSegments.Word;
 /// Words become text, and elements which enclose runs, e.g., links or content controls, become pairs of tags.
 /// A field whose result lies in the same paragraph becomes a pair as well, around its result. Everything else
 /// within the paragraph, e.g., tabs, pictures, references to notes, or formulas, becomes a tag of its own.
-/// Bookmarks and the ranges of comments are no tags: their starts go before the new words, their ends after them.
+/// A bookmark around words of the paragraph is a pair as well, see BookmarkPairsOf. Other bookmarks and the ranges
+/// of comments are no tags: their starts go before the new words, their ends after them.
 /// </para>
 /// <para>
 /// A paragraph inside another one, e.g., in a text box, is a segment of its own; for the paragraph around it,
@@ -175,13 +176,18 @@ internal static class WordSegmentReader
         private void Build(List<Item> items, int pairId)
         {
             var baseFormatKey = this.BaseFormatKeyOf(items);
+            var bookmarkEnds = BookmarkPairsOf(items);
             var index = 0;
             while (index < items.Count)
             {
                 switch (items[index])
                 {
                     case TextItem:
-                        index = this.BuildWords(items, index, pairId, baseFormatKey);
+                        index = this.BuildWords(items, index, pairId, baseFormatKey, bookmarkEnds);
+                        break;
+
+                    case PieceItem { Kind: PieceKind.MARKER_START } when bookmarkEnds.TryGetValue(index, out var bookmarkEnd):
+                        index = this.BuildBoundaryPair(items, index, bookmarkEnd);
                         break;
 
                     case PieceItem { Kind: PieceKind.DROPPED }:
@@ -229,12 +235,7 @@ internal static class WordSegmentReader
             {
                 // A field with its result in this paragraph: the result is words within a pair.
                 case ({ } separateIndex, { } endIndex):
-                    var opening = this.AtomOf(items, begin, separateIndex);
-                    var fieldPair = this.builder.Open();
-                    this.Build(items.GetRange(separateIndex + 1, endIndex - separateIndex - 1), fieldPair);
-                    this.builder.Close(fieldPair);
-                    this.pairs[fieldPair] = new WordFieldPair(opening, this.AtomOf(items, endIndex, endIndex));
-                    return endIndex + 1;
+                    return this.BuildBoundaryPair(items, begin, endIndex, separateIndex);
 
                 // A field without a result, which shows nothing:
                 case (null, { } endWithoutResult):
@@ -251,6 +252,94 @@ internal static class WordSegmentReader
                     this.AddPlaceholder(items, begin, items.Count - 1);
                     return items.Count;
             }
+        }
+
+        /// <summary>
+        /// Reads words between a start and an end which stay as they are, see WordBoundaryPair.
+        /// </summary>
+        /// <param name="items">The items of this level.</param>
+        /// <param name="start">The first item of the start.</param>
+        /// <param name="end">The item of the end.</param>
+        /// <param name="startEnd">The last item of the start, e.g., the mark which separates the result of a field; the start itself when it is one item.</param>
+        /// <returns>The index of the first item after the end.</returns>
+        private int BuildBoundaryPair(List<Item> items, int start, int end, int? startEnd = null)
+        {
+            var wordsStart = (startEnd ?? start) + 1;
+            var opening = this.AtomOf(items, start, wordsStart - 1);
+            var pair = this.builder.Open();
+            this.Build(items.GetRange(wordsStart, end - wordsStart), pair);
+            this.builder.Close(pair);
+            this.pairs[pair] = new WordBoundaryPair(opening, this.AtomOf(items, end, end));
+            return end + 1;
+        }
+
+        /// <summary>
+        /// Finds the bookmarks of a level which become pairs around their words.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A cross reference shows the words its bookmark encloses, e.g., the label and the number of a caption. As a
+        /// pair, the bookmark encloses the new words of the model alike; as a mark before and after the words, it would
+        /// widen to the whole paragraph, and the cross reference would show the whole caption once Word updates it.
+        /// </para>
+        /// <para>
+        /// That takes a bookmark whose start and end lie in the same level, with words in between, and which crosses
+        /// neither another such bookmark nor a field: pairs have to nest. Every other bookmark, an empty one such as
+        /// the one Word keeps for the last place of editing included, stays a mark, as do the ranges of comments.
+        /// </para>
+        /// </remarks>
+        /// <returns>The index of the end of each such bookmark, by the index of its start.</returns>
+        private static Dictionary<int, int> BookmarkPairsOf(List<Item> items)
+        {
+            var openStarts = new Dictionary<string, int>(StringComparer.Ordinal);
+            var candidates = new List<(int Start, int End)>();
+            for (var index = 0; index < items.Count; index++)
+            {
+                switch (items[index])
+                {
+                    case PieceItem { Kind: PieceKind.MARKER_START, Piece.Element: W.BookmarkStart { Id.Value: { } startId } }:
+                        openStarts[startId] = index;
+                        break;
+
+                    case PieceItem { Kind: PieceKind.MARKER_END, Piece.Element: W.BookmarkEnd { Id.Value: { } endId } } when openStarts.Remove(endId, out var start):
+                        var enclosed = items.GetRange(start + 1, index - start - 1);
+                        if (HasWords(enclosed) && FieldsAreWhole(enclosed))
+                            candidates.Add((start, index));
+
+                        break;
+                }
+            }
+
+            // Of two bookmarks which cross, the one which starts first becomes a pair:
+            var pairs = new Dictionary<int, int>();
+            foreach (var (start, end) in candidates.OrderBy(candidate => candidate.Start))
+            {
+                if (pairs.All(pair => !Cross(pair.Key, pair.Value, start, end)))
+                    pairs[start] = end;
+            }
+
+            return pairs;
+        }
+
+        private static bool Cross(int firstStart, int firstEnd, int secondStart, int secondEnd) =>
+            (firstStart < secondStart && secondStart < firstEnd && firstEnd < secondEnd) ||
+            (secondStart < firstStart && firstStart < secondEnd && secondEnd < firstEnd);
+
+        /// <summary>
+        /// Whether every field which starts among the items also ends among them, and the other way round.
+        /// </summary>
+        private static bool FieldsAreWhole(List<Item> items)
+        {
+            var depth = 0;
+            foreach (var item in items)
+            {
+                if (item is PieceItem { Kind: PieceKind.FIELD_BEGIN })
+                    depth++;
+                else if (item is PieceItem { Kind: PieceKind.FIELD_END } && --depth < 0)
+                    return false;
+            }
+
+            return depth == 0;
         }
 
         /// <summary>
@@ -293,7 +382,7 @@ internal static class WordSegmentReader
         /// formatting go into a pair of their own.
         /// </remarks>
         /// <returns>The index of the first item after the words.</returns>
-        private int BuildWords(List<Item> items, int start, int pairId, string baseFormatKey)
+        private int BuildWords(List<Item> items, int start, int pairId, string baseFormatKey, Dictionary<int, int> bookmarkEnds)
         {
             var words = new List<TextItem>();
             var index = start;
@@ -301,7 +390,7 @@ internal static class WordSegmentReader
             {
                 if (items[index] is TextItem text)
                     words.Add(text);
-                else if (items[index] is PieceItem { Kind: PieceKind.MARKER_START } startMarker)
+                else if (items[index] is PieceItem { Kind: PieceKind.MARKER_START } startMarker && !bookmarkEnds.ContainsKey(index))
                     this.startMarkers.Add(startMarker.Piece.Element);
                 else if (items[index] is PieceItem { Kind: PieceKind.MARKER_END } endMarker)
                     this.endMarkers.Add(endMarker.Piece.Element);

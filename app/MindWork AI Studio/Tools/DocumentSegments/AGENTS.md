@@ -86,8 +86,11 @@ footers, and the notes as segments, and leaves everything else of the document a
   simple field, custom XML, or subdocument. When the model moves such a tag of its own into an insertion, the
   writer puts it right behind the insertion and goes on with a new one; a container which the model nests there
   loses its container and keeps its words.
-- **Bookmarks and comment ranges are no tags.** Their starts go before the new words, their ends after them,
-  so a range only widens to its paragraph.
+- **A bookmark around words is a pair, other ranges are no tags.** A cross reference shows the words its bookmark
+  encloses, e.g., the label and the number of a caption, so such a bookmark encloses the new words alike, as long
+  as it lies within one level of the paragraph and crosses neither another one nor a field. The starts of all other
+  bookmarks and of comment ranges go before the new words, their ends after them, so such a range only widens to
+  its paragraph.
 - **Changes of formatting are pairs as well.** Within a pair, or outside of any, the words in the most common
   formatting stay words, and those in any other formatting, e.g., a word in bold, get a pair of their own.
   Spaces never get one. A paragraph with more than `FormatSpans.MAX_PAIRS` such pairs keeps one formatting

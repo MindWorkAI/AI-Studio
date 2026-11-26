@@ -46,7 +46,7 @@ public sealed class WordSegmentFormatTests
             Assert.That(keys, Does.Contain(LINK_PARAGRAPH), "A link is a pair, a tab a tag of its own.");
             Assert.That(keys, Does.Contain("See the note<1/>"), "The reference to a footnote is a tag of its own.");
             Assert.That(keys, Does.Contain("<1>Introduction</1>"), "The result of a field is words within a pair.");
-            Assert.That(keys, Does.Contain("Chapter"), "Bookmarks are no tags.");
+            Assert.That(keys, Does.Contain("<1>Chapter</1>"), "A bookmark around words is a pair, so that a cross reference to it shows the new words alone.");
             Assert.That(keys, Does.Contain("Mixed <1>bold</1> words"), "A word in bold is a pair.");
             Assert.That(keys, Does.Contain("Confidential"), "Headers are read.");
             Assert.That(keys, Does.Contain("<1/> A note."), "Footnotes are read, without their separators.");

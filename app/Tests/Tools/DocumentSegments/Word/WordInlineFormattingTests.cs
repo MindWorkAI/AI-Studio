@@ -220,6 +220,68 @@ public sealed class WordInlineFormattingTests
         });
     }
 
+    [Test]
+    public async Task ACaptionBookmarkEnclosesTheNewLabelAndNumber()
+    {
+        // A caption as Word writes it: a cross reference points to the bookmark around its label and number:
+        Create(this.source, Paragraph(
+            new W.BookmarkStart { Id = "0", Name = "_Ref1" },
+            Run("Figure "),
+            new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.Begin }),
+            new W.Run(new W.FieldCode(" SEQ Figure \\* ARABIC ") { Space = DocumentFormat.OpenXml.SpaceProcessingModeValues.Preserve }),
+            new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.Separate }),
+            Run("1"),
+            new W.Run(new W.FieldChar { FieldCharType = W.FieldCharValues.End }),
+            new W.BookmarkEnd { Id = "0" },
+            Run(": Overview of the system")));
+        var key = (await this.KeysAsync()).Single();
+
+        var result = await this.WriteAsync(key, "<1>Abbildung <2>1</2></1>: Übersicht über das System");
+
+        using var document = WordprocessingDocument.Open(this.target, false);
+        var paragraph = document.MainDocumentPart!.Document!.Body!.Elements<W.Paragraph>().Single();
+        var enclosed = paragraph.ChildElements.SkipWhile(child => child is not W.BookmarkStart).Skip(1).TakeWhile(child => child is not W.BookmarkEnd);
+        Assert.Multiple(() =>
+        {
+            Assert.That(key, Is.EqualTo("<1>Figure <2>1</2></1>: Overview of the system"));
+            Assert.That(ValidationErrorsOf(document), Is.EqualTo(this.SourceValidationErrors()), "The new document is as valid as the source.");
+            Assert.That(result.SimplifiedCount, Is.Zero);
+            Assert.That(string.Concat(enclosed.SelectMany(child => child.Descendants<W.Text>()).Select(text => text.Text)), Is.EqualTo("Abbildung 1"), "A cross reference shows the new label and number, not the whole caption.");
+        });
+    }
+
+    [Test]
+    public async Task ABookmarkWithoutWordsIsNoTag()
+    {
+        Create(this.source, Paragraph(new W.BookmarkStart { Id = "1", Name = "_GoBack" }, new W.BookmarkEnd { Id = "1" }, Run("Some text.")));
+
+        Assert.That(await this.KeysAsync(), Is.EqualTo(new[] { "Some text." }));
+    }
+
+    [Test]
+    public async Task OfTwoCrossingBookmarksTheFirstIsAPair()
+    {
+        Create(this.source, Paragraph(
+            new W.BookmarkStart { Id = "0", Name = "First" },
+            Run("one "),
+            new W.BookmarkStart { Id = "1", Name = "Second" },
+            Run("two"),
+            new W.BookmarkEnd { Id = "0" },
+            Run(" three"),
+            new W.BookmarkEnd { Id = "1" }));
+        var key = (await this.KeysAsync()).Single();
+
+        await this.WriteAsync(key, key.ToUpperInvariant());
+
+        using var document = WordprocessingDocument.Open(this.target, false);
+        Assert.Multiple(() =>
+        {
+            Assert.That(key, Is.EqualTo("<1>one two</1> three"), "Pairs have to nest, so the second bookmark widens to the paragraph.");
+            Assert.That(ValidationErrorsOf(document), Is.EqualTo(this.SourceValidationErrors()), "The new document is as valid as the source.");
+            Assert.That(document.MainDocumentPart!.Document!.Body!.InnerText, Is.EqualTo("ONE TWO THREE"));
+        });
+    }
+
     private List<string> SourceValidationErrors()
     {
         using var document = WordprocessingDocument.Open(this.source, false);

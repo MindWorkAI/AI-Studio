@@ -143,7 +143,7 @@ internal static class WordParagraphWriter
 
                     case TaggedTokenKind.CLOSE when openIds.Contains(token.Id) && paragraph.Pairs.TryGetValue(token.Id, out var closedPair):
                         this.Close();
-                        if (closedPair is WordFieldPair { Closing: var closing })
+                        if (closedPair is WordBoundaryPair { Closing: var closing })
                             this.AppendAtom(closing);
 
                         break;
@@ -172,9 +172,10 @@ internal static class WordParagraphWriter
                     this.openPairs.Add(new(pairId, this.target, null));
                     break;
 
-                case WordFieldPair field:
+                // The start of a field or of a bookmark goes before the words, its end follows them:
+                case WordBoundaryPair boundary:
                     this.openPairs.Add(new(pairId, this.target, null));
-                    this.AppendAtom(field.Opening);
+                    this.AppendAtom(boundary.Opening);
                     break;
 
                 // The words within the pair take its formatting, see WordParagraph.TextFormatOf:

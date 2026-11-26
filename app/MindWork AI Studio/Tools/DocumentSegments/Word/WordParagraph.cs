@@ -29,7 +29,7 @@ internal sealed record WordParagraph(
     /// All elements the tags stand for, in the order they stood in the paragraph.
     /// </summary>
     public IEnumerable<WordAtom> AtomsInOrder => this.Placeholders.Values
-        .Concat(this.Pairs.Values.OfType<WordFieldPair>().SelectMany(pair => new[] { pair.Opening, pair.Closing }))
+        .Concat(this.Pairs.Values.OfType<WordBoundaryPair>().SelectMany(pair => new[] { pair.Opening, pair.Closing }))
         .OrderBy(atom => atom.Order);
 
     /// <summary>
