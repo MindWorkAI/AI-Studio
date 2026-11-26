@@ -2018,10 +2018,13 @@ mod tests {
         database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
         assert_eq!(payload_indexes(&database).len(), INDEXED_PAYLOAD_FIELDS.len());
 
+        // On Windows, an open WAL locks the file `.wal` in its directory against every other handle,
+        // so the WAL can be read only after the store is closed, just like before it was loaded:
+        drop(database);
+
         // Not assert_eq: on failure, it would print every byte of the WAL.
         assert!(file_contents(&wal_path) == wal, "loading the store left its WAL as it was");
 
-        drop(database);
         fs::remove_dir_all(test_directory).unwrap();
     }
 
