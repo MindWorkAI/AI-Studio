@@ -2,15 +2,15 @@
 
 public sealed partial class RustService
 {
-    public async Task<string> ReadUserLanguage(bool forceRequest = false)
+    public async Task<string> ReadUserLanguage()
     {
-        if (!forceRequest && !string.IsNullOrWhiteSpace(this.cachedUserLanguage))
+        if (!string.IsNullOrWhiteSpace(this.cachedUserLanguage))
             return this.cachedUserLanguage;
 
         await this.userLanguageLock.WaitAsync();
         try
         {
-            if (!forceRequest && !string.IsNullOrWhiteSpace(this.cachedUserLanguage))
+            if (!string.IsNullOrWhiteSpace(this.cachedUserLanguage))
                 return this.cachedUserLanguage;
 
             var response = await this.http.GetAsync("/system/language");
@@ -33,15 +33,15 @@ public sealed partial class RustService
         }
     }
 
-    public async Task<string> ReadUserName(bool forceRequest = false)
+    public async Task<string> ReadUserName()
     {
-        if (!forceRequest && !string.IsNullOrWhiteSpace(this.cachedUserName))
+        if (!string.IsNullOrWhiteSpace(this.cachedUserName))
             return this.cachedUserName;
 
         await this.userNameLock.WaitAsync();
         try
         {
-            if (!forceRequest && !string.IsNullOrWhiteSpace(this.cachedUserName))
+            if (!string.IsNullOrWhiteSpace(this.cachedUserName))
                 return this.cachedUserName;
 
             var response = await this.http.GetAsync("/system/username");

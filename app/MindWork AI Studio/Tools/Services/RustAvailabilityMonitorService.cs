@@ -2,31 +2,24 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Tools.Services;
 
+/// <summary>
+/// Shuts the server down once the runtime is gone.
+/// </summary>
+/// <remarks>
+/// Services report a failed call to the runtime with the event RUST_SERVICE_UNAVAILABLE. Such a call can fail
+/// while the runtime keeps running, so RuntimeOutageCheck probes the runtime before the server shuts down.
+/// </remarks>
 public sealed class RustAvailabilityMonitorService : BackgroundService, IMessageBusReceiver
 {
-    private const int UNAVAILABLE_EVENT_THRESHOLD = 2;
-
     private readonly ILogger<RustAvailabilityMonitorService> logger;
     private readonly MessageBus messageBus;
-    private readonly RustService rustService;
-    private readonly IHostApplicationLifetime appLifetime;
+    private readonly RuntimeOutageCheck outageCheck;
 
-    private int rustUnavailableCount;
-    private int availabilityCheckTriggered;
-    
-    // To prevent multiple shutdown triggers. We use int instead of bool for Interlocked operations.
-    private int shutdownTriggered;
-
-    public RustAvailabilityMonitorService(
-        ILogger<RustAvailabilityMonitorService> logger,
-        MessageBus messageBus,
-        RustService rustService,
-        IHostApplicationLifetime appLifetime)
+    public RustAvailabilityMonitorService(ILogger<RustAvailabilityMonitorService> logger, MessageBus messageBus, RustService rustService, IHostApplicationLifetime appLifetime)
     {
         this.logger = logger;
         this.messageBus = messageBus;
-        this.rustService = rustService;
-        this.appLifetime = appLifetime;
+        this.outageCheck = new(rustService.IsRuntimeAliveAsync, appLifetime.StopApplication, RuntimeProbeSchedule.DEFAULT, appLifetime.ApplicationStopping, logger);
 
         this.messageBus.RegisterComponent(this);
         this.ApplyFilters([], [Event.RUST_SERVICE_UNAVAILABLE]);
@@ -54,58 +47,18 @@ public sealed class RustAvailabilityMonitorService : BackgroundService, IMessage
             string s when !string.IsNullOrWhiteSpace(s) => s,
             _ => "unknown reason",
         };
-        
-        // Thread-safe incrementation of the unavailable count and check against the threshold:
-        var numEvents = Interlocked.Increment(ref this.rustUnavailableCount);
-        
-        // On the first event, trigger some Rust availability checks to confirm.
-        // Just fire and forget - we don't need to await this here.
-        if (numEvents == 1 && Interlocked.Exchange(ref this.availabilityCheckTriggered, 1) == 0)
-        {
-            //
-            // This is also useful to speed up the detection of Rust availability issues,
-            // as it triggers two immediate checks instead of waiting for the next scheduled check.
-            // Scheduled checks are typically every few minutes, which might be too long to wait
-            // in case of critical Rust service failures.
-            //
-            // On the other hand, we cannot kill the .NET server on the first failure, as it might
-            // be a transient issue.
-            //
-            
-            this.VerifyRustAvailability().Observe($"{nameof(RustAvailabilityMonitorService)}: verifying the Rust availability");
-            this.VerifyRustAvailability().Observe($"{nameof(RustAvailabilityMonitorService)}: verifying the Rust availability");
-        }
 
-        if (numEvents <= UNAVAILABLE_EVENT_THRESHOLD)
-        {
-            this.logger.LogWarning("Rust service unavailable (num repeats={NumRepeats}, threshold={Threshold}). Reason = '{Reason}'. Waiting for more occurrences before shutting down the server.", numEvents, UNAVAILABLE_EVENT_THRESHOLD, reason);
-            return Task.CompletedTask;
-        }
-
-        // Ensure shutdown is only triggered once:
-        if (Interlocked.Exchange(ref this.shutdownTriggered, 1) != 0)
-            return Task.CompletedTask;
-
-        this.logger.LogError("Rust service unavailable (num repeats={NumRepeats}, threshold={Threshold}). Reason = '{Reason}'. Shutting down the server.", numEvents, UNAVAILABLE_EVENT_THRESHOLD, reason);
-        this.appLifetime.StopApplication();
+        //
+        // The round of probes runs on its own and takes up to a minute. The service which reported
+        // the failed call goes on meanwhile, e.g., the event stream with its next attempt. The check
+        // watches the outcome of the round itself.
+        //
+        _ = this.outageCheck.Report(reason);
         return Task.CompletedTask;
     }
 
     public Task<MessageBusAnswer<TResult>> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
         return Task.FromResult(MessageBusAnswer<TResult>.NONE);
-    }
-
-    private async Task VerifyRustAvailability()
-    {
-        try
-        { 
-            await this.rustService.ReadUserLanguage(forceRequest: true);
-        }
-        catch (Exception e)
-        {
-            this.logger.LogWarning(e, "Rust availability check failed.");
-            await this.messageBus.SendMessage(null, Event.RUST_SERVICE_UNAVAILABLE, "Rust availability check failed");
-        }
     }
 }

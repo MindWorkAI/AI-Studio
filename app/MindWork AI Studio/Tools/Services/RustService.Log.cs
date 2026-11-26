@@ -14,7 +14,7 @@ public sealed partial class RustService
     }
 
     /// <summary>
-    /// Sends a log event to the Rust runtime.
+    /// Queues a log event for the Rust runtime.
     /// </summary>
     /// <param name="timestamp">When the log event happened, formatted by TerminalLogger.FormatTransportTimestamp.</param>
     /// <param name="level">The log level.</param>
@@ -22,29 +22,11 @@ public sealed partial class RustService
     /// <param name="message">The log message.</param>
     /// <param name="exception">Optional exception message.</param>
     /// <param name="stackTrace">Optional exception stack trace.</param>
+    /// <remarks>
+    /// Never waits: the event joins the queue of RustLogForwarder, which sends it in a batch.
+    /// </remarks>
     public void LogEvent(string timestamp, string level, string category, string message, string? exception = null, string? stackTrace = null)
     {
-        try
-        {
-            //
-            // Fire-and-forget the log event to avoid blocking. This is the one place which deliberately
-            // discards its task instead of observing it: observing means logging the failure, and logging
-            // means sending another log event through this very method. A broken connection to Rust would
-            // feed itself. The unobserved task exception handler in Program.cs remains the safety net here.
-            //
-            var request = new LogEventRequest(timestamp, level, category, message, exception, stackTrace);
-            _ = this.http.PostAsJsonAsync("/log/event", request, JSON_OPTIONS);
-        }
-        catch
-        {
-            //
-            // We don't expect this to ever happen because the HTTP client cannot raise exceptions in fire-and-forget mode.
-            // This is because we don't await the task, so any exceptions thrown during the HTTP request are not propagated
-            // back to the caller.
-            //
-            
-            Console.WriteLine("Failed to send log event to Rust service.");
-            // Ignore errors to avoid log loops
-        }
+        this.logForwarder.Enqueue(new LogEventRequest(timestamp, level, category, message, exception, stackTrace));
     }
 }

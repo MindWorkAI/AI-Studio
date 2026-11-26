@@ -29,7 +29,7 @@ namespace AIStudio.Tools.Services;
 [JsonSerializable(typeof(ValidateShortcutRequest))]
 [JsonSerializable(typeof(SetInterfaceSizeRequest))]
 [JsonSerializable(typeof(CreateMediaJobRequest))]
-[JsonSerializable(typeof(LogEventRequest))]
+[JsonSerializable(typeof(LogEventsRequest))]
 [JsonSerializable(typeof(ValidateTokenizerRequest))]
 [JsonSerializable(typeof(StoreTokenizerRequest))]
 [JsonSerializable(typeof(DeleteTokenizerRequest))]
