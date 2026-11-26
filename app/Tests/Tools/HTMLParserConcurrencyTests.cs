@@ -8,13 +8,14 @@ namespace AIStudio.Tests.Tools;
 /// </summary>
 /// <remarks>
 /// A web search reads up to four result pages in parallel, and every one of them is converted
-/// through the same entry point. The converter doing that work tracks the ancestors of the node it
-/// is at, and it does so without any synchronization, so sharing one converter between those
-/// conversions let them write into each other's ancestor lists.<br/><br/>
-/// That went wrong in two ways, and this test covers both. Loudly, as a torn list throwing an index
-/// out of range — which is what showed up in the logs. And quietly, as a list indented by the depth
-/// a different page happened to be at, which nothing reports and which only a comparison against a
-/// known-good conversion catches.
+/// through the same converter, which ReverseMarkdown documents as safe for concurrent use since
+/// version 6. Up to version 5, a converter tracked the ancestors of the node it was at without any
+/// synchronization, and conversions sharing one wrote into each other's ancestor lists.<br/><br/>
+/// That went wrong in two ways, and this test covers both, should a version of the library ever
+/// share state between conversions again. Loudly, as a torn list throwing an index out of range —
+/// which is what showed up in the logs. And quietly, as a list indented by the depth a different
+/// page happened to be at, which nothing reports and which only a comparison against a known-good
+/// conversion catches.
 /// </remarks>
 [TestFixture]
 public sealed class HTMLParserConcurrencyTests
