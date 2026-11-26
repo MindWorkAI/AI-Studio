@@ -41,7 +41,7 @@ rustls = { version = "0.23.46", default-features = false, features = ["aws_lc_rs
 rand = "0.10.4"
 rand_chacha = "0.10.0"
 subtle = "2.6.1"
-base64 = "0.22.1"
+base64 = "0.23.1"
 aes = "0.9.4"
 cbc = "0.2.1"
 pbkdf2 = "0.13.0"
