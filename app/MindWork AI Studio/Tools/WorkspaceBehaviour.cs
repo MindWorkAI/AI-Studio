@@ -1668,6 +1668,34 @@ public static partial class WorkspaceBehaviour
     }
 
     /// <summary>
+    /// Asks the user for a new name of a chat.
+    /// </summary>
+    /// <remarks>
+    /// The one place which words this question, for the menu of a chat in the list and for the menu
+    /// beside the name of the open chat alike.
+    /// </remarks>
+    /// <param name="dialogService">Used to ask.</param>
+    /// <param name="chatName">The name the chat has now, which the field starts with.</param>
+    /// <returns>The new name, or null when the user canceled.</returns>
+    public static async Task<string?> AskForChatNameAsync(IDialogService dialogService, string chatName)
+    {
+        var dialogParameters = new DialogParameters<SingleInputDialog>
+        {
+            { x => x.Message, string.Format(TA("Please enter a new or edit the name for your chat '{0}':"), chatName) },
+            { x => x.InputHeaderText, TB("Chat Name") },
+            { x => x.UserInput, chatName },
+            { x => x.ConfirmText, TB("Rename") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, TA("Please enter a chat name.") },
+        };
+
+        var dialogReference = await dialogService.ShowAsync<SingleInputDialog>(TB("Rename Chat"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false, Data: string name } ? name : null;
+    }
+
+    /// <summary>
     /// Deletes the given chat without asking, together with what it received.
     /// </summary>
     /// <param name="workspaceId">Workspace that owns the chat; an empty id means a temporary chat.</param>

@@ -179,6 +179,29 @@ public partial class ChatTemplateDialog : MSGComponentBase
     }
 
     /// <summary>
+    /// Lets the user build a new chat template on the given chat, see <see cref="AddAsync"/>.
+    /// </summary>
+    /// <remarks>
+    /// The template menu of the composer and the menu beside the name of the open chat both offer this,
+    /// so both start the dialog alike.
+    /// </remarks>
+    /// <param name="dialogService">The dialog service of the caller.</param>
+    /// <param name="settingsManager">The settings which keep the templates.</param>
+    /// <param name="chat">The chat the template starts from.</param>
+    /// <returns>True when a template was stored.</returns>
+    public static Task<bool> AddFromChatAsync(IDialogService dialogService, SettingsManager settingsManager, ChatThread? chat)
+    {
+        var parameters = new DialogParameters<ChatTemplateDialog>
+        {
+            { x => x.IsEditing, false },
+            { x => x.CreateFromExistingChatThread, true },
+            { x => x.ExistingChatThread, chat },
+        };
+
+        return AddAsync(dialogService, settingsManager, parameters, isImport: false);
+    }
+
+    /// <summary>
     /// Lets the user change one of their chat templates and stores the change once saved.
     /// </summary>
     /// <remarks>

@@ -984,6 +984,47 @@ public partial class ChatComponent : MSGComponentBase
     /// </summary>
     private bool CanThreadBecomeTemplate => this.HasVisibleMessages && !this.IsCurrentChatStreaming;
 
+    //
+    // The menu beside the name of the open chat follows the rule of the menus of the list: an entry which
+    // does not apply to this chat stays out, and an entry which applies but has to wait, such as every
+    // entry while an answer is being written, shows grayed. Without any entry, the menu stays out.
+    //
+
+    /// <summary>
+    /// Whether the menu of the open chat offers another name. Not for the new chat of a place, which is
+    /// named after the message being written.
+    /// </summary>
+    private bool IsRenameOffered => this.ChatThread is not null && !this.IsNewChat;
+
+    /// <summary>
+    /// Whether the menu of the open chat offers to move it, see <see cref="this.CanThreadBeMoved"/>: the new
+    /// chat of a place only once it holds something of the user's.
+    /// </summary>
+    private bool IsMoveOffered => this.ChatThread is not null
+                                  && this.SettingsManager.ConfigurationData.Workspace.CanChatsGoIntoWorkspaces
+                                  && (!this.IsNewChat || this.HasNewChatContent());
+
+    /// <summary>
+    /// Whether the menu of the open chat offers to make a chat template of it, which needs a message to
+    /// start from, see <see cref="this.CanThreadBecomeTemplate"/>.
+    /// </summary>
+    private bool IsTemplateOffered => this.HasVisibleMessages;
+
+    /// <summary>
+    /// Whether the menu of the open chat offers to delete it: a sent chat which lies on the disk. A chat
+    /// which lies in memory only goes as soon as a new chat starts in its place anyway. Asks the disk, so
+    /// only the open menu checks this.
+    /// </summary>
+    private bool IsDeleteOffered => this.ChatThread is { } chat
+                                    && !this.IsNewChat
+                                    && WorkspaceBehaviour.IsChatExisting(new LoadChat(chat.WorkspaceId, chat.ChatId));
+
+    /// <summary>
+    /// Whether the menu of the open chat has any entry. A chat to delete always has a name to change, so
+    /// this asks no disk, as it runs with every render.
+    /// </summary>
+    private bool HasChatMenu => this.IsRenameOffered || this.IsMoveOffered || this.IsTemplateOffered;
+
     /// <summary>
     /// Whether the user may pick another profile, which the open chat carries from then on.
     /// </summary>
@@ -2663,10 +2704,11 @@ public partial class ChatComponent : MSGComponentBase
         // Want the user to manage the chat storage manually? In that case, we have to ask the user
         // about possible data loss. An answer still being written is lost as well, whenever chats are
         // not stored automatically, since leaving stops it, see StopAnswerOfLeftChatAsync. Not for a
-        // chat which stays as it is when left, see IsKeptWhenLeft:
+        // chat which stays as it is when left, see IsKeptWhenLeft, and not for one about to be deleted,
+        // whose deletion asks below, so the user answers one question only:
         //
         var storageBehavior = this.ChatStorage;
-        if ((storageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.AreChangesLostWhenLeft) || (storageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY && this.IsCurrentChatStreaming && !this.IsKeptWhenLeft))
+        if (!deletePreviousChat && ((storageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.AreChangesLostWhenLeft) || (storageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY && this.IsCurrentChatStreaming && !this.IsKeptWhenLeft)))
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
@@ -2847,6 +2889,56 @@ public partial class ChatComponent : MSGComponentBase
 
         await this.SyncForegroundChatAsync();
         return true;
+    }
+
+    /// <summary>
+    /// Gives the open chat another name, from the menu beside its name.
+    /// </summary>
+    /// <remarks>
+    /// Renames the chat as the list does: the stored chat gets the name right away, without what the user
+    /// has not saved yet, and the open chat shows it, see Workspaces.RenameChatAsync. A chat which lies in
+    /// memory only keeps the name there.
+    /// </remarks>
+    private async Task RenameOpenChatAsync()
+    {
+        if (this.ChatThread is not { } chat || !this.IsRenameOffered || this.IsCurrentChatStreaming)
+            return;
+
+        if (await WorkspaceBehaviour.AskForChatNameAsync(this.DialogService, chat.Name) is not { } chatName)
+            return;
+
+        var storedChat = new LoadChat(chat.WorkspaceId, chat.ChatId);
+        if (WorkspaceBehaviour.IsChatExisting(storedChat) && await WorkspaceBehaviour.LoadChatAsync(storedChat) is { } stored)
+        {
+            stored.Name = chatName;
+            await WorkspaceBehaviour.StoreChatAsync(stored);
+        }
+
+        chat.Name = chatName;
+        await this.ChatThreadChanged.InvokeAsync(chat);
+    }
+
+    /// <summary>
+    /// Deletes the open chat after asking, from the menu beside its name, and starts the new chat of its
+    /// place, as the button which deletes a chat and starts a new one does.
+    /// </summary>
+    private async Task DeleteOpenChatAsync()
+    {
+        if (!this.IsDeleteOffered || this.IsCurrentChatStreaming)
+            return;
+
+        await this.StartNewChat(useSameWorkspace: true, deletePreviousChat: true);
+    }
+
+    /// <summary>
+    /// Starts a new chat template from the open chat, from the menu beside its name.
+    /// </summary>
+    private async Task SaveChatAsTemplateAsync()
+    {
+        if (!this.CanThreadBecomeTemplate)
+            return;
+
+        await ChatTemplateDialog.AddFromChatAsync(this.DialogService, this.SettingsManager, this.ChatThread);
     }
 
     private async Task MoveChatToWorkspace()

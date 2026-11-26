@@ -1670,24 +1670,11 @@ public partial class Workspaces : MSGComponentBase
 
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
             return;
-        
-        var dialogParameters = new DialogParameters<SingleInputDialog>
-        {
-            { x => x.Message, string.Format(TA("Please enter a new or edit the name for your chat '{0}':"), chat.Name) },
-            { x => x.InputHeaderText, T("Chat Name") },
-            { x => x.UserInput, chat.Name },
-            { x => x.ConfirmText, T("Rename") },
-            { x => x.ConfirmColor, Color.Info },
-            { x => x.AllowEmptyInput, false },
-            { x => x.EmptyInputErrorMessage, TA("Please enter a chat name.") },
-        };
-        
-        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Chat"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+
+        if (await WorkspaceBehaviour.AskForChatNameAsync(this.DialogService, chat.Name) is not { } chatName)
             return;
 
-        chat.Name = (dialogResult.Data as string)!;
+        chat.Name = chatName;
         if (this.CurrentChatThread?.ChatId == chat.ChatId)
         {
             this.CurrentChatThread.Name = chat.Name;

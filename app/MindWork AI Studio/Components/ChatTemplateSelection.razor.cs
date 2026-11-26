@@ -66,13 +66,7 @@ public partial class ChatTemplateSelection : MSGComponentBase
         if (!this.CanChatThreadBeUsedForTemplate)
             return;
 
-        var dialogParameters = new DialogParameters<ChatTemplateDialog>
-        {
-            { x => x.IsEditing, false },
-            { x => x.CreateFromExistingChatThread, true },
-            { x => x.ExistingChatThread, this.CurrentChatThread },
-        };
-        await ChatTemplateDialog.AddAsync(this.DialogService, this.SettingsManager, dialogParameters, isImport: false);
+        await ChatTemplateDialog.AddFromChatAsync(this.DialogService, this.SettingsManager, this.CurrentChatThread);
     }
 
     #region Overrides of MSGComponentBase

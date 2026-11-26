@@ -19,22 +19,23 @@
 }
 
 /*
- * In the bar above the chat, the row keeps its gray, which sets it apart from the round toggle beside
- * it, but loses its text and takes the height and the corners of a compact button. Its pen takes the
- * compact size of the arrow, so that the gray button looks no larger than the toggle. Both parts are
- * square there.
+ * In the bar above the chat, the row keeps its gray, but loses its text and becomes a pill of the
+ * height of a compact button, round like the toggle and the other buttons of the bar. Each part fills
+ * its half of the pill, the pen on the left and the arrow on the right, with a little more room toward
+ * the round ends. The pen takes the compact size of the arrow, so that the pill looks no larger than
+ * the toggle.
  */
 .new-chat-row.is-compact {
     height: 32px;
-    border-radius: var(--mud-default-borderradius);
+    border-radius: 16px;
 }
 
 .new-chat-row.is-compact .new-chat-row-main {
-    padding: 0 6px;
+    padding: 0 6px 0 10px;
 }
 
 .new-chat-row.is-compact ::deep .mud-menu .mud-icon-button {
-    padding: 0 6px;
+    padding: 0 10px 0 6px;
 }
 
 /*

@@ -19,6 +19,34 @@
             <MudText Typo="Typo.body1" Style="@BREADCRUMB_CHAT_STYLE">
                 @this.RenderBreadcrumbPart(this.BreadcrumbChatName, BreadcrumbPart.CHAT)
             </MudText>
+
+            @* The menu of the open chat has an arrow of its own, so a click on the name always shows the
+               chat in the list. What does not apply to this chat stays out of the menu, and what has to
+               wait shows grayed; a new chat with nothing in it yet has no menu at all: *@
+            @if (this.HasChatMenu)
+            {
+                <span class="flex-shrink-0">
+                    <CompactMenu Icon="@AppIcons.DROPDOWN_MENU" Size="Size.Small" AriaLabel="@T("Chat options")">
+                        @if (this.IsRenameOffered)
+                        {
+                            <MudMenuItem Disabled="@this.IsCurrentChatStreaming" Icon="@AppIcons.RENAME" Label="@T("Rename")" OnClick="@this.RenameOpenChatAsync"/>
+                        }
+                        @if (this.IsMoveOffered)
+                        {
+                            <MudMenuItem Disabled="@(!this.CanThreadBeMoved)" Icon="@AppIcons.MOVE_TO_WORKSPACE" Label="@T("Move to workspace")" OnClick="@this.MoveChatToWorkspace"/>
+                        }
+                        @if (this.IsTemplateOffered)
+                        {
+                            <MudMenuItem Disabled="@(!this.CanThreadBecomeTemplate)" Icon="@AppIcons.CREATE_CHAT_TEMPLATE" Label="@T("Save as template")" OnClick="@this.SaveChatAsTemplateAsync"/>
+                        }
+                        @if (this.IsDeleteOffered)
+                        {
+                            <MudDivider/>
+                            <MudMenuItem Disabled="@this.IsCurrentChatStreaming" Icon="@AppIcons.DELETE" IconColor="Color.Error" Label="@T("Delete")" OnClick="@this.DeleteOpenChatAsync"/>
+                        }
+                    </CompactMenu>
+                </span>
+            }
         </MudStack>
 
         @* The provider of the chat, which cannot change while an answer is being written: another
