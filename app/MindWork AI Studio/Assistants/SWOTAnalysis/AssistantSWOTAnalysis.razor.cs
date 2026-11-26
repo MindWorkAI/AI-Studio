@@ -65,7 +65,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
         if (this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions)
         {
             this.showWebContentReader = this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectWebContentReader;
-            this.useContentCleaner = this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectContentCleanerAgent;
+            this.useContentCleaner = this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectContentCleaner;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedOtherLanguage;
             this.importantAspects = this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedImportantAspects;

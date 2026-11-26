@@ -75,7 +75,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         if (this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions)
         {
             this.showWebContentReader = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectWebContentReader;
-            this.useContentCleaner = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectContentCleanerAgent;
+            this.useContentCleaner = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectContentCleaner;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedOtherLanguage;
             this.selectedComplexity = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedComplexity;

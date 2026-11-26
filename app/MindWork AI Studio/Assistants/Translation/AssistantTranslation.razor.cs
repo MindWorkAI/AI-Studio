@@ -85,7 +85,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         if (this.SettingsManager.ConfigurationData.Translation.PreselectOptions)
         {
             this.showWebContentReader = this.SettingsManager.ConfigurationData.Translation.PreselectWebContentReader;
-            this.useContentCleaner = this.SettingsManager.ConfigurationData.Translation.PreselectContentCleanerAgent;
+            this.useContentCleaner = this.SettingsManager.ConfigurationData.Translation.PreselectContentCleaner;
             this.liveTranslation = this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;

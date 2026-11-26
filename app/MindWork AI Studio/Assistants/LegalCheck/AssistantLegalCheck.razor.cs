@@ -53,7 +53,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
         if (this.SettingsManager.ConfigurationData.LegalCheck.PreselectOptions)
         {
             this.showWebContentReader = this.SettingsManager.ConfigurationData.LegalCheck.PreselectWebContentReader;
-            this.useContentCleaner = this.SettingsManager.ConfigurationData.LegalCheck.PreselectContentCleanerAgent;
+            this.useContentCleaner = this.SettingsManager.ConfigurationData.LegalCheck.PreselectContentCleaner;
             return true;
         }
         

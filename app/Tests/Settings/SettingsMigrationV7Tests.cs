@@ -34,6 +34,10 @@ public sealed class SettingsMigrationV7Tests
           "AgentDataSourceSelection": { "PreselectAgentOptions": true, "PreselectedAgentProvider": "selection", "MinimumProviderConfidence": "MEDIUM" },
           "AgentRetrievalContextValidation": { "EnableRetrievalContextValidation": true, "PreselectAgentOptions": true, "PreselectedAgentProvider": "validation", "MinimumProviderConfidence": "LOW", "NumParallelValidations": 7 },
           "AssistantPluginAudit": { "RequireAuditBeforeActivation": false, "PreselectedAgentProvider": "audit", "MinimumProviderConfidence": "MODERATE" },
+          "Translation": { "PreselectContentCleanerAgent": true, "PreselectedProvider": "translation" },
+          "TextSummarizer": { "PreselectContentCleanerAgent": true, "PreselectedProvider": "summarizer" },
+          "SWOTAnalysis": { "PreselectContentCleanerAgent": true, "PreselectedProvider": "swot" },
+          "LegalCheck": { "PreselectContentCleanerAgent": true, "PreselectedProvider": "legal" },
           "ManagedLockedConfigurations": {
             "DataAssistantPluginAudit.PreselectedAgentProvider": "{{CONFIG_PLUGIN_ID}}",
             "DataApp.UpdateInterval": "{{CONFIG_PLUGIN_ID}}"
@@ -108,6 +112,57 @@ public sealed class SettingsMigrationV7Tests
             Assert.That(settings.AssistantPluginAudit.RequireAuditBeforeActivation, Is.False);
             Assert.That(settings.AssistantPluginAudit.PreselectedProvider, Is.EqualTo("audit"));
             Assert.That(settings.AssistantPluginAudit.MinimumProviderConfidence, Is.EqualTo(ConfidenceLevel.MODERATE));
+        }
+    }
+
+    [Test]
+    public void TheAssistantsKeepTheirChoiceOfTheContentCleaner()
+    {
+        var settings = Migrate(V6_SETTINGS);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(settings.Translation.PreselectContentCleaner, Is.True);
+            Assert.That(settings.Translation.PreselectedProvider, Is.EqualTo("translation"));
+            Assert.That(settings.TextSummarizer.PreselectContentCleaner, Is.True);
+            Assert.That(settings.TextSummarizer.PreselectedProvider, Is.EqualTo("summarizer"));
+            Assert.That(settings.SWOTAnalysis.PreselectContentCleaner, Is.True);
+            Assert.That(settings.SWOTAnalysis.PreselectedProvider, Is.EqualTo("swot"));
+            Assert.That(settings.LegalCheck.PreselectContentCleaner, Is.True);
+            Assert.That(settings.LegalCheck.PreselectedProvider, Is.EqualTo("legal"));
+        }
+    }
+
+    /// <summary>
+    /// Settings of version V5 pass every step up to V7, and the classes they share with V6 keep their former names on the way.
+    /// </summary>
+    [Test]
+    public void SettingsOfVersionV5ArriveWithTheNewNames()
+    {
+        const string V5_SETTINGS = """
+            {
+              "Version": "V5",
+              "Translation": { "PreselectContentCleanerAgent": true },
+              "TextContentCleaner": { "PreselectAgentOptions": true, "PreselectedAgentProvider": "cleaner" },
+              "AgentDataSourceSelection": { "PreselectAgentOptions": true, "PreselectedAgentProvider": "selection" },
+              "AgentRetrievalContextValidation": { "EnableRetrievalContextValidation": true, "NumParallelValidations": 4 },
+              "AssistantPluginAudit": { "PreselectedAgentProvider": "audit" }
+            }
+            """;
+
+        var settings = SettingsMigrations.Migrate(NullLogger<SettingsManager>.Instance, Version.V5, V5_SETTINGS, SettingsManager.JSON_OPTIONS);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(settings.Version, Is.EqualTo(Version.V7));
+            Assert.That(settings.Translation.PreselectContentCleaner, Is.True);
+            Assert.That(settings.TextContentCleaner.PreselectOptions, Is.True);
+            Assert.That(settings.TextContentCleaner.PreselectedProvider, Is.EqualTo("cleaner"));
+            Assert.That(settings.DataSourceSelection.PreselectOptions, Is.True);
+            Assert.That(settings.DataSourceSelection.PreselectedProvider, Is.EqualTo("selection"));
+            Assert.That(settings.RetrievalContextValidation.EnableRetrievalContextValidation, Is.True);
+            Assert.That(settings.RetrievalContextValidation.NumParallelValidations, Is.EqualTo(4));
+            Assert.That(settings.AssistantPluginAudit.PreselectedProvider, Is.EqualTo("audit"));
         }
     }
 

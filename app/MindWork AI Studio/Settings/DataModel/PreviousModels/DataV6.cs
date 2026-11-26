@@ -144,7 +144,7 @@ public sealed class DataV6
 
     public DataIconFinder IconFinder { get; set; } = new();
 
-    public DataTranslation Translation { get; set; } = new();
+    public DataTranslationV6 Translation { get; set; } = new();
 
     public DataCoding Coding { get; set; } = new();
 
@@ -156,9 +156,9 @@ public sealed class DataV6
 
     public DataMandatoryInformation MandatoryInformation { get; set; } = new();
 
-    public DataTextSummarizer TextSummarizer { get; set; } = new();
+    public DataTextSummarizerV6 TextSummarizer { get; set; } = new();
 
-    public DataSWOTAnalysis SWOTAnalysis { get; set; } = new();
+    public DataSWOTAnalysisV6 SWOTAnalysis { get; set; } = new();
 
     public DataTextContentCleanerV6 TextContentCleaner { get; set; } = new();
 
@@ -188,7 +188,7 @@ public sealed class DataV6
 
     public DataModelComparison ModelComparison { get; set; } = new();
 
-    public DataLegalCheck LegalCheck { get; set; } = new();
+    public DataLegalCheckV6 LegalCheck { get; set; } = new();
 
     public DataSynonyms Synonyms { get; set; } = new();
 
