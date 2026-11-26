@@ -805,7 +805,7 @@ fn ensure_enough_space(required_bytes: u64, available_bytes: Option<u64>) -> Qdr
 /// path as it is serves as the fallback.
 fn available_space(path: &Path) -> Option<u64> {
     let disks = sysinfo::Disks::new_with_refreshed_list()
-        .list()
+        .ok()?
         .iter()
         .map(|disk| DiskSpace {
             mount_point: disk.mount_point().to_path_buf(),

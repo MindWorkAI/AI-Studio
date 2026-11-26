@@ -88,7 +88,7 @@ onenote_parser = "2.1.0"
 typed-path = "0.12.4"
 tempfile = "3.27.0"
 strum_macros = "0.28.0"
-sysinfo = "0.39.6"
+sysinfo = { version = "0.40.4", default-features = false, features = ["system", "disk"] }
 bytes = "1.12.2"
 qdrant-edge = "0.9.0"
 

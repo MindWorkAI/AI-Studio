@@ -32,7 +32,8 @@ pub fn kill_stale_process(pid_file_path: PathBuf, sidecar_type: SidecarType) -> 
     let pid_file_content = fs::read_to_string(&pid_file_path)?;
     let (pid, expected_name) = parse_pid_file(&pid_file_content)?;
 
-    let mut system = System::new_all();
+    // Refreshing the one process adds it, so the system needs to load nothing else:
+    let mut system = System::new().map_err(Error::other)?;
 
     let pid = Pid::from_u32(pid);
     system.refresh_processes(ProcessesToUpdate::Some(&[pid]), true);
@@ -63,7 +64,17 @@ pub fn kill_stale_process(pid_file_path: PathBuf, sidecar_type: SidecarType) -> 
 }
 
 pub fn log_potential_stale_process(pid_file_path: PathBuf, pid: u32, sidecar_type: SidecarType) {
-    let mut system = System::new_all();
+    let mut system = match System::new() {
+        Ok(system) => system,
+        Err(e) => {
+            warn!(Source="Stale Process Cleanup";
+                "{}: Pid file with process number '{}' was not created because the processes could not be read: {}",
+                sidecar_type, pid, e
+            );
+            return;
+        }
+    };
+
     let pid = Pid::from_u32(pid);
     system.refresh_processes(ProcessesToUpdate::Some(&[pid]), true);
     let Some(process) = system.process(pid) else {
@@ -85,5 +96,28 @@ pub fn log_potential_stale_process(pid_file_path: PathBuf, pid: u32, sidecar_typ
         Err(e) => {
             warn!(Source="Stale Process Cleanup";"{}: Failed to create \"{}\": {}", sidecar_type, pid_file_path.display(), e);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Verifies that a process found by its number alone gets a PID file and is killed later on.
+    #[cfg(unix)]
+    #[test]
+    fn stale_process_is_recorded_and_killed() {
+        use std::os::unix::process::ExitStatusExt;
+
+        let mut child = std::process::Command::new("sleep").arg("30").spawn().unwrap();
+        let pid_file_path = std::env::temp_dir().join(format!("ai-studio-stale-process-{}.pid", rand::random::<u64>()));
+
+        log_potential_stale_process(pid_file_path.clone(), child.id(), SidecarType::Dotnet);
+        let content = fs::read_to_string(&pid_file_path).unwrap();
+        assert_eq!(content, format!("{}\nsleep\n", child.id()));
+
+        kill_stale_process(pid_file_path.clone(), SidecarType::Dotnet).unwrap();
+        assert!(!pid_file_path.exists());
+        assert_eq!(child.wait().unwrap().signal(), Some(9));
     }
 }
