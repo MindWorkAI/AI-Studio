@@ -158,6 +158,40 @@ public sealed class PowerPointSegmentFormatTests
     }
 
     [Test]
+    public async Task TooManyChangesOfFormattingKeepTheMostCommonFormatting()
+    {
+        // A glossary in the title: each term in bold comes first, but most letters are those of the plain explanations:
+        using (var document = PresentationDocument.Open(this.source, true))
+        {
+            var title = SlideOf(document).Descendants<A.Paragraph>().Single(candidate => candidate.InnerText == "Mission to Mars");
+            title.RemoveAllChildren<A.Run>();
+            var end = title.GetFirstChild<A.EndParagraphRunProperties>();
+            foreach (var run in Enumerable.Range(0, 13).SelectMany(_ => new[]
+                     {
+                         new A.Run(new A.RunProperties { Language = "en-US", Bold = true }, new A.Text("Term ")),
+                         new A.Run(new A.RunProperties { Language = "en-US" }, new A.Text("explained in plain words. ")),
+                     }))
+            {
+                if (end is null)
+                    title.AppendChild(run);
+                else
+                    title.InsertBefore(run, end);
+            }
+        }
+
+        var results = await this.ResultsAsync(key => key.StartsWith("Term ", StringComparison.Ordinal) ? key.ToUpperInvariant() : key);
+        var result = await this.format.WriteAsync(this.source, this.target, results, string.Empty, NullLogger.Instance, CancellationToken.None);
+
+        using var written = PresentationDocument.Open(this.target, false);
+        var paragraph = SlideOf(written).Descendants<A.Paragraph>().Single(candidate => candidate.InnerText.StartsWith("TERM EXPLAINED", StringComparison.Ordinal));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.SimplifiedCount, Is.EqualTo(1), "Thirteen terms in bold are more pairs than a model keeps in place reliably.");
+            Assert.That(paragraph.Elements<A.Run>().Where(run => run.RunProperties?.Bold?.Value == true), Is.Empty, "The new words get the formatting of most letters, not the one of the first word.");
+        });
+    }
+
+    [Test]
     public async Task AChangedSourceWritesNothing()
     {
         var result = await this.format.WriteAsync(this.source, this.target, new SegmentResults(new Dictionary<string, SegmentOutcome>()), "de-DE", NullLogger.Instance, CancellationToken.None);

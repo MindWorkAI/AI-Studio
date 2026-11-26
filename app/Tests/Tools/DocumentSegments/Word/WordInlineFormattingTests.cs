@@ -117,6 +117,26 @@ public sealed class WordInlineFormattingTests
         });
     }
 
+    [Test]
+    public async Task TooManyChangesOfFormattingKeepTheMostCommonFormatting()
+    {
+        // A glossary: each term in bold comes first, but most letters are those of the plain explanations:
+        var runs = Enumerable.Range(0, 13).SelectMany(_ => new[] { Bold("Term "), Run("explained in plain words. ") }).ToArray<DocumentFormat.OpenXml.OpenXmlElement>();
+        Create(this.source, Paragraph(runs));
+        var key = string.Concat(Enumerable.Repeat("Term explained in plain words. ", 13));
+
+        var result = await this.WriteAsync(key, key.ToUpperInvariant());
+
+        using var document = WordprocessingDocument.Open(this.target, false);
+        var paragraph = document.MainDocumentPart!.Document!.Body!.Elements<W.Paragraph>().Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.SimplifiedCount, Is.EqualTo(1));
+            Assert.That(paragraph.InnerText, Is.EqualTo(key.ToUpperInvariant()));
+            Assert.That(TextsWhere(paragraph, run => run.RunProperties?.Bold is not null), Is.Empty, "The new words get the formatting of most letters, not the one of the first word.");
+        });
+    }
+
     private void CreateSentence() => Create(this.source, Paragraph(Run("This is "), Bold("very"), Run(" "), Italic("important"), Run(" and "), Link("linked"), Run(" text.")));
 
     private async Task<List<string>> KeysAsync() => (await this.format.ReadAsync(this.source, CancellationToken.None)).Select(segment => segment.Key).ToList();

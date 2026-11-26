@@ -1,4 +1,3 @@
-using AIStudio.Tools.OpenXml;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
@@ -11,68 +10,31 @@ namespace AIStudio.Tools.DocumentSegments.Word;
 /// footers, and notes stay as they are.
 /// </summary>
 /// <remarks>
-/// The new document comes about in a copy of the source in the temporary folder, which goes into the file the
-/// user chose once it is complete; TemplateCopy says why. See WordSegmentReader for what becomes a segment.
+/// How the new document comes about is the same for every Office document, see OpenXmlSegmentFormat. See
+/// WordSegmentReader for what becomes a segment.
 /// </remarks>
-public sealed class WordSegmentFormat : IDocumentSegmentFormat
+internal sealed class WordSegmentFormat : OpenXmlSegmentFormat<WordprocessingDocument, WordParagraph>
 {
     private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(WordSegmentFormat).Namespace, nameof(WordSegmentFormat));
 
-    /// <summary>
-    /// The folder below the temporary folder of the system, where the documents come about.
-    /// </summary>
-    private const string TEMPORARY_DIRECTORY = "mindwork-ai-studio-documents";
+    /// <inheritdoc />
+    public override FileTypeFilter FileType => FileTypes.MS_WORD;
 
     /// <inheritdoc />
-    public FileTypeFilter FileType => FileTypes.MS_WORD;
+    public override string LimitsNotice => TA("Charts, SmartArt, comments, the alternative texts of pictures, and the properties of the document, such as its title, stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.");
 
     /// <inheritdoc />
-    public string LimitsNotice => TA("Charts, SmartArt, comments, the alternative texts of pictures, and the properties of the document, such as its title, stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.");
+    protected override string FileExtension => ".docx";
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token) => Task.Run<IReadOnlyList<DocumentSegment>>(() =>
-    {
-        using var file = TemplateFile.OpenRead(path);
-        using var document = WordprocessingDocument.Open(file, false);
-        return WordSegmentReader.Read(document).Select(paragraph => paragraph.Segment).ToList();
-    }, token);
+    protected override WordprocessingDocument Open(Stream stream, bool isEditable) => WordprocessingDocument.Open(stream, isEditable);
 
     /// <inheritdoc />
-    public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
-    {
-        using var copy = await TemplateCopy.CreateAsync(sourcePath, TEMPORARY_DIRECTORY, ".docx", logger, token);
-        var result = await Task.Run(() => WriteInto(copy, results, languageTag), token);
-        if (result.Outcome is SegmentWriteOutcome.WRITTEN)
-            await copy.WriteIntoAsync(targetPath, token);
+    protected override IReadOnlyList<WordParagraph> ReadParagraphs(WordprocessingDocument document) => WordSegmentReader.Read(document);
 
-        return result;
-    }
+    /// <inheritdoc />
+    protected override DocumentSegment SegmentOf(WordParagraph paragraph) => paragraph.Segment;
 
-    /// <summary>
-    /// Writes the new words into the copy of the source, which is the source read again.
-    /// </summary>
-    private static SegmentWriteResult WriteInto(TemplateCopy copy, SegmentResults results, string languageTag)
-    {
-        using var file = copy.OpenForEditing();
-        using var document = WordprocessingDocument.Open(file, true);
-        var paragraphs = WordSegmentReader.Read(document);
-        if (paragraphs.Any(paragraph => !results.Covers(paragraph.Segment)))
-            return SegmentWriteResult.SOURCE_CHANGED;
-
-        var exactCount = 0;
-        var simplifiedCount = 0;
-        foreach (var paragraph in paragraphs)
-        {
-            // A paragraph which stays as it was keeps everything, its runs included:
-            if (!results.TryGetText(paragraph.Segment, out var newText) || newText == paragraph.Segment.Key)
-                continue;
-
-            if (WordParagraphWriter.Write(paragraph, newText, languageTag))
-                exactCount++;
-            else
-                simplifiedCount++;
-        }
-
-        return new(SegmentWriteOutcome.WRITTEN, exactCount, simplifiedCount);
-    }
+    /// <inheritdoc />
+    protected override bool Write(WordParagraph paragraph, string newText, string languageTag) => WordParagraphWriter.Write(paragraph, newText, languageTag);
 }

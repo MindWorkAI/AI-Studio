@@ -1,4 +1,3 @@
-using AIStudio.Tools.OpenXml;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
@@ -11,68 +10,31 @@ namespace AIStudio.Tools.DocumentSegments.PowerPoint;
 /// animations, and the masters and layouts of the slides stay as they are.
 /// </summary>
 /// <remarks>
-/// The new presentation comes about in a copy of the source in the temporary folder, which goes into the file the
-/// user chose once it is complete; TemplateCopy says why. See SlideSegmentReader for what becomes a segment.
+/// How the new presentation comes about is the same for every Office document, see OpenXmlSegmentFormat. See
+/// SlideSegmentReader for what becomes a segment.
 /// </remarks>
-public sealed class PowerPointSegmentFormat : IDocumentSegmentFormat
+internal sealed class PowerPointSegmentFormat : OpenXmlSegmentFormat<PresentationDocument, SlideTextParagraph>
 {
     private static string TA(string fallbackEN) => I18N.I.TA(fallbackEN, typeof(PowerPointSegmentFormat).Namespace, nameof(PowerPointSegmentFormat));
 
-    /// <summary>
-    /// The folder below the temporary folder of the system, where the documents come about.
-    /// </summary>
-    private const string TEMPORARY_DIRECTORY = "mindwork-ai-studio-documents";
+    /// <inheritdoc />
+    public override FileTypeFilter FileType => FileTypes.POWER_POINT_PRESENTATION;
 
     /// <inheritdoc />
-    public FileTypeFilter FileType => FileTypes.POWER_POINT_PRESENTATION;
+    public override string LimitsNotice => TA("Charts, SmartArt, the alternative texts of pictures, the properties of the presentation, such as its title, and the masters and layouts of the slides stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check the text boxes on your slides.");
 
     /// <inheritdoc />
-    public string LimitsNotice => TA("Charts, SmartArt, the alternative texts of pictures, the properties of the presentation, such as its title, and the masters and layouts of the slides stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check the text boxes on your slides.");
+    protected override string FileExtension => ".pptx";
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token) => Task.Run<IReadOnlyList<DocumentSegment>>(() =>
-    {
-        using var file = TemplateFile.OpenRead(path);
-        using var document = PresentationDocument.Open(file, false);
-        return SlideSegmentReader.Read(document).Select(paragraph => paragraph.Segment).ToList();
-    }, token);
+    protected override PresentationDocument Open(Stream stream, bool isEditable) => PresentationDocument.Open(stream, isEditable);
 
     /// <inheritdoc />
-    public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
-    {
-        using var copy = await TemplateCopy.CreateAsync(sourcePath, TEMPORARY_DIRECTORY, ".pptx", logger, token);
-        var result = await Task.Run(() => WriteInto(copy, results, languageTag), token);
-        if (result.Outcome is SegmentWriteOutcome.WRITTEN)
-            await copy.WriteIntoAsync(targetPath, token);
+    protected override IReadOnlyList<SlideTextParagraph> ReadParagraphs(PresentationDocument document) => SlideSegmentReader.Read(document);
 
-        return result;
-    }
+    /// <inheritdoc />
+    protected override DocumentSegment SegmentOf(SlideTextParagraph paragraph) => paragraph.Segment;
 
-    /// <summary>
-    /// Writes the new words into the copy of the source, which is the source read again.
-    /// </summary>
-    private static SegmentWriteResult WriteInto(TemplateCopy copy, SegmentResults results, string languageTag)
-    {
-        using var file = copy.OpenForEditing();
-        using var document = PresentationDocument.Open(file, true);
-        var paragraphs = SlideSegmentReader.Read(document);
-        if (paragraphs.Any(paragraph => !results.Covers(paragraph.Segment)))
-            return SegmentWriteResult.SOURCE_CHANGED;
-
-        var exactCount = 0;
-        var simplifiedCount = 0;
-        foreach (var paragraph in paragraphs)
-        {
-            // A paragraph which stays as it was keeps everything, its runs included:
-            if (!results.TryGetText(paragraph.Segment, out var newText) || newText == paragraph.Segment.Key)
-                continue;
-
-            if (SlideParagraphWriter.Write(paragraph, newText, languageTag))
-                exactCount++;
-            else
-                simplifiedCount++;
-        }
-
-        return new(SegmentWriteOutcome.WRITTEN, exactCount, simplifiedCount);
-    }
+    /// <inheritdoc />
+    protected override bool Write(SlideTextParagraph paragraph, string newText, string languageTag) => SlideParagraphWriter.Write(paragraph, newText, languageTag);
 }

@@ -32,7 +32,7 @@ internal static class WordParagraphWriter
             child.Remove();
 
         foreach (var marker in paragraph.StartMarkers)
-            element.AppendChild(Detached(marker));
+            element.AppendChild(marker.Detached());
 
         var writtenAtoms = new HashSet<WordAtom>();
         bool keepsTags;
@@ -52,7 +52,7 @@ internal static class WordParagraphWriter
             AppendAtom(element, atom);
 
         foreach (var marker in paragraph.EndMarkers)
-            element.AppendChild(Detached(marker));
+            element.AppendChild(marker.Detached());
 
         return keepsTags && !paragraph.HasMixedFormatting;
     }
@@ -142,7 +142,7 @@ internal static class WordParagraphWriter
     {
         foreach (var piece in atom.Pieces)
         {
-            var element = Detached(piece.Element);
+            var element = piece.Element.Detached();
             if (!piece.InRun)
             {
                 target.AppendChild(element);
@@ -206,13 +206,5 @@ internal static class WordParagraphWriter
 
         run.AppendChild(new W.Text(OpenXmlText.XmlSafe(text.ToString())) { Space = SpaceProcessingModeValues.Preserve });
         text.Clear();
-    }
-
-    private static T Detached<T>(T element) where T : OpenXmlElement
-    {
-        if (element.Parent is not null)
-            element.Remove();
-
-        return element;
     }
 }

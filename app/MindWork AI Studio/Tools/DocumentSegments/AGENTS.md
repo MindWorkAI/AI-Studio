@@ -41,7 +41,8 @@ the repository root and to `app/AGENTS.md`, which apply here as well.
   The texts of a document are data: they go into the request, never into the system prompt.
 - **Write only into the file the user chose.** The rules of `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md`
   hold for every format of Office documents: no copy of the whole file in memory, and `TemplateCopy` from
-  `app/MindWork AI Studio/Tools/OpenXml/` for the copy in the temporary folder.
+  `app/MindWork AI Studio/Tools/OpenXml/` for the copy in the temporary folder. `OpenXmlSegmentFormat` does both
+  for every Office format, so a new one brings only its reader and its writer.
 
 ## Markdown files and other text
 
@@ -84,7 +85,9 @@ footers, and the notes as segments, and leaves everything else of the document a
   formatting stay words, and those in any other formatting, e.g., a word in bold, get a pair of their own.
   Spaces never get one. A paragraph with more than `FormatSpans.MAX_PAIRS` such pairs keeps one formatting
   for its new words instead and counts as simplified: every pair is one more thing a model has to keep in
-  place. `FormatSpans` serves every format which works this way, PowerPoint included.
+  place. That formatting is the one of the most letters, not the one of the first words, or a glossary with a
+  term in bold at the start of each line would turn bold as a whole. `FormatSpanReader` does all this for every
+  format which works this way, PowerPoint included.
 
 ## PowerPoint presentations
 

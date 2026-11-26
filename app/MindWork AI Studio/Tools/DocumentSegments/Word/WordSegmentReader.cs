@@ -139,34 +139,37 @@ internal static class WordSegmentReader
     /// <summary>
     /// Reads one paragraph.
     /// </summary>
-    private sealed class ParagraphReader(bool usesFormatPairs)
+    private sealed class ParagraphReader
     {
         private readonly TaggedTextBuilder builder = new();
+        private readonly FormatSpanReader<W.RunProperties> spans;
         private readonly Dictionary<int, WordPair> pairs = [];
         private readonly Dictionary<int, WordAtom> placeholders = [];
         private readonly Dictionary<int, W.RunProperties?> textFormats = [];
-        private readonly Dictionary<int, string> textFormatKeys = [];
-        private readonly Dictionary<W.RunProperties, string> formatKeys = new(ReferenceEqualityComparer.Instance);
         private readonly List<OpenXmlElement> startMarkers = [];
         private readonly List<OpenXmlElement> endMarkers = [];
-        private bool hasTagLikeWords;
-        private bool hasMixedFormatting;
         private int nextOrder;
+
+        public ParagraphReader(bool usesFormatPairs) => this.spans = new(this.builder, usesFormatPairs, FormatKeyOf);
 
         /// <summary>
         /// How many changes of formatting became pairs.
         /// </summary>
-        public int FormatPairCount { get; private set; }
+        public int FormatPairCount => this.spans.FormatPairCount;
 
         public WordParagraph? TryRead(W.Paragraph paragraph)
         {
             this.Build(ItemsOf(paragraph), 0);
 
             // Words which read as a tag could not be told apart from the tags of the paragraph:
-            if (this.hasTagLikeWords)
+            if (this.spans.HasTagLikeWords)
                 return null;
 
-            return new(paragraph, new DocumentSegment(this.builder.Build()), this.pairs, this.placeholders, this.textFormats, this.startMarkers, this.endMarkers, this.hasMixedFormatting);
+            // The pairs of formatting have their formatting already, the other pairs and the words outside of any pair get the most common one:
+            foreach (var (pairId, format) in this.spans.BaseFormats)
+                this.textFormats[pairId] = format;
+
+            return new(paragraph, new DocumentSegment(this.builder.Build()), this.pairs, this.placeholders, this.textFormats, this.startMarkers, this.endMarkers, this.spans.HasMixedFormatting);
         }
 
         private void Build(List<Item> items, int pairId)
@@ -306,42 +309,19 @@ internal static class WordSegmentReader
                     break;
             }
 
-            foreach (var span in FormatSpans.Of(words.Select(word => (word.Text, word.Format, this.FormatKeyOf(word.Format))), baseFormatKey))
+            this.spans.AddWords(words.Select(word => (word.Text, word.Format)), pairId, baseFormatKey, (formatPair, format) =>
             {
-                this.hasTagLikeWords |= TaggedText.ContainsTagLikeText(span.Text);
-                if (!usesFormatPairs || span.FormatKey == baseFormatKey)
-                {
-                    this.builder.Words(span.Text);
-                    this.NoteFormat(pairId, span);
-                    continue;
-                }
-
-                var formatPair = this.builder.Open();
-                this.pairs[formatPair] = new WordFormatPair(span.Format);
-                this.textFormats[formatPair] = span.Format;
-                this.builder.Words(span.Text);
-                this.builder.Close(formatPair);
-                this.FormatPairCount++;
-            }
+                this.pairs[formatPair] = new WordFormatPair(format);
+                this.textFormats[formatPair] = format;
+            });
 
             return index;
         }
 
         /// <summary>
-        /// Notes the formatting of words outside of a pair of formatting, and whether it differs from earlier ones.
-        /// </summary>
-        private void NoteFormat(int pairId, FormatSpan<W.RunProperties?> span)
-        {
-            if (this.textFormatKeys.TryAdd(pairId, span.FormatKey))
-                this.textFormats[pairId] = span.Format;
-            else if (this.textFormatKeys[pairId] != span.FormatKey && !string.IsNullOrWhiteSpace(span.Text))
-                this.hasMixedFormatting = true;
-        }
-
-        /// <summary>
         /// Finds the formatting most words of a pair have, or of the paragraph outside of any pair.
         /// </summary>
-        private string BaseFormatKeyOf(List<Item> items) => FormatSpans.BaseKeyOf(items.OfType<TextItem>().Select(word => (word.Text, this.FormatKeyOf(word.Format))));
+        private string BaseFormatKeyOf(List<Item> items) => this.spans.BaseKeyOf(items.OfType<TextItem>().Select(word => (word.Text, word.Format)));
 
         private void AddPlaceholder(List<Item> items, int first, int last)
         {
@@ -378,25 +358,14 @@ internal static class WordSegmentReader
         /// <summary>
         /// Tells the formatting of runs apart, leaving out what changes nothing about how words look.
         /// </summary>
-        private string FormatKeyOf(W.RunProperties? format)
+        private static string FormatKeyOf(W.RunProperties format)
         {
-            if (format is null)
-                return string.Empty;
-
-            if (this.formatKeys.TryGetValue(format, out var formatKey))
-                return formatKey;
-
             var copy = (W.RunProperties)format.CloneNode(true);
             copy.Languages = null;
             copy.NoProof = null;
-            formatKey = copy.OuterXml;
 
             // A run without anything that changes its look counts as having no properties at all:
-            if (!copy.HasAttributes && !copy.HasChildren)
-                formatKey = string.Empty;
-
-            this.formatKeys[format] = formatKey;
-            return formatKey;
+            return copy.HasAttributes || copy.HasChildren ? copy.OuterXml : string.Empty;
         }
 
         private static List<Item> ItemsOf(OpenXmlElement parent)

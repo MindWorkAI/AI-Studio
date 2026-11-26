@@ -57,7 +57,7 @@ internal static class SlideParagraphWriter
                         break;
 
                     case TaggedTokenKind.PLACEHOLDER when paragraph.Placeholders.TryGetValue(token.Id, out var placeholder) && writtenPlaceholders.Add(token.Id):
-                        Insert(element, end, Detached(placeholder));
+                        Insert(element, end, placeholder.Detached());
                         break;
                 }
             }
@@ -72,7 +72,7 @@ internal static class SlideParagraphWriter
         foreach (var (id, placeholder) in paragraph.Placeholders.OrderBy(entry => entry.Key))
         {
             if (!writtenPlaceholders.Contains(id))
-                Insert(element, end, Detached(placeholder));
+                Insert(element, end, placeholder.Detached());
         }
 
         return keepsTags && !paragraph.HasMixedFormatting;
@@ -117,13 +117,5 @@ internal static class SlideParagraphWriter
             paragraph.AppendChild(element);
         else
             paragraph.InsertBefore(element, end);
-    }
-
-    private static T Detached<T>(T element) where T : OpenXmlElement
-    {
-        if (element.Parent is not null)
-            element.Remove();
-
-        return element;
     }
 }
