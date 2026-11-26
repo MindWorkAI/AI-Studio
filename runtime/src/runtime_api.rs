@@ -20,6 +20,10 @@ static RUSTLS_CRYPTO_PROVIDER_INIT: Once = Once::new();
 /// what a tool returns to a model well below this. The limit is headroom, not a working constraint.
 const PROMPT_INJECTION_BODY_LIMIT_BYTES: usize = 16 * 1024 * 1024;
 
+/// The request body limit for a batch of log events from the .NET server. A batch rarely takes more
+/// than a few hundred kilobytes; the limit leaves room for a batch full of stack traces.
+const LOG_EVENTS_BODY_LIMIT_BYTES: usize = 16 * 1024 * 1024;
+
 /// The port used for the runtime API server. In the development environment, we use a fixed
 /// port, in the production environment we use the next available port. This differentiation
 /// is necessary because we cannot communicate the port to the .NET server in the development
@@ -93,7 +97,13 @@ fn create_router() -> Router {
         .route("/image/prepare", post(crate::image::prepare_image))
         .route("/image/prepare-for-model", post(crate::image::prepare_image_for_model))
         .route("/log/paths", get(crate::log::get_log_paths))
-        .route("/log/event", post(crate::log::log_event))
+        //
+        // A batch holds up to a few hundred log events of the .NET server, some with a stack trace,
+        // which can exceed Axum's 2 MB default. The runtime would refuse such a batch with 413, and
+        // its events would be lost.
+        //
+        .route("/log/events", post(crate::log::log_events)
+            .layer(DefaultBodyLimit::max(LOG_EVENTS_BODY_LIMIT_BYTES)))
         .route("/tokenizer/count", post(crate::tokenizer::token_count))
         .route("/tokenizer/validate", post(crate::tokenizer::validate_tokenizer))
         .route("/tokenizer/store", post(crate::tokenizer::store_tokenizer))

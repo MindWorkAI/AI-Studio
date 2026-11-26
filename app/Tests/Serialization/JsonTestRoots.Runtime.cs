@@ -29,7 +29,7 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(ValidateShortcutRequest), options));
         yield return Case(new(typeof(SetInterfaceSizeRequest), options));
         yield return Case(new(typeof(CreateMediaJobRequest), options));
-        yield return Case(new(typeof(LogEventRequest), options));
+        yield return Case(new(typeof(LogEventsRequest), options));
         yield return Case(new(typeof(ValidateTokenizerRequest), options));
         yield return Case(new(typeof(StoreTokenizerRequest), options));
         yield return Case(new(typeof(DeleteTokenizerRequest), options));

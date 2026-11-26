@@ -455,15 +455,32 @@ fn log_with_level(
     }
 }
 
-/// Logs an event from the .NET server.
-pub async fn log_event(Json(event): Json<LogEvent>) -> Json<LogEventResponse> {
+/// Logs a batch of events from the .NET server, in the order the server sent them.
+///
+/// The server sends its events in batches. With one request per event, a burst of events, such as
+/// the changes of a build in a watched folder, flooded the one HTTP/2 connection which all calls of
+/// the server share, until the runtime closed it.
+pub async fn log_events(Json(request): Json<LogEventsRequest>) -> Json<LogEventResponse> {
+    log_dotnet_events(log::logger(), &request.events);
+    Json(LogEventResponse { success: true, issue: String::new() })
+}
+
+/// Logs the given events from the .NET server, one after another.
+fn log_dotnet_events(logger: &dyn log::Log, events: &[LogEvent]) {
+    for event in events {
+        log_dotnet_event(logger, event);
+    }
+}
+
+/// Logs one event from the .NET server.
+fn log_dotnet_event(logger: &dyn log::Log, event: &LogEvent) {
     let level = parse_dotnet_log_level(&event.level);
     let message = event.message.as_str();
     let category = event.category.as_str();
     let created_at = parse_dotnet_timestamp(&event.timestamp);
 
     log_with_level(
-        log::logger(),
+        logger,
         level,
         category,
         created_at,
@@ -481,8 +498,6 @@ pub async fn log_event(Json(event): Json<LogEvent>) -> Json<LogEventResponse> {
     if created_at.is_none() && !WARNED_ABOUT_UNREADABLE_DOTNET_TIMESTAMP.swap(true, Ordering::Relaxed) {
         log::warn!(Source = ".NET Server", Comp = category; "Could not read the timestamp '{}' of a log event. Such events show the time they arrived instead. This warning appears only once.", event.timestamp);
     }
-
-    Json(LogEventResponse { success: true, issue: String::new() })
 }
 
 /// The response the get log paths request.
@@ -503,6 +518,13 @@ pub struct LogEvent {
     message: String,
     exception: Option<String>,
     stack_trace: Option<String>,
+}
+
+/// A batch of log events from the .NET server.
+#[derive(Deserialize)]
+pub struct LogEventsRequest {
+    /// The events, in the order they happened.
+    events: Vec<LogEvent>,
 }
 
 /// The response to a log event request.
@@ -682,6 +704,29 @@ mod tests {
             (String::from("  Exception: Boom"), created_at),
             (String::from("    at First()"), created_at),
             (String::from("    at Second()"), created_at),
+        ]);
+    }
+
+    #[test]
+    fn a_batch_of_dotnet_events_is_logged_in_order() {
+        log::set_max_level(LevelFilter::Info);
+
+        // The shape in which the .NET server sends its batches:
+        let request: LogEventsRequest = serde_json::from_str(r#"{"events":[
+            {"timestamp":"2026-11-25T18:02:02.2220000+00:00","level":"Information","category":"Tests","message":"First","exception":null,"stack_trace":null},
+            {"timestamp":"2026-11-25T18:02:03.2930000+00:00","level":"Error","category":"Tests","message":"Second","exception":"Boom","stack_trace":"at Third()"}
+        ]}"#).unwrap();
+
+        let logger = CapturingLogger::default();
+        log_dotnet_events(&logger, &request.events);
+
+        let first = parse_dotnet_timestamp("2026-11-25T18:02:02.2220000+00:00");
+        let second = parse_dotnet_timestamp("2026-11-25T18:02:03.2930000+00:00");
+        assert_eq!(logger.0.into_inner().unwrap(), vec![
+            (String::from("First"), first),
+            (String::from("Second"), second),
+            (String::from("  Exception: Boom"), second),
+            (String::from("    at Third()"), second),
         ]);
     }
 

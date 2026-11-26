@@ -86,7 +86,7 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
                 textWriter.WriteLine();
         }
 
-        // Send log event to Rust via API (fire-and-forget):
+        // Queue the log event for Rust, which receives it in a batch:
         if (RUST_SERVICE is not null)
             RUST_SERVICE.LogEvent(transportTimestamp, logLevel, category, message, exceptionMessage, stackTrace);
         
