@@ -2,7 +2,7 @@
 
 - Status: Active
 - Introduced: 2026-11-26
-- Remove after: when a ReverseMarkdown release keeps the words of the blocks apart which it writes into the text of an inline element, such as a link
+- Remove after: when a ReverseMarkdown release keeps the words of the blocks apart which it writes into the text of an inline element, such as a link, see [mysticmind/reversemarkdown-net#440](https://github.com/mysticmind/reversemarkdown-net/issues/440)
 - Code references:
   - `app/MindWork AI Studio/Tools/HTMLParser.cs` (`UnwrapBlocksInsideInlineElements`, `IsBlockInsideInlineElement`, `NeedsSeparator`, `INLINE_ELEMENTS`, `BLOCK_ELEMENTS`)
   - `app/Tests/Tools/HTMLParserConversionTests.cs` (`BlocksInsideALinkKeepTheirWordsApart`)

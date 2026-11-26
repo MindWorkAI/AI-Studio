@@ -278,7 +278,8 @@ public sealed class HTMLParser
     /// <param name="root">The document element of the HTML, as ReverseMarkdown parsed it.</param>
     /// <remarks>
     /// Compatibility shim, see documentation/compatibility-shims/2026-11-reversemarkdown-blocks-in-inline-elements.md;
-    /// remove it once ReverseMarkdown separates such blocks itself.<br/><br/>
+    /// remove it once ReverseMarkdown separates such blocks itself, see
+    /// https://github.com/mysticmind/reversemarkdown-net/issues/440.<br/><br/>
     /// Many pages wrap a whole teaser in a link: a heading, a line of metadata, and a summary, each a block of its own.
     /// A link holds no blocks in Markdown, so ReverseMarkdown 6 writes their texts one after another into the text of
     /// the link, without anything in between, e.g., "Java77.721 Abrufeheise security". Spaces next to such blocks alone
