@@ -3765,6 +3765,72 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Yes, hide the policy definition
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T940701960"] = "Ja, die Definition des Regelwerks ausblenden"
 
+-- Please choose a document.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T1072225014"] = "Bitte wählen Sie ein Dokument aus."
+
+-- Please choose a document.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T1072225014::INFORMAL"] = "Bitte wähle ein Dokument aus."
+
+-- Reading the document …
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T153794455"] = "Dokument wird gelesen …"
+
+-- The document declares the encoding '{0}', but new text can only be written in UTF-8. Please save the document in UTF-8 and change its declared encoding first, e.g., the charset of a web page or the inputenc option in LaTeX.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T1641536835"] = "Das Dokument gibt die Kodierung „{0}“ an, neuer Text kann aber nur in UTF-8 geschrieben werden. Bitte speichern Sie das Dokument zuerst in UTF-8 und ändern Sie die darin angegebene Kodierung, z. B. den Zeichensatz (charset) einer Webseite oder die inputenc-Option in LaTeX."
+
+-- The document declares the encoding '{0}', but new text can only be written in UTF-8. Please save the document in UTF-8 and change its declared encoding first, e.g., the charset of a web page or the inputenc option in LaTeX.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T1641536835::INFORMAL"] = "Das Dokument gibt die Kodierung „{0}“ an, neuer Text kann aber nur in UTF-8 geschrieben werden. Bitte speichere das Dokument zuerst in UTF-8 und ändere die darin angegebene Kodierung, z. B. den Zeichensatz (charset) einer Webseite oder die inputenc-Option in LaTeX."
+
+-- Please choose a file other than the original document, which stays unchanged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T1908151195"] = "Bitte wählen Sie eine andere Datei als das Originaldokument aus, denn dieses bleibt unverändert."
+
+-- Please choose a file other than the original document, which stays unchanged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T1908151195::INFORMAL"] = "Bitte wähle eine andere Datei als das Originaldokument aus, denn dieses bleibt unverändert."
+
+-- The document contains no text.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T2028875630"] = "Das Dokument enthält keinen Text."
+
+-- The document is not saved in UTF-8, so its special characters, such as umlauts, would be damaged. Please save it in UTF-8 first, e.g., with a text editor, and try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T2158409886"] = "Das Dokument ist nicht in UTF-8 gespeichert, daher würden seine Sonderzeichen, z. B. Umlaute, beschädigt. Bitte speichern Sie es zuerst in UTF-8, z. B. mit einem Texteditor, und versuchen Sie es dann erneut."
+
+-- The document is not saved in UTF-8, so its special characters, such as umlauts, would be damaged. Please save it in UTF-8 first, e.g., with a text editor, and try again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T2158409886::INFORMAL"] = "Das Dokument ist nicht in UTF-8 gespeichert, daher würden seine Sonderzeichen, z. B. Umlaute, beschädigt. Bitte speichere es zuerst in UTF-8, z. B. mit einem Texteditor, und versuche es dann erneut."
+
+-- The document could not be read. Please check that it is a valid file and that it is not locked by another program.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T2463822939"] = "Das Dokument konnte nicht gelesen werden. Bitte überprüfen Sie, ob es sich um eine gültige Datei handelt und ob diese nicht von einem anderen Programm gesperrt ist."
+
+-- The document could not be read. Please check that it is a valid file and that it is not locked by another program.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T2463822939::INFORMAL"] = "Das Dokument konnte nicht gelesen werden. Bitte überprüfe, ob es sich um eine gültige Datei handelt und ob diese nicht von einem anderen Programm gesperrt ist."
+
+-- {0} of {1} sections done …
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T2470675815"] = "{0} von {1} Abschnitten bearbeitet …"
+
+-- The new document was saved.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T2729293509"] = "Das neue Dokument wurde gespeichert."
+
+-- This kind of file is not supported. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T3124140929"] = "Dateien dieser Art werden nicht unterstützt. Bitte wählen Sie eine Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei aus."
+
+-- This kind of file is not supported. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T3124140929::INFORMAL"] = "Dateien dieser Art werden nicht unterstützt. Bitte wähle eine Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei aus."
+
+-- The new document could not be saved. Please check that the original document can be read and that the target file is not open in another program.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T3523533471"] = "Das neue Dokument konnte nicht gespeichert werden. Bitte überprüfen Sie, ob das Originaldokument lesbar ist und ob die Zieldatei nicht in einem anderen Programm geöffnet ist."
+
+-- The new document could not be saved. Please check that the original document can be read and that the target file is not open in another program.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T3523533471::INFORMAL"] = "Das neue Dokument konnte nicht gespeichert werden. Bitte überprüfe, ob das Originaldokument lesbar ist und ob die Zieldatei nicht in einem anderen Programm geöffnet ist."
+
+-- In {0} sections, the AI model did not keep all of the formatting, so some of it, such as links or bold words, is missing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T4068939522"] = "In {0} Abschnitten hat das KI-Modell nicht die gesamte Formatierung beibehalten, sodass einige Elemente wie Links oder fett markierte Wörter fehlen."
+
+-- Document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T4165204724"] = "Dokument"
+
+-- The original document has changed in the meantime. Please start again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T868743874"] = "Das Originaldokument hat sich inzwischen geändert. Bitte starten Sie den Vorgang erneut."
+
+-- The original document has changed in the meantime. Please start again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTASSISTANTBASE::T868743874::INFORMAL"] = "Das Originaldokument hat sich inzwischen geändert. Bitte starte den Vorgang erneut."
+
 -- Revise Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1070696505"] = "Assistenten überarbeiten"
 
@@ -4518,11 +4584,26 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T204
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T3424652889"] = "Unbekannt"
 
+-- Switch to checking a document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T1054307854"] = "Zur Dokumentenprüfung wechseln"
+
+-- The grammar and spelling of '{0}' have been checked.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T1057618530"] = "Grammatik und Rechtschreibung von „{0}“ wurden geprüft."
+
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T137304886"] = "Bitte geben Sie einen Text ein. Sie können den gewünschten Text aus einem Dokument oder einer Website kopieren."
 
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T137304886::INFORMAL"] = "Bitte gib einen Text ein. Du kannst den gewünschten Text aus einem Dokument oder einer Website kopieren."
+
+-- Check the grammar and spelling of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2011104123"] = "Überprüfen Sie die Grammatik und Rechtschreibung einer Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei. Das korrigierte Dokument wird als neue Datei desselben Typs gespeichert, und die Formatierung des Originals bleibt so weit wie möglich erhalten."
+
+-- Check the grammar and spelling of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2011104123::INFORMAL"] = "Überprüfe die Grammatik und Rechtschreibung einer Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei. Das korrigierte Dokument wird als neue Datei desselben Typs gespeichert, und die Formatierung des Originals bleibt so weit wie möglich erhalten."
+
+-- Save corrected document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2129000916"] = "Korrigiertes Dokument speichern"
 
 -- Load text from file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2210807298"] = "Text aus Datei laden"
@@ -4530,8 +4611,23 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING
 -- Proofread
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2325568297"] = "Korrekturlesen"
 
+-- Check document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2430185044"] = "Dokument prüfen"
+
+-- Corrected sections: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2546559264"] = "Korrigierte Abschnitte: {0}"
+
+-- Switch to checking a text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2577515836"] = "Zur Textprüfung wechseln"
+
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2591284123"] = "Sprache"
+
+-- Corrected document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2637340209"] = "Korrigiertes Dokument"
+
+-- Check text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2707654846"] = "Text prüfen"
 
 -- Your input to check
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2861221443"] = "Ihre Eingabe zur Überprüfung"
@@ -4545,17 +4641,29 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING
 -- Grammar & Spelling Checker
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3169549433"] = "Grammatik- und Rechtschreibprüfung"
 
--- Check the grammar and spelling of a text.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3184716499"] = "Grammatik und Rechtschreibung eines Textes überprüfen."
-
 -- Check the following text for grammar and spelling mistakes:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3486937812"] = "Prüfe den folgenden Text auf Grammatik- und Rechtschreibfehler:"
+
+-- Select a document to check
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3551194040"] = "Dokument zum Prüfen auswählen"
+
+-- Check the grammar and spelling of a document or a text.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3823036322"] = "Grammatik und Rechtschreibung eines Dokuments oder eines Textes überprüfen."
+
+-- Check the grammar and spelling of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T4021896692"] = "Überprüfen Sie die Grammatik und Rechtschreibung eines Textes, den Sie eingeben oder einfügen, oder den Sie aus einer Datei laden. Der korrigierte Text erscheint direkt hier, und die Änderungen sind markiert."
+
+-- Check the grammar and spelling of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T4021896692::INFORMAL"] = "Überprüfe die Grammatik und Rechtschreibung eines Textes, den du eingibst oder einfügst, oder den du aus einer Datei lädst. Der korrigierte Text erscheint direkt hier, und die Änderungen sind markiert."
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T656744944::INFORMAL"] = "Bitte gib eine benutzerdefinierte Sprache an."
+
+-- corrected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T992760136"] = "korrigiert"
 
 -- Text
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::I18N::ASSISTANTI18N::T1041509726"] = "Text"
@@ -6264,17 +6372,41 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 -- For complex tasks, write prompts in English.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T85710437::INFORMAL"] = "Schreib die Prompts für komplexe Aufgaben in Englisch."
 
+-- Rewrite and improve a Word, PowerPoint, LaTeX, Markdown, or HTML file paragraph by paragraph. The improved document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1106503382"] = "Überarbeiten und verbessern Sie eine Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei Absatz für Absatz. Das verbesserte Dokument wird als neue Datei desselben Typs gespeichert, und die Formatierung des Originals bleibt so weit wie möglich erhalten."
+
+-- Rewrite and improve a Word, PowerPoint, LaTeX, Markdown, or HTML file paragraph by paragraph. The improved document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1106503382::INFORMAL"] = "Überarbeite und verbessere eine Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei Absatz für Absatz. Das verbesserte Dokument wird als neue Datei desselben Typs gespeichert, und die Formatierung des Originals bleibt so weit wie möglich erhalten."
+
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T137304886"] = "Bitte geben Sie einen Text ein. Sie können den gewünschten Text aus einem Dokument oder einer Website kopieren."
 
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T137304886::INFORMAL"] = "Bitte gib einen Text ein. Du kannst den gewünschten Text aus einem Dokument oder einer Website kopieren."
 
+-- improved
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1590224381"] = "verbessert"
+
 -- Sentence structure
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1714063121"] = "Satzstruktur"
 
+-- Rewrite and improve a document or a text. Please note that the capabilities of the different LLM providers will vary.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1754663777"] = "Ein Dokument oder einen Text überarbeiten und verbessern. Bitte beachten Sie, dass die Fähigkeiten der verschiedenen LLM-Anbieter unterschiedlich sein können."
+
+-- Rewrite and improve a document or a text. Please note that the capabilities of the different LLM providers will vary.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1754663777::INFORMAL"] = "Ein Dokument oder einen Text überarbeiten und verbessern. Bitte beachte, dass die Fähigkeiten der verschiedenen LLM-Anbieter unterschiedlich sein können."
+
+-- Rewrite and improve a text which you type or paste, or which you load from a file. The improved text appears right here, with the changes marked.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1832596558"] = "Überarbeiten und verbessern Sie einen Text, den Sie eingeben oder einfügen, oder den Sie aus einer Datei laden. Der verbesserte Text erscheint direkt hier, und die Änderungen sind markiert."
+
+-- Rewrite and improve a text which you type or paste, or which you load from a file. The improved text appears right here, with the changes marked.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1832596558::INFORMAL"] = "Überarbeite und verbessere einen Text, den du eingibst oder einfügst, oder den du aus einer Datei lädst. Der verbesserte Text erscheint direkt hier, und die Änderungen sind markiert."
+
 -- Rewrite & Improve Text
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1994150308"] = "Text umformulieren & verbessern"
+
+-- Save improved document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2080446773"] = "Verbessertes Dokument speichern"
 
 -- Improve your text
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2163831433"] = "Verbessern Sie Ihren Text"
@@ -6282,11 +6414,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 -- Improve your text
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2163831433::INFORMAL"] = "Verbessere deinen Text"
 
+-- Improved document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T217405602"] = "Verbessertes Dokument"
+
 -- Load text from file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2210807298"] = "Text aus Datei laden"
 
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2591284123"] = "Sprache"
+
+-- Switch to improving a text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2611538509"] = "Zur Textverbesserung wechseln"
 
 -- Rewrite and improve the following text:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2875363001"] = "Bitte den folgenden Text umschreiben und verbessern:"
@@ -6300,20 +6438,32 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 -- Your input to improve
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3037449423::INFORMAL"] = "Dein Text, der verbessert werden soll"
 
+-- '{0}' has been improved paragraph by paragraph. Every sentence stayed in its paragraph, and the structure of the document is unchanged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3261300502"] = "„{0}“ wurde Absatz für Absatz verbessert. Jeder Satz ist in seinem Absatz geblieben, und die Struktur des Dokuments ist unverändert."
+
+-- Improve text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3294512994"] = "Text verbessern"
+
+-- Improved sections: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3589380997"] = "Verbesserte Abschnitte: {0}"
+
 -- Writing style
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3754048862"] = "Schreibstil"
 
--- Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T480915300"] = "Überarbeiten und verbessern Sie Ihren Text. Bitte beachten Sie, dass die Fähigkeiten der verschiedenen LLM-Anbieter unterschiedlich sein können."
+-- Improve document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T377629992"] = "Dokument verbessern"
 
--- Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T480915300::INFORMAL"] = "Überarbeite und verbessere deinen Text. Bitte beachte, dass die Fähigkeiten der verschiedenen LLM-Anbieter unterschiedlich sein können."
+-- Select a document to improve
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T550741400"] = "Dokument zum Verbessern auswählen"
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T656744944::INFORMAL"] = "Bitte gib eine benutzerdefinierte Sprache an."
+
+-- Switch to improving a document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T763976467"] = "Zur Dokumentenverbesserung wechseln"
 
 -- Passive voice
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::SENTENCESTRUCTUREEXTENSIONS::T132535068"] = "Passiv"
@@ -7137,6 +7287,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T33
 -- Simple language, e.g., for children
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::COMPLEXITYEXTENSIONS::T530584375"] = "Einfache Sprache, zum Beispiel für Kinder"
 
+-- Translate a document or a text from one language to another.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T109146452"] = "Ein Dokument oder einen Text aus einer Sprache in eine andere übersetzen."
+
 -- Please select a target language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1173859091"] = "Bitte wählen Sie eine Zielsprache aus."
 
@@ -7155,8 +7308,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T13730
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T137304886::INFORMAL"] = "Bitte gib einen Text ein. Du kannst den gewünschten Text aus einem Dokument oder einer Website kopieren."
 
+-- Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1928036000"] = "Übersetzen Sie einen Text, den Sie eingeben oder einfügen, oder den Sie aus einer Datei oder einer Webseite laden. Die Übersetzung erscheint direkt hier."
+
+-- Translate a text which you type or paste, or which you load from a file or a web page. The translation appears right here.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T1928036000::INFORMAL"] = "Übersetze einen Text, den du eingibst oder einfügst, oder den du aus einer Datei oder einer Webseite lädst. Die Übersetzung erscheint direkt hier."
+
 -- Translate
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2028202101"] = "Übersetzen"
+
+-- Translated sections: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2117028431"] = "Übersetzte Abschnitte: {0}"
+
+-- Save translated document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2123468759"] = "Übersetztes Dokument speichern"
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T237828418"] = "Zielsprache"
@@ -7164,8 +7329,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T23782
 -- Translate the following text to {0}:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2578812023"] = "Übersetze den folgenden Text in {0}:"
 
--- Translate text from one language to another.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3230457846"] = "Text aus einer Sprache in eine andere übersetzen."
+-- '{0}' has been translated into {1}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2918834204"] = "„{0}“ wurde in {1} übersetzt."
+
+-- Switch to document translation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2998957500"] = "Zur Dokumentenübersetzung wechseln"
 
 -- No live translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3556243327"] = "Keine Live-Übersetzung"
@@ -7173,8 +7341,23 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T35562
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3848935911"] = "Benutzerdefinierte Zielsprache"
 
+-- Translated document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3954880992"] = "Übersetztes Dokument"
+
+-- Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4264268496"] = "Übersetzen Sie eine Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei. Die Übersetzung wird als neue Datei desselben Typs gespeichert, und die Formatierung des Originals bleibt so weit wie möglich erhalten."
+
+-- Translate a Word, PowerPoint, LaTeX, Markdown, or HTML file. The translation is saved as a new file of the same type, and the formatting of the original is kept as far as possible.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4264268496::INFORMAL"] = "Übersetze eine Word-, PowerPoint-, LaTeX-, Markdown- oder HTML-Datei. Die Übersetzung wird als neue Datei desselben Typs gespeichert, und die Formatierung des Originals bleibt so weit wie möglich erhalten."
+
 -- Live translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T4279308324"] = "Live-Übersetzung"
+
+-- Select a document to translate
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T551715734"] = "Dokument zum Übersetzen auswählen"
+
+-- Switch to text translation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T589253298"] = "Zur Textübersetzung wechseln"
 
 -- Translation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T613888204"] = "Übersetzung"
@@ -7184,6 +7367,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T65674
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T656744944::INFORMAL"] = "Bitte gib eine benutzerdefinierte Sprache an."
+
+-- Translate document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T673837466"] = "Dokument übersetzen"
+
+-- Translate text
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T922529912"] = "Text übersetzen"
 
 -- confidential
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1052709079"] = "vertraulich"
@@ -9668,6 +9857,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 
 -- Change what this tile opens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Ändern, was diese Kachel öffnet"
+
+-- Sections left unchanged because the AI model gave no usable answer for them: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EDITEDDOCUMENTSUMMARY::T1474806928"] = "Abschnitte, die unverändert blieben, weil das KI-Modell dafür keine verwertbare Antwort geliefert hat: {0}"
+
+-- Sections left unchanged because the prompt injection check found suspicious content in them: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EDITEDDOCUMENTSUMMARY::T4269976588"] = "Abschnitte, die unverändert blieben, weil die Prüfung auf Prompt-Injections darin verdächtige Inhalte gefunden hat: {0}"
 
 -- This conversation fills the context window of the model. Choose a provider whose model reads more at once.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T103248473"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Wählen Sie einen Anbieter, dessen Modell mehr auf einmal verarbeitet."
@@ -16524,6 +16719,15 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T34
 -- Which target language should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T3547337928"] = "Welche Zielsprache soll vorausgewählt werden?"
 
+-- How should the grammar & spelling checker start?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T369463242"] = "Wie soll die Grammatik- und Rechtschreibprüfung starten?"
+
+-- Choose whether the grammar & spelling checker asks you each time whether to check a document or a text, or always starts with one of them. You can switch between the two at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T832058832"] = "Wählen Sie, ob die Grammatik- und Rechtschreibprüfung Sie jedes Mal fragt, ob ein Dokument oder ein Text geprüft werden soll, oder immer mit einem von beiden beginnt. Mit der Schaltfläche neben dem Zahnradsymbol können Sie jederzeit zwischen beiden wechseln."
+
+-- Choose whether the grammar & spelling checker asks you each time whether to check a document or a text, or always starts with one of them. You can switch between the two at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T832058832::INFORMAL"] = "Wähle, ob die Grammatik- und Rechtschreibprüfung dich jedes Mal fragt, ob ein Dokument oder ein Text geprüft werden soll, oder immer mit einem von beiden beginnt. Mit der Schaltfläche neben dem Zahnradsymbol kannst du jederzeit zwischen beiden wechseln."
+
 -- Assistant: Grammar & Spelling Checker Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T886675455"] = "Assistent: Optionen für die Grammatik- und Rechtschreibprüfung"
 
@@ -16932,6 +17136,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T37
 -- Select a prompt guide
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T4252279140"] = "Prompting-Leitfaden auswählen"
 
+-- How should the rewrite & improve assistant start?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1085306882"] = "Wie soll „Text umformulieren & verbessern“ starten?"
+
 -- Which writing style should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1173034744"] = "Welcher Schreibstil soll vorausgewählt werden?"
 
@@ -16964,6 +17171,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3547337928
 
 -- Preselect rewrite & improve text options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T3745021518"] = "Optionen für „Text umformulieren & verbessern“ vorauswählen?"
+
+-- Choose whether the rewrite & improve assistant asks you each time whether to improve a document or a text, or always starts with one of them. You can switch between the two at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T4221619986"] = "Wählen Sie, ob der Assistent „Text umformulieren & verbessern“ Sie jedes Mal fragt, ob ein Dokument oder ein Text verbessert werden soll, oder immer mit einem von beiden beginnt. Mit der Schaltfläche neben dem Zahnradsymbol können Sie jederzeit zwischen beiden wechseln."
+
+-- Choose whether the rewrite & improve assistant asks you each time whether to improve a document or a text, or always starts with one of them. You can switch between the two at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T4221619986::INFORMAL"] = "Wähle, ob der Assistent „Text umformulieren & verbessern“ dich jedes Mal fragt, ob ein Dokument oder ein Text verbessert werden soll, oder immer mit einem von beiden beginnt. Mit der Schaltfläche neben dem Zahnradsymbol kannst du jederzeit zwischen beiden wechseln."
 
 -- No rewrite & improve text options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T553954963"] = "Es sind keine Optionen für „Text umformulieren & verbessern“ vorausgewählt"
@@ -17382,6 +17595,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T193635
 -- When enabled, the text content cleaner is preselected. This might be useful when you prefer to clean up the content before translating it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1936357390::INFORMAL"] = "Wenn diese Option aktiviert ist, ist die Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn du den Inhalt vor der Übersetzung bereinigen möchtest."
 
+-- How should the translator start?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1945562480"] = "Wie soll der Übersetzer starten?"
+
 -- Preselect translator options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1989346399"] = "Übersetzeroptionen vorauswählen?"
 
@@ -17426,6 +17642,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T419551
 
 -- When enabled, you can preselect the translator options. This might be useful when you prefer a specific target language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T4195511669::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du die Übersetzeroptionen vorauswählen. Das kann nützlich sein, wenn du eine bestimmte Zielsprache oder ein bestimmtes LLM bevorzugst."
+
+-- Choose whether the translator asks you each time whether to translate a document or a text, or always starts with one of them. You can switch between the two at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T506174308"] = "Wählen Sie, ob der Übersetzer Sie jedes Mal fragt, ob ein Dokument oder ein Text übersetzt werden soll, oder immer mit einem von beiden beginnt. Mit der Schaltfläche neben dem Zahnradsymbol können Sie jederzeit zwischen beiden wechseln."
+
+-- Choose whether the translator asks you each time whether to translate a document or a text, or always starts with one of them. You can switch between the two at any time with the button next to the gear icon.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T506174308::INFORMAL"] = "Wähle, ob der Übersetzer dich jedes Mal fragt, ob ein Dokument oder ein Text übersetzt werden soll, oder immer mit einem von beiden beginnt. Mit der Schaltfläche neben dem Zahnradsymbol kannst du jederzeit zwischen beiden wechseln."
 
 -- Preselect the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T629158142"] = "Den Web-Content-Reader vorauswählen?"
@@ -20241,6 +20463,15 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T28881410
 -- Formal address
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ADDRESSFORMEXTENSIONS::T3439873254"] = "Formelle Anrede (Sie)"
 
+-- Always start with a document
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ASSISTANTSTARTMODEEXTENSIONS::T204202312"] = "Immer mit einem Dokument beginnen"
+
+-- Ask every time
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ASSISTANTSTARTMODEEXTENSIONS::T648770414"] = "Jedes Mal fragen"
+
+-- Always start with a text
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::ASSISTANTSTARTMODEEXTENSIONS::T97323650"] = "Immer mit einem Text beginnen"
+
 -- This data source can be used with any LLM provider. Your data may be sent to a cloud-based provider.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T1531417967"] = "Diese Datenquelle kann mit jedem LLM-Anbieter verwendet werden. Ihre Daten können an einen cloudbasierten Anbieter gesendet werden."
 
@@ -20981,6 +21212,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "Der Index de
 
 -- The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889::INFORMAL"] = "Der Index der Datenquelle „{0}“ kann nicht mehr gelesen werden. Bei einer Reparatur wird der Index vollständig neu erstellt: Alle bisher indexierten Daten werden verworfen und jedes Dokument dieser Datenquelle erneut an deinen Einbettungsanbieter gesendet. Bei einem Cloud-Anbieter entstehen dadurch Kosten, und bei einer großen Datenquelle kann dies einige Zeit dauern. Möchtest du diese Datenquelle jetzt reparieren?"
+
+-- Document
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::DOCUMENTSEGMENTFORMATS::T4165204724"] = "Dokument"
+
+-- Scripts, styles, code, preformatted text, and embedded graphics stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::HTML::HTMLSEGMENTFORMAT::T3877316317"] = "Skripte, Stile, Code, vorformatierter Text und eingebettete Grafiken bleiben unverändert."
+
+-- Formulas, code, drawings, comments, and the preamble apart from the title stay as they are, as does text in commands which the document defines itself. The language settings, e.g., of babel or polyglossia, stay unchanged, and a language with another script may need further packages.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::LATEX::LATEXSEGMENTFORMAT::T3778847049"] = "Formeln, Code, Zeichnungen, Kommentare und die Präambel mit Ausnahme des Titels bleiben unverändert, ebenso wie Text in Befehlen, die das Dokument selbst definiert. Die Spracheinstellungen, z. B. von babel oder polyglossia, bleiben unverändert, und eine Sprache mit einem anderen Schriftsystem kann weitere Pakete erfordern."
+
+-- Code, formulas, link targets, and embedded HTML stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::MARKDOWNSEGMENTFORMAT::T4053772832"] = "Code, Formeln, Linkziele und eingebettetes HTML bleiben unverändert."
+
+-- Charts, SmartArt, the alternative texts of pictures, the properties of the presentation, such as its title, and the masters and layouts of the slides stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check the text boxes on your slides.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::POWERPOINT::POWERPOINTSEGMENTFORMAT::T1136076172"] = "Diagramme, SmartArt, die Alternativtexte von Bildern, die Eigenschaften der Präsentation, wie z. B. deren Titel, sowie die Folienmaster und Layouts bleiben unverändert. Absätze behalten ihre Textrichtung bei, sodass neuer Text in einer von rechts nach links geschriebenen Sprache, wie Arabisch oder Hebräisch, möglicherweise Anpassungen erfordert. Neuer Text benötigt oft mehr Platz als der Originaltext. Bitte überprüfen Sie daher die Textfelder auf Ihren Folien."
+
+-- Charts, SmartArt, the alternative texts of pictures, the properties of the presentation, such as its title, and the masters and layouts of the slides stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check the text boxes on your slides.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::POWERPOINT::POWERPOINTSEGMENTFORMAT::T1136076172::INFORMAL"] = "Diagramme, SmartArt, die Alternativtexte von Bildern, die Eigenschaften der Präsentation, wie z. B. deren Titel, sowie die Folienmaster und Layouts bleiben unverändert. Absätze behalten ihre Textrichtung bei, sodass neuer Text in einer von rechts nach links geschriebenen Sprache, wie Arabisch oder Hebräisch, möglicherweise Anpassungen erfordert. Neuer Text benötigt oft mehr Platz als der Originaltext. Bitte überprüfe daher die Textfelder auf deinen Folien."
+
+-- Charts, SmartArt, comments, the alternative texts of pictures, and the properties of the document, such as its title, stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::WORD::WORDSEGMENTFORMAT::T3987467163"] = "Diagramme, SmartArt, Kommentare, die Alternativtexte von Bildern sowie die Eigenschaften des Dokuments, wie z. B. dessen Titel, bleiben unverändert. Absätze behalten ihre Textrichtung bei, sodass neuer Text in einer von rechts nach links geschriebenen Sprache, wie Arabisch oder Hebräisch, möglicherweise Anpassungen erfordert. Neuer Text benötigt oft mehr Platz als der Originaltext. Bitte überprüfen Sie daher Textfelder und Tabellenzellen mit fester Größe."
+
+-- Charts, SmartArt, comments, the alternative texts of pictures, and the properties of the document, such as its title, stay as they are. Paragraphs keep their direction, so new text in a language written from right to left, such as Arabic or Hebrew, may need adjustments. New text often needs more room than the original, so please check text boxes and table cells of a fixed size.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DOCUMENTSEGMENTS::WORD::WORDSEGMENTFORMAT::T3987467163::INFORMAL"] = "Diagramme, SmartArt, Kommentare, die Alternativtexte von Bildern sowie die Eigenschaften des Dokuments, wie z. B. dessen Titel, bleiben unverändert. Absätze behalten ihre Textrichtung bei, sodass neuer Text in einer von rechts nach links geschriebenen Sprache, wie Arabisch oder Hebräisch, möglicherweise Anpassungen erfordert. Neuer Text benötigt oft mehr Platz als der Originaltext. Bitte überprüfe daher Textfelder und Tabellenzellen mit fester Größe."
 
 -- Please drop a file, not a folder.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DROPPEDFILE::T1472251601"] = "Bitte legen Sie eine Datei ab, keinen Ordner."

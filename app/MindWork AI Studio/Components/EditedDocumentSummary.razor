@@ -1,0 +1,35 @@
+@using AIStudio.Tools.DocumentSegments
+@inherits MSGComponentBase
+
+<MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+    <MudText Typo="Typo.h6" Class="mb-2">
+        @this.Title
+    </MudText>
+    <MudText Typo="Typo.body1">
+        @this.DoneText
+    </MudText>
+    <MudText Typo="Typo.body2">
+        @this.SectionsText
+    </MudText>
+    @if (this.Document.Results.CountOf(SegmentStatus.FILTERED) is > 0 and var filteredCount)
+    {
+        <MudText Typo="Typo.body2">
+            @string.Format(T("Sections left unchanged because the prompt injection check found suspicious content in them: {0}"), filteredCount)
+        </MudText>
+    }
+    @if (this.Document.Results.CountOf(SegmentStatus.FAILED) is > 0 and var failedCount)
+    {
+        <MudText Typo="Typo.body2">
+            @string.Format(T("Sections left unchanged because the AI model gave no usable answer for them: {0}"), failedCount)
+        </MudText>
+    }
+    @if (DocumentSegmentFormats.For(this.Document.SourcePath) is { } format)
+    {
+        <MudText Typo="Typo.body2" Class="mt-2">
+            @format.LimitsNotice
+        </MudText>
+    }
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.SAVE" Disabled="@this.IsSaving" OnClick="@this.Save" Class="mt-3">
+        @this.SaveText
+    </MudButton>
+</MudPaper>

@@ -1,0 +1,177 @@
+# AGENTS.md
+
+These instructions cover the document segments in `app/MindWork AI Studio/Tools/DocumentSegments/`, with
+which an assistant lets a model work on the text of a whole document, e.g., translate it, and writes a new
+document of the same type in which everything but the text stays as it was. They add to the `AGENTS.md` in
+the repository root and to `app/AGENTS.md`, which apply here as well.
+
+## How a document comes about
+
+1. An `IDocumentSegmentFormat` reads the document into `DocumentSegment`s, in the order of the document:
+   paragraphs, headings, table cells, or texts of attributes. Each one holds a `TaggedText`, the words with
+   numbered tags for the inline structure: a pair such as `<1>…</1>` for something with words, e.g., a link
+   or a bold run, and a tag of its own such as `<2/>` for something without, e.g., a tab or a picture. Only
+   the format knows what a number stands for.
+2. `SegmentBatchPlanner` groups the segments with letters into batches, each text once.
+3. The assistant passes the texts through `PromptInjectionGuardService`, within one scope for the whole run.
+   A segment which the filter changed never reaches a model and stays as it is (`SegmentOutcome.FILTERED`).
+4. `SegmentTransformer` sends each batch as JSON (`SegmentBatch`, written and read by `SegmentJson`) with the
+   instructions of the assistant, checks the answer, and asks once more for what is missing or whose tags do
+   not fit. An answer which breaks off splits its batch.
+5. `SegmentResults` keeps what became of each segment, by its text. The format reads the source again, writes
+   nothing when the results miss one of its segments (`SegmentWriteOutcome.SOURCE_CHANGED`), and otherwise
+   writes the new texts into a copy of the source, which goes into the file the user chose.
+
+## Rules which are easy to break
+
+- **Nothing here knows what the model does.** The instructions and the system prompt come from the
+  assistant, so the same classes serve a translation as well as a correction. Keep words such as
+  "translate" out of this folder, apart from examples.
+- **Tags are the only structure a model sees.** Never put markup of a format, such as XML or Markdown
+  syntax which the format must keep, into a segment as words: make it a tag of its own. Words of a
+  document which read as a tag (`TaggedText.ContainsTagLikeText`) would be taken for one, so a format
+  leaves such a segment as it is, or sends it without tags when it has no markup to guard.
+- **A pair stays within its pair, a tag of its own may move.** `TaggedText.HasSameTagsAs` checks exactly
+  this, so a format can nest its parts again as before. Whatever must keep its order, such as the start
+  and the end of a field, belongs into one pair.
+- **Words beat structure.** A segment whose tags still do not fit after the second request keeps the words
+  of the model, and the format counts it as simplified. Every writer keeps what it can: the pairs whose both
+  tags arrived, nested as the model nested them, and the tags of their own where the model put them; what the
+  model dropped follows its words. Only words whose tags cannot be read at all are written without any inline
+  structure, and only a segment without any answer keeps its original text. A format whose parts may not
+  nest freely makes sure the result stays valid, see `WordParagraphWriter.Allows`.
+- **Prompt texts stay in English, the user's texts do not.** Requests and issues are written for the model.
+  The texts of a document are data: they go into the request, never into the system prompt.
+- **Write only into the file the user chose.** The rules of `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md`
+  hold for every format of Office documents: no copy of the whole file in memory, and `TemplateCopy` from
+  `app/MindWork AI Studio/Tools/OpenXml/` for the copy in the temporary folder. `OpenXmlSegmentFormat` does both
+  for every Office format, so a new one brings only its reader and its writer.
+
+## Markdown files and other text
+
+`MarkdownSegmentFormat` reads the paragraphs, headings, list items, quotes, table cells, and footnotes of a Markdown
+file at the positions Markdig reports for them. Every format of documents which are text themselves works this way:
+`TextSegmentBuilder` puts a segment together with the markup of its tags, and `TextSegmentWriter` replaces the words
+of each segment in the source, so everything else stays byte for byte, and `TextDocumentFile` keeps the encoding.
+`TextSegmentFormat` puts these together, so that such a format brings only its reader, how new words fit into it, and,
+when its files name their encoding, how to find that name.
+
+- **Only Unicode, read strictly.** `TextDocumentFile` reads UTF-8, or the Unicode encoding a byte order mark
+  announces (`ByteOrderMark`), with an exception fallback, and refuses a file whose bytes do not fit, or which names
+  another encoding for itself, e.g., by the charset of a web page or the option of inputenc in LaTeX
+  (`UnsupportedTextEncodingException`). A placeholder for an unreadable character would replace it everywhere in the
+  file, also outside of the segments, and new words in UTF-8 would come out garbled in a file which says Latin-1.
+  A format whose files name their encoding passes its finder to `TextDocumentFile.ReadAsync`.
+- **A segment without new words keeps its source.** The writer copies it as it is, so writing every segment back
+  unchanged yields the same file; only new words get the markup of the tags as the format recorded it.
+- **New words go into one line.** A model may write line breaks, and in Markdown or LaTeX a blank line would end a
+  paragraph or a table row, so their words functions replace line breaks with spaces; in HTML, a line break is white
+  space like any other. A segment which needs words of another kind, e.g., within an optional argument of LaTeX,
+  brings its own function, see `TextSegment.FormatWords`.
+- **Code, formulas, link targets, and embedded HTML are tags of their own or stay out.** Emphasis and links are
+  pairs around their words, so a model never sees an address.
+- **Words travel decoded and come back encoded, in Markdown as well.** Escaped characters and entities reach the
+  model as they read, e.g., `a | b` for `a \| b`, and `MarkdownWords` escapes new words where Markdown would read
+  them as markup: characters of inline markup, a mark which would start a list, a heading, or a quote at the start
+  of a line, e.g., `1. Januar`, and an ampersand which would start an entity. The white space around the words of a
+  segment, e.g., the padding of a table cell, stays outside of it.
+
+## Word documents
+
+`Word/WordSegmentFormat` reads the paragraphs of the body, the tables, the text boxes, the headers and
+footers, and the notes as segments, and leaves everything else of the document alone.
+
+- **Move, never copy.** The writer moves the elements a tag stands for into the new paragraph. A text box
+  holds paragraphs of its own, which are segments as well; only moving keeps their new words, whichever
+  paragraph is written first.
+- **Containers are pairs, fields are pairs, the rest is a tag of its own.** Links, content controls, simple
+  fields, and the insertions of the change tracking enclose runs, so the writer creates them anew around the new
+  words, with their properties. A field whose result lies in the same paragraph is a pair around its result, which
+  keeps its start, instruction, and end in their order. Content controls bound to data, or offering a choice, a
+  date, or a check box, stay as they are.
+- **An insertion holds runs only.** Within an insertion or a move of the change tracking, Word allows no link,
+  simple field, custom XML, or subdocument. When the model moves such a tag of its own into an insertion, the
+  writer puts it right behind the insertion and goes on with a new one; a container which the model nests there
+  loses its container and keeps its words.
+- **A bookmark around words is a pair, other ranges are no tags.** A cross reference shows the words its bookmark
+  encloses, e.g., the label and the number of a caption, so such a bookmark encloses the new words alike, as long
+  as it lies within one level of the paragraph and crosses neither another one nor a field. The starts of all other
+  bookmarks and of comment ranges go before the new words, their ends after them, so such a range only widens to
+  its paragraph.
+- **Changes of formatting are pairs as well.** Within a pair, or outside of any, the words in the most common
+  formatting stay words, and those in any other formatting, e.g., a word in bold, get a pair of their own.
+  Spaces never get one. A paragraph with more than `FormatSpans.MAX_PAIRS` such pairs keeps one formatting
+  for its new words instead and counts as simplified: every pair is one more thing a model has to keep in
+  place. That formatting is the one of the most letters, not the one of the first words, or a glossary with a
+  term in bold at the start of each line would turn bold as a whole. `FormatSpanReader` does all this for every
+  format which works this way, PowerPoint included.
+
+## PowerPoint presentations
+
+`PowerPoint/PowerPointSegmentFormat` reads the paragraphs of the shapes, groups, and tables of every slide, and
+those of its notes, slide by slide. The rules of `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md` about
+files hold here as well; its classes for the Slide Assistant are not used.
+
+- **Masters and layouts stay as they are.** Their texts are prompts for authors, which every slide replaces.
+- **A link is formatting.** PowerPoint keeps it in the properties of a run, so it becomes a pair like bold.
+  Line breaks and fields, such as the number of the slide, are tags of their own.
+- **The properties of the end of a paragraph come last.** The writer inserts new runs before them, as the
+  schema demands.
+- **Language and spell check are no formatting.** A run differs from another only in what changes its look;
+  new runs carry the target language and no mark of an earlier spell check.
+
+## Web pages
+
+`Html/HtmlSegmentFormat` reads the runs of words between the blocks of a page, its title, its describing meta
+elements, and the attributes people read (`alt`, `title`, `placeholder`, `aria-label`). Like Markdown, it
+replaces the words in the source by their positions and leaves the rest byte for byte.
+
+- **Elements which mark up words are pairs, the rest of a run is a tag of its own.** Code, pictures, line
+  breaks, form fields, scripts, and comments stay as they are; preformatted blocks stay out entirely. An element
+  which marks up words but holds blocks, e.g., a link around a card with a heading and a paragraph, counts as a
+  block, so that the words of its blocks are read.
+- **Words travel decoded and come back encoded.** The model gets the words as a browser shows them, entities
+  decoded and white space collapsed. `HtmlSegmentReader.EncodedText` and `EncodedAttribute` encode them again,
+  so new words never break the markup. The value of an attribute without quotes, e.g., `alt=Mars`, gets quotes
+  for new words, which may hold spaces.
+- **Attributes come first.** A readable attribute may lie within the markup of a block, e.g., a picture in a
+  paragraph, so the writer replaces the attributes, reads the blocks of that page again, and replaces them then.
+- **A run whose nodes leave markup in between stays as it is.** HtmlAgilityPack fixes broken markup in its
+  tree, not in the source; what the tree does not cover would otherwise go to the model as words.
+
+## LaTeX documents
+
+`Latex/LatexSegmentFormat` reads the paragraphs of the body, the texts of headings and captions, the labels of list
+items, the cells of tables, and the title in the preamble. Like Markdown, it replaces the words in the source by
+their positions and leaves the rest byte for byte. `LatexParser` reads only as much markup as the segments need: it
+expands no macro.
+
+- **Commands which mark up words are pairs, the rest is a tag of its own.** `LatexCommands` knows which commands
+  hold words, e.g., `\textbf` or `\footnote`, which start a segment of their own, e.g., `\section`, and which are
+  layout, e.g., `\label` or `\hline`, which stays outside of a segment at its edges. At the edges of a pair, layout
+  belongs to the markup of the pair, e.g., `\bfseries` of `{\bfseries words}`, but a `\label` is a tag of its own:
+  it is the target of references, which a model dropping the pair must not take along. An unknown command stays as
+  it is, with the arguments right after it: a macro of the document may hold anything.
+- **Words travel decoded and come back encoded.** Escaped characters, accents such as `\"a`, and quotes such as
+  `\glqq` reach the model as the characters they stand for, a tilde as a non-breaking space. `LatexWords` escapes
+  the special characters of new words; within an optional argument, it puts closing brackets into braces.
+- **Markup which ends in a command gets an empty group.** TeX takes letters right after a command for part of its
+  name and drops the space after it, so the writer protects new words after such a tag.
+- **Formulas, code, and drawings stay as they are.** A formula within a paragraph is a tag of its own. Verbatim and
+  listing environments, TikZ pictures, and bibliographies stay out entirely, as does every paragraph whose markup
+  the parser cannot follow, e.g., a closing brace without an opening one.
+- **Broken markup costs one paragraph, and no more time.** An opening brace without its closing one, or groups
+  nested deeper than `LatexParser.MAX_NESTING_DEPTH`, leave the rest of their paragraph as it is; the paragraphs
+  after it are read as usual. The parser notes each opening without an end, so that it reads every part of a
+  document about once, and the reader takes the end of the body from the parser, which skips `\end{document}`
+  within comments and code.
+- **The language settings stay.** The format leaves babel or polyglossia alone: a document may switch between
+  languages on purpose, and another script may need packages which only its author can choose.
+
+## Tests
+
+The tests in `app/Tests/Tools/DocumentSegments/` play the model with a delegate, so they run without a
+provider. Each format gets a test which writes every segment back unchanged and expects the same document.
+Office documents are built in code, e.g., by `TestWordDocument` or by `TestTemplate` of the Slide Assistant,
+so no binary document is checked in, and a test which writes one compares what the `OpenXmlValidator` finds
+with what it finds in the source.

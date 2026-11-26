@@ -1,14 +1,13 @@
+using AIStudio.Tools.OpenXml;
+
 namespace AIStudio.Tools.PowerPoint;
 
 /// <summary>
 /// Creates a presentation file from a template and a slide deck.
 /// </summary>
 /// <remarks>
-/// The presentation comes about in a copy of the template in the temporary folder, and only the
-/// complete presentation is streamed into the file the user chose. Nothing is created next to that
-/// file: inside the Flatpak, the save dialog grants access to exactly the chosen file, and to nothing
-/// next to it. A failure before the presentation is complete therefore leaves the target untouched,
-/// and neither the template nor the presentation has to be held in memory.
+/// The presentation comes about in a TemplateCopy, and only the complete presentation is streamed
+/// into the file the user chose; TemplateCopy says why.
 /// </remarks>
 internal static class PresentationFile
 {
@@ -35,77 +34,20 @@ internal static class PresentationFile
     /// <returns>Whether the presentation was written, and which pictures it lacks.</returns>
     public static async Task<PresentationFileResult> CreateAsync(string templatePath, string targetPath, SlideDeckSpec deck, IReadOnlyDictionary<string, string> basis, PresentationWriteOptions options, IPictureSource pictures, ILogger logger, CancellationToken token)
     {
-        var temporaryDirectory = Path.Join(Path.GetTempPath(), TEMPORARY_DIRECTORY);
-        Directory.CreateDirectory(temporaryDirectory);
+        using var copy = await TemplateCopy.CreateAsync(templatePath, TEMPORARY_DIRECTORY, ".pptx", logger, token);
 
-        var temporaryPath = Path.Join(temporaryDirectory, $"{Guid.NewGuid():N}.pptx");
-        try
+        PresentationWriteResult written;
+        await using (var presentationFile = copy.OpenForEditing())
         {
-            await using (var templateFile = new FileStream(templatePath, FileMode.Open, FileAccess.Read, PresentationTemplate.FILE_SHARE))
-            await using (var copy = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                await templateFile.CopyToAsync(copy, token);
+            var currentTemplate = PresentationTemplate.Read(presentationFile);
+            presentationFile.Position = 0;
+            if (!SlideDeckSpecValidator.StillFits(deck, currentTemplate, basis))
+                return PresentationFileResult.TEMPLATE_CHANGED;
 
-            PresentationWriteResult written;
-            await using (var presentationFile = new FileStream(temporaryPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-            {
-                var currentTemplate = PresentationTemplate.Read(presentationFile);
-                presentationFile.Position = 0;
-                if (!SlideDeckSpecValidator.StillFits(deck, currentTemplate, basis))
-                    return PresentationFileResult.TEMPLATE_CHANGED;
+            written = await PresentationWriter.WriteAsync(presentationFile, currentTemplate, deck, options, pictures, token);
+        }
 
-                written = await PresentationWriter.WriteAsync(presentationFile, currentTemplate, deck, options, pictures, token);
-            }
-
-            await CopyIntoTargetAsync(temporaryPath, targetPath, logger, token);
-            return new PresentationFileResult(true, written.SkippedPictures);
-        }
-        finally
-        {
-            DeleteQuietly(temporaryPath, logger);
-        }
-    }
-
-    /// <summary>
-    /// Streams the complete presentation into the file the user chose.
-    /// </summary>
-    /// <remarks>
-    /// The file is written over rather than removed and created anew, which the Flatpak would not
-    /// allow. Once writing has begun, a failure removes the file: a half-written presentation is
-    /// worse than none. A file which cannot even be opened, e.g., because PowerPoint shows it, stays
-    /// as it is.
-    /// </remarks>
-    private static async Task CopyIntoTargetAsync(string presentationPath, string targetPath, ILogger logger, CancellationToken token)
-    {
-        await using var presentation = new FileStream(presentationPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        var target = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None);
-        try
-        {
-            await using (target)
-                await presentation.CopyToAsync(target, token);
-        }
-        catch
-        {
-            DeleteQuietly(targetPath, logger);
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Removes a file which is of no use anymore, and only reports when that fails.
-    /// </summary>
-    /// <remarks>
-    /// A copy of the template left behind would pile up in the temporary folder with every attempt.
-    /// </remarks>
-    private static void DeleteQuietly(string path, ILogger logger)
-    {
-        try
-        {
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-        catch (Exception e)
-        {
-            logger.LogWarning(e, "The file '{FilePath}' cannot be deleted.", path);
-        }
+        await copy.WriteIntoAsync(targetPath, token);
+        return new PresentationFileResult(true, written.SkippedPictures);
     }
 }

@@ -31,10 +31,6 @@ internal static class ReadableTextDetection
 
     private const byte DELETE_BYTE = 0x7F;
 
-    private static readonly byte[] UTF8_BOM = [0xEF, 0xBB, 0xBF];
-    private static readonly byte[] UTF16_BE_BOM = [0xFE, 0xFF];
-    private static readonly byte[] UTF16_LE_BOM = [0xFF, 0xFE];
-
     /// <summary>
     /// Determines from the first PROBE_SIZE bytes whether a file uses a recognizable text encoding
     /// and does not resemble binary data.
@@ -93,21 +89,16 @@ internal static class ReadableTextDetection
 
     private static bool IsReadableText(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.StartsWith(UTF8_BOM))
-            return IsReadableText(bytes[UTF8_BOM.Length..], new UTF8Encoding(true, true));
-
-        if (bytes.StartsWith(UTF16_BE_BOM))
-            return IsReadableText(bytes[UTF16_BE_BOM.Length..], new UnicodeEncoding(true, true, true));
-
-        if (bytes.StartsWith(UTF16_LE_BOM))
-            return IsReadableText(bytes[UTF16_LE_BOM.Length..], new UnicodeEncoding(false, true, true));
+        // The runtime's text reader knows no UTF-32, whose text is mostly NUL bytes anyway:
+        if (ByteOrderMark.TryFind(bytes, out var encoding, out var markLength))
+            return encoding is not UTF32Encoding && IsReadableText(bytes[markLength..], encoding);
 
         if (bytes.Contains((byte)0))
             return false;
 
         try
         {
-            return IsReadableText(bytes, new UTF8Encoding(false, true));
+            return IsReadableText(bytes, ByteOrderMark.STRICT_UTF8_WITHOUT_MARK);
         }
         catch (DecoderFallbackException)
         {

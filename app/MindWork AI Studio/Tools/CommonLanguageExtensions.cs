@@ -71,6 +71,24 @@ public static class CommonLanguageExtensions
             _ => $"Use the language {language.Name} ({language}) for your output.",
         };
 
+        /// <summary>
+        /// Names the language whose rules a prompt applies, e.g., to check the spelling and grammar of a text.
+        /// </summary>
+        /// <param name="customLanguage">The language the user entered for OTHER.</param>
+        /// <param name="sourceLanguage">How the prompt names the language of the text, when the user chose none.</param>
+        public string PromptRulesLanguage(string customLanguage, string sourceLanguage = "the source language")
+        {
+            var name = language switch
+            {
+                CommonLanguages.AS_IS => sourceLanguage,
+                CommonLanguages.OTHER => customLanguage,
+
+                _ => language.Name,
+            };
+
+            return string.IsNullOrWhiteSpace(name) ? sourceLanguage : name;
+        }
+
         public string NameSelecting
         {
             get

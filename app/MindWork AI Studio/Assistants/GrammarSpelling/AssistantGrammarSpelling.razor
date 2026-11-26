@@ -1,7 +1,22 @@
 @attribute [Route(Routes.ASSISTANT_GRAMMAR_SPELLING)]
-@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogGrammarSpelling>
+@inherits DocumentAssistantBase<AIStudio.Dialogs.Settings.SettingsDialogGrammarSpelling>
 
-<ReadFileContent Text="@T("Load text from file")" @bind-FileContent="@this.inputText" EnableDragDrop="true" CatchAllDocuments="true"/>
-<MudTextField T="string" @bind-Value="@this.inputText" Validation="@this.ValidateText" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" AdornmentIcon="@AppIcons.INPUT_TEXT" Adornment="Adornment.Start" Label="@TA("Your input to check")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional)" @bind-Value="@this.selectedTargetLanguage" Icon="@AppIcons.LANGUAGE" Label="@T("Language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language")" />
-<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+@if (this.Mode is AssistantContentMode.UNDECIDED)
+{
+    @this.ModeChoice
+}
+else
+{
+    @if (this.Mode is AssistantContentMode.DOCUMENT)
+    {
+        @this.DocumentSelection
+    }
+    else
+    {
+        <ReadFileContent Text="@T("Load text from file")" @bind-FileContent="@this.inputText" EnableDragDrop="true" CatchAllDocuments="true"/>
+        <MudTextField T="string" @bind-Value="@this.inputText" Validation="@this.ValidateText" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" AdornmentIcon="@AppIcons.INPUT_TEXT" Adornment="Adornment.Start" Label="@TA("Your input to check")" Variant="Variant.Outlined" Lines="6" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    }
+
+    <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional)" @bind-Value="@this.selectedTargetLanguage" Icon="@AppIcons.LANGUAGE" Label="@T("Language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language")" />
+    <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+}

@@ -8,7 +8,12 @@ public sealed class DataTranslation
     /// The live translation interval for debouncing in milliseconds.
     /// </summary>
     public int DebounceIntervalMilliseconds { get; set; } = 1_500;
-    
+
+    /// <summary>
+    /// Whether the translator asks on start to translate a document or a text, or starts with one of them right away.
+    /// </summary>
+    public AssistantStartMode StartMode { get; set; } = AssistantStartMode.ASK_EVERY_TIME;
+
     /// <summary>
     /// Do we want to preselect any translator options?
     /// </summary>

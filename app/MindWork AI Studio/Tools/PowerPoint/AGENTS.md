@@ -17,7 +17,9 @@ to `app/AGENTS.md`, which apply here as well.
    which gets one repair round.
 5. `SlideDeckSpec.ToMarkdownOutline` shows the result as an outline, and `PresentationWriter.WriteAsync`
    writes the file: a copy of the template, with its slides replaced. `PresentationFile.CreateAsync` makes
-   that copy in the temporary folder and streams it into the target once it is complete.
+   that copy in the temporary folder and streams it into the target once it is complete, both with
+   `TemplateCopy` from `app/MindWork AI Studio/Tools/OpenXml/`, which every Office document written from
+   a template shares.
 
 ## Rules which are easy to break
 
@@ -69,6 +71,8 @@ to `app/AGENTS.md`, which apply here as well.
 - **Write only into the file the user chose.** Inside the Flatpak, the save dialog grants access to
   exactly that file, so nothing may be created, renamed, or moved next to it. Temporary files go into
   the temporary folder, and the finished presentation is written over the chosen file, never moved there.
+  `TemplateCopy` keeps both rules, and `TemplateFile.OpenRead` opens a template which PowerPoint still
+  shows; use them rather than a `FileStream` of your own.
 - **Removing a shape removes what only it used:** its image, chart, or diagram parts, and the animations
   of its slide, see `PresentationWriter.RemoveShape`. Otherwise PowerPoint offers to repair the file.
 
