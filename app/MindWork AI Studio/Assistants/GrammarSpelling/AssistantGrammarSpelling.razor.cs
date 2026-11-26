@@ -79,8 +79,8 @@ public partial class AssistantGrammarSpelling : DocumentAssistantBase<SettingsDi
 
     protected override IReadOnlyList<AssistantModeOption<AssistantContentMode>> ModeOptions =>
     [
-        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Check document"), TA("Check the spelling and grammar of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
-        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Check text"), TA("Check the spelling and grammar of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked.")),
+        new(AssistantContentMode.DOCUMENT, AppIcons.DOCUMENT, T("Check document"), TA("Check the grammar and spelling of a Word, PowerPoint, LaTeX, Markdown, or HTML file. The corrected document is saved as a new file of the same type, and the formatting of the original is kept as far as possible.")),
+        new(AssistantContentMode.TEXT, AppIcons.INPUT_TEXT, T("Check text"), TA("Check the grammar and spelling of a text which you type or paste, or which you load from a file. The corrected text appears right here, with the changes marked.")),
     ];
 
     protected override string SwitchTooltip(AssistantContentMode target) => target is AssistantContentMode.DOCUMENT ? T("Switch to checking a document") : T("Switch to checking a text");
@@ -97,7 +97,7 @@ public partial class AssistantGrammarSpelling : DocumentAssistantBase<SettingsDi
 
     protected override string DocumentSaveText => T("Save corrected document");
 
-    protected override string DocumentDoneText(EditedDocument document) => string.Format(T("The spelling and grammar of '{0}' are checked."), Path.GetFileName(document.SourcePath));
+    protected override string DocumentDoneText(EditedDocument document) => string.Format(T("The grammar and spelling of '{0}' have been checked."), Path.GetFileName(document.SourcePath));
 
     protected override string DocumentSectionsText(SegmentResults results) => string.Format(T("Corrected sections: {0}"), results.CountChanged());
 

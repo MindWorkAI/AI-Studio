@@ -14,13 +14,13 @@
     @if (this.Document.Results.CountOf(SegmentStatus.FILTERED) is > 0 and var filteredCount)
     {
         <MudText Typo="Typo.body2">
-            @string.Format(T("Sections left as they are, because the security check found suspicious content in them: {0}"), filteredCount)
+            @string.Format(T("Sections left unchanged because the prompt injection check found suspicious content in them: {0}"), filteredCount)
         </MudText>
     }
     @if (this.Document.Results.CountOf(SegmentStatus.FAILED) is > 0 and var failedCount)
     {
         <MudText Typo="Typo.body2">
-            @string.Format(T("Sections left as they are, because the AI model delivered no usable answer for them: {0}"), failedCount)
+            @string.Format(T("Sections left unchanged because the AI model gave no usable answer for them: {0}"), failedCount)
         </MudText>
     }
     @if (DocumentSegmentFormats.For(this.Document.SourcePath) is { } format)

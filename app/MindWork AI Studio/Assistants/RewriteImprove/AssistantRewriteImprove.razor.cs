@@ -100,9 +100,9 @@ public partial class AssistantRewriteImprove : DocumentAssistantBase<SettingsDia
 
     protected override string DocumentSaveText => T("Save improved document");
 
-    protected override string DocumentDoneText(EditedDocument document) => string.Format(T("'{0}' is improved paragraph by paragraph: each sentence stays in its paragraph, and the structure of the document stays as it is."), Path.GetFileName(document.SourcePath));
+    protected override string DocumentDoneText(EditedDocument document) => string.Format(T("'{0}' has been improved paragraph by paragraph. Every sentence stayed in its paragraph, and the structure of the document is unchanged."), Path.GetFileName(document.SourcePath));
 
-    protected override string DocumentSectionsText(SegmentResults results) => string.Format(T("Revised sections: {0}"), results.CountChanged());
+    protected override string DocumentSectionsText(SegmentResults results) => string.Format(T("Improved sections: {0}"), results.CountChanged());
 
     protected override string SendToChatVisibleUserPromptPrefix => T("Rewrite and improve the following text:");
 

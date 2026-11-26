@@ -89,8 +89,8 @@ public abstract partial class DocumentAssistantBase<TSettings>
         {
             this.Logger.LogWarning("The assistant '{AssistantTitle}' refused the document '{DocumentPath}': {Reason}", this.Title, sourcePath, e.Message);
             var message = string.IsNullOrWhiteSpace(e.DeclaredEncoding)
-                ? this.TA("The document is not saved as UTF-8, so its special characters, such as umlauts, would be damaged. Please save it as UTF-8 first, e.g., with a text editor, and try again.")
-                : string.Format(this.TA("The document names the encoding '{0}' for itself, but new text can only be written as UTF-8. Please save the document as UTF-8 and change the encoding it names first, e.g., the charset of a web page or the option of inputenc in LaTeX."), e.DeclaredEncoding);
+                ? this.TA("The document is not saved in UTF-8, so its special characters, such as umlauts, would be damaged. Please save it in UTF-8 first, e.g., with a text editor, and try again.")
+                : string.Format(this.TA("The document declares the encoding '{0}', but new text can only be written in UTF-8. Please save the document in UTF-8 and change its declared encoding first, e.g., the charset of a web page or the inputenc option in LaTeX."), e.DeclaredEncoding);
 
             await this.MessageBus.SendError(new(AppIcons.DOCUMENT, message));
             return;
@@ -98,14 +98,14 @@ public abstract partial class DocumentAssistantBase<TSettings>
         catch (Exception e) when (e is not OperationCanceledException)
         {
             this.Logger.LogError(e, "The assistant '{AssistantTitle}' could not read the document '{DocumentPath}'.", this.Title, sourcePath);
-            await this.MessageBus.SendError(new(AppIcons.DOCUMENT, this.TA("The document could not be read. Please check that it is a valid file and that no other program locks it.")));
+            await this.MessageBus.SendError(new(AppIcons.DOCUMENT, this.TA("The document could not be read. Please check that it is a valid file and that it is not locked by another program.")));
             return;
         }
 
         var segmentsWithWords = segments.Where(segment => segment.HasWords).DistinctBy(segment => segment.Key).ToList();
         if (segmentsWithWords.Count == 0)
         {
-            await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, this.TB("The document holds no text.")));
+            await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, this.TB("The document contains no text.")));
             return;
         }
 
@@ -167,7 +167,7 @@ public abstract partial class DocumentAssistantBase<TSettings>
         var targetPath = response.SaveFilePath;
         if (IsSameFile(targetPath, document.SourcePath))
         {
-            await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, this.TA("Please choose another file than the original document, which stays as it is.")));
+            await this.MessageBus.SendWarning(new(AppIcons.DOCUMENT, this.TA("Please choose a file other than the original document, which stays unchanged.")));
             return;
         }
 
@@ -188,7 +188,7 @@ public abstract partial class DocumentAssistantBase<TSettings>
 
             this.Logger.LogInformation("The assistant '{AssistantTitle}' saved '{TargetPath}' with {ExactCount} sections in full and {SimplifiedCount} simplified.", this.Title, targetPath, result.ExactCount, result.SimplifiedCount);
             if (result.SimplifiedCount > 0)
-                await this.MessageBus.SendWarning(new(AppIcons.WARNING, string.Format(this.TB("In {0} sections, the AI model did not keep all marks of the formatting, so parts of their formatting, such as links or bold words, are missing."), result.SimplifiedCount)));
+                await this.MessageBus.SendWarning(new(AppIcons.WARNING, string.Format(this.TB("In {0} sections, the AI model did not keep all of the formatting, so some of it, such as links or bold words, is missing."), result.SimplifiedCount)));
 
             await feedback.SucceededAsync(AppIcons.DOCUMENT, this.TB("The new document was saved."), targetPath, true);
         }

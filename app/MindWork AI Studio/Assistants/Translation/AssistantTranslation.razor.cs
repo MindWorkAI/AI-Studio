@@ -95,7 +95,7 @@ public partial class AssistantTranslation : DocumentAssistantBase<SettingsDialog
 
     protected override string DocumentSaveText => T("Save translated document");
 
-    protected override string DocumentDoneText(EditedDocument document) => string.Format(T("'{0}' is translated into {1}."), Path.GetFileName(document.SourcePath), document.Label);
+    protected override string DocumentDoneText(EditedDocument document) => string.Format(T("'{0}' has been translated into {1}."), Path.GetFileName(document.SourcePath), document.Label);
 
     protected override string DocumentSectionsText(SegmentResults results) => string.Format(T("Translated sections: {0}"), results.CountOf(SegmentStatus.TRANSFORMED));
 
