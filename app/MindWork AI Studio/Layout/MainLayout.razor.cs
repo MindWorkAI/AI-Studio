@@ -542,7 +542,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         {
             DataSourceEmbeddingState.QUEUED => (AppIcons.EMBEDDING_IN_PROGRESS, palette.Info.Value, "#1976d2"),
             DataSourceEmbeddingState.RUNNING => (AppIcons.EMBEDDING_IN_PROGRESS, palette.Warning.Value, "#d29f00"),
-            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => (AppIcons.ERROR, palette.Error.Value, "#d32f2f"),
+            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => (AppIcons.DATA_SOURCES_FAILED, palette.Error.Value, "#d32f2f"),
             _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING => (AppIcons.WARNING, palette.Warning.Value, "#d29f00"),
 
             // Nothing to do: the entry keeps the colors of its neighbors, so a permanently visible

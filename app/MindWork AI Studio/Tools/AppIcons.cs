@@ -146,8 +146,8 @@ public static class AppIcons
     /// <summary>Marks the visual briefing assistant and its briefings.</summary>
     public const string ASSISTANT_VISUAL_BRIEFING = LucideIcons.LAYOUT_DASHBOARD;
 
-    /// <summary>Shows all files attached to a chat.</summary>
-    public const string ATTACHED_FILES = LucideIcons.FILE_STACK;
+    /// <summary>Shows all files attached to a chat, as several files, as FILE_COUNT counts them.</summary>
+    public const string ATTACHED_FILES = LucideIcons.FILES;
 
     /// <summary>Attaches files or marks attachments, such as those of a chat or a mail.</summary>
     public const string ATTACH_FILE = LucideIcons.PAPERCLIP;
@@ -331,6 +331,9 @@ public static class AppIcons
 
     /// <summary>Marks the choice of a data source.</summary>
     public const string DATA_SOURCE = LucideIcons.DATABASE;
+
+    /// <summary>Shows that indexing a data source failed, in red, as the counterpart of DATA_SOURCES_UP_TO_DATE.</summary>
+    public const string DATA_SOURCES_FAILED = LucideIcons.DATABASE_X;
 
     /// <summary>Shows that the data sources need no attention, because nothing is indexing and nothing failed.</summary>
     public const string DATA_SOURCES_UP_TO_DATE = LucideIcons.DATABASE_CHECK;
