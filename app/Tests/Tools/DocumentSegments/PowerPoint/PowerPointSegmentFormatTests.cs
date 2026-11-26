@@ -157,6 +157,52 @@ public sealed class PowerPointSegmentFormatTests
         });
     }
 
+    /// <remarks>
+    /// The format skips a paragraph whose text stays as it was, so this test hands every key to the writer itself:
+    /// a writer which puts a paragraph together again from its own tags has to yield the same presentation.
+    /// </remarks>
+    [Test]
+    public void WritingEveryKeyThroughTheWriterKeepsThePresentation()
+    {
+        File.Copy(this.source, this.target);
+        using (var document = PresentationDocument.Open(this.target, true))
+        {
+            foreach (var paragraph in SlideSegmentReader.Read(document))
+                Assert.That(SlideParagraphWriter.Write(paragraph, paragraph.Segment.Key, string.Empty), Is.True, $"'{paragraph.Segment.Key}' keeps its inline structure and formatting.");
+        }
+
+        using var sourceDocument = PresentationDocument.Open(this.source, false);
+        using var targetDocument = PresentationDocument.Open(this.target, false);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(targetDocument), Is.EqualTo(ValidationErrorsOf(sourceDocument)), "The new presentation is as valid as the source.");
+            foreach (var (sourceRoot, targetRoot) in RootsOf(sourceDocument).Zip(RootsOf(targetDocument)))
+            {
+                Assert.That(StructureOf(targetRoot), Is.EqualTo(StructureOf(sourceRoot)), $"Every element of {sourceRoot.LocalName} besides the runs stays, in its order.");
+                Assert.That(FormattedTextOf(targetRoot), Is.EqualTo(FormattedTextOf(sourceRoot)), $"Every word of {sourceRoot.LocalName} keeps its formatting.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task WhatTheModelDroppedFollowsItsWords()
+    {
+        // The model left out the line break and the number of the slide:
+        var results = await this.ResultsAsync(key => key == RICH_PARAGRAPH ? "Wir fliegen <1>sehr</1> weit, <3>siehe den Plan</3> auf Folie" : key);
+
+        var result = await this.format.WriteAsync(this.source, this.target, results, "de-DE", NullLogger.Instance, CancellationToken.None);
+
+        using var sourceDocument = PresentationDocument.Open(this.source, false);
+        using var document = PresentationDocument.Open(this.target, false);
+        var paragraph = SlideOf(document).Descendants<A.Paragraph>().Single(candidate => candidate.Descendants<A.Field>().Any());
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.EqualTo(ValidationErrorsOf(sourceDocument)), "The new presentation is as valid as the source.");
+            Assert.That(result.SimplifiedCount, Is.EqualTo(1));
+            Assert.That(paragraph.ChildElements.Select(child => child.LocalName).TakeLast(3), Is.EqualTo(new[] { "br", "fld", "endParaRPr" }), "The line break and the field follow the words rather than getting lost.");
+        });
+    }
+
     [Test]
     public async Task TooManyChangesOfFormattingKeepTheMostCommonFormatting()
     {
@@ -213,6 +259,54 @@ public sealed class PowerPointSegmentFormatTests
     }
 
     private static P.Slide SlideOf(PresentationDocument document) => document.PresentationPart!.SlideParts.Single().Slide!;
+
+    private static IEnumerable<OpenXmlElement> RootsOf(PresentationDocument document)
+    {
+        var slidePart = document.PresentationPart!.SlideParts.Single();
+        yield return slidePart.Slide!;
+        yield return slidePart.NotesSlidePart!.NotesSlide!;
+    }
+
+    /// <summary>
+    /// The elements of a part in their order, apart from runs and their properties, which a writer may split or join.
+    /// </summary>
+    private static List<string> StructureOf(OpenXmlElement root) => root
+        .Descendants()
+        .Where(element => element is not (A.Run or A.Text or A.RunProperties) && !element.Ancestors<A.RunProperties>().Any())
+        .Select(element => element.LocalName)
+        .ToList();
+
+    /// <summary>
+    /// The words of a part with their formatting, joined where the formatting stays the same; language and spell check are no formatting, see SlideSegmentReader.
+    /// </summary>
+    private static List<string> FormattedTextOf(OpenXmlElement root)
+    {
+        var spans = new List<(string Format, string Text)>();
+        foreach (var text in root.Descendants<A.Text>())
+        {
+            var format = string.Empty;
+            if (text.Parent?.GetFirstChild<A.RunProperties>() is { } properties)
+            {
+                var copy = (A.RunProperties)properties.CloneNode(true);
+                copy.Language = null;
+                copy.AlternativeLanguage = null;
+                copy.SpellingError = null;
+                copy.Dirty = null;
+                copy.NoProof = null;
+                copy.SmartTagClean = null;
+
+                // Properties which change nothing count as none, as for the reader:
+                format = copy.HasAttributes || copy.HasChildren ? copy.OuterXml : string.Empty;
+            }
+
+            if (spans.Count > 0 && spans[^1].Format == format)
+                spans[^1] = (format, spans[^1].Text + text.Text);
+            else
+                spans.Add((format, text.Text));
+        }
+
+        return spans.Select(span => $"{span.Format}: {span.Text}").ToList();
+    }
 
     /// <summary>
     /// What the validator finds, without where it finds it: new runs move the places of what the source already had.

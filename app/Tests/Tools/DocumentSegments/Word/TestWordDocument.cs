@@ -18,6 +18,8 @@ internal static class TestWordDocument
 
     private const string HEADER_ID = "rIdHeader";
 
+    private const string FOOTER_ID = "rIdFooter";
+
     /// <summary>
     /// A document with nothing but the given paragraphs.
     /// </summary>
@@ -33,7 +35,7 @@ internal static class TestWordDocument
 
     /// <summary>
     /// A document with what Word documents commonly hold: a link, a tab, a reference to a footnote, a field
-    /// with its result, a bookmark, words with mixed formatting, a header, and a footnote.
+    /// with its result, a bookmark, words with mixed formatting, a header, a footer, a footnote, and an endnote.
     /// </summary>
     /// <param name="path">Where to create the document.</param>
     public static void CreateSample(string path)
@@ -44,6 +46,15 @@ internal static class TestWordDocument
 
         var headerPart = mainPart.AddNewPart<HeaderPart>(HEADER_ID);
         headerPart.Header = new W.Header(Paragraph(Run("Confidential")));
+
+        var footerPart = mainPart.AddNewPart<FooterPart>(FOOTER_ID);
+        footerPart.Footer = new W.Footer(Paragraph(Run("Page footer")));
+
+        var endnotesPart = mainPart.AddNewPart<EndnotesPart>();
+        endnotesPart.Endnotes = new W.Endnotes(
+            new W.Endnote(Paragraph(new W.Run(new W.SeparatorMark()))) { Type = W.FootnoteEndnoteValues.Separator, Id = -1 },
+            new W.Endnote(Paragraph(new W.Run(new W.ContinuationSeparatorMark()))) { Type = W.FootnoteEndnoteValues.ContinuationSeparator, Id = 0 },
+            new W.Endnote(Paragraph(new W.Run(new W.EndnoteReferenceMark()), Run(" An endnote."))) { Id = 1 });
 
         var footnotesPart = mainPart.AddNewPart<FootnotesPart>();
         footnotesPart.Footnotes = new W.Footnotes(
@@ -64,7 +75,9 @@ internal static class TestWordDocument
             Paragraph(new W.BookmarkStart { Id = "1", Name = "_Ref1" }, Run("Chapter"), new W.BookmarkEnd { Id = "1" }),
             Paragraph(Run("Mixed "), Bold("bold"), Run(" words")),
             Paragraph(Run("2026")),
-            new W.SectionProperties(new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = HEADER_ID })));
+            new W.SectionProperties(
+                new W.HeaderReference { Type = W.HeaderFooterValues.Default, Id = HEADER_ID },
+                new W.FooterReference { Type = W.HeaderFooterValues.Default, Id = FOOTER_ID })));
     }
 
     public static W.Paragraph Paragraph(params OpenXmlElement[] content) => new(content);
