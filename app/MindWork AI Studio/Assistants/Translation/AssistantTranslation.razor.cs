@@ -66,8 +66,6 @@ public partial class AssistantTranslation : DocumentAssistantBase<SettingsDialog
     
     protected override bool AllowProfiles => false;
     
-    protected override IReadOnlyList<IButtonData> FooterButtons => [];
-    
     protected override string SubmitText => this.Mode is AssistantContentMode.DOCUMENT ? T("Translate document") : T("Translate");
 
     protected override Func<Task> SubmitAction => () => this.Mode is AssistantContentMode.DOCUMENT ? this.EditDocumentAsync() : this.TranslateText(true);

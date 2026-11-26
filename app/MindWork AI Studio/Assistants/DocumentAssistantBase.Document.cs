@@ -1,6 +1,5 @@
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.DocumentSegments;
-using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 
 using Microsoft.AspNetCore.Components;
@@ -56,11 +55,8 @@ public abstract partial class DocumentAssistantBase<TSettings>
         if (string.IsNullOrWhiteSpace(path))
             return this.TA("Please choose a document.");
 
-        if (!FileTypes.IsAllowedPath(path, FileTypes.EDITABLE_DOCUMENT))
-            return this.TA("This kind of file is not supported. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file.");
-
         if (DocumentSegmentFormats.For(path) is null)
-            return this.TB("Documents of this kind are not supported yet.");
+            return this.TA("This kind of file is not supported. Please choose a Word, PowerPoint, LaTeX, Markdown, or HTML file.");
 
         return null;
     }

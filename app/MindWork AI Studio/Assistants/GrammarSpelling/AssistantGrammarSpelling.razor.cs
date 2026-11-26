@@ -62,8 +62,7 @@ public partial class AssistantGrammarSpelling : DocumentAssistantBase<SettingsDi
 
     protected override Func<string> Result2Copy => () => this.correctedText;
 
-    // A document becomes a file of its own, so only a text goes on to another assistant:
-    protected override IReadOnlyList<IButtonData> FooterButtons => this.Mode is not AssistantContentMode.TEXT ? [] :
+    protected override IReadOnlyList<IButtonData> TextFooterButtons =>
     [
         new SendToButton
         {

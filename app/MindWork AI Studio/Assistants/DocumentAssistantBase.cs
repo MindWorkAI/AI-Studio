@@ -3,7 +3,6 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.DocumentSegments;
-using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
@@ -112,6 +111,14 @@ public abstract partial class DocumentAssistantBase<TSettings> : AssistantBaseCo
     /// </remarks>
     protected virtual (string Original, string Changed) TextResultDiff => (string.Empty, string.Empty);
 
+    /// <summary>
+    /// The buttons below the result of a text, e.g., to send it to another assistant.
+    /// </summary>
+    /// <remarks>
+    /// A document gets none: it becomes a file of its own, which the summary of the document offers to save.
+    /// </remarks>
+    protected virtual IReadOnlyList<IButtonData> TextFooterButtons => [];
+
     #endregion
 
     #region Overrides of AssistantBase
@@ -134,6 +141,8 @@ public abstract partial class DocumentAssistantBase<TSettings> : AssistantBaseCo
     protected override IReadOnlySet<string>? AssistantManagedToolIds => this.Mode is AssistantContentMode.DOCUMENT ? NO_TOOLS : null;
 
     protected override bool SubmitDisabled => this.isSavingDocument;
+
+    protected sealed override IReadOnlyList<IButtonData> FooterButtons => this.Mode is AssistantContentMode.TEXT ? this.TextFooterButtons : [];
 
     protected sealed override void ApplyTextLaunchPayload(TextLaunchPayload payload)
     {
@@ -222,7 +231,7 @@ public abstract partial class DocumentAssistantBase<TSettings> : AssistantBaseCo
         builder.AddComponentParameter(2, nameof(SelectFile.FileChanged), EventCallback.Factory.Create<string>(this, path => this.documentPath = path));
         builder.AddComponentParameter(3, nameof(SelectFile.Label), this.TB("Document"));
         builder.AddComponentParameter(4, nameof(SelectFile.FileDialogTitle), this.DocumentDialogTitle);
-        builder.AddComponentParameter(5, nameof(SelectFile.Filter), new[] { FileTypes.EDITABLE_DOCUMENT });
+        builder.AddComponentParameter(5, nameof(SelectFile.Filter), new[] { DocumentSegmentFormats.AllKinds });
         builder.AddComponentParameter(6, nameof(SelectFile.Validation), new Func<string, string?>(this.ValidateDocument));
         builder.AddComponentParameter(7, nameof(SelectFile.Disabled), this.IsProcessing);
         builder.AddComponentParameter(8, nameof(SelectFile.EnableDragDrop), true);

@@ -184,7 +184,7 @@ presentation with the Open XML SDK (`DocumentFormat.OpenXml`), in `app/MindWork 
 **Area guide:** `app/MindWork AI Studio/Tools/PowerPoint/AGENTS.md`, with how a presentation comes about
 and the rules which are easy to break.
 
-Added document segments with which a model works on whole documents## Document Segments
+## Document Segments
 
 An assistant which works on a whole document, such as the Translation assistant with "Translate document",
 lets a model work on its text segment by segment and writes a new document of the same type, in which
@@ -198,7 +198,8 @@ assistant brings only its prompts, the texts which name what it does, and its fi
 
 - **Overrides call the base.** `ResetForm`, `CaptureCustomAssistantSessionState`, and
   `RestoreCustomAssistantSessionState` of such an assistant call the base, which keeps the mode and the document.
-  A text sent to it goes into `ApplyTextLaunchPayloadToText`, after the base switched to the text.
+  A text sent to it goes into `ApplyTextLaunchPayloadToText`, after the base switched to the text, and buttons
+  below the result of a text, such as "Send to", into `TextFooterButtons`: a document gets none.
 - **Texts of the base use `TB()`, or `TA()` when they address the reader.** `T()` takes the key from the type at
   runtime, which is the derived assistant, while the I18N collector files the text under the base. The base
   therefore declares its own `TA()`, as `AssistantBase` does.
