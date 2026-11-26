@@ -1,8 +1,9 @@
-using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using AIStudio.Tools.Web;
+using AngleSharp.Dom;
 using HtmlAgilityPack;
 using ReverseMarkdown;
 
@@ -15,39 +16,39 @@ public sealed class HTMLParser
     private const int DEFAULT_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 
     /// <summary>
-    /// The fixed configuration every HTML to Markdown conversion runs with.
+    /// The elements which ReverseMarkdown reads as inline elements around their content, such as a link.
     /// </summary>
-    /// <remarks>
-    /// This one is shared, because it is only ever read: a configuration holds no counters and no
-    /// collections which get written to. The converters reading it are not shared, see the pool
-    /// below.
-    /// </remarks>
-    private static readonly Config MARKDOWN_CONFIG = new()
-    {
-        UnknownTags = Config.UnknownTagsOption.Bypass,
-        RemoveComments = true,
-        SmartHrefHandling = true,
-    };
+    private static readonly FrozenSet<string> INLINE_ELEMENTS = new[] { "a", "abbr", "b", "cite", "del", "em", "i", "s", "span", "strike", "strong", "sub", "sup" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// The converters not currently in use, kept so that the reflection in their constructor does
-    /// not run for every page.
+    /// The elements which ReverseMarkdown reads as blocks of their own, or as containers of blocks. Tables and pre are
+    /// left out: their content keeps its own structure inside an inline element as well.
+    /// </summary>
+    private static readonly FrozenSet<string> BLOCK_ELEMENTS = new[]
+    {
+        "article", "aside", "blockquote", "dd", "div", "dl", "dt", "figcaption", "figure", "footer", "h1", "h2", "h3", "h4", "h5", "h6",
+        "header", "hr", "li", "main", "nav", "ol", "p", "section", "ul",
+    }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The one converter every HTML to Markdown conversion runs through.
     /// </summary>
     /// <remarks>
-    /// One converter per conversion rather than one for all of them: a converter tracks the
-    /// ancestors of the node it is at in state of its own, updates that state at every single node,
-    /// and does so without any synchronization. A web search converts up to four pages at the same
-    /// time, which let those conversions tear each other's ancestor lists apart — sometimes loudly,
-    /// as an index outside the bounds of an array, and sometimes quietly, as a list indented by the
-    /// depth another page happened to be at.<br/><br/>
-    /// Which converter gets which page does not matter, so the pool needs no key: that ancestor
-    /// state is entered and left in pairs around every node, which leaves it empty once a
-    /// conversion returns. Nothing of a page outlives its own conversion. A key would, in fact, do
-    /// harm — two conversions of the same page at the same time would share one converter again.
-    /// <br/><br/>
-    /// The pool holds no more converters than are ever converting at once, which is a handful.
+    /// Since version 6, ReverseMarkdown keeps the state of a conversion inside that conversion and
+    /// documents its converter as safe for concurrent use. A web search converts up to four pages at
+    /// the same time, and HTMLParserConcurrencyTests checks that they stay apart. Up to version 5, a
+    /// converter tracked the ancestors of the node it was at in state of its own, and conversions
+    /// sharing one tore each other's lists apart, which is why there used to be a pool of them.<br/><br/>
+    /// Built from a configuration alone, the converter takes its built-in readers and needs no
+    /// reflection, so a trimmed build keeps everything it uses, see MarkdownChecks of the trim smoke test.
     /// </remarks>
-    private static readonly ConcurrentBag<Converter> CONVERTER_POOL = [];
+    private static readonly Converter CONVERTER = new(new Config
+    {
+        Tags = { Unknown = Config.UnknownTagsOption.Bypass },
+        Formatting = { RemoveComments = true },
+        Links = { SmartHref = true },
+        Preprocess = { { "Unwrap the blocks inside inline elements", UnwrapBlocksInsideInlineElements } },
+    });
 
     /// <summary>
     /// Loads a web page.
@@ -269,21 +270,74 @@ public sealed class HTMLParser
     /// </summary>
     /// <param name="html">The HTML content to parse.</param>
     /// <returns>The converted Markdown content.</returns>
+    public static string ParseToMarkdown(string html) => CONVERTER.Convert(html);
+
+    /// <summary>
+    /// Replaces every block inside an inline element by its content, with a space before and after it.
+    /// </summary>
+    /// <param name="root">The document element of the HTML, as ReverseMarkdown parsed it.</param>
     /// <remarks>
-    /// The converter returns to the pool only after it converted without throwing, and that is
-    /// deliberately not done in a finally block: a conversion which throws leaves the ancestors it
-    /// entered behind, because the library does not unwind them itself. Such a converter would
-    /// count those ancestors into every page it is handed afterwards, so it is left to the garbage
-    /// collector rather than passed on.
+    /// Compatibility shim, see documentation/compatibility-shims/2026-11-reversemarkdown-blocks-in-inline-elements.md;
+    /// remove it once ReverseMarkdown separates such blocks itself.<br/><br/>
+    /// Many pages wrap a whole teaser in a link: a heading, a line of metadata, and a summary, each a block of its own.
+    /// A link holds no blocks in Markdown, so ReverseMarkdown 6 writes their texts one after another into the text of
+    /// the link, without anything in between, e.g., "Java77.721 Abrufeheise security". A space next to such a block
+    /// would not help: inside a block, the library drops text which is nothing but whitespace. Hence, each block gives
+    /// way to its content, which the library then reads as part of the inline element, spaces included. The result is
+    /// what the library makes of such a block anyway, only with the words apart. Where whitespace is there already,
+    /// nothing is added, and inside pre the text stays exactly as it is.<br/><br/>
+    /// The blocks are taken from the outside in, so an inner block sees the neighbors it got when its outer block gave
+    /// way. Every conversion parses a document of its own, so this step changes nothing which another thread could see.
     /// </remarks>
-    public static string ParseToMarkdown(string html)
+    private static void UnwrapBlocksInsideInlineElements(IElement root)
     {
-        if (!CONVERTER_POOL.TryTake(out var converter))
-            converter = new Converter(MARKDOWN_CONFIG);
+        var blocks = root.QuerySelectorAll("*").Where(IsBlockInsideInlineElement).ToList();
+        foreach (var block in blocks)
+        {
+            if (block.Parent is not { } parent)
+                continue;
 
-        var markdown = converter.Convert(html);
+            if (NeedsSeparator(block.PreviousSibling, atItsEnd: true))
+                parent.InsertBefore(block.Owner!.CreateTextNode(" "), block);
 
-        CONVERTER_POOL.Add(converter);
-        return markdown;
+            if (NeedsSeparator(block.NextSibling, atItsEnd: false))
+                parent.InsertBefore(block.Owner!.CreateTextNode(" "), block.NextSibling);
+
+            foreach (var child in block.ChildNodes.ToArray())
+                parent.InsertBefore(child, block);
+
+            block.Remove();
+        }
     }
+
+    private static bool IsBlockInsideInlineElement(IElement element)
+    {
+        if (!BLOCK_ELEMENTS.Contains(element.LocalName))
+            return false;
+
+        var insideInlineElement = false;
+        for (var ancestor = element.ParentElement; ancestor is not null; ancestor = ancestor.ParentElement)
+        {
+            if (ancestor.LocalName.Equals("pre", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (INLINE_ELEMENTS.Contains(ancestor.LocalName))
+                insideInlineElement = true;
+        }
+
+        return insideInlineElement;
+    }
+
+    /// <summary>
+    /// Whether the node next to a block runs into the block without whitespace in between.
+    /// </summary>
+    /// <param name="neighbor">The node right before or after the block, if any.</param>
+    /// <param name="atItsEnd">True when the neighbor comes before the block, so its last character touches the block.</param>
+    private static bool NeedsSeparator(INode? neighbor, bool atItsEnd) => neighbor switch
+    {
+        null => false,
+        IText { Data.Length: 0 } => false,
+        IText text => !char.IsWhiteSpace(atItsEnd ? text.Data[^1] : text.Data[0]),
+        _ => true,
+    };
 }

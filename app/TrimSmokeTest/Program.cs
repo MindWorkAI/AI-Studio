@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace AIStudio.TrimSmokeTest;
 
 /// <summary>
-/// Checks whether a trimmed build can still read and write the JSON of AI Studio, and compute with the
-/// Mathematics tools, see TrimSmokeTest.csproj.
+/// Checks whether a trimmed build can still read and write the JSON of AI Studio, compute with the
+/// Mathematics tools, and convert HTML to Markdown, see TrimSmokeTest.csproj.
 /// </summary>
 public static class Program
 {
@@ -30,10 +30,12 @@ public static class Program
 
         failures.AddRange(JsonRoundTrips.FindLosses());
         failures.AddRange(MathematicsChecks.FindFailures());
+        failures.AddRange(MarkdownChecks.FindFailures());
         if (failures.Count is 0)
         {
             Console.WriteLine($"- All {roots.Count} JSON roots can be read and written.");
             Console.WriteLine("- The Mathematics tools compute what they compute untrimmed.");
+            Console.WriteLine("- HTML becomes the same Markdown as untrimmed.");
             return 0;
         }
 
