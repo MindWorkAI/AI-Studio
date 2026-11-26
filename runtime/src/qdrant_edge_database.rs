@@ -805,7 +805,7 @@ fn ensure_enough_space(required_bytes: u64, available_bytes: Option<u64>) -> Qdr
 /// path as it is serves as the fallback.
 fn available_space(path: &Path) -> Option<u64> {
     let disks = sysinfo::Disks::new_with_refreshed_list()
-        .list()
+        .ok()?
         .iter()
         .map(|disk| DiskSpace {
             mount_point: disk.mount_point().to_path_buf(),
@@ -2018,10 +2018,13 @@ mod tests {
         database.search_embedding(SEARCH_STORE, search_vector(), 3, None, &[]).unwrap();
         assert_eq!(payload_indexes(&database).len(), INDEXED_PAYLOAD_FIELDS.len());
 
+        // On Windows, an open WAL locks the file `.wal` in its directory against every other handle,
+        // so the WAL can be read only after the store is closed, just like before it was loaded:
+        drop(database);
+
         // Not assert_eq: on failure, it would print every byte of the WAL.
         assert!(file_contents(&wal_path) == wal, "loading the store left its WAL as it was");
 
-        drop(database);
         fs::remove_dir_all(test_directory).unwrap();
     }
 

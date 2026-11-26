@@ -338,10 +338,13 @@ fn get_log_time(now: &mut DeferredNow, record: &log::Record) -> LogTime {
         },
 
         // Case: The event happened earlier, e.g., in the .NET server. The logger
-        // runs in UTC (see init_logging), so this time is written in UTC as well:
+        // runs in UTC (see init_logging), so this time is written in UTC as well.
+        // flexi_logger keeps the arrival time as a jiff value, whose microseconds
+        // since the Unix epoch carry it over to chrono:
         Some(created_at) => LogTime {
             timestamp: created_at.format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK).to_string(),
-            delay_ms: get_notable_delay_ms(created_at, now.now_utc_owned()),
+            delay_ms: DateTime::<Utc>::from_timestamp_micros(now.now().timestamp().as_microsecond())
+                .and_then(|arrived_at| get_notable_delay_ms(created_at, arrived_at)),
         },
     }
 }
