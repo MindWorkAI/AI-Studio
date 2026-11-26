@@ -78,8 +78,8 @@ public sealed class RetrievalContextValidationProviderTests
 
     private static void PickOwnProvider(SettingsManager settingsManager)
     {
-        settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions = true;
-        settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectedAgentProvider = OWN_PROVIDER_ID;
+        settingsManager.ConfigurationData.RetrievalContextValidation.PreselectOptions = true;
+        settingsManager.ConfigurationData.RetrievalContextValidation.PreselectedProvider = OWN_PROVIDER_ID;
     }
 
     /// <summary>

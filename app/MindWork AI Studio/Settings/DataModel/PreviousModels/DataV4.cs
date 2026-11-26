@@ -47,7 +47,7 @@ public sealed class DataV4
 
     public DataTextSummarizer TextSummarizer { get; set; } = new();
 
-    public DataTextContentCleaner TextContentCleaner { get; set; } = new();
+    public DataTextContentCleanerV6 TextContentCleaner { get; set; } = new();
     
     public DataAgenda Agenda { get; set; } = new();
     

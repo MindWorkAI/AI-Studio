@@ -53,7 +53,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         var usedContexts = preparedContexts;
 
         // Want the user to validate all retrieval contexts?
-        if (settings.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && chatThread.DataSourceOptions.AutomaticValidation)
+        if (settings.ConfigurationData.RetrievalContextValidation.EnableRetrievalContextValidation && chatThread.DataSourceOptions.AutomaticValidation)
         {
             //
             // Which provider validates? Only one which may see what the chat may see: the model reads

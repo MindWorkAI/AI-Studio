@@ -115,13 +115,13 @@ public sealed class DataV5
 
     public DataTextSummarizer TextSummarizer { get; set; } = new();
 
-    public DataTextContentCleaner TextContentCleaner { get; set; } = new();
-    
-    public DataAgentDataSourceSelection AgentDataSourceSelection { get; set; } = new();
-    
-    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; set; } = new();
+    public DataTextContentCleanerV6 TextContentCleaner { get; set; } = new();
 
-    public DataAssistantPluginAudit AssistantPluginAudit { get; set; } = new(x => x.AssistantPluginAudit);
+    public DataAgentDataSourceSelectionV6 AgentDataSourceSelection { get; set; } = new();
+
+    public DataAgentRetrievalContextValidationV6 AgentRetrievalContextValidation { get; set; } = new();
+
+    public DataAssistantPluginAuditV6 AssistantPluginAudit { get; set; } = new();
     
     public DataAgenda Agenda { get; set; } = new();
     

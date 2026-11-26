@@ -106,7 +106,7 @@ public sealed class PluginAuditOperation(ILogger<PluginAuditOperation> logger, S
     public static AIOperationProviderSettings GetProviderSettings(SettingsManager settingsManager)
     {
         var settings = settingsManager.ConfigurationData.AssistantPluginAudit;
-        return new(settings.PreselectedAgentProvider, settings.MinimumProviderConfidence);
+        return new(settings.PreselectedProvider, settings.MinimumProviderConfidence);
     }
 
     #region Overrides of AIOperationBase

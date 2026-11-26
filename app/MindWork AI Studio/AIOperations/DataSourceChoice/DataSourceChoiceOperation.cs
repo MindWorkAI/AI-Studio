@@ -79,9 +79,9 @@ public sealed class DataSourceChoiceOperation(ILogger<DataSourceChoiceOperation>
     /// <returns>The preferred provider and the minimum confidence, or none of them while the preselection is switched off.</returns>
     public static AIOperationProviderSettings GetProviderSettings(SettingsManager settingsManager)
     {
-        var settings = settingsManager.ConfigurationData.AgentDataSourceSelection;
-        return settings.PreselectAgentOptions
-            ? new(settings.PreselectedAgentProvider, settings.MinimumProviderConfidence)
+        var settings = settingsManager.ConfigurationData.DataSourceSelection;
+        return settings.PreselectOptions
+            ? new(settings.PreselectedProvider, settings.MinimumProviderConfidence)
             : AIOperationProviderSettings.NONE;
     }
 

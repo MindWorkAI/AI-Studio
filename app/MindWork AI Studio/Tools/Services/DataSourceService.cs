@@ -133,7 +133,7 @@ public sealed class DataSourceService
     private IReadOnlyList<ParticipatingProvider> GetParticipatingProviders(string currentProviderId, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, ParticipatingProvider currentProvider)
     {
         var providers = new List<ParticipatingProvider> { currentProvider };
-        var retrievalContextValidationEnabled = this.settingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation;
+        var retrievalContextValidationEnabled = this.settingsManager.ConfigurationData.RetrievalContextValidation.EnableRetrievalContextValidation;
         foreach (var (component, role) in GetParticipatingOperations(dataSourceOptions, retrievalMode, retrievalContextValidationEnabled))
             this.AddOperationProvider(providers, component, currentProviderId, role);
 

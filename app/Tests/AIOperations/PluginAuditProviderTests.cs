@@ -39,7 +39,7 @@ public sealed class PluginAuditProviderTests
         AddProvider(settingsManager, AUDIT_PROVIDER_ID, LLMProviders.MISTRAL);
         AddProvider(settingsManager, APP_DEFAULT_PROVIDER_ID, LLMProviders.OPEN_AI);
         settingsManager.ConfigurationData.App.PreselectedProvider = APP_DEFAULT_PROVIDER_ID;
-        settingsManager.ConfigurationData.AssistantPluginAudit.PreselectedAgentProvider = AUDIT_PROVIDER_ID;
+        settingsManager.ConfigurationData.AssistantPluginAudit.PreselectedProvider = AUDIT_PROVIDER_ID;
 
         var choice = Choose(settingsManager, null);
 

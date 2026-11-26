@@ -32,8 +32,8 @@ public sealed class TextContentCleaningOperation(ILogger<TextContentCleaningOper
     public static AIOperationProviderSettings GetProviderSettings(SettingsManager settingsManager)
     {
         var settings = settingsManager.ConfigurationData.TextContentCleaner;
-        return settings.PreselectAgentOptions
-            ? new(settings.PreselectedAgentProvider, settings.MinimumProviderConfidence)
+        return settings.PreselectOptions
+            ? new(settings.PreselectedProvider, settings.MinimumProviderConfidence)
             : AIOperationProviderSettings.NONE;
     }
 

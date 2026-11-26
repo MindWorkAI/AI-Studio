@@ -1,5 +1,5 @@
 {
-  "Version": "V6",
+  "Version": "V7",
   "Providers": [
     {
       "Num": 7,
@@ -1501,22 +1501,22 @@
     "PreselectedProvider": "PreselectedProvider sample 639"
   },
   "TextContentCleaner": {
-    "PreselectAgentOptions": true,
-    "PreselectedAgentProvider": "PreselectedAgentProvider sample 640"
+    "PreselectOptions": true,
+    "PreselectedProvider": "PreselectedAgentProvider sample 640"
   },
-  "AgentDataSourceSelection": {
-    "PreselectAgentOptions": true,
-    "PreselectedAgentProvider": "PreselectedAgentProvider sample 641"
+  "DataSourceSelection": {
+    "PreselectOptions": true,
+    "PreselectedProvider": "PreselectedAgentProvider sample 641"
   },
-  "AgentRetrievalContextValidation": {
+  "RetrievalContextValidation": {
     "EnableRetrievalContextValidation": true,
-    "PreselectAgentOptions": true,
-    "PreselectedAgentProvider": "PreselectedAgentProvider sample 642",
+    "PreselectOptions": true,
+    "PreselectedProvider": "PreselectedAgentProvider sample 642",
     "NumParallelValidations": 83
   },
   "AssistantPluginAudit": {
     "RequireAuditBeforeActivation": true,
-    "PreselectedAgentProvider": "PreselectedAgentProvider sample 644",
+    "PreselectedProvider": "PreselectedAgentProvider sample 644",
     "MinimumLevel": "DANGEROUS",
     "BlockActivationBelowMinimum": true,
     "AutomaticallyAuditAssistants": true,

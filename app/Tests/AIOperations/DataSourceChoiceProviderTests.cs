@@ -113,8 +113,8 @@ public sealed class DataSourceChoiceProviderTests
         var settingsManager = CreateSettingsManager();
         AddProvider(settingsManager, CHAT_PROVIDER_ID, LLMProviders.OPEN_AI);
         AddProvider(settingsManager, OWN_PROVIDER_ID, LLMProviders.MISTRAL);
-        settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = true;
-        settingsManager.ConfigurationData.AgentDataSourceSelection.MinimumProviderConfidence = ConfidenceLevel.HIGH;
+        settingsManager.ConfigurationData.DataSourceSelection.PreselectOptions = true;
+        settingsManager.ConfigurationData.DataSourceSelection.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
         var choice = Choose(settingsManager, [OpenServer()]);
 
@@ -129,8 +129,8 @@ public sealed class DataSourceChoiceProviderTests
 
     private static void PickOwnProvider(SettingsManager settingsManager)
     {
-        settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = true;
-        settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider = OWN_PROVIDER_ID;
+        settingsManager.ConfigurationData.DataSourceSelection.PreselectOptions = true;
+        settingsManager.ConfigurationData.DataSourceSelection.PreselectedProvider = OWN_PROVIDER_ID;
     }
 
     private static IDataSource OpenServer() => new DataSourceERI_V1

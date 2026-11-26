@@ -23,25 +23,25 @@ public sealed class AITaskMinimumConfidenceTests
         var settingsManager = CreateSettingsManager();
         settingsManager.ConfigurationData.TextContentCleaner.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_TEXT_CONTENT_CLEANER, on => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions = on);
+        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_TEXT_CONTENT_CLEANER, on => settingsManager.ConfigurationData.TextContentCleaner.PreselectOptions = on);
     }
 
     [Test]
     public void TheDataSourceSelectionAppliesItsMinimumOnlyWithItsPreselection()
     {
         var settingsManager = CreateSettingsManager();
-        settingsManager.ConfigurationData.AgentDataSourceSelection.MinimumProviderConfidence = ConfidenceLevel.HIGH;
+        settingsManager.ConfigurationData.DataSourceSelection.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_DATA_SOURCE_SELECTION, on => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = on);
+        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_DATA_SOURCE_SELECTION, on => settingsManager.ConfigurationData.DataSourceSelection.PreselectOptions = on);
     }
 
     [Test]
     public void TheRetrievalContextValidationAppliesItsMinimumOnlyWithItsPreselection()
     {
         var settingsManager = CreateSettingsManager();
-        settingsManager.ConfigurationData.AgentRetrievalContextValidation.MinimumProviderConfidence = ConfidenceLevel.HIGH;
+        settingsManager.ConfigurationData.RetrievalContextValidation.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION, on => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions = on);
+        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION, on => settingsManager.ConfigurationData.RetrievalContextValidation.PreselectOptions = on);
     }
 
     [Test]

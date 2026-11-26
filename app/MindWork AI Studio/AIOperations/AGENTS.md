@@ -70,7 +70,7 @@ text content cleaner.
 
 Each operation has a preferred provider and a minimum confidence in its settings data class, managed through
 `ManagedConfiguration` and documented in `Plugins/configuration/plugin.lua`. With a switch such as
-`PreselectAgentOptions`, both apply only while it is on, like the settings of the assistants. Add the minimum
+`PreselectOptions`, both apply only while it is on, like the settings of the assistants. Add the minimum
 to `ComponentsExtensions.MinimumConfidence` as well, so that the provider selections of the settings filter by
 it.
 

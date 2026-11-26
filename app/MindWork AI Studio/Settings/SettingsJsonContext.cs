@@ -29,6 +29,7 @@ namespace AIStudio.Settings;
 [JsonSerializable(typeof(DataV1V3))]
 [JsonSerializable(typeof(DataV4))]
 [JsonSerializable(typeof(DataV5))]
+[JsonSerializable(typeof(DataV6))]
 [JsonSerializable(typeof(ISet<string>))]
 [JsonSerializable(typeof(ISet<PreviewFeatures>))]
 [JsonSerializable(typeof(ISet<LLMProviders>))]

@@ -76,7 +76,7 @@
                             }
 
                             @* With Semantic Search, no AI operation takes part: nothing would validate the retrieved data. *@
-                            @if (this.AllowsAutomaticSelection && this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && !this.IsSemanticSearchEffective)
+                            @if (this.AllowsAutomaticSelection && this.SettingsManager.ConfigurationData.RetrievalContextValidation.EnableRetrievalContextValidation && !this.IsSemanticSearchEffective)
                             {
                                 <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
                             }

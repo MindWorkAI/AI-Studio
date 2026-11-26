@@ -75,9 +75,9 @@ public sealed class RetrievalContextValidationOperation(ILogger<RetrievalContext
     /// <returns>The preferred provider and the minimum confidence, or none of them while the preselection is switched off.</returns>
     public static AIOperationProviderSettings GetProviderSettings(SettingsManager settingsManager)
     {
-        var settings = settingsManager.ConfigurationData.AgentRetrievalContextValidation;
-        return settings.PreselectAgentOptions
-            ? new(settings.PreselectedAgentProvider, settings.MinimumProviderConfidence)
+        var settings = settingsManager.ConfigurationData.RetrievalContextValidation;
+        return settings.PreselectOptions
+            ? new(settings.PreselectedProvider, settings.MinimumProviderConfidence)
             : AIOperationProviderSettings.NONE;
     }
 
@@ -121,8 +121,8 @@ public sealed class RetrievalContextValidationOperation(ILogger<RetrievalContext
             return request.RetrievalContexts.Select(retrievalContext => RetrievalContextValidationResult.NotAnswered(retrievalContext, "The last prompt was empty.")).ToList();
         }
 
-        var settings = this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation;
-        var numParallelValidations = settings.PreselectAgentOptions ? settings.NumParallelValidations : DEFAULT_PARALLEL_VALIDATIONS;
+        var settings = this.SettingsManager.ConfigurationData.RetrievalContextValidation;
+        var numParallelValidations = settings.PreselectOptions ? settings.NumParallelValidations : DEFAULT_PARALLEL_VALIDATIONS;
 
         //
         // A semaphore of this call limits the validations running at once. It is local, so that

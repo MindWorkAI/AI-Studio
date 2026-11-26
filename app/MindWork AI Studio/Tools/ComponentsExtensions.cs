@@ -223,9 +223,9 @@ public static class ComponentsExtensions
             Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence : default,
             Components.MODEL_COMPARISON_ASSISTANT => settingsManager.ConfigurationData.ModelComparison.PreselectOptions ? settingsManager.ConfigurationData.ModelComparison.MinimumProviderConfidence : default,
 
-            Components.AI_TASK_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.TextContentCleaner.MinimumProviderConfidence : default,
-            Components.AI_TASK_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.ConfigurationData.AgentDataSourceSelection.MinimumProviderConfidence : default,
-            Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.ConfigurationData.AgentRetrievalContextValidation.MinimumProviderConfidence : default,
+            Components.AI_TASK_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectOptions ? settingsManager.ConfigurationData.TextContentCleaner.MinimumProviderConfidence : default,
+            Components.AI_TASK_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.DataSourceSelection.PreselectOptions ? settingsManager.ConfigurationData.DataSourceSelection.MinimumProviderConfidence : default,
+            Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.RetrievalContextValidation.PreselectOptions ? settingsManager.ConfigurationData.RetrievalContextValidation.MinimumProviderConfidence : default,
             Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT => settingsManager.ConfigurationData.AssistantPluginAudit.MinimumProviderConfidence,
 
             _ => default,

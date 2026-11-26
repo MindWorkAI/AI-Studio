@@ -56,8 +56,8 @@ public sealed class TextContentCleaningProviderTests
         var settingsManager = CreateSettingsManager();
         var assistantProvider = AddProvider(settingsManager, ASSISTANT_PROVIDER_ID, LLMProviders.OPEN_AI);
         AddProvider(settingsManager, CLEANER_PROVIDER_ID, LLMProviders.MISTRAL);
-        settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions = true;
-        settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider = CLEANER_PROVIDER_ID;
+        settingsManager.ConfigurationData.TextContentCleaner.PreselectOptions = true;
+        settingsManager.ConfigurationData.TextContentCleaner.PreselectedProvider = CLEANER_PROVIDER_ID;
 
         var choice = Choose(settingsManager, assistantProvider);
 
@@ -78,8 +78,8 @@ public sealed class TextContentCleaningProviderTests
         var settingsManager = CreateSettingsManager();
         var assistantProvider = AddProvider(settingsManager, ASSISTANT_PROVIDER_ID, LLMProviders.OPEN_AI);
         AddProvider(settingsManager, CLEANER_PROVIDER_ID, LLMProviders.MISTRAL);
-        settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions = false;
-        settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider = CLEANER_PROVIDER_ID;
+        settingsManager.ConfigurationData.TextContentCleaner.PreselectOptions = false;
+        settingsManager.ConfigurationData.TextContentCleaner.PreselectedProvider = CLEANER_PROVIDER_ID;
 
         var choice = Choose(settingsManager, assistantProvider);
 
@@ -139,7 +139,7 @@ public sealed class TextContentCleaningProviderTests
         var settingsManager = CreateSettingsManager();
         var assistantProvider = AddProvider(settingsManager, ASSISTANT_PROVIDER_ID, LLMProviders.OPEN_AI);
         AddProvider(settingsManager, CLEANER_PROVIDER_ID, LLMProviders.MISTRAL);
-        settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions = true;
+        settingsManager.ConfigurationData.TextContentCleaner.PreselectOptions = true;
         settingsManager.ConfigurationData.TextContentCleaner.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
         var choice = Choose(settingsManager, assistantProvider);
