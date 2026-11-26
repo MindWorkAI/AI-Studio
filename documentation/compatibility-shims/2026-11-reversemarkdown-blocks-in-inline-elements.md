@@ -14,7 +14,7 @@ AI Studio converts web pages and the HTML of mails to Markdown with ReverseMarkd
 
 ## Compatibility Behavior
 
-The converter of `HTMLParser` runs a preprocessing step of its own, through the preprocessing API of ReverseMarkdown. The step finds every block element inside an inline element, such as a `div`, a heading, or a list inside a link, and replaces it by its content. Before and after that content, it puts a space, unless there is whitespace already. A plain space next to the block would not be enough: inside a block, ReverseMarkdown drops text which is nothing but whitespace. Tables and `pre` keep their structure, and inside `pre` nothing changes at all.
+The converter of `HTMLParser` runs a preprocessing step of its own, through the preprocessing API of ReverseMarkdown. The step finds every block element inside an inline element, such as a `div`, a heading, or a list inside a link, and replaces it by its content. Before and after that content, it puts a space, unless there is whitespace already. Spaces next to the blocks alone were not enough: a first attempt which only added them still left most teasers on the start page of a news site glued together. Tables and `pre` keep their structure, and inside `pre` nothing changes at all.
 
 The result is what ReverseMarkdown makes of such a block anyway, only with the words apart. Pages without blocks inside inline elements convert exactly as without this step; on eight real pages, only the two start pages of news sites changed.
 

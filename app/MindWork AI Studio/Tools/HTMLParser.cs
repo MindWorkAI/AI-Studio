@@ -281,11 +281,11 @@ public sealed class HTMLParser
     /// remove it once ReverseMarkdown separates such blocks itself.<br/><br/>
     /// Many pages wrap a whole teaser in a link: a heading, a line of metadata, and a summary, each a block of its own.
     /// A link holds no blocks in Markdown, so ReverseMarkdown 6 writes their texts one after another into the text of
-    /// the link, without anything in between, e.g., "Java77.721 Abrufeheise security". A space next to such a block
-    /// would not help: inside a block, the library drops text which is nothing but whitespace. Hence, each block gives
-    /// way to its content, which the library then reads as part of the inline element, spaces included. The result is
-    /// what the library makes of such a block anyway, only with the words apart. Where whitespace is there already,
-    /// nothing is added, and inside pre the text stays exactly as it is.<br/><br/>
+    /// the link, without anything in between, e.g., "Java77.721 Abrufeheise security". Spaces next to such blocks alone
+    /// were not enough: a first attempt which only added them still left most teasers on the start page of a news site
+    /// glued together. Hence, each block gives way to its content, which the library then reads as part of the inline
+    /// element, spaces included. The result is what the library makes of such a block anyway, only with the words
+    /// apart. Where whitespace is there already, nothing is added, and inside pre the text stays exactly as it is.<br/><br/>
     /// The blocks are taken from the outside in, so an inner block sees the neighbors it got when its outer block gave
     /// way. Every conversion parses a document of its own, so this step changes nothing which another thread could see.
     /// </remarks>
