@@ -10,6 +10,12 @@ internal sealed partial class FileSourceIndexer
 {
     private const int WATCHER_DEBOUNCE_SECONDS = 2;
 
+    /// <summary>
+    /// How long the changes of a data source are counted after the one which was logged, before their summary is logged.
+    /// </summary>
+    private const int WATCHER_SUMMARY_SECONDS = 30;
+
+    private readonly WatcherChangeTally watcherChangeTally = new();
     private readonly ConcurrentDictionary<string, DataSourceWatcherRegistration> watchers = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, CancellationTokenSource> watcherDebounceTokens = new(StringComparer.OrdinalIgnoreCase);
     private readonly Lock watcherDebounceLock = new();
@@ -130,23 +136,52 @@ internal sealed partial class FileSourceIndexer
 
     private void OnWatchedDataSourceChanged(string dataSourceId, DataSourceWatcherConfiguration configuration, FileSystemEventArgs args)
     {
-        if (!IsRelevantWatcherEvent(configuration, args))
+        var isRelevant = IsRelevantWatcherEvent(configuration, args);
+
+        //
+        // Only the first change of a burst gets a line of its own, and the others are counted,
+        // cf. WatcherChangeTally:
+        //
+        if (this.watcherChangeTally.Count(dataSourceId, args.FullPath, isRelevant))
         {
-            logger.LogDebug(
-                "Ignoring file system change for data source '{DataSourceId}' at '{Path}' (event={ChangeType}) because the path is not part of the RAG index.",
-                dataSourceId,
-                args.FullPath,
-                args.ChangeType);
-            return;
+            if (isRelevant)
+                logger.LogDebug(
+                    "Detected relevant file system change for data source '{DataSourceId}' at '{Path}' (event={ChangeType}). Scheduling a debounced embedding run. Further changes within {Seconds} s are summarized.",
+                    dataSourceId,
+                    args.FullPath,
+                    args.ChangeType,
+                    WATCHER_SUMMARY_SECONDS);
+            else
+                logger.LogDebug(
+                    "Ignoring file system change for data source '{DataSourceId}' at '{Path}' (event={ChangeType}) because the path is not part of the RAG index. Further changes within {Seconds} s are summarized.",
+                    dataSourceId,
+                    args.FullPath,
+                    args.ChangeType,
+                    WATCHER_SUMMARY_SECONDS);
+
+            this.ScheduleWatcherSummary(dataSourceId);
         }
 
-        logger.LogDebug(
-            "Detected relevant file system change for data source '{DataSourceId}' at '{Path}' (event={ChangeType}). Scheduling a debounced embedding run.",
-            dataSourceId,
-            args.FullPath,
-            args.ChangeType);
+        if (isRelevant)
+            this.ScheduleWatchedDataSourceRefresh(dataSourceId);
+    }
 
-        this.ScheduleWatchedDataSourceRefresh(dataSourceId);
+    private void ScheduleWatcherSummary(string dataSourceId)
+    {
+        Task.Run(async () =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(WATCHER_SUMMARY_SECONDS));
+            var counts = this.watcherChangeTally.Close(dataSourceId);
+            if (counts.Total > 0)
+                logger.LogDebug(
+                    "The watcher of data source '{DataSourceId}' reported {FurtherChanges} further file system change(s) within {Seconds} s: {Relevant} concern the RAG index, {Ignored} do not. The last one was at '{Path}'.",
+                    dataSourceId,
+                    counts.Total,
+                    WATCHER_SUMMARY_SECONDS,
+                    counts.Relevant,
+                    counts.Ignored,
+                    counts.LastPath);
+        }).Observe($"{nameof(FileSourceIndexer)}: summarizing the file system changes of a data source");
     }
 
     private void ScheduleWatchedDataSourceRefresh(string dataSourceId)
