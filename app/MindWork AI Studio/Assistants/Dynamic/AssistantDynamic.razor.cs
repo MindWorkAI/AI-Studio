@@ -663,6 +663,15 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             if (!prop.Key.TryRead<string>(out var propName) || string.IsNullOrWhiteSpace(propName))
                 continue;
 
+            // A plugin may still use a former name of a prop. The current name wins when the update holds both:
+            if (propSpec is not null)
+            {
+                if (!propSpec.TryGetCurrentName(propName, propsTable, out var currentName))
+                    continue;
+
+                propName = currentName;
+            }
+
             if (propSpec is not null && propSpec.NonWriteable.Contains(propName, StringComparer.Ordinal))
             {
                 this.Logger.LogWarning($"Assistant {sourceType} callback tried to update non-writeable prop '{propName}' on component '{GetComponentName(component)}'. The value is ignored.");

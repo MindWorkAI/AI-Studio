@@ -77,8 +77,13 @@ public static class ComponentPropSpecs
             ),
             [AssistantComponentType.WEB_CONTENT_READER] = new(
                 required: ["Name"],
-                optional: ["UserPrompt", "Preselect", "PreselectContentCleanerAgent", "Class", "Style"],
-                nonWriteable: ["Name", "UserPrompt", "Class", "Style" ]
+                optional: ["UserPrompt", "Preselect", "PreselectContentCleaner", "Class", "Style"],
+                nonWriteable: ["Name", "UserPrompt", "Class", "Style" ],
+                formerNames: new Dictionary<string, string>
+                {
+                    // The name before v26.11.2, when the content cleaner was called an agent:
+                    ["PreselectContentCleanerAgent"] = "PreselectContentCleaner",
+                }
             ),
             [AssistantComponentType.FILE_CONTENT_READER] = new(
                 required: ["Name"],

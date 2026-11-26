@@ -369,7 +369,7 @@ ASSISTANT = {
                     ["Name"] = "<unique identifier of this component>", -- required
                     ["UserPrompt"] = "<help text that explains the purpose of this reader>",
                     ["Preselect"] = false, -- automatically show the reader when the assistant opens
-                    ["PreselectContentCleanerAgent"] = true -- run the content cleaner by default
+                    ["PreselectContentCleaner"] = true -- run the content cleaner by default
                 }
             },
             {

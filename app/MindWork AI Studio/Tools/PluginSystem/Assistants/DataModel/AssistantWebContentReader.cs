@@ -14,10 +14,10 @@ internal sealed class AssistantWebContentReader : StatefulAssistantComponentBase
         set => this.Props[nameof(this.Preselect)] = value;
     }
 
-    public bool PreselectContentCleanerAgent
+    public bool PreselectContentCleaner
     {
-        get => this.Props.TryGetValue(nameof(this.PreselectContentCleanerAgent), out var v) && v is true;
-        set => this.Props[nameof(this.PreselectContentCleanerAgent)] = value;
+        get => this.Props.TryGetValue(nameof(this.PreselectContentCleaner), out var v) && v is true;
+        set => this.Props[nameof(this.PreselectContentCleaner)] = value;
     }
 
     public string Class
@@ -41,7 +41,7 @@ internal sealed class AssistantWebContentReader : StatefulAssistantComponentBase
             state.WebContent[this.Name] = new WebContentState
             {
                 Preselect = this.Preselect,
-                PreselectContentCleaner = this.PreselectContentCleanerAgent,
+                PreselectContentCleaner = this.PreselectContentCleaner,
             };
         }
     }
