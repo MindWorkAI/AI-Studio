@@ -10231,16 +10231,16 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3980535867::INFORMAL"] 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T853724151"] = "Datei „{0}“ angehängt."
 
 -- The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen des Agenten zur Inhaltsbereinigung. Bitte wählen Sie ein anderes Modell aus oder konfigurieren Sie ein geeignetes Modell in den App-Einstellungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen der Inhaltsbereinigung. Bitte wählen Sie ein anderes Modell aus oder konfigurieren Sie ein geeignetes Modell in den App-Einstellungen."
 
 -- The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446::INFORMAL"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen des Agenten zur Inhaltsbereinigung. Bitte wähle ein anderes Modell aus oder konfiguriere ein geeignetes Modell in den App-Einstellungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446::INFORMAL"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen der Inhaltsbereinigung. Bitte wähle ein anderes Modell aus oder konfiguriere ein geeignetes Modell in den App-Einstellungen."
 
 -- The content cleaner uses the model of this assistant. Please select one below.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613"] = "Der Agent zur Inhaltsbereinigung verwendet das Modell dieses Assistenten. Bitte wählen Sie unten eines aus."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613"] = "Die Inhaltsbereinigung verwendet das Modell dieses Assistenten. Bitte wählen Sie unten eines aus."
 
 -- The content cleaner uses the model of this assistant. Please select one below.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613::INFORMAL"] = "Der Agent zur Inhaltsbereinigung verwendet das Modell dieses Assistenten. Bitte wähle unten eines aus."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613::INFORMAL"] = "Die Inhaltsbereinigung verwendet das Modell dieses Assistenten. Bitte wähle unten eines aus."
 
 -- The content was loaded, but not cleaned: the model of the content cleaner gave no answer.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1189712796"] = "Der Inhalt wurde geladen, aber nicht bereinigt: Das Modell der Inhaltsbereinigung hat keine Antwort gegeben."
@@ -10303,7 +10303,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3825586228::INFORMAL"] =
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T4249712357"] = "Optionen für Webinhalte anzeigen"
 
 -- The content was loaded, but not cleaned: no model is available for the content cleaner.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T903778235"] = "Der Inhalt wurde geladen, aber nicht bereinigt: Für den Agenten zur Inhaltsbereinigung ist kein Modell verfügbar."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T903778235"] = "Der Inhalt wurde geladen, aber nicht bereinigt: Für die Inhaltsbereinigung ist kein Modell verfügbar."
 
 -- Loading
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENTSTEPSEXTENSIONS::T1404011351"] = "Laden"
@@ -10348,28 +10348,28 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T1984243691::INFORMAL"] = "Du
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Datei auswählen"
 
 -- External Assistants rated below this audit level are treated as insufficiently reviewed.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1162151451"] = "Externe Assistenten, die unter dieser Auditstufe bewertet werden, gelten als nicht ausreichend geprüft."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1162151451"] = "Externe Assistenten, die unterhalb dieser Audit-Stufe bewertet werden, gelten als nicht ausreichend geprüft."
 
 -- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio uses the app-wide default provider, or else the model you choose when auditing.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1707650617"] = "Optional können Sie einen eigenen Anbieter für die Prüfung von Assistant-Plugins auswählen. Wenn Sie das Feld leer lassen, verwendet AI Studio den Standardanbieter der App oder, falls keiner festgelegt ist, das Modell, das Sie bei der Prüfung auswählen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1707650617"] = "Optional können Sie einen eigenen Anbieter für die Prüfung von Assistenten-Plugins auswählen. Bleibt das Feld leer, verwendet AI Studio den appweiten Standardanbieter und sonst das Modell, das Sie bei der Prüfung auswählen."
 
 -- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio uses the app-wide default provider, or else the model you choose when auditing.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1707650617::INFORMAL"] = "Optional kannst du einen eigenen Anbieter für die Prüfung von Assistant-Plugins auswählen. Wenn du das Feld leer lässt, verwendet AI Studio den Standardanbieter der App oder, falls keiner festgelegt ist, das Modell, das du bei der Prüfung auswählst."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1707650617::INFORMAL"] = "Optional kannst du einen eigenen Anbieter für die Prüfung von Assistenten-Plugins auswählen. Bleibt das Feld leer, verwendet AI Studio den appweiten Standardanbieter und sonst das Modell, das du bei der Prüfung auswählst."
 
 -- Users may still activate plugins below the minimum Audit-Level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1840342259"] = "Sie können Plugins weiterhin aktivieren, auch wenn die Audit-Stufe unter dem Mindestwert liegt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1840342259"] = "Nutzer können Assistenten unterhalb der Mindest-Audit-Stufe weiterhin aktivieren."
 
 -- Automatically audit new or updated plugins in the background?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1843401860"] = "Neue oder aktualisierte Plugins automatisch im Hintergrund überprüfen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1843401860"] = "Neue oder aktualisierte Plugins automatisch im Hintergrund prüfen?"
 
 -- Require a security audit before activating external Assistants?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2010360320"] = "Vor der Aktivierung externer Assistenten eine Sicherheitsprüfung verlangen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2010360320"] = "Vor dem Aktivieren externer Assistenten ein Sicherheitsaudit verlangen?"
 
 -- External Assistants must be audited before activation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2065972970"] = "Externe Assistenten müssen vor der Aktivierung geprüft werden."
 
 -- Before external assistants are activated, a model audits newly installed or updated ones for security risks. AI Studio keeps the latest audit card until the plugin manifest changes.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2081939459"] = "Bevor externe Assistenten aktiviert werden, prüft ein Modell neu installierte oder aktualisierte Assistenten auf Sicherheitsrisiken. AI Studio behält die Karte der letzten Prüfung bei, bis sich das Plugin-Manifest ändert."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2081939459"] = "Bevor externe Assistenten aktiviert werden, prüft ein Modell neu installierte oder aktualisierte Assistenten auf Sicherheitsrisiken. AI Studio speichert die neueste Audit-Karte, bis sich das Plugin-Manifest ändert."
 
 -- AI Task: Security Audit for external Assistants
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2200966468"] = "KI-Aufgabe: Sicherheitsprüfung für externe Assistenten"
@@ -10378,142 +10378,142 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUD
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T232834129"] = "Aktivierung unterhalb der Mindest-Audit-Stufe blockieren?"
 
 -- Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2516645821"] = "Wenn Sie diese Einstellung deaktivieren, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Sicherheitsprüfung oder nach Änderungen am Plugin aktiviert und verwendet werden. Möchten Sie diesen Schutz wirklich deaktivieren?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2516645821"] = "Wenn Sie diese Einstellung deaktivieren, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Prüfung oder nach Änderungen an Plugins aktiviert und verwendet werden. Möchten Sie diesen Schutz wirklich deaktivieren?"
 
 -- Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2516645821::INFORMAL"] = "Wenn du diese Einstellung deaktivierst, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Sicherheitsprüfung oder nach Änderungen am Plugin aktiviert und verwendet werden. Möchtest du diesen Schutz wirklich deaktivieren?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2516645821::INFORMAL"] = "Wenn du diese Einstellung deaktivierst, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Prüfung oder nach Änderungen an Plugins aktiviert und verwendet werden. Möchtest du diesen Schutz wirklich deaktivieren?"
 
 -- Automatic audits cannot run, because no model is available for security checks. Choose one above, or set an app-wide default provider in the app options.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2857321563"] = "Automatische Prüfungen können nicht ausgeführt werden, da kein Modell für Sicherheitsprüfungen verfügbar ist. Wählen Sie oben ein Modell aus oder legen Sie in den App-Einstellungen einen Standardanbieter für die gesamte App fest."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2857321563"] = "Automatische Prüfungen können nicht laufen, weil kein Modell für Sicherheitsprüfungen verfügbar ist. Wählen Sie oben eines aus oder legen Sie in den App-Einstellungen einen appweiten Standardanbieter fest."
 
 -- Automatic audits cannot run, because no model is available for security checks. Choose one above, or set an app-wide default provider in the app options.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2857321563::INFORMAL"] = "Automatische Prüfungen können nicht ausgeführt werden, da kein Modell für Sicherheitsprüfungen verfügbar ist. Wähle oben ein Modell aus oder lege in den App-Einstellungen einen Standardanbieter für die gesamte App fest."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2857321563::INFORMAL"] = "Automatische Prüfungen können nicht laufen, weil kein Modell für Sicherheitsprüfungen verfügbar ist. Wähle oben eines aus oder lege in den App-Einstellungen einen appweiten Standardanbieter fest."
 
 -- Use the app default, otherwise the model chosen when auditing
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2888830822"] = "Verwenden Sie die Standardeinstellung der App, andernfalls das bei der Prüfung ausgewählte Modell."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2888830822"] = "App-Standard verwenden, sonst das bei der Prüfung gewählte Modell"
 
 -- External Assistant can be activated without an audit
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2915620630"] = "Der externe Assistent kann ohne Prüfung aktiviert werden."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2915620630"] = "Externer Assistent kann ohne Prüfung aktiviert werden"
 
 -- The audit shows you all security risks and information. If you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3081698423"] = "Die Sicherheitsprüfung zeigt Ihnen alle Sicherheitsrisiken und Informationen an. Wenn Sie diese Einschätzung nach eigenem Ermessen für falsch halten, können Sie die Installation trotzdem durchführen (nicht empfohlen)."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3081698423"] = "Die Überprüfung zeigt Ihnen alle Sicherheitsrisiken und Informationen. Wenn Sie diese Bewertung nach eigenem Ermessen für falsch halten, können Sie sich entscheiden, den Assistenten trotzdem zu installieren (nicht empfohlen)."
 
 -- The audit shows you all security risks and information. If you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3081698423::INFORMAL"] = "Die Sicherheitsprüfung zeigt dir alle Sicherheitsrisiken und Informationen an. Wenn du diese Einschätzung nach eigenem Ermessen für falsch hältst, kannst du die Installation trotzdem durchführen (nicht empfohlen)."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3081698423::INFORMAL"] = "Die Überprüfung zeigt dir alle Sicherheitsrisiken und Informationen. Wenn du diese Bewertung nach eigenem Ermessen für falsch hältst, kannst du dich entscheiden, den Assistenten trotzdem zu installieren (nicht empfohlen)."
 
 -- Security audit is done manually by the user
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3568079552"] = "Die Sicherheitsprüfung wird manuell vom Benutzer durchgeführt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3568079552"] = "Das Sicherheitsaudit wird manuell vom Benutzer durchgeführt."
 
 -- Minimum required audit level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3599539909"] = "Erforderliche Mindest-Auditstufe"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3599539909"] = "Minimale erforderliche Audit-Stufe"
 
 -- Security audit is automatically done in the background
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3684348859"] = "Die Sicherheitsprüfung wird automatisch im Hintergrund durchgeführt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3684348859"] = "Das Sicherheitsaudit wird automatisch im Hintergrund durchgeführt."
 
 -- Disable Assistant Audit Protection
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T4019550023"] = "Audit-Schutz für Assistenten deaktivieren"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T4019550023"] = "Assistenten-Audit-Schutz deaktivieren"
 
 -- Activation is blocked below the minimum Audit-Level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T4041192469"] = "Die Aktivierung ist unterhalb der Mindest-Audit-Stufe gesperrt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T4041192469"] = "Die Aktivierung ist unterhalb der Mindest-Audit-Stufe blockiert."
 
 -- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the assistant.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T1210631144"] = "Ist diese Option aktiviert, können Sie das Modell für diese Aufgabe und die erforderliche Konfidenz vorab auswählen. Ohne vorab ausgewähltes Modell verwendet AI Studio das Modell des Assistenten."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T1210631144"] = "Wenn diese Option aktiviert ist, können Sie das Modell für diese Aufgabe und das nötige Vertrauensniveau vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Assistenten."
 
 -- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the assistant.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T1210631144::INFORMAL"] = "Ist diese Option aktiviert, kannst du das Modell für diese Aufgabe und die erforderliche Konfidenz vorab auswählen. Ohne vorab ausgewähltes Modell verwendet AI Studio das Modell des Assistenten."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T1210631144::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du das Modell für diese Aufgabe und das nötige Vertrauensniveau vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Assistenten."
 
 -- When an assistant loads content from the web, a model can clean it up: it extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T1587139574"] = "Wenn ein Assistent Inhalte aus dem Web lädt, kann ein Modell diese bereinigen: Es extrahiert die Hauptinhalte, entfernt Werbung und andere irrelevante Elemente und versucht, relative Links in absolute Links umzuwandeln, damit sie verwendet werden können."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T1587139574"] = "Wenn ein Assistent Inhalte aus dem Internet lädt, kann ein Modell sie bereinigen: Es extrahiert den Hauptinhalt, entfernt Werbung und andere irrelevante Elemente und versucht, relative Links in absolute Links umzuwandeln, damit sie verwendet werden können."
 
 -- Use the model of the assistant
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T2899245972"] = "Verwenden Sie das Modell des Assistenten."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T2899245972"] = "Modell des Assistenten verwenden"
 
 -- AI Task: Text Content Cleaner
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T3478589970"] = "KI-Aufgabe: Text bereinigen"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T3478589970"] = "KI-Aufgabe: Inhaltsbereinigung"
 
 -- No options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T354528094"] = "Es sind keine Optionen vorausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T354528094"] = "Es sind keine Optionen vorausgewählt"
 
 -- Preselect text content cleaner options?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T3659087305"] = "Optionen zur Bereinigung von Textinhalten vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T3659087305"] = "Optionen für die Inhaltsbereinigung vorauswählen?"
 
 -- Options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T3875604319"] = "Optionen sind vorausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T3875604319"] = "Optionen sind vorausgewählt"
 
 -- AI Task: Data Source Selection
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T1227800581"] = "KI-Aufgabe: Auswahl der Datenquelle"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T1227800581"] = "KI-Aufgabe: Wahl der Datenquellen"
 
 -- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the chat.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T2513220366"] = "Wenn diese Option aktiviert ist, können Sie das Modell für diese Aufgabe und die erforderliche Konfidenz vorab auswählen. Ist kein Modell vorausgewählt, verwendet AI Studio das Modell des Chats."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T2513220366"] = "Wenn diese Option aktiviert ist, können Sie das Modell für diese Aufgabe und das nötige Vertrauensniveau vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Chats."
 
 -- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the chat.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T2513220366::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du das Modell für diese Aufgabe und die erforderliche Konfidenz vorab auswählen. Ist kein Modell vorausgewählt, verwendet AI Studio das Modell des Chats."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T2513220366::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du das Modell für diese Aufgabe und das nötige Vertrauensniveau vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Chats."
 
 -- In classic RAG, which searches the data sources with every message, a model first selects the data sources which fit the current prompt.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T2522862914"] = "Beim klassischen RAG, bei dem die Datenquellen bei jeder Nachricht durchsucht werden, wählt ein Modell zunächst die Datenquellen aus, die zum aktuellen Prompt passen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T2522862914"] = "Beim klassischen RAG, das die Datenquellen bei jeder Nachricht durchsucht, wählt ein Modell zuerst die Datenquellen aus, die zum aktuellen Prompt passen."
 
 -- Use the model of the chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T3435835378"] = "Modell des Chats verwenden"
 
 -- No options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T354528094"] = "Es sind keine Optionen vorausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T354528094"] = "Es sind keine Optionen vorausgewählt"
 
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T3875604319"] = "Optionen sind vorausgewählt"
 
 -- Preselect data source selection options?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T991598424"] = "Auswahloptionen für Datenquellen vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T991598424"] = "Datenquellen-Auswahloptionen vorauswählen?"
 
 -- Each validation is a request of its own, so more simultaneous validations mean as many simultaneous requests. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 and 6 validations.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T1490986595"] = "Jede Validierung ist eine eigene Anfrage. Mehr gleichzeitige Validierungen bedeuten also ebenso viele gleichzeitige Anfragen. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn Sie unsicher sind, wählen Sie eine niedrige Einstellung zwischen 1 und 6 Validierungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T1490986595"] = "Jede Validierung ist eine eigene Anfrage. Mehr gleichzeitige Validierungen bedeuten also entsprechend viele gleichzeitige Anfragen. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn Sie unsicher sind, wählen Sie eine niedrige Einstellung zwischen 1 und 6 Validierungen."
 
 -- Each validation is a request of its own, so more simultaneous validations mean as many simultaneous requests. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 and 6 validations.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T1490986595::INFORMAL"] = "Jede Validierung ist eine eigene Anfrage. Mehr gleichzeitige Validierungen bedeuten also ebenso viele gleichzeitige Anfragen. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn du unsicher bist, wähle eine niedrige Einstellung zwischen 1 und 6 Validierungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T1490986595::INFORMAL"] = "Jede Validierung ist eine eigene Anfrage. Mehr gleichzeitige Validierungen bedeuten also entsprechend viele gleichzeitige Anfragen. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn du unsicher bist, wähle eine niedrige Einstellung zwischen 1 und 6 Validierungen."
 
 -- AI Task: Retrieval Context Validation
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T1717726852"] = "KI-Aufgabe: Validierung des Abrufkontexts"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T1717726852"] = "KI-Aufgabe: Validierung der Abrufkontexte"
 
 -- How many validations should run simultaneously?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2326205445"] = "Wie viele Validierungen sollen gleichzeitig ausgeführt werden?"
 
 -- When enabled, a model checks each retrieval context of classic RAG, whether it makes sense for the given prompt.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T240073404"] = "Wenn diese Option aktiviert ist, prüft ein Modell bei klassischem RAG für jeden abgerufenen Kontext, ob er zur jeweiligen Eingabeaufforderung passt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T240073404"] = "Wenn diese Option aktiviert ist, prüft ein Modell bei jedem Abrufkontext des klassischen RAG, ob er zum jeweiligen Prompt passt."
 
 -- Validate the retrieval contexts?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2428915017"] = "Die abgerufenen Kontexte überprüfen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2428915017"] = "Abrufkontexte validieren?"
 
 -- When enabled, you can preselect the model for this task, the confidence it needs, and how many validations run simultaneously. Without a preselected model, AI Studio uses the model of the chat.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2520295642"] = "Wenn diese Option aktiviert ist, können Sie das Modell für diese Aufgabe, die erforderliche Konfidenz und die Anzahl der gleichzeitig ausgeführten Validierungen vorauswählen. Ist kein Modell vorausgewählt, verwendet AI Studio das Modell des Chats."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2520295642"] = "Wenn diese Option aktiviert ist, können Sie das Modell für diese Aufgabe, das nötige Vertrauensniveau und die Zahl der gleichzeitigen Validierungen vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Chats."
 
 -- When enabled, you can preselect the model for this task, the confidence it needs, and how many validations run simultaneously. Without a preselected model, AI Studio uses the model of the chat.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2520295642::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du das Modell für diese Aufgabe, die erforderliche Konfidenz und die Anzahl der gleichzeitig ausgeführten Validierungen vorauswählen. Ist kein Modell vorausgewählt, verwendet AI Studio das Modell des Chats."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2520295642::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du das Modell für diese Aufgabe, das nötige Vertrauensniveau und die Zahl der gleichzeitigen Validierungen vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Chats."
 
 -- Preselect retrieval context validation options?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2663938643"] = "Optionen zur Validierung des abgerufenen Kontexts vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2663938643"] = "Optionen zur Überprüfung des Abrufkontexts vorauswählen?"
 
 -- Use the model of the chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T3435835378"] = "Modell des Chats verwenden"
 
 -- No options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T354528094"] = "Es sind keine Optionen vorausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T354528094"] = "Es sind keine Optionen vorausgewählt"
 
 -- Options are preselected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T3875604319"] = "Optionen sind vorausgewählt"
 
 -- validations
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T595734827"] = "Überprüfungen"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T595734827"] = "Validierungen"
 
 -- Each retrieval context is validated
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T705018823"] = "Jeder Abrufkontext wird validiert."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T705018823"] = "Jeder Abrufkontext wird validiert"
 
 -- In classic RAG, a model checks each retrieval context, i.e., each passage found in the data sources, whether it fits the current prompt. There can be many of them, so you might want to use a cheap and fast model for this job. When using a local or self-hosted model, look for a small (e.g., 3B) and fast one.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T765642962"] = "Bei klassischem RAG prüft ein Modell jeden abgerufenen Kontext – also jede in den Datenquellen gefundene Passage – daraufhin, ob er zur aktuellen Anfrage passt. Davon kann es viele geben. Daher empfiehlt es sich, für diese Aufgabe ein kostengünstiges und schnelles Modell zu verwenden. Wenn Sie ein lokales oder selbst gehostetes Modell nutzen, wählen Sie ein kleines (z. B. ein 3B-Modell) und schnelles Modell."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T765642962"] = "Beim klassischen RAG prüft ein Modell jeden Abrufkontext – also jede Textstelle, die in den Datenquellen gefunden wurde – darauf, ob er zum aktuellen Prompt passt. Da es viele davon geben kann, empfiehlt sich für diese Aufgabe ein kostengünstiges und schnelles Modell. Wenn Sie ein lokales oder selbst gehostetes Modell verwenden, wählen Sie ein kleines (z. B. 3B) und schnelles Modell aus."
 
 -- In classic RAG, a model checks each retrieval context, i.e., each passage found in the data sources, whether it fits the current prompt. There can be many of them, so you might want to use a cheap and fast model for this job. When using a local or self-hosted model, look for a small (e.g., 3B) and fast one.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T765642962::INFORMAL"] = "Bei klassischem RAG prüft ein Modell jeden abgerufenen Kontext – also jede in den Datenquellen gefundene Passage – daraufhin, ob er zur aktuellen Anfrage passt. Davon kann es viele geben. Daher empfiehlt es sich, für diese Aufgabe ein kostengünstiges und schnelles Modell zu verwenden. Wenn du ein lokales oder selbst gehostetes Modell nutzt, wähle ein kleines (z. B. ein 3B-Modell) und schnelles Modell."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T765642962::INFORMAL"] = "Beim klassischen RAG prüft ein Modell jeden Abrufkontext – also jede Textstelle, die in den Datenquellen gefunden wurde – darauf, ob er zum aktuellen Prompt passt. Da es viele davon geben kann, empfiehlt sich für diese Aufgabe ein kostengünstiges und schnelles Modell. Wenn du ein lokales oder selbst gehostetes Modell verwendest, wähle ein kleines (z. B. 3B) und schnelles Modell aus."
 
 -- No validation is performed
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T95175095"] = "Es wird keine Validierung durchgeführt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T95175095"] = "Es findet keine Validierung statt"
 
 -- Spellchecking is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"] = "Rechtschreibprüfung ist deaktiviert"
@@ -23368,10 +23368,10 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T392269104::INFORMAL"] = "Die Prüfung, welche Textstellen zu deiner Frage passen, ist fehlgeschlagen. Diese Antwort verwendet alle gefundenen Textstellen."
 
 -- Automatic AI data source selection with heuristic source reduction
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AISRCSELWITHDYNHEUR::T1677447909"] = "Automatische Auswahl von KI-Datenquellen mit heuristischer Quellenreduzierung"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AISRCSELWITHDYNHEUR::T1677447909"] = "Automatische Auswahl der Datenquellen mittels KI und mit heuristischer Datenquellen-Reduktion"
 
 -- Automatically selects the appropriate data sources based on the last prompt. Applies a heuristic reduction at the end to reduce the number of data sources.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AISRCSELWITHDYNHEUR::T648937779"] = "Wählt anhand der letzten Eingabe automatisch passende Datenquellen aus. Reduziert anschließend heuristisch die Anzahl der Datenquellen."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AISRCSELWITHDYNHEUR::T648937779"] = "Wählt automatisch die passenden Datenquellen basierend auf der letzten Eingabe aus. Wendet am Ende eine heuristische Reduzierung an, um die Anzahl der Datenquellen zu verringern."
 
 -- This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3047786484"] = "Dieser RAG-Prozess filtert Datenquellen, wählt automatisch passende Quellen aus, ermöglicht optional die manuelle Auswahl von Quellen, ruft Daten ab und überprüft den Abrufkontext automatisch."
