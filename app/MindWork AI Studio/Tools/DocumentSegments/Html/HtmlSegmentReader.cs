@@ -66,6 +66,39 @@ internal static partial class HtmlSegmentReader
     [GeneratedRegex("[ \t\r\n\f]+")]
     private static partial Regex WhiteSpaceRegex();
 
+    [GeneratedRegex("""\A\s*<\?xml\b[^>]*\bencoding\s*=\s*["']([^"']*)["']""", RegexOptions.IgnoreCase)]
+    private static partial Regex XmlDeclarationEncodingRegex();
+
+    [GeneratedRegex("""\bcharset\s*=\s*["']?([^;"'\s]*)""", RegexOptions.IgnoreCase)]
+    private static partial Regex ContentTypeCharsetRegex();
+
+    /// <summary>
+    /// Finds the encoding which a page names for itself: by its XML declaration, by a meta element with a
+    /// charset, or by one which stands for the HTTP header of the content type.
+    /// </summary>
+    /// <param name="text">The page.</param>
+    /// <returns>The name of the encoding, e.g., "iso-8859-1"; null when the page names none.</returns>
+    public static string? DeclaredEncodingOf(string text)
+    {
+        if (XmlDeclarationEncodingRegex().Match(text) is { Success: true } declaration && !string.IsNullOrWhiteSpace(declaration.Groups[1].Value))
+            return declaration.Groups[1].Value;
+
+        foreach (var meta in Parse(text).DocumentNode.Descendants("meta"))
+        {
+            var charset = meta.GetAttributeValue("charset", string.Empty);
+            if (!string.IsNullOrWhiteSpace(charset))
+                return HtmlEntity.DeEntitize(charset);
+
+            if (!string.Equals(meta.GetAttributeValue("http-equiv", string.Empty).Trim(), "content-type", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (ContentTypeCharsetRegex().Match(HtmlEntity.DeEntitize(meta.GetAttributeValue("content", string.Empty))) is { Success: true } match && !string.IsNullOrWhiteSpace(match.Groups[1].Value))
+                return match.Groups[1].Value;
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// Reads a page.
     /// </summary>

@@ -64,6 +64,40 @@ internal sealed partial class LatexSegmentReader
     }
 
     /// <summary>
+    /// Finds the encoding which a document names for itself, by the option of inputenc or by \inputencoding.
+    /// </summary>
+    /// <remarks>
+    /// Without either, LaTeX reads a document as UTF-8 since 2018, and XeLaTeX and LuaLaTeX always do. A document
+    /// may name several encodings, e.g., to switch between them; any of them other than UTF-8 is reason enough to
+    /// refuse the document, so that one is returned. Names in comments do not count.
+    /// </remarks>
+    /// <param name="text">The document.</param>
+    /// <returns>The first name of an encoding other than UTF-8, e.g., "latin1", or else the last name of UTF-8; null when the document names none.</returns>
+    public static string? DeclaredEncodingOf(string text)
+    {
+        string? declared = null;
+        foreach (Match match in InputEncodingRegex().Matches(text))
+        {
+            if (IsInComment(text, match.Index))
+                continue;
+
+            var options = (match.Groups["options"].Success ? match.Groups["options"].Value : match.Groups["encoding"].Value)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            foreach (var option in options)
+            {
+                if (declared is null || TextDocumentFile.IsUtf8(declared))
+                    declared = option;
+            }
+        }
+
+        return declared;
+    }
+
+    [GeneratedRegex(@"\\usepackage\s*\[(?<options>[^\]]*)\]\s*\{inputenc\}|\\inputencoding\s*\{(?<encoding>[^}]*)\}")]
+    private static partial Regex InputEncodingRegex();
+
+    /// <summary>
     /// Finds the preamble and the body of a document.
     /// </summary>
     private static (int PreambleEnd, int BodyStart, int BodyEnd) RegionsOf(string text)

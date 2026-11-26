@@ -15,7 +15,7 @@ namespace AIStudio.Tools.DocumentSegments.Html;
 /// same segments with the new attributes in their markup, and replaces the blocks then.
 /// </para>
 /// <para>
-/// The page counts as UTF-8 unless a byte order mark says otherwise, see TextDocumentFile.
+/// The page counts as UTF-8 unless a byte order mark says otherwise; a page in another encoding is refused, see TextDocumentFile.
 /// </para>
 /// </remarks>
 public sealed class HtmlSegmentFormat : IDocumentSegmentFormat
@@ -26,12 +26,12 @@ public sealed class HtmlSegmentFormat : IDocumentSegmentFormat
     public FileTypeFilter FileType => FileTypes.HTML;
 
     /// <inheritdoc />
-    public string LimitsNotice => TB("Scripts, styles, code, preformatted text, and embedded graphics stay as they are. Pages in an older encoding than UTF-8 may show wrong characters.");
+    public string LimitsNotice => TB("Scripts, styles, code, preformatted text, and embedded graphics stay as they are.");
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token)
     {
-        var file = await TextDocumentFile.ReadAsync(path, token);
+        var file = await TextDocumentFile.ReadAsync(path, HtmlSegmentReader.DeclaredEncodingOf, token);
         return HtmlSegmentReader.AttributeSegmentsOf(file.Text)
             .Concat(HtmlSegmentReader.BlockSegmentsOf(file.Text))
             .OrderBy(segment => segment.Start)
@@ -42,7 +42,7 @@ public sealed class HtmlSegmentFormat : IDocumentSegmentFormat
     /// <inheritdoc />
     public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
     {
-        var file = await TextDocumentFile.ReadAsync(sourcePath, token);
+        var file = await TextDocumentFile.ReadAsync(sourcePath, HtmlSegmentReader.DeclaredEncodingOf, token);
         var attributes = HtmlSegmentReader.AttributeSegmentsOf(file.Text);
         if (HtmlSegmentReader.BlockSegmentsOf(file.Text).Concat(attributes).Any(segment => !results.Covers(segment.Segment)))
             return SegmentWriteResult.SOURCE_CHANGED;

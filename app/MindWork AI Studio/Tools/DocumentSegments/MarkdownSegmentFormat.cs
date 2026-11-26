@@ -46,14 +46,14 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
     /// <inheritdoc />
     public async Task<IReadOnlyList<DocumentSegment>> ReadAsync(string path, CancellationToken token)
     {
-        var file = await TextDocumentFile.ReadAsync(path, token);
+        var file = await TextDocumentFile.ReadAsync(path, null, token);
         return SegmentsOf(file.Text).Select(segment => segment.Segment).ToList();
     }
 
     /// <inheritdoc />
     public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
     {
-        var file = await TextDocumentFile.ReadAsync(sourcePath, token);
+        var file = await TextDocumentFile.ReadAsync(sourcePath, null, token);
         var result = TextSegmentWriter.Apply(file.Text, SegmentsOf(file.Text), results, WithoutLineBreaks, out var text);
         if (result.Outcome is SegmentWriteOutcome.WRITTEN)
             await file.WriteAsync(targetPath, text, token);

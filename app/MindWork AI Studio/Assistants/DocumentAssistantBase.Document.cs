@@ -89,6 +89,16 @@ public abstract partial class DocumentAssistantBase<TSettings>
         {
             segments = await format.ReadAsync(sourcePath, token);
         }
+        catch (UnsupportedTextEncodingException e)
+        {
+            this.Logger.LogWarning("The assistant '{AssistantTitle}' refused the document '{DocumentPath}': {Reason}", this.Title, sourcePath, e.Message);
+            var message = string.IsNullOrWhiteSpace(e.DeclaredEncoding)
+                ? this.TA("The document is not saved as UTF-8, so its special characters, such as umlauts, would be damaged. Please save it as UTF-8 first, e.g., with a text editor, and try again.")
+                : string.Format(this.TA("The document names the encoding '{0}' for itself, but new text can only be written as UTF-8. Please save the document as UTF-8 and change the encoding it names first, e.g., the charset of a web page or the option of inputenc in LaTeX."), e.DeclaredEncoding);
+
+            await this.MessageBus.SendError(new(AppIcons.DOCUMENT, message));
+            return;
+        }
         catch (Exception e) when (e is not OperationCanceledException)
         {
             this.Logger.LogError(e, "The assistant '{AssistantTitle}' could not read the document '{DocumentPath}'.", this.Title, sourcePath);

@@ -50,6 +50,12 @@ file at the positions Markdig reports for them. Every format of documents which 
 `TextSegmentBuilder` puts a segment together with the markup of its tags, and `TextSegmentWriter` replaces the words
 of each segment in the source, so everything else stays byte for byte, and `TextDocumentFile` keeps the encoding.
 
+- **Only Unicode, read strictly.** `TextDocumentFile` reads UTF-8, or the Unicode encoding a byte order mark
+  announces (`ByteOrderMark`), with an exception fallback, and refuses a file whose bytes do not fit, or which names
+  another encoding for itself, e.g., by the charset of a web page or the option of inputenc in LaTeX
+  (`UnsupportedTextEncodingException`). A placeholder for an unreadable character would replace it everywhere in the
+  file, also outside of the segments, and new words in UTF-8 would come out garbled in a file which says Latin-1.
+  A format whose files name their encoding passes its finder to `TextDocumentFile.ReadAsync`.
 - **A segment without new words keeps its source.** The writer copies it as it is, so writing every segment back
   unchanged yields the same file; only new words get the markup of the tags as the format recorded it.
 - **New words go into one line.** A model may write line breaks, and in Markdown or LaTeX a blank line would end a
