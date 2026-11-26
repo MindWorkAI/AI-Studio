@@ -63,7 +63,7 @@ encoding_rs = "0.8.44"
 
 symphonia = { version = "0.6", default-features = false, features = ["aac", "aiff", "alac", "caf", "flac", "isomp4", "mkv", "mp1", "mp2", "mp3", "ogg", "pcm", "vorbis", "wav"] }
 ropus = "=0.12.18"
-rubato = { version = "4", default-features = false, features = ["fft_resampler"] }
+rubato = { version = "5.1.0", default-features = false, features = ["fft_resampler"] }
 webm-iterable = "0.7.1"
 calamine = "0.37.0"
 
