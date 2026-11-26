@@ -87,7 +87,7 @@ public sealed class RetrievalContextValidationOperation(ILogger<RetrievalContext
     public override string Id => "Retrieval Context Validation";
 
     /// <inheritdoc />
-    public override Tools.Components Component => Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION;
+    public override Tools.Components Component => Tools.Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION;
 
     /// <summary>
     /// The model reads the passages, so it has to reach what the chat requires of every provider which reads its data.

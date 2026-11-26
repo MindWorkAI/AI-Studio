@@ -23,7 +23,7 @@ public sealed class AITaskMinimumConfidenceTests
         var settingsManager = CreateSettingsManager();
         settingsManager.ConfigurationData.TextContentCleaner.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AGENT_TEXT_CONTENT_CLEANER, on => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions = on);
+        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_TEXT_CONTENT_CLEANER, on => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions = on);
     }
 
     [Test]
@@ -32,7 +32,7 @@ public sealed class AITaskMinimumConfidenceTests
         var settingsManager = CreateSettingsManager();
         settingsManager.ConfigurationData.AgentDataSourceSelection.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AGENT_DATA_SOURCE_SELECTION, on => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = on);
+        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_DATA_SOURCE_SELECTION, on => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = on);
     }
 
     [Test]
@@ -41,7 +41,7 @@ public sealed class AITaskMinimumConfidenceTests
         var settingsManager = CreateSettingsManager();
         settingsManager.ConfigurationData.AgentRetrievalContextValidation.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, on => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions = on);
+        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION, on => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions = on);
     }
 
     [Test]
@@ -50,7 +50,7 @@ public sealed class AITaskMinimumConfidenceTests
         var settingsManager = CreateSettingsManager();
         settingsManager.ConfigurationData.AssistantPluginAudit.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        Assert.That(AIStudio.Tools.ComponentsExtensions.MinimumConfidence(AIStudio.Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, settingsManager), Is.EqualTo(ConfidenceLevel.HIGH), "The audit has no preselection switch, so nothing may turn its minimum off.");
+        Assert.That(AIStudio.Tools.ComponentsExtensions.MinimumConfidence(AIStudio.Tools.Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT, settingsManager), Is.EqualTo(ConfidenceLevel.HIGH), "The audit has no preselection switch, so nothing may turn its minimum off.");
     }
 
     private static void AssertMinimumFollowsPreselection(SettingsManager settingsManager, AIStudio.Tools.Components component, Action<bool> setPreselection)

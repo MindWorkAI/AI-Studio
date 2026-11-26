@@ -43,7 +43,7 @@ public sealed class TextContentCleaningOperation(ILogger<TextContentCleaningOper
     public override string Id => "Text Content Cleaning";
 
     /// <inheritdoc />
-    public override Tools.Components Component => Tools.Components.AGENT_TEXT_CONTENT_CLEANER;
+    public override Tools.Components Component => Tools.Components.AI_TASK_TEXT_CONTENT_CLEANER;
 
     /// <summary>
     /// A web page requires nothing of its own: the user chose to read it with the assistant.

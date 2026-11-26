@@ -42,7 +42,7 @@
                         <MudText Typo="Typo.body2" Class="mb-3">
                             @this.ProviderSelectionHint
                         </MudText>
-                        <CascadingValue Value="Components.AGENT_ASSISTANT_PLUGIN_AUDIT">
+                        <CascadingValue Value="Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT">
                             <ProviderSelection @bind-ProviderSettings="@this.auditProviderSelection" ValidateProvider="@this.ValidatingProvider" Label="@T("Model")" Disabled="@this.isAuditing" />
                         </CascadingValue>
                     </MudPaper>

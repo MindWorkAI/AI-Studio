@@ -91,7 +91,7 @@ public sealed class DataSourceChoiceOperation(ILogger<DataSourceChoiceOperation>
     public override string Id => "Data Source Selection";
 
     /// <inheritdoc />
-    public override Tools.Components Component => Tools.Components.AGENT_DATA_SOURCE_SELECTION;
+    public override Tools.Components Component => Tools.Components.AI_TASK_DATA_SOURCE_SELECTION;
 
     /// <summary>
     /// The model reads the descriptions of the data sources, so it has to reach what they require.

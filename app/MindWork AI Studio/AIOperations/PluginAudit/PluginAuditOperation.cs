@@ -115,7 +115,7 @@ public sealed class PluginAuditOperation(ILogger<PluginAuditOperation> logger, S
     public override string Id => "Assistant Plugin Security Audit";
 
     /// <inheritdoc />
-    public override Tools.Components Component => Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT;
+    public override Tools.Components Component => Tools.Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT;
 
     /// <summary>
     /// A plugin requires nothing of its own: whoever may audit it is decided by the minimum of the audit.

@@ -60,6 +60,18 @@ public sealed class AppUserAgentTests
         Assert.That(userAgent, Is.EqualTo($"{AppUserAgent.BASE} Component/TRANSLATION_ASSISTANT"));
     }
 
+    /// <summary>
+    /// Operators filter their logs by these names, which the wiki lists, so renaming one has to be deliberate.
+    /// </summary>
+    [TestCase(AIStudio.Tools.Components.AI_TASK_TEXT_CONTENT_CLEANER, "AI_TASK_TEXT_CONTENT_CLEANER")]
+    [TestCase(AIStudio.Tools.Components.AI_TASK_DATA_SOURCE_SELECTION, "AI_TASK_DATA_SOURCE_SELECTION")]
+    [TestCase(AIStudio.Tools.Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION, "AI_TASK_RETRIEVAL_CONTEXT_VALIDATION")]
+    [TestCase(AIStudio.Tools.Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT, "AI_TASK_ASSISTANT_PLUGIN_AUDIT")]
+    public void AnAITaskIsNamedAsAnAITask(AIStudio.Tools.Components component, string expectedName)
+    {
+        Assert.That(AppUserAgent.ForComponent(component), Is.EqualTo($"{AppUserAgent.BASE} Component/{expectedName}"));
+    }
+
     [Test]
     public void NoComponentKeepsTheBase()
     {
