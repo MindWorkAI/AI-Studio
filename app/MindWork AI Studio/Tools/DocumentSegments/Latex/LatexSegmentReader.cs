@@ -445,10 +445,14 @@ internal sealed partial class LatexSegmentReader
     /// <summary>
     /// Writes a pair, whose layout and white space at its edges belong to its markup, e.g., \bfseries of {\bfseries words}.
     /// </summary>
+    /// <remarks>
+    /// A label is no layout of the pair but a target of references, e.g., \label within a footnote: it becomes a tag of
+    /// its own, which follows the words when the model drops the pair, rather than going with the markup of the pair.
+    /// </remarks>
     private void EmitPair(PairItem pair, TextSegmentBuilder builder)
     {
-        var first = pair.Children.FindIndex(IsContent);
-        var last = pair.Children.FindLastIndex(IsContent);
+        var first = pair.Children.FindIndex(item => IsContent(item) || IsLabel(item));
+        var last = pair.Children.FindLastIndex(item => IsContent(item) || IsLabel(item));
         var id = builder.Open(KeptApart(this.text[pair.Start..pair.Children[first].Start]));
         this.Emit(pair.Children, first, last, builder);
         builder.Close(id, this.text[pair.Children[last].End..pair.End]);
@@ -481,6 +485,11 @@ internal sealed partial class LatexSegmentReader
     };
 
     private static bool IsContent(Item item) => item is not (SpaceItem or PlaceholderItem { IsLayout: true });
+
+    private static bool IsLabel(Item item) => item is PlaceholderItem { Markup: var markup } && LabelRegex().IsMatch(markup);
+
+    [GeneratedRegex(@"\A\s*\\label\b")]
+    private static partial Regex LabelRegex();
 
     private static bool IsInvalid(Item item) => item is InvalidItem || (item is PairItem pair && pair.Children.Any(IsInvalid));
 

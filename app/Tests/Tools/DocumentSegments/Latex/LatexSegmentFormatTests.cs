@@ -284,6 +284,24 @@ public sealed class LatexSegmentFormatTests
         });
     }
 
+    [Test]
+    public async Task ALabelWithinAPairStaysWhenTheModelDropsThePair()
+    {
+        this.WriteSource("\\begin{document}\nSee the note\\footnote{Some details.\\label{fn:details}} and note~\\ref{fn:details}.\n\\end{document}\n");
+        var key = (await this.KeysAsync()).Single();
+
+        // The model left out the tags of the footnote:
+        var results = new SegmentResults(new Dictionary<string, SegmentOutcome> { [key] = SegmentOutcome.Transformed("Siehe die Anmerkung mit Details und die Anmerkung <3/>.") });
+        await this.format.WriteAsync(this.source, this.target, results, "de-DE", NullLogger.Instance, CancellationToken.None);
+        var written = await File.ReadAllTextAsync(this.target);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(key, Does.Contain("<1>Some details.<2/></1>"), "The label is a tag of its own within the footnote.");
+            Assert.That(written, Does.Contain("\\label{fn:details}"), "The target of the reference stays, so that \\ref finds it.");
+        });
+    }
+
     private void WriteSource(string text) => File.WriteAllText(this.source, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 
     private async Task<List<string>> KeysAsync() => (await this.format.ReadAsync(this.source, CancellationToken.None)).Select(segment => segment.Key).ToList();

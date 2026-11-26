@@ -137,7 +137,7 @@ internal static partial class HtmlSegmentReader
 
                 var builder = new TextSegmentBuilder();
                 builder.Words(Collapsed(text.Substring(attribute.ValueStartIndex, attribute.ValueLength)));
-                var segment = builder.Build(attribute.ValueStartIndex, attribute.ValueStartIndex + attribute.ValueLength);
+                var segment = builder.Build(attribute.ValueStartIndex, attribute.ValueStartIndex + attribute.ValueLength, attribute.QuoteType is AttributeValueQuote.None ? QuotedAttribute : null);
                 if (!builder.HasTagLikeWords && segment.Segment.HasWords)
                     segments.Add(segment);
             }
@@ -156,6 +156,11 @@ internal static partial class HtmlSegmentReader
     /// Makes words fit into the value of an attribute, whichever quotes enclose it.
     /// </summary>
     public static string EncodedAttribute(string words) => EncodedText(words).Replace("\"", "&quot;").Replace("'", "&#39;");
+
+    /// <summary>
+    /// Makes words the value of an attribute which had no quotes, e.g., alt=Mars: new words with a space would end it.
+    /// </summary>
+    private static string QuotedAttribute(string words) => $"\"{EncodedAttribute(words)}\"";
 
     private static bool IsReadable(HtmlNode element, HtmlAttribute attribute)
     {
@@ -197,10 +202,20 @@ internal static partial class HtmlSegmentReader
     private static bool IsWithinWords(HtmlNode node) => node.NodeType switch
     {
         HtmlNodeType.Text or HtmlNodeType.Comment => true,
-        HtmlNodeType.Element => INLINE_ELEMENTS.Contains(node.Name) || ATOMIC_ELEMENTS.Contains(node.Name),
+        HtmlNodeType.Element => ATOMIC_ELEMENTS.Contains(node.Name) || (INLINE_ELEMENTS.Contains(node.Name) && !HoldsBlocks(node)),
 
         _ => false,
     };
+
+    /// <summary>
+    /// Whether an element which marks up words holds blocks, e.g., a link around a whole card with a heading and a
+    /// paragraph. Such an element counts as a block, so that the runs of words within it are read: as a part of a run,
+    /// its blocks would become one tag of their own, and their words would never reach the model.
+    /// </summary>
+    private static bool HoldsBlocks(HtmlNode element) => element.ChildNodes.Any(child =>
+        child.NodeType is HtmlNodeType.Element &&
+        !ATOMIC_ELEMENTS.Contains(child.Name) &&
+        (!INLINE_ELEMENTS.Contains(child.Name) || HoldsBlocks(child)));
 
     private static void AddRun(List<HtmlNode> run, string text, List<TextSegment> segments)
     {

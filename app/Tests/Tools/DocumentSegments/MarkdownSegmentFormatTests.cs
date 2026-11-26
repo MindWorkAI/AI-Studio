@@ -168,6 +168,41 @@ public sealed class MarkdownSegmentFormatTests
         });
     }
 
+    [Test]
+    public async Task NewWordsWhichLookLikeMarkdownStayWords()
+    {
+        var source = await this.WriteSourceAsync("January 1 is a holiday.\n\n| Term | Meaning |\n|------|---------|\n| a | b |\n");
+        var target = Path.Join(this.testFolder, "target.md");
+        var results = await this.ResultsAsync(source, key => key switch
+        {
+            "January 1 is a holiday." => "1. Januar ist ein Feiertag.",
+            "a" => "x | y",
+            "b" => "5 * 3 [Beispiel]",
+
+            _ => key,
+        });
+
+        await this.format.WriteAsync(source, target, results, "de-DE", NullLogger.Instance, CancellationToken.None);
+        var written = await File.ReadAllTextAsync(target);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Does.StartWith("1\\. Januar ist ein Feiertag."), "Words at the start of a line which read as a list get an escape.");
+            Assert.That(written, Does.Contain("| x \\| y | 5 \\* 3 \\[Beispiel\\] |"), "Characters of markup get an escape, a | in a cell above all.");
+            Assert.That(MarkdownSegmentFormat.SegmentsOf(written).Select(segment => segment.Segment.Key), Is.EqualTo(new[] { "1. Januar ist ein Feiertag.", "Term", "Meaning", "x | y", "5 * 3 [Beispiel]" }), "The new words stay words: no list, no further column, no link.");
+        });
+    }
+
+    [Test]
+    public async Task EscapesAndEntitiesReachTheModelAsTheyRead()
+    {
+        var source = await this.WriteSourceAsync("Fish &amp; Chips cost 5 \\* 3 \\| 2 &copy; us.\n");
+
+        var keys = (await this.format.ReadAsync(source, CancellationToken.None)).Select(segment => segment.Key).ToList();
+
+        Assert.That(keys, Is.EqualTo(new[] { "Fish & Chips cost 5 * 3 | 2 © us." }));
+    }
+
     private async Task<string> WriteSourceAsync(string text)
     {
         var path = Path.Join(this.testFolder, "source.md");

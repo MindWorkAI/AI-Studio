@@ -22,6 +22,12 @@ namespace AIStudio.Tools.DocumentSegments;
 /// HTML, footnote references, task boxes, and hard line breaks become tags of their own. A soft line break
 /// becomes a space: the new words of a paragraph go into one line, which Markdown shows the same way.
 /// </para>
+/// <para>
+/// Words travel decoded and come back encoded, as for web pages and LaTeX: the model gets them as they read, e.g.,
+/// "a | b" for "a \| b" or "&amp;" for "&amp;amp;", and MarkdownWords escapes the new words where Markdown would
+/// take them for markup. The white space around the words of a segment, e.g., the padding of a table cell, stays
+/// outside of it.
+/// </para>
 /// </remarks>
 public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
 {
@@ -54,7 +60,7 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
     public async Task<SegmentWriteResult> WriteAsync(string sourcePath, string targetPath, SegmentResults results, string languageTag, ILogger logger, CancellationToken token)
     {
         var file = await TextDocumentFile.ReadAsync(sourcePath, null, token);
-        var result = TextSegmentWriter.Apply(file.Text, SegmentsOf(file.Text), results, WithoutLineBreaks, out var text);
+        var result = TextSegmentWriter.Apply(file.Text, SegmentsOf(file.Text), results, MarkdownWords.Encoded, out var text);
         if (result.Outcome is SegmentWriteOutcome.WRITTEN)
             await file.WriteAsync(targetPath, text, token);
 
@@ -88,11 +94,6 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
     }
 
     /// <summary>
-    /// Keeps a paragraph in one piece: a line break inside it would end it, or a table row.
-    /// </summary>
-    private static string WithoutLineBreaks(string words) => words.ReplaceLineEndings(" ");
-
-    /// <summary>
     /// Walks the inline parts of one block and puts its segment together.
     /// </summary>
     private sealed class InlineWalker(string text)
@@ -103,16 +104,30 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
         private int? hardLineBreakId;
         private bool isConsistent = true;
 
+        /// <summary>
+        /// Where the segment starts and ends, without the white space around its words.
+        /// </summary>
+        private int segmentStart;
+
+        private int segmentEnd;
+
         public TextSegment? TryRead(ContainerInline root)
         {
-            this.position = root.FirstChild!.Span.Start;
-            var start = this.position;
+            this.segmentStart = root.FirstChild!.Span.Start;
+            this.segmentEnd = Math.Min(root.LastChild!.Span.End + 1, text.Length);
+            while (this.segmentStart < this.segmentEnd && text[this.segmentStart] is ' ' or '\t')
+                this.segmentStart++;
+
+            while (this.segmentEnd > this.segmentStart && text[this.segmentEnd - 1] is ' ' or '\t')
+                this.segmentEnd--;
+
+            this.position = this.segmentStart;
             this.VisitChildren(root);
 
             if (!this.isConsistent || this.builder.HasTagLikeWords)
                 return null;
 
-            return this.builder.Build(start, this.position);
+            return this.builder.Build(this.segmentStart, this.position);
         }
 
         private void VisitChildren(ContainerInline container)
@@ -130,6 +145,16 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
         {
             var start = inline.Span.Start;
             var end = inline.Span.End + 1;
+
+            // Plain words at the edges lose the white space around them, which stays outside of the segment:
+            if (inline is LiteralInline { IsFirstCharacterEscaped: false } && !inline.Span.IsEmpty)
+            {
+                start = Math.Max(start, this.segmentStart);
+                end = Math.Min(end, this.segmentEnd);
+                if (end <= start)
+                    return;
+            }
+
             if (inline.Span.IsEmpty || start < this.position || end > text.Length)
             {
                 this.isConsistent = false;
@@ -157,7 +182,18 @@ public sealed class MarkdownSegmentFormat : IDocumentSegmentFormat
                     this.hardLineBreakId = lineBreak;
                     return;
 
-                case LiteralInline or HtmlEntityInline:
+                // Escaped characters and entities reach the model as they read, e.g., "|" for "\|" or "&" for "&amp;":
+                case LiteralInline { IsFirstCharacterEscaped: true } escaped:
+                    this.AddGap(start);
+                    this.builder.Words(escaped.Content.ToString());
+                    break;
+
+                case HtmlEntityInline entity:
+                    this.AddGap(start);
+                    this.builder.Words(entity.Transcoded.ToString());
+                    break;
+
+                case LiteralInline:
                     this.AddGap(start);
                     this.builder.Words(text[start..end]);
                     break;

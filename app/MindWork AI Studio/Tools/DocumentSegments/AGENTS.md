@@ -68,6 +68,11 @@ of each segment in the source, so everything else stays byte for byte, and `Text
   brings its own function, see `TextSegment.FormatWords`.
 - **Code, formulas, link targets, and embedded HTML are tags of their own or stay out.** Emphasis and links are
   pairs around their words, so a model never sees an address.
+- **Words travel decoded and come back encoded, in Markdown as well.** Escaped characters and entities reach the
+  model as they read, e.g., `a | b` for `a \| b`, and `MarkdownWords` escapes new words where Markdown would read
+  them as markup: characters of inline markup, a mark which would start a list, a heading, or a quote at the start
+  of a line, e.g., `1. Januar`, and an ampersand which would start an entity. The white space around the words of a
+  segment, e.g., the padding of a table cell, stays outside of it.
 
 ## Word documents
 
@@ -120,10 +125,13 @@ elements, and the attributes people read (`alt`, `title`, `placeholder`, `aria-l
 replaces the words in the source by their positions and leaves the rest byte for byte.
 
 - **Elements which mark up words are pairs, the rest of a run is a tag of its own.** Code, pictures, line
-  breaks, form fields, scripts, and comments stay as they are; preformatted blocks stay out entirely.
+  breaks, form fields, scripts, and comments stay as they are; preformatted blocks stay out entirely. An element
+  which marks up words but holds blocks, e.g., a link around a card with a heading and a paragraph, counts as a
+  block, so that the words of its blocks are read.
 - **Words travel decoded and come back encoded.** The model gets the words as a browser shows them, entities
   decoded and white space collapsed. `HtmlSegmentReader.EncodedText` and `EncodedAttribute` encode them again,
-  so new words never break the markup.
+  so new words never break the markup. The value of an attribute without quotes, e.g., `alt=Mars`, gets quotes
+  for new words, which may hold spaces.
 - **Attributes come first.** A readable attribute may lie within the markup of a block, e.g., a picture in a
   paragraph, so the writer replaces the attributes, reads the blocks of that page again, and replaces them then.
 - **A run whose nodes leave markup in between stays as it is.** HtmlAgilityPack fixes broken markup in its
@@ -138,8 +146,10 @@ expands no macro.
 
 - **Commands which mark up words are pairs, the rest is a tag of its own.** `LatexCommands` knows which commands
   hold words, e.g., `\textbf` or `\footnote`, which start a segment of their own, e.g., `\section`, and which are
-  layout, e.g., `\label` or `\hline`, which stays outside of a segment at its edges. An unknown command stays as it
-  is, with the arguments right after it: a macro of the document may hold anything.
+  layout, e.g., `\label` or `\hline`, which stays outside of a segment at its edges. At the edges of a pair, layout
+  belongs to the markup of the pair, e.g., `\bfseries` of `{\bfseries words}`, but a `\label` is a tag of its own:
+  it is the target of references, which a model dropping the pair must not take along. An unknown command stays as
+  it is, with the arguments right after it: a macro of the document may hold anything.
 - **Words travel decoded and come back encoded.** Escaped characters, accents such as `\"a`, and quotes such as
   `\glqq` reach the model as the characters they stand for, a tilde as a non-breaking space. `LatexWords` escapes
   the special characters of new words; within an optional argument, it puts closing brackets into braces.

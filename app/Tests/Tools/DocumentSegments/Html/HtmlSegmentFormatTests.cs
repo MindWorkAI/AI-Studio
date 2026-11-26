@@ -157,6 +157,33 @@ public sealed class HtmlSegmentFormatTests
         });
     }
 
+    [Test]
+    public async Task AnAttributeWithoutQuotesGetsThemForNewWords()
+    {
+        File.WriteAllText(this.source, "<p>The planet <img src=mars.png alt=Mars> is red.</p>", new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        var results = await this.ResultsAsync(key => key == "Mars" ? "Der rote Planet" : key);
+
+        await this.format.WriteAsync(this.source, this.target, results, string.Empty, NullLogger.Instance, CancellationToken.None);
+        var written = await File.ReadAllTextAsync(this.target);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Does.Contain("<img src=mars.png alt=\"Der rote Planet\">"));
+            Assert.That(HtmlSegmentReader.Parse(written).DocumentNode.Descendants("img").Single().GetAttributeValue("alt", string.Empty), Is.EqualTo("Der rote Planet"), "The new words stay one value.");
+        });
+    }
+
+    [Test]
+    public async Task BlocksWithinALinkAreRead()
+    {
+        // A card, as many pages show them: a link around a heading and a paragraph:
+        File.WriteAllText(this.source, "<a href=\"/mars\"><div><h3>Mars</h3><p>The red planet.</p></div></a>", new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+
+        var keys = (await this.format.ReadAsync(this.source, CancellationToken.None)).Select(segment => segment.Key).ToList();
+
+        Assert.That(keys, Is.EqualTo(new[] { "Mars", "The red planet." }));
+    }
+
     private async Task<SegmentResults> ResultsAsync(Func<string, string> transform)
     {
         var segments = await this.format.ReadAsync(this.source, CancellationToken.None);
