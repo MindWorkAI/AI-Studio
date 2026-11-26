@@ -99,12 +99,12 @@ pub fn log_potential_stale_process(pid_file_path: PathBuf, pid: u32, sidecar_typ
     }
 }
 
-#[cfg(test)]
+// The test starts `sleep`, which Windows lacks:
+#[cfg(all(test, unix))]
 mod tests {
     use super::*;
 
     /// Verifies that a process found by its number alone gets a PID file and is killed later on.
-    #[cfg(unix)]
     #[test]
     fn stale_process_is_recorded_and_killed() {
         use std::os::unix::process::ExitStatusExt;
