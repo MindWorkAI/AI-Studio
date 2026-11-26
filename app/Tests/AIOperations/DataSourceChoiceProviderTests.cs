@@ -124,7 +124,7 @@ public sealed class DataSourceChoiceProviderTests
     private static AIOperationProviderChoice Choose(SettingsManager settingsManager, IReadOnlyList<IDataSource> dataSources)
     {
         var resolver = new AIOperationProviderResolver(settingsManager, NullLogger<AIOperationProviderResolver>.Instance);
-        return resolver.Preview(DataSourceChoiceOperation.GetProviderSettings(settingsManager), dataSources.GetRequiredConfidenceLevel(), AgenticSrcSelWithDynHeur.GetChoiceProviderOptions(settingsManager, CHAT_PROVIDER_ID, dataSources));
+        return resolver.Preview(DataSourceChoiceOperation.GetProviderSettings(settingsManager), dataSources.GetRequiredConfidenceLevel(), AISrcSelWithDynHeur.GetChoiceProviderOptions(settingsManager, CHAT_PROVIDER_ID, dataSources));
     }
 
     private static void PickOwnProvider(SettingsManager settingsManager)

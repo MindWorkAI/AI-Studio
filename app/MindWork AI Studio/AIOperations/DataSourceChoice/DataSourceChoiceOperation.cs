@@ -13,7 +13,7 @@ namespace AIStudio.AIOperations.DataSourceChoice;
 /// Chooses the data sources which fit a prompt, from the descriptions of the data sources.
 /// </summary>
 /// <remarks>
-/// The classic RAG process runs it before it searches, see AgenticSrcSelWithDynHeur.
+/// The classic RAG process runs it before it searches, see AISrcSelWithDynHeur.
 /// </remarks>
 public sealed class DataSourceChoiceOperation(ILogger<DataSourceChoiceOperation> logger, SettingsManager settingsManager, DataSourceDescriptionService descriptionService) : AIOperationBase<DataSourceChoiceRequest, DataSourceChoiceResult>(logger, settingsManager)
 {

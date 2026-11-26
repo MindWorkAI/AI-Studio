@@ -7,7 +7,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components.Settings;
 
-public partial class SettingsPanelAgentAssistantAudit : SettingsPanelBase
+public partial class SettingsPanelAITaskAssistantAudit : SettingsPanelBase
 {
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
