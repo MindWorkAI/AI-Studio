@@ -6,7 +6,7 @@ namespace AIStudio.Components;
 /// <summary>
 /// A data structure to combine the data source and the underlying AI decision.
 /// </summary>
-public sealed class DataSourceAgentSelected
+public sealed class DataSourceAISelected
 {
     /// <summary>
     /// The data source.

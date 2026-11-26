@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace AIStudio.Tests.Settings;
 
 /// <summary>
-/// Checks when the minimum confidence of a background task applies.
+/// Checks when the minimum confidence of an AI task applies.
 /// </summary>
 /// <remarks>
 /// The text content cleaner, the data source selection, and the retrieval context validation apply their
@@ -15,7 +15,7 @@ namespace AIStudio.Tests.Settings;
 /// one would find a namespace of this assembly first, see AIOperationProviderResolverTests.
 /// </remarks>
 [TestFixture]
-public sealed class BackgroundTaskMinimumConfidenceTests
+public sealed class AITaskMinimumConfidenceTests
 {
     [Test]
     public void TheTextContentCleanerAppliesItsMinimumOnlyWithItsPreselection()

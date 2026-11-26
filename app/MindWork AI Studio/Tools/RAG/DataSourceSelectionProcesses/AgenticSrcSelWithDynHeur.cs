@@ -30,7 +30,7 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
     {
         var proceedWithRAG = true;
         IReadOnlyList<IDataSource> selectedDataSources = [];
-        IReadOnlyList<DataSourceAgentSelected> finalAISelection = [];
+        IReadOnlyList<DataSourceAISelected> finalAISelection = [];
         
         var choiceOperation = Program.SERVICE_PROVIDER.GetRequiredService<DataSourceChoiceOperation>();
         var providerResolver = Program.SERVICE_PROVIDER.GetRequiredService<AIOperationProviderResolver>();
@@ -87,7 +87,7 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
             aiSelectedDataSources = aiSelectedDataSources.Where(x => allowedDataSources.ContainsKey(x.Id)).ToList();
 
             // Store the real AI-selected data sources:
-            finalAISelection = aiSelectedDataSources.Select(x => new DataSourceAgentSelected { DataSource = allowedDataSources[x.Id], AIDecision = x, Selected = false }).ToList();
+            finalAISelection = aiSelectedDataSources.Select(x => new DataSourceAISelected { DataSource = allowedDataSources[x.Id], AIDecision = x, Selected = false }).ToList();
 
             var numHallucinatedSources = totalAISelectedDataSources - aiSelectedDataSources.Count;
             if (numHallucinatedSources > 0)

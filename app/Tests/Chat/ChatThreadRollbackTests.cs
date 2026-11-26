@@ -212,7 +212,7 @@ public sealed class ChatThreadRollbackTests
         HideFromUser = hidden,
     };
 
-    private static DataSourceAgentSelected SelectedHandbook() => new()
+    private static DataSourceAISelected SelectedHandbook() => new()
     {
         DataSource = new DataSourceLocalDirectory { Id = "handbook", Name = "Handbook" },
         AIDecision = new SelectedDataSource("handbook", "The question is about the handbook.", 0.9f),

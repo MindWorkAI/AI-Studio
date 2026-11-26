@@ -1247,7 +1247,7 @@ public partial class ChatComponent : MSGComponentBase
         await this.ApplyUpdatedAutomaticDataSourceOptionsAfterConfigurationChange();
     }
 
-    private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
+    private IReadOnlyList<DataSourceAISelected> GetAISelectedDataSources()
     {
         if (this.ChatThread is null)
             return [];

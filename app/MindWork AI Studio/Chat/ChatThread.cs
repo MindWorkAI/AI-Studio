@@ -99,7 +99,7 @@ public sealed record ChatThread
     /// <summary>
     /// The AI-selected data sources for this chat thread.
     /// </summary>
-    public IReadOnlyList<DataSourceAgentSelected> AISelectedDataSources { get; set; } = [];
+    public IReadOnlyList<DataSourceAISelected> AISelectedDataSources { get; set; } = [];
 
     /// <summary>
     /// The augmented data for this chat thread. Will be inserted into the system prompt.

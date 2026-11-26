@@ -41,7 +41,7 @@ internal sealed class AssistantWebContentReader : StatefulAssistantComponentBase
             state.WebContent[this.Name] = new WebContentState
             {
                 Preselect = this.Preselect,
-                PreselectContentCleanerAgent = this.PreselectContentCleanerAgent,
+                PreselectContentCleaner = this.PreselectContentCleanerAgent,
             };
         }
     }

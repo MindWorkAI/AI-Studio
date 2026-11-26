@@ -13,7 +13,7 @@ namespace AIStudio.Tests.Tools;
 /// Checks the User-Agent which AI Studio sends to self-hosted servers.
 /// </summary>
 /// <remarks>
-/// Operators of a gateway such as LiteLLM read it in their logs to see which assistant or agent sent a
+/// Operators of a gateway such as LiteLLM read it in their logs to see which assistant or AI task sent a
 /// request. It has to stay a valid header value whatever a plugin calls its assistant, because an
 /// invalid one would either break the request or silently vanish from the logs. Who receives it at all
 /// is a privacy question: nobody without the consent of the user, and a cloud provider never.

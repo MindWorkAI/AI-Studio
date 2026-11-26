@@ -137,7 +137,7 @@
                                         @if (!this.IsSemanticSearchEffective && this.DataSourcesAISelected.Count > 0)
                                         {
                                             <ExpansionPanel HeaderIcon="@AppIcons.AI_SELECTED_DATA_SOURCES" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("AI-Selected Data Sources")">
-                                                <MudList T="DataSourceAgentSelected" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
+                                                <MudList T="DataSourceAISelected" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
                                                     @foreach (var source in this.DataSourcesAISelected)
                                                     {
                                                         <MudListItem Value="@source">

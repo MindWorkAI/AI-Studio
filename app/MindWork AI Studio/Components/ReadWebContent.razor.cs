@@ -58,10 +58,10 @@ public partial class ReadWebContent : MSGComponentBase
     public AIStudio.Settings.Provider ProviderSettings { get; set; } = AIStudio.Settings.Provider.NONE;
     
     [Parameter]
-    public bool AgentIsRunning { get; set; }
+    public bool CleanerIsRunning { get; set; }
     
     [Parameter]
-    public EventCallback<bool> AgentIsRunningChanged { get; set; }
+    public EventCallback<bool> CleanerIsRunningChanged { get; set; }
     
     [Parameter]
     public bool Preselect { get; set; }
@@ -70,10 +70,10 @@ public partial class ReadWebContent : MSGComponentBase
     public EventCallback<bool> PreselectChanged { get; set; }
     
     [Parameter]
-    public bool PreselectContentCleanerAgent { get; set; }
+    public bool PreselectContentCleaner { get; set; }
     
     [Parameter]
-    public EventCallback<bool> PreselectContentCleanerAgentChanged { get; set; }
+    public EventCallback<bool> PreselectContentCleanerChanged { get; set; }
 
     private readonly Process<ReadWebContentSteps> process = Process<ReadWebContentSteps>.INSTANCE;
     private ProcessStepValue processStep;
@@ -183,7 +183,7 @@ public partial class ReadWebContent : MSGComponentBase
             markdown = retrievedPage.ExtractedPage.Markdown;
             markdown = await this.PromptInjectionGuardService.SanitizeAsync(markdown, PromptInjectionSource.WebContent(this.URL));
             
-            if (this.PreselectContentCleanerAgent)
+            if (this.PreselectContentCleaner)
             {
                 var request = new TextContentCleaningRequest(markdown, this.URL);
                 var choice = this.ProviderResolver.Resolve(this.TextContentCleaning, request, TextContentCleaningOperation.GetProviderSettings(this.SettingsManager), GetCleanerProviderOptions(this.SettingsManager, this.ProviderSettings));
@@ -199,8 +199,8 @@ public partial class ReadWebContent : MSGComponentBase
                 else
                 {
                     this.processStep = this.process[ReadWebContentSteps.CLEANING];
-                    this.AgentIsRunning = true;
-                    await this.AgentIsRunningChanged.InvokeAsync(this.AgentIsRunning);
+                    this.CleanerIsRunning = true;
+                    await this.CleanerIsRunningChanged.InvokeAsync(this.CleanerIsRunning);
                     this.StateHasChanged();
 
                     var result = await this.TextContentCleaning.RunAsync(request, new(choice.Provider));
@@ -209,19 +209,19 @@ public partial class ReadWebContent : MSGComponentBase
                         await this.MessageBus.SendWarning(new(AppIcons.AI_OPERATION, T("The content was loaded, but not cleaned: the model of the content cleaner gave no answer.")));
 
                     this.processStep = this.process[ReadWebContentSteps.DONE];
-                    this.AgentIsRunning = false;
-                    await this.AgentIsRunningChanged.InvokeAsync(this.AgentIsRunning);
+                    this.CleanerIsRunning = false;
+                    await this.CleanerIsRunningChanged.InvokeAsync(this.CleanerIsRunning);
                     this.StateHasChanged();
                 }
             }
         }
         catch (Exception exception)
         {
-            if (this.AgentIsRunning)
+            if (this.CleanerIsRunning)
             {
                 this.processStep = this.process[ReadWebContentSteps.START];
-                this.AgentIsRunning = false;
-                await this.AgentIsRunningChanged.InvokeAsync(this.AgentIsRunning);
+                this.CleanerIsRunning = false;
+                await this.CleanerIsRunningChanged.InvokeAsync(this.CleanerIsRunning);
                 this.StateHasChanged();
             }
 
@@ -269,9 +269,9 @@ public partial class ReadWebContent : MSGComponentBase
         await this.PreselectChanged.InvokeAsync(state);
     }
     
-    private async Task UseContentCleanerAgentChanged(bool state)
+    private async Task UseContentCleanerChanged(bool state)
     {
-        await this.PreselectContentCleanerAgentChanged.InvokeAsync(state);
+        await this.PreselectContentCleanerChanged.InvokeAsync(state);
     }
     
     /// <summary>
@@ -290,7 +290,7 @@ public partial class ReadWebContent : MSGComponentBase
     {
         get
         {
-            if(!this.PreselectContentCleanerAgent || this.cleanerChoice.HasProvider)
+            if(!this.PreselectContentCleaner || this.cleanerChoice.HasProvider)
                 return null;
 
             return this.cleanerChoice.FallbackIssue switch
