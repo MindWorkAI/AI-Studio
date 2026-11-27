@@ -73,6 +73,17 @@ public partial class ChatCompressionDialog : MSGComponentBase
     [Parameter]
     public bool StoresChatFirst { get; set; }
 
+    /// <summary>
+    /// Whether the summary starts right away, with the suggested name and the preselected focus, since the settings say
+    /// to compress without asking, see ContextWindowFullHandling.Decide.
+    /// </summary>
+    /// <remarks>
+    /// The dialog stays, so the user sees the progress and may cancel. When the summary fails, the dialog shows why and
+    /// waits for the user, as it does otherwise.
+    /// </remarks>
+    [Parameter]
+    public bool StartsAutomatically { get; set; }
+
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
     private readonly CancellationTokenSource cancellationTokenSource = new();
@@ -99,6 +110,15 @@ public partial class ChatCompressionDialog : MSGComponentBase
         this.focus = this.options.PreselectedFocus;
         this.writer = this.ChatCompressionService.ChooseWriter(this.SourceChat, this.ChatProvider);
         await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        // The form exists only after the first render, and CompressAsync validates it:
+        if (firstRender && this.StartsAutomatically)
+            await this.CompressAsync();
     }
 
     #endregion

@@ -851,6 +851,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// and the run stops as if the user had stopped it, so that no later request of the run goes out instead.
     /// <br/><br/>
     ///
+    /// When the settings say to send without asking, the request goes out without the dialog. An assistant compresses
+    /// nothing, so it asks when the settings say to compress, see ContextWindowFullHandling.Decide.
+    /// <br/><br/>
+    ///
     /// Requests which do not go through AddAIResponseAsync are not covered: the SWOT analysis, the stages of the
     /// Visual Briefing, the hidden requests of the BeyondFacts Lab, the batch processing, and the generation of
     /// assistant plugins send on their own. The chats of assistants decide for themselves, see
@@ -865,10 +869,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         var parts = ConversationParts.Of(thread, thread.SystemPrompt, string.Empty, null, this.ProviderSettings.SupportsImageInput(), null);
         var tokens = await this.TokenCounter.CountAsync(this.ProviderSettings, parts, thread.ReportedHistoryFor(this.ProviderSettings.Model), this.CancellationTokenSource?.Token ?? CancellationToken.None);
-        if (!tokens.AsksBeforeSending(ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression).ShareToAsk))
+        var options = ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression);
+        if (!tokens.AsksBeforeSending(options.ShareToAsk))
             return true;
 
         this.askedAboutContextWindow = true;
+        if (ContextWindowFullHandling.Decide(options.WhenContextWindowFills, ChatCompressionOffer.NONE, canSendAnyway: true, mayCompressAutomatically: false) is ContextWindowFullAction.SEND)
+            return true;
+
         if (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokens, ContextWindowFullSubject.ASSISTANT_REQUEST, ChatCompressionOffer.NONE) is ContextWindowFullDecision.SEND_ANYWAY)
             return true;
 

@@ -22,6 +22,15 @@
                 @this.SummaryScope
             </MudJustifiedText>
 
+            @if (this.StartsAutomatically)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    <MudJustifiedText Typo="Typo.body2">
+                        @TA("As chosen in the settings, AI Studio compresses a chat without asking once it grows too long. You can still cancel it here.")
+                    </MudJustifiedText>
+                </MudAlert>
+            }
+
             @if (!string.IsNullOrWhiteSpace(this.FallbackNotice))
             {
                 <MudAlert Severity="Severity.Info" Dense="true">

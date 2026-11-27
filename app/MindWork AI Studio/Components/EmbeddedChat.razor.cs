@@ -544,11 +544,17 @@ public partial class EmbeddedChat : MSGComponentBase
     /// that is all it says: the dialog names the window, which would tell apart models the user must not know.
     /// Compressing is offered where the chat allows it and where it makes room for the message; otherwise, the dialog
     /// says why it would not help, see ChatCompressionService.OfferBeforeSendingAsync. The message stays in the field
-    /// then, and the user sends it afterward.
+    /// then, and the user sends it afterward.<br/><br/>
+    ///
+    /// The settings may say to send without asking or to compress without asking, see ContextWindowFullHandling.Decide.
+    /// A message which no longer fits is never sent without asking. Compressing without asking replaces the earlier
+    /// messages, as compressing always does here; the conversation is counted again afterward and decided on once
+    /// more, without compressing again, and then the message goes out.
     /// </remarks>
     /// <param name="message">The text of the message about to be sent.</param>
+    /// <param name="mayCompressAutomatically">False when the conversation was compressed for this message already.</param>
     /// <returns>True when the message is to be sent.</returns>
-    private async Task<bool> ConfirmContextWindowAsync(string message)
+    private async Task<bool> ConfirmContextWindowAsync(string message, bool mayCompressAutomatically = true)
     {
         var options = ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression);
         if (EmbeddedChatTokenBudget.Of(this.tokens, options.ShareToAsk) is EmbeddedChatTokenBudgetState.UNKNOWN || this.conversation?.Thread is not { } thread)
@@ -566,13 +572,27 @@ public partial class EmbeddedChat : MSGComponentBase
         }
 
         var offer = await this.OfferCompressionAsync(thread, tokensWithMessage, options);
-        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, offer, canSendAnyway: notice is EmbeddedChatSendNotice.NEARLY_FULL, recheckOffer: () => this.OfferCompressionAsync(thread, tokensWithMessage, ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression))))
+        var canSendAnyway = notice is EmbeddedChatSendNotice.NEARLY_FULL;
+        switch (ContextWindowFullHandling.Decide(options.WhenContextWindowFills, offer, canSendAnyway, mayCompressAutomatically))
+        {
+            case ContextWindowFullAction.SEND:
+                return true;
+
+            case ContextWindowFullAction.COMPRESS:
+                if (!await this.CompressAsync(startsAutomatically: true))
+                    return false;
+
+                await this.RecountAsync();
+                return await this.ConfirmContextWindowAsync(message, mayCompressAutomatically: false);
+        }
+
+        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, offer, canSendAnyway, recheckOffer: () => this.OfferCompressionAsync(thread, tokensWithMessage, ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression))))
         {
             case ContextWindowFullDecision.SEND_ANYWAY:
                 return true;
 
             case ContextWindowFullDecision.COMPRESS:
-                await this.CompressAsync();
+                await this.CompressAsync(startsAutomatically: false);
                 return false;
 
             default:
@@ -623,15 +643,17 @@ public partial class EmbeddedChat : MSGComponentBase
     /// filter before it becomes a message, since the model reads it again. The conversation is replaced only once the
     /// compressed one is stored, see EmbeddedChatService.ReplaceAsync.
     /// </remarks>
-    private async Task CompressAsync()
+    /// <param name="startsAutomatically">Whether the summary starts without asking, since the settings say so, see ChatCompressionDialog.StartsAutomatically.</param>
+    /// <returns>True when the summary took the place of the earlier messages.</returns>
+    private async Task<bool> CompressAsync(bool startsAutomatically)
     {
         if (this.conversation is not { Thread: { } thread, IsRunning: false })
-            return;
+            return false;
 
         // The message about to be sent waits in the field, so an unanswered last message is summarized with the rest:
         var plan = ChatCompressionPlan.Of(thread, 0, draftIsEmpty: false);
         if (plan is null)
-            return;
+            return false;
 
         var dialogParameters = new DialogParameters<ChatCompressionDialog>
         {
@@ -639,12 +661,13 @@ public partial class EmbeddedChat : MSGComponentBase
             { x => x.Plan, plan },
             { x => x.ChatProvider, this.Provider },
             { x => x.Target, ChatCompressionTarget.SAME_CHAT },
+            { x => x.StartsAutomatically, startsAutomatically },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ChatCompressionDialog>(T("Compress Conversation"), dialogParameters, DialogOptions.BLOCKING_FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not ChatCompressionDialogResult result)
-            return;
+            return false;
 
         this.isCompressing = true;
         try
@@ -654,13 +677,17 @@ public partial class EmbeddedChat : MSGComponentBase
             var summaryMessage = ChatCompression.SummaryMessage(ChatCompressionTarget.SAME_CHAT, sourceName, payload.Text);
             var compressed = WorkspaceBehaviour.CloneChat(thread);
             ChatCompression.TurnIntoContinuation(compressed, 0, ChatCompressionTarget.SAME_CHAT, summaryMessage, payload.Restrictions, this.Provider.Id);
-            if (!await this.ChatService.ReplaceAsync(this.ChatId, compressed))
-                await this.MessageBus.SendWarning(new(AppIcons.COMPRESS_CHAT, T("The conversation was not compressed, because the AI answered meanwhile.")));
+            if (await this.ChatService.ReplaceAsync(this.ChatId, compressed))
+                return true;
+
+            await this.MessageBus.SendWarning(new(AppIcons.COMPRESS_CHAT, T("The conversation was not compressed, because the AI answered meanwhile.")));
+            return false;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             this.Logger.LogError(exception, "Could not store the compressed embedded chat '{ChatId}'.", this.ChatId);
             await this.MessageBus.SendError(new(AppIcons.COMPRESS_CHAT, TA("AI Studio could not save the compressed conversation, so it stays as it was. Please try again.")));
+            return false;
         }
         finally
         {
