@@ -446,11 +446,8 @@ public static class AppIcons
     /// <summary>Expands a section or opens a list, such as a dropdown.</summary>
     public const string EXPAND_MORE = LucideIcons.CHEVRON_DOWN;
 
-    /// <summary>Exports an item to a file, such as a visual briefing or a plugin archive.</summary>
-    public const string EXPORT = LucideIcons.FILE_DOWN;
-
-    /// <summary>Exports settings as a section for an enterprise configuration.</summary>
-    public const string EXPORT_CONFIGURATION = LucideIcons.FILE_OUTPUT;
+    /// <summary>Exports an item, such as an answer, a code block, a visual briefing, or a plugin archive as a file, or a chat template or a provider as a section for the configuration of an organization: the arrow leaves the line, the mirror image of IMPORT, whose arrow comes down to it. Like IMPORT, it stands for both kinds.</summary>
+    public const string EXPORT = LucideIcons.ARROW_UP_FROM_LINE;
 
     /// <summary>Marks a single file, such as a file path field.</summary>
     public const string FILE = LucideIcons.FILE;
@@ -575,8 +572,8 @@ public static class AppIcons
     /// <summary>Signals that an image cannot be used, such as an unsupported format or a model that cannot read images.</summary>
     public const string IMAGE_NOT_SUPPORTED = LucideIcons.IMAGE_OFF;
 
-    /// <summary>Imports an item from a file, such as a provider, a profile, a data source, a backup, or a visual briefing.</summary>
-    public const string IMPORT = LucideIcons.IMPORT;
+    /// <summary>Imports an item, such as a backup or a visual briefing from a file, or a provider, a profile, or a data source from a section for the configuration of an organization: the arrow comes down to the line, the mirror image of EXPORT. Like EXPORT, it stands for both kinds.</summary>
+    public const string IMPORT = LucideIcons.ARROW_DOWN_TO_LINE;
 
     /// <summary>Marks a field for aspects the model should focus on.</summary>
     public const string IMPORTANT_ASPECTS = LucideIcons.LIST;

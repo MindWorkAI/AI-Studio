@@ -1,0 +1,44 @@
+/*
+ * The actions of a message stand in a row below its card, outside of it, since they act on the whole
+ * message and not on a part of its text. Its first icon stands below the text of the card: the card
+ * puts its text 16 pixels in, a small button its icon 5. The buttons keep some room between them, so
+ * each icon reads on its own.
+ *
+ * The row is the gap between two messages: a message adds only a little room above its card, so the
+ * room a hidden row keeps does not pile up on the usual gap.
+ */
+.message-block {
+    margin-top: 4px;
+}
+
+.message-actions {
+    gap: 6px;
+    min-height: 32px;
+    padding-left: 11px;
+}
+
+/*
+ * The time since the message ends the row, as the small text of the app, see Typo.body2, after a gap
+ * which sets it apart from the buttons. MudText renders it, so its element carries no scope of this
+ * component.
+ */
+.message-actions ::deep .message-time {
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+/*
+ * A message whose actions show only under the pointer keeps the room of their row, so nothing moves
+ * when they show up. They show while the pointer is over the message or its row, while the keyboard
+ * is in them, and while their menu is open, which the pointer reaches only by leaving the message.
+ * Transparent rather than hidden, so the keyboard still reaches them.
+ */
+.message-block.has-hover-actions .message-actions {
+    opacity: 0;
+}
+
+.message-block.has-hover-actions:hover .message-actions,
+.message-block.has-hover-actions:focus-within .message-actions,
+.message-block.has-hover-actions.is-menu-open .message-actions {
+    opacity: 1;
+}

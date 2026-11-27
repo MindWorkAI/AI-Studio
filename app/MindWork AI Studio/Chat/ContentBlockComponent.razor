@@ -3,7 +3,10 @@
 @using AIStudio.Components
 @inherits AIStudio.Components.MSGComponentBase
 
-<MudCard Class="@this.CardClasses" Outlined="@true">
+@* A message, and the row of its actions below its card: they act on the whole message, not on a part
+   of its text, see ContentBlockComponent.razor.css: *@
+<div class="@this.BlockClasses">
+<MudCard Class="rounded-lg" Outlined="@true">
     <MudCardHeader>
         <CardHeaderAvatar>
             <MudAvatar Color="@this.Role.Color">
@@ -13,7 +16,7 @@
         <CardHeaderContent>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 <MudText Typo="Typo.body1">
-                    @this.Role.Name (@this.Time.LocalDateTime)
+                    @this.Role.Name
                 </MudText>
                 @if (this.HasToolTrace)
                 {
@@ -44,94 +47,6 @@
                         </MudBadge>
                     </MudTooltip>
                 }
-                @if (this.Content.Sources.Count > 0)
-                {
-                    <MudTooltip Text="@T("Number of sources")" Placement="Placement.Bottom">
-                        <MudBadge Content="@this.Content.Sources.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
-                            <MudIconButton Icon="@AppIcons.SOURCES" Disabled="@(!this.HasSourcesToShow)" OnClick="@this.ShowSources"/>
-                        </MudBadge>
-                    </MudTooltip>
-                }
-                @if (this.IsSecondToLastBlock && this.Role is ChatRole.USER && this.EditLastUserBlockFunc is not null)
-                {
-                    <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@AppIcons.EDIT" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.EditLastUserBlock"/>
-                    </MudTooltip>
-                }
-                @if (this.IsLastContentBlock && this.Role is ChatRole.USER && this.EditLastBlockFunc is not null)
-                {
-                    <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@AppIcons.EDIT" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.EditLastBlock"/>
-                    </MudTooltip>
-                }
-                @if (this.IsLastContentBlock && this.Role is ChatRole.AI && this.RegenerateFunc is not null)
-                {
-                    <MudTooltip Text="@T("Regenerate")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@AppIcons.REGENERATE" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled() || !this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
-                    </MudTooltip>
-                }
-                @if (!this.IsLastContentBlock && this.Role is ChatRole.AI && this.RollbackFunc is not null)
-                {
-                    <MudTooltip Text="@T("Roll back to this response")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@AppIcons.ROLLBACK" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.RollbackBlock"/>
-                    </MudTooltip>
-                }
-                @if (this.RemoveBlockFunc is not null)
-                {
-                    <MudTooltip Text="@T("Removes this block")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@AppIcons.DELETE" Color="Color.Error" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.RemoveBlock"/>
-                    </MudTooltip>
-                }
-
-                @if (this.CanExportAnswer)
-                {
-                    <MudTooltip Text="@this.EffectiveExportTitle" Placement="Placement.Bottom">
-                        <MudMenu Icon="@AppIcons.EXPORT" MaxHeight="@MenuDefaults.MAX_HEIGHT">
-                            @foreach (var documentFormat in FileExportFormat.DocumentFormats)
-                            {
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@documentFormat.Name"/>
-                            }
-                            @if (this.MessageFiles.Count > MAX_FILES_WITHOUT_SUBMENUS)
-                            {
-                                <MudDivider/>
-                                @foreach (var filesOfAKind in this.MessageFilesByKind)
-                                {
-                                    <MudMenu StartIcon="@ExportGroupIcon(filesOfAKind)" Label="@this.ExportGroupLabel(filesOfAKind)" MaxHeight="@MenuDefaults.MAX_HEIGHT">
-                                        @foreach (var messageFile in filesOfAKind)
-                                        {
-                                            <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
-                                        }
-                                    </MudMenu>
-                                }
-                            }
-                            else if (this.MessageFiles.Count > 0)
-                            {
-                                <MudDivider/>
-                                @foreach (var messageFile in this.MessageFiles)
-                                {
-                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
-                                }
-                            }
-                            <MudDivider/>
-                            @foreach (var textFormat in FileExportFormat.TextFormats)
-                            {
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(textFormat))" Icon="@textFormat.Icon" Label="@textFormat.Name"/>
-                            }
-                        </MudMenu>
-                    </MudTooltip>
-                }
-                @if (this.CanSendTo)
-                {
-                    <MudTooltip Text="@T("Send to ...")" Placement="Placement.Bottom">
-                        <MudMenu Icon="@AppIcons.SEND_TO" Disabled="@(!this.IsSendToEnabled)" MaxHeight="@MenuDefaults.MAX_HEIGHT">
-                            @foreach (var destination in this.SendToDestinations)
-                            {
-                                <MudMenuItem OnClick="@(() => this.SendTo(destination))" Label="@destination.Name"/>
-                            }
-                        </MudMenu>
-                    </MudTooltip>
-                }
-                <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium" IsAIGenerated="@this.GetsAIGeneratedContentDisclosure"/>
             </div>
         </CardHeaderActions>
     </MudCardHeader>
@@ -261,7 +176,7 @@
                                 </ContentPresentationView>
                                 @if (textContent.Sources.Count > 0)
                                 {
-                                    <SourcesList @ref="this.sourcesList" Sources="@textContent.Sources" Passages="@textContent.SourcePassages"/>
+                                    <SourcesList Sources="@textContent.Sources" Passages="@textContent.SourcePassages"/>
                                 }
                             </div>
                         }
@@ -305,3 +220,92 @@
         }
     </MudCardContent>
 </MudCard>
+    @* The actions of the message stand below it, as in other chat apps, in one quiet row: copying,
+       editing the last prompt, and regenerating the last answer at hand, everything else in the menu,
+       and at its end how long ago the message was written. Sources and attachments are no actions: the
+       sources keep their list at the end of the answer. As in every menu of the app, an entry which does
+       not apply to the message stays out, one which has to wait shows grayed, and without any entry, the
+       menu stays out. *@
+    <div class="message-actions d-flex align-center">
+        <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Small" IsAIGenerated="@this.GetsAIGeneratedContentDisclosure"/>
+        @if (this.IsEditOffered)
+        {
+            <MudTooltip Text="@T("Edit")" Placement="Placement.Top">
+                <MudIconButton Icon="@AppIcons.EDIT" Size="Size.Small" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.EditPromptAsync"/>
+            </MudTooltip>
+        }
+        @if (this.IsLastContentBlock && this.Role is ChatRole.AI && this.RegenerateFunc is not null)
+        {
+            <MudTooltip Text="@T("Regenerate")" Placement="Placement.Top">
+                <MudIconButton Icon="@AppIcons.REGENERATE" Size="Size.Small" Disabled="@(!this.BlockActionsEnabled() || !this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
+            </MudTooltip>
+        }
+        @if (this.HasMessageMenu)
+        {
+            <CompactMenu Icon="@AppIcons.MORE_OPTIONS" Size="Size.Small" AriaLabel="@T("Message options")" OpenChanged="@this.MenuOpenChanged">
+                @if (this.CanExportAnswer)
+                {
+                    <MudMenu StartIcon="@AppIcons.EXPORT" Label="@T("Export")" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                        @foreach (var documentFormat in FileExportFormat.DocumentFormats)
+                        {
+                            <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.Icon" Label="@documentFormat.Name"/>
+                        }
+                        @if (this.MessageFiles.Count > MAX_FILES_WITHOUT_SUBMENUS)
+                        {
+                            <MudDivider/>
+                            @foreach (var filesOfAKind in this.MessageFilesByKind)
+                            {
+                                <MudMenu StartIcon="@ExportGroupIcon(filesOfAKind)" Label="@this.ExportGroupLabel(filesOfAKind)" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                                    @foreach (var messageFile in filesOfAKind)
+                                    {
+                                        <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                                    }
+                                </MudMenu>
+                            }
+                        }
+                        else if (this.MessageFiles.Count > 0)
+                        {
+                            <MudDivider/>
+                            @foreach (var messageFile in this.MessageFiles)
+                            {
+                                <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
+                            }
+                        }
+                        <MudDivider/>
+                        @foreach (var textFormat in FileExportFormat.TextFormats)
+                        {
+                            <MudMenuItem OnClick="@(() => this.ExportDocument(textFormat))" Icon="@textFormat.Icon" Label="@textFormat.Name"/>
+                        }
+                    </MudMenu>
+                }
+                @if (this.CanSendTo)
+                {
+                    <MudMenu StartIcon="@AppIcons.SEND_TO" Label="@T("Send to")" Disabled="@(!this.IsSendToEnabled)" MaxHeight="@MenuDefaults.MAX_HEIGHT">
+                        @foreach (var destination in this.SendToDestinations)
+                        {
+                            <MudMenuItem OnClick="@(() => this.SendTo(destination))" Label="@destination.Name"/>
+                        }
+                    </MudMenu>
+                }
+                @if (this.IsRollbackOffered)
+                {
+                    <MudMenuItem Icon="@AppIcons.ROLLBACK" Label="@T("Roll back to this response")" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.RollbackBlock"/>
+                }
+                @if (this.RemoveBlockFunc is not null)
+                {
+                    @if (this.CanExportAnswer || this.CanSendTo || this.IsRollbackOffered)
+                    {
+                        <MudDivider/>
+                    }
+                    <MudMenuItem Icon="@AppIcons.DELETE" IconColor="Color.Error" Label="@T("Remove")" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.RemoveBlock"/>
+                }
+            </CompactMenu>
+        }
+        @if (this.ShowsTime)
+        {
+            <MudTooltip Text="@this.ExactTime" Placement="Placement.Top">
+                <MudText Typo="Typo.body2" HtmlTag="span" Class="message-time mud-text-secondary">@this.TimeSince</MudText>
+            </MudTooltip>
+        }
+    </div>
+</div>

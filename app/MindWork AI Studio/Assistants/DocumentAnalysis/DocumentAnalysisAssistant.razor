@@ -148,7 +148,7 @@ else
                         @T("Preparation for enterprise distribution")
                     </MudText>
 
-                    <MudButton StartIcon="@AppIcons.EXPORT_CONFIGURATION" Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsEnterpriseConfiguration ?? false))" Variant="Variant.Filled" Color="Color.Default" OnClick="@this.ExportPolicyAsConfiguration">
+                    <MudButton StartIcon="@AppIcons.EXPORT" Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsEnterpriseConfiguration ?? false))" Variant="Variant.Filled" Color="Color.Default" OnClick="@this.ExportPolicyAsConfiguration">
                         @T("Export policy as configuration section")
                     </MudButton>
                 }

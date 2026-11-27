@@ -54,7 +54,7 @@
                     else if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
                     {
                         <MudTooltip Text="@T("Export configuration")">
-                            <MudMenu Icon="@AppIcons.EXPORT_CONFIGURATION" Color="Color.Info" Variant="Variant.Text">
+                            <MudMenu Icon="@AppIcons.EXPORT" Color="Color.Info" Variant="Variant.Text">
                                 <MudMenuItem Icon="@AppIcons.LINK" OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))">
                                     @T("Use shared attachment paths")
                                 </MudMenuItem>

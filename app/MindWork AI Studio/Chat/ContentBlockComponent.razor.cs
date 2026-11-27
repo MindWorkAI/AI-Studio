@@ -1,5 +1,6 @@
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
@@ -51,7 +52,16 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     [Parameter]
     public bool IsLastContentBlock { get; set; }
-    
+
+    /// <summary>
+    /// Whether the actions below the message show only under the pointer, or while the keyboard or its
+    /// menu is in them. The chat shows those of its last message all the time, and those of every other
+    /// message this way, so that a long chat stays calm. Their row keeps its room either way, so nothing
+    /// moves when they show up.
+    /// </summary>
+    [Parameter]
+    public bool AreActionsOnHoverOnly { get; set; }
+
     [Parameter]
     public bool IsSecondToLastBlock { get; set; }
 
@@ -166,11 +176,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     private IReadOnlyList<MessageFile> cachedMessageFiles = [];
     private char csvSeparator = ',';
     private ElementReference mathContentContainer;
-    private SourcesList? sourcesList;
     private string lastMathRenderSignature = string.Empty;
     private bool hasActiveMathContainer;
     private bool isDisposed;
     private bool showToolTrace;
+    private bool isMenuOpen;
     private readonly HashSet<int> expandedToolInvocations = [];
 
     /// <summary>
@@ -216,6 +226,77 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// Whether this block leaves AI Studio with the notice that AI generated it, when that is switched on.
     /// </summary>
     private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
+
+    /// <summary>
+    /// Whether the menu of this block offers to roll the chat back to it: an answer which is not the last one.
+    /// The last answer offers to regenerate itself instead.
+    /// </summary>
+    private bool IsRollbackOffered => !this.IsLastContentBlock && this.Role is ChatRole.AI && this.RollbackFunc is not null;
+
+    /// <summary>
+    /// Whether this block offers to edit it: the last prompt of the chat, with its answer after it or,
+    /// when that answer is missing, as the last block, see <see cref="this.EditPromptAsync"/>.
+    /// </summary>
+    private bool IsEditOffered => this.Role is ChatRole.USER
+                                  && ((this.IsSecondToLastBlock && this.EditLastUserBlockFunc is not null)
+                                      || (this.IsLastContentBlock && this.EditLastBlockFunc is not null));
+
+    /// <summary>
+    /// Puts the last prompt back into the composer to edit it. A prompt with an answer after it loses
+    /// that answer as well, since the edited prompt will get a new one; a prompt without an answer, e.g.,
+    /// after the answer failed, simply goes back.
+    /// </summary>
+    private Task EditPromptAsync() => this.IsLastContentBlock ? this.EditLastBlock() : this.EditLastUserBlock();
+
+    /// <summary>
+    /// Whether the menu below this block has any entry, see ContentBlockComponent.razor.
+    /// </summary>
+    private bool HasMessageMenu => this.CanExportAnswer || this.CanSendTo || this.IsRollbackOffered || this.RemoveBlockFunc is not null;
+
+    /// <summary>
+    /// Whether the time of the message shows at the end of its actions: once it is complete, since an
+    /// answer still being written has not settled yet.
+    /// </summary>
+    private bool ShowsTime => this.Content is { InitialRemoteWait: false, IsStreaming: false };
+
+    /// <summary>
+    /// How long ago the message was written: the prompt when it was sent, the answer when it started.
+    /// </summary>
+    private string TimeSince => RelativeTime.Since(this.Time, DateTimeOffset.Now);
+
+    /// <summary>
+    /// The date and the time of the message, which the time since shows under the pointer.
+    /// </summary>
+    private string ExactTime => this.Time.LocalDateTime.ToString("g", I18N.I.Culture);
+
+    /// <summary>
+    /// The classes of the message and its actions, see ContentBlockComponent.razor.css.
+    /// </summary>
+    private string BlockClasses
+    {
+        get
+        {
+            var classes = "message-block";
+            if (this.AreActionsOnHoverOnly)
+                classes += " has-hover-actions";
+
+            if (this.isMenuOpen)
+                classes += " is-menu-open";
+
+            return string.IsNullOrWhiteSpace(this.Class) ? classes : $"{classes} {this.Class}";
+        }
+    }
+
+    /// <summary>
+    /// Keeps the actions in sight while their menu is open, since the pointer leaves the message for the menu.
+    /// </summary>
+    private void MenuOpenChanged(bool isOpen) => this.isMenuOpen = isOpen;
+
+    /// <summary>
+    /// Renders anew once a minute, so the time since the message follows the clock. The render check
+    /// lets the message through only when that time reads differently, see <see cref="this.CreateRenderHash"/>.
+    /// </summary>
+    private void OnMinutePassed() => this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(ContentBlockComponent)}: following the clock");
 
     /// <summary>
     /// The files this block holds, tables, code blocks, and formulas, so that the export menu can offer each of them.
@@ -334,6 +415,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.RegisterStreamingEvents();
+        RelativeTime.MinutePassed += this.OnMinutePassed;
         await base.OnInitializedAsync();
 
         //
@@ -425,6 +507,9 @@ public partial class ContentBlockComponent : MSGComponentBase
         hash.Add(this.Class);
         hash.Add(this.IsLastContentBlock);
         hash.Add(this.IsSecondToLastBlock);
+        hash.Add(this.AreActionsOnHoverOnly);
+        hash.Add(this.isMenuOpen);
+        hash.Add(this.TimeSince);
         hash.Add(this.HideContent);
         hash.Add(this.SettingsManager.IsDarkMode);
         hash.Add(this.RegenerateEnabled());
@@ -483,8 +568,6 @@ public partial class ContentBlockComponent : MSGComponentBase
 
     #endregion
     
-    private string CardClasses => $"my-2 rounded-lg {this.Class}";
-
     private bool HasToolTrace => this.Role is ChatRole.AI && this.GetToolInvocations().Count > 0;
 
     private static Color GetTraceColor(ToolInvocationTraceStatus status) => status switch
@@ -761,31 +844,13 @@ public partial class ContentBlockComponent : MSGComponentBase
         this.Content.FileAttachments = [.. result];
     }
 
-    /// <summary>
-    /// Whether the sources of this block stand below the answer, where the counter can take the reader.
-    /// </summary>
-    /// <remarks>
-    /// The same condition the block itself renders the list under. While an answer is still coming
-    /// in, its sources may already be known, but there is nothing on the page yet to scroll to --
-    /// so the counter says it cannot do anything rather than doing nothing when clicked.
-    /// </remarks>
-    private bool HasSourcesToShow => this.Content is { InitialRemoteWait: false, IsStreaming: false, Sources.Count: > 0 };
-
-    /// <summary>
-    /// Takes the reader from the source counter down to the sources themselves.
-    /// </summary>
-    private async Task ShowSources()
-    {
-        if (this.sourcesList is not null)
-            await this.sourcesList.ScrollIntoViewAsync();
-    }
-
     protected override async ValueTask DisposeResourcesAsync()
     {
         if (this.isDisposed)
             return;
 
         this.isDisposed = true;
+        RelativeTime.MinutePassed -= this.OnMinutePassed;
 
         //
         // Our handlers close over this component, while the content belongs to the chat thread and

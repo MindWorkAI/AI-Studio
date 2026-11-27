@@ -84,6 +84,7 @@
                             ExportFileName="@this.ChatThread.Name"
                             RemoveBlockFunc="@this.RemoveBlock"
                             IsLastContentBlock="@isLastBlock"
+                            AreActionsOnHoverOnly="@(!isLastBlock)"
                             IsSecondToLastBlock="@isSecondLastBlock"
                             RegenerateFunc="@this.RegenerateBlock"
                             RegenerateEnabled="@(() => this.IsProviderSelected && this.ChatThread.IsLLMProviderAllowed(this.Provider))"
