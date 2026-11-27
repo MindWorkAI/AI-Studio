@@ -214,7 +214,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
             this.customCsvSeparator = string.Empty;
             this.minimumDelaySeconds = MinimumDelayIsManaged ? this.ManagedMinimumDelaySeconds : DataBatchProcessing.DEFAULT_MIN_DELAY_SECONDS;
-            this.maximumDelaySeconds = Math.Clamp(DataBatchProcessing.DEFAULT_MAX_DELAY_SECONDS, this.minimumDelaySeconds, DataBatchProcessing.MAX_DELAY_SECONDS);
+            this.maximumDelaySeconds = Math.Clamp(DataBatchProcessing.DEFAULT_MAX_DELAY_SECONDS, this.minimumDelaySeconds, DataBatchProcessing.PAUSE_LIMITS.LongestSeconds);
             return;
         }
 
@@ -237,8 +237,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.csvSeparator = settings.CsvSeparator;
         this.customCsvSeparator = settings.CustomCsvSeparator;
         this.minimumDelaySeconds = MinimumDelayIsManaged ? this.ManagedMinimumDelaySeconds
-            : Math.Clamp(settings.MinimumDelaySeconds, DataBatchProcessing.MIN_DELAY_SECONDS, DataBatchProcessing.MAX_DELAY_SECONDS);
-        this.maximumDelaySeconds = Math.Clamp(settings.MaximumDelaySeconds, this.minimumDelaySeconds, DataBatchProcessing.MAX_DELAY_SECONDS);
+            : DataBatchProcessing.PAUSE_LIMITS.Clamp(settings.MinimumDelaySeconds);
+        this.maximumDelaySeconds = Math.Clamp(settings.MaximumDelaySeconds, this.minimumDelaySeconds, DataBatchProcessing.PAUSE_LIMITS.LongestSeconds);
     }
 
     private async Task LoadConfiguredPromptFileAsync()

@@ -13,17 +13,15 @@ public partial class AssistantBatchProcessing
     private static bool MinimumDelayIsManaged => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumDelaySeconds, out var meta)
                                                  && meta.ManagedMode is not null;
 
-    private int ManagedMinimumDelaySeconds => Math.Clamp(this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds,
-        DataBatchProcessing.MIN_DELAY_SECONDS,
-        DataBatchProcessing.MAX_DELAY_SECONDS);
+    private int ManagedMinimumDelaySeconds => DataBatchProcessing.PAUSE_LIMITS.Clamp(this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds);
 
     private int EffectiveMinimumDelaySeconds => MinimumDelayIsManaged ? this.ManagedMinimumDelaySeconds
-        : Math.Clamp(this.minimumDelaySeconds, DataBatchProcessing.MIN_DELAY_SECONDS, DataBatchProcessing.MAX_DELAY_SECONDS);
+        : DataBatchProcessing.PAUSE_LIMITS.Clamp(this.minimumDelaySeconds);
 
     private (int Minimum, int Maximum) GetEffectiveDelayRange()
     {
         var minimum = this.EffectiveMinimumDelaySeconds;
-        var maximum = Math.Clamp(this.maximumDelaySeconds, minimum, DataBatchProcessing.MAX_DELAY_SECONDS);
+        var maximum = Math.Clamp(this.maximumDelaySeconds, minimum, DataBatchProcessing.PAUSE_LIMITS.LongestSeconds);
         return (minimum, maximum);
     }
 

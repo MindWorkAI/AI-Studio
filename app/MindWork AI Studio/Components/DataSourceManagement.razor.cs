@@ -5,7 +5,6 @@ using AIStudio.Tools.Databases;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
-using AIStudio.Tools.Services.Indexing;
 
 using Microsoft.AspNetCore.Components;
 
@@ -50,16 +49,16 @@ public partial class DataSourceManagement : MSGComponentBase
     /// upper bound, and the free value adjusts to it, cf. PauseRange.GetEffective.
     /// </remarks>
     private int MinimumPauseSliderMax => IsMaximumPauseLocked && !IsMinimumPauseLocked
-        ? PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing).MaximumSeconds
-        : DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS;
+        ? this.SettingsManager.ConfigurationData.App.DataSourceIndexing.EffectivePauseRange.MaximumSeconds
+        : DataDataSourceIndexing.PAUSE_LIMITS.LongestSeconds;
 
     /// <remarks>
     /// The upper bound starts where the lower bound is, so raising the lower one above it raises the
     /// upper one along with it. A locked slider keeps the whole range, cf. MinimumPauseSliderMax.
     /// </remarks>
     private int MaximumPauseSliderMin => IsMaximumPauseLocked
-        ? 0
-        : PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing).MinimumSeconds;
+        ? DataDataSourceIndexing.PAUSE_LIMITS.ShortestSeconds
+        : this.SettingsManager.ConfigurationData.App.DataSourceIndexing.EffectivePauseRange.MinimumSeconds;
 
     #region Overrides of ComponentBase
 

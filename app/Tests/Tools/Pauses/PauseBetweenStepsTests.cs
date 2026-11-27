@@ -1,6 +1,6 @@
-using AIStudio.Tools.Services.Indexing;
+using AIStudio.Tools.Pauses;
 
-namespace AIStudio.Tests.Tools;
+namespace AIStudio.Tests.Tools.Pauses;
 
 /// <summary>
 /// Checks the pause between two indexing steps, which spares an embedding server that many people share.

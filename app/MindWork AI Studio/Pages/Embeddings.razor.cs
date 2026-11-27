@@ -6,7 +6,6 @@ using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
-using AIStudio.Tools.Services.Indexing;
 
 using Microsoft.AspNetCore.Components;
 
@@ -66,7 +65,7 @@ public partial class Embeddings : MSGComponentBase
     {
         get
         {
-            var pause = PauseRange.FromSettings(this.SettingsManager.ConfigurationData.App.DataSourceIndexing);
+            var pause = this.SettingsManager.ConfigurationData.App.DataSourceIndexing.EffectivePauseRange;
             if (pause.IsNone)
                 return string.Empty;
 

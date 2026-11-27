@@ -1,7 +1,7 @@
-namespace AIStudio.Tools.Services.Indexing;
+namespace AIStudio.Tools.Pauses;
 
 /// <summary>
-/// How long the indexing step which is about to start waits, cf. PauseBetweenSteps.GetPauseBeforeNextStep.
+/// How long the step which is about to start waits, cf. PauseBetweenSteps.GetPauseBeforeNextStep.
 /// </summary>
 /// <param name="Pause">The pause drawn for the gap since the last step.</param>
 /// <param name="Remaining">What is left of the pause now. More than zero, unless this is NONE.</param>

@@ -208,10 +208,10 @@ else
 }
 else
 {
-    <MudTextSlider T="int" Label="@T("Minimum pause between files")" Min="@DataBatchProcessing.MIN_DELAY_SECONDS" Max="@DataBatchProcessing.MAX_DELAY_SECONDS" Step="1" Unit="@T("seconds")" @bind-Value="@this.minimumDelaySeconds" Disabled="@(() => this.isProcessingBatch)"/>
+    <MudTextSlider T="int" Label="@T("Minimum pause between files")" Min="@DataBatchProcessing.PAUSE_LIMITS.ShortestSeconds" Max="@DataBatchProcessing.PAUSE_LIMITS.LongestSeconds" Step="1" Unit="@T("seconds")" @bind-Value="@this.minimumDelaySeconds" Disabled="@(() => this.isProcessingBatch)"/>
 }
 
-<MudTextSlider T="int" Label="@T("Maximum pause between files")" Min="@this.EffectiveMinimumDelaySeconds" Max="@DataBatchProcessing.MAX_DELAY_SECONDS" Step="1" Unit="@T("seconds")" @bind-Value="@this.maximumDelaySeconds" Disabled="@(() => this.isProcessingBatch)"/>
+<MudTextSlider T="int" Label="@T("Maximum pause between files")" Min="@this.EffectiveMinimumDelaySeconds" Max="@DataBatchProcessing.PAUSE_LIMITS.LongestSeconds" Step="1" Unit="@T("seconds")" @bind-Value="@this.maximumDelaySeconds" Disabled="@(() => this.isProcessingBatch)"/>
 
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
     @T("Before the next file starts, AI Studio waits for a random number of whole seconds from this interval. The minimum is always 6 seconds and the maximum is 300 seconds (5 minutes). Restored files and the end of a run do not add another pause.")

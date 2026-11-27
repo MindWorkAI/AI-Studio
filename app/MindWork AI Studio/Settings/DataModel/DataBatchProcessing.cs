@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 
 using AIStudio.Assistants.BatchProcessing;
 using AIStudio.Provider;
+using AIStudio.Tools.Pauses;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -12,8 +13,12 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessing>>? configSelection = null)
 {
     public const string DEFAULT_FILE_PATTERNS = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm";
-    public const int MIN_DELAY_SECONDS = 6;
-    public const int MAX_DELAY_SECONDS = 300;
+
+    /// <summary>
+    /// The pauses between two files either bound may ask for: at least 6 seconds, at most 300 seconds.
+    /// </summary>
+    public static readonly PauseLimits PAUSE_LIMITS = new(6, 300);
+
     public const int DEFAULT_MIN_DELAY_SECONDS = 6;
     public const int DEFAULT_MAX_DELAY_SECONDS = 10;
     public const bool DEFAULT_INCLUDE_SUBDIRECTORIES = false;
