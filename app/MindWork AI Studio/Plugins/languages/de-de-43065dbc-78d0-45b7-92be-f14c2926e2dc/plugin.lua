@@ -16011,6 +16011,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T4
 -- The language in which the assistants you build answer.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T42126731::INFORMAL"] = "Die Sprache, in der die von dir erstellten Assistenten antworten."
 
+-- When you switch to the chat or to another assistant and come back, an assistant can still show your inputs, your options, and its last result. AI Studio keeps them in memory only, never on disk, until you reset the assistant or quit AI Studio. A text which you send to the assistant from elsewhere replaces them. An assistant which is still working keeps working in the background either way.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2267376752"] = "Wenn Sie zum Chat oder zu einem anderen Assistenten wechseln und zurückkehren, kann ein Assistent Ihre Eingaben, Optionen und sein letztes Ergebnis weiterhin anzeigen. AI Studio speichert diese Inhalte nur im Arbeitsspeicher, niemals auf der Festplatte, bis Sie den Assistenten zurücksetzen oder AI Studio beenden. Ein Text, den Sie dem Assistenten von anderer Stelle aus senden, ersetzt diese Inhalte. Ein Assistent, der noch arbeitet, arbeitet in jedem Fall im Hintergrund weiter."
+
+-- When you switch to the chat or to another assistant and come back, an assistant can still show your inputs, your options, and its last result. AI Studio keeps them in memory only, never on disk, until you reset the assistant or quit AI Studio. A text which you send to the assistant from elsewhere replaces them. An assistant which is still working keeps working in the background either way.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2267376752::INFORMAL"] = "Wenn du zum Chat oder zu einem anderen Assistenten wechselst und zurückkehrst, kann ein Assistent deine Eingaben, Optionen und sein letztes Ergebnis weiterhin anzeigen. AI Studio speichert diese Inhalte nur im Arbeitsspeicher, niemals auf der Festplatte, bis du den Assistenten zurücksetzt oder AI Studio beendest. Ein Text, den du dem Assistenten von anderer Stelle aus sendest, ersetzt diese Inhalte. Ein Assistent, der noch arbeitet, arbeitet in jedem Fall im Hintergrund weiter."
+
 -- There are no categories to show or hide right now.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2279201345"] = "Derzeit gibt es keine Kategorien zum Ein- oder Ausblenden."
 
@@ -16046,6 +16052,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T403
 
 -- Assistant Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T4124037832"] = "Assistenten-Einstellungen"
+
+-- What should happen to your inputs when you leave an assistant?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T700558677"] = "Was soll mit Ihren Eingaben geschehen, wenn Sie einen Assistenten verlassen?"
+
+-- What should happen to your inputs when you leave an assistant?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T700558677::INFORMAL"] = "Was soll mit deinen Eingaben geschehen, wenn du einen Assistenten verlässt?"
 
 -- Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786145170"] = "Durch das Einklappen einer Kategorie bleibt die Assistentenseite übersichtlich. Legen Sie fest, ob AI Studio ihre Assistenten weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
@@ -20202,6 +20214,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1402851833
 -- Welcome
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1485461907"] = "Willkommen"
 
+-- Keep my inputs and the last result until I reset the assistant or quit AI Studio
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1488089083"] = "Behalten Sie meine Eingaben und das letzte Ergebnis bei, bis ich den Assistenten zurücksetze oder AI Studio beende."
+
 -- Assistants
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1614176092"] = "Assistenten"
 
@@ -20324,6 +20339,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T453866521"
 
 -- Chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T578410699"] = "Chat"
+
+-- Reset the assistant, so that it starts anew next time
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T715634053"] = "Setzen Sie den Assistenten zurück, damit er beim nächsten Mal wieder von vorn beginnt."
 
 -- When possible, use the LLM provider which was used for each chat in the first place
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T75376144"] = "Wenn möglich, den LLM-Anbieter verwenden, der ursprünglich für den jeweiligen Chat verwendet wurde"
