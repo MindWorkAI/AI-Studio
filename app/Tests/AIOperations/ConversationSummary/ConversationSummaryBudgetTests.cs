@@ -30,4 +30,14 @@ public sealed class ConversationSummaryBudgetTests
     {
         Assert.That(ConversationSummaryBudget.IsTooLong(summaryTokens, tokensForTheSummary), Is.EqualTo(expected), "Models cannot count, so a summary somewhat longer than asked for is fine.");
     }
+
+    [TestCase(32_000, 8_192, 8_000, TestName = "A quarter of the window")]
+    [TestCase(100_000, 8_192, 8_192, TestName = "At most what the settings allow")]
+    [TestCase(100_000, 16_384, 16_384, TestName = "A larger maximum lets a large window keep more")]
+    [TestCase(2_000, 8_192, ConversationSummaryBudget.MIN_TOKENS_FOR_THE_SUMMARY, TestName = "At least the room for a summary at all")]
+    [TestCase(100_000, 500, ConversationSummaryBudget.MIN_TOKENS_FOR_THE_SUMMARY, TestName = "A maximum below the least room counts as the least room")]
+    public void TheRoomForTheSummaryFollowsTheWindowAndTheSettings(int windowTokens, int maxSummaryTokens, int expected)
+    {
+        Assert.That(ConversationSummaryBudget.TokensForTheSummary(windowTokens, maxSummaryTokens), Is.EqualTo(expected));
+    }
 }

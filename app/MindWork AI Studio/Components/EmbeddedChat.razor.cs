@@ -299,7 +299,7 @@ public partial class EmbeddedChat : MSGComponentBase
     /// How much room the conversation leaves in the context window, as far as the chat shows it, see
     /// EmbeddedChatTokenBudget.Shown.
     /// </summary>
-    private EmbeddedChatTokenBudgetState Budget => EmbeddedChatTokenBudget.Shown(this.tokens, this.ShowsContextWindow);
+    private EmbeddedChatTokenBudgetState Budget => EmbeddedChatTokenBudget.Shown(this.tokens, this.ShowsContextWindow, ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression).ShareToAsk);
 
     /// <summary>
     /// Whether the chat offers to compress the conversation, see AllowsCompression.
@@ -550,11 +550,12 @@ public partial class EmbeddedChat : MSGComponentBase
     /// <returns>True when the message is to be sent.</returns>
     private async Task<bool> ConfirmContextWindowAsync(string message)
     {
-        if (EmbeddedChatTokenBudget.Of(this.tokens) is EmbeddedChatTokenBudgetState.UNKNOWN || this.conversation?.Thread is not { } thread)
+        var options = ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression);
+        if (EmbeddedChatTokenBudget.Of(this.tokens, options.ShareToAsk) is EmbeddedChatTokenBudgetState.UNKNOWN || this.conversation?.Thread is not { } thread)
             return true;
 
         var tokensWithMessage = this.tokens with { DraftTokens = await this.CountMessageAsync(message) };
-        var notice = EmbeddedChatTokenBudget.NoticeBeforeSending(tokensWithMessage, this.ShowsContextWindow);
+        var notice = EmbeddedChatTokenBudget.NoticeBeforeSending(tokensWithMessage, this.ShowsContextWindow, options.ShareToAsk);
         if (notice is EmbeddedChatSendNotice.NONE)
             return true;
 
@@ -565,7 +566,7 @@ public partial class EmbeddedChat : MSGComponentBase
         }
 
         var offer = this.AllowsCompression && thread.IsLLMProviderAllowed(this.Provider)
-            ? await this.CompressionService.OfferBeforeSendingAsync(thread, 0, this.Provider, tokensWithMessage, this.countToken)
+            ? await this.CompressionService.OfferBeforeSendingAsync(thread, 0, this.Provider, tokensWithMessage, options, this.countToken)
             : ChatCompressionOffer.NONE;
 
         switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, offer, canSendAnyway: notice is EmbeddedChatSendNotice.NEARLY_FULL))

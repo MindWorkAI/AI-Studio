@@ -81,7 +81,11 @@ public sealed class DataChatCompression(Expression<Func<Data, DataChatCompressio
     /// </summary>
     /// <remarks>
     /// Between MIN_SUMMARY_TOKENS and MAX_SUMMARY_TOKENS. A summary never takes more than a quarter of the
-    /// context window of the model which writes it, nor of the model of the chat.
+    /// context window of the model which writes it, nor of the model of the chat.<br/><br/>
+    ///
+    /// Context windows of 250,000 tokens and more are common by now. A summary of 8,192 tokens takes a small
+    /// share of them, yet keeps room for the details of a long conversation. A summary meant to save tokens has
+    /// no business being much longer anyway.
     /// </remarks>
     public int MaxSummaryTokens { get; set; } = ManagedConfiguration.Register(configSelection, n => n.MaxSummaryTokens, 8_192);
 

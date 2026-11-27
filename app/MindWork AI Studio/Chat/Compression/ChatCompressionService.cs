@@ -22,7 +22,7 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     /// example conversation of the chat template, the last message of the user with its files, and the last answer of
     /// the AI stay word for word, and the message about to be sent goes along unchanged. So it helps only when what is
     /// left, together with the room for the summary, stays below the share from which AI Studio asks before sending,
-    /// see ConversationTokens.SHARE_TO_ASK_BEFORE_SENDING. The checks which need no count come first, see
+    /// see ChatCompressionOptions.ShareToAsk. The checks which need no count come first, see
     /// OfferBeforeCounting. Then the summarized messages are counted with their files, which the count of the whole
     /// conversation mostly left in the cache of the counter already, and taken off that count, see KeepsTooMuch.
     /// When they cannot be counted, compressing is offered, since nothing speaks against it.<br/><br/>
@@ -34,13 +34,14 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     /// <param name="exampleConversationLength">How many blocks the example conversation of the chat template holds, 0 without a template.</param>
     /// <param name="provider">The provider which would write the summary, with the tokenizer to count with.</param>
     /// <param name="tokensWithMessage">What the chat costs together with the message about to be sent, with the context window of the model.</param>
+    /// <param name="options">The settings of compressing, read once for this decision.</param>
     /// <param name="token">Ends the count when nobody needs the answer anymore.</param>
     /// <returns>Whether compressing is offered, or why not.</returns>
-    public async Task<ChatCompressionOffer> OfferBeforeSendingAsync(ChatThread chat, int exampleConversationLength, AIStudio.Settings.Provider provider, ConversationTokens tokensWithMessage, CancellationToken token = default)
+    public async Task<ChatCompressionOffer> OfferBeforeSendingAsync(ChatThread chat, int exampleConversationLength, AIStudio.Settings.Provider provider, ConversationTokens tokensWithMessage, ChatCompressionOptions options, CancellationToken token = default)
     {
         // The message is in the input field, so an unanswered last message is summarized rather than taken along:
         var plan = ChatCompressionPlan.Of(chat, exampleConversationLength, draftIsEmpty: false);
-        var offer = OfferBeforeCounting(tokensWithMessage.Window, plan is not null, tokensWithMessage.DraftTokens);
+        var offer = OfferBeforeCounting(tokensWithMessage.Window, plan is not null, tokensWithMessage.DraftTokens, options);
         if (offer is not ChatCompressionOffer.OFFERED || plan is null)
             return offer;
 
@@ -49,7 +50,7 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
         if (!summarized.IsKnown)
             return ChatCompressionOffer.OFFERED;
 
-        return KeepsTooMuch(tokensWithMessage.Window.DefaultTokens, tokensWithMessage.Tokens, summarized.HistoryTokens)
+        return KeepsTooMuch(tokensWithMessage.Window.DefaultTokens, tokensWithMessage.Tokens, summarized.HistoryTokens, options)
             ? ChatCompressionOffer.KEEPS_TOO_MUCH
             : ChatCompressionOffer.OFFERED;
     }
@@ -66,8 +67,9 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     /// <param name="window">The context window of the model which would write the summary.</param>
     /// <param name="hasSomethingToSummarize">Whether the chat holds messages to summarize besides the last exchange, see ChatCompressionPlan.Of.</param>
     /// <param name="messageTokens">How many tokens the message about to be sent takes.</param>
+    /// <param name="options">The settings of compressing: the share from which AI Studio asks, and the most tokens of a summary.</param>
     /// <returns>Whether compressing may be offered, as far as can be told without a count, or why not; NONE without a known window, since nothing then asks before sending.</returns>
-    internal static ChatCompressionOffer OfferBeforeCounting(ContextWindow window, bool hasSomethingToSummarize, int messageTokens)
+    internal static ChatCompressionOffer OfferBeforeCounting(ContextWindow window, bool hasSomethingToSummarize, int messageTokens, ChatCompressionOptions options)
     {
         if (!window.IsKnown)
             return ChatCompressionOffer.NONE;
@@ -75,7 +77,7 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
         if (!ConversationSummaryBudget.CanSummarizeWith(window))
             return ChatCompressionOffer.WINDOW_TOO_SMALL;
 
-        if (messageTokens + ConversationSummaryBudget.TokensForTheSummary(window.DefaultTokens) >= window.DefaultTokens * ConversationTokens.SHARE_TO_ASK_BEFORE_SENDING)
+        if (messageTokens + ConversationSummaryBudget.TokensForTheSummary(window.DefaultTokens, options.MaxSummaryTokens) >= window.DefaultTokens * options.ShareToAsk)
             return ChatCompressionOffer.MESSAGE_TOO_LONG;
 
         return hasSomethingToSummarize ? ChatCompressionOffer.OFFERED : ChatCompressionOffer.NOTHING_TO_SUMMARIZE;
@@ -92,10 +94,11 @@ public sealed class ChatCompressionService(ConversationTokenCounter tokenCounter
     /// <param name="windowTokens">The context window of the model.</param>
     /// <param name="tokensWithMessage">What the chat costs together with the message about to be sent.</param>
     /// <param name="summarizedTokens">What the messages which the summary replaces cost, with their files.</param>
+    /// <param name="options">The settings of compressing: the share from which AI Studio asks, and the most tokens of a summary.</param>
     /// <returns>True when compressing would not make enough room.</returns>
-    internal static bool KeepsTooMuch(int windowTokens, int tokensWithMessage, int summarizedTokens)
+    internal static bool KeepsTooMuch(int windowTokens, int tokensWithMessage, int summarizedTokens, ChatCompressionOptions options)
     {
-        var tokensAfterCompressing = tokensWithMessage - summarizedTokens + ConversationSummaryBudget.TokensForTheSummary(windowTokens);
-        return tokensAfterCompressing >= windowTokens * ConversationTokens.SHARE_TO_ASK_BEFORE_SENDING;
+        var tokensAfterCompressing = tokensWithMessage - summarizedTokens + ConversationSummaryBudget.TokensForTheSummary(windowTokens, options.MaxSummaryTokens);
+        return tokensAfterCompressing >= windowTokens * options.ShareToAsk;
     }
 }

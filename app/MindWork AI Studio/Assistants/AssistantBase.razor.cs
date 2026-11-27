@@ -865,7 +865,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         var parts = ConversationParts.Of(thread, thread.SystemPrompt, string.Empty, null, this.ProviderSettings.SupportsImageInput(), null);
         var tokens = await this.TokenCounter.CountAsync(this.ProviderSettings, parts, thread.ReportedHistoryFor(this.ProviderSettings.Model), this.CancellationTokenSource?.Token ?? CancellationToken.None);
-        if (!tokens.AsksBeforeSending)
+        if (!tokens.AsksBeforeSending(ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression).ShareToAsk))
             return true;
 
         this.askedAboutContextWindow = true;

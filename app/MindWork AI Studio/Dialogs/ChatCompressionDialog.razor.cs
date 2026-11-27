@@ -71,6 +71,7 @@ public partial class ChatCompressionDialog : MSGComponentBase
     private string issue = string.Empty;
     private bool isSummarizing;
     private ConversationSummaryProgress progress;
+    private ChatCompressionOptions options = ChatCompressionOptions.DEFAULT;
 
     #region Overrides of ComponentBase
 
@@ -79,6 +80,10 @@ public partial class ChatCompressionDialog : MSGComponentBase
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         this.chatName = this.SuggestedName;
+
+        // Read once, so that the summary uses the settings the dialog opened with:
+        this.options = ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression);
+        this.focus = this.options.PreselectedFocus;
         await base.OnInitializedAsync();
     }
 
@@ -126,7 +131,7 @@ public partial class ChatCompressionDialog : MSGComponentBase
             this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(ChatCompressionDialog)}: showing the progress of the summary");
         });
 
-        var result = await this.ConversationSummary.RunAsync(new ConversationSummaryRequest(this.SourceChat, this.Plan, this.focus, progressReporter), new AIOperationContext(this.ProviderSettings), this.cancellationTokenSource.Token);
+        var result = await this.ConversationSummary.RunAsync(new ConversationSummaryRequest(this.SourceChat, this.Plan, this.focus, this.options.MaxSummaryTokens, progressReporter), new AIOperationContext(this.ProviderSettings), this.cancellationTokenSource.Token);
 
         // The user canceled, and the dialog is gone already:
         if (this.cancellationTokenSource.IsCancellationRequested)

@@ -12,7 +12,7 @@ namespace AIStudio.Chat.Embedded;
 public static class EmbeddedChatTokenBudget
 {
     /// <summary>
-    /// From which share of the context on the chat warns.
+    /// From which share of the context on the chat warns, unless AI Studio asks before sending from a lower share already.
     /// </summary>
     public const double WARNING_SHARE = 0.8;
 
@@ -25,8 +25,9 @@ public static class EmbeddedChatTokenBudget
     /// Decides how much room a chat has left.
     /// </summary>
     /// <param name="tokens">What the conversation costs, with the system prompt, and the context of the model.</param>
+    /// <param name="shareToAsk">The share of the context from which AI Studio asks before sending, see ChatCompressionOptions.ShareToAsk; the chat warns from it at the latest.</param>
     /// <returns>The state of the budget.</returns>
-    public static EmbeddedChatTokenBudgetState Of(ConversationTokens tokens)
+    public static EmbeddedChatTokenBudgetState Of(ConversationTokens tokens, double shareToAsk)
     {
         if (!tokens.IsKnown || !tokens.Window.IsKnown)
             return EmbeddedChatTokenBudgetState.UNKNOWN;
@@ -35,7 +36,7 @@ public static class EmbeddedChatTokenBudget
         if (tokens.Tokens > window - RESERVE_TOKENS)
             return EmbeddedChatTokenBudgetState.FULL;
 
-        return tokens.Tokens >= window * WARNING_SHARE ? EmbeddedChatTokenBudgetState.WARNING : EmbeddedChatTokenBudgetState.OK;
+        return tokens.Tokens >= window * Math.Min(WARNING_SHARE, shareToAsk) ? EmbeddedChatTokenBudgetState.WARNING : EmbeddedChatTokenBudgetState.OK;
     }
 
     /// <summary>
@@ -48,10 +49,11 @@ public static class EmbeddedChatTokenBudget
     /// </remarks>
     /// <param name="tokens">What the conversation costs, with the system prompt, and the context of the model.</param>
     /// <param name="showsContextWindow">Whether the chat shows the context window.</param>
+    /// <param name="shareToAsk">The share of the context from which AI Studio asks before sending, see ChatCompressionOptions.ShareToAsk.</param>
     /// <returns>The state of the budget the chat shows.</returns>
-    public static EmbeddedChatTokenBudgetState Shown(ConversationTokens tokens, bool showsContextWindow)
+    public static EmbeddedChatTokenBudgetState Shown(ConversationTokens tokens, bool showsContextWindow, double shareToAsk)
     {
-        var state = Of(tokens);
+        var state = Of(tokens, shareToAsk);
         return showsContextWindow || state is EmbeddedChatTokenBudgetState.FULL ? state : EmbeddedChatTokenBudgetState.UNKNOWN;
     }
 
@@ -60,18 +62,19 @@ public static class EmbeddedChatTokenBudget
     /// </summary>
     /// <remarks>
     /// The chat refuses a message after which the conversation would be full, see RESERVE_TOKENS; before that, it asks
-    /// from the share on from which the chat page asks as well, see ConversationTokens.SHARE_TO_ASK_BEFORE_SENDING. In
+    /// from the share on from which the chat page asks as well, see ChatCompressionOptions.ShareToAsk. In
     /// a small window, the reserve comes first; in a large one, the share does. A chat which hides the context window
     /// does not ask, since its question would name the window; it only refuses, see Shown.
     /// </remarks>
     /// <param name="tokensWithMessage">What the conversation costs together with the message, and the context of the model.</param>
     /// <param name="showsContextWindow">Whether the chat shows the context window.</param>
+    /// <param name="shareToAsk">The share of the context from which AI Studio asks before sending, see ChatCompressionOptions.ShareToAsk.</param>
     /// <returns>What to tell the user.</returns>
-    public static EmbeddedChatSendNotice NoticeBeforeSending(ConversationTokens tokensWithMessage, bool showsContextWindow)
+    public static EmbeddedChatSendNotice NoticeBeforeSending(ConversationTokens tokensWithMessage, bool showsContextWindow, double shareToAsk)
     {
-        if (Of(tokensWithMessage) is EmbeddedChatTokenBudgetState.FULL)
+        if (Of(tokensWithMessage, shareToAsk) is EmbeddedChatTokenBudgetState.FULL)
             return EmbeddedChatSendNotice.FULL;
 
-        return showsContextWindow && tokensWithMessage.AsksBeforeSending ? EmbeddedChatSendNotice.NEARLY_FULL : EmbeddedChatSendNotice.NONE;
+        return showsContextWindow && tokensWithMessage.AsksBeforeSending(shareToAsk) ? EmbeddedChatSendNotice.NEARLY_FULL : EmbeddedChatSendNotice.NONE;
     }
 }

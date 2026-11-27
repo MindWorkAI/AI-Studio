@@ -24,15 +24,6 @@ public readonly record struct ConversationTokens
     public static readonly ConversationTokens UNAVAILABLE = new();
 
     /// <summary>
-    /// From which share of the context window on AI Studio asks before it sends a message, see AsksBeforeSending.
-    /// </summary>
-    /// <remarks>
-    /// Not only once the window overflows: most models count their answer into the window, so the
-    /// last few percent leave little room for it, and the next message would no longer fit.
-    /// </remarks>
-    public const double SHARE_TO_ASK_BEFORE_SENDING = 0.95;
-
-    /// <summary>
     /// How much of the context window of the model the counted parts take, e.g., 0.5 for half of it.
     /// </summary>
     /// <remarks>
@@ -44,13 +35,19 @@ public readonly record struct ConversationTokens
         : 0d;
 
     /// <summary>
-    /// Whether the counted parts take so much of the context window that AI Studio asks before it sends them.
+    /// Whether the counted parts take so much of the context window that AI Studio acts before it sends them.
     /// </summary>
     /// <remarks>
+    /// Not only once the window overflows: most models count their answer into the window, so the last few
+    /// percent leave little room for it, and the next message would no longer fit. The share is a setting, see
+    /// ChatCompressionOptions.ShareToAsk.<br/><br/>
+    ///
     /// Never when the window is unknown, e.g., for many self-hosted models: the notice then stays
     /// away, just as the number under the input field keeps its colour.
     /// </remarks>
-    public bool AsksBeforeSending => this.FillShare >= SHARE_TO_ASK_BEFORE_SENDING;
+    /// <param name="shareToAsk">The share of the context window from which AI Studio acts, e.g., 0.95.</param>
+    /// <returns>True from the share on, never without a known window.</returns>
+    public bool AsksBeforeSending(double shareToAsk) => this.FillShare >= shareToAsk;
 
     /// <summary>
     /// Whether anything could be counted.

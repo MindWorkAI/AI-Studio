@@ -16,6 +16,8 @@ namespace AIStudio.Tests.Chat;
 [TestFixture]
 public sealed class ConversationTokensTests
 {
+    private const double SHARE_TO_ASK = 0.95;
+
     [TestCase(1, 100, false)]
     [TestCase(100, 100, false, Description = "Exactly the limit still fits. It is a maximum, not a threshold.")]
     [TestCase(101, 100, true)]
@@ -168,7 +170,21 @@ public sealed class ConversationTokensTests
             Window = ContextWindow.Of(window),
         };
 
-        Assert.That(counted.AsksBeforeSending, Is.EqualTo(asks));
+        Assert.That(counted.AsksBeforeSending(SHARE_TO_ASK), Is.EqualTo(asks));
+    }
+
+    [TestCase(5_999, 0.6, false, TestName = "Below a lower share nothing is asked")]
+    [TestCase(6_000, 0.6, true, TestName = "A lower share asks earlier")]
+    public void TheShareOfTheSettingsDecides(int historyTokens, double shareToAsk, bool asks)
+    {
+        var counted = new ConversationTokens
+        {
+            IsKnown = true,
+            HistoryTokens = historyTokens,
+            Window = ContextWindow.Of(10_000),
+        };
+
+        Assert.That(counted.AsksBeforeSending(shareToAsk), Is.EqualTo(asks));
     }
 
     [Test]
@@ -184,7 +200,7 @@ public sealed class ConversationTokensTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(counted.FillShare, Is.Zero, "A share of an unknown total would be a number made up on the spot.");
-            Assert.That(counted.AsksBeforeSending, Is.False, "Nobody wrote the window down, so nobody can say that it is full.");
+            Assert.That(counted.AsksBeforeSending(SHARE_TO_ASK), Is.False, "Nobody wrote the window down, so nobody can say that it is full.");
         }
     }
 }

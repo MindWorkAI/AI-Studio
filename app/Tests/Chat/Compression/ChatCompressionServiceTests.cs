@@ -21,13 +21,13 @@ public sealed class ChatCompressionServiceTests
     [TestCase(ConversationSummaryBudget.MIN_CONTEXT_WINDOW - 1, true, 10, ChatCompressionOffer.WINDOW_TOO_SMALL, TestName = "A model below the minimum writes no summary")]
     public void WhatSpeaksAgainstCompressingBeforeCounting(int window, bool hasSomethingToSummarize, int messageTokens, ChatCompressionOffer expected)
     {
-        Assert.That(ChatCompressionService.OfferBeforeCounting(ContextWindow.Of(window), hasSomethingToSummarize, messageTokens), Is.EqualTo(expected));
+        Assert.That(ChatCompressionService.OfferBeforeCounting(ContextWindow.Of(window), hasSomethingToSummarize, messageTokens, ChatCompressionOptions.DEFAULT), Is.EqualTo(expected));
     }
 
     [Test]
     public void WithoutAWindowNothingIsSaidAboutCompressing()
     {
-        Assert.That(ChatCompressionService.OfferBeforeCounting(ContextWindow.UNKNOWN, true, 500), Is.EqualTo(ChatCompressionOffer.NONE), "Without a window, AI Studio does not ask before sending at all.");
+        Assert.That(ChatCompressionService.OfferBeforeCounting(ContextWindow.UNKNOWN, true, 500, ChatCompressionOptions.DEFAULT), Is.EqualTo(ChatCompressionOffer.NONE), "Without a window, AI Studio does not ask before sending at all.");
     }
 
     [TestCase(32_000, 31_000, 25_000, false, TestName = "Summarizing most of the chat makes room")]
@@ -35,6 +35,30 @@ public sealed class ChatCompressionServiceTests
     [TestCase(32_000, 31_000, 7_000, true, TestName = "The last exchange and the summary together still fill the window")]
     public void WhatCompressingKeepsDecidesWhetherItHelps(int window, int tokensWithMessage, int summarizedTokens, bool expected)
     {
-        Assert.That(ChatCompressionService.KeepsTooMuch(window, tokensWithMessage, summarizedTokens), Is.EqualTo(expected), "Compressing takes off only the summarized messages and adds the room for the summary.");
+        Assert.That(ChatCompressionService.KeepsTooMuch(window, tokensWithMessage, summarizedTokens, ChatCompressionOptions.DEFAULT), Is.EqualTo(expected), "Compressing takes off only the summarized messages and adds the room for the summary.");
+    }
+
+    [Test]
+    public void ALowerShareMakesCompressingHelpLessOften()
+    {
+        var options = ChatCompressionOptions.DEFAULT with { ShareToAsk = 0.5 };
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ChatCompressionService.KeepsTooMuch(32_000, 31_000, 16_000, ChatCompressionOptions.DEFAULT), Is.False, "At 95 percent, the compressed chat stays below the share.");
+            Assert.That(ChatCompressionService.KeepsTooMuch(32_000, 31_000, 16_000, options), Is.True, "At 50 percent, the same chat would reach the share again right away.");
+        }
+    }
+
+    [Test]
+    public void AShorterSummaryLeavesMoreRoomForTheMessage()
+    {
+        var options = ChatCompressionOptions.DEFAULT with { MaxSummaryTokens = 1_024 };
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ChatCompressionService.OfferBeforeCounting(ContextWindow.Of(32_000), true, 23_000, ChatCompressionOptions.DEFAULT), Is.EqualTo(ChatCompressionOffer.MESSAGE_TOO_LONG), "A message and a summary of 8,000 tokens fill the window.");
+            Assert.That(ChatCompressionService.OfferBeforeCounting(ContextWindow.Of(32_000), true, 23_000, options), Is.EqualTo(ChatCompressionOffer.OFFERED), "With a summary of at most 1,024 tokens, the message fits.");
+        }
     }
 }

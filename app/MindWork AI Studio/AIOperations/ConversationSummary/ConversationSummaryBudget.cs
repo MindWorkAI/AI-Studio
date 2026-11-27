@@ -17,16 +17,6 @@ public static class ConversationSummaryBudget
     public const int MIN_TOKENS_FOR_THE_SUMMARY = 1_024;
 
     /// <summary>
-    /// The most room kept free for the summary the AI writes.
-    /// </summary>
-    /// <remarks>
-    /// Context windows of 250,000 tokens and more are common by now. A summary of 8,192 tokens takes
-    /// a small share of them, yet keeps room for the details of a long conversation. A summary meant
-    /// to save tokens has no business being longer anyway.
-    /// </remarks>
-    public const int MAX_TOKENS_FOR_THE_SUMMARY = 8_192;
-
-    /// <summary>
     /// The smallest context window a model needs for writing a summary.
     /// </summary>
     /// <remarks>
@@ -62,13 +52,15 @@ public static class ConversationSummaryBudget
     /// How many tokens the summary should take in a model with the given context window.
     /// </summary>
     /// <remarks>
-    /// A quarter of the window, at least MIN_TOKENS_FOR_THE_SUMMARY and at most MAX_TOKENS_FOR_THE_SUMMARY.
+    /// A quarter of the window, at least MIN_TOKENS_FOR_THE_SUMMARY and at most what the settings allow, see
+    /// DataChatCompression.MaxSummaryTokens.
     /// It is a target, not a limit: the AI is asked for a summary of this length, and one which grows
     /// far beyond it is shortened once, see ConversationSummaryOperation.RunAsync.
     /// </remarks>
     /// <param name="windowTokens">The context window of the model which writes the summary.</param>
+    /// <param name="maxSummaryTokens">The most tokens a summary should take; never fewer than MIN_TOKENS_FOR_THE_SUMMARY.</param>
     /// <returns>The tokens kept free for the summary.</returns>
-    public static int TokensForTheSummary(int windowTokens) => Math.Clamp(windowTokens / 4, MIN_TOKENS_FOR_THE_SUMMARY, MAX_TOKENS_FOR_THE_SUMMARY);
+    public static int TokensForTheSummary(int windowTokens, int maxSummaryTokens) => Math.Clamp(windowTokens / 4, MIN_TOKENS_FOR_THE_SUMMARY, Math.Max(MIN_TOKENS_FOR_THE_SUMMARY, maxSummaryTokens));
 
     /// <summary>
     /// Whether a summary grew so long beyond the room kept for it that the AI has to shorten it.

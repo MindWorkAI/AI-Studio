@@ -140,7 +140,7 @@ public sealed class ConversationSummaryOperation(ConversationTokenCounter tokenC
                 messages.Add(await this.CountAsync(provider, ConversationSummaryInput.Render(block, ++number, text, keptMessage), token));
             }
 
-            var tokensForTheSummary = window.IsKnown ? ConversationSummaryBudget.TokensForTheSummary(window.DefaultTokens) : 0;
+            var tokensForTheSummary = window.IsKnown ? ConversationSummaryBudget.TokensForTheSummary(window.DefaultTokens, request.MaxSummaryTokens) : 0;
             var tokensForMessagesAndSummary = window.IsKnown ? await this.TokensForMessagesAndSummaryAsync(provider, window.DefaultTokens, tokensForTheSummary, request.Focus, token) : int.MaxValue;
 
             // There has to be room for a part next to a summary so far which takes all the room kept for it, which a long focus may take away:

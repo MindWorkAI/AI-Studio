@@ -959,7 +959,9 @@ public partial class ChatComponent : MSGComponentBase
             if (this.conversationTokens.TooManyImages || this.conversationTokens.FillShare >= 1d)
                 return "token-budget-exceeded";
 
-            return this.conversationTokens.FillShare >= WINDOW_NEARLY_FULL ? "token-budget-nearly-full" : string.Empty;
+            // The number warns before AI Studio asks, also when the user lets it ask early:
+            var nearlyFull = Math.Min(WINDOW_NEARLY_FULL, ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression).ShareToAsk);
+            return this.conversationTokens.FillShare >= nearlyFull ? "token-budget-nearly-full" : string.Empty;
         }
     }
     
@@ -2385,11 +2387,12 @@ public partial class ChatComponent : MSGComponentBase
     /// <returns>True when the message is to be sent.</returns>
     private async Task<bool> ConfirmContextWindowAsync()
     {
-        if (!this.conversationTokens.AsksBeforeSending)
+        var options = ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression);
+        if (!this.conversationTokens.AsksBeforeSending(options.ShareToAsk))
             return true;
 
         var offer = this.AllowsCompression
-            ? await this.CompressionService.OfferBeforeSendingAsync(this.ChatThread!, this.ExampleConversationLengthOf(this.ChatThread!), this.Provider, this.conversationTokens)
+            ? await this.CompressionService.OfferBeforeSendingAsync(this.ChatThread!, this.ExampleConversationLengthOf(this.ChatThread!), this.Provider, this.conversationTokens, options)
             : ChatCompressionOffer.NONE;
 
         switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, this.conversationTokens, ContextWindowFullSubject.CHAT, offer))
