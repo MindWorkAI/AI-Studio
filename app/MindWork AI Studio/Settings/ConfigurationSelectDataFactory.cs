@@ -52,6 +52,14 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Always use the default chat provider when loading chats"), LoadingChatProviderBehavior.ALWAYS_USE_DEFAULT_CHAT_PROVIDER);
     }
     
+    public static IEnumerable<ConfigurationSelectData<ContextWindowFullBehavior>> GetContextWindowFullBehaviorData()
+    {
+        yield return new(TB("Ask me what to do"), ContextWindowFullBehavior.ASK);
+        yield return new(TB("Compress automatically and continue in a new chat"), ContextWindowFullBehavior.COMPRESS_INTO_NEW_CHAT);
+        yield return new(TB("Compress automatically and replace the earlier messages"), ContextWindowFullBehavior.COMPRESS_AND_REPLACE);
+        yield return new(TB("Send the message without asking"), ContextWindowFullBehavior.SEND_WITHOUT_ASKING);
+    }
+
     public static IEnumerable<ConfigurationSelectData<AddChatProviderBehavior>> GetAddChatProviderBehavior()
     {
         yield return new(TB("Use the latest LLM provider, which was used before; use the default chat provider initially"), AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER);

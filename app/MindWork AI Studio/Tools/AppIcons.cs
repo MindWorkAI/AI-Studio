@@ -1127,6 +1127,9 @@ public static class AppIcons
     /// <summary>Reports success or a completed, confirmed, or configured state.</summary>
     public const string SUCCESS = LucideIcons.CIRCLE_CHECK;
 
+    /// <summary>Marks what a summary should pay particular attention to, such as when compressing a chat.</summary>
+    public const string SUMMARY_FOCUS = LucideIcons.FOCUS;
+
     /// <summary>Marks the supporters of AI Studio.</summary>
     public const string SUPPORTERS = LucideIcons.HEART;
 
