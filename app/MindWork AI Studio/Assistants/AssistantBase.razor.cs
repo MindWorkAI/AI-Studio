@@ -287,7 +287,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     /// <summary>
     /// What this assistant holds once its defaults are applied, before the user changed anything; null until
-    /// then, e.g. for a hidden assistant which sends the user to the overview instead.
+    /// then, e.g., for a hidden assistant which sends the user to the overview instead.
     /// </summary>
     /// <remarks>
     /// When the user leaves the assistant, it stores a draft only if its state differs from this one, see
@@ -1311,7 +1311,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// Restores what this assistant held when the user left it, see SaveDraftIfChanged.
     /// </summary>
     /// <remarks>
-    /// A draft is no run, so this component takes over no session ID and does not count as attached to a
+    /// A draft is not a run, so this component takes over no session ID and does not count as attached to a
     /// session: an assistant such as the I18N one loads its data anew, as on any other start. Flags of work
     /// in progress stay as they are, see AssistantSessionStateKey.IsKeptOutOfDrafts.
     /// </remarks>

@@ -88,7 +88,7 @@ public sealed class AssistantState : IAssistantSessionValue
 
     /// <inheritdoc />
     /// <remarks>
-    /// Compares the values of all fields. Whether a web content cleaner runs is no input and does not count,
+    /// Compares the values of all fields. Whether a web content cleaner runs is not an input and does not count,
     /// see WebContentState.HasSameInputsAs.
     /// </remarks>
     public bool HasSameValueAs(object other) => other is AssistantState otherState

@@ -151,7 +151,7 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     /// Stores what an assistant holds when the user leaves it, so that it is there again when the user comes back.
     /// </summary>
     /// <remarks>
-    /// A draft is no run: neither <see cref="GetSnapshots"/> nor <see cref="HasActiveSessions"/> sees it, so
+    /// A draft is not a run: neither <see cref="GetSnapshots"/> nor <see cref="HasActiveSessions"/> sees it, so
     /// the assistant overview shows no status for it, and AI Studio may close without asking. It lives in
     /// memory only, until AI Studio closes, the user resets the assistant, or a text is sent to it. A newer
     /// draft replaces the older one. A draft holds everything its assistant captures, such as the chat

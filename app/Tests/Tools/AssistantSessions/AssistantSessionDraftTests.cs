@@ -11,7 +11,7 @@ namespace AIStudio.Tests.Tools.AssistantSessions;
 /// Checks the drafts which keep what an assistant holds while the user is elsewhere in AI Studio.
 /// </summary>
 /// <remarks>
-/// A draft is no run: it must neither show up as one, e.g. as a status in the assistant overview, nor
+/// A draft is not a run: it must neither show up as one, e.g., as a status in the assistant overview, nor
 /// outlive a reset of its assistant or a text sent to it, which would otherwise overwrite that text.
 /// </remarks>
 [TestFixture]
@@ -39,7 +39,7 @@ public sealed class AssistantSessionDraftTests
 
         Assert.That(draft, Is.Not.Null);
         Assert.That(draft!.Key, Is.EqualTo(TRANSLATION_KEY));
-        Assert.That(draft.IsActive, Is.False, "A draft is no run.");
+        Assert.That(draft.IsActive, Is.False, "A draft is not a run.");
         Assert.That(TextOf(draft), Is.EqualTo("hello"));
     }
 
@@ -168,7 +168,7 @@ public sealed class AssistantSessionDraftTests
             .Select(field => $"{field.DeclaringType!.Name}.{field.Name}")
             .ToList();
 
-        Assert.That(restoredFromDrafts, Is.Empty, "Work outside of a run ends with the component which did it, so a flag restored from a draft stays set for good and may lock the form. Pass isKeptOutOfDrafts: true, or list a key which is no such flag in NO_FLAGS_OF_WORK_IN_PROGRESS.");
+        Assert.That(restoredFromDrafts, Is.Empty, "Work outside of a run ends with the component which did it, so a flag restored from a draft stays set for good and may lock the form. Pass isKeptOutOfDrafts: true, or list a key which is not such a flag in NO_FLAGS_OF_WORK_IN_PROGRESS.");
     }
 
     [Test]
@@ -194,7 +194,7 @@ public sealed class AssistantSessionDraftTests
         state.Set(TEXT_KEY, string.Empty);
         state.Set(IS_VALID_KEY, true);
 
-        Assert.That(AssistantLowerBase.IsWorthADraft(state.ToDictionary(), stateWithDefaults.ToDictionary(), holdsSentText: false), Is.False, "A value which follows from the inputs, which did not change, is no change of its own.");
+        Assert.That(AssistantLowerBase.IsWorthADraft(state.ToDictionary(), stateWithDefaults.ToDictionary(), holdsSentText: false), Is.False, "A value which follows from the inputs, which did not change, is not a change on its own.");
     }
 
     [Test]
@@ -208,7 +208,7 @@ public sealed class AssistantSessionDraftTests
         state.Set(TEXT_KEY, string.Empty);
         state.Set(IS_READING_KEY, true);
 
-        Assert.That(AssistantLowerBase.IsWorthADraft(state.ToDictionary(), stateWithDefaults.ToDictionary(), holdsSentText: false), Is.False, "Work in progress is no change the user made.");
+        Assert.That(AssistantLowerBase.IsWorthADraft(state.ToDictionary(), stateWithDefaults.ToDictionary(), holdsSentText: false), Is.False, "Work in progress is not a change the user made.");
     }
 
     [TestCase(typeof(AssistantLowerBase), "INPUT_IS_VALID_STATE_KEY")]

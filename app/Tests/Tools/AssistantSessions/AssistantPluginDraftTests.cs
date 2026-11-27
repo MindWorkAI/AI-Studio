@@ -58,7 +58,7 @@ public sealed class AssistantPluginDraftTests
 
         form.WebContent["page"].CleanerIsRunning = true;
 
-        Assert.That(AssistantLowerBase.IsWorthADraft(Capture(form), stateWithDefaults, holdsSentText: false), Is.False, "Work in progress is no change the user made.");
+        Assert.That(AssistantLowerBase.IsWorthADraft(Capture(form), stateWithDefaults, holdsSentText: false), Is.False, "Work in progress is not a change the user made.");
     }
 
     [Test]

@@ -25,7 +25,7 @@ public sealed class WebContentState
     /// Tells whether another state holds the same inputs as this one.
     /// </summary>
     /// <remarks>
-    /// Whether the content cleaner runs is no input: it is work in progress, which ends with the component that started it.
+    /// Whether the content cleaner runs is not an input: it is work in progress, which ends with the component that started it.
     /// </remarks>
     /// <param name="other">The state to compare with.</param>
     /// <returns><c>true</c> when both states hold the same inputs; otherwise, <c>false</c>.</returns>
