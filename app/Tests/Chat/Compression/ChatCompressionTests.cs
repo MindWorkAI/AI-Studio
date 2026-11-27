@@ -260,6 +260,21 @@ public sealed class ChatCompressionTests
     }
 
     [Test]
+    public void WithinTheSameChatTheMessageBeingWrittenStays()
+    {
+        var chat = Chat(
+            Block(ChatRole.USER, "First question", 1),
+            Block(ChatRole.AI, "First answer", 2),
+            Block(ChatRole.USER, "Second question", 3),
+            Block(ChatRole.AI, "Second answer", 4));
+        chat.Draft.SetText("The message being written");
+
+        ChatCompression.TurnIntoContinuation(chat, 0, ChatCompressionTarget.SAME_CHAT, "The summary", ChatRestrictions.NONE, "provider-1");
+
+        Assert.That(chat.Draft.Text, Is.EqualTo("The message being written"), "A chat compressed before sending sends this message right afterward.");
+    }
+
+    [Test]
     public void TheLastMessageFollowsTheSummaryUnchanged()
     {
         var message = ChatCompression.WithLastMessage(ChatCompressionTarget.NEW_CHAT, "**Summary of the chat 'Budget 2027'**", "What about  the travel costs?\n");

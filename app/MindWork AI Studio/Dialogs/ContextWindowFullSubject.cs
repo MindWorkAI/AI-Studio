@@ -9,7 +9,7 @@ namespace AIStudio.Dialogs;
 public enum ContextWindowFullSubject
 {
     /// <summary>
-    /// A message of the chat page, which compressing continues in a new chat.
+    /// A message of the chat page, whose chat compressing continues in a new chat or in place, see ChatCompressionTarget.
     /// </summary>
     CHAT,
 

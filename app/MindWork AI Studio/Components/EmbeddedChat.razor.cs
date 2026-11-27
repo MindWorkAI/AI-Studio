@@ -586,7 +586,7 @@ public partial class EmbeddedChat : MSGComponentBase
                 return await this.ConfirmContextWindowAsync(message, mayCompressAutomatically: false);
         }
 
-        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, offer, canSendAnyway, recheckOffer: () => this.OfferCompressionAsync(thread, tokensWithMessage, ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression))))
+        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, offer, canSendAnyway, ChatCompressionTarget.SAME_CHAT, recheckOffer: () => this.OfferCompressionAsync(thread, tokensWithMessage, ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression))))
         {
             case ContextWindowFullDecision.SEND_ANYWAY:
                 return true;

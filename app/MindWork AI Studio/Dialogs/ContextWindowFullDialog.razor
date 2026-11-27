@@ -1,3 +1,4 @@
+@using AIStudio.Chat.Compression
 @using AIStudio.Settings.DataModel
 @inherits MSGComponentBase
 
@@ -43,7 +44,7 @@
                 </MudJustifiedText>
             }
 
-            @if (this.CanCompress && this.Subject is ContextWindowFullSubject.EMBEDDED_CHAT)
+            @if (this.CanCompress && this.CompressionTarget is ChatCompressionTarget.SAME_CHAT)
             {
                 <MudJustifiedText Typo="Typo.body1">
                     @TA("When you compress the conversation, the AI summarizes it, and the summary takes the place of the earlier messages. Your message stays in the input field, so you can send it afterward.")

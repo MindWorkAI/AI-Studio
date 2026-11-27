@@ -62,6 +62,12 @@ public partial class ContextWindowFullDialog : MSGComponentBase
     public bool CanSendAnyway { get; set; } = true;
 
     /// <summary>
+    /// Where the conversation goes on when the user compresses, which decides the wording.
+    /// </summary>
+    [Parameter]
+    public ChatCompressionTarget CompressionTarget { get; set; } = ChatCompressionTarget.NEW_CHAT;
+
+    /// <summary>
     /// Decides again whether compressing is offered, with the settings as they are now; null where nothing compresses.
     /// </summary>
     /// <remarks>
@@ -86,9 +92,10 @@ public partial class ContextWindowFullDialog : MSGComponentBase
     /// <param name="subject">What is about to be sent.</param>
     /// <param name="offer">Whether compressing is offered, or why it would not help; NONE where nothing compresses.</param>
     /// <param name="canSendAnyway">Whether the user may send the message anyway, e.g., not where the chat refuses a message which no longer fits.</param>
+    /// <param name="compressionTarget">Where the conversation goes on when the user compresses.</param>
     /// <param name="recheckOffer">Decides again whether compressing is offered, once the user changed the settings; null where nothing compresses.</param>
     /// <returns>What the user decided; CANCEL when the dialog was closed.</returns>
-    public static async Task<ContextWindowFullDecision> ShowAsync(IDialogService dialogService, ConversationTokens tokens, ContextWindowFullSubject subject, ChatCompressionOffer offer, bool canSendAnyway = true, Func<Task<ChatCompressionOffer>>? recheckOffer = null)
+    public static async Task<ContextWindowFullDecision> ShowAsync(IDialogService dialogService, ConversationTokens tokens, ContextWindowFullSubject subject, ChatCompressionOffer offer, bool canSendAnyway = true, ChatCompressionTarget compressionTarget = ChatCompressionTarget.NEW_CHAT, Func<Task<ChatCompressionOffer>>? recheckOffer = null)
     {
         var isWindowExceeded = tokens.FillShare >= 1d;
         var culture = I18N.I.Culture;
@@ -100,6 +107,7 @@ public partial class ContextWindowFullDialog : MSGComponentBase
             { x => x.Subject, subject },
             { x => x.Offer, offer },
             { x => x.CanSendAnyway, canSendAnyway },
+            { x => x.CompressionTarget, compressionTarget },
             { x => x.RecheckOffer, recheckOffer },
         };
 
@@ -142,6 +150,7 @@ public partial class ContextWindowFullDialog : MSGComponentBase
         ChatCompressionOffer.MESSAGE_TOO_LONG => TA("Compressing would not help, since your message alone nearly fills the context window of the model."),
         ChatCompressionOffer.NOTHING_TO_SUMMARIZE => TA("Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI."),
         ChatCompressionOffer.KEEPS_TOO_MUCH when this.Subject is ContextWindowFullSubject.EMBEDDED_CHAT => TA("Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model."),
+        ChatCompressionOffer.KEEPS_TOO_MUCH when this.CompressionTarget is ChatCompressionTarget.SAME_CHAT => TA("Compressing would not help, since the system prompt, your last message with its files, and the last answer of the AI stay word for word, and together with your new message, they still nearly fill the context window of the model."),
         ChatCompressionOffer.KEEPS_TOO_MUCH => TA("Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model."),
         _ => null,
     };

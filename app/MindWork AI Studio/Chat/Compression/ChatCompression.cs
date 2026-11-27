@@ -14,7 +14,8 @@ namespace AIStudio.Chat.Compression;
 /// tools, the data sources, the system prompt, and above all the restrictions, which say what the
 /// conversation has seen and which providers and tools may still see it. Only the messages are
 /// replaced, before the copy is stored for the first time. An embedded chat of an assistant has no
-/// workspace to keep the original in, so its copy replaces it, see ChatCompressionTarget.SAME_CHAT.
+/// workspace to keep the original in, so its copy replaces it, and a chat compressed in place changes
+/// itself, see ChatCompressionTarget.SAME_CHAT.
 /// </remarks>
 public static class ChatCompression
 {
@@ -59,12 +60,12 @@ public static class ChatCompression
     /// the tools returned for the summarized answers move to it, as far as the summary names them, see
     /// WebAddressesFromToolsNamedIn.
     /// </remarks>
-    /// <param name="continuation">The copy of the compressed chat, not stored yet.</param>
+    /// <param name="continuation">The copy of the compressed chat, not stored yet, or the chat itself when it is compressed in place.</param>
     /// <param name="exampleConversationLength">How many blocks the example conversation of the chat template holds, 0 without a template.</param>
     /// <param name="target">Where the conversation goes on.</param>
     /// <param name="summaryMessage">The text of the message which holds the summary, see SummaryMessage.</param>
     /// <param name="summaryRestrictions">What the filtered summary demands, which the new chat demands as well.</param>
-    /// <param name="providerId">The provider the new chat continues with: the one which wrote the summary.</param>
+    /// <param name="providerId">The provider the conversation continues with: the one of the chat, also when another model wrote the summary.</param>
     /// <exception cref="InvalidOperationException">The copy holds nothing to compress, which only happens when it is not a copy of a chat which had something.</exception>
     public static void TurnIntoContinuation(ChatThread continuation, int exampleConversationLength, ChatCompressionTarget target, string summaryMessage, ChatRestrictions summaryRestrictions, string providerId)
     {
