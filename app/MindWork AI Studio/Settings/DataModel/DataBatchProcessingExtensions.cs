@@ -1,5 +1,3 @@
-using AIStudio.Tools.Pauses;
-
 namespace AIStudio.Settings.DataModel;
 
 public static class DataBatchProcessingExtensions
@@ -8,14 +6,13 @@ public static class DataBatchProcessingExtensions
     extension(DataBatchProcessing settings)
     {
         /// <summary>
-        /// The bounds of the pause between two files which the settings preset, as the user set them
-        /// and as configuration plugins lock them, cf. PauseRange.GetEffective.
+        /// Whether a configuration plugin locks the lower bound of the pause between two files.
         /// </summary>
-        public PauseRange EffectivePauseRange => PauseRange.GetEffective(
-            DataBatchProcessing.PAUSE_LIMITS,
-            settings.MinimumDelaySeconds,
-            () => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumDelaySeconds, out var meta) && meta.IsLocked,
-            settings.MaximumDelaySeconds,
-            () => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MaximumDelaySeconds, out var meta) && meta.IsLocked);
+        public static bool IsMinimumPauseLocked => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumDelaySeconds, out var meta) && meta.IsLocked;
+
+        /// <summary>
+        /// Whether a configuration plugin locks the upper bound of the pause between two files.
+        /// </summary>
+        public static bool IsMaximumPauseLocked => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MaximumDelaySeconds, out var meta) && meta.IsLocked;
     }
 }

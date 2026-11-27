@@ -200,18 +200,9 @@ else
     @T("Processing pace")
 </MudText>
 
-@if (MinimumDelayIsManaged)
-{
-    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
-        @(string.Format(TA("Your organization requires a pause of at least {0} seconds between files."), this.ManagedMinimumDelaySeconds))
-    </MudAlert>
-}
-else
-{
-    <MudTextSlider T="int" Label="@T("Minimum pause between files")" Min="@DataBatchProcessing.PAUSE_LIMITS.ShortestSeconds" Max="@DataBatchProcessing.PAUSE_LIMITS.LongestSeconds" Step="1" Unit="@T("seconds")" @bind-Value="@this.minimumDelaySeconds" Disabled="@(() => this.isProcessingBatch)"/>
-}
-
-<MudTextSlider T="int" Label="@T("Maximum pause between files")" Min="@this.EffectiveMinimumDelaySeconds" Max="@DataBatchProcessing.PAUSE_LIMITS.LongestSeconds" Step="1" Unit="@T("seconds")" @bind-Value="@this.maximumDelaySeconds" Disabled="@(() => this.isProcessingBatch)"/>
+<ConfigurationPauseRange Limits="@DataBatchProcessing.PAUSE_LIMITS" IsSetting="false" Disabled="@(() => this.isProcessingBatch)"
+                         MinimumDescription="@T("Minimum pause between files")" Minimum="@(() => this.MinimumDelaySeconds)" MinimumUpdate="@(value => this.minimumDelaySeconds = value)" IsMinimumLocked="@(() => DataBatchProcessing.IsMinimumPauseLocked)"
+                         MaximumDescription="@T("Maximum pause between files")" Maximum="@(() => this.MaximumDelaySeconds)" MaximumUpdate="@(value => this.maximumDelaySeconds = value)" IsMaximumLocked="@(() => DataBatchProcessing.IsMaximumPauseLocked)"/>
 
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
     @T("Before the next file starts, AI Studio waits for a random number of whole seconds from this interval. The minimum is always 6 seconds and the maximum is 300 seconds (5 minutes). Restored files and the end of a run do not add another pause.")

@@ -105,19 +105,10 @@ public sealed class PauseRangeTests
     }
 
     [Test]
-    public void TheBatchProcessingTakesItsBoundsFromItsSettings()
+    public void TheBatchProcessingPausesSixToTenSecondsByDefault()
     {
-        var storedBelowTheLimit = new DataBatchProcessing
-        {
-            MinimumDelaySeconds = 0,
-            MaximumDelaySeconds = 3
-        };
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(new DataBatchProcessing().EffectivePauseRange, Is.EqualTo(new PauseRange(6, 10)));
-            Assert.That(storedBelowTheLimit.EffectivePauseRange, Is.EqualTo(new PauseRange(6, 6)));
-        }
+        var settings = new DataBatchProcessing();
+        Assert.That(PauseRange.GetEffective(BATCH_PROCESSING, settings.MinimumDelaySeconds, UNLOCKED, settings.MaximumDelaySeconds, UNLOCKED), Is.EqualTo(new PauseRange(6, 10)));
     }
 
     [Test]
