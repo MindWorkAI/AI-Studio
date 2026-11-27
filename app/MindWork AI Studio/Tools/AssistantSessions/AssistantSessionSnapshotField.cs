@@ -13,9 +13,11 @@ public sealed record AssistantSessionSnapshotField<T> : IAssistantSessionSnapsho
     /// Initializes a new typed snapshot field.
     /// </summary>
     /// <param name="value">The captured value.</param>
-    public AssistantSessionSnapshotField(T value)
+    /// <param name="countsAsChange">Whether another value of this field means that the assistant changed, see CountsAsChange.</param>
+    public AssistantSessionSnapshotField(T value, bool countsAsChange = true)
     {
         this.Value = value;
+        this.CountsAsChange = countsAsChange;
     }
 
     /// <summary>
@@ -25,6 +27,9 @@ public sealed record AssistantSessionSnapshotField<T> : IAssistantSessionSnapsho
 
     /// <inheritdoc />
     public Type ValueType => typeof(T);
+
+    /// <inheritdoc />
+    public bool CountsAsChange { get; }
 
     /// <inheritdoc />
     public bool TryRead<TValue>(out TValue? value)
@@ -55,6 +60,10 @@ public sealed record AssistantSessionSnapshotField<T> : IAssistantSessionSnapsho
 
         if (value is null || otherValue is null)
             return false;
+
+        // A value which a snapshot holds as a copy of its own, e.g., the state of an assistant plugin, compares its content itself:
+        if (value is IAssistantSessionValue sessionValue)
+            return sessionValue.HasSameValueAs(otherValue);
 
         // Nobody can change a string or a copied value type behind our back:
         if (value is string || value.GetType().IsValueType)

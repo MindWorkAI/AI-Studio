@@ -11,6 +11,16 @@ public interface IAssistantSessionSnapshotField
     Type ValueType { get; }
 
     /// <summary>
+    /// Gets whether another value of this field means that the assistant changed.
+    /// </summary>
+    /// <remarks>
+    /// Not so for a value which follows from other values or is a cache, see AssistantSessionStateKey.IsDerived,
+    /// nor for a flag of work in progress, see AssistantSessionStateKey.IsKeptOutOfDrafts: neither is a change
+    /// the user made.
+    /// </remarks>
+    bool CountsAsChange { get; }
+
+    /// <summary>
     /// Tries to read the captured value as the requested type.
     /// </summary>
     /// <typeparam name="T">The requested value type.</typeparam>

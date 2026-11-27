@@ -88,7 +88,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<HashSet<string>?> ASSISTANT_TOOL_IDS_STATE_KEY = new(nameof(assistantToolIds));
     private static readonly AssistantSessionStateKey<PluginAssistants?> ASSISTANT_PLUGIN_STATE_KEY = new(nameof(assistantPlugin));
     private static readonly AssistantSessionStateKey<AssistantState> ASSISTANT_STATE_STATE_KEY = new(nameof(assistantState));
-    private static readonly AssistantSessionStateKey<Dictionary<string, string>> IMAGE_CACHE_STATE_KEY = new(nameof(imageCache));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> IMAGE_CACHE_STATE_KEY = new(nameof(imageCache), isDerived: true);
     private static readonly AssistantSessionStateKey<HashSet<string>> EXECUTING_BUTTON_ACTIONS_STATE_KEY = new(nameof(executingButtonActions), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<HashSet<string>> EXECUTING_SWITCH_ACTIONS_STATE_KEY = new(nameof(executingSwitchActions), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<string> PLUGIN_PATH_STATE_KEY = new(nameof(pluginPath));

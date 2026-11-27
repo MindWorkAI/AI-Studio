@@ -11,10 +11,12 @@ public readonly record struct AssistantSessionStateKey<T>
     /// </summary>
     /// <param name="name">The stable dictionary name used in assistant session snapshots.</param>
     /// <param name="isKeptOutOfDrafts">Whether a draft leaves the value out, see <see cref="IsKeptOutOfDrafts"/>.</param>
-    public AssistantSessionStateKey(string name, bool isKeptOutOfDrafts = false)
+    /// <param name="isDerived">Whether the value follows from other values, see IsDerived.</param>
+    public AssistantSessionStateKey(string name, bool isKeptOutOfDrafts = false, bool isDerived = false)
     {
         this.Name = name;
         this.IsKeptOutOfDrafts = isKeptOutOfDrafts;
+        this.IsDerived = isDerived;
     }
 
     /// <summary>
@@ -32,6 +34,17 @@ public readonly record struct AssistantSessionStateKey<T>
     /// out, it keeps the value which a freshly opened assistant starts with.
     /// </remarks>
     public bool IsKeptOutOfDrafts { get; }
+
+    /// <summary>
+    /// Gets whether the value follows from other values, such as whether the form is valid, or is a cache.
+    /// </summary>
+    /// <remarks>
+    /// A draft restores such a value, but it does not count as a change of the assistant: when the user leaves an
+    /// assistant, it stores a draft only when something else changed, see AssistantLowerBase.IsWorthADraft.
+    /// A cache which fills while the assistant renders, e.g., the images of an assistant plugin, would
+    /// otherwise make every assistant look changed as soon as it was shown.
+    /// </remarks>
+    public bool IsDerived { get; }
 
     /// <summary>
     /// Returns the stable dictionary name.

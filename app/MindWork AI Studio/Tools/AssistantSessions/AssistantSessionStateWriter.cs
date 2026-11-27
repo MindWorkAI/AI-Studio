@@ -20,7 +20,7 @@ public sealed class AssistantSessionStateWriter
     /// <param name="value">The captured value.</param>
     public void Set<T>(AssistantSessionStateKey<T> key, T value)
     {
-        this.fields[key.Name] = new AssistantSessionSnapshotField<T>(value);
+        this.fields[key.Name] = new AssistantSessionSnapshotField<T>(value, countsAsChange: !key.IsDerived && !key.IsKeptOutOfDrafts);
     }
 
     /// <summary>

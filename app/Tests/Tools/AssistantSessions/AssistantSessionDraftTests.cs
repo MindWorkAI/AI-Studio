@@ -1,6 +1,7 @@
 using System.Reflection;
 
 using AIStudio.Assistants;
+using AIStudio.Assistants.Dynamic;
 using AIStudio.Tools;
 using AIStudio.Tools.AssistantSessions;
 
@@ -19,9 +20,7 @@ public sealed class AssistantSessionDraftTests
     private static readonly AssistantSessionStateKey<string> TEXT_KEY = new("Text");
     private static readonly AssistantSessionStateKey<bool> IS_READING_KEY = new("IsReading", isKeptOutOfDrafts: true);
 
-    // The names under which AssistantBase captures whether its form is valid:
-    private static readonly AssistantSessionStateKey<bool> INPUT_IS_VALID_KEY = new("InputIsValid");
-    private static readonly AssistantSessionStateKey<string[]> INPUT_ISSUES_KEY = new("InputIssues");
+    private static readonly AssistantSessionStateKey<bool> IS_VALID_KEY = new("IsValid", isDerived: true);
 
     private static readonly AssistantSessionKey TRANSLATION_KEY = new(AIStudio.Tools.Components.TRANSLATION_ASSISTANT, "translation");
     private static readonly AssistantSessionKey SUMMARIZER_KEY = new(AIStudio.Tools.Components.TEXT_SUMMARIZER_ASSISTANT, "summarizer");
@@ -185,14 +184,43 @@ public sealed class AssistantSessionDraftTests
     }
 
     [Test]
-    public void TheValidityOfTheFormAloneIsNoChange()
+    public void ADerivedValueAloneIsNoChange()
     {
-        var stateWithDefaults = StateWithText(string.Empty);
-        var state = StateWithText(string.Empty);
-        state[INPUT_IS_VALID_KEY.Name] = new AssistantSessionSnapshotField<bool>(true);
-        state[INPUT_ISSUES_KEY.Name] = new AssistantSessionSnapshotField<string[]>(["The text is missing."]);
+        var stateWithDefaults = new AssistantSessionStateWriter();
+        stateWithDefaults.Set(TEXT_KEY, string.Empty);
+        stateWithDefaults.Set(IS_VALID_KEY, false);
 
-        Assert.That(AssistantLowerBase.IsWorthADraft(state, stateWithDefaults, holdsSentText: false), Is.False, "Whether the form is valid follows from the inputs, which did not change.");
+        var state = new AssistantSessionStateWriter();
+        state.Set(TEXT_KEY, string.Empty);
+        state.Set(IS_VALID_KEY, true);
+
+        Assert.That(AssistantLowerBase.IsWorthADraft(state.ToDictionary(), stateWithDefaults.ToDictionary(), holdsSentText: false), Is.False, "A value which follows from the inputs, which did not change, is no change of its own.");
+    }
+
+    [Test]
+    public void AFlagOfWorkInProgressAloneIsNoChange()
+    {
+        var stateWithDefaults = new AssistantSessionStateWriter();
+        stateWithDefaults.Set(TEXT_KEY, string.Empty);
+        stateWithDefaults.Set(IS_READING_KEY, false);
+
+        var state = new AssistantSessionStateWriter();
+        state.Set(TEXT_KEY, string.Empty);
+        state.Set(IS_READING_KEY, true);
+
+        Assert.That(AssistantLowerBase.IsWorthADraft(state.ToDictionary(), stateWithDefaults.ToDictionary(), holdsSentText: false), Is.False, "Work in progress is no change the user made.");
+    }
+
+    [TestCase(typeof(AssistantLowerBase), "INPUT_IS_VALID_STATE_KEY")]
+    [TestCase(typeof(AssistantLowerBase), "INPUT_ISSUES_STATE_KEY")]
+    [TestCase(typeof(AssistantDynamic), "IMAGE_CACHE_STATE_KEY")]
+    public void ValuesWhichFollowFromOthersAreDerived(Type declaringType, string fieldName)
+    {
+        var field = declaringType.GetField(fieldName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        Assert.That(field, Is.Not.Null, $"The key {fieldName} is gone; update this test.");
+
+        var isDerived = field!.FieldType.GetProperty(nameof(AssistantSessionStateKey<>.IsDerived))!.GetValue(field.GetValue(null));
+        Assert.That(isDerived, Is.True, "Whether the form is valid, and a cache which fills while the assistant renders, would otherwise make an assistant look changed although the user changed nothing.");
     }
 
     [Test]
