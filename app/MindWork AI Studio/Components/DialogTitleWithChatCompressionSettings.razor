@@ -1,0 +1,10 @@
+@inherits MSGComponentBase
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+    <MudText Typo="Typo.h6" Class="flex-grow-1">
+        @this.Title
+    </MudText>
+    <MudTooltip Text="@T("Settings of chat compression")" Placement="Placement.Bottom">
+        <MudIconButton Variant="Variant.Text" Icon="@AppIcons.SETTINGS" Disabled="@this.Disabled" OnClick="@this.OpenSettingsAsync"/>
+    </MudTooltip>
+</MudStack>

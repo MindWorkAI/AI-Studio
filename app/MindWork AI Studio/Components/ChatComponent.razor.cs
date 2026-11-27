@@ -2401,11 +2401,8 @@ public partial class ChatComponent : MSGComponentBase
         if (!this.conversationTokens.AsksBeforeSending(options.ShareToAsk))
             return true;
 
-        var offer = this.AllowsCompression
-            ? await this.CompressionService.OfferBeforeSendingAsync(this.ChatThread!, this.ExampleConversationLengthOf(this.ChatThread!), this.Provider, this.conversationTokens, options)
-            : ChatCompressionOffer.NONE;
-
-        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, this.conversationTokens, ContextWindowFullSubject.CHAT, offer))
+        var offer = await this.OfferCompressionAsync(options);
+        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, this.conversationTokens, ContextWindowFullSubject.CHAT, offer, recheckOffer: () => this.OfferCompressionAsync(ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression))))
         {
             case ContextWindowFullDecision.SEND_ANYWAY:
                 return true;
@@ -2423,6 +2420,18 @@ public partial class ChatComponent : MSGComponentBase
                 return false;
         }
     }
+
+    /// <summary>
+    /// Decides whether the notice before sending offers to compress this chat, or why it would not help.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is offered where this chat does not allow compressing, see AllowsCompression.
+    /// </remarks>
+    /// <param name="options">The settings of compressing, read once for this decision.</param>
+    /// <returns>Whether compressing is offered, or why not.</returns>
+    private async Task<ChatCompressionOffer> OfferCompressionAsync(ChatCompressionOptions options) => this.AllowsCompression
+        ? await this.CompressionService.OfferBeforeSendingAsync(this.ChatThread!, this.ExampleConversationLengthOf(this.ChatThread!), this.Provider, this.conversationTokens, options)
+        : ChatCompressionOffer.NONE;
 
     private async Task LoadedChatChanged(bool notifyParent = true)
     {

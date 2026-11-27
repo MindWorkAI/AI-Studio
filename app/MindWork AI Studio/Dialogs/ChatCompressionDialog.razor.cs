@@ -94,7 +94,7 @@ public partial class ChatCompressionDialog : MSGComponentBase
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
         this.chatName = this.SuggestedName;
 
-        // Read once, so that the summary uses the settings the dialog opened with:
+        // Read once, and again only when the user changes them through the gear, see ApplyChangedSettings:
         this.options = ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression);
         this.focus = this.options.PreselectedFocus;
         this.writer = this.ChatCompressionService.ChooseWriter(this.SourceChat, this.ChatProvider);
@@ -140,6 +140,24 @@ public partial class ChatCompressionDialog : MSGComponentBase
     };
 
     private string? ValidateChatName(string? value) => string.IsNullOrWhiteSpace(value) ? TA("Please enter a chat name.") : null;
+
+    /// <summary>
+    /// Reads the settings again once the user closed them through the gear.
+    /// </summary>
+    /// <remarks>
+    /// The model which writes the summary may have changed, and so may the preselected focus. A focus the user
+    /// wrote stays; one which is still the preselected focus follows the settings.
+    /// </remarks>
+    private void ApplyChangedSettings()
+    {
+        var previousFocus = this.options.PreselectedFocus;
+        this.options = ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression);
+        if (string.IsNullOrWhiteSpace(this.focus) || this.focus == previousFocus)
+            this.focus = this.options.PreselectedFocus;
+
+        this.writer = this.ChatCompressionService.ChooseWriter(this.SourceChat, this.ChatProvider);
+        this.StateHasChanged();
+    }
 
     private async Task HandleChatNameKeyDown(KeyboardEventArgs keyEvent)
     {

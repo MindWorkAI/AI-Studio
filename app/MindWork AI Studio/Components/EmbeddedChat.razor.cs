@@ -565,11 +565,8 @@ public partial class EmbeddedChat : MSGComponentBase
             return false;
         }
 
-        var offer = this.AllowsCompression && thread.IsLLMProviderAllowed(this.Provider)
-            ? await this.CompressionService.OfferBeforeSendingAsync(thread, 0, this.Provider, tokensWithMessage, options, this.countToken)
-            : ChatCompressionOffer.NONE;
-
-        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, offer, canSendAnyway: notice is EmbeddedChatSendNotice.NEARLY_FULL))
+        var offer = await this.OfferCompressionAsync(thread, tokensWithMessage, options);
+        switch (await ContextWindowFullDialog.ShowAsync(this.DialogService, tokensWithMessage, ContextWindowFullSubject.EMBEDDED_CHAT, offer, canSendAnyway: notice is EmbeddedChatSendNotice.NEARLY_FULL, recheckOffer: () => this.OfferCompressionAsync(thread, tokensWithMessage, ChatCompressionOptions.Of(this.SettingsManager.ConfigurationData.ChatCompression))))
         {
             case ContextWindowFullDecision.SEND_ANYWAY:
                 return true;
@@ -582,6 +579,21 @@ public partial class EmbeddedChat : MSGComponentBase
                 return false;
         }
     }
+
+    /// <summary>
+    /// Decides whether the notice before sending offers to compress the conversation, or why it would not help.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is offered where the conversation does not allow compressing, see AllowsCompression, nor where the
+    /// conversation no longer allows its own provider.
+    /// </remarks>
+    /// <param name="thread">The conversation.</param>
+    /// <param name="tokensWithMessage">What the conversation costs together with the message about to be sent.</param>
+    /// <param name="options">The settings of compressing, read once for this decision.</param>
+    /// <returns>Whether compressing is offered, or why not.</returns>
+    private async Task<ChatCompressionOffer> OfferCompressionAsync(ChatThread thread, ConversationTokens tokensWithMessage, ChatCompressionOptions options) => this.AllowsCompression && thread.IsLLMProviderAllowed(this.Provider)
+        ? await this.CompressionService.OfferBeforeSendingAsync(thread, 0, this.Provider, tokensWithMessage, options, this.countToken)
+        : ChatCompressionOffer.NONE;
 
     /// <summary>
     /// Counts the tokens of a message about to be sent.

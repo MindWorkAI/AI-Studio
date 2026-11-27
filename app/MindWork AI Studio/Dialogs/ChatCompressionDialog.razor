@@ -2,6 +2,9 @@
 @inherits MSGComponentBase
 
 <MudDialog DefaultFocus="DefaultFocus.FirstChild">
+    <TitleContent>
+        <DialogTitleWithChatCompressionSettings Title="@(this.MudDialog.Title ?? string.Empty)" Disabled="@this.isSummarizing" SettingsClosed="@this.ApplyChangedSettings"/>
+    </TitleContent>
     <DialogContent>
         <MudStack Spacing="3">
             <MudJustifiedText Typo="Typo.body1">

@@ -1,6 +1,10 @@
+@using AIStudio.Settings.DataModel
 @inherits MSGComponentBase
 
 <MudDialog>
+    <TitleContent>
+        <DialogTitleWithChatCompressionSettings Title="@(this.MudDialog.Title ?? string.Empty)" SettingsClosed="@this.ApplyChangedSettingsAsync"/>
+    </TitleContent>
     <DialogContent>
         <MudStack Spacing="3">
             <MudJustifiedText Typo="Typo.body1">
@@ -61,6 +65,20 @@
             {
                 <MudJustifiedText Typo="Typo.body1">
                     @TA("You can shorten your message, remove some of its files, or select a model which takes longer texts.")
+                </MudJustifiedText>
+            }
+
+            @if (this.SettingsManager.ConfigurationData.ChatCompression.ContextWindowFullBehavior is ContextWindowFullBehavior.ASK)
+            {
+                <MudJustifiedText Typo="Typo.body2">
+                    @if (this.Subject is ContextWindowFullSubject.ASSISTANT_REQUEST)
+                    {
+                        @TA("With the gear at the top, you can choose what AI Studio does in such a case from now on, e.g., send the request without asking.")
+                    }
+                    else
+                    {
+                        @TA("With the gear at the top, you can choose what AI Studio does in such a case from now on, e.g., compress automatically.")
+                    }
                 </MudJustifiedText>
             }
         </MudStack>
