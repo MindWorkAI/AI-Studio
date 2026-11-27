@@ -1,5 +1,7 @@
-using AIStudio.Agents;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.DataSourceChoice;
+using AIStudio.AIOperations.PluginAudit;
+using AIStudio.AIOperations.RetrievalContextValidation;
 using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.Builder;
 using AIStudio.Assistants.ERI;
@@ -14,17 +16,17 @@ namespace AIStudio.Tests.Serialization;
 public static partial class JsonTestRoots
 {
     /// <summary>
-    /// The JSON which models write for the agents and assistants of AI Studio, apart from the Visual Briefing
+    /// The JSON which models write for the AI operations and assistants of AI Studio, apart from the Visual Briefing
     /// assistant.
     /// </summary>
     public static IEnumerable<TestCaseData> ModelAnswers()
     {
         TestHost.PrepareStaticState();
 
-        // The agents, which select data sources, check retrieved passages, and audit assistant plugins:
-        yield return Case(new(typeof(List<SelectedDataSource>), AgentBase.JSON_SERIALIZER_OPTIONS));
-        yield return Case(new(typeof(RetrievalContextValidationResult), AgentBase.JSON_SERIALIZER_OPTIONS));
-        yield return Case(new(typeof(AssistantAuditResult), AgentBase.JSON_SERIALIZER_OPTIONS));
+        // The AI operations, which select data sources, check retrieved passages, and audit assistant plugins:
+        yield return Case(new(typeof(List<SelectedDataSource>), AIOperationsJson.OPTIONS));
+        yield return Case(new(typeof(RetrievalContextValidationAnswer), AIOperationsJson.OPTIONS));
+        yield return Case(new(typeof(PluginAuditResult), AIOperationsJson.OPTIONS));
 
         // The Assistant Builder, for assistant plugins and for direct chat launchers:
         yield return Case(new(typeof(LuaResponse), LuaResponse.JSON_OPTIONS));

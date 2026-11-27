@@ -198,7 +198,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             Name = this.dataName,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             AuthMethod = this.dataAuthMethod,
-            Username = this.dataUsername,
+            Username = ERICredentialValidation.Normalize(this.dataUsername),
             UsernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED,
             Type = DataSourceType.ERI_V1,
             SecurityPolicy = this.dataSecurityPolicy,
@@ -389,8 +389,11 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         var addedDataSource = this.CreateDataSource();
         if (!string.IsNullOrWhiteSpace(this.dataSecret))
         {
-            // Store the secret in the OS secure storage:
-            var storeResponse = await this.RustService.SetSecret(this, this.dataSecret, SecretStoreType.DATA_SOURCE);
+            //
+            // Store the secret in the OS secure storage, without the whitespace around it: it goes
+            // to the ERI server in an HTTP header, which drops that whitespace anyway:
+            //
+            var storeResponse = await this.RustService.SetSecret(this, ERICredentialValidation.Normalize(this.dataSecret), SecretStoreType.DATA_SOURCE);
             if (!storeResponse.Success)
             {
                 this.dataSecretStorageIssue = string.Format(TA("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);

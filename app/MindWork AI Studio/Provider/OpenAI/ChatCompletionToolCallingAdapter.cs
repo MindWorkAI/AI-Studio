@@ -18,7 +18,7 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     TextMessage systemPrompt, IDictionary<string, object> apiParameters,
     IList<object> providerTools, bool mayAskForSequentialToolCalls,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-    Func<ChatCompletionAPIRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync,
+    Func<ChatCompletionAPIRequest, ServerSentEventStreamEnd, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync,
     Func<ServerSentEvent, IList<ISource>> readSources,
     ILogger logger)
     : IToolCallingProviderAdapter where TRequest : ChatCompletionAPIRequest
@@ -71,13 +71,18 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
         // behind it, fragment by fragment. The usage goes out with every round: which of them
         // describes the conversation is the loop's decision, which knows which round this is.
         //
+        var streamEnd = new ServerSentEventStreamEnd();
         var accumulator = new ChatCompletionToolCallAccumulator(readSources);
-        await foreach (var serverSentEvent in streamRequestAsync(requestDto, token))
+        await foreach (var serverSentEvent in streamRequestAsync(requestDto, streamEnd, token))
         {
             var part = accumulator.Process(serverSentEvent);
-            if (part.HasContent || part.Usage.IsKnown)
-                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage));
+            if (part.HasContent || part.Usage.IsKnown || part.IsReasoning)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage) { IsReasoning = part.IsReasoning });
         }
+
+        // A stream which was cut off ends the round without an outcome, cf. IToolCallingProviderAdapter.ExecuteRoundAsync:
+        if (!streamEnd.IsReached)
+            yield break;
 
         var message = accumulator.Build();
         if (message is null)

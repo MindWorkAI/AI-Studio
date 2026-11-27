@@ -1,4 +1,4 @@
-﻿using AIStudio.Agents.AssistantAudit;
+﻿using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
@@ -70,7 +70,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         _ => this.GenerateAssistantSpec,
     };
     
-    protected override bool SubmitDisabled => this.isAgentRunning || this.IsInstallFlowRunning;
+    protected override bool SubmitDisabled => this.isGenerating || this.IsInstallFlowRunning;
     
     protected override bool ShowResult => false;
     
@@ -91,13 +91,13 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     protected override Func<string> Result2Copy => () => !string.IsNullOrWhiteSpace(this.generatedLuaAssistant) ? this.generatedLuaAssistant : this.generatedAssistantSpec;
 
     private BuilderStep step = BuilderStep.DESCRIBE;
-    private bool isAgentRunning;
+    private bool isGenerating;
     private bool isCheckingPlugin;
     private bool isInstallingPlugin;
     private bool isAuditingPlugin;
     private bool isEnablingPlugin;
     private string assistantDescription = string.Empty;
-    private AssistantCategory selectedCategory;
+    private PluginCategory selectedCategory;
     private string customCategory = string.Empty;
     private string assistantName = string.Empty;
     private string typicalInput = string.Empty;
@@ -129,13 +129,13 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private BuilderInstallStep? failedInstallStep;
     private string installFlowIssue = string.Empty;
     private static readonly AssistantSessionStateKey<BuilderStep> STEP_STATE_KEY = new(nameof(step));
-    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning), isKeptOutOfDrafts: true);
+    private static readonly AssistantSessionStateKey<bool> IS_GENERATING_STATE_KEY = new(nameof(isGenerating), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<bool> IS_CHECKING_PLUGIN_STATE_KEY = new(nameof(isCheckingPlugin), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<bool> IS_INSTALLING_PLUGIN_STATE_KEY = new(nameof(isInstallingPlugin), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<bool> IS_AUDITING_PLUGIN_STATE_KEY = new(nameof(isAuditingPlugin), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<bool> IS_ENABLING_PLUGIN_STATE_KEY = new(nameof(isEnablingPlugin), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<string> ASSISTANT_DESCRIPTION_STATE_KEY = new(nameof(assistantDescription));
-    private static readonly AssistantSessionStateKey<AssistantCategory> SELECTED_CATEGORY_STATE_KEY = new(nameof(selectedCategory));
+    private static readonly AssistantSessionStateKey<PluginCategory> SELECTED_CATEGORY_STATE_KEY = new(nameof(selectedCategory));
     private static readonly AssistantSessionStateKey<string> CUSTOM_CATEGORY_STATE_KEY = new(nameof(customCategory));
     private static readonly AssistantSessionStateKey<string> ASSISTANT_NAME_STATE_KEY = new(nameof(assistantName));
     private static readonly AssistantSessionStateKey<string> TYPICAL_INPUT_STATE_KEY = new(nameof(typicalInput));
@@ -188,7 +188,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private bool PluginInstallCompleted => this.pluginInstallResult?.Success is true;
 
-    private bool AuditCompleted => this.pluginAudit is not null && this.pluginAudit.Level is not AssistantAuditLevel.UNKNOWN;
+    private bool AuditCompleted => this.pluginAudit is not null && this.pluginAudit.Level is not PluginAuditLevel.UNKNOWN;
 
     private bool AuditRequiredForActivation => this.SettingsManager.ConfigurationData.AssistantPluginAudit.RequireAuditBeforeActivation;
 
@@ -216,9 +216,9 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
 
     private Severity AuditSeverity => this.pluginAudit?.Level switch
     {
-        AssistantAuditLevel.DANGEROUS => Severity.Error,
-        AssistantAuditLevel.CAUTION => Severity.Warning,
-        AssistantAuditLevel.SAFE => Severity.Info,
+        PluginAuditLevel.DANGEROUS => Severity.Error,
+        PluginAuditLevel.CAUTION => Severity.Warning,
+        PluginAuditLevel.SAFE => Severity.Info,
         _ => Severity.Normal,
     };
 
@@ -241,7 +241,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         this.pluginId = Guid.NewGuid();
         this.step = BuilderStep.DESCRIBE;
         this.assistantDescription = string.Empty;
-        this.selectedCategory = AssistantCategory.AS_IS;
+        this.selectedCategory = PluginCategory.NONE;
         this.customCategory = string.Empty;
         this.assistantName = string.Empty;
         this.typicalInput = string.Empty;
@@ -286,7 +286,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
     {
         state.Set(STEP_STATE_KEY, this.step);
-        state.Set(IS_AGENT_RUNNING_STATE_KEY, this.isAgentRunning);
+        state.Set(IS_GENERATING_STATE_KEY, this.isGenerating);
         state.Set(IS_CHECKING_PLUGIN_STATE_KEY, this.isCheckingPlugin);
         state.Set(IS_INSTALLING_PLUGIN_STATE_KEY, this.isInstallingPlugin);
         state.Set(IS_AUDITING_PLUGIN_STATE_KEY, this.isAuditingPlugin);
@@ -328,13 +328,14 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
         state.Restore(STEP_STATE_KEY, value => this.step = value);
-        state.Restore(IS_AGENT_RUNNING_STATE_KEY, value => this.isAgentRunning = value);
+        state.Restore(IS_GENERATING_STATE_KEY, value => this.isGenerating = value);
         state.Restore(IS_CHECKING_PLUGIN_STATE_KEY, value => this.isCheckingPlugin = value);
         state.Restore(IS_INSTALLING_PLUGIN_STATE_KEY, value => this.isInstallingPlugin = value);
         state.Restore(IS_AUDITING_PLUGIN_STATE_KEY, value => this.isAuditingPlugin = value);
         state.Restore(IS_ENABLING_PLUGIN_STATE_KEY, value => this.isEnablingPlugin = value);
         state.Restore(ASSISTANT_DESCRIPTION_STATE_KEY, value => this.assistantDescription = value);
-        state.Restore(SELECTED_CATEGORY_STATE_KEY, value => this.selectedCategory = value);
+        // A category your organization disabled meanwhile goes back to the choice of the model:
+        state.Restore(SELECTED_CATEGORY_STATE_KEY, value => this.selectedCategory = this.OfferedCategories.Contains(value) ? value : PluginCategory.NONE);
         state.Restore(CUSTOM_CATEGORY_STATE_KEY, value => this.customCategory = value);
         state.Restore(ASSISTANT_NAME_STATE_KEY, value => this.assistantName = value);
         state.Restore(TYPICAL_INPUT_STATE_KEY, value => this.typicalInput = value);
@@ -374,15 +375,40 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         return null;
     }
 
-    private string? ValidatingCategory(AssistantCategory category)
+    /// <summary>
+    /// The choices of the category field: leaving it to the model, the categories of AI Studio in the
+    /// order of the assistants page, and a custom category last. Categories your organization disabled
+    /// are missing.
+    /// </summary>
+    private IReadOnlyList<PluginCategory> OfferedCategories
     {
-        return null;
+        get
+        {
+            var app = this.SettingsManager.ConfigurationData.App;
+            return AssistantBuilderCategories.IsCustomOfferedUnder(app)
+                ? [PluginCategory.NONE, ..AssistantBuilderCategories.OfferedUnder(app), PluginCategory.CUSTOM]
+                : [PluginCategory.NONE, ..AssistantBuilderCategories.OfferedUnder(app)];
+        }
     }
+
+    private string NameOfCategory(PluginCategory category) => category switch
+    {
+        PluginCategory.NONE => T("Let the model choose"),
+        PluginCategory.CUSTOM => T("Other"),
+
+        _ => category.Name,
+    };
 
     private string? ValidateCustomCategory(string category)
     {
-        if(this.selectedCategory is AssistantCategory.OTHER && string.IsNullOrWhiteSpace(category))
+        if (this.selectedCategory is not PluginCategory.CUSTOM)
+            return null;
+
+        if(string.IsNullOrWhiteSpace(category))
             return TA("Please provide a custom category.");
+
+        if (this.SettingsManager.ConfigurationData.App.IsAssistantCategoryDisabled(new AssistantCategoryKey(PluginCategory.CUSTOM, category)))
+            return TA("Your organization disabled this category. Please choose another one.");
 
         return null;
     }
@@ -401,13 +427,13 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         if (!this.InputIsValid)
             return;
 
-        this.isAgentRunning = true;
+        this.isGenerating = true;
         try
         {
             var draft = await this.AssistantPluginGenerationService.GenerateAssistantDraftAsync(
                 new(
                     this.assistantDescription,
-                    this.GetSelectedCategoryName(),
+                    this.GetSelectedCategoryForDraft(),
                     this.assistantName,
                     this.createChatLauncher ? string.Empty : this.typicalInput,
                     this.createChatLauncher ? string.Empty : this.expectedOutput,
@@ -435,7 +461,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         }
         finally
         {
-            this.isAgentRunning = false;
+            this.isGenerating = false;
         }
     }
 
@@ -451,7 +477,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             return;
         }
 
-        this.isAgentRunning = true;
+        this.isGenerating = true;
         try
         {
             var draft = await this.AssistantPluginGenerationService.GenerateInitialLuaAsync(new(this.pluginId, this.generatedAssistantSpec, this.reviewNotes, this.CreateChatLaunchRequest()),
@@ -471,7 +497,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         }
         finally
         {
-            this.isAgentRunning = false;
+            this.isGenerating = false;
         }
     }
 
@@ -522,12 +548,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         this.step = BuilderStep.REVIEW_SPEC;
     }
 
-    private string GetSelectedCategoryName() => this.selectedCategory switch
-    {
-        AssistantCategory.AS_IS => string.Empty,
-        AssistantCategory.OTHER => this.customCategory,
-        _ => this.selectedCategory.Name,
-    };
+    private string GetSelectedCategoryForDraft() => AssistantBuilderCategories.FormatForDraft(this.selectedCategory, this.customCategory);
 
     private string GetSelectedOutputLanguageName() => this.selectedOutputLanguage switch
     {
@@ -721,15 +742,15 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         this.isAuditingPlugin = true;
         try
         {
-            this.pluginAudit = await this.AssistantPluginAuditService.RunAuditAsync(this.installedAssistantPlugin, fallbackProvider: this.ProviderSettings);
-            if (this.pluginAudit.Level is AssistantAuditLevel.UNKNOWN)
+            this.pluginAudit = await this.AssistantPluginAuditService.RunAuditAsync(this.installedAssistantPlugin, providerAtHand: this.ProviderSettings);
+            if (this.pluginAudit.Level is PluginAuditLevel.UNKNOWN)
             {
                 this.FailInstallStep(BuilderInstallStep.SECURITY_CHECK, T("The security check could not determine a result."));
                 await this.MessageBus.SendError(new(AppIcons.SECURITY_WARNING, T("The security check could not be completed.")));
                 return;
             }
 
-            this.UpsertAudit(this.pluginAudit);
+            AssistantPluginAuditService.UpsertAudit(this.SettingsManager, this.pluginAudit);
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendSuccess(new(
                 this.pluginAudit.Level.Icon,
@@ -826,16 +847,6 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     }
 
     private static PluginAssistants? ResolveAssistantPlugin(Guid pluginId) => PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(plugin => plugin.Id == pluginId);
-
-    private void UpsertAudit(PluginAssistantAudit audit)
-    {
-        var audits = this.SettingsManager.ConfigurationData.AssistantPluginAudits;
-        var existingIndex = audits.FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
-    }
 
     private void FailInstallStep(BuilderInstallStep installStep, string issue)
     {

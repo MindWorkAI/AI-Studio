@@ -119,8 +119,8 @@ Three things to know when adding another one:
 ## Verification
 
 - **The test project** (`app/Tests/Models/`) owns everything that can be asked of the rules: a corpus of real model IDs per provider, the difference test against the rules this replaced, and the properties every rule has to have — no two rules of equal specificity on one name, every family and host names a page and a day, every pattern in normalized form, no family stating one of the three reasoning words.
-- **`dotnet run verify-models`** in `app/Build` reports how long ago somebody last read those pages and names everything older than six months. It warns and never fails, because that answer changes with the calendar rather than with the code.
-- **`dotnet run verify`** runs the whole gate, and `dotnet run build` runs it before building. See `documentation/Build.md`.
+- **`dotnet run -- verify-models`** in `app/Build` reports how long ago somebody last read those pages and names everything older than six months. It warns and never fails, because that answer changes with the calendar rather than with the code.
+- **`dotnet run -- verify`** runs the whole gate, and `dotnet run -- build` runs it before building. See `documentation/Build.md`.
 
 ## Checklist
 
@@ -131,5 +131,5 @@ Three things to know when adding another one:
 - State a number only where a page states it. Leaving it out means "nobody knows", which is a usable answer; a made-up number is not.
 - Add the models to the corpus in `app/Tests/Models/Corpus/` and say whether the answer is expected to change.
 - Use `Refine` only for what a pattern cannot express, and `Rank` only with a reason that says what the computation gets wrong.
-- Run `dotnet test`, and `dotnet run verify-models` when you touched sources.
+- Run `dotnet test`, and `dotnet run -- verify-models` when you touched sources.
 - Add a changelog entry when users or administrators are affected — a new plugin key always affects administrators.

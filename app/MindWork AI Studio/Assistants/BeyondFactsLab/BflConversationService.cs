@@ -176,6 +176,15 @@ public sealed class BflConversationService(BeyondFactsLabStore store, EmbeddedCh
     public async Task<bool> UsesPromptOverridesAsync(CancellationToken token = default) => this.PromptOverridesDirectory is { } directory && (await BflPromptOverrides.FindAsync(directory, token)).Count > 0;
 
     /// <summary>
+    /// Finds the Markdown files in the test folder which replace no prompt of the lab, so that the lab can tell the
+    /// person why they change nothing.
+    /// </summary>
+    /// <returns>The files relative to the test folder, see BflPromptOverrides.FindUnknown; none while the setting does not allow prompt overrides.</returns>
+    /// <exception cref="IOException">The test folder cannot be read.</exception>
+    /// <exception cref="UnauthorizedAccessException">The test folder cannot be read.</exception>
+    public IReadOnlyList<string> FindUnknownPromptOverrides() => this.PromptOverridesDirectory is { } directory ? BflPromptOverrides.FindUnknown(directory) : [];
+
+    /// <summary>
     /// Puts together what a request of a chat carries beside the conversation: the system prompt, the images of the
     /// material the model may see, and the guidelines of the organization.
     /// </summary>

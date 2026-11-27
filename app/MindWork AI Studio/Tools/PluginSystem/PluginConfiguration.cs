@@ -227,6 +227,10 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             return false;
         }
 
+        // Compatibility shim, remove after 2027-05-26, see FormerSettingNames. Everything below reads the
+        // settings under their current names only:
+        settingsTable = FormerSettingNames.Resolve(settingsTable, this.Name, !dryRun);
+
         if (!TryValidateMinimumProviderConfidenceConfiguration(settingsTable, out message))
             return false;
 
@@ -334,6 +338,14 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: hide some assistants?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HiddenAssistants, this.Id, settingsTable, dryRun);
 
+        // Config: disable some categories of assistants, built-in ones and plugins alike?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.DisabledAssistantCategories, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.DisabledCustomAssistantCategories, this.Id, settingsTable, dryRun);
+
+        // Config: what happens to the assistants of categories users collapsed or hid?
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantsPage, x => x.CollapsedCategoryAssistants, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantsPage, x => x.HiddenCategoryAssistants, this.Id, settingsTable, dryRun);
+
         // Config: prohibit some providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProhibitedProviders, this.Id, settingsTable, dryRun);
         
@@ -386,13 +398,13 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.AllowOnlyOrganizationMailServers, this.Id, settingsTable, dryRun);
 
         // Config: the random pause between two indexing steps of local data sources
-        var minimumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MinimumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: value => value is >= 0 and <= DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+        var minimumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MinimumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: DataDataSourceIndexing.PAUSE_LIMITS.Allows);
         if (!minimumPauseIsValid && settingsTable.TryGetValue("DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds", out _))
-            LOG.LogWarning("The lower bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between 0 and {MaximumPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+            LOG.LogWarning("The lower bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between {ShortestPauseSeconds} and {LongestPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.PAUSE_LIMITS.ShortestSeconds, DataDataSourceIndexing.PAUSE_LIMITS.LongestSeconds);
 
-        var maximumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MaximumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: value => value is >= 0 and <= DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+        var maximumPauseIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.App.DataSourceIndexing, x => x.MaximumPauseBetweenStepsSeconds, this.Id, settingsTable, dryRun, validator: DataDataSourceIndexing.PAUSE_LIMITS.Allows);
         if (!maximumPauseIsValid && settingsTable.TryGetValue("DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds", out _))
-            LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between 0 and {MaximumPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.MAX_PAUSE_BETWEEN_STEPS_SECONDS);
+            LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} must be between {ShortestPauseSeconds} and {LongestPauseSeconds} seconds.", this.Id, DataDataSourceIndexing.PAUSE_LIMITS.ShortestSeconds, DataDataSourceIndexing.PAUSE_LIMITS.LongestSeconds);
 
         if (minimumPauseIsValid && maximumPauseIsValid
             && settingsTable.TryGetValue("DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds", out var minimumPauseValue) && minimumPauseValue.TryRead<int>(out var minimumPauseSeconds)
@@ -400,22 +412,44 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             && maximumPauseSeconds < minimumPauseSeconds)
             LOG.LogWarning("The upper bound of the pause between indexing steps configured by plugin {ConfigPluginId} is below its lower bound. The lower bound of {MinimumPauseSeconds} seconds wins.", this.Id, minimumPauseSeconds);
 
-        // Config: data source selection agent settings
-        ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        // Config: text content cleaner settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.TextContentCleaner, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.TextContentCleaner, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.TextContentCleaner, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
-        // Config: retrieval context validation agent settings
-        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.EnableRetrievalContextValidation, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.NumParallelValidations, this.Id, settingsTable, dryRun);
+        // Config: data source selection settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSelection, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSelection, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSelection, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+
+        // Config: retrieval context validation settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.RetrievalContextValidation, x => x.EnableRetrievalContextValidation, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.RetrievalContextValidation, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.RetrievalContextValidation, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.RetrievalContextValidation, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.RetrievalContextValidation, x => x.NumParallelValidations, this.Id, settingsTable, dryRun);
 
         // Config: assistant plugin audit settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.MinimumLevel, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, this.Id, settingsTable, dryRun);
+
+        // Config: chat compression settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.PreselectedFocus, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.ContextWindowFullBehavior, this.Id, settingsTable, dryRun);
+
+        var thresholdIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.ContextWindowThresholdPercent, this.Id, settingsTable, dryRun, validator: DataChatCompression.IsValidContextWindowThresholdPercent);
+        if (!thresholdIsValid && settingsTable.TryGetValue("DataChatCompression.ContextWindowThresholdPercent", out _))
+            LOG.LogWarning("The share of the context window configured by plugin {ConfigPluginId} for chat compression must be between {MinimumPercent} and {MaximumPercent} percent.", this.Id, DataChatCompression.MIN_CONTEXT_WINDOW_THRESHOLD_PERCENT, DataChatCompression.MAX_CONTEXT_WINDOW_THRESHOLD_PERCENT);
+
+        var maxSummaryTokensIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.MaxSummaryTokens, this.Id, settingsTable, dryRun, validator: DataChatCompression.IsValidMaxSummaryTokens);
+        if (!maxSummaryTokensIsValid && settingsTable.TryGetValue("DataChatCompression.MaxSummaryTokens", out _))
+            LOG.LogWarning("The most tokens of a summary configured by plugin {ConfigPluginId} for chat compression must be between {MinimumTokens} and {MaximumTokens}.", this.Id, DataChatCompression.MIN_SUMMARY_TOKENS, DataChatCompression.MAX_SUMMARY_TOKENS);
 
         // Config: enterprise-managed approvals for assistant plugins
         this.TryProcessEnterpriseApprovedAssistantPlugins(settingsTable, dryRun);
@@ -499,9 +533,20 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvSeparator, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CustomCsvSeparator, this.Id, settingsTable, dryRun);
         
-        var minimumDelayIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumDelaySeconds, this.Id, settingsTable, dryRun, validator: value => value is >= DataBatchProcessing.MIN_DELAY_SECONDS and <= DataBatchProcessing.MAX_DELAY_SECONDS);
+        // Config: the random pause between two files of the Batch Processing Assistant
+        var minimumDelayIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumDelaySeconds, this.Id, settingsTable, dryRun, validator: DataBatchProcessing.PAUSE_LIMITS.Allows);
         if (!minimumDelayIsValid && settingsTable.TryGetValue("DataBatchProcessing.MinimumDelaySeconds", out _))
-            LOG.LogWarning("The Batch Processing minimum delay configured by plugin {ConfigPluginId} must be between {MinimumDelaySeconds} and {MaximumDelaySeconds} seconds.", this.Id, DataBatchProcessing.MIN_DELAY_SECONDS, DataBatchProcessing.MAX_DELAY_SECONDS);
+            LOG.LogWarning("The Batch Processing minimum delay configured by plugin {ConfigPluginId} must be between {MinimumDelaySeconds} and {MaximumDelaySeconds} seconds.", this.Id, DataBatchProcessing.PAUSE_LIMITS.ShortestSeconds, DataBatchProcessing.PAUSE_LIMITS.LongestSeconds);
+
+        var maximumDelayIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MaximumDelaySeconds, this.Id, settingsTable, dryRun, validator: DataBatchProcessing.PAUSE_LIMITS.Allows);
+        if (!maximumDelayIsValid && settingsTable.TryGetValue("DataBatchProcessing.MaximumDelaySeconds", out _))
+            LOG.LogWarning("The Batch Processing maximum delay configured by plugin {ConfigPluginId} must be between {MinimumDelaySeconds} and {MaximumDelaySeconds} seconds.", this.Id, DataBatchProcessing.PAUSE_LIMITS.ShortestSeconds, DataBatchProcessing.PAUSE_LIMITS.LongestSeconds);
+
+        if (minimumDelayIsValid && maximumDelayIsValid
+            && settingsTable.TryGetValue("DataBatchProcessing.MinimumDelaySeconds", out var minimumDelayValue) && minimumDelayValue.TryRead<int>(out var minimumDelaySeconds)
+            && settingsTable.TryGetValue("DataBatchProcessing.MaximumDelaySeconds", out var maximumDelayValue) && maximumDelayValue.TryRead<int>(out var maximumDelaySeconds)
+            && maximumDelaySeconds < minimumDelaySeconds)
+            LOG.LogWarning("The Batch Processing maximum delay configured by plugin {ConfigPluginId} is below its minimum delay. The minimum delay of {MinimumDelaySeconds} seconds wins.", this.Id, minimumDelaySeconds);
 
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);

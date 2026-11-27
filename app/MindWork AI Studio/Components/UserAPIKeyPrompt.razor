@@ -7,12 +7,12 @@
     }
     else
     {
-        <MudText Typo="Typo.body1" Class="mb-3">
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @TA("Your organization has set up AI providers for you. To use them, AI Studio needs your personal API key. Please enter it below.")
-        </MudText>
+        </MudJustifiedText>
     }
 
-    <SecretInputField Secret="@this.apiKey" SecretChanged="@(value => this.apiKey = value)" Label="@T("API key")"/>
+    <SecretInputField Secret="@this.apiKey" SecretChanged="@(value => this.apiKey = value)" Label="@T("API key")" Validation="@ValidateAPIKey"/>
 
     @if (!string.IsNullOrWhiteSpace(this.issue))
     {
@@ -22,7 +22,7 @@
     }
 
     <MudStack Row="@true" AlignItems="AlignItems.Center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.SAVE" Disabled="@(this.isBusy || string.IsNullOrWhiteSpace(this.apiKey))" OnClick="@this.StoreAPIKeyAsync">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@AppIcons.SAVE" Disabled="@(!this.CanStoreAPIKey)" OnClick="@this.StoreAPIKeyAsync">
             @T("Check and save API key")
         </MudButton>
         @if (this.isBusy)

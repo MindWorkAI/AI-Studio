@@ -1,3 +1,5 @@
+using AIStudio.Tools.Mathematics;
+
 using AngouriMath;
 using AngouriMath.Core;
 using AngouriMath.Core.Exceptions;
@@ -11,7 +13,7 @@ namespace AIStudio.Tests.Tools.Mathematics;
 /// </summary>
 /// <remarks>
 /// AngouriMath puts correct answers ahead of backward compatibility, and says so: the release notes of
-/// 2.6.0 list 516 changed answers, fourteen of them silent, where the call still succeeds and returns
+/// 2.7.0 and 2.8.0 list 221 changed answers, 147 of them silent, where the call still succeeds and returns
 /// something else. An update which changes anything below fails here first, not in a chat. Each test
 /// names what AngouriMath does; where the tools have to guard against it, the test says so.
 /// </remarks>
@@ -19,6 +21,50 @@ namespace AIStudio.Tests.Tools.Mathematics;
 public sealed class AngouriMathBehaviorTests
 {
     private static readonly Entity.Variable X = MathS.Var("x");
+
+    /// <summary>
+    /// The operators and other tokens of the parser which are no function.
+    /// </summary>
+    private static readonly string[] OPERATORS =
+    [
+        "!", "!!", "!!!", "#", "&", "(", "(|", ")", "*", "+", "+oo", ",", "-", "->", "-oo", "...", "/", "/\\", ":", ";", "<", "<=", "<>", "=", "=>",
+        ">", ">=", "NaN", "[", "\\", "\\/", "]", "]T", "^", "and", "divides", "exists", "exists!", "forall", "implies", "in", "intersect", "mod",
+        "not", "or", "provided", "setsubtract", "subset", "superset", "unite", "xor", "{", "|", "|)", "}", "…", "∀", "∃", "∃!", "≡", "⊆", "⊇"
+    ];
+
+    /// <summary>
+    /// The functions of the parser which MathExpressionReader passes on, besides UNSUPPORTED_FUNCTIONS.
+    /// </summary>
+    private static readonly string[] FUNCTIONS_PASSED_ON =
+    [
+        "Chi", "Ci", "Ei", "Shi", "Si", "abs", "acos", "acosec", "acosech", "acosh", "acot", "acotan", "acotanh", "acoth", "acsc", "acsch", "aleph",
+        "apply", "arccos", "arccosec", "arccosech", "arccosh", "arccot", "arccotan", "arccotanh", "arccsc", "arch", "arcosech", "arcosh", "arcotanh",
+        "arcoth", "arcsch", "arcsec", "arcsech", "arcsin", "arcsinh", "arctan", "arctanh", "arcth", "argmax", "argmin", "arsch", "arsech", "arsh",
+        "arsinh", "artanh", "arth", "asec", "asech", "asin", "asinh", "atan", "atanh", "binomial", "card", "cbrt", "ceil", "ceiling", "ch",
+        "complement", "cos", "cosec", "cosech", "cosh", "cot", "cotan", "cotanh", "coth", "csc", "csch", "cth", "derivative", "digamma", "domain",
+        "erf", "erfc", "erfi", "exp", "factorial", "floor", "gamma", "gcd", "image", "integral", "intersection", "iverson", "lambda", "lambertw",
+        "lcm", "li", "limit", "limitleft", "limitright", "ln", "log", "log10", "log2", "max", "min", "phi", "piecewise", "polygamma", "pow",
+        "powerset", "preimage", "prime", "product", "productlog", "round", "sch", "sec", "sech", "sgn", "sh", "sign", "signum", "sin", "sinh", "sqr",
+        "sqrt", "sum", "tan", "tanh", "th", "trunc", "union", "valuation", "φ", "ϕ"
+    ];
+
+    /// <summary>
+    /// The kinds of nodes which MathExpressionReader passes on, besides UNSUPPORTED_NODE_TYPES.
+    /// </summary>
+    private static readonly string[] NODE_TYPES_PASSED_ON =
+    [
+        "Absf", "Alephf", "Andf", "Application", "Arccosecantf", "Arccosf", "Arccotanf", "Arcsecantf", "Arcsinf", "Arctanf", "Argmaxf", "Argminf",
+        "Binomialf", "Boolean", "Cardf", "Ceilf", "Chif", "Cif", "Congruentf", "Constant", "Cosecantf", "Cosf", "Cotanf", "Derivativef", "Divf",
+        "Dividesf", "Eif", "Equalsf", "Erfcf", "Erff", "Erfif", "ExistsUniquef", "Existsf", "Factorialf", "Floorf", "Forallf", "Gcdf",
+        "GreaterOrEqualf", "Greaterf", "Impliesf", "IncompleteGammaf", "Integralf", "Iversonf", "Lambda", "LambertWf", "Lcmf", "LessOrEqualf",
+        "Lessf", "Lif", "Limitf", "Logf", "Matrix", "Maxf", "Maximumf", "Minf", "Minimumf", "Minusf", "Modf", "Mulf", "Notf", "Number+Complex",
+        "Number+Integer", "Number+Rational", "Number+Real", "Orf", "Phif", "Piecewise", "Polygammaf", "Powf", "Primef", "Productf", "Providedf",
+        "Roundf", "Secantf", "Set+ConditionalSet", "Set+FiniteSet", "Set+IndexedIntersectionf", "Set+IndexedUnionf", "Set+Inf", "Set+Intersectionf",
+        "Set+Interval", "Set+Powersetf", "Set+SetMinusf", "Set+SpecialSet+Booleans", "Set+SpecialSet+Complexes", "Set+SpecialSet+Integers",
+        "Set+SpecialSet+NonNegativeIntegers", "Set+SpecialSet+PositiveIntegers", "Set+SpecialSet+Primes", "Set+SpecialSet+Rationals",
+        "Set+SpecialSet+Reals", "Set+Subsetf", "Set+Unionf", "Shif", "Sif", "Signumf", "Sinf", "SumOverSetf", "Sumf", "Summationf", "Tanf",
+        "Valuationf", "Variable", "Xorf"
+    ];
 
     private static Entity Parse(string text)
     {
@@ -81,20 +127,20 @@ public sealed class AngouriMathBehaviorTests
     }
 
     [Test]
-    public void DowncastingTurnsTinyValuesIntoZero()
+    public void DowncastingTurnsTinyLiteralsIntoZero()
     {
         // The Boltzmann constant at 300 K, the energy of a photon of 500 nm, and e^-100:
         using (Assert.EnterMultipleScope())
         {
             Assert.That(MathS.Settings.DowncastingEnabled.Value, Is.True, "AngouriMath downcasts by default.");
-            Assert.That(DecimalOf("1.380649e-23 * 300", 30, 20), Is.EqualTo("0"), "Downcasting takes a tiny value for the integer 0, so NumericEvaluator.EvaluateAt does without it.");
+            Assert.That(DecimalOf("1.380649e-23 * 300", 30, 20), Is.EqualTo("0"), "Downcasting reads a literal below the precision as the integer 0, so NumericEvaluator.EvaluateAt does without it.");
             Assert.That(DecimalOf("6.62607015e-34 * 299792458 / 500e-9", 40, 20), Is.EqualTo("0"));
-            Assert.That(DecimalOf("e^(-100)", 60, 20), Is.EqualTo("0"), "More digits only lower the bound below which a value vanishes.");
+            Assert.That(DecimalOf("e^(-100)", 60, 20), Is.EqualTo("3.7200759760208359630E-44"), "Since 2.7.0, a computed value keeps its digits; until then, it vanished below the precision.");
 
             using var withoutDowncasting = MathS.Settings.DowncastingEnabled.Set(false);
             Assert.That(DecimalOf("1.380649e-23 * 300", 30, 20), Is.EqualTo("4.14194700E-21"));
-            Assert.That(DecimalOf("6.62607015e-34 * 299792458 / 500e-9", 30, 20), Is.EqualTo("3.97289171430E-19"), "500e-9 is read as the fraction 1/2000000, and dividing by it rounds to 30 decimal places, see below.");
-            Assert.That(DecimalOf("6.62607015e-34 * 299792458 / 500e-9", 60, 20), Is.EqualTo("3.9728917142978574000E-19"));
+            Assert.That(DecimalOf("6.62607015e-34 * 299792458 / 500e-9", 30, 20), Is.EqualTo("3.9728917142978574E-19"), "500e-9 is read as the fraction 1/2000000, and since 2.7.0, dividing by it keeps the digits, see below.");
+            Assert.That(DecimalOf("6.62607015e-34 * 299792458 / 500e-9", 60, 20), Is.EqualTo("3.9728917142978574E-19"));
             Assert.That(DecimalOf("e^(-100)", 30, 20), Is.EqualTo("3.7200759760208359630E-44"));
         }
     }
@@ -106,24 +152,24 @@ public sealed class AngouriMathBehaviorTests
         {
             Assert.That(Parse("1e-60"), Is.EqualTo(Entity.Number.Integer.Create(0)), "A literal below about 1e-50 is read as 0, so MathExpressionReader parses without downcasting.");
             Assert.That(Parse("6.62607015e-34"), Is.TypeOf<Entity.Number.Real>(), "Unlike 0.1, a literal with a long denominator stays an inexact decimal.");
-            Assert.That(Parse("1 + 1e-40").InnerSimplified, Is.EqualTo(Entity.Number.Integer.Create(1)), "Simplifying drops an inexact decimal from a sum, so MathExpressionReader turns every literal into its fraction.");
+            Assert.That(Parse("1 + 1e-40").InnerSimplified.ToString(), Is.EqualTo("1 + 1E-40"), "Since 2.7.0, simplifying keeps an inexact decimal in a sum; until then, it dropped it.");
             Assert.That(Entity.Number.Rational.Create(EInteger.One, EInteger.FromInt32(10).Pow(200)).EDecimal.IsZero, Is.True, "A fraction converts to a fixed number of decimal places, so NumericEvaluator converts an exact value itself.");
             Assert.That(Parse("pi/10^1500").InnerSimplified, Is.EqualTo(Entity.Number.Integer.Create(0)), "Simplifying takes a value below about 1e-1000 for 0, so NumericEvaluator checks an exact 0 numerically.");
             Assert.That(Parse("pi/10^1000").InnerSimplified, Is.TypeOf<Entity.Divf>());
 
-            // Where it evaluates a function numerically, the bound lies near the precision instead:
+            // Until 2.7.0, where it evaluated a function numerically, the bound lay near the precision instead:
             using var lowerPrecision = MathS.Settings.DecimalPrecisionContext.Set(EContext.ForPrecision(50));
-            Assert.That(MathS.FromString("132521403/200000000000000000000000000000000000000000 * sin(61/100)", useCache: false).InnerSimplified, Is.EqualTo(Entity.Number.Integer.Create(0)), "So NumericCheck evaluates an exact 0 numerically.");
+            Assert.That(MathS.FromString("132521403/200000000000000000000000000000000000000000 * sin(61/100)", useCache: false).InnerSimplified, Is.TypeOf<Entity.Mulf>(), "A product is no longer taken for 0; NumericCheck still evaluates an exact 0 numerically.");
         }
     }
 
     [Test]
-    public void WithoutDowncastingAQuotientOfIntegersIsRoundedToDecimalPlaces()
+    public void WithoutDowncastingAQuotientOfIntegersKeepsItsDigits()
     {
         using var withoutDowncasting = MathS.Settings.DowncastingEnabled.Set(false);
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(DecimalOf("3/10^50 * 7", 30, 20), Is.EqualTo("0E-30"), "At 30 digits, the quotient keeps 30 decimal places, so NumericEvaluator.EvaluateAt adds the leading zeros of the smallest fraction to the precision.");
+            Assert.That(DecimalOf("3/10^50 * 7", 30, 20), Is.EqualTo("2.1E-49"), "Since 2.7.0, the quotient keeps its digits at 30 digits; until then, it kept 30 decimal places, which is why NumericEvaluator.EvaluateAt adds the leading zeros of the smallest fraction to the precision.");
             Assert.That(DecimalOf("3/10^50 * 7", 80, 20), Is.EqualTo("2.1000000000000000000E-49"));
             Assert.That(DecimalOf("2^(-200)", 30, 20), Is.EqualTo("6.2230152778611417071E-61"), "A power keeps its significant digits.");
         }
@@ -182,6 +228,7 @@ public sealed class AngouriMathBehaviorTests
             Assert.That(Parse("integral(x^3/(e^x-1), x, 0, +oo)"), Is.TypeOf<Entity.Integralf>());
             Assert.That(Parse("limit(sin(x)/x, x, 0)"), Is.TypeOf<Entity.Limitf>());
             Assert.That(Parse("+oo"), Is.TypeOf<Entity.Number.Real>());
+            Assert.That(Parse("x²").ToString(), Is.EqualTo("x ^ 2"), "Since 2.8.0, a superscript is a power, also under explicit parsing.");
         }
     }
 
@@ -204,12 +251,40 @@ public sealed class AngouriMathBehaviorTests
         using (Assert.EnterMultipleScope())
         {
             // Under explicit parsing, a character the lexer drops can leave two operands side by side, as in 2·3:
-            foreach (var text in new[] { "2 + * 3", "(2 + 3", "", "√2", "x²", "2·3", "1,5", "2**3", "|x|", "\\frac{1}{2}" })
+            foreach (var text in new[] { "2 + * 3", "(2 + 3", "", "√2", "2·3", "1,5", "2**3", "|x|", "\\frac{1}{2}" })
                 Assert.That(() => Parse(text), Throws.InstanceOf<ParseException>(), text);
 
             Assert.Throws<FunctionArgumentCountException>(() => Parse("sin(1, 2)"));
             Assert.Throws<FunctionArgumentCountException>(() => Parse("integral(x^2, x, 2)"), "An integral has two or four arguments.");
+            Assert.Throws<UnrecognizedFunctionParseException>(() => Parse("factorize(360)"), "Since 2.8.0, some names are refused with a message which names AngouriMath, the C# API, and functions the tools do not support.");
+            Assert.Throws<UnrecognizedFunctionParseException>(() => Parse("trunc(2.5)"));
         }
+    }
+
+    [Test]
+    public void EveryFunctionAndOperatorOfTheParserIsDecidedOn()
+    {
+        var tokens = ParserVocabulary.Tokens();
+        var functions = ParserVocabulary.FunctionNames();
+
+        const string DECISION = "A new token of the parser needs a decision: either MathExpressionReader refuses it, or the tools support it, with a guard in MathGuards where it computes without checking the cancellation token. AngouriMath computes some functions while it parses, so a refusal by the kind of node comes too late for them.";
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(functions.Except(MathExpressionReader.UNSUPPORTED_FUNCTIONS).Order(StringComparer.Ordinal), Is.EqualTo(FUNCTIONS_PASSED_ON), DECISION);
+            Assert.That(tokens.Where(token => !ParserVocabulary.IsFunction(token)).Order(StringComparer.Ordinal), Is.EqualTo(OPERATORS), DECISION);
+            Assert.That(MathExpressionReader.UNSUPPORTED_FUNCTIONS.Except(functions), Is.Empty, "MathExpressionReader refuses only names the parser reads as a function.");
+        }
+    }
+
+    [Test]
+    public void EveryKindOfNodeIsDecidedOn()
+    {
+        var passedOn = typeof(Entity).Assembly.GetTypes()
+            .Where(type => type.IsSubclassOf(typeof(Entity)) && !type.IsAbstract && !MathExpressionReader.UNSUPPORTED_NODE_TYPES.Contains(type))
+            .Select(type => type.FullName!.Replace("AngouriMath.Entity+", string.Empty, StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal);
+
+        Assert.That(passedOn, Is.EqualTo(NODE_TYPES_PASSED_ON), "A new kind of node needs a decision: either MathExpressionReader refuses it, or the tools support it, with a guard in MathGuards where it computes without checking the cancellation token.");
     }
 
     [Test]
@@ -374,7 +449,10 @@ public sealed class AngouriMathBehaviorTests
                 Assert.That(Parse("x^2 + 1 = 0").Solve(X).ToString(), Is.EqualTo("{ i, -i }"), "The codomain does not restrict the solutions.");
 
             Assert.That(Parse("x^2 - 2 = 0").Solve(X).ToString(), Is.EqualTo("{ sqrt(2), -sqrt(2) }"), "The solutions stay exact.");
-            Assert.That(Parse("sin(x) = 1/2").Solve(X).ToString(), Is.EqualTo("{ pi / 6 + 2 * pi * n_1, pi - pi / 6 + 2 * pi * n_1 }"), "n_1 stands for any integer.");
+            Assert.That(Parse("sin(x) = 1/2").Solve(X), Is.TypeOf<Entity.Set.IndexedUnionf>(), "Since 2.8.0, infinitely many solutions are a family, see MathSolutions.");
+            Assert.That(Parse("sin(x) = 1/2").Solve(X).ToString(), Is.EqualTo("union({ pi / 6 + 2 * pi * n, pi - pi / 6 + 2 * pi * n }, n in ZZ)"));
+            Assert.That(Parse("sin(x) = 1/2").Solve(X).FreeVariables.Select(variable => variable.Name), Has.No.Member("n"), "The family binds its index.");
+            Assert.That(Parse("e^x = 2").Solve(X).ToString(), Is.EqualTo("union({ ln(2) + 2 * pi * i * n }, n in ZZ)"), "An exponential equation has all its complex solutions; the one for n = 0 is the real one.");
             Assert.That(Parse("x^2 < 4").Solve(X), Is.TypeOf<Entity.Set.Interval>());
             Assert.That(Parse("x + 1 = x").Solve(X).ToString(), Is.EqualTo("{  }"));
             Assert.Throws<SolveRequiresStatementException>(() => Parse("x^2 - 4").Solve(X));
@@ -388,7 +466,7 @@ public sealed class AngouriMathBehaviorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(withNewton.Count, Is.EqualTo(5));
-            Assert.That(withNewton.All(root => root is Entity.Number.Complex { IsExact: false }), "Newton's roots are doubles, printed with every binary digit.");
+            Assert.That(withNewton.All(root => root is Entity.Number.Complex { IsExact: false }), "Since 2.7.0, the Durand-Kerner iteration gives every root of such a polynomial as a decimal. It never checks the cancellation token, which is one more reason for the tools to switch Newton's method off.");
 
             using (MathS.Settings.AllowNewton.Set(false))
                 Assert.That(Parse("x^5 + 3*x + 1 = 0").Solve(X), Is.TypeOf<Entity.Set.ConditionalSet>());
@@ -400,15 +478,19 @@ public sealed class AngouriMathBehaviorTests
     [Test]
     public void SolveHonorsTheCancellationTokenOfItsThread()
     {
+        // Since 2.7.0, nothing without Newton's method takes long enough to cancel it midway in a test, so the token is cancelled from the start:
         var task = Task.Run(() =>
         {
-            using var source = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+            var equation = Parse("x^2 - 3*x = 4");
+            using var source = new CancellationTokenSource();
+            source.Cancel();
             MathS.Multithreading.SetLocalCancellationToken(source.Token);
-            return Parse("x^20 + x + 1 = 0").Solve(X);
+            using var withoutNewton = MathS.Settings.AllowNewton.Set(false);
+            return equation.Solve(X);
         });
 
         var exception = Assert.Throws<AggregateException>(() => task.Wait(TimeSpan.FromSeconds(10)))!;
-        Assert.That(exception.InnerException, Is.InstanceOf<OperationCanceledException>(), "Without the token, this takes about 1.6 seconds.");
+        Assert.That(exception.InnerException, Is.InstanceOf<OperationCanceledException>(), "MathComputationService stops a computation through this token.");
     }
 
     [Test]

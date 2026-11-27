@@ -26,6 +26,12 @@ public static class BflWorkStateSections
         new("CONFLICTS", BflStep.FRAMEWORK, "Mögliche Konfliktstruktur: Evidenz-, Ziel-, Wert- oder Interessenkonflikte, als Hypothese."),
         new(OPEN_POINTS, BflStep.FRAMEWORK, "Offene Punkte, die die Person noch klären oder recherchieren möchte."),
 
+        new("GOAL", BflStep.GOALS_AND_ROLE, "Was die Person mit ihrem Beitrag erreichen möchte."),
+        new("ROLE", BflStep.GOALS_AND_ROLE, "In welchen Rollen sie spricht, etwa nach Pielke, mit welcher Verantwortung und welchen Interessen."),
+        new("REASONS", BflStep.GOALS_AND_ROLE, "Eine kurze Begründung für Ziel und Rollen."),
+        new("CONSEQUENCES", BflStep.GOALS_AND_ROLE, "Folgen von Ziel und Rollen für ihren Auftritt."),
+        new(OPEN_POINTS, BflStep.GOALS_AND_ROLE, "Offene Punkte."),
+
         new("ESTABLISHED", BflStep.KNOWLEDGE, "Gesicherte Aussagen der Person und worauf sie beruhen."),
         new("UNCERTAINTIES", BflStep.KNOWLEDGE, "Unsicherheiten und Grenzen des Wissens."),
         new("WEAK_POINTS", BflStep.KNOWLEDGE, "Schwachstellen und mögliche Kritikpunkte ihrer Arbeit."),
@@ -33,12 +39,6 @@ public static class BflWorkStateSections
         new("EXPERTISE_LIMITS", BflStep.KNOWLEDGE, "Wo die Expertise der Person endet."),
         new("KEY_MESSAGES", BflStep.KNOWLEDGE, "Ein bis zwei mögliche Kernbotschaften."),
         new(OPEN_POINTS, BflStep.KNOWLEDGE, "Offene Punkte und Wissenslücken."),
-
-        new("GOAL", BflStep.GOALS_AND_ROLE, "Was die Person mit ihrem Beitrag erreichen möchte."),
-        new("ROLE", BflStep.GOALS_AND_ROLE, "In welcher Rolle sie spricht, etwa nach Pielke, mit welcher Verantwortung und welchen Interessen."),
-        new("REASONS", BflStep.GOALS_AND_ROLE, "Eine kurze Begründung für Ziel und Rolle."),
-        new("CONSEQUENCES", BflStep.GOALS_AND_ROLE, "Folgen von Ziel und Rolle für ihren Auftritt."),
-        new(OPEN_POINTS, BflStep.GOALS_AND_ROLE, "Offene Punkte."),
 
         new("VALUES", BflStep.VALUES_AND_PERSPECTIVES, "Für den Anlass wichtige Werte und ihre Bedeutung, auch aus der Werte-Sortierung und den eigenen Werten der Person; die Werte, die sie genauer betrachtet hat, zuerst."),
         new("VALUE_CONFLICTS", BflStep.VALUES_AND_PERSPECTIVES, "Erkannte Wertkonflikte und die Abwägungen der Person."),

@@ -1,4 +1,4 @@
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Settings;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
@@ -111,8 +111,8 @@ public static class PluginAssistantSecurityResolver
                 CanActivatePlugin = true,
                 CanStartAssistant = true,
                 AuditLabel = TB("Safe"),
-                AuditColor = AssistantAuditLevel.SAFE.Color,
-                AuditIcon = AssistantAuditLevel.SAFE.Icon,
+                AuditColor = PluginAuditLevel.SAFE.Color,
+                AuditIcon = PluginAuditLevel.SAFE.Icon,
                 AvailabilityLabel = GetAvailabilityLabel(requiresAudit: false, hasAudit: true, hasHashMismatch: false, isBlocked: false, canOverride: false),
                 AvailabilityColor = GetAvailabilityColor(requiresAudit: false, hasAudit: true, hasHashMismatch: false, isBlocked: false, canOverride: false),
                 AvailabilityIcon = GetAvailabilityIcon(requiresAudit: false, hasAudit: true, hasHashMismatch: false, isBlocked: false, canOverride: false),
@@ -130,7 +130,7 @@ public static class PluginAssistantSecurityResolver
         }
 
         var audit = settingsManager.ConfigurationData.AssistantPluginAudits.FirstOrDefault(x => x.PluginId == plugin.Id);
-        var hasAudit = audit is not null && audit.Level is not AssistantAuditLevel.UNKNOWN;
+        var hasAudit = audit is not null && audit.Level is not PluginAuditLevel.UNKNOWN;
         var hashMatches = hasAudit && string.Equals(NormalizeHash(audit!.PluginHash), currentHash, StringComparison.Ordinal);
         var hasHashMismatch = hasAudit && !hashMatches;
         var isBelowMinimum = hashMatches && audit is not null && audit.Level < auditSettings.MinimumLevel;
@@ -159,8 +159,8 @@ public static class PluginAssistantSecurityResolver
                 CanActivatePlugin = !isBlocked,
                 CanStartAssistant = !isBlocked,
                 AuditLabel = TB("Unknown"),
-                AuditColor = AssistantAuditLevel.UNKNOWN.Color,
-                AuditIcon = AssistantAuditLevel.UNKNOWN.Icon,
+                AuditColor = PluginAuditLevel.UNKNOWN.Color,
+                AuditIcon = PluginAuditLevel.UNKNOWN.Icon,
                 AvailabilityLabel = GetAvailabilityLabel(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 AvailabilityColor = GetAvailabilityColor(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 AvailabilityIcon = GetAvailabilityIcon(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
@@ -198,8 +198,8 @@ public static class PluginAssistantSecurityResolver
                 CanActivatePlugin = !isBlocked,
                 CanStartAssistant = !isBlocked,
                 AuditLabel = TB("Unknown"),
-                AuditColor = AssistantAuditLevel.UNKNOWN.Color,
-                AuditIcon = AssistantAuditLevel.UNKNOWN.Icon,
+                AuditColor = PluginAuditLevel.UNKNOWN.Color,
+                AuditIcon = PluginAuditLevel.UNKNOWN.Icon,
                 AvailabilityLabel = GetAvailabilityLabel(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 AvailabilityColor = GetAvailabilityColor(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),
                 AvailabilityIcon = GetAvailabilityIcon(requiresAudit, hasAudit, hasHashMismatch, isBlocked, canOverride: false),

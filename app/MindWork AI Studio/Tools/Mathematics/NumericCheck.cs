@@ -17,8 +17,8 @@ namespace AIStudio.Tools.Mathematics;
 /// A point where either side has no value, such as a pole, is skipped. Agreement at the points
 /// supports the equality; it does not prove it.<br/><br/>
 /// A derivative is compared with the central difference of its function, over a step of 1e-20 at 60
-/// digits. The integer parameter of periodic solutions, which AngouriMath names n_1, takes the values
-/// -1, 0, and 1 instead, since such a solution holds at integers only.<br/><br/>
+/// digits. The index of a family of solutions takes three integers of its set instead, -1, 0, and 1 for
+/// any integer, since such a solution holds for those values only.<br/><br/>
 /// Call it inside a computation of MathComputationService.
 /// </remarks>
 public static class NumericCheck
@@ -40,7 +40,18 @@ public static class NumericCheck
     /// <summary>
     /// The precision of a derivative check: the central difference divides by its tiny step.
     /// </summary>
+    /// <remarks>
+    /// It suffices for a function no larger than its derivative, with 20 digits to spare. The difference
+    /// of a larger one, such as 100! + sin(x) or gamma(100, x), would be lost in the rounding of its
+    /// values, so the check takes one digit more for each power of ten by which the function exceeds its
+    /// derivative, see DerivativePrecisionAt.
+    /// </remarks>
     private const int DERIVATIVE_PRECISION = 60;
+
+    /// <summary>
+    /// The highest precision of a derivative check; a point which would need more is left out.
+    /// </summary>
+    private const int MAX_DERIVATIVE_PRECISION = 1_000;
 
     /// <summary>
     /// The step of the central difference: rounding at 60 digits costs about 1e-40 of it, and its own
@@ -53,6 +64,16 @@ public static class NumericCheck
     private static readonly EDecimal DERIVATIVE_TOLERANCE = EDecimal.FromString("1e-20");
 
     /// <summary>
+    /// The integers an index of a family of solutions may take, in the order they are tried.
+    /// </summary>
+    private static readonly int[] INDEX_CANDIDATES = [-1, 0, 1, 2, -2, 3, -3];
+
+    /// <summary>
+    /// How many integers of its set an index takes across the sample points.
+    /// </summary>
+    private const int INDEX_VALUES = 3;
+
+    /// <summary>
     /// Checks whether two expressions agree at every sample point where both have a value.
     /// </summary>
     /// <remarks>
@@ -62,17 +83,30 @@ public static class NumericCheck
     /// <param name="left">One expression.</param>
     /// <param name="right">The other expression.</param>
     /// <returns>What the check found.</returns>
-    public static NumericCheckOutcome AreEqual(Entity left, Entity right)
+    public static NumericCheckOutcome AreEqual(Entity left, Entity right) => AreEqual(left, right, []);
+
+    /// <summary>
+    /// Checks whether two expressions agree at every sample point where both have a value, with the indices of a
+    /// family of solutions taking integers of their sets.
+    /// </summary>
+    /// <param name="left">One expression.</param>
+    /// <param name="right">The other expression.</param>
+    /// <param name="indices">The indices which occur freely in the expressions, e.g., n for any integer.</param>
+    /// <returns>What the check found; not possible when an index takes none of the integers tried.</returns>
+    public static NumericCheckOutcome AreEqual(Entity left, Entity right, IReadOnlyList<SolutionIndex> indices)
     {
         left = WithoutCondition(left);
         right = WithoutCondition(right);
         var variables = MathVariables.FreeIn(left).Concat(MathVariables.FreeIn(right)).Distinct().OrderBy(variable => variable.Name, StringComparer.Ordinal).ToArray();
+        var indexValues = IndexValues(indices);
+        if (indexValues.Values.Any(values => values.Count == 0))
+            return NumericCheckOutcome.NOT_POSSIBLE;
 
         using var precision = MathS.Settings.DecimalPrecisionContext.Set(EContext.ForPrecision(PRECISION));
         var validPoints = 0;
         for (var point = 0; point < SAMPLE_POINTS; point++)
         {
-            var assignment = SampleAssignment(point, variables);
+            var assignment = SampleAssignment(point, variables, indexValues);
             var leftValue = ValueAt(left, assignment);
             var rightValue = ValueAt(right, assignment);
             if (leftValue is null || rightValue is null)
@@ -106,12 +140,21 @@ public static class NumericCheck
             var assignment = SampleAssignment(point, variables);
             var at = assignment[variable];
             var claimed = ValueAt(derivative, assignment);
-            var above = ValueAt(function, With(assignment, variable, (at + DERIVATIVE_STEP).InnerSimplified));
-            var below = ValueAt(function, With(assignment, variable, (at - DERIVATIVE_STEP).InnerSimplified));
-            if (claimed is null || above is null || below is null)
+            var value = ValueAt(function, assignment);
+            if (claimed is null || value is null)
                 continue;
 
-            var difference = NumericEvaluator.EvaluateAt(((Entity)above - below) / TWO_DERIVATIVE_STEPS, DERIVATIVE_PRECISION);
+            var digits = DerivativePrecisionAt(value, claimed);
+            if (digits > MAX_DERIVATIVE_PRECISION)
+                continue;
+
+            using var pointPrecision = MathS.Settings.DecimalPrecisionContext.Set(EContext.ForPrecision(digits));
+            var above = ValueAt(function, With(assignment, variable, (at + DERIVATIVE_STEP).InnerSimplified));
+            var below = ValueAt(function, With(assignment, variable, (at - DERIVATIVE_STEP).InnerSimplified));
+            if (above is null || below is null)
+                continue;
+
+            var difference = NumericEvaluator.EvaluateAt(((Entity)above - below) / TWO_DERIVATIVE_STEPS, digits);
             validPoints++;
             if (!AreClose(claimed, difference, DERIVATIVE_TOLERANCE))
                 return NumericCheckOutcome.FAILED;
@@ -121,11 +164,32 @@ public static class NumericCheck
     }
 
     /// <summary>
-    /// Whether AngouriMath named a variable as the integer parameter of periodic solutions, as in pi / 6 + 2 * pi * n_1.
+    /// The precision a central difference needs at a point: DERIVATIVE_PRECISION, and one digit more for each
+    /// power of ten by which the function exceeds its derivative.
     /// </summary>
-    /// <param name="variable">The variable.</param>
-    /// <returns>True for n_1, n_2, and so on.</returns>
-    public static bool IsIntegerParameter(Entity.Variable variable) => variable.Name.StartsWith("n_", StringComparison.Ordinal) && variable.Name.Length > 2 && variable.Name[2..].All(char.IsAsciiDigit);
+    /// <remarks>
+    /// Rounding to p digits changes each value of the function by about 10^-p of it, which the division by
+    /// the step of 1e-20 enlarges to 10^(20 - p) of it. To stay within DERIVATIVE_TOLERANCE of the derivative,
+    /// p has to exceed 40 plus the decimal logarithm of their ratio; DERIVATIVE_PRECISION keeps 20 digits
+    /// more. Against a derivative of 0, the tolerance is absolute.
+    /// </remarks>
+    private static int DerivativePrecisionAt(Entity.Number.Complex value, Entity.Number.Complex derivative)
+    {
+        var ratio = DecimalLogarithmOfSize(value) - (IsZero(derivative) ? 0 : DecimalLogarithmOfSize(derivative));
+        return DERIVATIVE_PRECISION + (int)Math.Max(0, Math.Ceiling(ratio));
+    }
+
+    /// <summary>
+    /// The decimal logarithm of the larger part of a number, roughly, also beyond the range of a double.
+    /// </summary>
+    private static double DecimalLogarithmOfSize(Entity.Number.Complex number)
+    {
+        var size = EDecimal.Max(number.RealPart.EDecimal.Abs(), number.ImaginaryPart.EDecimal.Abs());
+        if (size.IsZero)
+            return double.NegativeInfinity;
+
+        return size.Exponent.ToInt64Checked() + size.Mantissa.Abs().GetDigitCountAsInt64() - 1;
+    }
 
     /// <summary>
     /// The values of the variables at one sample point.
@@ -133,15 +197,40 @@ public static class NumericCheck
     /// <param name="point">The number of the point, from zero.</param>
     /// <param name="variables">The variables, in a fixed order.</param>
     /// <returns>Each variable with its exact value.</returns>
-    public static IReadOnlyDictionary<Entity.Variable, Entity> SampleAssignment(int point, IReadOnlyList<Entity.Variable> variables)
+    public static IReadOnlyDictionary<Entity.Variable, Entity> SampleAssignment(int point, IReadOnlyList<Entity.Variable> variables) => SampleAssignment(point, variables, new Dictionary<Entity.Variable, IReadOnlyList<Entity>>());
+
+    /// <summary>
+    /// The values of the variables at one sample point, where the indices of a family of solutions take integers of their sets.
+    /// </summary>
+    /// <param name="point">The number of the point, from zero.</param>
+    /// <param name="variables">The variables, in a fixed order.</param>
+    /// <param name="indices">The indices among the variables.</param>
+    /// <returns>Each variable with its exact value; an index which takes none of the integers tried is left out.</returns>
+    public static IReadOnlyDictionary<Entity.Variable, Entity> SampleAssignment(int point, IReadOnlyList<Entity.Variable> variables, IReadOnlyList<SolutionIndex> indices) => SampleAssignment(point, variables, IndexValues(indices));
+
+    /// <summary>
+    /// The integers each index takes, at most INDEX_VALUES of them.
+    /// </summary>
+    private static Dictionary<Entity.Variable, IReadOnlyList<Entity>> IndexValues(IReadOnlyList<SolutionIndex> indices)
+    {
+        var values = new Dictionary<Entity.Variable, IReadOnlyList<Entity>>(indices.Count);
+        foreach (var index in indices)
+            values[index.Variable] = [..INDEX_CANDIDATES.Where(index.Takes).Take(INDEX_VALUES).Select(Entity (candidate) => Entity.Number.Integer.Create(candidate))];
+
+        return values;
+    }
+
+    private static Dictionary<Entity.Variable, Entity> SampleAssignment(int point, IReadOnlyList<Entity.Variable> variables, IReadOnlyDictionary<Entity.Variable, IReadOnlyList<Entity>> indexValues)
     {
         var assignment = new Dictionary<Entity.Variable, Entity>(variables.Count);
         for (var index = 0; index < variables.Count; index++)
         {
-            // An integer parameter takes -1, 0, and 1, since a periodic solution holds only at integers:
-            if (IsIntegerParameter(variables[index]))
+            // An index takes integers of its set, since a family of solutions holds only there:
+            if (indexValues.TryGetValue(variables[index], out var values))
             {
-                assignment[variables[index]] = Entity.Number.Integer.Create((point + index) % 3 - 1);
+                if (values.Count > 0)
+                    assignment[variables[index]] = values[(point + index) % values.Count];
+
                 continue;
             }
 
@@ -159,7 +248,7 @@ public static class NumericCheck
     /// </summary>
     /// <param name="expression">The expression.</param>
     /// <param name="assignment">The value of each variable.</param>
-    /// <returns>The value, or null for no value, an infinite one, or one AngouriMath cannot evaluate.</returns>
+    /// <returns>The value, or null for no value, an infinite one, one MathGuards.CheckValueAtPoint refuses, or one AngouriMath cannot evaluate.</returns>
     public static Entity.Number.Complex? ValueAt(Entity expression, IReadOnlyDictionary<Entity.Variable, Entity> assignment)
     {
         try
@@ -168,13 +257,18 @@ public static class NumericCheck
             foreach (var (variable, value) in assignment)
                 substituted = substituted.Substitute(variable, value);
 
+            // A value of a variable may make a factorial or a power too large to be computed exactly, as x = 2.23 in
+            // (10^6 * x)!, or take a special function beyond its limits, as in gamma(1/2, 1000 * x). The check comes
+            // first, since EvaluableNumerical already computes the exact value:
+            MathGuards.CheckValueAtPoint(substituted);
             if (!substituted.EvaluableNumerical)
                 return null;
 
             //
             // A polynomial at a sample point stays exact. Anything else is evaluated without the downcasting which turns
-            // tiny values into 0, and so is an exact 0: simplifying takes a tiny value such as 6.62607015e-34 * sin(0.61)
-            // for 0 at this precision, see AngouriMathBehaviorTests:
+            // tiny values into 0, and so is an exact 0: simplifying takes a value below about 1e-1000 for 0, and up to
+            // version 2.6.0, it took a tiny value such as 6.62607015e-34 * sin(0.61) for 0 at this precision, see
+            // AngouriMathBehaviorTests:
             //
             var exact = NumericEvaluator.ExactValueOf(substituted);
             var number = exact is not null && !IsZero(exact) ? exact : NumericEvaluator.EvaluateAt(substituted, MathS.Settings.DecimalPrecisionContext.Value.Precision.ToInt32Checked());

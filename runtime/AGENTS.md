@@ -89,6 +89,32 @@ blocking handler can hold up the whole app. Therefore:
 - `runtime_api::test_support::assert_runtime_stays_free` tests a handler which waits for a lock. Run
   such a test with `#[tokio::test(flavor = "multi_thread", worker_threads = 1)]`.
 
+**AI Studio restarts itself only through `own_restart.rs`.** Since Tauri 2.12.6, a restart on macOS starts
+the new instance in the background, so that it takes no focus away from the app the user works in. AI
+Studio restarts itself only on behalf of the user, after an update or the restore of a backup, and the
+user then expects to see the app again. The new instance cannot bring its window to the front by itself:
+macOS lets an app become active only when the active app allows it. Therefore:
+
+- Call `own_restart::restart` or `own_restart::request_restart`, never `AppHandle::restart` or
+  `AppHandle::request_restart` directly. Both note that AI Studio restarts itself.
+- On `RunEvent::Exit`, which comes right before Tauri starts the new instance, `start_new_instance_in_front`
+  lets the old instance, which is still the active app, start the new one in the foreground and ends the
+  process.
+- Call `own_restart::restart` outside the main thread only. On the main thread, Tauri restarts the app at
+  once, without `RunEvent::Exit`, and therefore in the background.
+
+**Every build uses the Rust toolchain of `metadata.txt`.** Line 6 names it for the pipeline, the cloud
+sessions, and, since MindWorkAI/Flatpak#41, the Flatpak as well, which installs that toolchain instead of
+the extension `org.freedesktop.Sdk.Extension.rust-stable` of Flathub, which lagged behind by several
+versions. Therefore:
+
+- `rust-version` in `Cargo.toml` names the minor version of line 6, such as `1.100`. Clippy refuses every
+  API of the standard library which is newer (`incompatible_msrv`).
+- Raise both together when you upgrade Rust. The build script writes line 6 from the local `rustc` but
+  leaves `rust-version` alone. Never raise `rust-version` above line 6: Cargo then refuses the toolchain
+  of line 6, and the pipeline and the Flatpak fail.
+- Never silence `incompatible_msrv`. When the code needs a newer API, upgrade Rust first.
+
 ## IPC Communication Flow
 1. Rust runtime starts and generates TLS certificate
 2. Rust starts internal HTTPS API on random port

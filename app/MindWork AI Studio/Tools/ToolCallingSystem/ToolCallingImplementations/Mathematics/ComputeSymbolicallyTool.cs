@@ -94,7 +94,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
                                    - `result` is the answer in plain syntax, and `result_latex` the same for your reply. A `condition` says where the result holds, e.g., `not x - 1 = 0`; mention it.
                                    - When `complete` is false, the tool found no closed form, and `result` still holds the integral, the limit, or the equation. Never present it as an answer; `calculate` gives a definite integral numerically.
                                    - `verification` says whether the result was checked numerically: `passed`, `failed`, or `not_possible`. Never present a result with `failed` as correct, and say when the check was `not_possible`.
-                                   - Solutions may be complex; `real` tells for each one with a value. n_1 stands for any integer, r_1 for any real number, and C for any constant.
+                                   - Solutions may be complex; `real` tells for each one with a value. A solution with `holds_for` is one solution for every value of its index, such as n in pi / 6 + 2 * pi * n; `at_index_0` gives it for the index 0, with its decimal. `issues` say what other names in a result stand for, such as r_1 or C.
                                    """,
         Function = new()
         {
@@ -390,13 +390,31 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
             issues.Add("The expression has no '=', so it was solved for expression = 0.");
         }
 
-        var solutions = statement.Solve(variable);
         json["variable"] = variable.Name;
+        Solutions(json, issues, expression, statement, variable, statement.Solve(variable));
+    }
+
+    /// <summary>
+    /// Writes the solutions of a statement, and checks each one by inserting it.
+    /// </summary>
+    /// <remarks>
+    /// A family of solutions, such as union({ pi / 6 + 2 * pi * n }, n in ZZ), holds one solution for every value of
+    /// its index, see MathSolutions. Each of its members says so in holds_for, and gives the solution for the index 0
+    /// with its decimal, since that is the one a model asks for most, as in the time a sum takes to double.
+    /// </remarks>
+    /// <param name="json">The result for the model.</param>
+    /// <param name="issues">The issues of the result.</param>
+    /// <param name="expression">The expression as the model wrote it.</param>
+    /// <param name="statement">The statement which was solved.</param>
+    /// <param name="variable">The variable it was solved for.</param>
+    /// <param name="solutions">The set of solutions.</param>
+    internal static void Solutions(JsonObject json, List<string> issues, Entity expression, Entity statement, Entity.Variable variable, Entity solutions)
+    {
         json["result"] = MathFormatting.ToText(solutions, "The set of solutions");
         json["result_latex"] = MathFormatting.ToLatex(solutions, "The LaTeX of the solutions");
         ExplainParameters(issues, expression, solutions);
 
-        if (solutions is Entity.Set.ConditionalSet)
+        if (MathSolutions.HasUnsolvedPart(solutions))
         {
             json["complete"] = false;
             json["verification"] = Verification(NumericCheckOutcome.NOT_POSSIBLE);
@@ -405,26 +423,49 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
         }
 
         json["complete"] = true;
-        if (solutions is not Entity.Set.FiniteSet finite)
+        var members = MathSolutions.MembersOf(solutions);
+        if (members is null)
         {
             json["verification"] = Verification(NumericCheckOutcome.NOT_POSSIBLE);
             return;
         }
 
-        var outcome = finite.Count == 0 || statement is not Entity.Equalsf ? NumericCheckOutcome.NOT_POSSIBLE : NumericCheckOutcome.PASSED;
+        var outcome = members.Count == 0 || statement is not Entity.Equalsf ? NumericCheckOutcome.NOT_POSSIBLE : NumericCheckOutcome.PASSED;
         var list = new JsonArray();
-        foreach (var solution in finite)
+        foreach (var member in members)
         {
-            list.Add(Solution(solution));
+            list.Add(Solution(member));
             if (statement is Entity.Equalsf equation)
-                outcome = Combined(outcome, NumericCheck.AreEqual(equation.Left.Substitute(variable, solution), equation.Right.Substitute(variable, solution)));
+                outcome = Combined(outcome, NumericCheck.AreEqual(equation.Left.Substitute(variable, member.Value), equation.Right.Substitute(variable, member.Value), member.Indices));
         }
 
         json["solutions"] = list;
         json["verification"] = Verification(outcome);
-        if (finite.Count == 0)
+        if (members.Count == 0)
             issues.Add("There is no solution.");
     }
+
+    /// <summary>
+    /// Writes a member of the solutions, and for a member of a family the values its indices take and its solution for the index 0.
+    /// </summary>
+    private static JsonObject Solution(SolutionMember member)
+    {
+        var json = Solution(member.Value);
+        if (member.Indices.Count == 0)
+            return json;
+
+        json["holds_for"] = string.Join(" and ", member.Indices.Select(DescribeIndex));
+        if (!member.Indices.All(index => index.Takes(0)))
+            return json;
+
+        var atIndexZero = member.Indices.Aggregate(member.Value, (solution, index) => solution.Substitute(index.Variable, 0));
+        json["at_index_0"] = Solution(atIndexZero.Simplify());
+        return json;
+    }
+
+    private static string DescribeIndex(SolutionIndex index) => index.Over is Entity.Set.SpecialSet.Integers
+        ? $"every integer {index.Variable.Name}"
+        : $"every {index.Variable.Name} in {MathFormatting.ToText(index.Over, "The set of an index")}";
 
     private static JsonObject Solution(Entity solution)
     {
@@ -479,9 +520,7 @@ public sealed class ComputeSymbolicallyTool(SettingsManager settingsManager, Mat
         var original = MathVariables.FreeIn(expression).Select(variable => variable.Name).ToHashSet(StringComparer.Ordinal);
         foreach (var variable in MathVariables.FreeIn(result).Where(variable => !original.Contains(variable.Name)))
         {
-            if (NumericCheck.IsIntegerParameter(variable))
-                issues.Add($"{variable.Name} stands for any integer.");
-            else if (variable.Name.StartsWith("r_", StringComparison.Ordinal))
+            if (variable.Name.StartsWith("r_", StringComparison.Ordinal))
                 issues.Add($"{variable.Name} stands for any real number.");
             else if (variable.Name == "C" || variable.Name.StartsWith("C_", StringComparison.Ordinal))
                 issues.Add($"{variable.Name} stands for any constant.");

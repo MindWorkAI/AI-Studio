@@ -72,7 +72,7 @@
                         var fieldOptions = field.GetOptions();
                         if (fieldOptions.Count > 0)
                         {
-                            <MudSelect T="string" Label="@GetFieldLabel(toolSection, fieldName, field)" Value="@GetValue(toolSection, fieldName)" ValueChanged="@(value => this.UpdateValue(toolSection, fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(toolSection, fieldName, field)" Placeholder="@GetFieldPlaceholder(toolSection, fieldName, field)" Class="mb-3 configuration-help-justified" Disabled="@this.IsFieldDisabled(toolSection, fieldName)">
+                            <MudSelect T="string" Label="@GetFieldLabel(toolSection, fieldName, field)" Value="@GetValue(toolSection, fieldName)" ValueChanged="@(value => this.UpdateValue(toolSection, fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(toolSection, fieldName, field)" Placeholder="@GetFieldPlaceholder(toolSection, fieldName, field)" Class="mb-3" Disabled="@this.IsFieldDisabled(toolSection, fieldName)">
                                 @if (!toolSection.Definition.SettingsSchema.Required.Contains(fieldName))
                                 {
                                     <MudSelectItem T="string" Value="@string.Empty">@T("Not set")</MudSelectItem>
@@ -85,7 +85,7 @@
                         }
                         else
                         {
-                            <MudTextField T="string" Label="@GetFieldLabel(toolSection, fieldName, field)" Value="@GetValue(toolSection, fieldName)" ValueChanged="@(value => this.UpdateValue(toolSection, fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 configuration-help-justified" HelperText="@this.GetFieldDescription(toolSection, fieldName, field)" Placeholder="@GetFieldPlaceholder(toolSection, fieldName, field)" InputType="@(field.Secret ? InputType.Password : InputType.Text)" Disabled="@this.IsFieldDisabled(toolSection, fieldName)" />
+                            <MudTextField T="string" Label="@GetFieldLabel(toolSection, fieldName, field)" Value="@GetValue(toolSection, fieldName)" ValueChanged="@(value => this.UpdateValue(toolSection, fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" HelperText="@this.GetFieldDescription(toolSection, fieldName, field)" Placeholder="@GetFieldPlaceholder(toolSection, fieldName, field)" InputType="@(field.Secret ? InputType.Password : InputType.Text)" Disabled="@this.IsFieldDisabled(toolSection, fieldName)" Validation="@GetFieldValidation(field)" DebounceInterval="@GetFieldDebounceInterval(field)" />
                         }
                     }
                     </MudPaper>

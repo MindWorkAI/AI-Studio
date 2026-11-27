@@ -34,7 +34,7 @@ public sealed class SettingsStorageTests
 
     private const string SETTINGS_FILENAME = "settings.json";
 
-    private const string BACKUP_FILENAME = "settings.v6.json";
+    private const string BACKUP_FILENAME = "settings.v7.json";
 
     private string? previousConfigDirectory;
     private string? previousDataDirectory;
@@ -87,8 +87,8 @@ public sealed class SettingsStorageTests
         {
             Assert.That(File.Exists(settingsPath), Is.True, "The settings file was never written.");
             Assert.That(File.Exists(backupPath), Is.True, "The settings backup file was never written.");
-            Assert.That(ReadSettingsFile(settingsPath)?.Version, Is.EqualTo(Version.V6), "The settings file could not be read back.");
-            Assert.That(ReadSettingsFile(backupPath)?.Version, Is.EqualTo(Version.V6), "The settings backup file could not be read back.");
+            Assert.That(ReadSettingsFile(settingsPath)?.Version, Is.EqualTo(Version.V7), "The settings file could not be read back.");
+            Assert.That(ReadSettingsFile(backupPath)?.Version, Is.EqualTo(Version.V7), "The settings backup file could not be read back.");
         }
     }
 

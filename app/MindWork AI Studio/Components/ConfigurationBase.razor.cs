@@ -56,7 +56,7 @@ public abstract partial class ConfigurationBase : MSGComponentBase
 
     protected bool IsDisabled => this.Disabled() || this.IsLocked();
     
-    private string Classes => $"{this.GetClassForBase} {JUSTIFIED_HELP_CLASS} {this.MarginClass}";
+    private string Classes => $"{this.GetClassForBase} {this.MarginClass}";
 
     /// <summary>
     /// The bottom margin of the option. Options inside settings panels need the default
@@ -65,8 +65,6 @@ public abstract partial class ConfigurationBase : MSGComponentBase
     protected virtual string MarginClass => MARGIN_CLASS;
     
     private protected virtual RenderFragment? Body => null;
-
-    private const string JUSTIFIED_HELP_CLASS = "configuration-help-justified";
 
     private const string MARGIN_CLASS = "mb-6";
     

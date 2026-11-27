@@ -23,7 +23,10 @@ public sealed class EncryptionTests
 
     private static readonly byte[] SECRET_KEY_SALT = Enumerable.Range(0xA0, 16).Select(index => (byte)index).ToArray();
 
-    private static async Task<Encryption> CreateEncryptionAsync()
+    /// <summary>
+    /// The encryption with the password and the salt of these tests, which the tests of the runtime use as well.
+    /// </summary>
+    internal static async Task<Encryption> CreateEncryptionAsync()
     {
         var encryption = new Encryption(NullLogger<Encryption>.Instance, SECRET_PASSWORD, SECRET_KEY_SALT);
         await encryption.Initialize();
@@ -33,6 +36,7 @@ public sealed class EncryptionTests
     [TestCase("oKGio6SlpqeoqaqrrK2ur3lNRzNAfoSYKyC70CpjwS8=", "", TestName = "An empty text")]
     [TestCase("oKGio6SlpqeoqaqrrK2urwUfAfn5LbbIjbOC9nSvtUU=", "sk-imported-key", TestName = "A text within one block")]
     [TestCase("oKGio6SlpqeoqaqrrK2urwbjgbJCNk6Zw1Z9HyIiJdZJ+E7czzLYlM/undXUIsDr", "Schlüssel für Größe 🔑", TestName = "A text beyond ASCII")]
+    [TestCase("oKGio6SlpqeoqaqrrK2ur3BiwUyVT93sLAJFWcOIdZt7LL+HTABMxQmvnRNB/L1fvXrfJEBKdaufFaHZj+sLnQ==", "şifre-Łódź-пароль-日本-한글", TestName = "A text in several scripts")]
     public async Task TheAppEncryptsLikeTheRuntime(string expectedEncryptedValue, string text)
     {
         var encryption = await CreateEncryptionAsync();
@@ -44,6 +48,13 @@ public sealed class EncryptionTests
     [TestCase("oKGio6SlpqeoqaqrrK2ur3lNRzNAfoSYKyC70CpjwS8=", "", TestName = "An empty encrypted text")]
     [TestCase("oKGio6SlpqeoqaqrrK2urwUfAfn5LbbIjbOC9nSvtUU=", "sk-imported-key", TestName = "An encrypted text within one block")]
     [TestCase("oKGio6SlpqeoqaqrrK2urwbjgbJCNk6Zw1Z9HyIiJdZJ+E7czzLYlM/undXUIsDr", "Schlüssel für Größe 🔑", TestName = "An encrypted text beyond ASCII")]
+    [TestCase("oKGio6SlpqeoqaqrrK2ur3BiwUyVT93sLAJFWcOIdZt7LL+HTABMxQmvnRNB/L1fvXrfJEBKdaufFaHZj+sLnQ==", "şifre-Łódź-пароль-日本-한글", TestName = "An encrypted text in several scripts")]
+
+    // The runtime encodes the salt and the encrypted text one after the other, so the salt keeps its
+    // padding, cf. encrypts_text_beyond_ascii_for_the_app in runtime/src/encryption.rs. This is how
+    // a secret from the OS keyring arrives:
+    [TestCase("oKGio6SlpqeoqaqrrK2urw==BuOBskI2TpnDVn0fIiIl1kn4TtzPMtiUz+6d1dQiwOs=", "Schlüssel für Größe 🔑", TestName = "A text beyond ASCII as the runtime encrypts it")]
+    [TestCase("oKGio6SlpqeoqaqrrK2urw==cGLBTJVP3ewsAkVZw4h1m3ssv4dMAEzFCa+dE0H8vV+9et8kQEp1q58VodmP6wud", "şifre-Łódź-пароль-日本-한글", TestName = "A text in several scripts as the runtime encrypts it")]
     public async Task TheAppDecryptsWhatTheRuntimeEncrypted(string encryptedValue, string expectedText)
     {
         var encryption = await CreateEncryptionAsync();

@@ -40,6 +40,7 @@ public static partial class JsonTestRoots
         yield return Case(new(typeof(DataV1V3), SettingsManager.JSON_OPTIONS));
         yield return Case(new(typeof(DataV4), SettingsManager.JSON_OPTIONS));
         yield return Case(new(typeof(DataV5), SettingsManager.JSON_OPTIONS));
+        yield return Case(new(typeof(DataV6), SettingsManager.JSON_OPTIONS));
 
         //
         // The values of managed settings, which get written and read on their own, as the type of their

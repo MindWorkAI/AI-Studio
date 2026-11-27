@@ -103,7 +103,7 @@ else
     </MudSelect>
     @if (this.selectedProgrammingLanguage is ProgrammingLanguages.OTHER)
     {
-        <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Text="@this.otherProgrammingLanguage" Validation="@this.ValidateOtherLanguage" Label="@T("Other language")" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Value="@this.otherProgrammingLanguage" Validation="@this.ValidateOtherLanguage" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" Label="@T("Other language")" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
 </MudStack>
 
@@ -136,20 +136,20 @@ else
     </MudSelect>
     @if (this.selectedDataSource is DataSources.CUSTOM)
     {
-        <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Text="@this.otherDataSource" Validation="@this.ValidateOtherDataSource" Label="@TA("Describe your data source")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Value="@this.otherDataSource" Validation="@this.ValidateOtherDataSource" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" Label="@TA("Describe your data source")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
     }
 </MudStack>
 
 @if(this.selectedDataSource > DataSources.FILE_SYSTEM)
 {
-    <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Text="@this.dataSourceProductName" Label="@T("Data source: product name")" Validation="@this.ValidateDataSourceProductName" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
+    <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Value="@this.dataSourceProductName" Label="@T("Data source: product name")" Validation="@this.ValidateDataSourceProductName" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 }
 
 @if (this.NeedHostnamePort())
 {
     <div class="mb-3">
         <MudStack Row="@true">
-            <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Text="@this.dataSourceHostname" Label="@T("Data source: hostname")" Validation="@this.ValidateHostname" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Value="@this.dataSourceHostname" Label="@T("Data source: hostname")" Validation="@this.ValidateHostname" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
             <MudNumericField Disabled="@this.IsERIInputDisabled" Label="@T("Data source: port")" Immediate="@true" Min="1" Max="65535" Validation="@this.ValidatePort" @bind-Value="@this.dataSourcePort" Variant="Variant.Outlined" Margin="Margin.Dense" OnKeyUp="() => this.DataSourcePortWasTyped()"/>
         </MudStack>
         @if (this.dataSourcePort < 1024)
@@ -185,7 +185,7 @@ else
             </MudSelectItemExtended>
         }
     </MudSelectExtended>
-    <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Text="@this.authDescription" Label="@this.AuthDescriptionTitle()" Validation="@this.ValidateAuthDescription" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField Disabled="@this.IsERIInputDisabled" T="string" @bind-Value="@this.authDescription" Label="@this.AuthDescriptionTitle()" Validation="@this.ValidateAuthDescription" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="3" Sizing="InputSizing.Auto" MaxLines="6" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 </MudStack>
 
 @if (this.selectedAuthenticationMethods.Contains(Auth.KERBEROS))

@@ -63,15 +63,8 @@ public partial class SingleInputDialog : MSGComponentBase
     
     private async Task HandleUserInputKeyDown(KeyboardEventArgs keyEvent)
     {
-        var key = keyEvent.Key.ToLowerInvariant();
-        var code = keyEvent.Code.ToLowerInvariant();
-        if (key is not "enter" && code is not "enter" and not "numpadenter")
-            return;
-        
-        if (keyEvent is { AltKey: true } or { CtrlKey: true } or { MetaKey: true })
-            return;
-        
-        await this.Confirm();
+        if (keyEvent.IsPlainEnter)
+            await this.Confirm();
     }
 
     private async Task Confirm()

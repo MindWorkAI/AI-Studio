@@ -96,7 +96,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
             var embedUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:embedContent";
             using var request = new HttpRequestMessage(HttpMethod.Post, embedUrl);
-            request.Headers.Add("x-goog-api-key", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Headers.Add("x-goog-api-key", await this.DecryptAPIKey(requestedSecret));
             
             // Set the content:
             request.Content = new StringContent(embeddingRequest, Encoding.UTF8, "application/json");

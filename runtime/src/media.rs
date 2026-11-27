@@ -1738,6 +1738,31 @@ mod tests {
         assert_eq!(clusters, 2);
     }
 
+    /// Verifies that every block keeps a known size. A block of exactly 127 bytes, i.e., an Opus
+    /// packet of 123 bytes plus the 4 bytes of the block header, must not get the size 0xFF, which
+    /// EBML reserves for an element of unknown size.
+    #[test]
+    fn webm_writer_keeps_the_size_of_every_block_known() {
+        let path = std::env::temp_dir().join(format!("ai-studio-media-block-size-{}.webm", rand::random::<u64>()));
+        let mut writer = WebmOpusWriter::new(File::create(&path).unwrap()).unwrap();
+        for (index, packet_len) in [122, 123, 124].into_iter().enumerate() {
+            writer.write_packet(&vec![0xf8; packet_len], index as u64 * 960).unwrap();
+        }
+
+        writer.finish().unwrap();
+        let bytes = fs::read(&path).unwrap();
+        let _ = fs::remove_file(path);
+        let tags = WebmIterator::new(Cursor::new(bytes), &[]).collect::<Result<Vec<_>, _>>().unwrap();
+        let block_lengths: Vec<_> = tags.iter()
+            .filter_map(|tag| match tag {
+                MatroskaSpec::SimpleBlock(block) => Some(block.len()),
+                _ => None,
+            })
+            .collect();
+
+        assert_eq!(block_lengths, vec![126, 127, 128]);
+    }
+
     /// Verifies deterministic arithmetic-mean downmixing.
     #[test]
     fn downmix_is_bounded_and_balanced() {

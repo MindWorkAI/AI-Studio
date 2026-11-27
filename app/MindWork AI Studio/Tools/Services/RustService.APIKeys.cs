@@ -1,4 +1,5 @@
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tools.Services;
 
@@ -85,13 +86,18 @@ public sealed partial class RustService
     /// <summary>
     /// Try to store the API key for the given secret ID.
     /// </summary>
+    /// <remarks>
+    /// The whitespace around the key goes, a line break copied along with it included: an HTTP header
+    /// drops it anyway, and every key ends up in one. Passwords, which may well start or end with a
+    /// space, take SetSecret instead and stay as they are.
+    /// </remarks>
     /// <param name="secretId">The secret ID to store the API key for.</param>
     /// <param name="key">The API key to store.</param>
     /// <param name="storeType">The secret store type. Defaults to LLM_PROVIDER for backward compatibility.</param>
     /// <returns>The store secret response.</returns>
     public async Task<StoreSecretResponse> SetAPIKey(ISecretId secretId, string key, SecretStoreType storeType)
     {
-        var encryptedKey = await this.encryptor!.Encrypt(key);
+        var encryptedKey = await this.encryptor!.Encrypt(APIKeyValidation.Normalize(key));
         var secretKey = APIKey(storeType, secretId);
         var state = await this.StoreEncryptedAPIKeyByKey(secretKey, encryptedKey);
         if (state.Success)

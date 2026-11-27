@@ -7,9 +7,10 @@ namespace AIStudio.Tools.ToolCallingSystem.Harness;
 /// </summary>
 /// <remarks>
 /// Text arrives while the round is still running, its outcome only at the end. A round which ends
-/// without a ROUND_COMPLETED event has failed: that is how a failed request or a truncated stream
-/// is told apart from a round which simply had nothing to say. The adapter has already told the
-/// user what went wrong in that case, so the loop ends without a message of its own.
+/// without a ROUND_COMPLETED event has failed: that is how a failed request, or a stream which a
+/// stop, a timeout, or a broken connection cut off, is told apart from a round which simply had
+/// nothing to say. The user has already been told what went wrong in that case, and a stop is no
+/// error, so the loop ends without a message of its own.
 /// </remarks>
 /// <param name="Kind">What this event carries.</param>
 /// <param name="Delta">The piece of text, set for TEXT_DELTA events only.</param>

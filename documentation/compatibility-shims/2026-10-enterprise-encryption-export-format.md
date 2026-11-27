@@ -18,14 +18,13 @@ The setting `DataApp.EnterpriseEncryptionExportFormat` decides the format, and n
 
 ## Compatibility Behavior
 
-Settings written before v26.10.1 lack the property `App.EnterpriseEncryptionExportFormat`. When `SettingsManager` reads such settings, from the settings file or from its backup, it sets the format to v1. Settings of an older schema version always get v1 while they are migrated. Once the settings are stored, they hold the format, and the shim changes nothing anymore.
+Settings written before v26.10.1 lack the property `App.EnterpriseEncryptionExportFormat`. When `SettingsManager` reads such settings, from the settings file or from its backup, it sets the format to v1. Settings of an older schema version get v1 while they are migrated, unless they hold the format already, as settings of version V6 may. Once the settings are stored, they hold the format, and the shim changes nothing anymore.
 
 Reading `ENC:v1:` values is no part of this shim: AI Studio keeps reading them for good, because organizations deployed configuration plugins with them.
 
 ## Removal Checklist
 
-- Remove `KeepTheLegacyEncryptionExportFormat` and its call in `SettingsManager.TryDeserializeCurrentSettings`.
-- Remove the line which sets v1 after `SettingsMigrations.Migrate` in `SettingsManager.ReadSettingsSnapshot`.
+- Remove `KeepTheLegacyEncryptionExportFormat` and its calls in `SettingsManager.TryDeserializeCurrentSettings` and after `SettingsMigrations.Migrate` in `SettingsManager.ReadSettingsSnapshot`.
 - Remove the tests of `app/Tests/Settings/EnterpriseEncryptionExportFormatTests.cs` which expect v1 for settings without the property, and keep the others.
 - Keep the setting `DataApp.EnterpriseEncryptionExportFormat` and the v1 format: both stay.
 - Update this document's status to `Removed`.

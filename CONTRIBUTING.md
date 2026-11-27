@@ -27,7 +27,7 @@ As of October 2026, we recommend one of these setups, or a newer model of the sa
 
 The repository contains an [AGENTS.md](AGENTS.md), which your agent reads on its own. It describes the architecture, our conventions, and how to build and test AI Studio, and it is binding for every agent working on the code.
 
-Before you open a pull request, run [the quality gate](documentation/Build.md#the-quality-gate) with `dotnet run verify`, then [run the app locally](documentation/Build.md#run-the-app-locally-with-all-your-changes) and try out what you changed.
+Before you open a pull request, run [the quality gate](documentation/Build.md#the-quality-gate) with `dotnet run -- verify`, then [run the app locally](documentation/Build.md#run-the-app-locally-with-all-your-changes) and try out what you changed.
 
 Contributions written without AI assistance are welcome as well, as long as they meet the same standard.
 

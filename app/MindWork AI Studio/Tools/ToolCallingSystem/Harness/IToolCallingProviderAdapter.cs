@@ -1,3 +1,5 @@
+using AIStudio.Provider;
+
 namespace AIStudio.Tools.ToolCallingSystem.Harness;
 
 /// <summary>
@@ -31,8 +33,13 @@ public interface IToolCallingProviderAdapter
     /// <returns>
     /// The events of this round: any number of TEXT_DELTA events, closed by one ROUND_COMPLETED
     /// event carrying the outcome. A stream which ends without that closing event is a failed
-    /// round; it ends the loop without an error message because the adapter has already told the
-    /// user what went wrong.
+    /// round: its request failed, or a stop, a timeout, or a broken connection cut off its stream.
+    /// It ends the loop without an error message, because the user has already been told what went
+    /// wrong, and a stop is no error.<br/><br/>
+    /// An adapter therefore completes a round only from a stream which the provider closed, cf.
+    /// <see cref="ServerSentEventStreamEnd"/>, never from whatever arrived before the stream was cut
+    /// off. Such a round would have the loop report a model which said nothing, or run a call which
+    /// the user no longer wants.
     /// </returns>
     public IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default);
 

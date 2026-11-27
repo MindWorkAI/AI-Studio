@@ -108,6 +108,8 @@ public sealed class LeftOverConfigurationObjectsTests
 
         public PluginCategory[] Categories => [];
 
+        public string[] CustomCategories => [];
+
         public PluginTargetGroup[] TargetGroups => [];
 
         public bool IsMaintained => true;

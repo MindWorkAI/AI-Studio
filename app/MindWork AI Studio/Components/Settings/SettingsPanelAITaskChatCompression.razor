@@ -1,0 +1,5 @@
+@inherits SettingsPanelBase
+
+<ExpansionPanel HeaderIcon="@AppIcons.COMPRESS_CHAT" HeaderText="@T("AI Task: Chat Compression")">
+    <ChatCompressionSettings AvailableLLMProviders="@this.AvailableLLMProvidersFunc()"/>
+</ExpansionPanel>

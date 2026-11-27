@@ -29,3 +29,4 @@ pub mod tokenizer;
 mod file_actions;
 pub mod global_shortcuts;
 pub mod interface_zoom;
+mod own_restart;

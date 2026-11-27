@@ -1,6 +1,9 @@
+using System.Reflection;
+
 using AIStudio.Tools.Mathematics;
 
 using AngouriMath;
+using AngouriMath.Core.Exceptions;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -105,6 +108,15 @@ public sealed class MathComputationServiceTests
     }
 
     [Test]
+    public async Task ABugOfAngouriMathBecomesAMessageWithoutTheLibrary()
+    {
+        var service = CreateService();
+        var bug = (Exception)Activator.CreateInstance(typeof(AngouriBugException), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, ["please report about it to the official repository of AngouriMath"], null)!;
+        var exception = (await Assert.ThrowsAsync<MathComputationException>(() => service.ComputeAsync<int>(_ => throw bug)))!;
+        Assert.That(exception.Message, Is.EqualTo("The tool ran into an error of its own with this expression and could not compute it."));
+    }
+
+    [Test]
     public async Task AnExceptionOfAngouriMathBecomesAMessageAndFreesTheSlot()
     {
         var service = CreateService();
@@ -112,7 +124,7 @@ public sealed class MathComputationServiceTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(exception.Message, Does.StartWith("The tool could not compute this:`x + 1` evaluates to `x + 1`"));
+            Assert.That(exception.Message, Does.StartWith("The tool could not compute this: `x + 1` evaluates to `x + 1`"));
             Assert.That(await service.ComputeAsync(_ => 4), Is.EqualTo(4));
         }
     }

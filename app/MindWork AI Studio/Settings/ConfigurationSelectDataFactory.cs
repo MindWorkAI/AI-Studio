@@ -6,7 +6,7 @@ using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Assistants.EMail;
 using AIStudio.Provider;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations.PluginAudit;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 
@@ -39,6 +39,12 @@ public static class ConfigurationSelectDataFactory
         }
     }
     
+    public static IEnumerable<ConfigurationSelectData<AssistantOfferBehavior>> GetAssistantOfferBehaviorData()
+    {
+        yield return new(TB("""Keep offering me the assistants, e.g., in the "Send to ..." menu"""), AssistantOfferBehavior.KEEP_OFFERING);
+        yield return new(TB("""Treat the assistants as if they did not exist, e.g., not in the "Send to ..." menu"""), AssistantOfferBehavior.TREAT_AS_ABSENT);
+    }
+
     public static IEnumerable<ConfigurationSelectData<LoadingChatProviderBehavior>> GetLoadingChatProviderBehavior()
     {
         yield return new(TB("When possible, use the LLM provider which was used for each chat in the first place"), LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE);
@@ -46,6 +52,14 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("Always use the default chat provider when loading chats"), LoadingChatProviderBehavior.ALWAYS_USE_DEFAULT_CHAT_PROVIDER);
     }
     
+    public static IEnumerable<ConfigurationSelectData<ContextWindowFullBehavior>> GetContextWindowFullBehaviorData()
+    {
+        yield return new(TB("Ask me what to do"), ContextWindowFullBehavior.ASK);
+        yield return new(TB("Compress automatically and continue in a new chat"), ContextWindowFullBehavior.COMPRESS_INTO_NEW_CHAT);
+        yield return new(TB("Compress automatically and replace the earlier messages"), ContextWindowFullBehavior.COMPRESS_AND_REPLACE);
+        yield return new(TB("Send the message without asking"), ContextWindowFullBehavior.SEND_WITHOUT_ASKING);
+    }
+
     public static IEnumerable<ConfigurationSelectData<AddChatProviderBehavior>> GetAddChatProviderBehavior()
     {
         yield return new(TB("Use the latest LLM provider, which was used before; use the default chat provider initially"), AddChatProviderBehavior.ADDED_CHATS_USE_LATEST_PROVIDER);
@@ -394,11 +408,11 @@ public static class ConfigurationSelectDataFactory
             yield return new(theme.Name, theme);
     }
 
-    public static IEnumerable<ConfigurationSelectData<AssistantAuditLevel>> GetAssistantAuditLevelsData()
+    public static IEnumerable<ConfigurationSelectData<PluginAuditLevel>> GetAssistantAuditLevelsData()
     {
-        foreach (var level in Enum.GetValues<AssistantAuditLevel>())
+        foreach (var level in Enum.GetValues<PluginAuditLevel>())
         {
-            if (level == AssistantAuditLevel.UNKNOWN)
+            if (level == PluginAuditLevel.UNKNOWN)
                 continue;
 
             yield return new(level.Name, level);

@@ -8,6 +8,9 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
   - [Directory Structure](#directory-structure)
   - [Structure](#structure)
     - [Minimal Requirements Assistant Table](#example-minimal-requirements-assistant-table)
+  - [Categories](#categories)
+    - [Custom categories](#custom-categories)
+    - [Categories your organization disabled](#categories-your-organization-disabled)
   - [Continuing in a Chat](#continuing-in-a-chat)
     - [Supported types (matching the Blazor UI components):](#supported-types-matching-the-blazor-ui-components)
   - [Component References](#component-references)
@@ -112,6 +115,64 @@ ASSISTANT = {
 }
 ```
 
+## Categories
+`CATEGORIES` decides where the assistants page shows your assistant: under the heading of each category it names, next to the built-in assistants of the same category. An assistant with `CATEGORIES = { "BUSINESS", "SCIENCE" }` appears under "Business" and under "Science", but only once under each heading. Name at least one category, and name only categories which fit your assistant: users and organizations decide by the categories what they see.
+
+| Key | Heading on the assistants page |
+|---|---|
+| `COMMON` | General |
+| `BUSINESS` | Business |
+| `EDUCATION` | Learning & Reflecting |
+| `SOFTWARE_DEVELOPMENT` | Software Development |
+| `ART` | Art |
+| `CONTENT_CREATION` | Content Creation |
+| `ENTERTAINMENT` | Entertainment |
+| `FICTION` | Fiction |
+| `FITNESS` | Fitness |
+| `FOOD` | Food |
+| `GAMING` | Gaming |
+| `HEALTH` | Health |
+| `INDUSTRY` | Industry |
+| `MUSIC` | Music |
+| `NEWS` | News |
+| `PARTY` | Party |
+| `POLITICAL` | Political |
+| `SCIENCE` | Science |
+| `SHOPPING` | Shopping |
+| `SOCIAL` | Social |
+| `SPORTS` | Sports |
+| `TECHNOLOGY` | Technology |
+| `TRAVEL` | Travel |
+| `UTILITY` | Utility |
+| `WEATHER` | Weather |
+| `WRITING` | Writing |
+| `AI_STUDIO_DEVELOPMENT` | AI Studio Development |
+| `CUSTOM` | Your own categories, see below |
+
+- AI Studio shows the headings in the language of the user. The page starts with "General", "Business", "Learning & Reflecting", and "Software Development", continues with the other categories in alphabetical order, then with custom categories, and ends with "AI Studio Development".
+- `CORE` belongs to configuration and language plugins. An assistant which names it appears under "General", just like one with `COMMON`.
+- Write the keys exactly as listed. AI Studio skips an unknown key, and a plugin without any known key does not load.
+- Users can collapse a category or hide it on the assistants page. They also decide whether the "Send to ..." menu keeps offering the assistants of such a category.
+- Requires AI Studio v26.11.2 or newer. Older versions do not know `COMMON`, `AI_STUDIO_DEVELOPMENT`, and `CUSTOM`, skip them, and refuse a plugin which names no other key. To reach older versions as well, add a key they know, e.g., `CATEGORIES = { "COMMON", "CORE" }`: both stand for "General", so the assistant appears there once.
+
+### Custom categories
+When no category fits, name your own: add `CUSTOM` to `CATEGORIES` and the names to `CUSTOM_CATEGORIES`.
+
+```lua
+CATEGORIES = { "SCIENCE", "CUSTOM" }
+CUSTOM_CATEGORIES = { "Space Travel" }
+```
+
+- AI Studio shows the names as you write them, in every language, so write them in the language of your users.
+- Names which differ only in case share one heading, also when they come from different plugins.
+- `CUSTOM` needs `CUSTOM_CATEGORIES` with at least one name, and `CUSTOM_CATEGORIES` needs `CUSTOM`. A name must not be empty. Otherwise, AI Studio does not load the plugin.
+
+### Categories your organization disabled
+Organizations can disable categories on their devices, e.g., `ENTERTAINMENT`, through the settings `DataApp.DisabledAssistantCategories` and `DataApp.DisabledCustomAssistantCategories` of a configuration plugin. An assistant of a disabled category disappears: from the assistants page, from links, and from the Assistant Builder. Users cannot switch it on.
+
+- An assistant with several categories stays available while one of them is not disabled.
+- Assistant plugins the organization deployed itself are never disabled by their categories: a plugin stored below the directory of a configuration plugin, or one which declares `DEPLOYED_USING_CONFIG_SERVER = true` and whose code the organization approved.
+
 ## Continuing in a Chat
 Users can continue the result of a form assistant in a chat: "Send to ..." → "New Chat" opens a chat with the conversation of the assistant. Which system prompt that chat gets is your decision, made in the optional field `ChatSystemPrompt`:
 
@@ -185,8 +246,8 @@ ASSISTANT = {
 - A chat template may preselect tools and data sources as well. When it does, it decides them alone: the launcher `ToolIds` and `DataSourceIds` are dropped, and AI Studio writes a warning into the log naming both sides. The rule is the same for tools and for data sources, so there is only one to remember.
 - A chat template may also preselect a provider and a profile, and the same rule applies: they win over the launcher `ProviderId` and `ProfileId`, with a warning in the log. A provider of the template which is gone or does not meet the confidence level required for chats, and a profile of the template which is gone, are left out instead of stopping the launch; the launcher then decides as if the template named none.
 - A chat template may name a workspace for its chats as well. Here the launcher wins when it names a workspace of its own, because that choice was made on purpose. A launcher that opens a disappearing chat opens it in the workspace of its template instead, which is created when it does not exist yet; if that fails, the chat stays a disappearing chat.
-- The reason the template wins as a whole rather than field by field is a difference in what the two can express. A launcher can only ever say "these sources, picked by hand", while a chat template carries the whole data source options and can also say "let an agent pick the sources for each message". A mix of both would be something neither of them asked for.
-- The data sources of a chat template are checked exactly like the ones of a launcher: a source which no longer exists, or which is not permitted for the effective provider, stops the launch before a workspace or chat is created. The message then names the chat template as the cause, not the launcher. A template which leaves the choice to an agent names no source and is therefore not checked here; that decision is made per message in the chat.
+- The reason the template wins as a whole rather than field by field is a difference in what the two can express. A launcher can only ever say "these sources, picked by hand", while a chat template carries the whole data source options and can also say "let an AI task pick the sources for each message". A mix of both would be something neither of them asked for.
+- The data sources of a chat template are checked exactly like the ones of a launcher: a source which no longer exists, or which is not permitted for the effective provider, stops the launch before a workspace or chat is created. The message then names the chat template as the cause, not the launcher. A template which leaves the choice to an AI task names no source and is therefore not checked here; that decision is made per message in the chat.
 - The predefined user prompt and the attachments of the selected chat template are placed into the chat input, unless the user already has an unsent draft there.
 
 ### Editing a launcher in AI Studio
@@ -219,7 +280,7 @@ Launchers with an own icon or extra Lua code keep the plugin code editor and the
 - `DATE_RANGE_PICKER`: date range input based on `MudDateRangePicker`; requires `Name`, `Label`, and may include `Value`, `Color`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
 - `TIME_PICKER`: time input based on `MudTimePicker`; requires `Name`, `Label`, and may include `Value`, `Color`, `Placeholder`, `HelperText`, `TimeFormat`, `AmPm`, `PickerVariant`, `UserPrompt`, `Class`, `Style`.
 - `PROVIDER_SELECTION` / `PROFILE_SELECTION`: hooks into the shared provider/profile selectors.
-- `WEB_CONTENT_READER`: renders `ReadWebContent`; include `Name`, `UserPrompt`, `Preselect`, `PreselectContentCleanerAgent`.
+- `WEB_CONTENT_READER`: renders `ReadWebContent`; include `Name`, `UserPrompt`, `Preselect`, `PreselectContentCleaner`. Before AI Studio v26.11.2, `PreselectContentCleaner` was called `PreselectContentCleanerAgent`. AI Studio still reads the former name, also in the props a callback returns, so existing plugins need no change; callbacks see the prop under its current name only.
 - `FILE_CONTENT_READER`: renders `ReadFileContent`; use it when exactly one expected file should be read and inserted into the prompt; include `Name`, and optionally `UserPrompt`, `ShowAttachedDocumentState`, `Class`, `Style`. `ShowAttachedDocumentState` defaults to `true`; set it to `false` only when the loaded-document indicator should be hidden.
 - `FILE_ATTACHMENTS`: renders `AttachDocuments`; use it when the assistant should accept multiple documents/images or an unpredictable number of files as context; include `Name`, and may include `Heading`, `UserPrompt`, `CatchAllDocuments`, `UseSmallForm`, `Class`, `Style`. Keep `UseSmallForm = false` by default unless compact layout is explicitly required.
 - **Drop zones and `CatchAllDocuments`**: `FILE_CONTENT_READER` and `FILE_ATTACHMENTS` both accept dropped files. `CatchAllDocuments` makes one of them the default target of the whole assistant, so that a file dropped anywhere in it still arrives there. That only makes sense while the assistant has exactly **one** drop zone. With several, set `CatchAllDocuments = false`: it defaults to `true` when the prop is absent, and users then have to aim at the zone they mean instead of watching their file land in a neighbouring one. AI Studio enforces the rule at runtime, so a `true` value is ignored anyway as soon as a second drop zone exists.
@@ -239,7 +300,7 @@ Images referenced via the `plugin://` scheme must exist in the plugin directory 
 | `PROFILE_SELECTION`        | `None`                              | `None`                                                                                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ProfileSelection.razor)        |
 | `FILE_CONTENT_READER`      | `Name`                              | `UserPrompt`, `ShowAttachedDocumentState`, `Class`, `Style`                                                                                                                                                           | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadFileContent.razor)         |
 | `FILE_ATTACHMENTS`         | `Name`                              | `Heading`, `UserPrompt`, `CatchAllDocuments`, `UseSmallForm`, `Class`, `Style`                                                                                                                                        | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/AttachDocuments.razor)         |
-| `WEB_CONTENT_READER`       | `Name`                              | `UserPrompt`                                                                                                                                                                                                         | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadWebContent.razor)          |
+| `WEB_CONTENT_READER`       | `Name`                              | `UserPrompt`, `Preselect`, `PreselectContentCleaner`, `Class`, `Style`                                                                                                                                               | [`internal`](https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Components/ReadWebContent.razor)          |
 | `COLOR_PICKER`             | `Name`, `Label`                     | `Placeholder`, `Color`, `ShowAlpha`, `ShowToolbar`, `ShowModeSwitch`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                | [MudColorPicker](https://www.mudblazor.com/components/colorpicker)                                                                  |
 | `DATE_PICKER`              | `Name`, `Label`                     | `Value`, `Color`, `Placeholder`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                                         | [MudDatePicker](https://www.mudblazor.com/components/datepicker)                                                                    |
 | `DATE_RANGE_PICKER`        | `Name`, `Label`                     | `Value`, `Color`, `PlaceholderStart`, `PlaceholderEnd`, `HelperText`, `DateFormat`, `PickerVariant`, `UserPrompt`, `Class`, `Style`                                                                                  | [MudDateRangePicker](https://www.mudblazor.com/components/daterangepicker)                                                          |
@@ -1212,7 +1273,7 @@ LogInfo(dt.day .. "." .. dt.month .. "." .. dt.year)
 2. Keep in mind that components and their properties are _**case-sensitive**_ (e.g. if you write `["Type"] = "heading"` instead of `["Type"] = "HEADING"` the component will not be registered). Always copy-paste the component from the `plugin.lua` manifest to avoid this.
 3. When you expect default content (e.g., a textarea with instructions), keep `UserPrompt` but also set `PrefillText` so the user starts with a hint.
 4. If you need extra explanatory text (before or after the interactive controls), use `TEXT` or `HEADING` components.
-5. Keep `Preselect`/`PreselectContentCleanerAgent` flags in `WEB_CONTENT_READER` to simplify the initial UI for the user.
+5. Keep `Preselect`/`PreselectContentCleaner` flags in `WEB_CONTENT_READER` to simplify the initial UI for the user.
 
 ## Useful Resources
 - [translation example](./examples/translation/plugin.lua)

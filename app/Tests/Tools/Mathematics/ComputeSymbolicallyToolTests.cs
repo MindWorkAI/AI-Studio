@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using AIStudio.Tools.Mathematics;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mathematics;
 
+using AngouriMath;
 using AngouriMath.Core;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -33,6 +34,21 @@ public sealed class ComputeSymbolicallyToolTests
     }
 
     private static string RequestRefusal(string json) => Assert.Throws<ArgumentException>(() => ComputeSymbolicallyTool.ReadRequest(Arguments(json)))!.Message;
+
+    /// <summary>
+    /// Writes the solutions of an equation in x as the tool does, for a set of solutions given as text.
+    /// </summary>
+    private static Task<JsonObject> DescribeSolutions(string equation, string solutions) => SERVICE.ComputeAsync(_ =>
+    {
+        var statement = MathExpressionReader.Read(equation, "expression");
+        var json = new JsonObject();
+        var issues = new List<string>();
+        ComputeSymbolicallyTool.Solutions(json, issues, statement, statement, MathS.Var("x"), MathExpressionReader.Read(solutions, "solutions"));
+        json["issues"] = new JsonArray([..issues.Select(issue => JsonValue.Create(issue))]);
+        return json;
+    });
+
+    private static JsonNode Member(JsonObject json, int index) => json["solutions"]![index]!;
 
     [Test]
     public async Task SimplifiesAndStatesTheCondition()
@@ -155,10 +171,137 @@ public sealed class ComputeSymbolicallyToolTests
             Assert.That(Text(quadratic, "verification"), Is.EqualTo("passed"));
             Assert.That(complex["solutions"]![0]!["real"]!.GetValue<bool>(), Is.False);
             Assert.That(Text(complex, "verification"), Is.EqualTo("passed"));
-            Assert.That(Text(periodic, "verification"), Is.EqualTo("passed"), "n_1 takes integer values in the check.");
-            Assert.That(Issues(periodic), Has.Member("n_1 stands for any integer."));
+            Assert.That(Text(periodic, "verification"), Is.EqualTo("passed"), "The index takes integer values in the check.");
+            Assert.That(Member(periodic, 0)["holds_for"]!.GetValue<string>(), Is.EqualTo("every integer n"));
+            Assert.That(Member(periodic, 1)["at_index_0"]!["value"]!.GetValue<string>(), Is.EqualTo("5/6 * pi"));
             Assert.That(Issues(withoutEquals), Has.Member("The expression has no '=', so it was solved for expression = 0."));
             Assert.That(withoutEquals["solutions"]!.AsArray(), Has.Count.EqualTo(2));
+        }
+    }
+
+    [Test]
+    public async Task ListsAndChecksTheMembersOfAFamilyOfSolutions()
+    {
+        var periodic = await DescribeSolutions("sin(x) = 1/2", "union({ pi/6 + 2*pi*n, pi - pi/6 + 2*pi*n }, n in ZZ)");
+        var exponential = await DescribeSolutions("2^x = 5", "union({ log(2, 5) + 2*pi*i*n/ln(2) }, n in ZZ)");
+        var wrong = await DescribeSolutions("sin(x) = 1/2", "union({ pi/5 + 2*pi*n }, n in ZZ)");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(periodic["solutions"]!.AsArray(), Has.Count.EqualTo(2));
+            Assert.That(Member(periodic, 0)["holds_for"]!.GetValue<string>(), Is.EqualTo("every integer n"));
+            Assert.That(Member(periodic, 0)["at_index_0"]!["value"]!.GetValue<string>(), Is.EqualTo("pi / 6"));
+            Assert.That(Member(periodic, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Does.StartWith("0.52359877559"));
+            Assert.That(Member(periodic, 0)["at_index_0"]!["real"]!.GetValue<bool>(), Is.True);
+            Assert.That(Member(periodic, 0).AsObject().ContainsKey("decimal"), Is.False, "A member with an index has no single value.");
+            Assert.That(Text(periodic, "verification"), Is.EqualTo("passed"), "The index takes integer values in the check.");
+            Assert.That(periodic["complete"]!.GetValue<bool>(), Is.True);
+            Assert.That(Member(exponential, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Does.StartWith("2.32192809488"), "The solution for the index 0 is the real one, which a model needs most.");
+            Assert.That(Text(exponential, "verification"), Is.EqualTo("passed"));
+            Assert.That(Text(wrong, "verification"), Is.EqualTo("failed"));
+        }
+    }
+
+    [Test]
+    public async Task GivesTheRealSolutionOfAnExponentialEquation()
+    {
+        // The decimals are those of Python's decimal module, to 15 significant digits:
+        var power = await Compute(SymbolicOperation.SOLVE, "2^x = 5");
+        var doubling = await Compute(SymbolicOperation.SOLVE, "1.05^x = 2");
+        var lambert = await Compute(SymbolicOperation.SOLVE, "x*e^x = 2");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Member(power, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Is.EqualTo("2.32192809488736"));
+            Assert.That(Text(power, "verification"), Is.EqualTo("passed"));
+            Assert.That(Member(doubling, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Is.EqualTo("14.2066990828905"), "The years in which 5 % interest doubles a sum.");
+            Assert.That(Member(doubling, 0)["at_index_0"]!["real"]!.GetValue<bool>(), Is.True);
+            Assert.That(Member(lambert, 0)["at_index_0"]!["value"]!.GetValue<string>(), Is.EqualTo("lambertw(2)"));
+            Assert.That(Member(lambert, 0)["at_index_0"]!["decimal"]!.GetValue<string>(), Is.EqualTo("0.852605502013725"));
+            Assert.That(Text(lambert, "verification"), Is.EqualTo("passed"));
+        }
+    }
+
+    [Test]
+    public async Task GivesSolutionsCalculateTakes()
+    {
+        foreach (var equation in new[] { "2^x = 5", "x*e^x = 2", "sin(x) = 1/2" })
+        {
+            var solution = Member(await Compute(SymbolicOperation.SOLVE, equation), 0)["at_index_0"]!;
+            var value = await SERVICE.ComputeAsync(token => CalculateTool.Calculate(solution["value"]!.GetValue<string>(), 15, token));
+            Assert.That(value["decimal"]!.GetValue<string>(), Is.EqualTo(solution["decimal"]!.GetValue<string>()), equation);
+        }
+    }
+
+    [Test]
+    public async Task ChecksAnAntiderivativeFarLargerThanTheIntegrand()
+    {
+        // The antiderivative -gamma(41, x) is about 40!, its derivative x^40 * e^(-x) about 1e-9:
+        var integrated = await Compute(SymbolicOperation.INTEGRATE, "x^40*e^(-x)");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Text(integrated, "result"), Is.EqualTo("-gamma(41, x) + C"));
+            Assert.That(Text(integrated, "verification"), Is.EqualTo("passed"));
+        }
+    }
+
+    [Test]
+    public async Task ChecksNoSamplePointWhichCouldNotBeStopped()
+    {
+        // At x = 0.61, z is 6,100, the factorial that of 610,000, and the power a fraction of 378,000 digits; each
+        // would take seconds or minutes without a way to stop it:
+        var incompleteGamma = await Compute(SymbolicOperation.SIMPLIFY, "gamma(1/2, 10000*x)");
+        var factorial = await Compute(SymbolicOperation.SIMPLIFY, "(10^6*x)!");
+        var derivative = await Compute(SymbolicOperation.DIFFERENTIATE, "(10^6*x)!", "x");
+        var power = await Compute(SymbolicOperation.SIMPLIFY, "x^100000 + 1");
+
+        // The terms of the expansion each have a few hundred digits, which is no reason to leave a point out:
+        var expansion = await Compute(SymbolicOperation.EXPAND, "(x + 1)^200");
+        var smallerFactorial = await Compute(SymbolicOperation.SIMPLIFY, "(1000*x)!");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Text(incompleteGamma, "verification"), Is.EqualTo("not_possible"));
+            Assert.That(Text(factorial, "verification"), Is.EqualTo("not_possible"));
+            Assert.That(Text(derivative, "verification"), Is.EqualTo("not_possible"));
+            Assert.That(Text(power, "verification"), Is.EqualTo("not_possible"));
+            Assert.That(Text(expansion, "verification"), Is.EqualTo("passed"));
+            Assert.That(Text(smallerFactorial, "verification"), Is.EqualTo("passed"));
+        }
+    }
+
+    [Test]
+    public async Task AnswersWhatRanPastTheBudgetBefore()
+    {
+        // Each of these took the whole budget of 10 seconds with version 2.6.0:
+        var mixedBases = await Compute(SymbolicOperation.SOLVE, "(-2)^x + 4^x = 0");
+        var quintic = await Compute(SymbolicOperation.SOLVE, "x^5 + x - sqrt(2) = 0");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(mixedBases["complete"]!.GetValue<bool>(), Is.True);
+            Assert.That(Text(mixedBases, "verification"), Is.EqualTo("passed"));
+            Assert.That(quintic["complete"]!.GetValue<bool>(), Is.False);
+        }
+    }
+
+    [Test]
+    public async Task TakesFamiliesOfSolutionsApart()
+    {
+        var withoutZero = await DescribeSolutions("sin(x)/x = 0", "union({ pi*n }, n in ZZ \\ { 0 })");
+        var nested = await DescribeSolutions("e^(sin(x)) = 1", "union(union({ arcsin(2*pi*i*n) + 2*pi*m, pi - arcsin(2*pi*i*n) + 2*pi*m }, m in ZZ), n in ZZ)");
+        var joined = await DescribeSolutions("sin(x)*(x - 7) = 0", "{ 7 } \\/ union({ pi*n }, n in ZZ)");
+        var unsolved = await DescribeSolutions("sin(x) = x^5", "{ x : sin(x) = x^5 } \\/ union({ pi*n }, n in ZZ)");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Member(withoutZero, 0)["holds_for"]!.GetValue<string>(), Does.StartWith("every n in ZZ"));
+            Assert.That(Member(withoutZero, 0).AsObject().ContainsKey("at_index_0"), Is.False, "0 is not among the values of the index.");
+            Assert.That(Text(withoutZero, "verification"), Is.EqualTo("passed"), "At 0, the index would take a value without a solution.");
+            Assert.That(Member(nested, 0)["holds_for"]!.GetValue<string>(), Is.EqualTo("every integer n and every integer m"), "The outer index comes first.");
+            Assert.That(Member(nested, 0)["at_index_0"]!["value"]!.GetValue<string>(), Is.EqualTo("0"));
+            Assert.That(Text(nested, "verification"), Is.EqualTo("passed"));
+            Assert.That(joined["solutions"]!.AsArray(), Has.Count.EqualTo(2));
+            Assert.That(Member(joined, 0).AsObject().ContainsKey("holds_for"), Is.False);
+            Assert.That(Member(joined, 1)["holds_for"]!.GetValue<string>(), Is.EqualTo("every integer n"));
+            Assert.That(Text(joined, "verification"), Is.EqualTo("passed"));
+            Assert.That(unsolved["complete"]!.GetValue<bool>(), Is.False, "A part without a closed form leaves the solutions incomplete.");
+            Assert.That(unsolved.ContainsKey("solutions"), Is.False);
         }
     }
 

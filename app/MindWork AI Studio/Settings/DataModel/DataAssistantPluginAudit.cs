@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
-using AIStudio.Agents.AssistantAudit;
+
+using AIStudio.AIOperations.PluginAudit;
+using AIStudio.Provider;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -24,12 +26,20 @@ public sealed class DataAssistantPluginAudit(Expression<Func<Data, DataAssistant
     /// Which provider should be used for the assistant plugin audit?
     /// When empty, the app-wide default provider is used.
     /// </summary>
-    public string PreselectedAgentProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedAgentProvider, string.Empty);
+    public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProvider, string.Empty);
+
+    /// <summary>
+    /// The minimum confidence level of the provider which audits the plugins.
+    /// </summary>
+    /// <remarks>
+    /// It applies to every provider which audits a plugin, the fallbacks included.
+    /// </remarks>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, n => n.MinimumProviderConfidence, ConfidenceLevel.NONE);
 
     /// <summary>
     /// The minimum audit level assistant plugins should meet.
     /// </summary>
-    public AssistantAuditLevel MinimumLevel { get; set; } = ManagedConfiguration.Register(configSelection, n => n.MinimumLevel, AssistantAuditLevel.CAUTION);
+    public PluginAuditLevel MinimumLevel { get; set; } = ManagedConfiguration.Register(configSelection, n => n.MinimumLevel, PluginAuditLevel.CAUTION);
 
     /// <summary>
     /// Should activation be blocked when the audit result is below the minimum level?

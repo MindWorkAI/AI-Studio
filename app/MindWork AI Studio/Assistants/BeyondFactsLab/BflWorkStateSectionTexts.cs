@@ -31,7 +31,7 @@ public static class BflWorkStateSectionTexts
             (BflStep.KNOWLEDGE, "KEY_MESSAGES") => TB("Possible key messages"),
 
             (BflStep.GOALS_AND_ROLE, "GOAL") => TB("Goal of the contribution"),
-            (BflStep.GOALS_AND_ROLE, "ROLE") => TB("Role"),
+            (BflStep.GOALS_AND_ROLE, "ROLE") => TB("Roles"),
             (BflStep.GOALS_AND_ROLE, "REASONS") => TB("Reasons"),
             (BflStep.GOALS_AND_ROLE, "CONSEQUENCES") => TB("Consequences for the appearance"),
 

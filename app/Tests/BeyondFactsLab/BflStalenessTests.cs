@@ -272,11 +272,11 @@ public sealed class BflStalenessTests
         var workStates = new Dictionary<BflStep, BflWorkState>();
         Confirm(workStates, BflStep.FRAMEWORK);
         Confirm(workStates, BflStep.STRATEGY);
-        Confirm(workStates, BflStep.KNOWLEDGE);
+        Confirm(workStates, BflStep.GOALS_AND_ROLE);
 
-        var revisions = BflStaleness.UpstreamRevisionsOf(BflStep.GOALS_AND_ROLE, workStates);
+        var revisions = BflStaleness.UpstreamRevisionsOf(BflStep.KNOWLEDGE, workStates);
 
-        Assert.That(revisions.Keys, Is.EquivalentTo(new[] { BflStep.FRAMEWORK, BflStep.KNOWLEDGE }));
+        Assert.That(revisions.Keys, Is.EquivalentTo(new[] { BflStep.FRAMEWORK, BflStep.GOALS_AND_ROLE }));
     }
 
     [Test]

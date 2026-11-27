@@ -207,7 +207,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 baseInput,
                 additionalApiParameters,
                 runnableTools,
-                (requestDto, requestToken) => this.StreamResponsesRequest(requestDto, requestedSecret, requestToken));
+                (requestDto, streamEnd, requestToken) => this.StreamResponsesRequest(requestDto, requestedSecret, streamEnd, requestToken));
 
             var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
             var loopContext = new ToolCallingLoopContext
@@ -272,7 +272,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
 
             // Set the authorization header:
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
 
             // Set the content:
             request.Content = new StringContent(openAIChatRequest, Encoding.UTF8, "application/json");
@@ -296,14 +296,14 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
     /// classification come from the shared stream reader, which the tool calling rounds used to
     /// go without; reading the events is the adapter's business.
     /// </remarks>
-    private IAsyncEnumerable<ServerSentEvent> StreamResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    private IAsyncEnumerable<ServerSentEvent> StreamResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, ServerSentEventStreamEnd streamEnd, CancellationToken token)
     {
-        return this.ReadServerSentEventsAsync("OpenAI", "responses call", RequestBuilder, token);
+        return this.ReadServerSentEventsAsync("OpenAI", "responses call", RequestBuilder, streamEnd, token);
 
         async Task<HttpRequestMessage> RequestBuilder()
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "responses");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
             request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
             return request;
         }

@@ -1,0 +1,1759 @@
+{
+  "Version": "V6",
+  "Providers": [
+    {
+      "Num": 7,
+      "Id": "Id sample 1",
+      "InstanceName": "Name sample 13",
+      "UsedLLMProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 3",
+        "DisplayName": "DisplayName sample 4",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000005",
+      "Hostname": "Hostname sample 6",
+      "Host": "LM_STUDIO",
+      "HFInferenceProvider": "AUTOMATIC",
+      "AdditionalJsonApiParameters": "AdditionalJsonApiParameters sample 7",
+      "TokenizerPath": "/samples/TokenizerPath-8.txt",
+      "CapabilityOverrides": {
+        "AUDIO_INPUT": true,
+        "FUNCTION_CALLING": true,
+        "MULTIPLE_IMAGE_INPUT": true,
+        "SPEECH_INPUT": true,
+        "VIDEO_INPUT": true,
+        "OPTIONAL_REASONING": true,
+        "ALWAYS_REASONING": true,
+        "REASONING_BY_DEFAULT": true,
+        "CONTEXT_WINDOW": 49,
+        "MAX_IMAGES_PER_MESSAGE": 50,
+        "MAX_IMAGES_PER_REQUEST": 51
+      },
+      "AllowUserProvidedAPIKey": true,
+      "CustomIconDataUrl": "CustomIconDataUrl sample 12",
+      "PromptForUserAPIKey": true,
+      "Name": "Name sample 13"
+    },
+    {
+      "Num": 7,
+      "Id": "Id sample 14",
+      "InstanceName": "Name sample 26",
+      "UsedLLMProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 16",
+        "DisplayName": "DisplayName sample 17",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000018",
+      "Hostname": "Hostname sample 19",
+      "Host": "LM_STUDIO",
+      "HFInferenceProvider": "AUTOMATIC",
+      "AdditionalJsonApiParameters": "AdditionalJsonApiParameters sample 20",
+      "TokenizerPath": "/samples/TokenizerPath-21.txt",
+      "CapabilityOverrides": {
+        "AUDIO_INPUT": true,
+        "FUNCTION_CALLING": true,
+        "MULTIPLE_IMAGE_INPUT": true,
+        "SPEECH_INPUT": true,
+        "VIDEO_INPUT": true,
+        "OPTIONAL_REASONING": true,
+        "ALWAYS_REASONING": true,
+        "REASONING_BY_DEFAULT": true,
+        "CONTEXT_WINDOW": 62,
+        "MAX_IMAGES_PER_MESSAGE": 63,
+        "MAX_IMAGES_PER_REQUEST": 64
+      },
+      "AllowUserProvidedAPIKey": true,
+      "CustomIconDataUrl": "CustomIconDataUrl sample 25",
+      "PromptForUserAPIKey": true,
+      "Name": "Name sample 26"
+    }
+  ],
+  "Confidence": {
+    "EnforceGlobalMinimumConfidence": true,
+    "GlobalMinimumConfidence": "UNTRUSTED",
+    "ShowProviderConfidence": true,
+    "ConfidenceScheme": "TRUST_USA_EUROPE",
+    "CustomConfidenceScheme": {
+      "OPEN_AI": "UNTRUSTED",
+      "ANTHROPIC": "UNKNOWN"
+    }
+  },
+  "DataSourceSecurity": {
+    "TrustedProviderIds": [
+      "TrustedProviderIds sample 27",
+      "TrustedProviderIds sample 28"
+    ],
+    "MinimumOutboundDataRestriction": "ONLY_LINKS_FROM_CHAT"
+  },
+  "EmbeddingProviders": [
+    {
+      "Num": 7,
+      "Id": "Id sample 29",
+      "Name": "Name sample 30",
+      "UsedLLMProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 31",
+        "DisplayName": "DisplayName sample 32",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000033",
+      "Hostname": "Hostname sample 34",
+      "Host": "LM_STUDIO",
+      "TokenizerPath": "/samples/TokenizerPath-35.txt",
+      "TokenizerFingerprint": "TokenizerFingerprint sample 36",
+      "EmbeddingBatchSize": 77,
+      "TokenLimit": 78,
+      "AllowUserProvidedAPIKey": true,
+      "CustomIconDataUrl": "CustomIconDataUrl sample 39",
+      "HFInferenceProvider": "AUTOMATIC",
+      "PromptForUserAPIKey": true
+    },
+    {
+      "Num": 7,
+      "Id": "Id sample 40",
+      "Name": "Name sample 41",
+      "UsedLLMProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 42",
+        "DisplayName": "DisplayName sample 43",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000044",
+      "Hostname": "Hostname sample 45",
+      "Host": "LM_STUDIO",
+      "TokenizerPath": "/samples/TokenizerPath-46.txt",
+      "TokenizerFingerprint": "TokenizerFingerprint sample 47",
+      "EmbeddingBatchSize": 88,
+      "TokenLimit": 89,
+      "AllowUserProvidedAPIKey": true,
+      "CustomIconDataUrl": "CustomIconDataUrl sample 50",
+      "HFInferenceProvider": "AUTOMATIC",
+      "PromptForUserAPIKey": true
+    }
+  ],
+  "TranscriptionProviders": [
+    {
+      "Num": 7,
+      "Id": "Id sample 51",
+      "Name": "Name sample 52",
+      "UsedLLMProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 53",
+        "DisplayName": "DisplayName sample 54",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000055",
+      "Hostname": "Hostname sample 56",
+      "Host": "LM_STUDIO",
+      "AllowUserProvidedAPIKey": true,
+      "CustomIconDataUrl": "CustomIconDataUrl sample 57",
+      "HFInferenceProvider": "AUTOMATIC",
+      "PromptForUserAPIKey": true
+    },
+    {
+      "Num": 7,
+      "Id": "Id sample 58",
+      "Name": "Name sample 59",
+      "UsedLLMProvider": "OPEN_AI",
+      "Model": {
+        "Id": "Id sample 60",
+        "DisplayName": "DisplayName sample 61",
+        "IsSystemModel": false
+      },
+      "IsSelfHosted": true,
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000062",
+      "Hostname": "Hostname sample 63",
+      "Host": "LM_STUDIO",
+      "AllowUserProvidedAPIKey": true,
+      "CustomIconDataUrl": "CustomIconDataUrl sample 64",
+      "HFInferenceProvider": "AUTOMATIC",
+      "PromptForUserAPIKey": true
+    }
+  ],
+  "DataSources": [
+    {
+      "$type_discriminator": "LOCAL_DIRECTORY",
+      "Num": 7,
+      "Id": "Id sample 65",
+      "Name": "Name sample 66",
+      "Description": "Description sample 67",
+      "Type": "LOCAL_FILE",
+      "EmbeddingId": "EmbeddingId sample 68",
+      "MaxChunkTokenLength": 59,
+      "ChunkOverlapTokenLength": 60,
+      "ConfidenceLevel": "UNTRUSTED",
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000071",
+      "MaxMatches": 8,
+      "OutboundDataRestriction": "ONLY_LINKS_FROM_CHAT",
+      "Path": "/samples/Path-72.txt",
+      "FilePatterns": "FilePatterns sample 73",
+      "ExcludePatterns": "ExcludePatterns sample 74",
+      "MaxFileSizeMegabytes": 65,
+      "IncludeSubdirectories": true,
+      "IncludeHiddenFilesAndFolders": true
+    },
+    {
+      "$type_discriminator": "LOCAL_FILE",
+      "Num": 7,
+      "Id": "Id sample 76",
+      "Name": "Name sample 77",
+      "Description": "Description sample 78",
+      "Type": "LOCAL_FILE",
+      "EmbeddingId": "EmbeddingId sample 79",
+      "MaxChunkTokenLength": 70,
+      "ChunkOverlapTokenLength": 71,
+      "ConfidenceLevel": "UNTRUSTED",
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000082",
+      "MaxMatches": 8,
+      "OutboundDataRestriction": "ONLY_LINKS_FROM_CHAT",
+      "FilePath": "/samples/FilePath-83.txt"
+    },
+    {
+      "$type_discriminator": "ERI_V1",
+      "Num": 7,
+      "Id": "Id sample 84",
+      "Name": "Name sample 85",
+      "Type": "LOCAL_FILE",
+      "Hostname": "Hostname sample 86",
+      "Port": 77,
+      "AuthMethod": "KERBEROS",
+      "Username": "Username sample 88",
+      "UsernamePasswordMode": "SHARED_USERNAME_AND_PASSWORD",
+      "SecurityPolicy": "ALLOW_ANY",
+      "OutboundDataRestriction": "ONLY_LINKS_FROM_CHAT",
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000089",
+      "Version": "V1",
+      "SelectedRetrievalId": "SelectedRetrievalId sample 90",
+      "MaxMatches": 8
+    }
+  ],
+  "Mailboxes": [
+    {
+      "Num": 7,
+      "Id": "Id sample 91",
+      "Name": "Name sample 92",
+      "Type": "LOCAL_FILE",
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000093",
+      "EmbeddingId": "EmbeddingId sample 94",
+      "MaxChunkTokenLength": 85,
+      "ChunkOverlapTokenLength": 86,
+      "ConfidenceLevel": "UNTRUSTED",
+      "Host": "Host sample 97",
+      "Port": 88,
+      "TransportSecurity": "SSL_ON_CONNECT",
+      "AuthMethod": "PASSWORD",
+      "Username": "Username sample 99",
+      "RootFolder": "RootFolder sample 100",
+      "IncludeSentAndDrafts": true,
+      "MaxAge": "LAST_6_MONTHS",
+      "IndexAttachments": true,
+      "MaxAttachmentSizeMegabytes": 41,
+      "OutboundDataRestriction": "ONLY_LINKS_FROM_CHAT",
+      "MaxMatches": 8
+    },
+    {
+      "Num": 7,
+      "Id": "Id sample 102",
+      "Name": "Name sample 103",
+      "Type": "LOCAL_FILE",
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000104",
+      "EmbeddingId": "EmbeddingId sample 105",
+      "MaxChunkTokenLength": 46,
+      "ChunkOverlapTokenLength": 47,
+      "ConfidenceLevel": "UNTRUSTED",
+      "Host": "Host sample 108",
+      "Port": 49,
+      "TransportSecurity": "SSL_ON_CONNECT",
+      "AuthMethod": "PASSWORD",
+      "Username": "Username sample 110",
+      "RootFolder": "RootFolder sample 111",
+      "IncludeSentAndDrafts": true,
+      "MaxAge": "LAST_6_MONTHS",
+      "IndexAttachments": true,
+      "MaxAttachmentSizeMegabytes": 52,
+      "OutboundDataRestriction": "ONLY_LINKS_FROM_CHAT",
+      "MaxMatches": 8
+    }
+  ],
+  "MailboxSettings": {
+    "MinimumOutboundDataRestriction": "ONLY_LINKS_FROM_CHAT",
+    "AllowOnlyOrganizationMailServers": true
+  },
+  "Profiles": [
+    {
+      "Num": 7,
+      "Id": "Id sample 113",
+      "Name": "Name sample 114",
+      "NeedToKnow": "NeedToKnow sample 115",
+      "Actions": "Actions sample 116",
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000117"
+    },
+    {
+      "Num": 7,
+      "Id": "Id sample 118",
+      "Name": "Name sample 119",
+      "NeedToKnow": "NeedToKnow sample 120",
+      "Actions": "Actions sample 121",
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000122"
+    }
+  ],
+  "ChatTemplates": [
+    {
+      "Num": 7,
+      "Id": "Id sample 123",
+      "Name": "Name sample 124",
+      "SystemPrompt": "SystemPrompt sample 125",
+      "PredefinedUserPrompt": "PredefinedUserPrompt sample 126",
+      "ExampleConversation": [
+        {
+          "Time": "2026-10-29T14:37:15+01:00",
+          "ContentType": "UNKNOWN",
+          "Content": {
+            "$type": "text",
+            "Sources": [
+              {
+                "Title": "Title sample 128",
+                "URL": "URL sample 129",
+                "Origin": "RAG"
+              },
+              {
+                "Title": "Title sample 130",
+                "URL": "URL sample 131",
+                "Origin": "RAG"
+              }
+            ],
+            "FileAttachments": [
+              {
+                "$type": "file",
+                "Type": "IMAGE",
+                "FileName": "FileName sample 132",
+                "FilePath": "/samples/FilePath-133.txt",
+                "FileSizeBytes": 4000000134,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": true,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-133.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000135",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T13:16:00Z",
+                  "Length": 4000000137
+                }
+              },
+              {
+                "$type": "image",
+                "SourceType": "LOCAL_PATH",
+                "Type": "IMAGE",
+                "FileName": "FileName sample 138",
+                "FilePath": "/samples/FilePath-139.txt",
+                "FileSizeBytes": 4000000140,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": true,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-139.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000141",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T13:22:00Z",
+                  "Length": 4000000143
+                }
+              },
+              {
+                "$type": "managed_transcript",
+                "OriginalFileName": "OriginalFileName sample 147",
+                "IsStaged": true,
+                "Type": "IMAGE",
+                "FileName": "FileName sample 144",
+                "FilePath": "/samples/FilePath-145.txt",
+                "FileSizeBytes": 4000000146,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": false,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-145.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000148",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T13:29:00Z",
+                  "Length": 4000000150
+                }
+              }
+            ],
+            "ToolInvocations": [
+              {
+                "Order": 41,
+                "ToolId": "ToolId sample 152",
+                "ToolName": "ToolName sample 153",
+                "ToolIcon": "ToolIcon sample 154",
+                "ToolCallId": "ToolCallId sample 155",
+                "Status": "SUCCESS",
+                "WasExecuted": true,
+                "StatusMessage": "StatusMessage sample 156",
+                "Arguments": {
+                  "ArgumentsKey sample 157": "Arguments sample 158",
+                  "ArgumentsKey sample 159": "Arguments sample 160"
+                }
+              },
+              {
+                "Order": 51,
+                "ToolId": "ToolId sample 162",
+                "ToolName": "ToolName sample 163",
+                "ToolIcon": "ToolIcon sample 164",
+                "ToolCallId": "ToolCallId sample 165",
+                "Status": "SUCCESS",
+                "WasExecuted": true,
+                "StatusMessage": "StatusMessage sample 166",
+                "Arguments": {
+                  "ArgumentsKey sample 167": "Arguments sample 168",
+                  "ArgumentsKey sample 169": "Arguments sample 170"
+                }
+              }
+            ],
+            "Presentation": {
+              "Kind": "SWOT_ANALYSIS",
+              "Data": {
+                "sample": 171,
+                "text": "Gr\u00F6\u00DFe"
+              }
+            },
+            "SourcePassages": [
+              {
+                "SourceUrl": "SourceUrl sample 172",
+                "DataSourceName": "DataSourceName sample 173",
+                "Path": "/samples/Path-174.txt",
+                "Category": "UNKNOWN",
+                "Type": "UNKNOWN",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000175",
+                "Text": "Text sample 176",
+                "SurroundingContent": [
+                  "SurroundingContent sample 177",
+                  "SurroundingContent sample 178"
+                ],
+                "PageNumber": 69,
+                "EndPageNumber": 70,
+                "SheetName": "SheetName sample 181",
+                "StartRow": 72,
+                "EndRow": 73,
+                "StartLine": 74,
+                "EndLine": 75,
+                "ChunkNumber": 76
+              },
+              {
+                "SourceUrl": "SourceUrl sample 187",
+                "DataSourceName": "DataSourceName sample 188",
+                "Path": "/samples/Path-189.txt",
+                "Category": "UNKNOWN",
+                "Type": "UNKNOWN",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000190",
+                "Text": "Text sample 191",
+                "SurroundingContent": [
+                  "SurroundingContent sample 192",
+                  "SurroundingContent sample 193"
+                ],
+                "PageNumber": 84,
+                "EndPageNumber": 85,
+                "SheetName": "SheetName sample 196",
+                "StartRow": 87,
+                "EndRow": 88,
+                "StartLine": 89,
+                "EndLine": 40,
+                "ChunkNumber": 41
+              }
+            ],
+            "ReportedUsage": {
+              "PromptTokens": 42,
+              "ModelId": "ModelId sample 203",
+              "BlockCount": 44
+            },
+            "Text": "Text sample 205"
+          },
+          "Role": "UNKNOWN",
+          "HideFromUser": true
+        },
+        {
+          "Time": "2026-10-29T15:56:15+01:00",
+          "ContentType": "UNKNOWN",
+          "Content": {
+            "$type": "image",
+            "Sources": [
+              {
+                "Title": "Title sample 207",
+                "URL": "URL sample 208",
+                "Origin": "RAG"
+              },
+              {
+                "Title": "Title sample 209",
+                "URL": "URL sample 210",
+                "Origin": "RAG"
+              }
+            ],
+            "FileAttachments": [
+              {
+                "$type": "file",
+                "Type": "IMAGE",
+                "FileName": "FileName sample 211",
+                "FilePath": "/samples/FilePath-212.txt",
+                "FileSizeBytes": 4000000213,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": true,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-212.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000214",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T14:35:00Z",
+                  "Length": 4000000216
+                }
+              },
+              {
+                "$type": "image",
+                "SourceType": "LOCAL_PATH",
+                "Type": "IMAGE",
+                "FileName": "FileName sample 217",
+                "FilePath": "/samples/FilePath-218.txt",
+                "FileSizeBytes": 4000000219,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": true,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-218.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000220",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T14:41:00Z",
+                  "Length": 4000000222
+                }
+              },
+              {
+                "$type": "managed_transcript",
+                "OriginalFileName": "OriginalFileName sample 226",
+                "IsStaged": true,
+                "Type": "IMAGE",
+                "FileName": "FileName sample 223",
+                "FilePath": "/samples/FilePath-224.txt",
+                "FileSizeBytes": 4000000225,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": false,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-224.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000227",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T14:48:00Z",
+                  "Length": 4000000229
+                }
+              }
+            ],
+            "SourceType": "LOCAL_PATH",
+            "Source": "Source sample 230"
+          },
+          "Role": "UNKNOWN",
+          "HideFromUser": true
+        }
+      ],
+      "FileAttachments": [
+        {
+          "$type": "file",
+          "Type": "IMAGE",
+          "FileName": "FileName sample 231",
+          "FilePath": "/samples/FilePath-232.txt",
+          "FileSizeBytes": 4000000233,
+          "IsForbidden": false,
+          "IsValid": true,
+          "IsImage": true,
+          "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-232.txt",
+          "ProvenanceId": "00000000-0000-4000-8000-000000000234",
+          "Version": {
+            "LastWriteUtc": "2026-10-29T14:55:00Z",
+            "Length": 4000000236
+          }
+        },
+        {
+          "$type": "image",
+          "SourceType": "LOCAL_PATH",
+          "Type": "IMAGE",
+          "FileName": "FileName sample 237",
+          "FilePath": "/samples/FilePath-238.txt",
+          "FileSizeBytes": 4000000239,
+          "IsForbidden": false,
+          "IsValid": true,
+          "IsImage": true,
+          "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-238.txt",
+          "ProvenanceId": "00000000-0000-4000-8000-000000000240",
+          "Version": {
+            "LastWriteUtc": "2026-10-29T15:01:00Z",
+            "Length": 4000000242
+          }
+        },
+        {
+          "$type": "managed_transcript",
+          "OriginalFileName": "OriginalFileName sample 246",
+          "IsStaged": true,
+          "Type": "IMAGE",
+          "FileName": "FileName sample 243",
+          "FilePath": "/samples/FilePath-244.txt",
+          "FileSizeBytes": 4000000245,
+          "IsForbidden": false,
+          "IsValid": true,
+          "IsImage": false,
+          "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-244.txt",
+          "ProvenanceId": "00000000-0000-4000-8000-000000000247",
+          "Version": {
+            "LastWriteUtc": "2026-10-29T15:08:00Z",
+            "Length": 4000000249
+          }
+        }
+      ],
+      "AllowProfileUsage": true,
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000250",
+      "ToolIds": [
+        "ToolIds sample 251",
+        "ToolIds sample 252"
+      ],
+      "DataSourceOptions": {
+        "DisableDataSources": true,
+        "AutomaticDataSourceSelection": true,
+        "AutomaticValidation": true,
+        "RetrievalMode": "EVERY_MESSAGE",
+        "PreselectedDataSourceIds": [
+          "PreselectedDataSourceIds sample 253",
+          "PreselectedDataSourceIds sample 254"
+        ]
+      },
+      "ProfileId": "ProfileId sample 255",
+      "ProviderId": "ProviderId sample 256",
+      "WorkspaceName": "WorkspaceName sample 257"
+    },
+    {
+      "Num": 7,
+      "Id": "Id sample 258",
+      "Name": "Name sample 259",
+      "SystemPrompt": "SystemPrompt sample 260",
+      "PredefinedUserPrompt": "PredefinedUserPrompt sample 261",
+      "ExampleConversation": [
+        {
+          "Time": "2026-10-29T16:52:15+01:00",
+          "ContentType": "UNKNOWN",
+          "Content": {
+            "$type": "text",
+            "Sources": [
+              {
+                "Title": "Title sample 263",
+                "URL": "URL sample 264",
+                "Origin": "RAG"
+              },
+              {
+                "Title": "Title sample 265",
+                "URL": "URL sample 266",
+                "Origin": "RAG"
+              }
+            ],
+            "FileAttachments": [
+              {
+                "$type": "file",
+                "Type": "IMAGE",
+                "FileName": "FileName sample 267",
+                "FilePath": "/samples/FilePath-268.txt",
+                "FileSizeBytes": 4000000269,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": true,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-268.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000270",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T15:31:00Z",
+                  "Length": 4000000272
+                }
+              },
+              {
+                "$type": "image",
+                "SourceType": "LOCAL_PATH",
+                "Type": "IMAGE",
+                "FileName": "FileName sample 273",
+                "FilePath": "/samples/FilePath-274.txt",
+                "FileSizeBytes": 4000000275,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": true,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-274.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000276",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T15:37:00Z",
+                  "Length": 4000000278
+                }
+              },
+              {
+                "$type": "managed_transcript",
+                "OriginalFileName": "OriginalFileName sample 282",
+                "IsStaged": true,
+                "Type": "IMAGE",
+                "FileName": "FileName sample 279",
+                "FilePath": "/samples/FilePath-280.txt",
+                "FileSizeBytes": 4000000281,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": false,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-280.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000283",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T15:44:00Z",
+                  "Length": 4000000285
+                }
+              }
+            ],
+            "ToolInvocations": [
+              {
+                "Order": 76,
+                "ToolId": "ToolId sample 287",
+                "ToolName": "ToolName sample 288",
+                "ToolIcon": "ToolIcon sample 289",
+                "ToolCallId": "ToolCallId sample 290",
+                "Status": "SUCCESS",
+                "WasExecuted": true,
+                "StatusMessage": "StatusMessage sample 291",
+                "Arguments": {
+                  "ArgumentsKey sample 292": "Arguments sample 293",
+                  "ArgumentsKey sample 294": "Arguments sample 295"
+                }
+              },
+              {
+                "Order": 86,
+                "ToolId": "ToolId sample 297",
+                "ToolName": "ToolName sample 298",
+                "ToolIcon": "ToolIcon sample 299",
+                "ToolCallId": "ToolCallId sample 300",
+                "Status": "SUCCESS",
+                "WasExecuted": true,
+                "StatusMessage": "StatusMessage sample 301",
+                "Arguments": {
+                  "ArgumentsKey sample 302": "Arguments sample 303",
+                  "ArgumentsKey sample 304": "Arguments sample 305"
+                }
+              }
+            ],
+            "Presentation": {
+              "Kind": "SWOT_ANALYSIS",
+              "Data": {
+                "sample": 306,
+                "text": "Gr\u00F6\u00DFe"
+              }
+            },
+            "SourcePassages": [
+              {
+                "SourceUrl": "SourceUrl sample 307",
+                "DataSourceName": "DataSourceName sample 308",
+                "Path": "/samples/Path-309.txt",
+                "Category": "UNKNOWN",
+                "Type": "UNKNOWN",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000310",
+                "Text": "Text sample 311",
+                "SurroundingContent": [
+                  "SurroundingContent sample 312",
+                  "SurroundingContent sample 313"
+                ],
+                "PageNumber": 54,
+                "EndPageNumber": 55,
+                "SheetName": "SheetName sample 316",
+                "StartRow": 57,
+                "EndRow": 58,
+                "StartLine": 59,
+                "EndLine": 60,
+                "ChunkNumber": 61
+              },
+              {
+                "SourceUrl": "SourceUrl sample 322",
+                "DataSourceName": "DataSourceName sample 323",
+                "Path": "/samples/Path-324.txt",
+                "Category": "UNKNOWN",
+                "Type": "UNKNOWN",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000325",
+                "Text": "Text sample 326",
+                "SurroundingContent": [
+                  "SurroundingContent sample 327",
+                  "SurroundingContent sample 328"
+                ],
+                "PageNumber": 69,
+                "EndPageNumber": 70,
+                "SheetName": "SheetName sample 331",
+                "StartRow": 72,
+                "EndRow": 73,
+                "StartLine": 74,
+                "EndLine": 75,
+                "ChunkNumber": 76
+              }
+            ],
+            "ReportedUsage": {
+              "PromptTokens": 77,
+              "ModelId": "ModelId sample 338",
+              "BlockCount": 79
+            },
+            "Text": "Text sample 340"
+          },
+          "Role": "UNKNOWN",
+          "HideFromUser": true
+        },
+        {
+          "Time": "2026-10-29T18:11:15+01:00",
+          "ContentType": "UNKNOWN",
+          "Content": {
+            "$type": "image",
+            "Sources": [
+              {
+                "Title": "Title sample 342",
+                "URL": "URL sample 343",
+                "Origin": "RAG"
+              },
+              {
+                "Title": "Title sample 344",
+                "URL": "URL sample 345",
+                "Origin": "RAG"
+              }
+            ],
+            "FileAttachments": [
+              {
+                "$type": "file",
+                "Type": "IMAGE",
+                "FileName": "FileName sample 346",
+                "FilePath": "/samples/FilePath-347.txt",
+                "FileSizeBytes": 4000000348,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": true,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-347.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000349",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T16:50:00Z",
+                  "Length": 4000000351
+                }
+              },
+              {
+                "$type": "image",
+                "SourceType": "LOCAL_PATH",
+                "Type": "IMAGE",
+                "FileName": "FileName sample 352",
+                "FilePath": "/samples/FilePath-353.txt",
+                "FileSizeBytes": 4000000354,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": true,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-353.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000355",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T16:56:00Z",
+                  "Length": 4000000357
+                }
+              },
+              {
+                "$type": "managed_transcript",
+                "OriginalFileName": "OriginalFileName sample 361",
+                "IsStaged": true,
+                "Type": "IMAGE",
+                "FileName": "FileName sample 358",
+                "FilePath": "/samples/FilePath-359.txt",
+                "FileSizeBytes": 4000000360,
+                "IsForbidden": false,
+                "IsValid": true,
+                "IsImage": false,
+                "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-359.txt",
+                "ProvenanceId": "00000000-0000-4000-8000-000000000362",
+                "Version": {
+                  "LastWriteUtc": "2026-10-29T17:03:00Z",
+                  "Length": 4000000364
+                }
+              }
+            ],
+            "SourceType": "LOCAL_PATH",
+            "Source": "Source sample 365"
+          },
+          "Role": "UNKNOWN",
+          "HideFromUser": true
+        }
+      ],
+      "FileAttachments": [
+        {
+          "$type": "file",
+          "Type": "IMAGE",
+          "FileName": "FileName sample 366",
+          "FilePath": "/samples/FilePath-367.txt",
+          "FileSizeBytes": 4000000368,
+          "IsForbidden": false,
+          "IsValid": true,
+          "IsImage": true,
+          "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-367.txt",
+          "ProvenanceId": "00000000-0000-4000-8000-000000000369",
+          "Version": {
+            "LastWriteUtc": "2026-10-29T17:10:00Z",
+            "Length": 4000000371
+          }
+        },
+        {
+          "$type": "image",
+          "SourceType": "LOCAL_PATH",
+          "Type": "IMAGE",
+          "FileName": "FileName sample 372",
+          "FilePath": "/samples/FilePath-373.txt",
+          "FileSizeBytes": 4000000374,
+          "IsForbidden": false,
+          "IsValid": true,
+          "IsImage": true,
+          "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-373.txt",
+          "ProvenanceId": "00000000-0000-4000-8000-000000000375",
+          "Version": {
+            "LastWriteUtc": "2026-10-29T17:16:00Z",
+            "Length": 4000000377
+          }
+        },
+        {
+          "$type": "managed_transcript",
+          "OriginalFileName": "OriginalFileName sample 381",
+          "IsStaged": true,
+          "Type": "IMAGE",
+          "FileName": "FileName sample 378",
+          "FilePath": "/samples/FilePath-379.txt",
+          "FileSizeBytes": 4000000380,
+          "IsForbidden": false,
+          "IsValid": true,
+          "IsImage": false,
+          "FilePathAsUrl": "/local/file?path=%2Fsamples%2FFilePath-379.txt",
+          "ProvenanceId": "00000000-0000-4000-8000-000000000382",
+          "Version": {
+            "LastWriteUtc": "2026-10-29T17:23:00Z",
+            "Length": 4000000384
+          }
+        }
+      ],
+      "AllowProfileUsage": true,
+      "IsEnterpriseConfiguration": true,
+      "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000385",
+      "ToolIds": [
+        "ToolIds sample 386",
+        "ToolIds sample 387"
+      ],
+      "DataSourceOptions": {
+        "DisableDataSources": true,
+        "AutomaticDataSourceSelection": true,
+        "AutomaticValidation": true,
+        "RetrievalMode": "EVERY_MESSAGE",
+        "PreselectedDataSourceIds": [
+          "PreselectedDataSourceIds sample 388",
+          "PreselectedDataSourceIds sample 389"
+        ]
+      },
+      "ProfileId": "ProfileId sample 390",
+      "ProviderId": "ProviderId sample 391",
+      "WorkspaceName": "WorkspaceName sample 392"
+    }
+  ],
+  "EnabledPlugins": [
+    "00000000-0000-4000-8000-000000000393",
+    "00000000-0000-4000-8000-000000000394"
+  ],
+  "ManagedEditableDefaults": {
+    "ManagedEditableDefaultsKey sample 395": {
+      "ConfigPluginId": "00000000-0000-4000-8000-000000000396",
+      "LastAppliedValue": "LastAppliedValue sample 397"
+    },
+    "ManagedEditableDefaultsKey sample 398": {
+      "ConfigPluginId": "00000000-0000-4000-8000-000000000399",
+      "LastAppliedValue": "LastAppliedValue sample 400"
+    }
+  },
+  "ManagedLockedConfigurations": {
+    "ManagedLockedConfigurationsKey sample 401": "00000000-0000-4000-8000-000000000402",
+    "ManagedLockedConfigurationsKey sample 403": "00000000-0000-4000-8000-000000000404"
+  },
+  "ManagedUserValueSnapshots": {
+    "ManagedUserValueSnapshotsKey sample 405": "ManagedUserValueSnapshots sample 406",
+    "ManagedUserValueSnapshotsKey sample 407": "ManagedUserValueSnapshots sample 408"
+  },
+  "AssistantPluginAudits": [
+    {
+      "PluginId": "00000000-0000-4000-8000-000000000409",
+      "PluginHash": "PluginHash sample 410",
+      "AuditedAtUtc": "2026-10-29T19:21:15+01:00",
+      "AuditProviderId": "AuditProviderId sample 412",
+      "AuditProviderName": "AuditProviderName sample 413",
+      "Level": "DANGEROUS",
+      "Summary": "Summary sample 414",
+      "Confidence": 2.25,
+      "PromptPreview": "PromptPreview sample 415",
+      "Findings": [
+        {
+          "severity": "unknown",
+          "Category": "Category sample 417",
+          "Location": "Location sample 418",
+          "Description": "Description sample 419"
+        },
+        {
+          "severity": "unknown",
+          "Category": "Category sample 421",
+          "Location": "Location sample 422",
+          "Description": "Description sample 423"
+        }
+      ]
+    },
+    {
+      "PluginId": "00000000-0000-4000-8000-000000000424",
+      "PluginHash": "PluginHash sample 425",
+      "AuditedAtUtc": "2026-10-29T19:36:15+01:00",
+      "AuditProviderId": "AuditProviderId sample 427",
+      "AuditProviderName": "AuditProviderName sample 428",
+      "Level": "DANGEROUS",
+      "Summary": "Summary sample 429",
+      "Confidence": 2.25,
+      "PromptPreview": "PromptPreview sample 430",
+      "Findings": [
+        {
+          "severity": "unknown",
+          "Category": "Category sample 432",
+          "Location": "Location sample 433",
+          "Description": "Description sample 434"
+        },
+        {
+          "severity": "unknown",
+          "Category": "Category sample 436",
+          "Location": "Location sample 437",
+          "Description": "Description sample 438"
+        }
+      ]
+    }
+  ],
+  "AppliedEnterpriseAssistantActivations": [
+    "AppliedEnterpriseAssistantActivations sample 439",
+    "AppliedEnterpriseAssistantActivations sample 440"
+  ],
+  "StoredDataPathsAreRelative": true,
+  "NextProviderNum": 7,
+  "NextEmbeddingNum": 7,
+  "NextTranscriptionNum": 7,
+  "NextDataSourceNum": 7,
+  "NextProfileNum": 7,
+  "NextChatTemplateNum": 7,
+  "NextDocumentAnalysisPolicyNum": 7,
+  "App": {
+    "LanguageBehavior": "MANUAL",
+    "LanguagePluginId": "00000000-0000-4000-8000-000000000441",
+    "PreferredTheme": "LIGHT",
+    "IsSavingEnergy": true,
+    "EnableSpellchecking": true,
+    "CloseExportMessagesAutomatically": true,
+    "UpdateInterval": "DISABLE_UPDATES",
+    "UpdateInstallation": "AUTOMATIC",
+    "NavigationBehavior": "NEVER_EXPAND_USE_TOOLTIPS",
+    "StartPage": "CHAT",
+    "InterfaceScreenSizes": [
+      {
+        "ScreenKey": "ScreenKey sample 442",
+        "Size": "SYSTEM_SCALING",
+        "CustomPercent": 83
+      },
+      {
+        "ScreenKey": "ScreenKey sample 444",
+        "Size": "SYSTEM_SCALING",
+        "CustomPercent": 85
+      }
+    ],
+    "ShowPromptInjectionAlert": true,
+    "ShowIntroduction": true,
+    "ShowQuickStartGuide": true,
+    "ShowLastChangelog": true,
+    "ShowVision": true,
+    "PreviewVisibility": "RELEASE_CANDIDATE",
+    "EnabledPreviewFeatures": [
+      "PRE_WRITER_MODE_2024",
+      "PRE_RAG_2024"
+    ],
+    "PreselectedProvider": "PreselectedProvider sample 446",
+    "PreselectedProfile": "PreselectedProfile sample 447",
+    "PreselectedChatTemplate": "PreselectedChatTemplate sample 448",
+    "UseTranscriptionProvider": "UseTranscriptionProvider sample 449",
+    "OpusBitrate": "KBPS_32",
+    "ShortcutVoiceRecording": "ShortcutVoiceRecording sample 450",
+    "ShortcutVoiceRecordingDisplayName": "ShortcutVoiceRecordingDisplayName sample 451",
+    "ShortcutVoiceRecordingDisplaySource": "ShortcutVoiceRecordingDisplaySource sample 452",
+    "HttpClientTimeoutSeconds": 43,
+    "ShareFeatureUsageWithSelfHostedServerOperators": true,
+    "ExternalHttpCustomRootCertificatesEnabled": true,
+    "ExternalHttpCustomRootCertificateBundlePath": "/samples/ExternalHttpCustomRootCertificateBundlePath-454.txt",
+    "ExternalHttpCustomRootCertificateAllowedHosts": [
+      "ExternalHttpCustomRootCertificateAllowedHosts sample 455",
+      "ExternalHttpCustomRootCertificateAllowedHosts sample 456"
+    ],
+    "AllowUserToAddProvider": true,
+    "AllowUserToAddLLMProvider": true,
+    "AllowUserToAddEmbeddingProvider": true,
+    "AllowUserToAddTranscriptionProvider": true,
+    "ProhibitedProviders": [
+      "OPEN_AI",
+      "ANTHROPIC"
+    ],
+    "AllowUserToAddMailbox": true,
+    "AllowUserToImportConfigurationSnippets": true,
+    "AllowUserToImportProfile": true,
+    "AllowUserToImportLLMProvider": true,
+    "AllowUserToImportEmbeddingProvider": true,
+    "AllowUserToImportTranscriptionProvider": true,
+    "AllowUserToImportChatTemplate": true,
+    "AllowUserToImportERIDataSource": true,
+    "AllowUserToImportDocumentAnalysisPolicy": true,
+    "AllowUserToImportPlugins": true,
+    "AllowUserToImportConfigurationPlugins": true,
+    "AllowUserToSharePlugins": true,
+    "AllowUserToBackUpData": true,
+    "AllowUserToRestoreData": true,
+    "ShowAdminSettings": true,
+    "EnterpriseEncryptionExportFormat": "V2",
+    "AddAIGeneratedContentDisclosure": true,
+    "DataSourceIndexing": {
+      "AutomaticRefresh": true,
+      "MinimumPauseBetweenStepsSeconds": 47,
+      "MaximumPauseBetweenStepsSeconds": 48
+    },
+    "HiddenAssistants": [
+      "UNKNOWN",
+      "GRAMMAR_SPELLING_ASSISTANT"
+    ]
+  },
+  "Chat": {
+    "ShortcutSendBehavior": "MODIFER_ENTER_IS_SENDING",
+    "LoadingProviderBehavior": "ALWAYS_USE_DEFAULT_CHAT_PROVIDER",
+    "AddChatProviderBehavior": "ADDED_CHATS_USE_LATEST_PROVIDER",
+    "SendToChatDataSourceBehavior": "APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS",
+    "PreselectOptions": true,
+    "PreselectedProvider": "PreselectedProvider sample 459",
+    "PreselectedProfile": "PreselectedProfile sample 460",
+    "PreselectedChatTemplate": "PreselectedChatTemplate sample 461",
+    "PreselectedDataSourcesDisabled": true,
+    "PreselectedDataSourcesAutomaticSelection": true,
+    "PreselectedDataSourcesAutomaticValidation": true,
+    "PreselectedDataSourceIds": [
+      "PreselectedDataSourceIds sample 464",
+      "PreselectedDataSourceIds sample 465"
+    ],
+    "PreselectedDataSourcesRetrievalMode": "EVERY_MESSAGE",
+    "PreselectedDataSourceOptions": {
+      "DisableDataSources": true,
+      "AutomaticDataSourceSelection": true,
+      "AutomaticValidation": true,
+      "RetrievalMode": "EVERY_MESSAGE",
+      "PreselectedDataSourceIds": [
+        "PreselectedDataSourceIds sample 464",
+        "PreselectedDataSourceIds sample 465"
+      ]
+    },
+    "ShowLatestMessageAfterLoading": true,
+    "ReadChangedAttachmentsAgain": true
+  },
+  "Workspace": {
+    "StorageBehavior": "STORE_CHATS_AUTOMATICALLY",
+    "StorageTemporaryMaintenancePolicy": "DELETE_OLDER_THAN_7_DAYS",
+    "DisplayBehavior": "TOGGLE_SIDEBAR",
+    "IsSidebarVisible": true,
+    "SplitterPosition": 1.5
+  },
+  "IconFinder": {
+    "PreselectOptions": true,
+    "PreselectedSource": "ICONS8",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 466"
+  },
+  "Translation": {
+    "DebounceIntervalMilliseconds": 57,
+    "PreselectOptions": true,
+    "PreselectLiveTranslation": true,
+    "HideWebContentReader": true,
+    "PreselectWebContentReader": true,
+    "PreselectContentCleanerAgent": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectOtherLanguage": "PreselectOtherLanguage sample 468",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 469"
+  },
+  "Coding": {
+    "PreselectOptions": true,
+    "PreselectCompilerMessages": true,
+    "PreselectedProgrammingLanguage": "BASH",
+    "PreselectedOtherProgrammingLanguage": "PreselectedOtherProgrammingLanguage sample 470",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 471",
+    "PreselectedProfile": "PreselectedProfile sample 472"
+  },
+  "ERI": {
+    "AutoSaveChanges": true,
+    "PreselectOptions": true,
+    "ERIServers": [
+      {
+        "ServerName": "ServerName sample 473",
+        "ServerDescription": "ServerDescription sample 474",
+        "ERIVersion": "V1",
+        "ProgrammingLanguage": "C",
+        "OtherProgrammingLanguage": "OtherProgrammingLanguage sample 475",
+        "DataSource": "CUSTOM",
+        "DataSourceProductName": "DataSourceProductName sample 476",
+        "OtherDataSource": "OtherDataSource sample 477",
+        "DataSourceHostname": "DataSourceHostname sample 478",
+        "DataSourcePort": 69,
+        "UserTypedPort": true,
+        "AuthMethods": [
+          "KERBEROS",
+          "USERNAME_PASSWORD"
+        ],
+        "AuthDescription": "AuthDescription sample 480",
+        "OperatingSystem": "WINDOWS",
+        "AllowedLLMProviders": "ANY",
+        "EmbeddingInfos": [
+          {
+            "EmbeddingType": "EmbeddingType sample 481",
+            "EmbeddingName": "EmbeddingName sample 482",
+            "Description": "Description sample 483",
+            "UsedWhen": "UsedWhen sample 484",
+            "Link": "Link sample 485"
+          },
+          {
+            "EmbeddingType": "EmbeddingType sample 486",
+            "EmbeddingName": "EmbeddingName sample 487",
+            "Description": "Description sample 488",
+            "UsedWhen": "UsedWhen sample 489",
+            "Link": "Link sample 490"
+          }
+        ],
+        "RetrievalInfos": [
+          {
+            "Name": "Name sample 491",
+            "Description": "Description sample 492",
+            "Link": "Link sample 493",
+            "ParametersDescription": {
+              "ParametersDescriptionKey sample 494": "ParametersDescription sample 495",
+              "ParametersDescriptionKey sample 496": "ParametersDescription sample 497"
+            },
+            "Embeddings": [
+              {
+                "EmbeddingType": "EmbeddingType sample 498",
+                "EmbeddingName": "EmbeddingName sample 499",
+                "Description": "Description sample 500",
+                "UsedWhen": "UsedWhen sample 501",
+                "Link": "Link sample 502"
+              },
+              {
+                "EmbeddingType": "EmbeddingType sample 503",
+                "EmbeddingName": "EmbeddingName sample 504",
+                "Description": "Description sample 505",
+                "UsedWhen": "UsedWhen sample 506",
+                "Link": "Link sample 507"
+              }
+            ]
+          },
+          {
+            "Name": "Name sample 508",
+            "Description": "Description sample 509",
+            "Link": "Link sample 510",
+            "ParametersDescription": {
+              "ParametersDescriptionKey sample 511": "ParametersDescription sample 512",
+              "ParametersDescriptionKey sample 513": "ParametersDescription sample 514"
+            },
+            "Embeddings": [
+              {
+                "EmbeddingType": "EmbeddingType sample 515",
+                "EmbeddingName": "EmbeddingName sample 516",
+                "Description": "Description sample 517",
+                "UsedWhen": "UsedWhen sample 518",
+                "Link": "Link sample 519"
+              },
+              {
+                "EmbeddingType": "EmbeddingType sample 520",
+                "EmbeddingName": "EmbeddingName sample 521",
+                "Description": "Description sample 522",
+                "UsedWhen": "UsedWhen sample 523",
+                "Link": "Link sample 524"
+              }
+            ]
+          }
+        ],
+        "AdditionalLibraries": "AdditionalLibraries sample 525",
+        "WriteToFilesystem": true,
+        "BaseDirectory": "BaseDirectory sample 526",
+        "PreviouslyGeneratedFiles": [
+          "PreviouslyGeneratedFiles sample 527",
+          "PreviouslyGeneratedFiles sample 528"
+        ]
+      },
+      {
+        "ServerName": "ServerName sample 529",
+        "ServerDescription": "ServerDescription sample 530",
+        "ERIVersion": "V1",
+        "ProgrammingLanguage": "C",
+        "OtherProgrammingLanguage": "OtherProgrammingLanguage sample 531",
+        "DataSource": "CUSTOM",
+        "DataSourceProductName": "DataSourceProductName sample 532",
+        "OtherDataSource": "OtherDataSource sample 533",
+        "DataSourceHostname": "DataSourceHostname sample 534",
+        "DataSourcePort": 75,
+        "UserTypedPort": true,
+        "AuthMethods": [
+          "KERBEROS",
+          "USERNAME_PASSWORD"
+        ],
+        "AuthDescription": "AuthDescription sample 536",
+        "OperatingSystem": "WINDOWS",
+        "AllowedLLMProviders": "ANY",
+        "EmbeddingInfos": [
+          {
+            "EmbeddingType": "EmbeddingType sample 537",
+            "EmbeddingName": "EmbeddingName sample 538",
+            "Description": "Description sample 539",
+            "UsedWhen": "UsedWhen sample 540",
+            "Link": "Link sample 541"
+          },
+          {
+            "EmbeddingType": "EmbeddingType sample 542",
+            "EmbeddingName": "EmbeddingName sample 543",
+            "Description": "Description sample 544",
+            "UsedWhen": "UsedWhen sample 545",
+            "Link": "Link sample 546"
+          }
+        ],
+        "RetrievalInfos": [
+          {
+            "Name": "Name sample 547",
+            "Description": "Description sample 548",
+            "Link": "Link sample 549",
+            "ParametersDescription": {
+              "ParametersDescriptionKey sample 550": "ParametersDescription sample 551",
+              "ParametersDescriptionKey sample 552": "ParametersDescription sample 553"
+            },
+            "Embeddings": [
+              {
+                "EmbeddingType": "EmbeddingType sample 554",
+                "EmbeddingName": "EmbeddingName sample 555",
+                "Description": "Description sample 556",
+                "UsedWhen": "UsedWhen sample 557",
+                "Link": "Link sample 558"
+              },
+              {
+                "EmbeddingType": "EmbeddingType sample 559",
+                "EmbeddingName": "EmbeddingName sample 560",
+                "Description": "Description sample 561",
+                "UsedWhen": "UsedWhen sample 562",
+                "Link": "Link sample 563"
+              }
+            ]
+          },
+          {
+            "Name": "Name sample 564",
+            "Description": "Description sample 565",
+            "Link": "Link sample 566",
+            "ParametersDescription": {
+              "ParametersDescriptionKey sample 567": "ParametersDescription sample 568",
+              "ParametersDescriptionKey sample 569": "ParametersDescription sample 570"
+            },
+            "Embeddings": [
+              {
+                "EmbeddingType": "EmbeddingType sample 571",
+                "EmbeddingName": "EmbeddingName sample 572",
+                "Description": "Description sample 573",
+                "UsedWhen": "UsedWhen sample 574",
+                "Link": "Link sample 575"
+              },
+              {
+                "EmbeddingType": "EmbeddingType sample 576",
+                "EmbeddingName": "EmbeddingName sample 577",
+                "Description": "Description sample 578",
+                "UsedWhen": "UsedWhen sample 579",
+                "Link": "Link sample 580"
+              }
+            ]
+          }
+        ],
+        "AdditionalLibraries": "AdditionalLibraries sample 581",
+        "WriteToFilesystem": true,
+        "BaseDirectory": "BaseDirectory sample 582",
+        "PreviouslyGeneratedFiles": [
+          "PreviouslyGeneratedFiles sample 583",
+          "PreviouslyGeneratedFiles sample 584"
+        ]
+      }
+    ],
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 585",
+    "PreselectedProfile": "PreselectedProfile sample 586"
+  },
+  "DocumentAnalysis": {
+    "Policies": [
+      {
+        "Id": "Id sample 587",
+        "Num": 7,
+        "Name": "PolicyName sample 589",
+        "IsEnterpriseConfiguration": true,
+        "PolicyName": "PolicyName sample 589",
+        "PolicyDescription": "PolicyDescription sample 590",
+        "IsProtected": true,
+        "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000591",
+        "AnalysisRules": "AnalysisRules sample 592",
+        "OutputRules": "OutputRules sample 593",
+        "MinimumProviderConfidence": "UNTRUSTED",
+        "AllowedToolIds": [
+          "AllowedToolIds sample 594",
+          "AllowedToolIds sample 595"
+        ],
+        "PreselectedProvider": "PreselectedProvider sample 596",
+        "PreselectedProfile": "PreselectedProfile sample 597",
+        "HidePolicyDefinition": true
+      },
+      {
+        "Id": "Id sample 598",
+        "Num": 7,
+        "Name": "PolicyName sample 600",
+        "IsEnterpriseConfiguration": true,
+        "PolicyName": "PolicyName sample 600",
+        "PolicyDescription": "PolicyDescription sample 601",
+        "IsProtected": true,
+        "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000602",
+        "AnalysisRules": "AnalysisRules sample 603",
+        "OutputRules": "OutputRules sample 604",
+        "MinimumProviderConfidence": "UNTRUSTED",
+        "AllowedToolIds": [
+          "AllowedToolIds sample 605",
+          "AllowedToolIds sample 606"
+        ],
+        "PreselectedProvider": "PreselectedProvider sample 607",
+        "PreselectedProfile": "PreselectedProfile sample 608",
+        "HidePolicyDefinition": true
+      }
+    ]
+  },
+  "BatchProcessing": {
+    "PreselectOptions": true,
+    "InputDirectory": "InputDirectory sample 609",
+    "OutputDirectory": "OutputDirectory sample 610",
+    "FilePatterns": "FilePatterns sample 611",
+    "IncludeSubdirectories": true,
+    "IncludeHiddenFilesAndFolders": true,
+    "ExcludePatterns": "ExcludePatterns sample 612",
+    "MaxFileSizeMegabytes": 53,
+    "PromptSource": "POLICY",
+    "FreePrompt": "FreePrompt sample 614",
+    "PromptFilePath": "/samples/PromptFilePath-615.txt",
+    "PreselectedPolicyId": "PreselectedPolicyId sample 616",
+    "OutputMode": "TABLE_ONLY",
+    "ResultFileFormat": "UNKNOWN",
+    "CsvFileName": "CsvFileName sample 617",
+    "ResultColumnHeader": "ResultColumnHeader sample 618",
+    "CsvSeparator": "SEMICOLON",
+    "CustomCsvSeparator": "CustomCsvSeparator sample 619",
+    "MinimumDelaySeconds": 60,
+    "MaximumDelaySeconds": 61,
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 622"
+  },
+  "MandatoryInformation": {
+    "Acceptances": [
+      {
+        "InfoId": "InfoId sample 623",
+        "AcceptedVersion": "AcceptedVersion sample 624",
+        "AcceptedHash": "AcceptedHash sample 625",
+        "AcceptedAtUtc": "2026-10-29T22:56:15+01:00",
+        "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000627"
+      },
+      {
+        "InfoId": "InfoId sample 628",
+        "AcceptedVersion": "AcceptedVersion sample 629",
+        "AcceptedHash": "AcceptedHash sample 630",
+        "AcceptedAtUtc": "2026-10-29T23:01:15+01:00",
+        "EnterpriseConfigurationPluginId": "00000000-0000-4000-8000-000000000632"
+      }
+    ]
+  },
+  "TextSummarizer": {
+    "PreselectOptions": true,
+    "HideWebContentReader": true,
+    "PreselectWebContentReader": true,
+    "PreselectContentCleanerAgent": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 633",
+    "PreselectedComplexity": "SIMPLE_LANGUAGE",
+    "PreselectedExpertInField": "PreselectedExpertInField sample 634",
+    "PreselectedImportantAspects": "PreselectedImportantAspects sample 635",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 636"
+  },
+  "SWOTAnalysis": {
+    "PreselectOptions": true,
+    "HideWebContentReader": true,
+    "PreselectWebContentReader": true,
+    "PreselectContentCleanerAgent": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 637",
+    "PreselectedImportantAspects": "PreselectedImportantAspects sample 638",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 639"
+  },
+  "TextContentCleaner": {
+    "PreselectAgentOptions": true,
+    "PreselectedAgentProvider": "PreselectedAgentProvider sample 640"
+  },
+  "AgentDataSourceSelection": {
+    "PreselectAgentOptions": true,
+    "PreselectedAgentProvider": "PreselectedAgentProvider sample 641"
+  },
+  "AgentRetrievalContextValidation": {
+    "EnableRetrievalContextValidation": true,
+    "PreselectAgentOptions": true,
+    "PreselectedAgentProvider": "PreselectedAgentProvider sample 642",
+    "NumParallelValidations": 83
+  },
+  "AssistantPluginAudit": {
+    "RequireAuditBeforeActivation": true,
+    "PreselectedAgentProvider": "PreselectedAgentProvider sample 644",
+    "MinimumLevel": "DANGEROUS",
+    "BlockActivationBelowMinimum": true,
+    "AutomaticallyAuditAssistants": true,
+    "EnterpriseApprovedPlugins": [
+      {
+        "PluginHash": "PluginHash sample 645",
+        "DisplayName": "DisplayName sample 646",
+        "Comment": "Comment sample 647",
+        "ApprovedBy": "ApprovedBy sample 648",
+        "ApprovedAtUtc": "2026-10-29T23:19:15+01:00",
+        "Activate": true,
+        "AllowUserOverride": true
+      },
+      {
+        "PluginHash": "PluginHash sample 650",
+        "DisplayName": "DisplayName sample 651",
+        "Comment": "Comment sample 652",
+        "ApprovedBy": "ApprovedBy sample 653",
+        "ApprovedAtUtc": "2026-10-29T23:24:15+01:00",
+        "Activate": true,
+        "AllowUserOverride": true
+      }
+    ]
+  },
+  "Agenda": {
+    "PreselectOptions": true,
+    "PreselectName": "PreselectName sample 655",
+    "PreselectTopic": "PreselectTopic sample 656",
+    "PreselectObjective": "PreselectObjective sample 657",
+    "PreselectModerator": "PreselectModerator sample 658",
+    "PreselectDuration": "PreselectDuration sample 659",
+    "PreselectStartTime": "PreselectStartTime sample 660",
+    "PreselectIntroduceParticipants": true,
+    "PreselectNumberParticipants": "PEER_TO_PEER",
+    "PreselectActiveParticipation": true,
+    "PreselectIsMeetingVirtual": true,
+    "PreselectLocation": "PreselectLocation sample 661",
+    "PreselectJointDinner": true,
+    "PreselectSocialActivity": true,
+    "PreselectArriveAndDepart": true,
+    "PreselectLunchTime": 52,
+    "PreselectBreakTime": 53,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 664",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 665",
+    "PreselectedProfile": "PreselectedProfile sample 666"
+  },
+  "GrammarSpelling": {
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 667",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 668"
+  },
+  "RewriteImprove": {
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 669",
+    "PreselectedWritingStyle": "EVERYDAY",
+    "PreselectedSentenceStructure": "ACTIVE",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 670"
+  },
+  "PromptOptimizer": {
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 671",
+    "PreselectedImportantAspects": "PreselectedImportantAspects sample 672",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 673"
+  },
+  "EMail": {
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectOtherLanguage": "PreselectOtherLanguage sample 674",
+    "PreselectedWritingStyle": "BUSINESS_FORMAL",
+    "Greeting": "Greeting sample 675",
+    "SenderName": "SenderName sample 676",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 677",
+    "PreselectedProfile": "PreselectedProfile sample 678"
+  },
+  "SlideBuilder": {
+    "TemplatePath": "/samples/TemplatePath-679.txt",
+    "PreselectedFooterText": "PreselectedFooterText sample 680",
+    "PreselectedMaxBulletPointsPerSlide": 71,
+    "PreselectedKeepEmptyPicturePlaceholders": true,
+    "PreselectedPictureLibraryPath": "/samples/PreselectedPictureLibraryPath-682.txt",
+    "PreselectedLayouts": {
+      "TABLE_OF_CONTENTS": "PreselectedLayouts sample 683",
+      "AGENDA": "PreselectedLayouts sample 684"
+    },
+    "PreselectedTemplateSlideUses": {
+      "75": "KEEP",
+      "76": "EDIT"
+    },
+    "PreselectOptions": true,
+    "PreselectedProfile": "PreselectedProfile sample 687",
+    "PreselectedProvider": "PreselectedProvider sample 688",
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 689",
+    "PreselectedAudienceProfile": "STUDENTS",
+    "PreselectedAudienceAgeGroup": "CHILDREN",
+    "PreselectedAudienceOrganizationalLevel": "TRAINEES",
+    "PreselectedAudienceExpertise": "NON_EXPERTS",
+    "PreselectedOccasion": "TALK",
+    "PreselectedOtherOccasion": "PreselectedOtherOccasion sample 690",
+    "PreselectedImportantAspects": "PreselectedImportantAspects sample 691",
+    "MinimumProviderConfidence": "UNTRUSTED"
+  },
+  "AssistantBuilder": {
+    "PreselectOptions": true,
+    "PreselectedProvider": "PreselectedProvider sample 692",
+    "PreselectedOutputLanguage": "EN_US",
+    "PreselectedOtherOutputLanguage": "PreselectedOtherOutputLanguage sample 693",
+    "MinimumProviderConfidence": "UNTRUSTED"
+  },
+  "VisualBriefing": {
+    "PreselectedProfile": "PreselectedProfile sample 694",
+    "PreselectedProvider": "PreselectedProvider sample 695",
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 696",
+    "PreselectedAudienceProfile": "STUDENTS",
+    "PreselectedAudienceAgeGroup": "CHILDREN",
+    "PreselectedAudienceOrganizationalLevel": "TRAINEES",
+    "PreselectedAudienceExpertise": "NON_EXPERTS",
+    "ShowSourceReferences": true,
+    "OptimizeImages": true,
+    "MinimumProviderConfidence": "UNTRUSTED"
+  },
+  "LegalCheck": {
+    "PreselectOptions": true,
+    "HideWebContentReader": true,
+    "PreselectWebContentReader": true,
+    "PreselectContentCleanerAgent": true,
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 697",
+    "PreselectedProfile": "PreselectedProfile sample 698"
+  },
+  "Synonyms": {
+    "PreselectOptions": true,
+    "PreselectedLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 699",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 700"
+  },
+  "MyTasks": {
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectOtherLanguage": "PreselectOtherLanguage sample 701",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 702",
+    "PreselectedProfile": "PreselectedProfile sample 703"
+  },
+  "JobPostings": {
+    "PreselectOptions": true,
+    "PreselectedMandatoryInformation": "PreselectedMandatoryInformation sample 704",
+    "PreselectedJobDescription": "PreselectedJobDescription sample 705",
+    "PreselectedQualifications": "PreselectedQualifications sample 706",
+    "PreselectedResponsibilities": "PreselectedResponsibilities sample 707",
+    "PreselectedCompanyName": "PreselectedCompanyName sample 708",
+    "PreselectedWorkLocation": "PreselectedWorkLocation sample 709",
+    "PreselectedCountryLegalFramework": "PreselectedCountryLegalFramework sample 710",
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectOtherLanguage": "PreselectOtherLanguage sample 711",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProvider": "PreselectedProvider sample 712"
+  },
+  "BiasOfTheDay": {
+    "UsedBias": [
+      53,
+      54
+    ],
+    "DateLastBiasDrawn": "2026-10-29",
+    "BiasOfTheDayChatId": "00000000-0000-4000-8000-000000000715",
+    "BiasOfTheDayId": "00000000-0000-4000-8000-000000000716",
+    "RestrictOneBiasPerDay": true,
+    "PreselectOptions": true,
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectedOtherLanguage": "PreselectedOtherLanguage sample 717",
+    "MinimumProviderConfidence": "UNTRUSTED",
+    "PreselectedProfile": "PreselectedProfile sample 718",
+    "PreselectedProvider": "PreselectedProvider sample 719"
+  },
+  "I18N": {
+    "PreselectOptions": true,
+    "PreselectedLanguagePluginId": "00000000-0000-4000-8000-000000000720",
+    "PreselectedTargetLanguage": "EN_US",
+    "PreselectOtherLanguage": "PreselectOtherLanguage sample 721",
+    "PreselectedProvider": "PreselectedProvider sample 722"
+  },
+  "Tools": {
+    "Settings": {
+      "SettingsKey sample 723": {
+        "SettingsKey sample 724": "Settings sample 725",
+        "SettingsKey sample 726": "Settings sample 727"
+      },
+      "SettingsKey sample 728": {
+        "SettingsKey sample 729": "Settings sample 730",
+        "SettingsKey sample 731": "Settings sample 732"
+      }
+    },
+    "DefaultToolIdsByComponent": {
+      "DefaultToolIdsByComponentKey sample 733": [
+        "DefaultToolIdsByComponent sample 734",
+        "DefaultToolIdsByComponent sample 735"
+      ],
+      "DefaultToolIdsByComponentKey sample 736": [
+        "DefaultToolIdsByComponent sample 737",
+        "DefaultToolIdsByComponent sample 738"
+      ]
+    },
+    "VisibleToolSelectionComponents": [
+      "VisibleToolSelectionComponents sample 739",
+      "VisibleToolSelectionComponents sample 740"
+    ],
+    "EnableTools": true,
+    "DisabledToolIds": [
+      "DisabledToolIds sample 741",
+      "DisabledToolIds sample 742"
+    ],
+    "UserDisabledToolIds": [
+      "UserDisabledToolIds sample 743",
+      "UserDisabledToolIds sample 744"
+    ],
+    "MinimumProviderConfidenceByToolId": {
+      "MinimumProviderConfidenceByToolIdKey sample 745": "MinimumProviderConfidenceByToolId sample 746",
+      "MinimumProviderConfidenceByToolIdKey sample 747": "MinimumProviderConfidenceByToolId sample 748"
+    },
+    "LockedToolSettings": {
+      "LockedToolSettingsKey sample 749": "LockedToolSettings sample 750",
+      "LockedToolSettingsKey sample 751": "LockedToolSettings sample 752"
+    },
+    "DefaultToolSettings": {
+      "DefaultToolSettingsKey sample 753": "DefaultToolSettings sample 754",
+      "DefaultToolSettingsKey sample 755": "DefaultToolSettings sample 756"
+    }
+  }
+}

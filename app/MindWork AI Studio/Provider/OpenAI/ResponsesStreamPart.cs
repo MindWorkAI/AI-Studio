@@ -14,6 +14,11 @@ public readonly record struct ResponsesStreamPart(string TextDelta, IList<ISourc
     public static ResponsesStreamPart Nothing => new(string.Empty, []);
 
     /// <summary>
+    /// The part of a line which says that the model reasons, and nothing else.
+    /// </summary>
+    public static ResponsesStreamPart Reasoning => new(string.Empty, []) { IsReasoning = true };
+
+    /// <summary>
     /// Whether this part has anything to show at all.
     /// </summary>
     /// <remarks>
@@ -21,4 +26,9 @@ public readonly record struct ResponsesStreamPart(string TextDelta, IList<ISourc
     /// all is the tool calling loop's decision, which knows which round this is.
     /// </remarks>
     public bool HasContent => this.TextDelta.Length > 0 || this.Sources.Count > 0;
+
+    /// <summary>
+    /// Whether this line says that the model reasons, see ContentStreamChunk.IsReasoning.
+    /// </summary>
+    public bool IsReasoning { get; init; }
 }

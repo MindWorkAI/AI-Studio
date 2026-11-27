@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Collect I18N content" type="ShConfigurationType">
-    <option name="SCRIPT_TEXT" value="dotnet run collect-i18n" />
+    <option name="SCRIPT_TEXT" value="dotnet run -- collect-i18n" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="$PROJECT_DIR$/Build" />
     <option name="SCRIPT_OPTIONS" value="" />

@@ -23,7 +23,13 @@ public sealed class AnthropicContentBlockBuilder
     
     private const string DELTA_TEXT = "text_delta";
     private const string DELTA_INPUT_JSON = "input_json_delta";
-    private const string DELTA_THINKING = "thinking_delta";
+    /// <summary>
+    /// The type of a delta which carries thinking of the model.
+    /// </summary>
+    /// <remarks>
+    /// Both ways of streaming ask for it to tell that the model is thinking, cf. ResponseStreamLine.
+    /// </remarks>
+    internal const string DELTA_THINKING = "thinking_delta";
     private const string DELTA_SIGNATURE = "signature_delta";
     
     private const string EMPTY_OBJECT = "{}";

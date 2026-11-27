@@ -132,7 +132,7 @@ public static class DataSourceSecurityTrustExtensions
         /// Unlike AllowsDataSourceConfidenceLevel, this closes a mailbox without an allowed level to every
         /// provider, whether it was never chosen or edited by hand in the settings file. Every provider
         /// which sees mail content has to pass it: the chat provider, the embedding provider, and the
-        /// provider of every agent reading mails.
+        /// provider of every AI task or agent which reads mails.
         /// </remarks>
         public bool AllowsMailboxConfidenceLevel(ConfidenceLevel mailboxConfidenceLevel)
         {

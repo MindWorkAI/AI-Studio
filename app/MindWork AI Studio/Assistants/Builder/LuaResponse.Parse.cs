@@ -90,6 +90,12 @@ internal sealed partial class LuaResponse
             return false;
         }
 
+        if (!AssistantBuilderCategories.TryRead(this.Plugin.Categories, this.Plugin.CustomCategories, out _, out _))
+        {
+            error = LuaResponseParseError.INVALID_CATEGORIES;
+            return false;
+        }
+
         if (string.IsNullOrWhiteSpace(this.Assistant.Title) ||
             string.IsNullOrWhiteSpace(this.Assistant.Description) ||
             !IsValidAssistantMetadata(this.Assistant))

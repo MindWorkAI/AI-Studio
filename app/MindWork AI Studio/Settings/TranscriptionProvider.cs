@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Validation;
 
 using SharedTools;
 
@@ -184,17 +185,21 @@ public sealed record TranscriptionProvider(
                         //
                         // Queue the API key for storage in the OS keyring. A dry run only checks the
                         // configuration, so it queues nothing: the start which follows it would
-                        // otherwise store the key once more for every dry run before it:
+                        // otherwise store the key once more for every dry run before it. A key which
+                        // cannot be sent is reported either way, so that a dry run tells about it too:
                         //
-                        if (!dryRun)
-                        {
-                            PendingEnterpriseApiKeys.Add(new(
+                        var apiKeyIssue = dryRun
+                            ? APIKeyValidation.Check(decryptedApiKey)
+                            : PendingEnterpriseApiKeys.Add(new(
                                 $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.SecretId}",
                                 name,
                                 decryptedApiKey,
                                 SecretStoreType.TRANSCRIPTION_PROVIDER));
+
+                        if (apiKeyIssue.IsProblem)
+                            LOGGER.LogWarning($"The API key for transcription provider {idx} contains a character which an API key cannot contain ({apiKeyIssue.Kind}). It will not be stored. (Plugin ID: {configPluginId})");
+                        else if (!dryRun)
                             LOGGER.LogDebug($"Successfully decrypted API key for transcription provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
-                        }
                     }
                     else
                         LOGGER.LogWarning($"Failed to decrypt API key for transcription provider {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");

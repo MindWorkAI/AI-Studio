@@ -55,11 +55,11 @@ public sealed class VerifyCommand
             // Tauri's build script insists that everything the configuration lists is already
             // there and refuses to run otherwise, so nothing Rust compiles until a build has
             // produced those files once. Failing here would be a trap rather than a gate: the way
-            // to produce them is `dotnet run build`, and that command runs this gate first -- a
+            // to produce them is `dotnet run -- build`, and that command runs this gate first -- a
             // fresh clone would never get past it.
             //
             Console.WriteLine("- Skipping the Rust tests and Clippy: the .NET sidecar or the downloaded libraries are missing, and Tauri's build script needs both before anything Rust compiles.");
-            Console.WriteLine("   Run 'dotnet run build --skip-verify' once. From then on, this part of the gate runs with the rest.");
+            Console.WriteLine("   Run 'dotnet run -- build --skip-verify' once. From then on, this part of the gate runs with the rest.");
         }
 
         results.Add(("Model sources", new VerifyModelsCommand().VerifyModels()));

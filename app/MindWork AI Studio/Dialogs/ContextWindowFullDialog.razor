@@ -1,0 +1,104 @@
+@using AIStudio.Chat.Compression
+@using AIStudio.Settings.DataModel
+@inherits MSGComponentBase
+
+<MudDialog>
+    <TitleContent>
+        <DialogTitleWithChatCompressionSettings Title="@(this.MudDialog.Title ?? string.Empty)" SettingsClosed="@this.ApplyChangedSettingsAsync"/>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudJustifiedText Typo="Typo.body1">
+                @if (this.Subject is ContextWindowFullSubject.ASSISTANT_REQUEST)
+                {
+                    @if (this.IsWindowExceeded)
+                    {
+                        @(string.Format(T("Together with its files, this request takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse the request or leave out a part of it."), this.Tokens, this.WindowTokens))
+                    }
+                    else
+                    {
+                        @(string.Format(T("Together with its files, this request takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off."), this.Tokens, this.WindowTokens))
+                    }
+                }
+                else if (this.IsWindowExceeded)
+                {
+                    @(string.Format(TA("Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation."), this.Tokens, this.WindowTokens))
+                }
+                else
+                {
+                    @(string.Format(TA("Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit."), this.Tokens, this.WindowTokens))
+                }
+            </MudJustifiedText>
+
+            @if (!this.CanSendAnyway)
+            {
+                <MudJustifiedText Typo="Typo.body1">
+                    @T("This chat sends no message which no longer fits, since the model would lose the beginning of the conversation and the instructions of the assistant first.")
+                </MudJustifiedText>
+            }
+
+            @if (this.CompressionIssue is { } compressionIssue)
+            {
+                <MudJustifiedText Typo="Typo.body1">
+                    @compressionIssue
+                </MudJustifiedText>
+            }
+
+            @if (this.CanCompress && this.CompressionTarget is ChatCompressionTarget.SAME_CHAT)
+            {
+                <MudJustifiedText Typo="Typo.body1">
+                    @TA("When you compress the conversation, the AI summarizes it, and the summary takes the place of the earlier messages. Your message stays in the input field, so you can send it afterward.")
+                </MudJustifiedText>
+            }
+            else if (this.CanCompress)
+            {
+                <MudJustifiedText Typo="Typo.body1">
+                    @TA("When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.")
+                </MudJustifiedText>
+            }
+            else if (this.Subject is ContextWindowFullSubject.ASSISTANT_REQUEST)
+            {
+                <MudJustifiedText Typo="Typo.body1">
+                    @TA("You can attach fewer or smaller files, shorten your input, or select a model which takes longer texts.")
+                </MudJustifiedText>
+            }
+            else
+            {
+                <MudJustifiedText Typo="Typo.body1">
+                    @TA("You can shorten your message, remove some of its files, or select a model which takes longer texts.")
+                </MudJustifiedText>
+            }
+
+            @if (this.SettingsManager.ConfigurationData.ChatCompression.ContextWindowFullBehavior is ContextWindowFullBehavior.ASK)
+            {
+                <MudJustifiedText Typo="Typo.body2">
+                    @if (this.Subject is ContextWindowFullSubject.ASSISTANT_REQUEST)
+                    {
+                        @TA("With the gear at the top, you can choose what AI Studio does in such a case from now on, e.g., send the request without asking.")
+                    }
+                    else
+                    {
+                        @TA("With the gear at the top, you can choose what AI Studio does in such a case from now on, e.g., compress automatically.")
+                    }
+                </MudJustifiedText>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        @if (this.CanSendAnyway)
+        {
+            <MudButton OnClick="@this.SendAnyway" Variant="Variant.Filled" Color="Color.Error">
+                @T("Send anyway")
+            </MudButton>
+        }
+        @if (this.CanCompress)
+        {
+            <MudButton OnClick="@this.Compress" Variant="Variant.Filled" Color="Color.Primary">
+                @T("Compress chat")
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>

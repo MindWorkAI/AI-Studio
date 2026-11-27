@@ -37,6 +37,7 @@ public sealed class JsonGoldenFileTests
         yield return new("settings-v1.json", typeof(DataV1V3), SettingsManager.JSON_OPTIONS);
         yield return new("settings-v4.json", typeof(DataV4), SettingsManager.JSON_OPTIONS);
         yield return new("settings-v5.json", typeof(DataV5), SettingsManager.JSON_OPTIONS);
+        yield return new("settings-v6.json", typeof(DataV6), SettingsManager.JSON_OPTIONS);
         yield return new("chat.json", typeof(ChatThread), WorkspaceBehaviour.JSON_OPTIONS);
         yield return new("swot-analysis.json", typeof(SwotAnalysisResult), SwotAnalysisContentPresentation.JSON_OPTIONS);
         yield return new("data-backup-manifest.json", typeof(DataBackupManifest), DataBackupFormat.JSON_OPTIONS);
@@ -78,6 +79,7 @@ public sealed class JsonGoldenFileTests
     [TestCase("settings-v1.json", Version.V1)]
     [TestCase("settings-v4.json", Version.V4)]
     [TestCase("settings-v5.json", Version.V5)]
+    [TestCase("settings-v6.json", Version.V6)]
     public void OldSettingsMigrateAsWithReflection(string fileName, Version version)
     {
         var json = ReadFixture(fileName);
@@ -87,6 +89,21 @@ public sealed class JsonGoldenFileTests
         var migratedByReflection = SettingsMigrations.Migrate(NullLogger<SettingsManager>.Instance, version, json, baseline);
 
         Assert.That(JsonSerializer.Serialize(migrated, SettingsManager.JSON_OPTIONS), Is.EqualTo(JsonSerializer.Serialize(migratedByReflection, baseline)));
+    }
+
+    /// <summary>
+    /// The fixture of the current settings is the one of version V6 with the names of version V7, so the
+    /// migration has to turn the one into the other without losing a value.
+    /// </summary>
+    [Test]
+    public void TheSettingsOfVersionV6MigrateIntoTheCurrentFixture()
+    {
+        var migrated = SettingsMigrations.Migrate(NullLogger<SettingsManager>.Instance, Version.V6, ReadFixture("settings-v6.json"), SettingsManager.JSON_OPTIONS);
+
+        var expected = JsonNode.Parse(ReadFixture("settings.json"));
+        var actual = JsonSerializer.SerializeToNode(migrated, SettingsManager.JSON_OPTIONS);
+
+        Assert.That(JsonContainment.FindMissing(expected, actual), Is.Empty, "The migration lost or misplaced these values of the settings.");
     }
 
     /// <summary>

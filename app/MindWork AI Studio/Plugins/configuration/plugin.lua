@@ -351,6 +351,16 @@ CONFIG["DATA_SOURCES"] = {}
 --   UsernameHint       Optional text telling users what to enter as their username.
 --   HelpUrl            Optional http or https address of your instructions, e.g., on how to
 --                      enable IMAP for a mailbox.
+--   PasswordEncoding   Optional name of the encoding your mail server expects for usernames and
+--                      passwords with characters beyond ASCII, such as umlauts, accents, Turkish,
+--                      Cyrillic, or Asian characters. Most servers expect utf-8, the default.
+--                      Depending on its configuration, a server may expect another one, e.g.,
+--                      Microsoft Exchange the code page of its Windows system: windows-1252 in
+--                      Western Europe, windows-1250 in Central Europe, windows-1251 for Cyrillic,
+--                      windows-1254 in Turkey, or shift_jis in Japan. Any encoding .NET knows by
+--                      name works, as long as it keeps ASCII as it is; utf-16 does not. Every
+--                      mailbox on this server signs in with this encoding, also one added
+--                      before you set it, and users cannot change it.
 -- An entry with an invalid field is left out as a whole, and the log names the field.
 -- To allow mailboxes on these mail servers only, see DataMailboxes.AllowOnlyOrganizationMailServers.
 CONFIG["MAILBOX_PROVIDERS"] = {}
@@ -364,6 +374,7 @@ CONFIG["MAILBOX_PROVIDERS"] = {}
 --     ["Port"] = 993,
 --     ["UsernameHint"] = "Your account as DOMAIN\\username",
 --     ["HelpUrl"] = "https://intranet.example.org/mail/imap",
+--     ["PasswordEncoding"] = "windows-1252",
 -- }
 
 CONFIG["SETTINGS"] = {}
@@ -646,15 +657,15 @@ CONFIG["SETTINGS"] = {}
 -- call tools, neither the tools nor semantic_search may be switched off, and the provider has
 -- to meet a minimum confidence you set for semantic_search, see DataTools. Otherwise, AI Studio
 -- searches with every message instead.
--- With SEMANTIC_SEARCH, no agent takes part: DataChat.PreselectedDataSourcesAutomaticSelection
+-- With SEMANTIC_SEARCH, no AI task takes part: DataChat.PreselectedDataSourcesAutomaticSelection
 -- then lets the AI itself choose among all data sources it may use, and
 -- DataChat.PreselectedDataSourcesAutomaticValidation has no effect.
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode"] = "EVERY_MESSAGE"
 
--- Controls whether AI Studio asks an agent to choose data sources:
+-- Controls whether an AI task chooses the data sources:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
 
--- Controls whether retrieved data is validated by an agent:
+-- Controls whether an AI task validates the retrieved data:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation"] = true
 
 -- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
@@ -858,10 +869,14 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator"] = "SEMICOLON"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator"] = "^"
 --
--- Enforce the lower end of the random pause between files for the organization.
--- The value must be between 6 and 300 seconds. Users can configure only the upper
--- end of the interval while this setting is managed by a configuration plugin.
+-- Configure the random pause between two files. Before the next file starts, AI Studio waits
+-- for a random number of whole seconds between the lower and the upper bound, both included.
+-- This spares your AI servers. Both values must be between 6 and 300 seconds; the defaults are
+-- 6 and 10 seconds. You may set one bound or both. A bound you set wins, and AI Studio adjusts
+-- the other one to it. Should the upper bound be below the lower bound, the lower bound wins.
+-- The upper bound requires AI Studio v26.11.2 or newer; older versions ignore it.
 -- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumDelaySeconds"] = 12
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaximumDelaySeconds"] = 30
 --
 -- Configure the minimum provider confidence and the default provider.
 -- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
@@ -888,6 +903,8 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumDelaySeconds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaximumDelaySeconds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumProviderConfidence.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedProvider.AllowUserOverride"] = true
 
@@ -928,6 +945,51 @@ CONFIG["SETTINGS"] = {}
 -- configuration hides. The department configuration must then list every other
 -- assistant that is supposed to stay hidden, otherwise those become visible too.
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
+
+-- Configure which categories of assistants are disabled. Requires AI Studio v26.11.2 or newer.
+-- Unlike DataApp.HiddenAssistants above, this also covers assistant plugins, e.g., plugins users
+-- imported from the internet. An assistant of a disabled category disappears everywhere: from the
+-- assistants page, from the "Send to" menu, from links, from direct chat launchers, and from the
+-- category selection of the Assistant Builder. Users cannot show it again.
+--
+-- An assistant plugin with several categories stays available while one of its categories is not
+-- disabled. Assistant plugins your organization deployed itself are never disabled by their
+-- categories: a plugin stored below the directory of a configuration plugin, or a plugin which
+-- declares DEPLOYED_USING_CONFIG_SERVER = true and whose code you approved in
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"].
+--
+-- Allowed values are:
+--   COMMON, BUSINESS, EDUCATION, SOFTWARE_DEVELOPMENT, AI_STUDIO_DEVELOPMENT, INDUSTRY,
+--   UTILITY, GAMING, ENTERTAINMENT, SOCIAL, SHOPPING, TRAVEL, HEALTH, FITNESS, FOOD, PARTY,
+--   SPORTS, NEWS, WEATHER, MUSIC, POLITICAL, SCIENCE, TECHNOLOGY, ART, FICTION, WRITING,
+--   CONTENT_CREATION, CUSTOM
+--
+-- COMMON is the category "General"; disabling it disables CORE as well, because both share that
+-- heading. CUSTOM disables every custom category of a plugin. To disable single custom
+-- categories, list their names in DataApp.DisabledCustomAssistantCategories instead; the names
+-- are compared without regard to case.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces these lists
+-- completely, just like DataApp.HiddenAssistants.
+-- CONFIG["SETTINGS"]["DataApp.DisabledAssistantCategories"] = { "ENTERTAINMENT", "GAMING" }
+-- CONFIG["SETTINGS"]["DataApp.DisabledCustomAssistantCategories"] = { "Fun & Games" }
+
+-- Users may collapse categories on the assistants page, and hide categories they do not need.
+-- Both are their own choices, which your organization cannot preset. You can preset, though,
+-- what happens to the assistants of such categories outside of the assistants page, e.g., in
+-- the "Send to ..." menu. Requires AI Studio v26.11.2 or newer. Allowed values are:
+--   KEEP_OFFERING: AI Studio keeps offering the assistants.
+--   TREAT_AS_ABSENT: AI Studio treats the assistants as if they did not exist.
+--
+-- For collapsed categories; the default is KEEP_OFFERING:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.CollapsedCategoryAssistants"] = "TREAT_AS_ABSENT"
+--
+-- For hidden categories; the default is TREAT_AS_ABSENT:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.HiddenCategoryAssistants"] = "TREAT_AS_ABSENT"
+--
+-- Allow users to change these options even though your organization set them above:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.CollapsedCategoryAssistants.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantsPage.HiddenCategoryAssistants.AllowUserOverride"] = true
 
 -- Configure organization defaults for the Visual Briefing Assistant.
 -- The assistant turns documents, images, audio, and video into a self-contained interactive
@@ -1560,27 +1622,62 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataDataSourceIndexing.MinimumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataDataSourceIndexing.MaximumPauseBetweenStepsSeconds.AllowUserOverride"] = true
 
--- Configure the data source selection agent.
--- This agent is used when chat data source options enable AI-based data source selection.
--- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
--- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions"] = true
--- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
--- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions.AllowUserOverride"] = true
--- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider.AllowUserOverride"] = true
+-- Before v26.11.2, seven of the following settings had "Agent" in their names, such as
+-- "DataAgentDataSourceSelection.PreselectedAgentProvider" for "DataDataSourceSelection.PreselectedProvider".
+-- AI Studio reads these former names until May 2027 and names the new one in its log. Devices with
+-- v26.11.1 read only the former names: set both until every device runs v26.11.2 or newer. When a
+-- plugin sets both, v26.11.2 and newer take the new name.
 
--- Configure the retrieval context validation agent.
--- This agent is used when retrieval context validation is enabled globally and chat data source options enable AI-based validation.
--- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
--- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation"] = true
--- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions"] = true
--- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
--- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations"] = 3
--- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation.AllowUserOverride"] = true
--- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions.AllowUserOverride"] = true
--- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider.AllowUserOverride"] = true
--- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations.AllowUserOverride"] = true
+-- Configure the text content cleaner, an AI task.
+-- It removes navigation, advertisements, and other clutter from web pages which an assistant reads.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
+-- cleaner uses the provider of the assistant, and otherwise the app-wide default provider.
+-- The minimum confidence applies to every provider the cleaner uses, the provider of the assistant
+-- and the app-wide default included. The provider and the minimum confidence apply only while
+-- PreselectOptions is true.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectOptions"] = true
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.MinimumProviderConfidence"] = "NONE"
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataTextContentCleaner.MinimumProviderConfidence.AllowUserOverride"] = true
 
--- Configure assistant plugin security audits.
+-- Configure the data source selection, an AI task.
+-- It runs when chat data source options enable AI-based data source selection.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
+-- AI task uses the provider of the chat, and otherwise the app-wide default provider.
+-- The minimum confidence applies to every provider the AI task uses, the provider of the chat and the
+-- app-wide default included. The provider and the minimum confidence apply only while
+-- PreselectOptions is true.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataDataSourceSelection.PreselectOptions"] = true
+-- CONFIG["SETTINGS"]["DataDataSourceSelection.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataDataSourceSelection.MinimumProviderConfidence"] = "NONE"
+-- CONFIG["SETTINGS"]["DataDataSourceSelection.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataDataSourceSelection.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataDataSourceSelection.MinimumProviderConfidence.AllowUserOverride"] = true
+
+-- Configure the retrieval context validation, an AI task.
+-- It runs when retrieval context validation is enabled globally and chat data source options enable AI-based validation.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the
+-- AI task uses the provider of the chat, and otherwise the app-wide default provider.
+-- The minimum confidence applies to every provider the AI task uses, the provider of the chat and the
+-- app-wide default included. The provider and the minimum confidence apply only while
+-- PreselectOptions is true.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.EnableRetrievalContextValidation"] = true
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.PreselectOptions"] = true
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.MinimumProviderConfidence"] = "NONE"
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.NumParallelValidations"] = 3
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.EnableRetrievalContextValidation.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.MinimumProviderConfidence.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataRetrievalContextValidation.NumParallelValidations.AllowUserOverride"] = true
+
+-- Configure the security audit of assistant plugins, an AI task.
 --
 -- Configure whether assistant plugins must be audited before users can activate them.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation"] = true
@@ -1588,7 +1685,12 @@ CONFIG["SETTINGS"] = {}
 -- Configure a dedicated provider for assistant plugin audits.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
 -- Without a selected audit provider, AI Studio uses the app-wide default provider.
--- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum confidence of the provider which audits a plugin. It applies to every
+-- provider an audit uses, the app-wide default and the one picked in the audit dialog included.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumProviderConfidence"] = "NONE"
 --
 -- Configure the minimum audit level assistant plugins must meet.
 -- Allowed values are: UNKNOWN, DANGEROUS, CAUTION, SAFE
@@ -1598,14 +1700,58 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum"] = true
 --
 -- Configure whether new or changed assistant plugins are audited automatically in the background.
+-- Automatic audits need a provider: the dedicated audit provider or the app-wide default. Without
+-- one, AI Studio skips them and tells the user once.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants"] = false
 --
 -- Configure whether users can change assistant plugin audit settings locally.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation.AllowUserOverride"] = false
--- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedProvider.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumProviderConfidence.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants.AllowUserOverride"] = false
+
+-- Configure compressing a chat, whose summary an AI task writes.
+--
+-- Configure a dedicated provider which writes the summary.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the model
+-- of the chat writes the summary. AI Studio falls back to the model of the chat as well when the
+-- dedicated provider must not see what the chat holds, when its confidence is below the minimum
+-- below, or when its context window is too small.
+-- CONFIG["SETTINGS"]["DataChatCompression.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum confidence of the dedicated provider. It does not apply to the model of
+-- the chat, which saw everything the summary reads anyway.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataChatCompression.MinimumProviderConfidence"] = "NONE"
+--
+-- Configure what the summary should pay particular attention to. Users find it filled in when
+-- they compress a chat.
+-- CONFIG["SETTINGS"]["DataChatCompression.PreselectedFocus"] = "Keep every figure and every decision."
+--
+-- Configure the share of the context window, in percent, from which AI Studio acts before sending
+-- a message. Allowed values are between 50 and 95.
+-- CONFIG["SETTINGS"]["DataChatCompression.ContextWindowThresholdPercent"] = 95
+--
+-- Configure the most tokens a summary should take. Allowed values are between 1024 and 32768.
+-- A summary never takes more than a quarter of the context window of a model.
+-- CONFIG["SETTINGS"]["DataChatCompression.MaxSummaryTokens"] = 8192
+--
+-- Configure what AI Studio does when a message would fill the context window of the model:
+-- ASK asks the user, COMPRESS_INTO_NEW_CHAT compresses the chat and continues in a new one,
+-- COMPRESS_AND_REPLACE compresses the chat and replaces its messages with the summary, and
+-- SEND_WITHOUT_ASKING sends the message anyway, which the provider may refuse. Assistants cannot
+-- compress their requests, so both ways to compress ask there.
+-- CONFIG["SETTINGS"]["DataChatCompression.ContextWindowFullBehavior"] = "ASK"
+--
+-- Configure whether users can change these settings locally.
+-- CONFIG["SETTINGS"]["DataChatCompression.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.MinimumProviderConfidence.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.PreselectedFocus.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.ContextWindowThresholdPercent.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.MaxSummaryTokens.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.ContextWindowFullBehavior.AllowUserOverride"] = true
 
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
@@ -1699,16 +1845,16 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --         -- How the data sources are searched, with the same values and the same fallback
 --         -- as DataChat.PreselectedDataSourcesRetrievalMode: SEMANTIC_SEARCH lets the AI
 --         -- search them itself whenever a question calls for it, EVERY_MESSAGE lets AI Studio
---         -- search them with every message. With SEMANTIC_SEARCH, no agent takes part:
+--         -- search them with every message. With SEMANTIC_SEARCH, no AI task takes part:
 --         -- AutomaticDataSourceSelection then lets the AI itself choose among all data
 --         -- sources it may use, and AutomaticValidation has no effect.
 --         ["RetrievalMode"] = "EVERY_MESSAGE",
 --
---         -- Let an agent choose the fitting data sources for each question. When true,
+--         -- Let an AI task choose the fitting data sources for each question. When true,
 --         -- PreselectedDataSourceIds is not used.
 --         ["AutomaticDataSourceSelection"] = false,
 --
---         -- Let an agent check whether the retrieved data fits the question.
+--         -- Let an AI task check whether the retrieved data fits the question.
 --         ["AutomaticValidation"] = true,
 --
 --         -- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.

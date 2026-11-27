@@ -41,9 +41,11 @@ The parts:
   `MORE_TO_DO` gets its next step in the back lane of `DataSourceRunQueue`, behind every data source which begins
   a pass, so a mailbox waits for one step at most.
 - **`PauseBetweenSteps`** - a gap after every step which worked on documents, so that many people can share one
-  embedding server. The next run, of whichever data source, waits for a random pause between the bounds of the
-  settings (`PauseRange`: 0 to 300 seconds, none by default), less the time which passed since the step ended.
-  Not to be confused with the pause of the indexing as a whole (`IndexingPauses`), which a backup takes.
+  embedding server. The next run, of whichever data source, waits for a random pause between the bounds which
+  apply (`DataDataSourceIndexing.EffectivePauseRange` within `PAUSE_LIMITS`: 0 to 300 seconds, none by default),
+  less the time which passed since the step ended. The pause lives in `Tools/Pauses/` and is shared with other
+  features, so keep everything about the indexing out of it. Not to be confused with the pause of the indexing
+  as a whole (`IndexingPauses`), which a backup takes.
 - **`IndexingPass`** - the steps of one data source, from its first step until one of them is done. It remembers
   which documents failed during an earlier step, so the next steps do not read them again, and which failures
   were reported to the user already.

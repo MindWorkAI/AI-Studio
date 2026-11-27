@@ -68,19 +68,29 @@ public sealed class ToolSettingsSchemaBuilder
 
     public ToolSettingsSchemaBuilder RequiredSecret(string name) => this.Add(name, isRequired: true, isSecret: true);
 
+    /// <summary>
+    /// An optional API key, kept in the operating system's keyring like any secret.
+    /// </summary>
+    /// <remarks>
+    /// Use this instead of a plain secret for every key which goes into an HTTP header, so that the
+    /// settings dialog tells the user about a character the header cannot carry.
+    /// </remarks>
+    public ToolSettingsSchemaBuilder OptionalAPIKey(string name) => this.Add(name, isRequired: false, isSecret: true, isAPIKey: true);
+
     public ToolSettingsSchema Build() => new()
     {
         Properties = new(this.properties, StringComparer.Ordinal),
         Required = [..this.requiredNames],
     };
 
-    private ToolSettingsSchemaBuilder Add(string name, bool isRequired, string optionSource = "", bool isSecret = false, IReadOnlyList<string>? enumValues = null)
+    private ToolSettingsSchemaBuilder Add(string name, bool isRequired, string optionSource = "", bool isSecret = false, IReadOnlyList<string>? enumValues = null, bool isAPIKey = false)
     {
         this.properties[name] = new ToolSettingsFieldDefinition
         {
             OptionSource = optionSource,
             EnumValues = enumValues?.ToList() ?? [],
             Secret = isSecret,
+            IsAPIKey = isAPIKey,
             Group = this.currentGroup,
         };
 

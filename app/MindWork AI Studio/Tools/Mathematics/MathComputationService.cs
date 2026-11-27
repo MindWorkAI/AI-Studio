@@ -116,10 +116,16 @@ public sealed class MathComputationService(ILogger<MathComputationService> logge
         {
             completion.TrySetException(new MathComputationException($"The computation did not finish within {this.BudgetInSeconds} seconds."));
         }
+        catch (AngouriBugException exception)
+        {
+            // Its message asks to report the bug to the repository of AngouriMath, which a model cannot do:
+            logger.LogWarning("AngouriMath ran into a bug of its own: {Message}", exception.Message);
+            completion.TrySetException(new MathComputationException("The tool ran into an error of its own with this expression and could not compute it."));
+        }
         catch (AngouriMathBaseException exception)
         {
             logger.LogInformation("AngouriMath could not compute an expression: {Message}", exception.Message);
-            completion.TrySetException(new MathComputationException($"The tool could not compute this:{exception.Message.Shorten(MAX_MESSAGE_LENGTH)}"));
+            completion.TrySetException(new MathComputationException($"The tool could not compute this: {exception.Message.Shorten(MAX_MESSAGE_LENGTH)}"));
         }
         catch (Exception exception)
         {

@@ -1,8 +1,13 @@
-using AIStudio.Agents;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.ConversationSummary;
+using AIStudio.AIOperations.DataSourceChoice;
+using AIStudio.AIOperations.PluginAudit;
+using AIStudio.AIOperations.RetrievalContextValidation;
+using AIStudio.AIOperations.TextContentCleaning;
 using AIStudio.Assistants.BeyondFactsLab;
 using AIStudio.Assistants.ModelComparison;
 using AIStudio.Assistants.VisualBriefing;
+using AIStudio.Chat.Compression;
 using AIStudio.Chat.Embedded;
 using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
@@ -226,6 +231,7 @@ internal sealed class Program
         builder.Services.AddSingleton<GlobalShortcutService>();
         builder.Services.AddSingleton<MediaTranscriptionService>();
         builder.Services.AddSingleton<ConversationTokenCounter>();
+        builder.Services.AddSingleton<ChatCompressionService>();
         builder.Services.AddSingleton<VisualBriefingArtifactService>();
         builder.Services.AddSingleton<VisualBriefingStore>();
         builder.Services.AddSingleton<VisualBriefingBuildProgressService>();
@@ -258,10 +264,12 @@ internal sealed class Program
         
         // Stateless: every method works on its arguments alone, so one instance serves everyone.
         builder.Services.AddSingleton<HTMLParser>();
-        builder.Services.AddTransient<AgentDataSourceSelection>();
-        builder.Services.AddTransient<AgentRetrievalContextValidation>();
-        builder.Services.AddTransient<AgentTextContentCleaner>();
-        builder.Services.AddTransient<AssistantAuditAgent>();
+        builder.Services.AddSingleton<AIOperationProviderResolver>();
+        builder.Services.AddSingleton<TextContentCleaningOperation>();
+        builder.Services.AddSingleton<DataSourceChoiceOperation>();
+        builder.Services.AddSingleton<RetrievalContextValidationOperation>();
+        builder.Services.AddSingleton<PluginAuditOperation>();
+        builder.Services.AddSingleton<ConversationSummaryOperation>();
         builder.Services.AddTransient<AssistantPluginAuditService>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();

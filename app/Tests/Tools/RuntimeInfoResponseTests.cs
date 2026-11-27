@@ -37,4 +37,18 @@ public sealed class RuntimeInfoResponseTests
             Assert.That(response.RustVersion, Is.Null);
         }
     }
+
+    /// <summary>
+    /// The sandbox of a Flatpak lets no page through to the program which opens a document. Everywhere else,
+    /// the program decides, which the runtime learns only while opening the document.
+    /// </summary>
+    [TestCase(LinuxPackageType.FLATPAK, false)]
+    [TestCase(LinuxPackageType.APP_IMAGE, true)]
+    [TestCase(LinuxPackageType.NOT_APPLICABLE, true)]
+    [TestCase(LinuxPackageType.UNKNOWN, true)]
+    public void OnlyAFlatpakCannotOpenDocumentsAtAPage(LinuxPackageType packageType, bool canOpenAtPage)
+    {
+        var runtimeInfo = new RuntimeInfoResponse("/samples/work", "/samples/app/mindwork-ai-studio", packageType, InstallationKind.USER, null);
+        Assert.That(runtimeInfo.CanOpenDocumentsAtPage, Is.EqualTo(canOpenAtPage));
+    }
 }

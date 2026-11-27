@@ -44,7 +44,7 @@ public record ChatCompletionDeltaStreamLine(string Id, string Object, uint Creat
     public bool ContainsContent() => this.Choices.Count > 0;
 
     /// <inheritdoc />
-    public ContentStreamChunk GetContent() => new(this.Choices[0].Delta.Content, []);
+    public ContentStreamChunk GetContent() => new(this.Choices[0].Delta.Content, []) { IsReasoning = !string.IsNullOrEmpty(this.Choices[0].Delta.ReasoningContent) };
 
     /// <inheritdoc />
     public TokenUsage GetUsage() => this.Usage?.ToTokenUsage() ?? TokenUsage.UNKNOWN;

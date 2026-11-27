@@ -1,0 +1,16 @@
+@inherits MSGComponentBase
+<MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1" Class="@this.Class">
+    <MudTooltip Text="@this.ToggleTooltip" Placement="Placement.Top">
+        <MudButton Variant="Variant.Text" Color="Color.Default" Class="px-1" Style="min-width:auto; text-transform:none;" OnClick="@this.OnToggleCollapsed">
+            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.h4">
+                    @this.Category.Name
+                </MudText>
+                <MudIcon Icon="@(this.IsCollapsed ? AppIcons.EXPAND_MORE : AppIcons.EXPAND_LESS)"/>
+            </MudStack>
+        </MudButton>
+    </MudTooltip>
+    <MudTooltip Text="@T("Hide this category")" Placement="Placement.Top">
+        <MudIconButton Icon="@AppIcons.HIDDEN" Size="Size.Small" Color="Color.Default" OnClick="@this.ConfirmHideAsync"/>
+    </MudTooltip>
+</MudStack>

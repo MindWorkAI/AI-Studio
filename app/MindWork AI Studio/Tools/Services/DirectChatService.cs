@@ -16,6 +16,10 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
 
     public async Task<DirectChatStartResult> TryCreateAssistantChatAsync(PluginAssistants assistantPlugin)
     {
+        // Every way to a launcher leads through here, the one from the Assistant Builder included:
+        if (settingsManager.IsDisabledByItsCategories(assistantPlugin))
+            return new(null, TA("Your organization disabled the categories of this assistant."));
+
         if (assistantPlugin.ChatLaunchConfiguration is not { } launchConfiguration)
             return new(null, TB("The assistant plugin does not contain a valid chat launch configuration."));
 
@@ -304,7 +308,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
 
         //
         // There is nothing to check when data sources are switched off, and nothing to check either
-        // when an agent picks them: that choice is made per message in the chat, exactly as it is
+        // when an AI operation picks them: that choice is made per message in the chat, exactly as it is
         // for a chat template the user picks by hand.
         //
         if (chosenOptions.DisableDataSources || chosenOptions.AutomaticDataSourceSelection || chosenOptions.PreselectedDataSourceIds.Count == 0)
@@ -347,8 +351,8 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         {
             //
             // The options the launched chat will run under are what this check runs against: they
-            // decide which agent providers take part, and an agent with too little confidence makes
-            // a data source unavailable. Agents take part only when the chat searches with every
+            // decide which providers of AI operations take part, and an AI operation with too little confidence makes
+            // a data source unavailable. AI operations take part only when the chat searches with every
             // message, which the chat decides the same way:
             //
             var retrievalMode = await toolRegistry.GetEffectiveRetrievalModeAsync(chosenOptions, provider, Components.CHAT);

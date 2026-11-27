@@ -15,6 +15,7 @@ using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Validation;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 
@@ -148,6 +149,11 @@ public abstract class BaseProvider : IProvider, ISecretId
 
     protected static ModelLoadResult FailedModelLoadResult(ModelLoadFailureReason failureReason, string? technicalDetails = null) => ModelLoadResult.Failure(failureReason, technicalDetails);
 
+    /// <summary>
+    /// The result of loading the models with a key which cannot be sent, so that nothing was requested.
+    /// </summary>
+    protected static ModelLoadResult UnusableAPIKeyModelLoadResult() => FailedModelLoadResult(ModelLoadFailureReason.INVALID_API_KEY_CHARACTERS, "The API key contains a character which an HTTP header cannot carry.");
+
     protected bool IsTimeoutException(Exception exception, CancellationToken token = default)
     {
         if (token.IsCancellationRequested)
@@ -165,15 +171,72 @@ public abstract class BaseProvider : IProvider, ISecretId
             ExternalHttpClientTimeout.GetTimeoutDescription(),
             action)));
 
-    protected async Task<string?> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false) => apiKeyProvisional switch
+    /// <summary>
+    /// Gets the API key for loading the models: the one the user is entering, or else the stored one.
+    /// </summary>
+    /// <remarks>
+    /// Either is checked before it goes into a header. A key which the header cannot carry would
+    /// otherwise fail in the HTTP stack, with a message nobody understands.
+    /// </remarks>
+    /// <param name="storeType">Where the stored key is kept.</param>
+    /// <param name="apiKeyProvisional">The key the user is entering and did not store yet, or null for the stored one.</param>
+    /// <param name="isTryingSecret">Whether a missing key is fine, so that the keyring logs no error for it.</param>
+    /// <returns>The key without the whitespace around it, or whether it cannot be sent.</returns>
+    protected async Task<ModelLoadingSecretKey> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false)
     {
-        not null => apiKeyProvisional,
-        _ => await Program.RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret) switch
+        var key = apiKeyProvisional;
+        if (key is null)
         {
-            { Success: true } result => await result.Secret.Decrypt(Program.ENCRYPTION),
-            _ => null,
+            var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret);
+            if (!requestedSecret.Success)
+                return ModelLoadingSecretKey.NONE;
+
+            key = await requestedSecret.Secret.Decrypt(Program.ENCRYPTION);
         }
-    };
+
+        var issue = APIKeyValidation.Check(key);
+        if (!issue.IsProblem)
+            return new(APIKeyValidation.Normalize(key), false);
+
+        this.logger.LogWarning("The API key for loading the models of '{ProviderInstanceName}' (provider={ProviderType}) contains a character which an API key cannot contain ({IssueKind}). The models were not requested.", this.InstanceName, this.Provider, issue.Kind);
+        return ModelLoadingSecretKey.UNUSABLE;
+    }
+
+    /// <summary>
+    /// Decrypts a stored API key for the header of a request.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Every stored key which goes into a header goes through here, so that a key with a character
+    /// the header cannot carry never reaches the HTTP stack: its messages about such keys mean
+    /// nothing to the user, and some of them even quote the key. Such a key was stored before AI
+    /// Studio checked keys, or it reached the keyring some other way. The request then fails with a
+    /// ProviderRequestException, which tells the user to enter the key again. APIKeyHeaderTests
+    /// checks that no provider decrypts a key on its own.
+    /// </para>
+    /// <para>
+    /// A key which is empty without the whitespace around it fails as a missing key: a header with
+    /// an empty key would only earn a rejection from the provider.
+    /// </para>
+    /// </remarks>
+    /// <param name="requestedSecret">The stored key as the keyring returned it.</param>
+    /// <returns>The key without the whitespace around it.</returns>
+    protected async Task<string> DecryptAPIKey(RequestedSecret requestedSecret)
+    {
+        var key = await requestedSecret.Secret.Decrypt(Program.ENCRYPTION);
+        var issue = APIKeyValidation.Check(key);
+        if (issue.IsProblem)
+        {
+            this.logger.LogWarning("The stored API key of '{ProviderInstanceName}' (provider={ProviderType}) contains a character which an API key cannot contain ({IssueKind}). The request was not sent.", this.InstanceName, this.Provider, issue.Kind);
+            throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_API_KEY_CHARACTERS, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_API_KEY_CHARACTERS));
+        }
+
+        var headerValue = APIKeyValidation.Normalize(key);
+        if (headerValue.Length is 0)
+            throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY));
+
+        return headerValue;
+    }
 
     protected static ModelLoadFailureReason GetDefaultModelLoadFailureReason(HttpResponseMessage response) => response.StatusCode switch
     {
@@ -203,14 +266,17 @@ public abstract class BaseProvider : IProvider, ISecretId
         CancellationToken token = default)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret);
-        if (string.IsNullOrWhiteSpace(secretKey) && !isTryingSecret)
+        if (secretKey.IsUnusable)
+            return UnusableAPIKeyModelLoadResult();
+
+        if (string.IsNullOrWhiteSpace(secretKey.Key) && !isTryingSecret)
             return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, "No API key available for model loading.");
 
         using var request = new HttpRequestMessage(HttpMethod.Get, requestPath);
         if (requestConfigurator is not null)
-            requestConfigurator(request, secretKey ?? string.Empty);
-        else if (!string.IsNullOrWhiteSpace(secretKey))
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+            requestConfigurator(request, secretKey.Key ?? string.Empty);
+        else if (!string.IsNullOrWhiteSpace(secretKey.Key))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey.Key);
 
         try
         {
@@ -269,6 +335,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     {
         ProviderRequestFailureReason.TOO_MANY_REQUESTS => TA("The provider rejected the request because too many requests were sent. Please wait a moment and try again."),
         ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY => string.Format(TA("The API key for the provider '{0}' is missing or was rejected. Please check the key in the settings."), this.NameForUser),
+        ProviderRequestFailureReason.INVALID_API_KEY_CHARACTERS => APIKeyValidation.GetUnusableKeyMessage(this.NameForUser),
         ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => string.Format(TA("The provider '{0}' refused the request. Your account might not be allowed to use the selected model, or the provider might not serve your region."), this.NameForUser),
         ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => string.Format(TA("The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again."), this.NameForUser),
         ProviderRequestFailureReason.MODEL_NOT_FOUND => string.Format(TA("The provider '{0}' does not know the selected model. Please select another model."), this.NameForUser),
@@ -964,9 +1031,13 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="providerName">The name of the provider, for logging and error reporting.</param>
     /// <param name="operationName">What is being streamed, for logging: a chat completion, say, or a responses call.</param>
     /// <param name="requestBuilder">A function that builds the request.</param>
+    /// <param name="streamEnd">
+    /// Marked once the provider closed the stream, and left alone when a stop, a timeout, or a
+    /// broken connection cut it off. Null for a caller to whom both are the same.
+    /// </param>
     /// <param name="token">The cancellation token to use.</param>
     /// <returns>The events of the stream, in the order they arrived.</returns>
-    protected async IAsyncEnumerable<ServerSentEvent> ReadServerSentEventsAsync(string providerName, string operationName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default)
+    protected async IAsyncEnumerable<ServerSentEvent> ReadServerSentEventsAsync(string providerName, string operationName, Func<Task<HttpRequestMessage>> requestBuilder, ServerSentEventStreamEnd? streamEnd, [EnumeratorCancellation] CancellationToken token = default)
     {
         StreamReader? streamReader = null;
         using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
@@ -1056,9 +1127,15 @@ public abstract class BaseProvider : IProvider, ISecretId
                     break;
                 }
 
-                // The stream ended:
+                //
+                // The provider closed the stream. This is the only way to its end: every other
+                // way out of this loop cuts it off.
+                //
                 if (line is null)
+                {
+                    streamEnd?.MarkReached();
                     break;
+                }
 
                 // Skip empty lines:
                 if (string.IsNullOrWhiteSpace(line))
@@ -1095,7 +1172,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Check if annotations are supported:
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
-        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "chat completion", requestBuilder, token))
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "chat completion", requestBuilder, streamEnd: null, token))
         {
             // Skip lines without a payload. According to the specification,
             // we only want to read the data lines:
@@ -1197,7 +1274,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
         var isCompleted = false;
-        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, token))
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, streamEnd: null, token))
         {
             // Check if the line announces the end of the stream. This one is read off the raw
             // line rather than off a payload, because it has none:
@@ -1294,6 +1371,27 @@ public abstract class BaseProvider : IProvider, ISecretId
                 // Yield the response:
                 yield return new(string.Empty, providerResponse.GetSources());
             }
+
+            //
+            // Find the lines which say that the model reasons: the opening of a reasoning item,
+            // which is all the API tells about reasoning it keeps to itself, and the reasoning
+            // which does arrive as text. None of it is shown; the chunk only says that it happens.
+            //
+            else if (serverSentEvent.Data.StartsWith(
+                         """
+                         {"type":"response.reasoning
+                         """, StringComparison.InvariantCulture) ||
+                     (serverSentEvent.Data.StartsWith(
+                          """
+                          {"type":"response.output_item.added"
+                          """, StringComparison.InvariantCulture) &&
+                      serverSentEvent.Data.Contains(
+                          """
+                          "type":"reasoning"
+                          """, StringComparison.InvariantCulture)))
+            {
+                yield return new(string.Empty, []) { IsReasoning = true };
+            }
         }
     }
 
@@ -1386,7 +1484,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
                     runnableTools.Select(x => (object)ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
-                    (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, requestToken),
+                    (requestDto, streamEnd, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, streamEnd, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
 
@@ -1429,7 +1527,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             // Set the authorization header:
             if (requestedSecret.Success)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
 
             // Set provider-specific headers:
             requestHeadersAction?.Invoke(request.Headers);
@@ -1477,20 +1575,20 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// belongs to the shared stream reader, which the tool rounds used to go without.
     /// </remarks>
     private IAsyncEnumerable<ServerSentEvent> StreamChatCompletionRequest(ChatCompletionAPIRequest requestDto, string providerName, string requestPath,
-        RequestedSecret requestedSecret, Action<HttpRequestHeaders>? headersAction, CancellationToken token)
+        RequestedSecret requestedSecret, Action<HttpRequestHeaders>? headersAction, ServerSentEventStreamEnd streamEnd, CancellationToken token)
     {
         async Task<HttpRequestMessage> RequestBuilder()
         {
             var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
             if (requestedSecret.Success)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
 
             headersAction?.Invoke(request.Headers);
             request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
             return request;
         }
 
-        return this.ReadServerSentEventsAsync(providerName, "chat completion", RequestBuilder, token);
+        return this.ReadServerSentEventsAsync(providerName, "chat completion", RequestBuilder, streamEnd, token);
     }
 
     /// <summary>
@@ -1592,7 +1690,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 case LLMProviders.SELF_HOSTED:
                     if(requestedSecret.Success)
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
                     
                     break;
                 
@@ -1603,7 +1701,13 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return TranscriptionResult.Failure();
                     }
                     
-                    request.Headers.Add("Authorization", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                    //
+                    // Fireworks gets the bare key, without the scheme 'Bearer'. Headers.Add would parse the key as
+                    // an Authorization header, refuse one with a character such as '/' or '=', and quote the whole
+                    // key in its exception. DecryptAPIKey already made sure that the key holds only printable ASCII,
+                    // so it goes out as it is:
+                    //
+                    request.Headers.TryAddWithoutValidation("Authorization", await this.DecryptAPIKey(requestedSecret));
                     break;
                 
                 default:
@@ -1613,7 +1717,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return TranscriptionResult.Failure();
                     }
                     
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
                     break;
             }
 
@@ -1645,6 +1749,11 @@ public abstract class BaseProvider : IProvider, ISecretId
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             throw;
+        }
+        catch (ProviderRequestException e)
+        {
+            // We know what went wrong, e.g., a stored key which cannot be sent, and the user gets to read it:
+            return TranscriptionResult.Failure(e.UserMessage);
         }
         catch (Exception e)
         {
@@ -1682,7 +1791,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 case LLMProviders.SELF_HOSTED:
                     if(requestedSecret.Success)
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
                     
                     break;
                 
@@ -1693,7 +1802,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY));
                     }
 
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await this.DecryptAPIKey(requestedSecret));
                     break;
             }
             

@@ -111,6 +111,11 @@
                     <MudIconButton Icon="@AppIcons.DUPLICATE" Disabled="@(!this.CanThreadBeCopied)" OnClick="@this.CopyCurrentChat"/>
                 </MudTooltip>
             }
+
+            @* Without workspaces, compressing replaces the earlier messages, so the button stays: *@
+            <MudTooltip Text="@this.CompressTooltip" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@AppIcons.COMPRESS_CHAT" Disabled="@(!this.CanThreadBeCompressed)" OnClick="@this.CompressFromButtonAsync"/>
+            </MudTooltip>
             
             <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" KeepPreviewedText="@this.KeepPreviewedTextAsync" Disabled="@(!this.CanAttachFiles)"/>
             
@@ -151,7 +156,7 @@
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@this.DataSourceOptionsWereChanged" DataSourcesAISelected="@this.GetAgentSelectedDataSources()" ReadOnly="@this.IsCurrentChatStreaming" ReadOnlyMessage="@TA("Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")"/>
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@this.DataSourceOptionsWereChanged" DataSourcesAISelected="@this.GetAISelectedDataSources()" ReadOnly="@this.IsCurrentChatStreaming" ReadOnlyMessage="@TA("Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")"/>
             }
             
             @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)

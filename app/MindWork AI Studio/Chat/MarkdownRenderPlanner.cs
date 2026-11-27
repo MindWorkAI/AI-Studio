@@ -6,9 +6,10 @@ namespace AIStudio.Chat;
 /// nothing but a formula, see LatexFormula.
 /// </summary>
 /// <remarks>
-/// MudMarkdown shows a formula as it is, and MathJax typesets only what the chat hands it as a
-/// formula block. A formula therefore has to leave the Markdown around it. Inside a code block, $$ is
-/// code, not a formula, and a formula block the model never closed leaves the whole text as Markdown.
+/// MudMarkdown typesets a formula within a line, between single $, by itself, but shows a formula block
+/// as it is, and MathJax typesets only what the chat hands it as a formula block. A formula block
+/// therefore has to leave the Markdown around it. Inside a code block, $$ is code, not a formula, and a
+/// formula block the model never closed leaves the whole text as Markdown.
 /// </remarks>
 internal static class MarkdownRenderPlanner
 {

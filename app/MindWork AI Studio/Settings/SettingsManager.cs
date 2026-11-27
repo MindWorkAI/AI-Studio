@@ -20,7 +20,7 @@ public sealed class SettingsManager
     public readonly record struct ToolMinimumProviderConfidenceResolution(ConfidenceLevel ConfidenceLevel, string Source);
 
     private const string SETTINGS_FILENAME = "settings.json";
-    private const Version CURRENT_SETTINGS_VERSION = Version.V6;
+    private const Version CURRENT_SETTINGS_VERSION = Version.V7;
     
     private readonly record struct SettingsVersionReadResult(Version Version, SettingsWriteBlockReason FailureReason);
     
@@ -186,11 +186,13 @@ public sealed class SettingsManager
             }
 
             this.logger.LogInformation("No valid current-version settings backup was found. Migrating the settings file.");
-            settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion.Version, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            var settingsJson = await File.ReadAllTextAsync(settingsPath);
+            settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion.Version, settingsJson, JSON_OPTIONS);
 
             // Compatibility shim, remove after 2027-10-31, see KeepTheLegacyEncryptionExportFormat.
-            // Settings of an older version always come from before the export format existed:
-            settingsData.App.EnterpriseEncryptionExportFormat = EnterpriseEncryptionFormat.V1;
+            // Settings up to version V5 come from before the export format existed, but settings of
+            // version V6 may hold it already:
+            KeepTheLegacyEncryptionExportFormat(settingsData, settingsJson);
 
             this.PrepareLoadedSettings(settingsData);
             await this.StoreSettingsSnapshot(settingsData, settingsPath);
@@ -464,13 +466,16 @@ public sealed class SettingsManager
     
     public void InjectSpellchecking(Dictionary<string, object?> attributes) => attributes["spellcheck"] = this.ConfigurationData.App.EnableSpellchecking ? "true" : "false";
 
+    /// <summary>
+    /// The global minimum confidence level; NONE when neither the user nor the organization enforces one.
+    /// </summary>
+    public ConfidenceLevel GlobalMinimumConfidenceLevel => this.ConfigurationData.Confidence is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN }
+        ? this.ConfigurationData.Confidence.GlobalMinimumConfidence
+        : ConfidenceLevel.NONE;
+
     public ConfidenceLevel GetMinimumConfidenceLevel(Tools.Components component)
     {
-        var minimumLevel = ConfidenceLevel.NONE;
-        var enforceGlobalMinimumConfidence = this.ConfigurationData.Confidence is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
-        if (enforceGlobalMinimumConfidence)
-            minimumLevel = this.ConfigurationData.Confidence.GlobalMinimumConfidence;
-        
+        var minimumLevel = this.GlobalMinimumConfidenceLevel;
         var componentMinimumLevel = component.MinimumConfidence(this);
         if (componentMinimumLevel > minimumLevel)
             minimumLevel = componentMinimumLevel;
@@ -611,6 +616,18 @@ public sealed class SettingsManager
         // When there is an app-wide preselected provider, and it has a confidence level that is high enough, we return it:
         return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && this.IsProviderUsable(x.UsedLLMProvider, minimumLevel)) ?? Provider.NONE;
     }
+
+    /// <summary>
+    /// The ID of the provider which serves as the app-wide default.
+    /// </summary>
+    /// <remarks>
+    /// With exactly one configured provider, that one is the default, whatever the settings name, as in
+    /// GetPreselectedProvider. Neither a prohibition nor the confidence level is checked here: whoever uses
+    /// the provider checks them, e.g., AIOperationProviderChoice. The ID is empty when no default is set.
+    /// </remarks>
+    public string AppDefaultProviderId => this.ConfigurationData.Providers.Count == 1
+        ? this.ConfigurationData.Providers[0].Id
+        : this.ConfigurationData.App.PreselectedProvider;
 
     public Provider GetChatProviderForLoadedChat(string? chatProviderId = null)
     {

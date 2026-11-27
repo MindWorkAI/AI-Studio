@@ -91,10 +91,11 @@ public sealed class DataSourceValidation
         
         if(string.IsNullOrWhiteSpace(username))
             return TB("The username must not be empty.");
-        
-        return null;
+
+        // The username goes to the ERI server in an HTTP header, which carries nothing but ASCII:
+        return ERICredentialValidation.ValidateUsername(username);
     }
-    
+
     public string? ValidatingSecret(string secret)
     {
         var authMethod = this.GetAuthMethod();
@@ -113,8 +114,9 @@ public sealed class DataSourceValidation
 
                 _ => TA("Please enter the secret necessary for authentication.")
             };
-        
-        return null;
+
+        // Like the username, the password or the token goes to the ERI server in an HTTP header:
+        return ERICredentialValidation.ValidateSecret(authMethod, secret);
     }
 
     public string? ValidateRetrievalProcess(RetrievalInfo retrievalInfo)

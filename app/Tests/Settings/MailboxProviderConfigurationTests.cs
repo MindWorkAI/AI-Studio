@@ -39,6 +39,7 @@ public sealed class MailboxProviderConfigurationTests
             ["Port"] = "1143",
             ["UsernameHint"] = "\"Your account as DOMAIN\\\\username\"",
             ["HelpUrl"] = "\"https://intranet.example.org/mail/imap\"",
+            ["PasswordEncoding"] = "\" Windows-1254 \"",
         });
 
         Assert.That(provider, Is.Not.Null);
@@ -52,6 +53,7 @@ public sealed class MailboxProviderConfigurationTests
             Assert.That(provider.Port, Is.EqualTo(1143));
             Assert.That(provider.UsernameHint, Is.EqualTo(@"Your account as DOMAIN\username"));
             Assert.That(provider.HelpUrl, Is.EqualTo("https://intranet.example.org/mail/imap"));
+            Assert.That(provider.PasswordEncoding?.Name, Is.EqualTo("windows-1254"));
         }
     }
 
@@ -68,6 +70,7 @@ public sealed class MailboxProviderConfigurationTests
             Assert.That(withStartTls?.Port, Is.EqualTo(143));
             Assert.That(withoutEncryption?.UsernameHint, Is.Empty);
             Assert.That(withoutEncryption?.HelpUrl, Is.Empty);
+            Assert.That(withoutEncryption?.PasswordEncoding, Is.Null, "Without a word from the organization, the mailbox keeps the encoding it has.");
         }
     }
 
@@ -94,6 +97,12 @@ public sealed class MailboxProviderConfigurationTests
     [TestCase("Port", "65536")]
     [TestCase("HelpUrl", "\"ftp://intranet.example.org/mail\"")]
     [TestCase("HelpUrl", "\"/mail/imap\"")]
+    [TestCase("PasswordEncoding", "\"UNKNOWN\"")]
+    [TestCase("PasswordEncoding", "\"\"")]
+    [TestCase("PasswordEncoding", "\"utf-16\"")]
+    [TestCase("PasswordEncoding", "\"IBM037\"")]
+    [TestCase("PasswordEncoding", "\"utf-8, windows-1252\"")]
+    [TestCase("PasswordEncoding", "true")]
     public async Task AnEntryWithAnInvalidFieldIsLeftOut(string field, string? value)
     {
         var provider = await ReadAsync(new Dictionary<string, string?> { [field] = value });

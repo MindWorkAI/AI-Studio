@@ -11,7 +11,7 @@ public sealed class Data
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; set; } = Version.V6;
+    public Version Version { get; set; } = Version.V7;
 
     /// <summary>
     /// List of configured providers.
@@ -48,7 +48,7 @@ public sealed class Data
     /// </summary>
     /// <remarks>
     /// A list of its own rather than a part of DataSources: classic RAG, Semantic Search and the
-    /// agents read DataSources, and none of them is meant to see a mailbox. It also keeps the
+    /// AI operations read DataSources, and none of them is meant to see a mailbox. It also keeps the
     /// settings readable for older versions of AI Studio, so the settings version stays the same.
     /// An older version skips a property it does not know, but would fail to read the whole file
     /// over a data source type it does not know. It drops the list, though, the next time it stores
@@ -165,6 +165,11 @@ public sealed class Data
 
     public DataChat Chat { get; set; } = new(x => x.Chat);
 
+    /// <summary>
+    /// Gets the settings of the assistants page: collapsed and hidden categories.
+    /// </summary>
+    public DataAssistantsPage AssistantsPage { get; set; } = new(x => x.AssistantsPage);
+
     public DataWorkspace Workspace { get; set; } = new();
 
     public DataIconFinder IconFinder { get; set; } = new();
@@ -188,13 +193,18 @@ public sealed class Data
 
     public DataSWOTAnalysis SWOTAnalysis { get; set; } = new();
 
-    public DataTextContentCleaner TextContentCleaner { get; set; } = new();
+    public DataTextContentCleaner TextContentCleaner { get; set; } = new(x => x.TextContentCleaner);
     
-    public DataAgentDataSourceSelection AgentDataSourceSelection { get; set; } = new(x => x.AgentDataSourceSelection);
+    public DataDataSourceSelection DataSourceSelection { get; set; } = new(x => x.DataSourceSelection);
     
-    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; set; } = new(x => x.AgentRetrievalContextValidation);
+    public DataRetrievalContextValidation RetrievalContextValidation { get; set; } = new(x => x.RetrievalContextValidation);
 
     public DataAssistantPluginAudit AssistantPluginAudit { get; set; } = new(x => x.AssistantPluginAudit);
+
+    /// <summary>
+    /// Gets the managed settings of compressing a chat.
+    /// </summary>
+    public DataChatCompression ChatCompression { get; set; } = new(x => x.ChatCompression);
     
     public DataAgenda Agenda { get; set; } = new();
     

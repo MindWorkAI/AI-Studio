@@ -1,29 +1,69 @@
 using AIStudio.Components;
-using AIStudio.Agents.AssistantAudit;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
-using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Pages;
 
 public partial class Assistants : MSGComponentBase
 {
+    private static readonly AssistantCategoryKey COMMON = new(PluginCategory.COMMON);
+    private static readonly AssistantCategoryKey BUSINESS = new(PluginCategory.BUSINESS);
+    private static readonly AssistantCategoryKey EDUCATION = new(PluginCategory.EDUCATION);
+    private static readonly AssistantCategoryKey SOFTWARE_DEVELOPMENT = new(PluginCategory.SOFTWARE_DEVELOPMENT);
+
+    private readonly AssistantCategoryRegistry categoryRegistry = new();
+
     private bool isAutoAuditing;
 
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
 
     [Inject]
-    private NavigationManager NavigationManager { get; init; } = null!;
+    private IDialogService DialogService { get; init; } = null!;
 
-    [Inject]
-    private DirectChatService DirectChatService { get; init; } = null!;
-    
     protected override async Task OnInitializedAsync()
     {
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
+        this.categoryRegistry.ShowsAnyCategoryChanged += this.StateHasChanged;
         await base.OnInitializedAsync();
+    }
+
+    /// <inheritdoc />
+    protected override void DisposeResources()
+    {
+        this.categoryRegistry.ShowsAnyCategoryChanged -= this.StateHasChanged;
+        base.DisposeResources();
+    }
+
+    /// <summary>
+    /// Gets whether the user hid every category the page would show, so that it shows none.
+    /// </summary>
+    /// <remarks>
+    /// Without a hint, the page would look broken. When your organization hid or disabled every
+    /// assistant instead, the gear brings nothing back, so we keep quiet then.
+    /// </remarks>
+    private bool HidesEveryCategory
+    {
+        get
+        {
+            var page = this.SettingsManager.ConfigurationData.AssistantsPage;
+            return this.categoryRegistry.ShowsAnyCategory is false && (page.HiddenCategories.Count > 0 || page.HiddenCustomCategories.Count > 0);
+        }
+    }
+
+    private async Task OpenSettingsDialogAsync()
+    {
+        var categories = AssistantPageSections.SelectForSettings(this.categoryRegistry.ShownCategories, this.SettingsManager.ConfigurationData.App, this.SettingsManager.ConfigurationData.AssistantsPage);
+        var dialogParameters = new DialogParameters<SettingsDialogAssistantsPage>
+        {
+            { x => x.Categories, categories },
+        };
+
+        await this.DialogService.ShowAsync<SettingsDialogAssistantsPage>(T("Assistant Settings"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -34,8 +74,17 @@ public partial class Assistants : MSGComponentBase
 
     private IReadOnlyCollection<PluginAssistants> AssistantPlugins =>
         PluginFactory.RunningPlugins.OfType<PluginAssistants>()
-            .Where(plugin => this.SettingsManager.IsPluginEnabled(plugin))
+            .Where(plugin => this.SettingsManager.IsAssistantPluginAvailable(plugin))
             .ToList();
+
+    /// <summary>
+    /// Groups the enabled assistant plugins into the sections of the page.
+    /// </summary>
+    /// <remarks>
+    /// The page asks for the sections once per rendering, so that the plugins and their order stay the
+    /// same within one rendering.
+    /// </remarks>
+    private IReadOnlyList<AssistantPageSection<PluginAssistants>> CreateSections() => AssistantPageSections.Build(this.AssistantPlugins, plugin => plugin.AssistantTitle);
 
     private async Task TryAutoAuditAssistantsAsync()
     {
@@ -46,27 +95,12 @@ public partial class Assistants : MSGComponentBase
 
         try
         {
-            var wasConfigurationChanged = false;
-            var assistantPlugins = PluginFactory.RunningPlugins.OfType<PluginAssistants>().ToList();
-            foreach (var assistantPlugin in assistantPlugins)
-            {
-                var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
-                if (!securityState.RequiresAudit)
-                    continue;
-
-                var audit = await this.AssistantPluginAuditService.RunAuditAsync(assistantPlugin);
-                if (audit.Level is AssistantAuditLevel.UNKNOWN)
-                {
-                    await MessageBus.INSTANCE.SendError(new (AppIcons.AGENT, string.Format(this.TA("The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page."), assistantPlugin.Name)));
-                    continue;
-                }
-
-                this.UpsertAuditCard(audit);
-                wasConfigurationChanged = true;
-            }
-
-            if (!wasConfigurationChanged)
+            var audits = await this.AssistantPluginAuditService.RunAutomaticAuditsAsync();
+            if (audits.Count == 0)
                 return;
+
+            foreach (var audit in audits)
+                AssistantPluginAuditService.UpsertAudit(this.SettingsManager, audit);
 
             await this.SettingsManager.StoreSettings();
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
@@ -76,39 +110,6 @@ public partial class Assistants : MSGComponentBase
             this.isAutoAuditing = false;
             await this.InvokeAsync(this.StateHasChanged);
         }
-    }
-
-    private void UpsertAuditCard(PluginAssistantAudit audit)
-    {
-        var audits = this.SettingsManager.ConfigurationData.AssistantPluginAudits;
-        var existingIndex = audits.FindIndex(x => x.PluginId == audit.PluginId);
-        if (existingIndex >= 0)
-            audits[existingIndex] = audit;
-        else
-            audits.Add(audit);
-    }
-
-    private async Task StartAssistantPluginAsync(PluginAssistants assistantPlugin)
-    {
-        var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
-        if (!securityState.CanStartAssistant)
-            return;
-
-        if (!assistantPlugin.StartsChatDirectly)
-        {
-            this.NavigationManager.NavigateTo($"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}");
-            return;
-        }
-
-        var result = await this.DirectChatService.TryCreateAssistantChatAsync(assistantPlugin);
-        if (result.Request is null)
-        {
-            await this.MessageBus.SendError(new(AppIcons.ERROR, result.ErrorMessage));
-            return;
-        }
-
-        MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT, result.Request);
-        this.NavigationManager.NavigateTo(Routes.CHAT);
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default

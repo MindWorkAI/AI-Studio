@@ -11,7 +11,7 @@ namespace AIStudio.Tests.Settings;
 /// Either side can be filled in without knowing about the other, so all four combinations happen.
 /// The rule is deliberately the same for tools and for data sources: the chat template wins as a
 /// whole, because it is the only one of the two which can also leave the choice of sources to an
-/// agent, and a field-by-field mix of both would be something neither of them asked for.
+/// AI operation, and a field-by-field mix of both would be something neither of them asked for.
 /// </remarks>
 [TestFixture]
 public sealed class ChatTemplatePrecedenceTests
@@ -115,7 +115,7 @@ public sealed class ChatTemplatePrecedenceTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(optionsChoice.Options!.AutomaticDataSourceSelection, Is.True, "Letting an agent pick the sources is the one thing a launcher cannot express, so it is exactly what must not be overwritten by one.");
+            Assert.That(optionsChoice.Options!.AutomaticDataSourceSelection, Is.True, "Letting an AI operation pick the sources is the one thing a launcher cannot express, so it is exactly what must not be overwritten by one.");
             Assert.That(optionsChoice.Options.PreselectedDataSourceIds, Is.Empty);
             Assert.That(optionsChoice.LauncherChoiceDropped, Is.True);
         }

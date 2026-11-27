@@ -29,4 +29,21 @@ public sealed class FileActionsTests
 
     [Test]
     public void WhatOnlyADataSourceKnowsGetsNoActions() => Assert.That(FileActions.DetermineKind(SourceExtensions.CreateRetrievalSourceUrl("handbook.pdf", "docs/handbook.pdf")), Is.EqualTo(FileActions.FileActionsKind.NONE));
+
+    /// <summary>
+    /// Inside a Flatpak, no page reaches the program, so the tooltip must not promise one. It still names
+    /// the page, since that is where the passage is. Nothing asserts on the wording, which I18N decides.
+    /// </summary>
+    [Test]
+    public void WhereNoPageCanArriveTheTooltipPromisesNone()
+    {
+        var promise = FileActions.GetOpenTooltip(33, canOpenAtPage: true);
+        var withoutPromise = FileActions.GetOpenTooltip(33, canOpenAtPage: false);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(withoutPromise, Is.Not.EqualTo(promise));
+            Assert.That(withoutPromise, Does.Contain("33"));
+        }
+    }
 }

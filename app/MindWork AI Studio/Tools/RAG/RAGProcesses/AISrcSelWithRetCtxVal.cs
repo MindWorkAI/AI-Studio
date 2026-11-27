@@ -120,7 +120,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             //
             if (chatThread.DataSourceOptions.AutomaticDataSourceSelection)
             {
-                var dataSourceSelectionProcess = new AgenticSrcSelWithDynHeur();
+                var dataSourceSelectionProcess = new AISrcSelWithDynHeur();
                 var result = await dataSourceSelectionProcess.SelectDataSourcesAsync(provider, lastUserPrompt, chatThread, dataSources, token);
                 proceedWithRAG = result.ProceedWithRAG;
                 selectedDataSources = result.SelectedDataSources;
@@ -293,12 +293,12 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     /// Semantic Search asks the same place, DataSourceRequirements, so that both ways of searching
     /// demand the same of the same data sources. Only the data sources whose passages reached the
     /// AI count: one which found nothing leaves the chat as it was, and so does one whose passages
-    /// the validation agent dropped, or which did not fit into what the model can read, see
+    /// the validation dropped, or which did not fit into what the model can read, see
     /// PassageBudget. Neither the model nor any of its tools ever saw those passages; the
-    /// validation agent did, but it has no tools. Otherwise, a data source of public papers could
+    /// validation did, but it has no tools. Otherwise, a data source of public papers could
     /// fill the budget while the passages of a confidential one stayed out, and the chat would
     /// still lose the web search for good. The data security and the provider confidence were
-    /// raised before the retrieval already, for every selected data source, because the agents see
+    /// raised before the retrieval already, for every selected data source, because the AI operations see
     /// the passages as well; the data sources with passages are among them, so asking again would
     /// change nothing.<br/><br/>
     /// The answer which follows does not offer the web search any more: the request reads the

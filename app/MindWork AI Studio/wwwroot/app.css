@@ -284,8 +284,9 @@
     text-align: left;
 }
 
-.configuration-help-justified .mud-input-helper-text,
-.configuration-help-justified .mud-form-helpertext {
+/* Every hint and every issue below a field, justified like the texts around it; app.css comes after MudBlazor's own rule */
+.mud-input-helper-text,
+.mud-form-helpertext {
     text-align: justify;
     hyphens: auto;
     word-break: auto-phrase;

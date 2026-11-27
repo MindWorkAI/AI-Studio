@@ -20,9 +20,9 @@ public class DataLegalCheck
     public bool PreselectWebContentReader { get; set; }
 
     /// <summary>
-    /// Preselect the content cleaner agent?
+    /// Preselect the text content cleaner?
     /// </summary>
-    public bool PreselectContentCleanerAgent { get; set; }
+    public bool PreselectContentCleaner { get; set; }
     
     /// <summary>
     /// The minimum confidence level required for a provider to be considered.

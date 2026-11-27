@@ -54,6 +54,30 @@
         <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
     </PropertyGroup>
 
+    <!--
+        The published app brings the .NET runtime which line 5 of metadata.txt names, whatever SDK builds it.
+        Without a fixed version, the SDK takes the runtime it knows itself, and a build with an older SDK would
+        ship an older runtime than our other builds. The Flatpak is such a build: its SDK extension on Flathub
+        may lag behind for months. The version fixes the runtime packs, the app hosts, the trimmer, and the
+        package with the script of Blazor alike. The restore downloads these packages, so the version has to be
+        known while MSBuild evaluates the project; the target ReadMetaData runs too late for that, and it only
+        checks the version.
+    -->
+    <PropertyGroup>
+        <MetaDotnetRuntimeVersion Condition="Exists('$(MSBuildThisFileDirectory)../../metadata.txt')">$([System.Text.RegularExpressions.Regex]::Split($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../../metadata.txt')), '\r?\n')[4].Split(' ')[0])</MetaDotnetRuntimeVersion>
+        <RuntimeFrameworkVersion>$(MetaDotnetRuntimeVersion)</RuntimeFrameworkVersion>
+    </PropertyGroup>
+
+    <!--
+        The trimmer is a .NET program of its own, which runs on the runtime of the SDK and needs a runtime at
+        least as new as itself. An SDK older than the pinned runtime, such as the one of the Flatpak, could not
+        start the trimmer of the pinned version. Then the trimmer of that SDK does the work. It ships with
+        nothing, so the app still brings the pinned runtime.
+    -->
+    <ItemGroup Condition="'$(MetaDotnetRuntimeVersion)' != '' And $([MSBuild]::VersionLessThan('$(BundledNETCoreAppPackageVersion)', '$(MetaDotnetRuntimeVersion)'))">
+        <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="$(BundledNETCoreAppPackageVersion)" PrivateAssets="all" />
+    </ItemGroup>
+
     <Import Project="..\Trimming.props" />
 
     <ItemGroup>
@@ -75,23 +99,23 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="AngouriMath" Version="2.6.0" />
-      <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="9.2.0" />
+      <PackageReference Include="AngouriMath" Version="2.8.0" />
+      <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="9.14.0" />
       <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-      <PackageReference Include="MailKit" Version="4.18.2" />
-      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.14" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
+      <PackageReference Include="MailKit" Version="5.0.0" />
+      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.15" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.15" />
 
       <!--
           Its assembly ships with ASP.NET Core, but the package also brings the build logic which writes the
           manifest of the embedded files. Without that manifest, the release serves no static files at all, and
           WebRootFiles finds neither the changelogs nor the ERI specifications in any build.
       -->
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.14" />
-      <PackageReference Include="MudBlazor" Version="9.12.0" />
-      <PackageReference Include="MudBlazor.Markdown" Version="9.10.0" />
-      <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.15" />
+      <PackageReference Include="MudBlazor" Version="9.14.0" />
+      <PackageReference Include="MudBlazor.Markdown" Version="9.12.0" />
+      <PackageReference Include="ReverseMarkdown" Version="6.3.0" />
       <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
       <PackageReference Include="LuaCSharp" Version="0.5.8" />
     </ItemGroup>
@@ -125,7 +149,10 @@
     <!-- Read the meta data file -->
     <Target Name="ReadMetaData" BeforeTargets="BeforeBuild">
         <Error Text="The ../../metadata.txt file was not found!" Condition="!Exists('../../metadata.txt')" />
-        
+
+        <!-- Without this check, a broken line 5 would let the SDK pick the runtime by itself, without a word: -->
+        <Error Text="Line 5 of ../../metadata.txt names no .NET runtime, such as '10.0.15 (commit 8e0f8ed231)', but '$(MetaDotnetRuntimeVersion)'. The build ships the runtime which this line names, see RuntimeFrameworkVersion." Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(MetaDotnetRuntimeVersion)', '^\d+\.\d+\.\d+$'))" />
+
         <ReadLinesFromFile File="../../metadata.txt">
             <Output TaskParameter="Lines" PropertyName="Metadata" />
         </ReadLinesFromFile>
@@ -133,8 +160,9 @@
         <!--
             metadata.txt names the .NET SDK which the pipeline pins, but a local build may use another
             one. Hence, we take the SDK which builds right now. Its .version file starts with the commit
-            it was built from. The .NET runtime is not recorded at all: the app asks for it while it runs.
-            Neither is the Rust compiler, which the app learns from the runtime it built.
+            it was built from. The .NET runtime is not recorded here: the app asks for it while it runs, and
+            RuntimeFrameworkVersion above makes it the one in metadata.txt. Neither is the Rust compiler,
+            which the app learns from the runtime it built.
         -->
         <PropertyGroup>
             <DotnetSdkVersionFile>$(NetCoreRoot)sdk/$(NETCoreSdkVersion)/.version</DotnetSdkVersionFile>

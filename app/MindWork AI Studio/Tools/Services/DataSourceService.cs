@@ -1,9 +1,13 @@
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.DataSourceChoice;
+using AIStudio.AIOperations.RetrievalContextValidation;
 using AIStudio.Assistants.ERI;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.RAG;
 
 namespace AIStudio.Tools.Services;
 
@@ -11,7 +15,7 @@ public sealed class DataSourceService
 {
     //
     // Trust is recorded for every participating provider, while only the chat provider's trust
-    // decides about external data sources below. The agent which validates retrieval contexts
+    // decides about external data sources below. The AI operation which validates retrieval contexts
     // checks its own provider before it runs, so nothing slips through today. Keeping the value
     // named here is what makes that asymmetry visible.
     //
@@ -22,11 +26,13 @@ public sealed class DataSourceService
     private readonly DataSourceEmbeddingService embeddingService;
     private readonly RustService rustService;
     private readonly SettingsManager settingsManager;
+    private readonly AIOperationProviderResolver providerResolver;
     private readonly ILogger<DataSourceService> logger;
 
-    public DataSourceService(SettingsManager settingsManager, ILogger<DataSourceService> logger, RustService rustService, DataSourceEmbeddingService embeddingService)
+    public DataSourceService(SettingsManager settingsManager, AIOperationProviderResolver providerResolver, ILogger<DataSourceService> logger, RustService rustService, DataSourceEmbeddingService embeddingService)
     {
         this.logger = logger;
+        this.providerResolver = providerResolver;
         this.rustService = rustService;
         this.settingsManager = settingsManager;
         this.embeddingService = embeddingService;
@@ -40,8 +46,8 @@ public sealed class DataSourceService
     /// It also returns the data sources selected before when they are still allowed.
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
-    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
-    /// <param name="retrievalMode">How the data sources are searched in effect, which decides whether any agent participates at all.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which AI operations participate.</param>
+    /// <param name="retrievalMode">How the data sources are searched in effect, which decides whether any AI operation participates at all.</param>
     /// <param name="previousSelectedDataSources">The data sources selected before.</param>
     /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
     public async Task<AllowedSelectedDataSources> GetDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
@@ -69,8 +75,8 @@ public sealed class DataSourceService
     /// this method checks only the supplied data sources.
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
-    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
-    /// <param name="retrievalMode">How the data sources are searched in effect, which decides whether any agent participates at all.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which AI operations participate.</param>
+    /// <param name="retrievalMode">How the data sources are searched in effect, which decides whether any AI operation participates at all.</param>
     /// <param name="requestedDataSources">The data sources to check.</param>
     /// <returns>The requested data sources that are allowed for the provider.</returns>
     public async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, IReadOnlyCollection<IDataSource> requestedDataSources)
@@ -101,8 +107,8 @@ public sealed class DataSourceService
     /// It also returns the data sources selected before when they are still allowed.
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
-    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
-    /// <param name="retrievalMode">How the data sources are searched in effect, which decides whether any agent participates at all.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which AI operations participate.</param>
+    /// <param name="retrievalMode">How the data sources are searched in effect, which decides whether any AI operation participates at all.</param>
     /// <param name="previousSelectedDataSources">The data sources selected before.</param>
     /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
     public async Task<AllowedSelectedDataSources> GetDataSources(IProvider selectedLLMProvider, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
@@ -127,47 +133,63 @@ public sealed class DataSourceService
     private IReadOnlyList<ParticipatingProvider> GetParticipatingProviders(string currentProviderId, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, ParticipatingProvider currentProvider)
     {
         var providers = new List<ParticipatingProvider> { currentProvider };
-        var retrievalContextValidationEnabled = this.settingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation;
-        foreach (var (component, role) in GetParticipatingAgents(dataSourceOptions, retrievalMode, retrievalContextValidationEnabled))
-            this.AddAgentProvider(providers, component, currentProviderId, role);
+        var retrievalContextValidationEnabled = this.settingsManager.ConfigurationData.RetrievalContextValidation.EnableRetrievalContextValidation;
+        foreach (var (component, role) in GetParticipatingOperations(dataSourceOptions, retrievalMode, retrievalContextValidationEnabled))
+            this.AddOperationProvider(providers, component, currentProviderId, role);
 
         return providers;
     }
 
     /// <summary>
-    /// Which agents get to see the data of the data sources, besides the chat provider.
+    /// Which AI operations get to see the data of the data sources, besides the chat provider.
     /// </summary>
     /// <remarks>
-    /// Only the classic RAG process runs agents. With Semantic Search, the chat model picks the
+    /// Only the classic RAG process runs AI operations. With Semantic Search, the chat model picks the
     /// data sources and judges what it found itself, so the data reaches no other provider.
-    /// Counting the providers of the agents there would hold back data sources which the chat
+    /// Counting the providers of the AI operations there would hold back data sources which the chat
     /// provider alone may use.
     /// </remarks>
     /// <param name="dataSourceOptions">The active data source options.</param>
     /// <param name="retrievalMode">How the data sources are searched in effect.</param>
     /// <param name="retrievalContextValidationEnabled">Whether the validation of retrieval contexts is enabled in the settings.</param>
-    /// <returns>The component of each participating agent, together with its role for the log.</returns>
-    internal static IReadOnlyList<(Components Component, string Role)> GetParticipatingAgents(DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, bool retrievalContextValidationEnabled)
+    /// <returns>The component of each participating AI operation, together with its role for the log.</returns>
+    internal static IReadOnlyList<(Components Component, string Role)> GetParticipatingOperations(DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, bool retrievalContextValidationEnabled)
     {
         if (retrievalMode is DataSourceRetrievalMode.SEMANTIC_SEARCH)
             return [];
 
-        var agents = new List<(Components Component, string Role)>(2);
+        var operations = new List<(Components Component, string Role)>(2);
         if (dataSourceOptions.AutomaticDataSourceSelection)
-            agents.Add((Components.AGENT_DATA_SOURCE_SELECTION, "data source selection agent"));
+            operations.Add((Components.AI_TASK_DATA_SOURCE_SELECTION, "data source selection"));
 
         if (dataSourceOptions.AutomaticValidation && retrievalContextValidationEnabled)
-            agents.Add((Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, "retrieval context validation agent"));
+            operations.Add((Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION, "retrieval context validation"));
 
-        return agents;
+        return operations;
     }
 
-    private void AddAgentProvider(List<ParticipatingProvider> providers, Components component, string currentProviderId, string role)
+    /// <summary>
+    /// Adds the provider which an AI operation would run with, chosen as the operation chooses it when it runs.
+    /// </summary>
+    /// <remarks>
+    /// The data sources are what this check decides, so the choice leaves out the check of the data
+    /// sources, which the operation adds when it runs. Should that check refuse the provider counted here,
+    /// the operation falls back on the provider of the chat, which this check counts as well.
+    /// </remarks>
+    private void AddOperationProvider(List<ParticipatingProvider> providers, Components component, string currentProviderId, string role)
     {
-        var provider = this.settingsManager.GetPreselectedProvider(component, currentProviderId, true);
+        var operationSettings = component switch
+        {
+            Components.AI_TASK_DATA_SOURCE_SELECTION => DataSourceChoiceOperation.GetProviderSettings(this.settingsManager),
+            Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION => RetrievalContextValidationOperation.GetProviderSettings(this.settingsManager),
+            _ => AIOperationProviderSettings.NONE,
+        };
+
+        var provider = this.providerResolver.Preview(operationSettings, ConfidenceLevel.NONE, ClassicRagProviderOptions.For(this.settingsManager, currentProviderId)).Provider;
+
         if (provider == Settings.Provider.NONE)
         {
-            this.logger.LogWarning($"No provider is available for the {role}. Data sources cannot be made available while this agent is enabled.");
+            this.logger.LogWarning($"No provider is available for the {role}. Data sources cannot be made available while this AI operation is enabled.");
             providers.Add(new(role, false, ConfidenceLevel.NONE));
             return;
         }

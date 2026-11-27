@@ -72,7 +72,7 @@ public static class BflFieldTexts
             BflFieldCatalog.CONTRIBUTION_SUMMARY => TB("A few sentences are enough"),
             BflFieldCatalog.MATERIAL_NOTES => TA("E.g., use only paper X as the basis for the content. Add the material itself in the area 'Material'."),
 
-            BflFieldCatalog.GOALS => TA("In your own words, with the suggestions below, or still open: the chat sharpens your goal and role with you."),
+            BflFieldCatalog.GOALS => TA("In your own words, with the suggestions below, or still open: the chat sharpens your goals and roles with you."),
 
             BflFieldCatalog.PERSONAL_CONCERN => TA("Personal detail: it goes into exports and shared sessions only when you explicitly choose so."),
 

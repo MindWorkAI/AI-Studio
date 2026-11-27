@@ -6,7 +6,7 @@
         <MudIconButton Icon="@AppIcons.LAUNCHER_SETTINGS"
                        Color="Color.Default"
                        Variant="Variant.Text"
-                       Size="Size.Medium"
+                       Size="@(this.Compact ? Size.Small : Size.Medium)"
                        Disabled="@this.isEditing"
                        OnClick="@this.OpenSettingsDialogAsync"/>
     </MudTooltip>

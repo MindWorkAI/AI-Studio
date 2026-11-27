@@ -19,7 +19,11 @@ public sealed class ResponsesStreamAccumulator
     private const string EVENT_TEXT_DELTA = "response.output_text.delta";
     private const string EVENT_ANNOTATION_ADDED = "response.output_text.annotation.added";
     private const string EVENT_OUTPUT_ITEM_DONE = "response.output_item.done";
-    
+    private const string EVENT_OUTPUT_ITEM_ADDED = "response.output_item.added";
+    private const string EVENT_REASONING_SUMMARY_DELTA = "response.reasoning_summary_text.delta";
+    private const string EVENT_REASONING_DELTA = "response.reasoning_text.delta";
+    private const string ITEM_TYPE_REASONING = "reasoning";
+
     private readonly List<JsonElement> completedOutputItems = [];
     private ResponsesResponse? completedResponse;
     
@@ -51,6 +55,18 @@ public sealed class ResponsesStreamAccumulator
             //
             if (eventType is EVENT_OUTPUT_ITEM_DONE && root.TryGetProperty("item", out var outputItem))
                 this.completedOutputItems.Add(outputItem.Clone());
+
+            //
+            // The API mostly keeps its reasoning to itself: all it says is that a reasoning item
+            // opened, and then nothing until the item is done. That opening is the signal.
+            //
+            if (eventType is EVENT_OUTPUT_ITEM_ADDED &&
+                root.TryGetProperty("item", out var addedItem) &&
+                addedItem.ValueKind is JsonValueKind.Object &&
+                addedItem.TryGetProperty("type", out var addedItemType) &&
+                addedItemType.ValueKind is JsonValueKind.String &&
+                addedItemType.GetString() is ITEM_TYPE_REASONING)
+                return ResponsesStreamPart.Reasoning;
         }
         catch (JsonException)
         {
@@ -84,7 +100,11 @@ public sealed class ResponsesStreamAccumulator
                     return ResponsesStreamPart.Nothing;
 
                 return new ResponsesStreamPart(string.Empty, annotationLine.GetSources());
-            
+
+            // Reasoning which does arrive as text, as a summary or from an open model:
+            case EVENT_REASONING_SUMMARY_DELTA or EVENT_REASONING_DELTA:
+                return ResponsesStreamPart.Reasoning;
+
             default:
                 return ResponsesStreamPart.Nothing;
         }
@@ -106,8 +126,10 @@ public sealed class ResponsesStreamAccumulator
             return null;
 
         //
-        // No closing event came, so the round is put back together from the items which did.
-        // Reasoning items are among them, which is what the next request needs to continue.
+        // No closing event came, although the provider closed the stream: some gateways never send
+        // it. So the round is put back together from the items which did come. Reasoning items are
+        // among them, which is what the next request needs to continue. A stream which was cut off
+        // never gets here: its adapter ends the round before, cf. ServerSentEventStreamEnd.
         //
         return new ResponsesResponse
         {

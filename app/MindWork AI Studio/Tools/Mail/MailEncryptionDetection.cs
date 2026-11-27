@@ -36,17 +36,49 @@ public static class MailEncryptionDetection
     /// <summary>
     /// Reads the encryption from the structure the server describes.
     /// </summary>
+    /// <remarks>
+    /// The structure is walked with a stack of its own rather than by recursion: the IMAP client reads
+    /// a structure of any depth, and a mail nested deeply enough on purpose would otherwise end AI
+    /// Studio with a stack overflow, which no catch block stops. The parts are visited in their order,
+    /// so the first encrypted part decides, as for a parsed mail.
+    /// </remarks>
     /// <param name="bodyStructure">The BODYSTRUCTURE of the mail, or null when the server sent none.</param>
     /// <returns>How the content is encrypted, NONE when it is readable as far as the structure tells.</returns>
-    public static MailEncryptionKind Detect(BodyPart? bodyStructure) => bodyStructure switch
+    public static MailEncryptionKind Detect(BodyPart? bodyStructure)
     {
-        // An attached mail keeps its protection to itself:
-        BodyPartMessage => MailEncryptionKind.NONE,
+        var pending = new Stack<BodyPart>();
+        if (bodyStructure is not null)
+            pending.Push(bodyStructure);
 
-        BodyPartMultipart multipart => DetectMultipart(multipart.ContentType, multipart.BodyParts.Select(Detect)),
-        BodyPartBasic part => DetectPart(part.ContentType, part.FileName),
-        _ => MailEncryptionKind.NONE,
-    };
+        while (pending.TryPop(out var current))
+        {
+            switch (current)
+            {
+                // An attached mail keeps its protection to itself:
+                case BodyPartMessage:
+                    continue;
+
+                case BodyPartMultipart multipart when IsPgpMime(multipart.ContentType):
+                    return MailEncryptionKind.PGP_MIME;
+
+                case BodyPartMultipart multipart:
+                    // Pushed in reverse, so that the first part comes off the stack first:
+                    for (var index = multipart.BodyParts.Count - 1; index >= 0; index--)
+                        pending.Push(multipart.BodyParts[index]);
+
+                    continue;
+
+                case BodyPartBasic part:
+                    var kind = DetectPart(part.ContentType, part.FileName);
+                    if (kind is not MailEncryptionKind.NONE)
+                        return kind;
+
+                    continue;
+            }
+        }
+
+        return MailEncryptionKind.NONE;
+    }
 
     /// <summary>
     /// Reads the encryption from the MIME tree of a parsed mail.
@@ -73,12 +105,16 @@ public static class MailEncryptionDetection
 
     private static MailEncryptionKind DetectMultipart(ContentType contentType, IEnumerable<MailEncryptionKind> partKinds)
     {
-        // RFC 1847 knows no other use of multipart/encrypted than PGP/MIME in practice:
-        if (contentType.IsMimeType("multipart", "encrypted"))
+        if (IsPgpMime(contentType))
             return MailEncryptionKind.PGP_MIME;
 
         return partKinds.FirstOrDefault(kind => kind is not MailEncryptionKind.NONE);
     }
+
+    /// <summary>
+    /// Whether a multipart is encrypted. RFC 1847 knows no other use of multipart/encrypted than PGP/MIME in practice.
+    /// </summary>
+    private static bool IsPgpMime(ContentType contentType) => contentType.IsMimeType("multipart", "encrypted");
 
     private static MailEncryptionKind DetectPart(ContentType contentType, string? fileName)
     {

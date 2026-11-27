@@ -1,5 +1,5 @@
 @inherits ConfigurationBaseCore
 
-<MudSwitch T="bool" Disabled="@this.IsDisabled" Value="@this.State()" ValueChanged="@this.OptionChanged" Color="Color.Primary">
+<MudSwitch @key="@this.switchKey" T="bool" Disabled="@this.IsDisabled" Value="@this.State()" ValueChanged="@this.OptionChanged" Color="Color.Primary">
     @(this.State() ? this.LabelOn : this.LabelOff)
 </MudSwitch>

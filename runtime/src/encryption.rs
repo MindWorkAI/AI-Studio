@@ -165,3 +165,46 @@ impl fmt::Display for EncryptedText {
         write!(f, "**********")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Creates the encryption with the same password and salt as `EncryptionTests` in `app/Tests`,
+    /// so that both sides check the same values. The expected values were computed independently,
+    /// with PBKDF2 of Python and AES of OpenSSL.
+    fn create_encryption() -> Encryption {
+        let password: Vec<u8> = (0..512u32).map(|index| (index % 256) as u8).collect();
+        let salt: Vec<u8> = (0xA0..0xB0u8).collect();
+        Encryption::new(&password, &salt).expect("the password and the salt of the test are valid")
+    }
+
+    /// Secrets such as passwords reach the OS keyring through here, encrypted by the app. Characters
+    /// beyond ASCII, of any script, must arrive as they were typed.
+    #[test]
+    fn decrypts_text_beyond_ascii_which_the_app_encrypted() {
+        let encryption = create_encryption();
+        for (encrypted, expected) in [
+            ("oKGio6SlpqeoqaqrrK2urwbjgbJCNk6Zw1Z9HyIiJdZJ+E7czzLYlM/undXUIsDr", "Schlüssel für Größe 🔑"),
+            ("oKGio6SlpqeoqaqrrK2ur3BiwUyVT93sLAJFWcOIdZt7LL+HTABMxQmvnRNB/L1fvXrfJEBKdaufFaHZj+sLnQ==", "şifre-Łódź-пароль-日本-한글"),
+        ] {
+            let decrypted = encryption.decrypt(&EncryptedText::new(encrypted.to_string()));
+            assert_eq!(decrypted.as_deref(), Ok(expected));
+        }
+    }
+
+    /// Secrets read from the OS keyring leave through here, for the app to decrypt, which
+    /// `TheAppDecryptsWhatTheRuntimeEncrypted` in `EncryptionTests` checks with the same values. The
+    /// salt and the encrypted text are encoded one after the other, so the salt keeps its padding.
+    #[test]
+    fn encrypts_text_beyond_ascii_for_the_app() {
+        let encryption = create_encryption();
+        for (text, expected) in [
+            ("Schlüssel für Größe 🔑", "oKGio6SlpqeoqaqrrK2urw==BuOBskI2TpnDVn0fIiIl1kn4TtzPMtiUz+6d1dQiwOs="),
+            ("şifre-Łódź-пароль-日本-한글", "oKGio6SlpqeoqaqrrK2urw==cGLBTJVP3ewsAkVZw4h1m3ssv4dMAEzFCa+dE0H8vV+9et8kQEp1q58VodmP6wud"),
+        ] {
+            let encrypted = encryption.encrypt(text).expect("encrypting a text works");
+            assert_eq!(encrypted.get_encrypted(), expected);
+        }
+    }
+}

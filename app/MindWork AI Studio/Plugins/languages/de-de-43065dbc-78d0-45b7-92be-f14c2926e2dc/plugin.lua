@@ -48,47 +48,65 @@ LANG_NAME = "Deutsch (Deutschland)"
 
 UI_TEXT_CONTENT = {}
 
--- No audit provider is configured.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2034826200"] = "Es ist kein Audit-Anbieter konfiguriert."
+-- The summary grew too long for the context window of the model which writes it. Please select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T2793013947"] = "Die Zusammenfassung ist für das Kontextfenster des Modells, das sie schreibt, zu lang geworden. Bitte wählen Sie ein Modell, das längere Texte verarbeiten kann."
 
--- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2451573087"] = "Die Sicherheitsprüfung konnte nicht abgeschlossen werden, da die Antwort des LLM unbrauchbar war. Die Audit-Stufe bleibt „Unbekannt“, bitte versuchen Sie es später erneut."
+-- The summary grew too long for the context window of the model which writes it. Please select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T2793013947::INFORMAL"] = "Die Zusammenfassung ist für das Kontextfenster des Modells, das sie schreibt, zu lang geworden. Bitte wähle ein Modell, das längere Texte verarbeiten kann."
 
--- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2451573087::INFORMAL"] = "Die Sicherheitsprüfung konnte nicht abgeschlossen werden, da die Antwort des LLM unbrauchbar war. Die Audit-Stufe bleibt „Unbekannt“, bitte versuche es später erneut."
+-- The chat could not be summarized: {0}
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T3360083574"] = "Der Chat konnte nicht zusammengefasst werden: {0}"
 
--- The provider is not trusted enough for security checks.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2861409367"] = "Der Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug."
+-- The model which writes the summary is not allowed in this chat due to data security or confidence-level requirements.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T3385064904"] = "Das Modell, das die Zusammenfassung schreibt, ist in diesem Chat aufgrund der Datensicherheit oder der Anforderungen an das Vertrauensniveau nicht zulässig."
 
--- The audit agent did not return a usable response.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3310188890"] = "Der Audit-Agent hat keine verwendbare Antwort zurückgegeben."
+-- The context window of the model which writes the summary is too small for this chat. Please select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T451779746"] = "Das Kontextfenster des Modells, das die Zusammenfassung schreibt, ist für diesen Chat zu klein. Bitte wählen Sie ein Modell, das längere Texte verarbeiten kann."
 
--- No provider is configured for the Security Audit Agent.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3605554201"] = "Für den Sicherheitsprüfungs-Agenten ist kein Anbieter konfiguriert."
+-- The context window of the model which writes the summary is too small for this chat. Please select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T451779746::INFORMAL"] = "Das Kontextfenster des Modells, das die Zusammenfassung schreibt, ist für diesen Chat zu klein. Bitte wähle ein Modell, das längere Texte verarbeiten kann."
 
--- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T4104574219"] = "Der ausgewählte Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug. Wählen Sie einen Anbieter aus, der das hier erforderliche Vertrauensniveau erfüllt, oder legen Sie in den App-Einstellungen einen speziellen Anbieter für Audits fest."
+-- Please select a provider first.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T814679973"] = "Bitte wählen Sie zuerst einen Anbieter aus."
 
--- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T4104574219::INFORMAL"] = "Der ausgewählte Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug. Wähle einen Anbieter aus, der das hier erforderliche Vertrauensniveau erfüllt, oder lege in den App-Einstellungen einen speziellen Anbieter für Audits fest."
+-- Please select a provider first.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T814679973::INFORMAL"] = "Bitte wähle zuerst einen Anbieter aus."
 
--- The audit result was empty.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T432419958"] = "Das Prüfergebnis war leer."
+-- The AI did not write a summary. Please check the messages about the provider, and try again.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T890981280"] = "Die KI hat keine Zusammenfassung geschrieben. Bitte prüfen Sie die Meldungen zum Anbieter und versuchen Sie es erneut."
 
--- The audit agent returned invalid JSON.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T917600186"] = "Der Audit-Agent hat ungültiges JSON zurückgegeben."
+-- The AI did not write a summary. Please check the messages about the provider, and try again.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T890981280::INFORMAL"] = "Die KI hat keine Zusammenfassung geschrieben. Bitte prüfe die Meldungen zum Anbieter und versuche es erneut."
+
+-- Compressing the chat was canceled.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::CONVERSATIONSUMMARY::CONVERSATIONSUMMARYOPERATION::T928686376"] = "Das Komprimieren des Chats wurde abgebrochen."
 
 -- Concerning
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T1500095429"] = "Bedenklich"
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITLEVELEXTENSIONS::T1500095429"] = "Bedenklich"
 
 -- Dangerous
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T3421510547"] = "Gefährlich"
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITLEVELEXTENSIONS::T3421510547"] = "Gefährlich"
 
 -- Unknown
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T3424652889"] = "Unbekannt"
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITLEVELEXTENSIONS::T3424652889"] = "Unbekannt"
 
 -- Safe
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T760494712"] = "Sicher"
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITLEVELEXTENSIONS::T760494712"] = "Sicher"
+
+-- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T2451573087"] = "Die Sicherheitsprüfung konnte nicht abgeschlossen werden, da die Antwort des LLM unbrauchbar war. Die Audit-Stufe bleibt „Unbekannt“. Bitte versuchen Sie es später erneut."
+
+-- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T2451573087::INFORMAL"] = "Die Sicherheitsprüfung konnte nicht abgeschlossen werden, da die Antwort des LLM unbrauchbar war. Die Audit-Stufe bleibt „Unbekannt“. Bitte versuche es später erneut."
+
+-- The audit did not return a usable response.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T391654503"] = "Die Prüfung hat keine brauchbare Antwort geliefert."
+
+-- The audit result was empty.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T432419958"] = "Das Prüfergebnis war leer."
+
+-- The audit returned invalid JSON.
+UI_TEXT_CONTENT["AISTUDIO::AIOPERATIONS::PLUGINAUDIT::PLUGINAUDITOPERATION::T678594297"] = "Die Prüfung hat ungültiges JSON zurückgegeben."
 
 -- Objective
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1121586136"] = "Zielsetzung"
@@ -438,12 +456,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- These tools are part of the selected policy and cannot be changed here. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when the policy permits it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1133257227"] = "Diese Werkzeuge sind Teil des ausgewählten Regelwerks und können hier nicht geändert werden. Jedes Werkzeug muss die Vertrauensanforderungen des ausgewählten Anbieters erfüllen. Daher kann ein Werkzeug weiterhin nicht verfügbar sein, selbst wenn das Regelwerk es zulässt."
 
--- Your organization requires a pause of at least {0} seconds between files.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1155517317"] = "Ihre Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen den Dateien."
-
--- Your organization requires a pause of at least {0} seconds between files.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1155517317::INFORMAL"] = "Deine Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen den Dateien."
-
 -- The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1164512104"] = "Die Ergebnistabelle enthält eine Zeile pro Dokument, beginnend mit dem Dateinamen. Hier können Sie die Spalte benennen, welche die Antwort der KI enthält, z. B. Zusammenfassung. Wenn Sie das Feld leer lassen, verwenden wir „Ergebnis“."
 
@@ -525,17 +537,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Waiting {0} seconds before starting the next file.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1708373046"] = "Die nächste Datei startet in {0} Sekunden."
 
--- seconds
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1723256298"] = "Sekunden"
-
 -- The selected folder does not exist.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T17705912"] = "Der ausgewählte Ordner existiert nicht."
 
 -- The image was no longer available while the model was asked about it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1805791865"] = "Das Bild war nicht mehr verfügbar, während das Modell dazu befragt wurde."
-
--- Minimum pause between files
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1829787634"] = "Mindestpause zwischen Dateien"
 
 -- Was not able to read the input folder: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1871021621"] = "Der Eingabeordner konnte nicht gelesen werden: {0}"
@@ -683,9 +689,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T324865195"] = "Das ausgewählte Modell kann keine Bilder lesen, daher schlägt die Verarbeitung der {0} Bilder unter den ausgewählten Dateien fehl. Alle anderen Dateien werden wie gewohnt verarbeitet."
-
--- Maximum pause between files
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3250003796"] = "Maximale Pause zwischen Dateien"
 
 -- Please select the folder that contains the documents you want to process.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T33077198"] = "Bitte wählen Sie den Ordner aus, der die zu verarbeitenden Dokumente enthält."
@@ -857,6 +860,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T9738678"] = "Das ausgewählte Modell kann keine Bilder lesen, daher schlägt die Verarbeitung des Bildes unter den ausgewählten Dateien fehl. Alle anderen Dateien werden wie gewohnt verarbeitet."
+
+-- Pause between files
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T976137570"] = "Pause zwischen Dateien"
 
 -- Comma (,)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T1676507543"] = "Komma (,)"
@@ -1203,6 +1209,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLCONVERSATIONSERVICE::T
 -- The event is not public. Therefore, the lab does not research it on the web.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLEVENTVISIBILITY::T2308862256"] = "Die Veranstaltung ist nicht öffentlich. Daher recherchiert das Lab nicht im Web zu ihr."
 
+-- In your own words, with the suggestions below, or still open: the chat sharpens your goals and roles with you.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1063404761"] = "Ob in eigenen Worten, mit den Vorschlägen unten oder noch ganz offen: Im Chat schärfen Sie gemeinsam mit der KI Ihre Ziele und Rollen."
+
+-- In your own words, with the suggestions below, or still open: the chat sharpens your goals and roles with you.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1063404761::INFORMAL"] = "Ob in eigenen Worten, mit den Vorschlägen unten oder noch ganz offen: Im Chat schärfst du gemeinsam mit der KI deine Ziele und Rollen."
+
 -- Moderate the discussion
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T1131866893"] = "Diskussion moderieren"
 
@@ -1404,12 +1416,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T881586300
 -- E.g., the venue and the city, or online
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T916990010"] = "Z. B. der Veranstaltungsort und die Stadt oder online"
 
--- In your own words, with the suggestions below, or still open: the chat sharpens your goal and role with you.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T917276711"] = "Ob in eigenen Worten, mit den Vorschlägen unten oder noch ganz offen: Im Chat schärfen Sie gemeinsam mit der KI Ihr Ziel und Ihre Rolle."
-
--- In your own words, with the suggestions below, or still open: the chat sharpens your goal and role with you.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T917276711::INFORMAL"] = "Ob in eigenen Worten, mit den Vorschlägen unten oder noch ganz offen: Im Chat schärfst du gemeinsam mit der KI dein Ziel und deine Rolle."
-
 -- Topic of your contribution or your specific assignment
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLFIELDTEXTS::T932670647"] = "Thema Ihres Beitrags oder Ihr konkreter Auftrag"
 
@@ -1479,6 +1485,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266
 -- Plan about 30 to 60 minutes for a preparation. You can pause at any time: AI Studio saves your details and conversations, and you continue where you left off.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1637266933::INFORMAL"] = "Plane für eine Vorbereitung etwa 30 bis 60 Minuten ein. Du kannst jederzeit unterbrechen: AI Studio speichert deine Angaben und Gespräche, und du machst später dort weiter, wo du aufgehört hast."
 
+-- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your roles, your strategy, or a round of critical questions. You can always say that you do not know.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1776665173"] = "Lassen Sie das Lab das Gespräch eines Schritts beginnen, oder schreiben Sie zuerst und sagen Sie, wobei Sie Unterstützung möchten, etwa bei Ihren Rollen, Ihrer Strategie oder mit einer Runde kritischer Fragen. Sie können jederzeit „Ich weiß es nicht“ antworten."
+
+-- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your roles, your strategy, or a round of critical questions. You can always say that you do not know.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T1776665173::INFORMAL"] = "Lass das Lab das Gespräch eines Schritts beginnen, oder schreib zuerst und sag, wobei du Unterstützung möchtest, etwa bei deinen Rollen, deiner Strategie oder mit einer Runde kritischer Fragen. Du kannst jederzeit „Ich weiß es nicht“ antworten."
+
 -- Value card sort
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T194927200"] = "Werte-Sortierung"
 
@@ -1526,12 +1538,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3258811
 
 -- Simulated participants
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3371128229"] = "Simulierte Teilnehmende"
-
--- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3499941356"] = "Lassen Sie das Lab das Gespräch eines Schritts beginnen, oder schreiben Sie zuerst und sagen Sie, wobei Sie Unterstützung möchten, etwa bei Ihrer Rolle, Ihrer Strategie oder mit einer Runde kritischer Fragen. Sie können jederzeit „Ich weiß es nicht“ antworten."
-
--- Let the lab start the conversation of a step, or write first and say what support you want, e.g., with your role, your strategy, or a round of critical questions. You can always say that you do not know.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3499941356::INFORMAL"] = "Lass das Lab das Gespräch eines Schritts beginnen, oder schreib zuerst und sag, wobei du Unterstützung möchtest, etwa bei deiner Rolle, deiner Strategie oder mit einer Runde kritischer Fragen. Du kannst jederzeit „Ich weiß es nicht“ antworten."
 
 -- How to proceed
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T3627201124"] = "So geht es"
@@ -1587,12 +1593,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036
 -- The research agents receive only the public details about the event, which the form marks with a symbol. Your other details, your material, your work states, and your conversations stay in your preparation and never reach a search. The conversations of the steps never search the web themselves: they only read web pages whose addresses stand in them, e.g., the link to the event.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T4196036922::INFORMAL"] = "Die Recherche-Agenten erhalten nur die öffentlichen Angaben zur Veranstaltung, die das Formular mit einem Symbol kennzeichnet. Deine übrigen Angaben, dein Material, deine Arbeitsstände und deine Gespräche bleiben in deiner Vorbereitung und erreichen nie eine Suche. Die Gespräche der Schritte suchen selbst nie im Web, sondern lesen nur Webseiten, deren Adressen darin stehen, z. B. den Link zur Veranstaltung."
 
--- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your role, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T551596393"] = "Das Lab ist ein Reflexions- und Trainingswerkzeug für Forschende und alle, die Wissenschaft kommunizieren. Es hilft Ihnen, einen herausfordernden öffentlichen Auftritt vorzubereiten, etwa einen Vortrag, eine Podiumsdiskussion, ein Interview oder eine Anhörung: nicht nur inhaltlich, sondern auch strategisch und ethisch. Sie klären Ihre Ziele und Ihre Rolle, machen wissenschaftliche Unsicherheiten und Wertannahmen sichtbar, reflektieren das Framing und üben den Umgang mit kritischen Fragen."
-
--- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your role, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T551596393::INFORMAL"] = "Das Lab ist ein Reflexions- und Trainingswerkzeug für Forschende und alle, die Wissenschaft kommunizieren. Es hilft dir, einen herausfordernden öffentlichen Auftritt vorzubereiten, etwa einen Vortrag, eine Podiumsdiskussion, ein Interview oder eine Anhörung: nicht nur inhaltlich, sondern auch strategisch und ethisch. Du klärst deine Ziele und deine Rolle, machst wissenschaftliche Unsicherheiten und Wertannahmen sichtbar, reflektierst das Framing und übst den Umgang mit kritischen Fragen."
-
 -- The strategy fits your real speaking time and focuses on a few key messages.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T571189717"] = "Die Strategie passt zu Ihrer realen Redezeit und beschränkt sich auf wenige Kernbotschaften."
 
@@ -1613,6 +1613,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T7801220
 
 -- The knowledge base of the lab is a guide on science in public debates by Lara Wüster from the Technical University of Munich (TUM).
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T799477590"] = "Die Wissensbasis des Labs ist ein Leitfaden von Lara Wüster von der Technischen Universität München (TUM) über Wissenschaft im öffentlichen Diskurs."
+
+-- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your roles, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T804216196"] = "Das Lab ist ein Reflexions- und Trainingswerkzeug für Forschende und alle, die Wissenschaft kommunizieren. Es hilft Ihnen, einen herausfordernden öffentlichen Auftritt vorzubereiten, etwa einen Vortrag, eine Podiumsdiskussion, ein Interview oder eine Anhörung: nicht nur inhaltlich, sondern auch strategisch und ethisch. Sie klären Ihre Ziele und Ihre Rollen, machen wissenschaftliche Unsicherheiten und Wertannahmen sichtbar, reflektieren das Framing und üben den Umgang mit kritischen Fragen."
+
+-- The lab is a tool for reflection and training for researchers and science communicators. It helps you prepare a challenging public appearance, such as a talk, a panel discussion, an interview, or a hearing: not only its content, but also its strategy and its ethics. You clarify your goals and your roles, make scientific uncertainties and assumptions about values visible, reflect on framing, and practice critical questions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLINTRODUCTION::T804216196::INFORMAL"] = "Das Lab ist ein Reflexions- und Trainingswerkzeug für Forschende und alle, die Wissenschaft kommunizieren. Es hilft dir, einen herausfordernden öffentlichen Auftritt vorzubereiten, etwa einen Vortrag, eine Podiumsdiskussion, ein Interview oder eine Anhörung: nicht nur inhaltlich, sondern auch strategisch und ethisch. Du klärst deine Ziele und deine Rollen, machst wissenschaftliche Unsicherheiten und Wertannahmen sichtbar, reflektierst das Framing und übst den Umgang mit kritischen Fragen."
 
 -- Image of {0} × {1} pixels, added on {2}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLMATERIALS::T1012777859"] = "Bild mit {0} × {1} Pixeln, hinzugefügt am {2}"
@@ -1880,6 +1886,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXT
 
 -- How the person argues in speeches, interviews, and discussions.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPERSONRESEARCHSTAGEEXTENSIONS::T851469643"] = "Wie die Person in Reden, Interviews und Diskussionen argumentiert."
+
+-- These files in the test folder replace no prompt of the lab, perhaps because a prompt has a new name in this version: {0}. In the options of the lab, 'Copy the built-in prompts into the test folder' adds each prompt under its current name. Move your changes there, and delete the old files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1477753864"] = "Diese Dateien im Testordner ersetzen keinen Prompt des Labs, vielleicht weil ein Prompt in dieser Version einen neuen Namen hat: {0}. In den Optionen des Labs legt „Mitgelieferte Prompts in den Testordner kopieren“ jeden Prompt unter seinem aktuellen Namen an. Übertragen Sie Ihre Änderungen dorthin und löschen Sie die alten Dateien."
+
+-- These files in the test folder replace no prompt of the lab, perhaps because a prompt has a new name in this version: {0}. In the options of the lab, 'Copy the built-in prompts into the test folder' adds each prompt under its current name. Move your changes there, and delete the old files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1477753864::INFORMAL"] = "Diese Dateien im Testordner ersetzen keinen Prompt des Labs, vielleicht weil ein Prompt in dieser Version einen neuen Namen hat: {0}. In den Optionen des Labs legt „Mitgelieferte Prompts in den Testordner kopieren“ jeden Prompt unter seinem aktuellen Namen an. Übertrage deine Änderungen dorthin und lösche die alten Dateien."
 
 -- The lab currently uses experimental instructions from its test folder. You can switch them off in the options of the lab.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLPROMPTOVERRIDENOTICE::T1719028521"] = "Das Lab verwendet derzeit experimentelle Anweisungen aus seinem Testordner. Sie können sie in den Optionen des Labs deaktivieren."
@@ -2664,6 +2676,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T11478
 -- Event details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T135387869"] = "Rahmendaten"
 
+-- What you want to achieve, and in which roles you speak.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1558326745"] = "Was Sie erreichen möchten und in welchen Rollen Sie sprechen."
+
+-- What you want to achieve, and in which roles you speak.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T1558326745::INFORMAL"] = "Was du erreichen möchtest und in welchen Rollen du sprichst."
+
 -- What the event is about, for whom, and what you were asked to contribute.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T158292580"] = "Worum es bei der Veranstaltung geht, für wen sie gedacht ist und was Sie beitragen sollen."
 
@@ -2682,20 +2700,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T26621
 -- How you convey evidence, trade-offs between values, and open questions. For a public event, the lab researches the event, its participants, and the public debate on the web for this step.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2662194618::INFORMAL"] = "Wie du Evidenz, Wertabwägungen und offene Fragen vermittelst. Bei einer öffentlichen Veranstaltung recherchiert das Lab für diesen Schritt im Web zur Veranstaltung, zu ihren Teilnehmenden und zur öffentlichen Debatte."
 
--- Goals and role
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T2988481290"] = "Ziele und Rolle"
-
 -- What matters to you, what touches you, and what moves others.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3022557767"] = "Was Ihnen wichtig ist, was Sie berührt und was andere bewegt."
 
 -- What matters to you, what touches you, and what moves others.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3022557767::INFORMAL"] = "Was dir wichtig ist, was dich berührt und was andere bewegt."
-
--- What you want to achieve, and in which role you speak.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3052319680"] = "Was Sie erreichen möchten und in welcher Rolle Sie sprechen."
-
--- What you want to achieve, and in which role you speak.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3052319680::INFORMAL"] = "Was du erreichen möchtest und in welcher Rolle du sprichst."
 
 -- Strategy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3205650756"] = "Strategie"
@@ -2708,6 +2717,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T35957
 
 -- Results and materials
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3602322182"] = "Ergebnisse und Materialien"
+
+-- Goals and roles
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T3797204859"] = "Ziele und Rollen"
 
 -- Values and perspectives
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLSTEPEXTENSIONS::T494574525"] = "Werte und Perspektiven"
@@ -2949,6 +2961,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATEPANEL::T77919
 -- Controversies in the field
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1036905365"] = "Kontroversen im Fach"
 
+-- Roles
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1048039038"] = "Rollen"
+
 -- Hardest questions and approaches to answers
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T1149889718"] = "Schwierigste Fragen und Antwortansätze"
 
@@ -2987,9 +3002,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS:
 
 -- Changed
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2311397435"] = "Verändert"
-
--- Role
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T2418769465"] = "Rolle"
 
 -- Value conflicts and trade-offs
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BEYONDFACTSLAB::BFLWORKSTATESECTIONTEXTS::T257229999"] = "Wertkonflikte und Abwägungen"
@@ -3162,6 +3174,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1696631610"] 
 -- (Optional) Output language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1821434787"] = "Ausgabesprache (optional)"
 
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1849229205"] = "Sonstiges"
+
 -- The installed assistant could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1889523922"] = "Der installierte Assistent konnte nicht geladen werden."
 
@@ -3333,8 +3348,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4004589285::I
 -- Assistant updated.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T40397082"] = "Assistent aktualisiert."
 
+-- Let the model choose
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4061595525"] = "Das Modell entscheiden lassen"
+
 -- Allow AI Studio profiles
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4155351992"] = "AI-Studio-Profile zulassen"
+
+-- Your organization disabled this category. Please choose another one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4162610995"] = "Ihre Organisation hat diese Kategorie deaktiviert. Bitte wählen Sie eine andere aus."
+
+-- Your organization disabled this category. Please choose another one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4162610995::INFORMAL"] = "Deine Organisation hat diese Kategorie deaktiviert. Bitte wähle eine andere aus."
 
 -- Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4185028924"] = "Problem: {0}"
@@ -3425,6 +3449,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::
 
 -- The model returned an empty JSON object.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2410202327"] = "Das Modell hat ein leeres JSON-Objekt zurückgegeben."
+
+-- The model's answer names a category AI Studio does not know, or a custom category without its name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2704199301"] = "Die Antwort des Modells nennt eine Kategorie, die AI Studio nicht kennt, oder eine eigene Kategorie ohne Namen."
 
 -- The model returned an unusable JSON response.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2967613975"] = "Das Modell hat eine unbrauchbare JSON-Antwort zurückgegeben."
@@ -5820,6 +5847,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIE
 -- Start your first task. You work on it with one of the two models first, and then with the other one. AI Studio chooses at random which model you meet first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2374282918::INFORMAL"] = "Beginne mit deiner ersten Aufgabe. Du bearbeitest sie zunächst mit einem der beiden Modelle und anschließend mit dem anderen. AI Studio wählt zufällig aus, mit welchem Modell du zuerst arbeitest."
 
+-- This conversation fills the context window of the model. Finish this chat with “I'm done with this model”, and test what is left in a new task.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2698070096"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beenden Sie diesen Chat mit „Ich bin mit diesem Modell fertig“, und testen Sie den Rest in einer neuen Aufgabe."
+
+-- This conversation fills the context window of the model. Finish this chat with “I'm done with this model”, and test what is left in a new task.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2698070096::INFORMAL"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Beende diesen Chat mit „Ich bin mit diesem Modell fertig“, und teste den Rest in einer neuen Aufgabe."
+
 -- I'm done with this model
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::MODELCOMPARISONSERIESVIEW::T2855215253"] = "Ich bin mit diesem Modell fertig"
 
@@ -7893,6 +7926,45 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T3768991250"] = "Benutzer"
 -- AI
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T601166687"] = "KI"
 
+-- Summary of the earlier conversation
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T1179725706"] = "Zusammenfassung des bisherigen Gesprächs"
+
+-- Your last message in that chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T1936713585"] = "Ihre letzte Nachricht im ursprünglichen Chat"
+
+-- Your last message in that chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T1936713585::INFORMAL"] = "Deine letzte Nachricht im ursprünglichen Chat"
+
+-- This chat continues the conversation of that chat, which stays as it was. The summary describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2073462419"] = "Dieser Chat setzt das Gespräch des ursprünglichen Chats fort, der unverändert bleibt. Die Zusammenfassung beschreibt die dort angehängten Dateien. Die Dateien Ihrer letzten Nachricht bleiben an ihr angehängt; hängen Sie jede andere Datei erneut an, wenn die KI ihren vollständigen Inhalt benötigt."
+
+-- This chat continues the conversation of that chat, which stays as it was. The summary describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2073462419::INFORMAL"] = "Dieser Chat setzt das Gespräch des ursprünglichen Chats fort, der unverändert bleibt. Die Zusammenfassung beschreibt die dort angehängten Dateien. Die Dateien deiner letzten Nachricht bleiben an ihr angehängt; hänge jede andere Datei erneut an, wenn die KI ihren vollständigen Inhalt benötigt."
+
+-- {0} (continued {1})
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2105192574"] = "{0} (Fortsetzung {1})"
+
+-- {0} (continued)
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2398522711"] = "{0} (Fortsetzung)"
+
+-- Your last message
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2505774357"] = "Ihre letzte Nachricht"
+
+-- Your last message
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T2505774357::INFORMAL"] = "Deine letzte Nachricht"
+
+-- Unnamed chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T3310482275"] = "Unbenannter Chat"
+
+-- The summary takes the place of the earlier messages of this conversation and describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T3611731843"] = "Die Zusammenfassung ersetzt die bisherigen Nachrichten dieses Gesprächs und beschreibt die dort angehängten Dateien. Die Dateien Ihrer letzten Nachricht bleiben an ihr angehängt; hängen Sie jede andere Datei erneut an, wenn die KI ihren vollständigen Inhalt benötigt."
+
+-- The summary takes the place of the earlier messages of this conversation and describes the files attached there. The files of your last message stay attached to it; attach any other file again when the AI needs its full content.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T3611731843::INFORMAL"] = "Die Zusammenfassung ersetzt die bisherigen Nachrichten dieses Gesprächs und beschreibt die dort angehängten Dateien. Die Dateien deiner letzten Nachricht bleiben an ihr angehängt; hänge jede andere Datei erneut an, wenn die KI ihren vollständigen Inhalt benötigt."
+
+-- Summary of the chat '{0}'
+UI_TEXT_CONTENT["AISTUDIO::CHAT::COMPRESSION::CHATCOMPRESSION::T3701997113"] = "Zusammenfassung des Chats „{0}“"
+
 -- Edit Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1183581066"] = "Nachricht bearbeiten"
 
@@ -7959,11 +8031,17 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2093355991"] = "Entfern
 -- Regenerate Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2308444540"] = "Nachricht neu generieren"
 
+-- Processing the prompt...
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2462832453"] = "Prompt wird verarbeitet …"
+
 -- Failed to export this message, because the file format '{0}' is unknown.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2544592344"] = "Diese Nachricht konnte nicht exportiert werden, da das Dateiformat „{0}“ unbekannt ist."
 
 -- Arguments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2738624831"] = "Argumente"
+
+-- The model is thinking...
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2807374097"] = "Das Modell denkt nach …"
 
 -- Save as {0}
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2814713106"] = "Als {0} speichern"
@@ -8129,6 +8207,42 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3571008422::INFORMAL"] =
 
 -- The result is ready.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "Das Ergebnis ist fertig."
+
+-- Expand this category
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T1750778093"] = "Diese Kategorie ausklappen"
+
+-- The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2720183235"] = "Die Seite „Assistenten“ zeigt diese Kategorie künftig nicht mehr an. Außerdem behandelt AI Studio die zugehörigen Assistenten so, als wären sie nicht vorhanden; sie erscheinen z. B. nicht im Menü „Senden an …“."
+
+-- The assistants page will no longer show this category, and AI Studio will treat its assistants as if they did not exist, e.g., they will not appear in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2720183235::INFORMAL"] = "Die Seite „Assistenten“ zeigt diese Kategorie künftig nicht mehr an. Außerdem behandelt AI Studio die zugehörigen Assistenten so, als wären sie nicht vorhanden; sie erscheinen z. B. nicht im Menü „Senden an …“."
+
+-- The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2725056496"] = "Die Seite „Assistenten“ zeigt diese Kategorie künftig nicht mehr an. AI Studio bietet die zugehörigen Assistenten weiterhin an anderer Stelle an, z. B. im Menü „Senden an …“."
+
+-- The assistants page will no longer show this category. AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2725056496::INFORMAL"] = "Die Seite „Assistenten“ zeigt diese Kategorie künftig nicht mehr an. AI Studio bietet die zugehörigen Assistenten weiterhin an anderer Stelle an, z. B. im Menü „Senden an …“."
+
+-- You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2970234687"] = "Sie können die Kategorie jederzeit in den Assistenten-Einstellungen wieder einblenden. Diese öffnen Sie über das Zahnradsymbol neben der Seitenüberschrift."
+
+-- You can show the category again at any time in the assistant settings, which the gear next to the heading of the page opens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T2970234687::INFORMAL"] = "Du kannst die Kategorie jederzeit in den Assistenten-Einstellungen wieder einblenden. Diese öffnest du über das Zahnradsymbol neben der Seitenüberschrift."
+
+-- Hide the category '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T3025364089"] = "Kategorie „{0}“ ausblenden?"
+
+-- Hide this category
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T3438455681"] = "Diese Kategorie ausblenden"
+
+-- If you only want a better overview, click the heading of the category instead: that collapses it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T815674974"] = "Wenn Sie nur einen besseren Überblick möchten, klicken Sie stattdessen auf die Überschrift der Kategorie: Das klappt sie ein."
+
+-- If you only want a better overview, click the heading of the category instead: that collapses it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T815674974::INFORMAL"] = "Wenn du nur einen besseren Überblick möchtest, klicke stattdessen auf die Überschrift der Kategorie: Das klappt sie ein."
+
+-- Collapse this category
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTCATEGORYHEADER::T941766518"] = "Diese Kategorie einklappen"
 
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Detaillierte Sicherheitsinformationen anzeigen oder ausblenden."
@@ -8328,6 +8442,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1133040906"] = "Chat vers
 -- Bold
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1165397398"] = "Fett"
 
+-- Compressing a chat needs a model with a context window of at least {0} tokens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1284276020"] = "Das Komprimieren eines Chats erfordert ein Modell mit einem Kontextfenster von mindestens {0} Token."
+
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Generierung stoppen"
 
@@ -8357,6 +8474,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1967611328"] = "Ihr Promp
 
 -- Your Prompt (use selected instance '{0}', provider '{1}')
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1967611328::INFORMAL"] = "Dein Prompt (verwendete Instanz: „{0}“, Anbieter: „{1}“)"
+
+-- The new chat could not be created. This chat stays as it is.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1977579570"] = "Der neue Chat konnte nicht erstellt werden. Dieser Chat bleibt unverändert."
 
 -- approx. {0} of {1} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1992478915"] = "ca. {0} von {1} Token"
@@ -8394,6 +8514,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472::INFORMAL"] = 
 -- The selected provider is not allowed in this chat due to data security or confidence-level requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2672162875"] = "Der ausgewählte Anbieter ist in diesem Chat aufgrund der Datensicherheit oder der Anforderungen an das Vertrauensniveau nicht zulässig."
 
+-- Compress this chat & switch to a new chat with its summary.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2829016817"] = "Diesen Chat komprimieren & mit seiner Zusammenfassung in einen neuen Chat wechseln."
+
 -- Show the complete system prompt the AI receives
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2931983492"] = "Den vollständigen System-Prompt anzeigen, den die KI erhält"
 
@@ -8408,6 +8531,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3045856778"] = "Chat in d
 
 -- {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3244065777"] = "{0} Token"
+
+-- Compress this chat: its summary takes the place of the earlier messages.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3531933503"] = "Diesen Chat komprimieren: Seine Zusammenfassung ersetzt die bisherigen Nachrichten."
+
+-- Compress Chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3544398473"] = "Chat komprimieren"
 
 -- plus {0} image(s), which cannot be counted
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3619858297"] = "zuzüglich {0} Bild(er), die nicht gezählt werden können"
@@ -8427,11 +8556,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3682097866"] = "Änderung
 -- Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3682097866::INFORMAL"] = "Änderungen an den Datenquellen sind gesperrt, solange eine Antwort generiert wird. Deine aktuelle Auswahl wird unten angezeigt und gilt ab der nächsten Nachricht wieder, sobald der Vorgang abgeschlossen ist."
 
+-- This chat changed while the AI wrote its summary, so AI Studio did not compress it. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3869793460"] = "Dieser Chat hat sich geändert, während die KI seine Zusammenfassung geschrieben hat, deshalb hat AI Studio ihn nicht komprimiert. Bitte versuchen Sie es erneut."
+
+-- This chat changed while the AI wrote its summary, so AI Studio did not compress it. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3869793460::INFORMAL"] = "Dieser Chat hat sich geändert, während die KI seine Zusammenfassung geschrieben hat, deshalb hat AI Studio ihn nicht komprimiert. Bitte versuche es erneut."
+
 -- Start new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Neuen Chat im Arbeitsbereich „{0}“ starten"
 
 -- {0} of {1} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3996190985"] = "{0} von {1} Token"
+
+-- There is nothing to summarize yet before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4072384721"] = "Vor Ihrer letzten Nachricht und der letzten Antwort der KI gibt es noch nichts zusammenzufassen."
+
+-- There is nothing to summarize yet before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4072384721::INFORMAL"] = "Vor deiner letzten Nachricht und der letzten Antwort der KI gibt es noch nichts zusammenzufassen."
 
 -- Start temporary chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Neuen selbstlöschenden Chat starten"
@@ -8462,6 +8603,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Arbeitsber
 
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375::INFORMAL"] = "Arbeitsbereiche anzeigen"
+
+-- This chat could not be saved, so AI Studio did not compress it. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T831965343"] = "Dieser Chat konnte nicht gespeichert werden, deshalb hat AI Studio ihn nicht komprimiert. Bitte versuchen Sie es erneut."
+
+-- This chat could not be saved, so AI Studio did not compress it. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T831965343::INFORMAL"] = "Dieser Chat konnte nicht gespeichert werden, deshalb hat AI Studio ihn nicht komprimiert. Bitte versuche es erneut."
 
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T857715435"] = "ca. {0} Token"
@@ -8600,6 +8747,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T95098799"] = "
 
 -- You have selected 1 item.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T95098799::INFORMAL"] = "Du hast 1 Element ausgewählt."
+
+-- No pause
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPAUSERANGE::T1202649384"] = "Keine Pause"
+
+-- {0} seconds
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPAUSERANGE::T2586010064"] = "{0} Sekunden"
+
+-- {0} to {1} seconds
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPAUSERANGE::T4176272400"] = "{0} bis {1} Sekunden"
 
 -- Preselected provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T1469984996"] = "Vorausgewählter Anbieter"
@@ -9084,9 +9240,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1084943026::INFORM
 -- Automatic local data source refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1208397349"] = "Automatische Aktualisierung lokaler Datenquellen"
 
--- Shortest pause between indexing steps
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1308136668"] = "Kürzeste Pause zwischen den Etappen der Indexierung"
-
 -- Refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T135637716"] = "Aktualisieren"
 
@@ -9108,12 +9261,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1592527757"] = "Di
 -- External (ERI)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1652430727"] = "Extern (ERI)"
 
--- Longest pause between indexing steps
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1654263778"] = "Längste Pause zwischen den Etappen der Indexierung"
-
--- seconds
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1723256298"] = "Sekunden"
-
 -- Delete Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1849107431"] = "Datenquelle löschen"
 
@@ -9123,14 +9270,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2067030738"] = "M�
 -- Are you sure you want to delete the mailbox '{0}'? Your mails stay on the server as they are. AI Studio only deletes its index of them and the stored password.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2067030738::INFORMAL"] = "Möchtest du das Postfach „{0}“ wirklich löschen? Deine E-Mails bleiben unverändert auf dem Server. AI Studio löscht lediglich den dazugehörigen Index und das gespeicherte Passwort."
 
+-- AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time within this range, at most 300 seconds (5 minutes). This spares an embedding server which many people share, for example in your organization. Move both ends to 0 seconds for no pause.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2111903307"] = "AI Studio indexiert große Datenquellen in Etappen von wenigen Minuten. Zwischen zwei Etappen wartet AI Studio eine zufällige Zeit innerhalb dieses Bereichs, höchstens 300 Sekunden (5 Minuten). Das entlastet einen Einbettungsserver, den sich viele Nutzer teilen, zum Beispiel in Ihrer Organisation. Stellen Sie beide Werte auf 0 Sekunden, wenn keine Pause eingelegt werden soll."
+
+-- AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time within this range, at most 300 seconds (5 minutes). This spares an embedding server which many people share, for example in your organization. Move both ends to 0 seconds for no pause.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2111903307::INFORMAL"] = "AI Studio indexiert große Datenquellen in Etappen von wenigen Minuten. Zwischen zwei Etappen wartet AI Studio eine zufällige Zeit innerhalb dieses Bereichs, höchstens 300 Sekunden (5 Minuten). Das entlastet einen Einbettungsserver, den sich viele Nutzer teilen, zum Beispiel in deiner Organisation. Stell beide Werte auf 0 Sekunden, wenn keine Pause eingelegt werden soll."
+
 -- Local Directory Data Source Information
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2146756020"] = "Informationen zur lokalen Ordner-Datenquelle"
-
--- AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time between the shortest and the longest pause. This spares an embedding server which many people share, for example in your organization. Leave both at 0 seconds for no pause.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2352821039"] = "AI Studio indexiert große Datenquellen in Etappen von wenigen Minuten. Zwischen zwei Etappen wartet AI Studio eine zufällige Zeit, die zwischen der kürzesten und der längsten Pause liegt. Das entlastet einen Einbettungsserver, den sich viele Nutzer teilen, zum Beispiel in Ihrer Organisation. Lassen Sie beide Werte auf 0 Sekunden, wenn keine Pause eingelegt werden soll."
-
--- AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time between the shortest and the longest pause. This spares an embedding server which many people share, for example in your organization. Leave both at 0 seconds for no pause.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2352821039::INFORMAL"] = "AI Studio indexiert große Datenquellen in Etappen von wenigen Minuten. Zwischen zwei Etappen wartet AI Studio eine zufällige Zeit, die zwischen der kürzesten und der längsten Pause liegt. Das entlastet einen Einbettungsserver, den sich viele Nutzer teilen, zum Beispiel in deiner Organisation. Lass beide Werte auf 0 Sekunden, wenn keine Pause eingelegt werden soll."
 
 -- Local data sources refresh when files change, mailboxes every 16 minutes.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2511157475"] = "Lokale Datenquellen werden aktualisiert, wenn sich Dateien ändern, Postfächer alle 16 Minuten."
@@ -9186,9 +9333,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3337072977"] = "M�
 -- Are you sure you want to delete the data source '{0}' of type '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3337072977::INFORMAL"] = "Möchtest du die Datenquelle „{0}“ vom Typ „{1}“ wirklich löschen?"
 
--- The upper end of the random pause between two indexing steps. AI Studio allows up to 300 seconds (5 minutes).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3401303590"] = "Das obere Ende der zufälligen Pause zwischen zwei Etappen der Indexierung. AI Studio erlaubt bis zu 300 Sekunden (5 Minuten)."
-
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3424652889"] = "Unbekannt"
 
@@ -9205,7 +9349,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3525663993"] = "In
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3549650120"] = "Noch keine Datenquellen konfiguriert."
 
 -- Export Access Token?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3595669127"] = "Zugriffstoken exportieren?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3595669127"] = "Zugangstoken exportieren?"
 
 -- Local data sources refresh when files change.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3687976654"] = "Lokale Datenquellen werden aktualisiert, wenn sich Dateien ändern."
@@ -9220,16 +9364,19 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3831281036"] = "ER
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3865031940"] = "Aktionen"
 
 -- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4027572258"] = "Für diese ERI-Datenquelle ist ein Zugriffstoken konfiguriert. Möchten Sie das verschlüsselte Zugriffstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugriffstoken verwenden zu können."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4027572258"] = "Für diese ERI-Datenquelle ist ein Zugangstoken konfiguriert. Möchten Sie das verschlüsselte Zugangstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugangstoken verwenden zu können."
 
 -- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4027572258::INFORMAL"] = "Für diese ERI-Datenquelle ist ein Zugriffstoken konfiguriert. Möchtest du das verschlüsselte Zugriffstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugriffstoken verwenden zu können."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4027572258::INFORMAL"] = "Für diese ERI-Datenquelle ist ein Zugangstoken konfiguriert. Möchtest du das verschlüsselte Zugangstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugangstoken verwenden zu können."
 
 -- Waiting for indexing status
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4108252513"] = "Warten auf Indexierungsstatus"
 
 -- Information
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4256323669"] = "Information"
+
+-- Pause between indexing steps
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4289321676"] = "Pause zwischen den Etappen der Indexierung"
 
 -- Cannot export this ERI data source because no enterprise encryption secret is configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T750361472"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Geheimnis für die Verschlüsselung des Unternehmens konfiguriert ist."
@@ -9438,6 +9585,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTIONROW::T4047623216"] = "
 -- The index of this data source cannot be read anymore. Open your data source settings with the gear icon above, then use the repair action there.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTIONROW::T4047623216::INFORMAL"] = "Der Index dieser Datenquelle kann nicht mehr gelesen werden. Öffne die Einstellungen deiner Datenquelle über das Zahnradsymbol oben und führe dort die Reparaturaktion aus."
 
+-- Settings of chat compression
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIALOGTITLEWITHCHATCOMPRESSIONSETTINGS::T1424138911"] = "Einstellungen zum Komprimieren von Chats"
+
 -- Tools (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1019749907"] = "Werkzeuge (optional)"
 
@@ -9528,6 +9678,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1266644741"] = "Stoppen"
 -- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1561705002"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert."
 
+-- AI Studio could not save the compressed conversation, so it stays as it was. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1684892713"] = "AI Studio konnte das komprimierte Gespräch nicht speichern, daher bleibt es unverändert. Bitte versuchen Sie es erneut."
+
+-- AI Studio could not save the compressed conversation, so it stays as it was. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1684892713::INFORMAL"] = "AI Studio konnte das komprimierte Gespräch nicht speichern, daher bleibt es unverändert. Bitte versuche es erneut."
+
 -- approx. {0} of {1} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T1992478915"] = "ca. {0} von {1} Token"
 
@@ -9536,6 +9692,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982"] = "Dieses Ges
 
 -- Delete this conversation and start it over?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2055072982::INFORMAL"] = "Dieses Gespräch löschen und neu beginnen?"
+
+-- Compress Conversation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2060420344"] = "Gespräch komprimieren"
 
 -- Start the conversation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2172806379"] = "Gespräch beginnen"
@@ -9549,8 +9708,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281"] = "AI Studio 
 -- AI Studio cannot open this conversation. Its file may be damaged, or a newer version of AI Studio stored it. You can start the conversation over, which deletes it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T2927156281::INFORMAL"] = "AI Studio kann dieses Gespräch nicht öffnen. Die Datei ist möglicherweise beschädigt oder wurde mit einer neueren Version von AI Studio gespeichert. Du kannst das Gespräch neu beginnen; dabei wird es gelöscht."
 
+-- This conversation fills most of the context window of the model. Once it is nearly full, AI Studio offers to compress it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3215841322"] = "Dieses Gespräch füllt den größten Teil des Kontextfensters des Modells. Sobald es fast voll ist, bietet AI Studio an, es zu komprimieren."
+
 -- approx. {0} tokens; the context window of this model is unknown
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T357466604"] = "ca. {0} Token; das Kontextfenster dieses Modells ist unbekannt"
+
+-- Together with this conversation, your message no longer fits into the context window of the model. Shorten your message, or remove some of its files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3592945789"] = "Zusammen mit diesem Gespräch passt Ihre Nachricht nicht mehr in das Kontextfenster des Modells. Kürzen Sie Ihre Nachricht, oder entfernen Sie einige ihrer Dateien."
+
+-- Together with this conversation, your message no longer fits into the context window of the model. Shorten your message, or remove some of its files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3592945789::INFORMAL"] = "Zusammen mit diesem Gespräch passt deine Nachricht nicht mehr in das Kontextfenster des Modells. Kürze deine Nachricht, oder entferne einige ihrer Dateien."
 
 -- Your message
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3642105949"] = "Ihre Nachricht"
@@ -9567,6 +9735,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3757008686::INFORMAL"] = "
 -- {0} of {1} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T3996190985"] = "{0} von {1} Token"
 
+-- This conversation fills the context window of the model. When you send your next message, AI Studio offers to compress the conversation.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4002070413"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Wenn Sie Ihre nächste Nachricht senden, bietet AI Studio an, das Gespräch zu komprimieren."
+
+-- This conversation fills the context window of the model. When you send your next message, AI Studio offers to compress the conversation.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4002070413::INFORMAL"] = "Dieses Gespräch füllt das Kontextfenster des Modells. Wenn du deine nächste Nachricht sendest, bietet AI Studio an, das Gespräch zu komprimieren."
+
 -- Send
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4069397711"] = "Senden"
 
@@ -9575,6 +9749,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T4195068513"] = "Dieses Ges
 
 -- Start over
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T606705767"] = "Neu beginnen"
+
+-- The conversation was not compressed, because the AI answered meanwhile.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T659616282"] = "Das Gespräch wurde nicht komprimiert, da die KI inzwischen geantwortet hat."
 
 -- approx. {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::EMBEDDEDCHAT::T857715435"] = "ca. {0} Token"
@@ -9620,6 +9797,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268"] = "Datei in de
 
 -- Open the file in the program your system uses for it
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T4218155268::INFORMAL"] = "Datei in dem Programm öffnen, das dein System dafür verwendet"
+
+-- Open the file. As a Flatpak, AI Studio cannot open it at page {0}, where the passage is.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEACTIONS::T755778778"] = "Datei öffnen. Als Flatpak kann AI Studio sie nicht auf Seite {0} öffnen, wo die Textstelle steht."
 
 -- Exclusion help and examples
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T1309128010"] = "Hilfe und Beispiele zu Ausschlussregeln"
@@ -10048,19 +10228,19 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3980535867::INFORMAL"] 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T853724151"] = "Datei „{0}“ angehängt."
 
 -- The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen des Agenten zur Inhaltsbereinigung. Bitte wählen Sie ein anderes Modell aus oder konfigurieren Sie ein geeignetes Modell in den App-Einstellungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen der Inhaltsbereinigung. Bitte wählen Sie ein anderes Modell aus oder konfigurieren Sie ein geeignetes Modell in den App-Einstellungen."
 
 -- The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446::INFORMAL"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen des Agenten zur Inhaltsbereinigung. Bitte wähle ein anderes Modell aus oder konfiguriere ein geeignetes Modell in den App-Einstellungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446::INFORMAL"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen der Inhaltsbereinigung. Bitte wähle ein anderes Modell aus oder konfiguriere ein geeignetes Modell in den App-Einstellungen."
 
 -- The content cleaner uses the model of this assistant. Please select one below.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613"] = "Der Agent zur Inhaltsbereinigung verwendet das Modell dieses Assistenten. Bitte wählen Sie unten eines aus."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613"] = "Die Inhaltsbereinigung verwendet das Modell dieses Assistenten. Bitte wählen Sie unten eines aus."
 
 -- The content cleaner uses the model of this assistant. Please select one below.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613::INFORMAL"] = "Der Agent zur Inhaltsbereinigung verwendet das Modell dieses Assistenten. Bitte wähle unten eines aus."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613::INFORMAL"] = "Die Inhaltsbereinigung verwendet das Modell dieses Assistenten. Bitte wähle unten eines aus."
 
--- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "Der Inhalt wird mithilfe eines LLM-Agenten bereinigt: Der Hauptinhalt wird extrahiert, Werbung und andere irrelevante Elemente werden nach Möglichkeit entfernt. Relative Links werden nach Möglichkeit in absolute Links umgewandelt, damit sie verwendet werden können."
+-- The content was loaded, but not cleaned: the model of the content cleaner gave no answer.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1189712796"] = "Der Inhalt wurde geladen, aber nicht bereinigt: Das Modell der Inhaltsbereinigung hat keine Antwort gegeben."
 
 -- Fetch
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1396322691"] = "Abrufen"
@@ -10071,11 +10251,20 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2235427807"] = "Bitte ge
 -- Please provide a URL to load the content from.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2235427807::INFORMAL"] = "Bitte gib eine URL an, von der der Inhalt geladen werden soll."
 
+-- Your organization does not allow the selected model. Please select another model, or configure an eligible one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2247340324"] = "Ihre Organisation erlaubt das ausgewählte Modell nicht. Bitte wählen Sie ein anderes Modell aus oder konfigurieren Sie in den App-Einstellungen ein zugelassenes Modell."
+
+-- Your organization does not allow the selected model. Please select another model, or configure an eligible one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2247340324::INFORMAL"] = "Deine Organisation erlaubt das ausgewählte Modell nicht. Bitte wähle ein anderes Modell aus oder konfiguriere in den App-Einstellungen ein zugelassenes Modell."
+
 -- Loads the content from your URL. Does not work when the content is hidden behind a paywall.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2672192696"] = "Lädt den Inhalt von der übergebenen URL. Funktioniert nicht, wenn der Inhalt hinter einer Paywall verborgen ist."
 
 -- Loads the content from your URL. Does not work when the content is hidden behind a paywall.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2672192696::INFORMAL"] = "Lädt den Inhalt von der übergebenen URL. Funktioniert nicht, wenn der Inhalt hinter einer Paywall verborgen ist."
+
+-- The text content cleaner, an AI task, extracts the main content, tries to remove advertisements and other clutter, and tries to turn relative links into absolute ones, so that they work.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2765793850"] = "Die Inhaltsbereinigung, eine KI-Aufgabe, extrahiert den Hauptinhalt und versucht, Werbung und andere störende Elemente zu entfernen sowie relative Links in absolute umzuwandeln, damit sie funktionieren."
 
 -- URL from which to load the content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2883163022"] = "URL, von der der Inhalt geladen werden soll"
@@ -10095,6 +10284,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T307442288"] = "Bitte geb
 -- Please provide a valid HTTP or HTTPS URL.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T307442288::INFORMAL"] = "Bitte gib eine gültige HTTP- oder HTTPS-URL ein."
 
+-- Clean up the content with AI?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3375295820"] = "Inhalte mit KI bereinigen?"
+
 -- No content cleaning
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3588401674"] = "Keine Inhaltsbereinigung"
 
@@ -10104,14 +10296,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3825586228"] = "Bitte ge
 -- Please provide a valid URL.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3825586228::INFORMAL"] = "Bitte gib eine gültige URL ein."
 
--- Clean up content by using an LLM agent?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T4057255553"] = "Inhalte mit einem LLM-Agenten bereinigen?"
-
 -- Show web content options
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T4249712357"] = "Optionen für Webinhalte anzeigen"
 
 -- The content was loaded, but not cleaned: no model is available for the content cleaner.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T903778235"] = "Der Inhalt wurde geladen, aber nicht bereinigt: Für den Agenten zur Inhaltsbereinigung ist kein Modell verfügbar."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T903778235"] = "Der Inhalt wurde geladen, aber nicht bereinigt: Für die Inhaltsbereinigung ist kein Modell verfügbar."
 
 -- Loading
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENTSTEPSEXTENSIONS::T1404011351"] = "Laden"
@@ -10155,155 +10344,224 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T1984243691::INFORMAL"] = "Du
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Datei auswählen"
 
+-- When a chat grows too long for the context window of its model, AI Studio can compress it: a model summarizes the earlier messages, and the conversation continues with the summary. Every further message then costs fewer tokens.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T119443187"] = "Wenn ein Chat für das Kontextfenster seines Modells zu lang wird, kann AI Studio ihn komprimieren: Ein Modell fasst die bisherigen Nachrichten zusammen, und das Gespräch geht mit der Zusammenfassung weiter. Jede weitere Nachricht kostet dann weniger Token."
+
+-- Fill level of the context window from which AI Studio steps in
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T1307407764"] = "Füllstand des Kontextfensters, ab dem AI Studio eingreift"
+
+-- Assistants cannot compress their request: they ask you, unless you choose to send without asking. The BeyondFacts Lab and chats without workspaces always replace the earlier messages, since they cannot continue in a new chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T2718755276"] = "Assistenten können ihre Anfrage nicht komprimieren: Dort fragt AI Studio nach, außer Sie wählen das Senden ohne Rückfrage. Das BeyondFacts Lab und Chats ohne Arbeitsbereiche ersetzen immer die bisherigen Nachrichten, da sie nicht in einem neuen Chat weitergehen können."
+
+-- Assistants cannot compress their request: they ask you, unless you choose to send without asking. The BeyondFacts Lab and chats without workspaces always replace the earlier messages, since they cannot continue in a new chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T2718755276::INFORMAL"] = "Assistenten können ihre Anfrage nicht komprimieren: Dort fragt AI Studio nach, außer du wählst das Senden ohne Rückfrage. Das BeyondFacts Lab und Chats ohne Arbeitsbereiche ersetzen immer die bisherigen Nachrichten, da sie nicht in einem neuen Chat weitergehen können."
+
+-- What should happen when a chat grows too long for the context window?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T3259990225"] = "Was soll passieren, wenn ein Chat zu lang für das Kontextfenster wird?"
+
+-- Optionally choose a model for writing summaries, e.g., one with a large context window, which summarizes long chats in fewer steps. When it may not see a chat, e.g., because of the data sources of the chat, the model of the chat writes the summary.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T3280846698"] = "Optional können Sie ein Modell wählen, das die Zusammenfassungen schreibt, z. B. eines mit großem Kontextfenster, das lange Chats in weniger Schritten zusammenfasst. Darf es einen Chat nicht sehen, z. B. wegen der Datenquellen des Chats, schreibt das Modell des Chats die Zusammenfassung."
+
+-- Optionally choose a model for writing summaries, e.g., one with a large context window, which summarizes long chats in fewer steps. When it may not see a chat, e.g., because of the data sources of the chat, the model of the chat writes the summary.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T3280846698::INFORMAL"] = "Optional kannst du ein Modell wählen, das die Zusammenfassungen schreibt, z. B. eines mit großem Kontextfenster, das lange Chats in weniger Schritten zusammenfasst. Darf es einen Chat nicht sehen, z. B. wegen der Datenquellen des Chats, schreibt das Modell des Chats die Zusammenfassung."
+
+-- Longest summary
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T3372961161"] = "Höchstlänge der Zusammenfassung"
+
+-- Use the model of the chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T3435835378"] = "Modell des Chats verwenden"
+
+-- Compressing starts with this focus, and in the dialog, you can still change it. For example: the decisions about the budget, with all figures.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T3548434919"] = "Das Komprimieren beginnt mit diesem Schwerpunkt, und im Dialog können Sie ihn noch ändern. Zum Beispiel: die Entscheidungen zum Budget, mit allen Zahlen."
+
+-- Compressing starts with this focus, and in the dialog, you can still change it. For example: the decisions about the budget, with all figures.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T3548434919::INFORMAL"] = "Das Komprimieren beginnt mit diesem Schwerpunkt, und im Dialog kannst du ihn noch ändern. Zum Beispiel: die Entscheidungen zum Budget, mit allen Zahlen."
+
+-- tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T4243309651"] = "Token"
+
+-- Before sending a message, AI Studio checks how full the context window of the model would be. From this share on, it does what you chose above. A lower share keeps more room for long answers.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T556089934"] = "Bevor AI Studio eine Nachricht sendet, prüft es, wie voll das Kontextfenster des Modells damit wäre. Ab diesem Anteil tut AI Studio, was Sie oben gewählt haben. Ein niedrigerer Anteil lässt mehr Platz für lange Antworten."
+
+-- Before sending a message, AI Studio checks how full the context window of the model would be. From this share on, it does what you chose above. A lower share keeps more room for long answers.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T556089934::INFORMAL"] = "Bevor AI Studio eine Nachricht sendet, prüft es, wie voll das Kontextfenster des Modells damit wäre. Ab diesem Anteil tut AI Studio, was du oben gewählt hast. Ein niedrigerer Anteil lässt mehr Platz für lange Antworten."
+
+-- Preselect what the summary should pay particular attention to
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T732621014"] = "Schwerpunkt der Zusammenfassung vorauswählen"
+
+-- A summary takes at most a quarter of the context window, and never more than this. A longer summary keeps more details, but leaves less room for the rest of the conversation.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::CHATCOMPRESSIONSETTINGS::T746033922"] = "Eine Zusammenfassung nimmt höchstens ein Viertel des Kontextfensters ein und nie mehr als diesen Wert. Eine längere Zusammenfassung behält mehr Einzelheiten, lässt aber weniger Platz für den Rest des Gesprächs."
+
 -- External Assistants rated below this audit level are treated as insufficiently reviewed.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "Externe Assistenten, die unterhalb dieser Audit-Stufe bewertet werden, gelten als nicht ausreichend geprüft."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1162151451"] = "Externe Assistenten, die unterhalb dieser Audit-Stufe bewertet werden, gelten als nicht ausreichend geprüft."
+
+-- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio uses the app-wide default provider, or else the model you choose when auditing.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1707650617"] = "Optional können Sie einen eigenen Anbieter für die Prüfung von Assistenten-Plugins auswählen. Bleibt das Feld leer, verwendet AI Studio den appweiten Standardanbieter und sonst das Modell, das Sie bei der Prüfung auswählen."
+
+-- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio uses the app-wide default provider, or else the model you choose when auditing.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1707650617::INFORMAL"] = "Optional kannst du einen eigenen Anbieter für die Prüfung von Assistenten-Plugins auswählen. Bleibt das Feld leer, verwendet AI Studio den appweiten Standardanbieter und sonst das Modell, das du bei der Prüfung auswählst."
 
 -- Users may still activate plugins below the minimum Audit-Level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1840342259"] = "Nutzer können Assistenten unterhalb der Mindest-Audit-Stufe weiterhin aktivieren."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1840342259"] = "Nutzer können Assistenten unterhalb der Mindest-Audit-Stufe weiterhin aktivieren."
 
 -- Automatically audit new or updated plugins in the background?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1843401860"] = "Neue oder aktualisierte Plugins automatisch im Hintergrund prüfen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T1843401860"] = "Neue oder aktualisierte Plugins automatisch im Hintergrund prüfen?"
 
 -- Require a security audit before activating external Assistants?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2010360320"] = "Vor dem Aktivieren externer Assistenten ein Sicherheitsaudit verlangen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2010360320"] = "Vor dem Aktivieren externer Assistenten ein Sicherheitsaudit verlangen?"
 
 -- External Assistants must be audited before activation
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2065972970"] = "Externe Assistenten müssen vor der Aktivierung geprüft werden."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2065972970"] = "Externe Assistenten müssen vor der Aktivierung geprüft werden."
+
+-- Before external assistants are activated, a model audits newly installed or updated ones for security risks. AI Studio keeps the latest audit card until the plugin manifest changes.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2081939459"] = "Bevor externe Assistenten aktiviert werden, prüft ein Modell neu installierte oder aktualisierte Assistenten auf Sicherheitsrisiken. AI Studio speichert die neueste Audit-Karte, bis sich das Plugin-Manifest ändert."
+
+-- AI Task: Security Audit for external Assistants
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2200966468"] = "KI-Aufgabe: Sicherheitsprüfung für externe Assistenten"
 
 -- Block activation below the minimum Audit-Level?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T232834129"] = "Aktivierung unterhalb der Mindest-Audit-Stufe blockieren?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T232834129"] = "Aktivierung unterhalb der Mindest-Audit-Stufe blockieren?"
 
 -- Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2516645821"] = "Wenn Sie diese Einstellung deaktivieren, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Prüfung oder nach Änderungen an Plugins aktiviert und verwendet werden. Möchten Sie diesen Schutz wirklich deaktivieren?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2516645821"] = "Wenn Sie diese Einstellung deaktivieren, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Prüfung oder nach Änderungen an Plugins aktiviert und verwendet werden. Möchten Sie diesen Schutz wirklich deaktivieren?"
 
 -- Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2516645821::INFORMAL"] = "Wenn du diese Einstellung deaktivierst, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Prüfung oder nach Änderungen an Plugins aktiviert und verwendet werden. Möchtest du diesen Schutz wirklich deaktivieren?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2516645821::INFORMAL"] = "Wenn du diese Einstellung deaktivierst, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Prüfung oder nach Änderungen an Plugins aktiviert und verwendet werden. Möchtest du diesen Schutz wirklich deaktivieren?"
 
--- Agent: Security Audit for external Assistants
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2910364422"] = "Agent: Sicherheitsaudit für externe Assistenten"
+-- Automatic audits cannot run, because no model is available for security checks. Choose one above, or set an app-wide default provider in the app options.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2857321563"] = "Automatische Prüfungen können nicht laufen, weil kein Modell für Sicherheitsprüfungen verfügbar ist. Wählen Sie oben eines aus oder legen Sie in den App-Einstellungen einen appweiten Standardanbieter fest."
+
+-- Automatic audits cannot run, because no model is available for security checks. Choose one above, or set an app-wide default provider in the app options.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2857321563::INFORMAL"] = "Automatische Prüfungen können nicht laufen, weil kein Modell für Sicherheitsprüfungen verfügbar ist. Wähle oben eines aus oder lege in den App-Einstellungen einen appweiten Standardanbieter fest."
+
+-- Use the app default, otherwise the model chosen when auditing
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2888830822"] = "App-Standard verwenden, sonst das bei der Prüfung gewählte Modell"
 
 -- External Assistant can be activated without an audit
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2915620630"] = "Externer Assistent kann ohne Prüfung aktiviert werden"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T2915620630"] = "Externer Assistent kann ohne Prüfung aktiviert werden"
 
 -- The audit shows you all security risks and information. If you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3081698423"] = "Die Überprüfung zeigt Ihnen alle Sicherheitsrisiken und Informationen. Wenn Sie diese Bewertung nach eigenem Ermessen für falsch halten, können Sie sich entscheiden, den Assistenten trotzdem zu installieren (nicht empfohlen)."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3081698423"] = "Die Überprüfung zeigt Ihnen alle Sicherheitsrisiken und Informationen. Wenn Sie diese Bewertung nach eigenem Ermessen für falsch halten, können Sie sich entscheiden, den Assistenten trotzdem zu installieren (nicht empfohlen)."
 
 -- The audit shows you all security risks and information. If you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3081698423::INFORMAL"] = "Die Überprüfung zeigt dir alle Sicherheitsrisiken und Informationen. Wenn du diese Bewertung nach eigenem Ermessen für falsch hältst, kannst du dich entscheiden, den Assistenten trotzdem zu installieren (nicht empfohlen)."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3081698423::INFORMAL"] = "Die Überprüfung zeigt dir alle Sicherheitsrisiken und Informationen. Wenn du diese Bewertung nach eigenem Ermessen für falsch hältst, kannst du dich entscheiden, den Assistenten trotzdem zu installieren (nicht empfohlen)."
 
 -- Security audit is done manually by the user
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3568079552"] = "Das Sicherheitsaudit wird manuell vom Benutzer durchgeführt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3568079552"] = "Das Sicherheitsaudit wird manuell vom Benutzer durchgeführt."
 
 -- Minimum required audit level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3599539909"] = "Minimale erforderliche Audit-Stufe"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3599539909"] = "Minimale erforderliche Audit-Stufe"
 
 -- Security audit is automatically done in the background
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3684348859"] = "Das Sicherheitsaudit wird automatisch im Hintergrund durchgeführt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T3684348859"] = "Das Sicherheitsaudit wird automatisch im Hintergrund durchgeführt."
 
 -- Disable Assistant Audit Protection
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4019550023"] = "Assistenten-Audit-Schutz deaktivieren"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T4019550023"] = "Assistenten-Audit-Schutz deaktivieren"
 
 -- Activation is blocked below the minimum Audit-Level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4041192469"] = "Die Aktivierung ist unterhalb der Mindest-Audit-Stufe blockiert."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKASSISTANTAUDIT::T4041192469"] = "Die Aktivierung ist unterhalb der Mindest-Audit-Stufe blockiert."
 
--- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4166969352"] = "Optional können Sie einen speziellen Anbieter für Audits auswählen. Wenn dieses Feld leer bleibt, verwendet AI Studio den appweiten Standardanbieter."
+-- AI Task: Chat Compression
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCHATCOMPRESSION::T4225716570"] = "KI-Aufgabe: Komprimieren von Chats"
 
--- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4166969352::INFORMAL"] = "Optional kannst du einen speziellen Anbieter für Audits auswählen. Wenn dieses Feld leer bleibt, verwendet AI Studio den appweiten Standardanbieter."
+-- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the assistant.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T1210631144"] = "Wenn diese Option aktiviert ist, können Sie das Modell für diese Aufgabe und das nötige Vertrauensniveau vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Assistenten."
 
--- This Agent audits newly installed or updated external Plugin-Assistant for security risks before they are activated and stores the latest audit card until the plugin manifest changes.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T893652865"] = "Dieser Agent überprüft neu installierte oder aktualisierte externe Assistenten-Plugins vor ihrer Aktivierung auf Sicherheitsrisiken und speichert die neueste Audit-Karte, bis sich das Plugin-Manifest ändert."
+-- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the assistant.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T1210631144::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du das Modell für diese Aufgabe und das nötige Vertrauensniveau vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Assistenten."
 
--- Use Case: this agent is used to clean up text content. It extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1299550589"] = "Anwendungsfall: Dieser Agent wird verwendet, um Textinhalte zu bereinigen. Er extrahiert den Hauptinhalt, entfernt Werbung und andere irrelevante Elemente und versucht, relative Links in absolute Links umzuwandeln, damit diese verwendet werden können."
+-- When an assistant loads content from the web, a model can clean it up: it extracts the main content, removes advertisements and other irrelevant things, and attempts to convert relative links into absolute links so that they can be used.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T1587139574"] = "Wenn ein Assistent Inhalte aus dem Internet lädt, kann ein Modell sie bereinigen: Es extrahiert den Hauptinhalt, entfernt Werbung und andere irrelevante Elemente und versucht, relative Links in absolute Links umzuwandeln, damit sie verwendet werden können."
 
--- Agent: Text Content Cleaner Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3517268866"] = "Agent: Inhaltsbereinigung"
+-- Use the model of the assistant
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T2899245972"] = "Modell des Assistenten verwenden"
+
+-- AI Task: Text Content Cleaner
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T3478589970"] = "KI-Aufgabe: Inhaltsbereinigung"
 
 -- No options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T354528094"] = "Es sind keine Optionen vorausgewählt"
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3577764214"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3577764214::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T354528094"] = "Es sind keine Optionen vorausgewählt"
 
 -- Preselect text content cleaner options?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3659087305"] = "Optionen des Agenten zur Inhaltsbereinigung vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T3659087305"] = "Optionen für die Inhaltsbereinigung vorauswählen?"
 
 -- Options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T3875604319"] = "Optionen sind vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKCONTENTCLEANER::T3875604319"] = "Optionen sind vorausgewählt"
 
--- Use Case: this agent is used to select the appropriate data sources for the current prompt.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2208143316"] = "Anwendungsfall: Dieser Agent wird verwendet, um die passenden Datenquellen für die aktuelle Eingabe auszuwählen."
+-- AI Task: Data Source Selection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T1227800581"] = "KI-Aufgabe: Wahl der Datenquellen"
 
--- Agent: Data Source Selection Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T2258031949"] = "Agent: Wahl der Datenquellen"
+-- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T2513220366"] = "Wenn diese Option aktiviert ist, können Sie das Modell für diese Aufgabe und das nötige Vertrauensniveau vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Chats."
+
+-- When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T2513220366::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du das Modell für diese Aufgabe und das nötige Vertrauensniveau vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Chats."
+
+-- In classic RAG, which searches the data sources with every message, a model first selects the data sources which fit the current prompt.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T2522862914"] = "Beim klassischen RAG, das die Datenquellen bei jeder Nachricht durchsucht, wählt ein Modell zuerst die Datenquellen aus, die zum aktuellen Prompt passen."
+
+-- Use the model of the chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T3435835378"] = "Modell des Chats verwenden"
 
 -- No options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T354528094"] = "Es sind keine Optionen vorausgewählt"
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3577764214"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3577764214::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T354528094"] = "Es sind keine Optionen vorausgewählt"
 
 -- Options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T3875604319"] = "Optionen sind vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T3875604319"] = "Optionen sind vorausgewählt"
 
 -- Preselect data source selection options?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTDATASOURCESELECTION::T991598424"] = "Datenquellen-Auswahloptionen vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKDATASOURCESELECTION::T991598424"] = "Datenquellen-Auswahloptionen vorauswählen?"
 
--- Use Case: this agent is used to validate any retrieval context of any retrieval process. Perhaps there are many of these retrieval contexts and you want to validate them all. Therefore, you might want to use a cheap and fast LLM for this job. When using a local or self-hosted LLM, look for a small (e.g. 3B) and fast model.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1326813386"] = "Anwendungsfall: Dieser Agent wird verwendet, um beliebige Abrufkontexte in jedem Abrufprozess zu validieren. Möglicherweise gibt es viele solcher Abrufkontexte, und Sie möchten sie alle überprüfen. Daher empfiehlt es sich, für diese Aufgabe ein günstiges und schnelles LLM zu verwenden. Wenn Sie ein lokales oder selbst gehostetes LLM nutzen, sollten Sie auf ein kleines (z. B. 3B) und schnelles Modell achten."
+-- Each validation is a request of its own, so more simultaneous validations mean as many simultaneous requests. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 and 6 validations.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T1490986595"] = "Jede Validierung ist eine eigene Anfrage. Mehr gleichzeitige Validierungen bedeuten also entsprechend viele gleichzeitige Anfragen. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn Sie unsicher sind, wählen Sie eine niedrige Einstellung zwischen 1 und 6 Validierungen."
 
--- Use Case: this agent is used to validate any retrieval context of any retrieval process. Perhaps there are many of these retrieval contexts and you want to validate them all. Therefore, you might want to use a cheap and fast LLM for this job. When using a local or self-hosted LLM, look for a small (e.g. 3B) and fast model.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T1326813386::INFORMAL"] = "Anwendungsfall: Dieser Agent wird verwendet, um beliebige Abrufkontexte in jedem Abrufprozess zu validieren. Möglicherweise gibt es viele solcher Abrufkontexte, und du möchtest sie alle überprüfen. Daher empfiehlt es sich, für diese Aufgabe ein günstiges und schnelles LLM zu verwenden. Wenn du ein lokales oder selbst gehostetes LLM nutzt, solltest du auf ein kleines (z. B. 3B) und schnelles Modell achten."
+-- Each validation is a request of its own, so more simultaneous validations mean as many simultaneous requests. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 and 6 validations.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T1490986595::INFORMAL"] = "Jede Validierung ist eine eigene Anfrage. Mehr gleichzeitige Validierungen bedeuten also entsprechend viele gleichzeitige Anfragen. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn du unsicher bist, wähle eine niedrige Einstellung zwischen 1 und 6 Validierungen."
 
--- The validation agent is enabled
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2274149855"] = "Der Validierungs-Agent ist aktiviert"
+-- AI Task: Retrieval Context Validation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T1717726852"] = "KI-Aufgabe: Validierung der Abrufkontexte"
 
--- Enable the retrieval context validation agent?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2663872937"] = "Den Validierungs-Agenten für den Abrufkontext aktivieren?"
+-- How many validations should run simultaneously?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2326205445"] = "Wie viele Validierungen sollen gleichzeitig ausgeführt werden?"
+
+-- When enabled, a model checks each retrieval context of classic RAG, whether it makes sense for the given prompt.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T240073404"] = "Wenn diese Option aktiviert ist, prüft ein Modell bei jedem Abrufkontext des klassischen RAG, ob er zum jeweiligen Prompt passt."
+
+-- Validate the retrieval contexts?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2428915017"] = "Abrufkontexte validieren?"
+
+-- When enabled, you can preselect the model for this task, the confidence it needs, and how many validations run simultaneously. Without a preselected model, AI Studio uses the model of the chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2520295642"] = "Wenn diese Option aktiviert ist, können Sie das Modell für diese Aufgabe, das nötige Vertrauensniveau und die Zahl der gleichzeitigen Validierungen vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Chats."
+
+-- When enabled, you can preselect the model for this task, the confidence it needs, and how many validations run simultaneously. Without a preselected model, AI Studio uses the model of the chat.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2520295642::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du das Modell für diese Aufgabe, das nötige Vertrauensniveau und die Zahl der gleichzeitigen Validierungen vorauswählen. Ohne vorausgewähltes Modell verwendet AI Studio das Modell des Chats."
 
 -- Preselect retrieval context validation options?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2663938643"] = "Optionen zur Überprüfung des Abrufkontexts vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T2663938643"] = "Optionen zur Überprüfung des Abrufkontexts vorauswählen?"
 
--- agents
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T2669785679"] = "Agenten"
-
--- When enabled, the retrieval context validation agent will check each retrieval context of any retrieval process, whether a context makes sense for the given prompt.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T298440039"] = "Wenn diese Option aktiviert ist, prüft der Validierungs-Agent für Abrufkontexte bei jedem Abrufprozess, ob der jeweilige Kontext zum eingegebenen Prompt passt."
-
--- How many validation agents should work simultaneously?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3431541788"] = "Wie viele Validierungs-Agenten sollten gleichzeitig arbeiten?"
+-- Use the model of the chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T3435835378"] = "Modell des Chats verwenden"
 
 -- No options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T354528094"] = "Es sind keine Optionen vorausgewählt"
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3577764214"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
-
--- When enabled, you can preselect some agent options. This might be useful when you prefer an LLM.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3577764214::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
-
--- More active agents also mean that a corresponding number of requests are made simultaneously. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 to 6 agents.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3819544890"] = "Mehr aktive Agenten bedeuten auch, dass entsprechend viele Anfragen gleichzeitig gestellt werden. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn Sie unsicher sind, wählen Sie eine niedrige Einstellung zwischen 1 und 6 Agenten."
-
--- More active agents also mean that a corresponding number of requests are made simultaneously. Some providers limit the number of requests per minute. When you are unsure, choose a low setting between 1 to 6 agents.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3819544890::INFORMAL"] = "Mehr aktive Agenten bedeuten auch, dass entsprechend viele Anfragen gleichzeitig gestellt werden. Einige Anbieter begrenzen die Anzahl der Anfragen pro Minute. Wenn du unsicher bist, wähle eine niedrige Einstellung zwischen 1 und 6 Agenten."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T354528094"] = "Es sind keine Optionen vorausgewählt"
 
 -- Options are preselected
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T3875604319"] = "Optionen sind vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T3875604319"] = "Optionen sind vorausgewählt"
 
--- Agent: Retrieval Context Validation Options
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T928989804"] = "Agent: Validierung der Abrufkontexte"
+-- validations
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T595734827"] = "Validierungen"
+
+-- Each retrieval context is validated
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T705018823"] = "Jeder Abrufkontext wird validiert"
+
+-- In classic RAG, a model checks each retrieval context, i.e., each passage found in the data sources, whether it fits the current prompt. There can be many of them, so you might want to use a cheap and fast model for this job. When using a local or self-hosted model, look for a small (e.g., 3B) and fast one.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T765642962"] = "Beim klassischen RAG prüft ein Modell jeden Abrufkontext – also jede Textstelle, die in den Datenquellen gefunden wurde – darauf, ob er zum aktuellen Prompt passt. Da es viele davon geben kann, empfiehlt sich für diese Aufgabe ein kostengünstiges und schnelles Modell. Wenn Sie ein lokales oder selbst gehostetes Modell verwenden, wählen Sie ein kleines (z. B. 3B) und schnelles Modell aus."
+
+-- In classic RAG, a model checks each retrieval context, i.e., each passage found in the data sources, whether it fits the current prompt. There can be many of them, so you might want to use a cheap and fast model for this job. When using a local or self-hosted model, look for a small (e.g., 3B) and fast one.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T765642962::INFORMAL"] = "Beim klassischen RAG prüft ein Modell jeden Abrufkontext – also jede Textstelle, die in den Datenquellen gefunden wurde – darauf, ob er zum aktuellen Prompt passt. Da es viele davon geben kann, empfiehlt sich für diese Aufgabe ein kostengünstiges und schnelles Modell. Wenn du ein lokales oder selbst gehostetes Modell verwendest, wähle ein kleines (z. B. 3B) und schnelles Modell aus."
 
 -- No validation is performed
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONTEXTVALIDATION::T95175095"] = "Es findet keine Validierung statt"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAITASKRETRIEVALCONTEXTVALIDATION::T95175095"] = "Es findet keine Validierung statt"
 
 -- Spellchecking is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"] = "Rechtschreibprüfung ist deaktiviert"
@@ -10313,6 +10571,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1118505044"]
 
 -- Do you want to show preview features in the app?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1118505044::INFORMAL"] = "Möchtest du Vorschaufunktionen in der App anzeigen lassen?"
+
+-- When enabled, requests to self-hosted providers and LiteLLM name the feature that sent them, e.g., the chat, an assistant, or an AI task, together with the version of AI Studio and your operating system. This lets the operators of these servers, usually your organization, see which features are used. Cloud providers never receive these details, and AI Studio never sends anything to its developers.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1140234771"] = "Wenn diese Option aktiviert ist, nennen Anfragen an selbst gehostete Anbieter und LiteLLM die Funktion, von der sie stammen, zum Beispiel den Chat, einen Assistenten oder eine KI-Aufgabe. Dazu kommen die Version von AI Studio und Ihr Betriebssystem. So sehen die Betreiber dieser Server, in der Regel Ihre Organisation, welche Funktionen genutzt werden. Cloud-Anbieter erhalten diese Angaben nie, und AI Studio sendet niemals etwas an seine Entwickler."
+
+-- When enabled, requests to self-hosted providers and LiteLLM name the feature that sent them, e.g., the chat, an assistant, or an AI task, together with the version of AI Studio and your operating system. This lets the operators of these servers, usually your organization, see which features are used. Cloud providers never receive these details, and AI Studio never sends anything to its developers.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1140234771::INFORMAL"] = "Wenn diese Option aktiviert ist, nennen Anfragen an selbst gehostete Anbieter und LiteLLM die Funktion, von der sie stammen, zum Beispiel den Chat, einen Assistenten oder eine KI-Aufgabe. Dazu kommen die Version von AI Studio und dein Betriebssystem. So sehen die Betreiber dieser Server, in der Regel deine Organisation, welche Funktionen genutzt werden. Cloud-Anbieter erhalten diese Angaben nie, und AI Studio sendet niemals etwas an seine Entwickler."
 
 -- AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1190632518"] = "AI Studio kann bei Ausführung als Flatpak nicht nach Updates suchen. Updates werden außerhalb der App verwaltet."
@@ -10418,12 +10682,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"]
 
 -- Select the language for the app.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663::INFORMAL"] = "Wähle die Sprache für die App aus."
-
--- When enabled, requests to self-hosted providers and LiteLLM name the feature that sent them, e.g., the chat, an assistant, or an agent, together with the version of AI Studio and your operating system. This lets the operators of these servers, usually your organization, see which features are used. Cloud providers never receive these details, and AI Studio never sends anything to its developers.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907749697"] = "Wenn diese Option aktiviert ist, nennen Anfragen an selbst gehostete Anbieter und LiteLLM die Funktion, von der sie stammen, zum Beispiel den Chat, einen Assistenten oder einen Agenten. Dazu kommen die Version von AI Studio und Ihr Betriebssystem. So sehen die Betreiber dieser Server, in der Regel Ihre Organisation, welche Funktionen genutzt werden. Cloud-Anbieter erhalten diese Angaben nie, und AI Studio sendet niemals etwas an seine Entwickler."
-
--- When enabled, requests to self-hosted providers and LiteLLM name the feature that sent them, e.g., the chat, an assistant, or an agent, together with the version of AI Studio and your operating system. This lets the operators of these servers, usually your organization, see which features are used. Cloud providers never receive these details, and AI Studio never sends anything to its developers.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907749697::INFORMAL"] = "Wenn diese Option aktiviert ist, nennen Anfragen an selbst gehostete Anbieter und LiteLLM die Funktion, von der sie stammen, zum Beispiel den Chat, einen Assistenten oder einen Agenten. Dazu kommen die Version von AI Studio und dein Betriebssystem. So sehen die Betreiber dieser Server, in der Regel deine Organisation, welche Funktionen genutzt werden. Cloud-Anbieter erhalten diese Angaben nie, und AI Studio sendet niemals etwas an seine Entwickler."
 
 -- Your organization has disabled update checks and installations.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1909339369"] = "Ihre Organisation hat die Suche nach Updates und deren Installation deaktiviert."
@@ -11730,6 +11988,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T193192210"] = "
 -- null
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1996966820"] = "null"
 
+-- The model set for security checks no longer exists. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2001789726"] = "Das für Sicherheitsprüfungen festgelegte Modell existiert nicht mehr. Wählen Sie hier ein Modell aus, um dieses Plugin zu prüfen. Ihre Auswahl gilt nur für diese Prüfung; in den App-Einstellungen können Sie ein dauerhaftes Modell festlegen."
+
+-- The model set for security checks no longer exists. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2001789726::INFORMAL"] = "Das für Sicherheitsprüfungen festgelegte Modell existiert nicht mehr. Wähle hier ein Modell aus, um dieses Plugin zu prüfen. Deine Auswahl gilt nur für diese Prüfung; in den App-Einstellungen kannst du ein dauerhaftes Modell festlegen."
+
 -- Properties
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2177370620"] = "Eigenschaften"
 
@@ -11748,8 +12012,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T273798258"] = "
 -- Size
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2789707388"] = "Größe"
 
+-- Your organization does not allow the model set for security checks. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2882229141"] = "Das für Sicherheitsprüfungen festgelegte Modell ist von Ihrer Organisation nicht zugelassen. Wählen Sie hier ein Modell aus, um dieses Plugin zu prüfen. Ihre Auswahl gilt nur für diese Prüfung; in den App-Einstellungen können Sie ein dauerhaftes Modell festlegen."
+
+-- Your organization does not allow the model set for security checks. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2882229141::INFORMAL"] = "Das für Sicherheitsprüfungen festgelegte Modell ist von deiner Organisation nicht zugelassen. Wähle hier ein Modell aus, um dieses Plugin zu prüfen. Deine Auswahl gilt nur für diese Prüfung; in den App-Einstellungen kannst du ein dauerhaftes Modell festlegen."
+
+-- The model set for security checks is not trusted enough for them. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2917601715"] = "Das für Sicherheitsprüfungen festgelegte Modell ist dafür nicht vertrauenswürdig genug. Wählen Sie hier ein Modell aus, um dieses Plugin zu prüfen. Ihre Auswahl gilt nur für diese Prüfung; in den App-Einstellungen können Sie ein dauerhaftes Modell festlegen."
+
+-- The model set for security checks is not trusted enough for them. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2917601715::INFORMAL"] = "Das für Sicherheitsprüfungen festgelegte Modell ist dafür nicht vertrauenswürdig genug. Wähle hier ein Modell aus, um dieses Plugin zu prüfen. Deine Auswahl gilt nur für diese Prüfung; in den App-Einstellungen kannst du ein dauerhaftes Modell festlegen."
+
 -- No model configured
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2941224401"] = "Kein Modell konfiguriert"
+
+-- No model is set for security checks, neither for this AI task nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3013234535"] = "Für Sicherheitsprüfungen ist weder für diese KI-Aufgabe noch appweit ein Modell festgelegt. Wählen Sie hier eines aus, um dieses Plugin zu prüfen. Ihre Auswahl gilt nur für diese Prüfung; in den App-Einstellungen können Sie ein dauerhaftes Modell festlegen."
+
+-- No model is set for security checks, neither for this AI task nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3013234535::INFORMAL"] = "Für Sicherheitsprüfungen ist weder für diese KI-Aufgabe noch appweit ein Modell festgelegt. Wähle hier eines aus, um dieses Plugin zu prüfen. Deine Auswahl gilt nur für diese Prüfung; in den App-Einstellungen kannst du ein dauerhaftes Modell festlegen."
 
 -- Prompt: set
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3156437951"] = "Prompt: festgelegt"
@@ -11807,12 +12089,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T521056824::INFO
 
 -- Audit model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T532102309"] = "Audit-Modell"
-
--- No model is set for security checks, neither for this agent nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T614645381"] = "Für Sicherheitsprüfungen ist weder für diesen Agenten noch appweit ein Modell festgelegt. Wählen Sie hier eines aus, um dieses Plugin zu prüfen. Ihre Auswahl gilt nur für diese Prüfung; in den App-Einstellungen können Sie ein dauerhaftes Modell festlegen."
-
--- No model is set for security checks, neither for this agent nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T614645381::INFORMAL"] = "Für Sicherheitsprüfungen ist weder für diesen Agenten noch appweit ein Modell festgelegt. Wähle hier eines aus, um dieses Plugin zu prüfen. Deine Auswahl gilt nur für diese Prüfung; in den App-Einstellungen kannst du ein dauerhaftes Modell festlegen."
 
 -- System Prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T628396066"] = "System-Prompt"
@@ -11945,6 +12221,108 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T4009234360"] =
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T900713019"] = "Abbrechen"
+
+-- The summary grew too long. The AI is shortening it...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T1307726948"] = "Die Zusammenfassung ist zu lang geworden. Die KI kürzt sie gerade …"
+
+-- This chat holds data which the model picked for compressing chats must not see, so the model of this chat writes the summary.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T1403809223"] = "Dieser Chat enthält Daten, die das zum Komprimieren von Chats ausgewählte Modell nicht sehen darf, deshalb schreibt das Modell dieses Chats die Zusammenfassung."
+
+-- AI Studio is reading the messages and their files...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T1765271698"] = "AI Studio liest die Nachrichten und ihre Dateien …"
+
+-- The AI is summarizing part {0} of {1}...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T1784069543"] = "Die KI fasst Teil {0} von {1} zusammen …"
+
+-- The model picked for compressing chats cannot write this summary, so the model of this chat writes it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T1883484811"] = "Das zum Komprimieren von Chats ausgewählte Modell kann diese Zusammenfassung nicht schreiben, deshalb schreibt sie das Modell dieses Chats."
+
+-- Compress & switch
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2083316581"] = "Komprimieren & wechseln"
+
+-- Please enter a chat name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2301651387"] = "Bitte geben Sie einen Namen für den Chat ein."
+
+-- Please enter a chat name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2301651387::INFORMAL"] = "Bitte gib einen Namen für den Chat ein."
+
+-- '{0}' summarizes {1} messages.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2618292032"] = "„{0}“ fasst {1} Nachrichten zusammen."
+
+-- What should the summary pay particular attention to? (optional)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2754261329"] = "Worauf soll die Zusammenfassung besonders achten? (optional)"
+
+-- The context window of the model picked for compressing chats is too small, so the model of this chat writes the summary.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2776976467"] = "Das Kontextfenster des zum Komprimieren von Chats ausgewählten Modells ist zu klein, deshalb schreibt das Modell dieses Chats die Zusammenfassung."
+
+-- No model may write the summary of this chat. Please select a model with a context window of at least {0} tokens.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T280997124"] = "Kein Modell darf die Zusammenfassung dieses Chats schreiben. Bitte wählen Sie ein Modell mit einem Kontextfenster von mindestens {0} Token."
+
+-- No model may write the summary of this chat. Please select a model with a context window of at least {0} tokens.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T280997124::INFORMAL"] = "Kein Modell darf die Zusammenfassung dieses Chats schreiben. Bitte wähle ein Modell mit einem Kontextfenster von mindestens {0} Token."
+
+-- The model picked for compressing chats does not reach the minimum confidence level, so the model of this chat writes the summary.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T290152775"] = "Das zum Komprimieren von Chats ausgewählte Modell erreicht das Mindestvertrauensniveau nicht, deshalb schreibt das Modell dieses Chats die Zusammenfassung."
+
+-- The AI does not look at the images in this chat again. The summary keeps what the conversation said about them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2909256987"] = "Die KI sieht sich die Bilder in diesem Chat nicht noch einmal an. Die Zusammenfassung behält, was im Gespräch über sie gesagt wurde."
+
+-- Name of the new chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T2969679548"] = "Name des neuen Chats"
+
+-- The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T337872053"] = "Die KI fasst diesen Chat einschließlich des Inhalts seiner Dokumente zusammen, und das Gespräch geht in einem neuen Chat weiter. Er enthält die Zusammenfassung, Ihre letzte Nachricht mit ihren Dateien und die letzte Antwort der KI. Da der neue Chat viel kürzer ist, kostet jede weitere Nachricht weniger Token. Dieser Chat bleibt unverändert, sodass das gesamte Gespräch verfügbar bleibt."
+
+-- The AI summarizes this chat, the content of its documents included, and the conversation continues in a new chat. It holds the summary, your last message with its files, and the last answer of the AI. Since the new chat is much shorter, every further message costs fewer tokens. This chat stays as it is, so the whole conversation remains available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T337872053::INFORMAL"] = "Die KI fasst diesen Chat einschließlich des Inhalts seiner Dokumente zusammen, und das Gespräch geht in einem neuen Chat weiter. Er enthält die Zusammenfassung, deine letzte Nachricht mit ihren Dateien und die letzte Antwort der KI. Da der neue Chat viel kürzer ist, kostet jede weitere Nachricht weniger Token. Dieser Chat bleibt unverändert, sodass das gesamte Gespräch verfügbar bleibt."
+
+-- Compress
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3456693933"] = "Komprimieren"
+
+-- Your organization does not allow the model picked for compressing chats, so the model of this chat writes the summary.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3679858548"] = "Ihre Organisation lässt das zum Komprimieren von Chats ausgewählte Modell nicht zu, deshalb schreibt das Modell dieses Chats die Zusammenfassung."
+
+-- Your organization does not allow the model picked for compressing chats, so the model of this chat writes the summary.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3679858548::INFORMAL"] = "Deine Organisation lässt das zum Komprimieren von Chats ausgewählte Modell nicht zu, deshalb schreibt das Modell dieses Chats die Zusammenfassung."
+
+-- The AI is summarizing the chat...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3770574675"] = "Die KI fasst den Chat zusammen …"
+
+-- This chat has changes which are not saved yet. AI Studio saves it first, so that the whole conversation remains available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3878527262"] = "Dieser Chat enthält Änderungen, die noch nicht gespeichert sind. AI Studio speichert ihn zuerst, damit das gesamte Gespräch erhalten bleibt."
+
+-- The model picked for compressing chats no longer exists, so the model of this chat writes the summary.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T3914443767"] = "Das zum Komprimieren von Chats ausgewählte Modell gibt es nicht mehr, deshalb schreibt das Modell dieses Chats die Zusammenfassung."
+
+-- As chosen in the settings, AI Studio compresses a chat without asking once it grows too long. You can still cancel it here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T4017758346"] = "Wie in den Einstellungen gewählt, komprimiert AI Studio einen Chat ohne Rückfrage, sobald er zu lang wird. Sie können das hier noch abbrechen."
+
+-- As chosen in the settings, AI Studio compresses a chat without asking once it grows too long. You can still cancel it here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T4017758346::INFORMAL"] = "Wie in den Einstellungen gewählt, komprimiert AI Studio einen Chat ohne Rückfrage, sobald er zu lang wird. Du kannst das hier noch abbrechen."
+
+-- Your last message has no answer yet. It goes into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T503931674"] = "Ihre letzte Nachricht hat noch keine Antwort. Der neue Chat übernimmt sie in sein Eingabefeld, sodass Sie sie dort senden können."
+
+-- Your last message has no answer yet. It goes into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T503931674::INFORMAL"] = "Deine letzte Nachricht hat noch keine Antwort. Der neue Chat übernimmt sie in sein Eingabefeld, sodass du sie dort senden kannst."
+
+-- The AI summarizes this conversation, the content of its documents included. The summary then takes the place of the earlier messages, while your last message and the last answer of the AI stay as they are. AI Studio does not keep the earlier messages. Since the conversation is much shorter afterward, every further message costs fewer tokens.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T611696201"] = "Die KI fasst dieses Gespräch einschließlich des Inhalts seiner Dokumente zusammen. Die Zusammenfassung ersetzt anschließend die bisherigen Nachrichten, während Ihre letzte Nachricht und die letzte Antwort der KI unverändert bleiben. AI Studio bewahrt die bisherigen Nachrichten nicht auf. Da das Gespräch danach viel kürzer ist, kostet jede weitere Nachricht weniger Token."
+
+-- The AI summarizes this conversation, the content of its documents included. The summary then takes the place of the earlier messages, while your last message and the last answer of the AI stay as they are. AI Studio does not keep the earlier messages. Since the conversation is much shorter afterward, every further message costs fewer tokens.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T611696201::INFORMAL"] = "Die KI fasst dieses Gespräch einschließlich des Inhalts seiner Dokumente zusammen. Die Zusammenfassung ersetzt anschließend die bisherigen Nachrichten, während deine letzte Nachricht und die letzte Antwort der KI unverändert bleiben. AI Studio bewahrt die bisherigen Nachrichten nicht auf. Da das Gespräch danach viel kürzer ist, kostet jede weitere Nachricht weniger Token."
+
+-- '{0}' summarizes 1 message.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T782708289"] = "„{0}“ fasst 1 Nachricht zusammen."
+
+-- The summary takes in the content of the documents attached in this chat. This takes longer than summarizing the messages alone.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T793617890"] = "Die Zusammenfassung bezieht den Inhalt der in diesem Chat angehängten Dokumente ein. Das dauert länger, als nur die Nachrichten zusammenzufassen."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T900713019"] = "Abbrechen"
+
+-- For example: the decisions about the budget, with all figures.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATCOMPRESSIONDIALOG::T944830013"] = "Zum Beispiel: die Entscheidungen zum Budget, mit allen Zahlen."
 
 -- Only text content is supported in the editing mode yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1352914344"] = "Im Bearbeitungsmodus wird bisher nur Textinhalt unterstützt."
@@ -12404,6 +12782,120 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "Nein"
 
 -- Yes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Ja"
+
+-- Compressing would not help, since the system prompt, your last message with its files, and the last answer of the AI stay word for word, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1067977239"] = "Das Komprimieren würde nicht helfen, da der System-Prompt, Ihre letzte Nachricht samt Dateien und die letzte Antwort der KI wörtlich bleiben. Zusammen mit Ihrer neuen Nachricht füllen sie das Kontextfenster des Modells weiterhin fast aus."
+
+-- Compressing would not help, since the system prompt, your last message with its files, and the last answer of the AI stay word for word, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1067977239::INFORMAL"] = "Das Komprimieren würde nicht helfen, da der System-Prompt, deine letzte Nachricht samt Dateien und die letzte Antwort der KI wörtlich bleiben. Zusammen mit deiner neuen Nachricht füllen sie das Kontextfenster des Modells weiterhin fast aus."
+
+-- Compress chat
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1399817897"] = "Chat komprimieren"
+
+-- Compressing is not possible, since it needs a model with a context window of at least {0} tokens. With the gear at the top, you can choose such a model for compressing.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1512420599"] = "Das Komprimieren ist nicht möglich, denn dafür braucht es ein Modell mit einem Kontextfenster von mindestens {0} Token. Über das Zahnrad oben können Sie ein solches Modell zum Komprimieren wählen."
+
+-- Compressing is not possible, since it needs a model with a context window of at least {0} tokens. With the gear at the top, you can choose such a model for compressing.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1512420599::INFORMAL"] = "Das Komprimieren ist nicht möglich, denn dafür braucht es ein Modell mit einem Kontextfenster von mindestens {0} Token. Über das Zahnrad oben kannst du ein solches Modell zum Komprimieren wählen."
+
+-- With the gear at the top, you can choose what AI Studio does in such a case from now on, e.g., send the request without asking.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1872243866"] = "Über das Zahnrad oben können Sie festlegen, was AI Studio in solchen Fällen künftig tut, z. B. die Anfrage ohne Rückfrage senden."
+
+-- With the gear at the top, you can choose what AI Studio does in such a case from now on, e.g., send the request without asking.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1872243866::INFORMAL"] = "Über das Zahnrad oben kannst du festlegen, was AI Studio in solchen Fällen künftig tut, z. B. die Anfrage ohne Rückfrage senden."
+
+-- Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1962759837"] = "Das Komprimieren würde nicht helfen, da der neue Chat den System-Prompt, Ihre letzte Nachricht samt Dateien und die letzte Antwort der KI wörtlich übernimmt. Zusammen mit Ihrer neuen Nachricht füllen sie das Kontextfenster des Modells weiterhin fast aus."
+
+-- Compressing would not help, since the new chat keeps the system prompt, your last message with its files, and the last answer of the AI word for word, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T1962759837::INFORMAL"] = "Das Komprimieren würde nicht helfen, da der neue Chat den System-Prompt, deine letzte Nachricht samt Dateien und die letzte Antwort der KI wörtlich übernimmt. Zusammen mit deiner neuen Nachricht füllen sie das Kontextfenster des Modells weiterhin fast aus."
+
+-- Together with its files, this request takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse the request or leave out a part of it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2202754109"] = "Zusammen mit ihren Dateien umfasst diese Anfrage etwa {0} Token, das ausgewählte Modell liest aber höchstens {1} Token. Der Anbieter wird die Anfrage wahrscheinlich ablehnen oder einen Teil davon weglassen."
+
+-- With the gear at the top, you can choose what AI Studio does in such a case from now on, e.g., compress automatically.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2319078030"] = "Über das Zahnrad oben können Sie festlegen, was AI Studio in solchen Fällen künftig tut, z. B. automatisch komprimieren."
+
+-- With the gear at the top, you can choose what AI Studio does in such a case from now on, e.g., compress automatically.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2319078030::INFORMAL"] = "Über das Zahnrad oben kannst du festlegen, was AI Studio in solchen Fällen künftig tut, z. B. automatisch komprimieren."
+
+-- This request is too long for the model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2505364605"] = "Diese Anfrage ist zu lang für das Modell"
+
+-- Send anyway
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2511873300"] = "Trotzdem senden"
+
+-- When you compress the conversation, the AI summarizes it, and the summary takes the place of the earlier messages. Your message stays in the input field, so you can send it afterward.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2531375206"] = "Wenn Sie das Gespräch komprimieren, fasst die KI es zusammen, und die Zusammenfassung ersetzt die bisherigen Nachrichten. Ihre Nachricht bleibt im Eingabefeld, sodass Sie sie anschließend senden können."
+
+-- When you compress the conversation, the AI summarizes it, and the summary takes the place of the earlier messages. Your message stays in the input field, so you can send it afterward.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2531375206::INFORMAL"] = "Wenn du das Gespräch komprimierst, fasst die KI es zusammen, und die Zusammenfassung ersetzt die bisherigen Nachrichten. Deine Nachricht bleibt im Eingabefeld, sodass du sie anschließend senden kannst."
+
+-- Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T285302554"] = "Zusammen mit Ihrer Nachricht umfasst dieser Chat etwa {0} Token, das ausgewählte Modell liest aber höchstens {1} Token. Der Anbieter wird Ihre Nachricht wahrscheinlich ablehnen oder einen Teil des Gesprächs weglassen."
+
+-- Together with your message, this chat takes about {0} tokens, but the selected model reads at most {1} tokens. The provider will probably refuse your message or leave out a part of the conversation.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T285302554::INFORMAL"] = "Zusammen mit deiner Nachricht umfasst dieser Chat etwa {0} Token, das ausgewählte Modell liest aber höchstens {1} Token. Der Anbieter wird deine Nachricht wahrscheinlich ablehnen oder einen Teil des Gesprächs weglassen."
+
+-- This request nearly fills the context window of the model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T2965624948"] = "Diese Anfrage füllt das Kontextfenster des Modells fast aus"
+
+-- You can shorten your message, remove some of its files, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3003436474"] = "Sie können Ihre Nachricht kürzen, einige ihrer Dateien entfernen oder ein Modell wählen, das längere Texte verarbeiten kann."
+
+-- You can shorten your message, remove some of its files, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3003436474::INFORMAL"] = "Du kannst deine Nachricht kürzen, einige ihrer Dateien entfernen oder ein Modell wählen, das längere Texte verarbeiten kann."
+
+-- Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3017128359"] = "Das Komprimieren würde nicht helfen, da die Anweisungen des Assistenten, Ihre letzte Nachricht und die letzte Antwort der KI unverändert bleiben und zusammen mit Ihrer neuen Nachricht das Kontextfenster des Modells weiterhin fast ausfüllen."
+
+-- Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3017128359::INFORMAL"] = "Das Komprimieren würde nicht helfen, da die Anweisungen des Assistenten, deine letzte Nachricht und die letzte Antwort der KI unverändert bleiben und zusammen mit deiner neuen Nachricht das Kontextfenster des Modells weiterhin fast ausfüllen."
+
+-- Compressing would not help, since your message alone nearly fills the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T329309533"] = "Das Komprimieren würde nicht helfen, da schon Ihre Nachricht allein das Kontextfenster des Modells fast ausfüllt."
+
+-- Compressing would not help, since your message alone nearly fills the context window of the model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T329309533::INFORMAL"] = "Das Komprimieren würde nicht helfen, da schon deine Nachricht allein das Kontextfenster des Modells fast ausfüllt."
+
+-- This chat is too long for the model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3668031040"] = "Dieser Chat ist zu lang für das Modell"
+
+-- Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3814366820"] = "Zusammen mit Ihrer Nachricht umfasst dieser Chat etwa {0} der {1} Token, die das ausgewählte Modell höchstens liest. Für die Antwort bleibt nur wenig Platz, sodass sie abbrechen kann, und Ihre nächste Nachricht passt wahrscheinlich nicht mehr hinein."
+
+-- Together with your message, this chat takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off, and your next message will probably no longer fit.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T3814366820::INFORMAL"] = "Zusammen mit deiner Nachricht umfasst dieser Chat etwa {0} der {1} Token, die das ausgewählte Modell höchstens liest. Für die Antwort bleibt nur wenig Platz, sodass sie abbrechen kann, und deine nächste Nachricht passt wahrscheinlich nicht mehr hinein."
+
+-- Together with its files, this request takes about {0} of the {1} tokens which the selected model reads at most. Little room is left for the answer, which may break off.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T4078890076"] = "Zusammen mit ihren Dateien umfasst diese Anfrage etwa {0} der {1} Token, die das ausgewählte Modell höchstens liest. Für die Antwort bleibt nur wenig Platz, sodass sie abbrechen kann."
+
+-- This chat sends no message which no longer fits, since the model would lose the beginning of the conversation and the instructions of the assistant first.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T409376063"] = "Dieser Chat sendet keine Nachricht, die nicht mehr passt, da das Modell sonst zuerst den Anfang des Gesprächs und die Anweisungen des Assistenten verlieren würde."
+
+-- When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T4191569714"] = "Wenn Sie den Chat komprimieren, fasst die KI ihn zusammen, und das Gespräch geht in einem neuen Chat weiter. Der neue Chat übernimmt Ihre Nachricht in sein Eingabefeld, sodass Sie sie dort senden können."
+
+-- When you compress the chat, the AI summarizes it, and the conversation continues in a new chat. Your message goes along into the input field of the new chat, so you can send it there.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T4191569714::INFORMAL"] = "Wenn du den Chat komprimierst, fasst die KI ihn zusammen, und das Gespräch geht in einem neuen Chat weiter. Der neue Chat übernimmt deine Nachricht in sein Eingabefeld, sodass du sie dort senden kannst."
+
+-- This chat nearly fills the context window of the model
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T700383515"] = "Dieser Chat füllt das Kontextfenster des Modells fast aus"
+
+-- Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T83982298"] = "Das Komprimieren würde noch nicht helfen, da es vor Ihrer letzten Nachricht und der letzten Antwort der KI nichts zusammenzufassen gibt."
+
+-- Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T83982298::INFORMAL"] = "Das Komprimieren würde noch nicht helfen, da es vor deiner letzten Nachricht und der letzten Antwort der KI nichts zusammenzufassen gibt."
+
+-- You can attach fewer or smaller files, shorten your input, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T839986901"] = "Sie können weniger oder kleinere Dateien anhängen, Ihre Eingabe kürzen oder ein Modell wählen, das längere Texte verarbeiten kann."
+
+-- You can attach fewer or smaller files, shorten your input, or select a model which takes longer texts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T839986901::INFORMAL"] = "Du kannst weniger oder kleinere Dateien anhängen, deine Eingabe kürzen oder ein Modell wählen, das längere Texte verarbeiten kann."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONTEXTWINDOWFULLDIALOG::T900713019"] = "Abbrechen"
 
 -- Restart now
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREPENDINGDIALOG::T1409292924"] = "Jetzt neu starten"
@@ -13416,6 +13908,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1836253938"] = "Se
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1847791252"] = "Aktualisieren"
 
+-- Your username or password contains characters beyond ASCII, such as umlauts or accents. Depending on its configuration, a mail server may expect them in another encoding than {0}, which this test used. Ask your IT department which encoding the server expects, and choose it in the server details. Every test is one attempt to sign in, and too many failed attempts may lock your account.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1885860334"] = "Ihr Benutzername oder Ihr Passwort enthält Zeichen außerhalb des ASCII-Zeichensatzes, etwa Umlaute oder Buchstaben mit Akzent. Je nach Konfiguration erwartet ein Mailserver diese möglicherweise in einer anderen Zeichenkodierung als {0}, die dieser Test verwendet hat. Fragen Sie in Ihrer IT-Abteilung nach, welche Zeichenkodierung der Server erwartet, und wählen Sie diese in den Servereinstellungen aus. Jeder Test entspricht einem Anmeldeversuch. Zu viele fehlgeschlagene Versuche können dazu führen, dass Ihr Konto gesperrt wird."
+
+-- Your username or password contains characters beyond ASCII, such as umlauts or accents. Depending on its configuration, a mail server may expect them in another encoding than {0}, which this test used. Ask your IT department which encoding the server expects, and choose it in the server details. Every test is one attempt to sign in, and too many failed attempts may lock your account.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1885860334::INFORMAL"] = "Dein Benutzername oder dein Passwort enthält Zeichen außerhalb des ASCII-Zeichensatzes, etwa Umlaute oder Buchstaben mit Akzent. Je nach Konfiguration erwartet ein Mailserver diese möglicherweise in einer anderen Zeichenkodierung als {0}, die dieser Test verwendet hat. Frag in deiner IT-Abteilung nach, welche Zeichenkodierung der Server erwartet, und wähle diese in den Servereinstellungen aus. Jeder Test entspricht einem Anmeldeversuch. Zu viele fehlgeschlagene Versuche können dazu führen, dass dein Konto gesperrt wird."
+
 -- Sign-in
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1936191160"] = "Anmeldung"
 
@@ -13575,14 +14073,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3362621909"] = "Se
 -- Hide Server Details
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3516057682"] = "Servereinstellungen ausblenden"
 
+-- Encoding of username and password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3611739483"] = "Zeichenkodierung von Benutzername und Passwort"
+
 -- Port
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3804576966"] = "Port"
+
+-- Test again with {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4041320769"] = "Mit {0} erneut testen"
 
 -- Not tested yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T417002657"] = "Noch nicht getestet."
 
 -- Yes, also index the sent mails and the drafts
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4209023132"] = "Ja, auch die gesendeten E-Mails und die Entwürfe indexieren"
+
+-- Your organization sets the encoding for this mail server.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4269875433"] = "Ihre Organisation legt die Zeichenkodierung für diesen Mailserver fest."
+
+-- Your organization sets the encoding for this mail server.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4269875433::INFORMAL"] = "Deine Organisation legt die Zeichenkodierung für diesen Mailserver fest."
 
 -- Username
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T470340825"] = "Benutzername"
@@ -15501,11 +16011,53 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T4
 -- The language in which the assistants you build answer.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T42126731::INFORMAL"] = "Die Sprache, in der die von dir erstellten Assistenten antworten."
 
--- Default minimum pause between files
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1008440099"] = "Standardmäßige Mindestpause zwischen Dateien"
+-- There are no categories to show or hide right now.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2279201345"] = "Derzeit gibt es keine Kategorien zum Ein- oder Ausblenden."
+
+-- Hiding a category says that you do not need its assistants. Choose whether AI Studio still offers them elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2321353169"] = "Das Ausblenden einer Kategorie bedeutet, dass Sie die Assistenten dieser Kategorie nicht benötigen. Wählen Sie aus, ob AI Studio sie weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
+
+-- Hiding a category says that you do not need its assistants. Choose whether AI Studio still offers them elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2321353169::INFORMAL"] = "Das Ausblenden einer Kategorie bedeutet, dass du die Assistenten dieser Kategorie nicht benötigst. Wähle aus, ob AI Studio sie weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
+
+-- What should happen to assistants of categories you hid?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2813197614"] = "Was soll mit den Assistenten aus Kategorien geschehen, die Sie ausgeblendet haben?"
+
+-- What should happen to assistants of categories you hid?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2813197614::INFORMAL"] = "Was soll mit den Assistenten aus Kategorien geschehen, die du ausgeblendet hast?"
+
+-- What should happen to assistants of categories you collapsed?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2994249650"] = "Was soll mit den Assistenten aus Kategorien geschehen, die Sie eingeklappt haben?"
+
+-- What should happen to assistants of categories you collapsed?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2994249650::INFORMAL"] = "Was soll mit den Assistenten aus Kategorien geschehen, die du eingeklappt hast?"
+
+-- The category is hidden
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T3228924424"] = "Die Kategorie ist ausgeblendet."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T3448155331"] = "Schließen"
+
+-- The category is shown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T3595686409"] = "Die Kategorie wird angezeigt."
+
+-- Categories
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T4034259341"] = "Kategorien"
+
+-- Assistant Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T4124037832"] = "Assistenten-Einstellungen"
+
+-- Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786145170"] = "Durch das Einklappen einer Kategorie bleibt die Assistentenseite übersichtlich. Legen Sie fest, ob AI Studio ihre Assistenten weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
+
+-- Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786145170::INFORMAL"] = "Durch das Einklappen einer Kategorie bleibt die Assistentenseite übersichtlich. Leg fest, ob AI Studio ihre Assistenten weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
 
 -- Instructions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1221801316"] = "Anweisungen"
+
+-- Default pause between files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1294143443"] = "Standardmäßige Pause zwischen Dateien"
 
 -- Include hidden files and folders by default?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1450016875"] = "Versteckte Dateien und Ordner standardmäßig einbeziehen?"
@@ -15518,9 +16070,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T15
 
 -- Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1624717965"] = "Als versteckt gelten Dateien und Ordner, deren Namen mit einem Punkt beginnen, z. B. .git oder .env, sowie solche, die das Betriebssystem als versteckt kennzeichnet. Ein Dateimuster, das mit einem Punkt beginnt, z. B. .gitignore, wählt solche Dateien trotzdem aus."
-
--- seconds
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1723256298"] = "Sekunden"
 
 -- Default prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1750564968"] = "Standard-Prompt"
@@ -15557,9 +16106,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T23
 
 -- Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats as well as images in JPG, PNG, WebP, GIF, BMP, and TIFF format.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T232588799::INFORMAL"] = "Trenne mehrere Dateimuster durch ein Semikolon, z. B. *.pdf;*.docx. Die Standardmuster umfassen alle unterstützten Audio- und Videoformate sowie Bilder im JPG-, PNG-, WebP-, GIF-, BMP- und TIFF-Format."
-
--- The lower end of the random pause interval. AI Studio never allows less than 6 seconds.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T237774509"] = "Das untere Ende des Intervalls für die zufällige Pause. AI Studio erlaubt niemals weniger als 6 Sekunden."
 
 -- A policy brings its own tools, so there is nothing to preselect here. You configure them with the policy in the Document Analysis Assistant.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2391906382"] = "Ein Regelwerk bringt seine eigenen Werkzeuge mit, daher gibt es hier nichts vorauszuwählen. Sie konfigurieren die Werkzeuge zusammen mit dem Regelwerk im Assistenten für die Dokumentenanalyse."
@@ -15603,9 +16149,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T29
 -- Only the selected folder is processed
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2958253681"] = "Nur der ausgewählte Ordner wird verarbeitet"
 
--- Default maximum pause between files
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3011459001"] = "Standardmäßige maximale Pause zwischen Dateien"
-
 -- Include subfolders by default?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3106330739"] = "Unterordner standardmäßig einbeziehen?"
 
@@ -15630,20 +16173,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T34
 -- Processing pace
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3428873429"] = "Verarbeitungsgeschwindigkeit"
 
--- The upper end of the random pause interval. The app-wide maximum is 300 seconds (5 minutes).
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3434290122"] = "Das obere Ende des zufälligen Pausenintervalls. Der appweite Höchstwert beträgt 300 Sekunden (5 Minuten)."
-
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3448155331"] = "Schließen"
 
 -- The current content of this Markdown file is loaded whenever the defaults are applied.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3468539567"] = "Der aktuelle Inhalt dieser Markdown-Datei wird geladen, wenn die Standardwerte angewendet werden."
-
--- Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3663516199"] = "Ihre Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen Dateien. Benutzer können nur die Obergrenze festlegen."
-
--- Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3663516199::INFORMAL"] = "Deine Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen Dateien. Benutzer können nur die Obergrenze festlegen."
 
 -- Load default prompt from file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3763644960"] = "Standard-Prompt aus Datei laden"
@@ -15698,6 +16232,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T70
 
 -- Restore default patterns
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T7425959"] = "Standardmuster wiederherstellen"
+
+-- Before the next file starts, AI Studio waits for a random time within this range, at least 6 seconds and at most 300 seconds (5 minutes).
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T754486332"] = "Bevor die nächste Datei gestartet wird, wartet AI Studio eine zufällige Zeit innerhalb dieses Bereichs, mindestens 6 Sekunden und höchstens 300 Sekunden (5 Minuten)."
 
 -- Leave empty when an input folder should be selected for every batch run.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T762890100"] = "Leer lassen, wenn für jeden Stapellauf ein Eingabeordner ausgewählt werden soll."
@@ -15884,6 +16421,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T492357592::IN
 
 -- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T582516016"] = "Wenn diese Option aktiviert ist, wird nach dem Laden eines Chats die neueste Nachricht angezeigt. Wenn sie deaktiviert ist, wird die erste (älteste) Nachricht angezeigt."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATCOMPRESSION::T3448155331"] = "Schließen"
+
+-- AI Task: Chat Compression
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATCOMPRESSION::T4225716570"] = "KI-Aufgabe: Komprimieren von Chats"
 
 -- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, our templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1172171653"] = "Passen Sie Ihre KI-Erfahrung mit Chat-Vorlagen an. Egal, ob Sie mit Prompt-Engineering experimentieren, einfach einen eigenen System-Prompt im normalen Chat verwenden oder einen spezialisierten Assistenten erstellen möchten – mit Chat-Vorlagen haben Sie die volle Kontrolle. Ähnlich wie in den Playgrounds gängiger KI-Anbieter können Sie eigene System-Prompts festlegen und bei unterstützenden Anbietern auch Assistenten-Prompts nutzen."
@@ -16194,9 +16737,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T386176
 -- When enabled, you can preselect some job posting options. This might be useful when you prefer a specific LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T3861766667::INFORMAL"] = "Wenn diese Option aktiviert ist, kannst du einige Optionen für Stellenanzeigen vorauswählen. Das kann nützlich sein, wenn du ein bestimmtes LLM bevorzugst."
 
--- Content cleaner agent is preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
-
 -- Web content reader is shown
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1030372436"] = "Der Web-Content-Reader wird angezeigt"
 
@@ -16224,8 +16764,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1766361
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1766361623::INFORMAL"] = "Wähle, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
 
--- Content cleaner agent is not preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
+-- When enabled, the text content cleaner is preselected. This might be useful when you prefer to clean up the legal content before translating it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1958081245"] = "Wenn diese Option aktiviert ist, ist die Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn Sie den rechtlichen Inhalt bereinigen möchten, bevor Sie ihn übersetzen."
+
+-- When enabled, the text content cleaner is preselected. This might be useful when you prefer to clean up the legal content before translating it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1958081245::INFORMAL"] = "Wenn diese Option aktiviert ist, ist die Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn du den rechtlichen Inhalt bereinigen möchtest, bevor du ihn übersetzt."
 
 -- When enabled, the web content reader is preselected. This might be useful when you prefer to load legal content from the web very often.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1993094764"] = "Wenn diese Option aktiviert ist, wird der Web-Content-Reader vorausgewählt. Das kann nützlich sein, wenn Sie häufig juristische Inhalte aus dem Internet laden möchten."
@@ -16245,26 +16788,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2529161
 -- Web content reader is hidden
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2799795311"] = "Der Web-Content-Reader ist ausgeblendet"
 
+-- Text content cleaner is not preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T284131714"] = "Inhaltsbereinigung ist nicht vorausgewählt"
+
+-- Preselect the text content cleaner?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2981779520"] = "Inhaltsbereinigung vorauswählen?"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3448155331"] = "Schließen"
 
 -- Web content reader is preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3641773985"] = "Der Web-Content-Reader ist vorausgewählt"
 
--- Preselect the content cleaner agent?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
-
 -- Assistant: Legal Check Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4033382756"] = "Assistent: Optionen für die rechtliche Prüfung"
 
--- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the legal content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4049873385"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn Sie den rechtlichen Inhalt bereinigen möchten, bevor Sie ihn übersetzen."
-
--- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the legal content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4049873385::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn du den rechtlichen Inhalt bereinigen möchtest, bevor du ihn übersetzt."
-
 -- Preselect the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T629158142"] = "Den Web-Content-Reader vorauswählen?"
+
+-- Text content cleaner is preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T845988899"] = "Inhaltsbereinigung ist vorausgewählt"
 
 -- No preset preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMODELCOMPARISON::T1028082569"] = "Keine Voreinstellung vorausgewählt"
@@ -16704,9 +17247,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T99564
 -- A slide holds at most this many bullet points, in all of its text slots together. Match it to the room for text in the layouts of your template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T995644230::INFORMAL"] = "Eine Folie enthält höchstens so viele Aufzählungspunkte, in allen ihren Textfeldern zusammen. Stimme den Wert auf den Platz für Text in den Layouts deiner Vorlage ab."
 
--- Content cleaner agent is preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
-
 -- Web content reader is shown
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1030372436"] = "Der Web-Content-Reader wird angezeigt"
 
@@ -16722,9 +17262,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T16331
 -- Web content reader is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1701127912"] = "Der Web-Content-Reader ist nicht vorausgewählt"
 
--- Content cleaner agent is not preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
-
 -- Hide the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2090693677"] = "Web-Content-Reader ausblenden?"
 
@@ -16734,20 +17271,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T21718
 -- No SWOT analysis options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2361666775"] = "Es sind keine Optionen für die SWOT-Analyse vorausgewählt"
 
+-- When enabled, the text content cleaner is preselected for cleaning website content before it is analyzed.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2429021439"] = "Wenn diese Option aktiviert ist, ist die Inhaltsbereinigung vorausgewählt, um Webinhalte vor der Analyse zu bereinigen."
+
 -- Preselect SWOT analysis options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2593950994"] = "Optionen für die SWOT-Analyse vorauswählen?"
 
 -- Web content reader is hidden
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2799795311"] = "Der Web-Content-Reader ist ausgeblendet"
 
+-- Text content cleaner is not preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T284131714"] = "Inhaltsbereinigung ist nicht vorausgewählt"
+
+-- Preselect the text content cleaner?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2981779520"] = "Inhaltsbereinigung vorauswählen?"
+
 -- When enabled, the web content reader is preselected. This is useful when you often analyze content from websites.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3088856907"] = "Wenn diese Option aktiviert ist, ist der Web-Content-Reader vorausgewählt. Das kann nützlich sein, wenn Sie häufig Inhalte von Websites analysieren."
 
 -- When enabled, the web content reader is preselected. This is useful when you often analyze content from websites.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3088856907::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Web-Content-Reader vorausgewählt. Das kann nützlich sein, wenn du häufig Inhalte von Websites analysierst."
-
--- When enabled, the content cleaner agent is preselected for cleaning website content before it is analyzed.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T332064979"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt, um Webinhalte vor der Analyse zu bereinigen."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3448155331"] = "Schließen"
@@ -16757,9 +17300,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T35473
 
 -- Web content reader is preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3641773985"] = "Der Web-Content-Reader ist vorausgewählt"
-
--- Preselect the content cleaner agent?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
 
 -- Specify topics the SWOT analysis should pay particular attention to.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3857591121"] = "Geben Sie die Themen an, auf die die SWOT-Analyse besonders achten soll."
@@ -16775,6 +17315,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T62915
 
 -- Preselect an analysis focus
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T656094797"] = "Analysefokus vorauswählen"
+
+-- Text content cleaner is preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T845988899"] = "Inhaltsbereinigung ist vorausgewählt"
 
 -- When enabled, you can preselect the SWOT analysis options. This is useful when you prefer a specific language, analysis focus, or LLM.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T975761680"] = "Wenn diese Option aktiviert ist, können Sie die Optionen für die SWOT-Analyse vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache, einen bestimmten Analysefokus oder ein bestimmtes LLM bevorzugen."
@@ -16812,9 +17355,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T388911788
 -- Preselect synonym options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T4170921846"] = "Synonymoptionen vorauswählen?"
 
--- Content cleaner agent is preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
-
 -- Web content reader is shown
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1030372436"] = "Der Web-Content-Reader wird angezeigt"
 
@@ -16830,12 +17370,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T141
 -- Preselect another target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1462295644"] = "Eine andere Zielsprache vorauswählen"
 
--- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the content before summarizing it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T154694569"] = "Wenn diese Option aktiviert ist, wird der Agent zur Inhaltsbereinigung automatisch vorausgewählt. Das kann nützlich sein, wenn Sie den Inhalt bereinigen möchten, bevor Sie ihn zusammenfassen."
-
--- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the content before summarizing it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T154694569::INFORMAL"] = "Wenn diese Option aktiviert ist, wird der Agent zur Inhaltsbereinigung automatisch vorausgewählt. Das kann nützlich sein, wenn du den Inhalt bereinigen möchtest, bevor du ihn zusammenfasst."
-
 -- When activated, the web content reader is hidden and cannot be used. As a result, the user interface becomes a bit easier to use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1633101895"] = "Wenn diese Option aktiviert ist, wird der Web-Content-Reader ausgeblendet und kann nicht verwendet werden. Dadurch wird die Benutzeroberfläche etwas einfacher zu bedienen."
 
@@ -16844,9 +17378,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T170
 
 -- Assistant: Text Summarizer Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1767527569"] = "Assistent: Optionen für die Textzusammenfassung"
-
--- Content cleaner agent is not preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
 
 -- Hide the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2090693677"] = "Web-Content-Reader ausblenden?"
@@ -16862,6 +17393,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T244
 
 -- Web content reader is hidden
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2799795311"] = "Der Web-Content-Reader ist ausgeblendet"
+
+-- Text content cleaner is not preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T284131714"] = "Inhaltsbereinigung ist nicht vorausgewählt"
+
+-- Preselect the text content cleaner?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T2981779520"] = "Inhaltsbereinigung vorauswählen?"
 
 -- No summarizer options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3215334223"] = "Es sind keine Optionen für die Textzusammenfassung vorausgewählt"
@@ -16881,11 +17418,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T354
 -- Web content reader is preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3641773985"] = "Der Web-Content-Reader ist vorausgewählt"
 
--- Preselect the content cleaner agent?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
-
 -- Preselect important aspects
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3705987833"] = "Wichtige Aspekte vorauswählen"
+
+-- When enabled, the text content cleaner is preselected. This might be useful when you prefer to clean up the content before summarizing it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T402180229"] = "Wenn diese Option aktiviert ist, ist die Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn Sie den Inhalt bereinigen möchten, bevor Sie ihn zusammenfassen."
+
+-- When enabled, the text content cleaner is preselected. This might be useful when you prefer to clean up the content before summarizing it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T402180229::INFORMAL"] = "Wenn diese Option aktiviert ist, ist die Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn du den Inhalt bereinigen möchtest, bevor du ihn zusammenfasst."
 
 -- Which summarizer complexity should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T408530182"] = "Welche Komplexität der Zusammenfassung soll vorausgewählt werden?"
@@ -16902,8 +17442,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T511
 -- Preselect the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T629158142"] = "Den Web-Content-Reader vorauswählen?"
 
--- Content cleaner agent is preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
+-- Text content cleaner is preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T845988899"] = "Inhaltsbereinigung ist vorausgewählt"
 
 -- Assistant: Translator Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1016384269"] = "Assistent: Übersetzeroptionen"
@@ -16929,8 +17469,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T170112
 -- Live translation is not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1825690873"] = "Live-Übersetzung ist nicht vorausgewählt"
 
--- Content cleaner agent is not preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1969816694"] = "Agent zur Inhaltsbereinigung ist nicht vorausgewählt"
+-- When enabled, the text content cleaner is preselected. This might be useful when you prefer to clean up the content before translating it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1936357390"] = "Wenn diese Option aktiviert ist, ist die Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn Sie den Inhalt vor der Übersetzung bereinigen möchten."
+
+-- When enabled, the text content cleaner is preselected. This might be useful when you prefer to clean up the content before translating it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1936357390::INFORMAL"] = "Wenn diese Option aktiviert ist, ist die Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn du den Inhalt vor der Übersetzung bereinigen möchtest."
 
 -- Preselect translator options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T1989346399"] = "Übersetzeroptionen vorauswählen?"
@@ -16947,8 +17490,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T243574
 -- Web content reader is hidden
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2799795311"] = "Der Web-Content-Reader ist ausgeblendet"
 
+-- Text content cleaner is not preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T284131714"] = "Inhaltsbereinigung ist nicht vorausgewählt"
+
 -- No translator options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2866358796"] = "Es sind keine Übersetzeroptionen vorausgewählt"
+
+-- Preselect the text content cleaner?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T2981779520"] = "Inhaltsbereinigung vorauswählen?"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3448155331"] = "Schließen"
@@ -16965,9 +17514,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T354826
 -- Web content reader is preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3641773985"] = "Der Web-Content-Reader ist vorausgewählt"
 
--- Preselect the content cleaner agent?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
-
 -- When enabled, you can preselect the translator options. This might be useful when you prefer a specific target language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T4195511669"] = "Wenn diese Option aktiviert ist, können Sie die Übersetzeroptionen vorauswählen. Das kann nützlich sein, wenn Sie eine bestimmte Zielsprache oder ein bestimmtes LLM bevorzugen."
 
@@ -16977,11 +17523,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T419551
 -- Preselect the web content reader?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T629158142"] = "Den Web-Content-Reader vorauswählen?"
 
--- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T82436938"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn Sie den Inhalt vor der Übersetzung bereinigen möchten."
-
--- When enabled, the content cleaner agent is preselected. This might be useful when you prefer to clean up the content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T82436938::INFORMAL"] = "Wenn diese Option aktiviert ist, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn du den Inhalt vor der Übersetzung bereinigen möchtest."
+-- Text content cleaner is preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T845988899"] = "Inhaltsbereinigung ist vorausgewählt"
 
 -- How fast should the live translation react?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T884246296"] = "Wie schnell soll die Live-Übersetzung reagieren?"
@@ -17679,17 +18222,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1271524187"] = "Analysieren Sie e
 -- Analyze a document regarding defined rules and extract key information.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1271524187::INFORMAL"] = "Analysiere ein Dokument hinsichtlich festgelegter Regeln und extrahiere wichtige Informationen."
 
--- Business
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T131837803"] = "Business"
-
 -- Legal Check
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1348190638"] = "Rechtliche Prüfung"
 
 -- Identify strengths, weaknesses, opportunities, threats, and practical next steps from provided information.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1356376259"] = "Stärken, Schwächen, Chancen, Risiken und praktische nächste Schritte aus den bereitgestellten Informationen identifizieren."
-
--- General
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1432485131"] = "Allgemein"
 
 -- Grammar & Spelling
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1514925962"] = "Grammatik & Rechtschreibung"
@@ -17775,17 +18312,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2770149758"] = "Dokumentenanalyse
 -- Visual Briefing Assistant
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T277804139"] = "Assistent für visuelle Briefings"
 
--- AI Studio Development
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2830810750"] = "AI-Studio-Entwicklung"
-
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254"] = "Erstellen Sie eine Stellenanzeige anhand einer vorgegebenen Stellenbeschreibung."
 
 -- Generate a job posting for a given job description.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254::INFORMAL"] = "Erstelle eine Stellenanzeige anhand einer vorgegebenen Stellenbeschreibung."
-
--- Installed Assistants
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T295232966"] = "Installierte Assistenten"
 
 -- My Tasks
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3011450657"] = "Meine Aufgaben"
@@ -17793,23 +18324,20 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3011450657"] = "Meine Aufgaben"
 -- E-Mail
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3026443472"] = "E-Mail"
 
--- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311775455"] = "Die automatische Sicherheitsprüfung für das Assistenten-Plugin „{0}“ ist fehlgeschlagen. Bitte führen Sie sie manuell auf der Plugin-Seite aus."
-
--- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311775455::INFORMAL"] = "Die automatische Sicherheitsprüfung für das Assistenten-Plugin „{0}“ ist fehlgeschlagen. Bitte führe sie manuell auf der Plugin-Seite aus."
-
 -- Translate AI Studio text content into other languages
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3181803840"] = "Textinhalte von AI Studio in andere Sprachen übersetzen."
-
--- Software Engineering
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3260960011"] = "Software-Entwicklung"
 
 -- Assistant Builder
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3303547904"] = "Assistenten-Builder"
 
 -- Rewrite & Improve
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3309133329"] = "Umformulieren & Verbessern"
+
+-- You hid all categories. You can show them again in the assistant settings, which the gear next to the heading opens.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3608690820"] = "Sie haben alle Kategorien ausgeblendet. Sie können sie in den Assistenten-Einstellungen wieder einblenden, die das Zahnradsymbol neben der Überschrift öffnet."
+
+-- You hid all categories. You can show them again in the assistant settings, which the gear next to the heading opens.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3608690820::INFORMAL"] = "Du hast alle Kategorien ausgeblendet. Du kannst sie in den Assistenten-Einstellungen wieder einblenden, die das Zahnradsymbol neben der Überschrift öffnet."
 
 -- Icon Finder
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3693102312"] = "Icon Finder"
@@ -17819,6 +18347,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3733831260"] = "Erstellen Sie Ihr
 
 -- Generate your own assistants.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3733831260::INFORMAL"] = "Erstelle deine eigenen Assistenten."
+
+-- Open the assistant settings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3745279719"] = "Assistenten-Einstellungen öffnen"
 
 -- Generate an ERI server to integrate business systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3756213118"] = "Erstellen Sie einen ERI-Server zur Integration von Geschäftssystemen."
@@ -17852,6 +18383,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537"] = "Stellen Sie Frage
 
 -- Ask a question about a legal document.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537::INFORMAL"] = "Stelle Fragen zu einem juristischen Dokument."
+
+-- Assistant Settings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4124037832"] = "Assistenten-Einstellungen"
 
 -- Log Viewer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4130241777"] = "Protokollanzeige"
@@ -17888,9 +18422,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T892147062"] = "AI-Studio-Protokol
 
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Lokalisierung"
-
--- Learning & Reflecting
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T912918956"] = "Lernen & Reflektieren"
 
 -- Turn texts and documents into slides, also as a PowerPoint file in the design of your template.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T943132958"] = "Verwandeln Sie Texte und Dokumente in Folien, auch als PowerPoint-Datei im Design Ihrer Vorlage."
@@ -19038,6 +19569,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2430906247::INFORMAL"] = "{0} Möcht
 -- The tile '{0}' has been updated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "Die Kachel „{0}“ wurde aktualisiert."
 
+-- Your organization disabled all categories of this assistant: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2444737585"] = "Ihre Organisation hat alle Kategorien dieses Assistenten deaktiviert: {0}."
+
+-- Your organization disabled all categories of this assistant: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2444737585::INFORMAL"] = "Deine Organisation hat alle Kategorien dieses Assistenten deaktiviert: {0}."
+
 -- Share dialog not available
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2445896850"] = "Dialog zum Teilen nicht verfügbar"
 
@@ -19113,12 +19650,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3974628410"] = "Bitte legen Sie jewe
 -- Please drop only one plugin archive at a time.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3974628410::INFORMAL"] = "Bitte lege jeweils nur ein Plugin-Archiv gleichzeitig ab."
 
--- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817"] = "Die automatische Sicherheitsprüfung für das Assistenten-Plugin „{0}“ ist fehlgeschlagen. Bitte führen Sie sie manuell aus."
-
--- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817::INFORMAL"] = "Die automatische Sicherheitsprüfung für das Assistenten-Plugin „{0}“ ist fehlgeschlagen. Bitte führe sie manuell aus."
-
 -- The assistant plugin '{0}' has been successfully revised.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4157246824"] = "Das Assistenten-Plugin „{0}“ wurde erfolgreich überarbeitet."
 
@@ -19130,6 +19661,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T659549952"] = "Das Plugin-Archiv wur
 
 -- An error occurred while exporting the plugin.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T759681732"] = "Beim Exportieren des Plugins ist ein Fehler aufgetreten."
+
+-- Your organization disabled the category '{0}' of this assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T798759833"] = "Ihre Organisation hat die Kategorie „{0}“ dieses Assistenten deaktiviert."
+
+-- Your organization disabled the category '{0}' of this assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T798759833::INFORMAL"] = "Deine Organisation hat die Kategorie „{0}“ dieses Assistenten deaktiviert."
 
 -- The plugin could not be imported: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T837269472"] = "Das Plugin konnte nicht importiert werden: {0}"
@@ -19632,14 +20169,23 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1114668646
 -- Sidebar is always visible: show the workspaces next to the chat all the time
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1149606444"] = "Seitenleiste ist immer sichtbar: Arbeitsbereiche werden stets neben dem Chat angezeigt"
 
+-- Ask me what to do
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1179755636"] = "Mich fragen, was zu tun ist"
+
 -- Always use the default chat provider when loading chats
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1188453609"] = "Beim Laden von Chats immer den Standardanbieter verwenden"
+
+-- Send the message without asking
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1230541366"] = "Nachricht ohne Rückfrage senden"
 
 -- Show also prototype features: these are works in progress; expect bugs and missing features
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1245257804"] = "Auch Prototyp-Funktionen anzeigen: Diese befinden sich noch in der Entwicklung; Fehler und fehlende Funktionen sind zu erwarten"
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1258653480"] = "Einstellungen"
+
+-- Keep offering me the assistants, e.g., in the "Send to ..." menu
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1289869768"] = "Biete mir die Assistenten weiterhin an, z. B. im Menü „Senden an …“"
 
 -- No key is sending the input
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1311973034"] = "Keine Taste sendet die Eingabe; Sie müssen auf die Schaltfläche klicken, um zu senden"
@@ -19670,6 +20216,12 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1874928511
 
 -- Always expand navigation
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1991359958"] = "Navigationsleiste immer ausklappen"
+
+-- Treat the assistants as if they did not exist, e.g., not in the "Send to ..." menu
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2049952564"] = "Behandle die Assistenten so, als wären sie nicht vorhanden, z. B. nicht im Menü „Senden an …“"
+
+-- Compress automatically and continue in a new chat
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2052671834"] = "Automatisch komprimieren und in einem neuen Chat fortfahren"
 
 -- Show also experimental features: these are experimental; expect bugs, missing features, many changes
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T2091731959"] = "Auch experimentelle Funktionen anzeigen: Diese Funktionen sind experimentell; Fehler, fehlende Funktionen und viele Änderungen sind zu erwarten"
@@ -19727,6 +20279,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3061414822
 
 -- Check every hour
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3137986690"] = "Jede Stunde überprüfen"
+
+-- Compress automatically and replace the earlier messages
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T340081694"] = "Automatisch komprimieren und die bisherigen Nachrichten ersetzen"
 
 -- Delete disappearing chats older than 180 days
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3491430707"] = "Selbstlöschende Chats: Chats löschen, die älter als 180 Tage sind"
@@ -20057,39 +20612,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T373499115"] = "Ihre Dat
 
 -- Your data sources could not be used. This answer was created without them.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T373499115::INFORMAL"] = "Deine Datenquellen konnten nicht verwendet werden. Diese Antwort wurde ohne sie erstellt."
-
--- Software Development
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1025369409"] = "Softwareentwicklung"
-
--- Business
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T131837803"] = "Business"
-
--- General
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1432485131"] = "Allgemein"
-
--- Other
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1849229205"] = "Sonstiges"
-
--- Please select the assistant category
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2552974770"] = "Bitte wählen Sie die Assistentenkategorie aus"
-
--- Please select the assistant category
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2552974770::INFORMAL"] = "Bitte wähle die Assistentenkategorie aus"
-
--- AI Studio Development
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2830810750"] = "AI-Studio-Entwicklung"
-
--- Productivity
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T2887181245"] = "Produktivität"
-
--- Scientific
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T3802462536"] = "Wissenschaftlich"
-
--- Select the assistant category
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T4193824894"] = "Assistentenkategorie auswählen"
-
--- Learning & Reflecting
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T912918956"] = "Lernen & Reflektieren"
 
 -- This assistant is already running. AI Studio opens the running session instead.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTLAUNCH::ASSISTANTLAUNCHSERVICE::T2575715765"] = "Dieser Assistent läuft bereits. AI Studio öffnet stattdessen die laufende Sitzung."
@@ -21003,6 +21525,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T495100949"] = "Bitte verwen
 -- Please use only single asterisks as wildcards, e.g., *.txt or report-*.md.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T495100949::INFORMAL"] = "Bitte verwende als Platzhalter nur einzelne Sternchen, z. B. *.txt oder report-*.md."
 
+-- The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked. Choose another encoding in the server details of the mailbox, or ask your IT department which one the server expects.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1203063005"] = "Die ausgewählte Zeichenkodierung kann Ihren Benutzernamen oder Ihr Passwort nicht an diesen Server übertragen: Sie unterstützt mindestens eines der darin enthaltenen Zeichen nicht, oder der Server akzeptiert ausschließlich UTF-8. AI Studio hat deshalb keinen Anmeldeversuch unternommen, damit Ihr Konto nicht gesperrt wird. Wählen Sie in den Servereinstellungen des Postfachs eine andere Zeichenkodierung aus, oder fragen Sie Ihre IT-Abteilung, welche Zeichenkodierung der Server erwartet."
+
+-- The chosen encoding cannot carry your username or your password to this server: it lacks one of their characters, or the server accepts no other encoding than UTF-8. AI Studio did not try to sign in, so that your account is not locked. Choose another encoding in the server details of the mailbox, or ask your IT department which one the server expects.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1203063005::INFORMAL"] = "Die ausgewählte Zeichenkodierung kann deinen Benutzernamen oder dein Passwort nicht an diesen Server übertragen: Sie unterstützt mindestens eines der darin enthaltenen Zeichen nicht, oder der Server akzeptiert ausschließlich UTF-8. AI Studio hat deshalb keinen Anmeldeversuch unternommen, damit dein Konto nicht gesperrt wird. Wähle in den Servereinstellungen des Postfachs eine andere Zeichenkodierung aus, oder frag deine IT-Abteilung, welche Zeichenkodierung der Server erwartet."
+
 -- The server could not be reached. Please check the host and the port, and whether you need a VPN connection.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T1314233926"] = "Der Server konnte nicht erreicht werden. Bitte prüfen Sie Host und Port und ob Sie eine VPN-Verbindung benötigen."
 
@@ -21164,6 +21692,54 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1713926719"] = "Der Export w
 
 -- The export failed.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1895034475"] = "Der Export ist fehlgeschlagen."
+
+-- The organization does not allow the provider for security checks.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T1679509394"] = "Die Organisation lässt den Anbieter für Sicherheitsprüfungen nicht zu."
+
+-- AI Studio did not audit new or updated assistant plugins automatically, because no model is set for security checks, and there is no app-wide default either. Choose a model for security checks in the settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T1994155532"] = "AI Studio hat neue oder aktualisierte Assistenten-Plugins nicht automatisch geprüft, weil weder ein Modell für Sicherheitsprüfungen noch ein appweiter Standardanbieter festgelegt ist. Wählen Sie in den Einstellungen ein Modell für Sicherheitsprüfungen aus."
+
+-- AI Studio did not audit new or updated assistant plugins automatically, because no model is set for security checks, and there is no app-wide default either. Choose a model for security checks in the settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T1994155532::INFORMAL"] = "AI Studio hat neue oder aktualisierte Assistenten-Plugins nicht automatisch geprüft, weil weder ein Modell für Sicherheitsprüfungen noch ein appweiter Standardanbieter festgelegt ist. Wähle in den Einstellungen ein Modell für Sicherheitsprüfungen aus."
+
+-- No audit provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T2034826200"] = "Es ist kein Audit-Anbieter konfiguriert."
+
+-- Your organization does not allow the provider for security checks. Pick another one, or choose a dedicated provider for security checks in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T2109782167"] = "Der Anbieter für Sicherheitsprüfungen ist in Ihrer Organisation nicht zugelassen. Wählen Sie einen anderen aus oder legen Sie in den App-Einstellungen einen eigens für Sicherheitsprüfungen vorgesehenen Anbieter fest."
+
+-- Your organization does not allow the provider for security checks. Pick another one, or choose a dedicated provider for security checks in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T2109782167::INFORMAL"] = "Der Anbieter für Sicherheitsprüfungen ist in deiner Organisation nicht zugelassen. Wähle einen anderen aus oder lege in den App-Einstellungen einen eigens für Sicherheitsprüfungen vorgesehenen Anbieter fest."
+
+-- The provider is not trusted enough for security checks.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T2861409367"] = "Der Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug."
+
+-- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually on the plugins page.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T3322815862"] = "Die automatische Sicherheitsprüfung für das Assistenten-Plugin „{0}“ ist fehlgeschlagen. Bitte führen Sie sie manuell auf der Plugin-Seite aus."
+
+-- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually on the plugins page.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T3322815862::INFORMAL"] = "Die automatische Sicherheitsprüfung für das Assistenten-Plugin „{0}“ ist fehlgeschlagen. Bitte führe sie manuell auf der Plugin-Seite aus."
+
+-- AI Studio did not audit new or updated assistant plugins automatically, because the model for security checks is not trusted enough. Choose another one in the settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T3336137740"] = "AI Studio hat neue oder aktualisierte Assistenten-Plugins nicht automatisch geprüft, weil das Modell für Sicherheitsprüfungen nicht vertrauenswürdig genug ist. Wählen Sie in den Einstellungen ein anderes aus."
+
+-- AI Studio did not audit new or updated assistant plugins automatically, because the model for security checks is not trusted enough. Choose another one in the settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T3336137740::INFORMAL"] = "AI Studio hat neue oder aktualisierte Assistenten-Plugins nicht automatisch geprüft, weil das Modell für Sicherheitsprüfungen nicht vertrauenswürdig genug ist. Wähle in den Einstellungen ein anderes aus."
+
+-- No provider is configured for security checks.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T3445977179"] = "Für Sicherheitsprüfungen ist kein Anbieter konfiguriert."
+
+-- AI Studio did not audit new or updated assistant plugins automatically, because your organization does not allow the model for security checks. Choose another one in the settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T399386793"] = "AI Studio hat neue oder aktualisierte Assistenten-Plugins nicht automatisch geprüft, weil Ihre Organisation das Modell für Sicherheitsprüfungen nicht zulässt. Wählen Sie in den Einstellungen ein anderes aus."
+
+-- AI Studio did not audit new or updated assistant plugins automatically, because your organization does not allow the model for security checks. Choose another one in the settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T399386793::INFORMAL"] = "AI Studio hat neue oder aktualisierte Assistenten-Plugins nicht automatisch geprüft, weil deine Organisation das Modell für Sicherheitsprüfungen nicht zulässt. Wähle in den Einstellungen ein anderes aus."
+
+-- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T4104574219"] = "Der ausgewählte Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug. Wählen Sie einen Anbieter, der das hier erforderliche Vertrauensniveau erreicht, oder legen Sie in den App-Einstellungen einen eigens für Sicherheitsprüfungen vorgesehenen Anbieter fest."
+
+-- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::ASSISTANTPLUGINAUDITSERVICE::T4104574219::INFORMAL"] = "Der ausgewählte Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug. Wähle einen Anbieter, der das hier erforderliche Vertrauensniveau erreicht, oder lege in den App-Einstellungen einen eigens für Sicherheitsprüfungen vorgesehenen Anbieter fest."
 
 -- Text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1041509726"] = "Text"
@@ -21567,6 +22143,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T949
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."
 
+-- The table CUSTOM_CATEGORIES is using an invalid syntax. It must be a table of names.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T131394700"] = "Die Tabelle CUSTOM_CATEGORIES verwendet eine ungültige Syntax. Sie muss eine Tabelle mit Namen sein."
+
 -- The field NAME does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1340447036"] = "Das Feld NAME existiert nicht oder ist keine gültige Zeichenkette."
 
@@ -21597,6 +22176,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2262604281"] = "Das
 -- The field DESCRIPTION does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T229488255"] = "Das Feld DESCRIPTION existiert nicht oder ist keine gültige Zeichenkette."
 
+-- The table CUSTOM_CATEGORIES requires the category CUSTOM in the table CATEGORIES.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2426905758"] = "Die Tabelle CUSTOM_CATEGORIES benötigt die Kategorie CUSTOM in der Tabelle CATEGORIES."
+
+-- The category CUSTOM requires the table CUSTOM_CATEGORIES with at least one name.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2515975321"] = "Die Kategorie CUSTOM erfordert die Tabelle CUSTOM_CATEGORIES mit mindestens einem Namen."
+
 -- The field VERSION is not a valid version number. The version number must be formatted as string in the major.minor.patch format (X.X.X).
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T2538827536"] = "Das Feld VERSION ist keine gültige Versionsnummer. Die Versionsnummer muss als Zeichenkette im Format Hauptversion.Nebenversion.Patch (X.X.X) angegeben werden."
 
@@ -21617,6 +22202,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3667396132"] = "Die
 
 -- The field NAME is empty. The name must be a non-empty string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T3763759727"] = "Das Feld NAME ist leer. Der Name darf nicht leer sein."
+
+-- The table CUSTOM_CATEGORIES contains an empty name or a value which is not a text.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T4089014619"] = "Die Tabelle CUSTOM_CATEGORIES enthält einen leeren Namen oder einen Wert, der kein Text ist."
 
 -- The field SUPPORT_CONTACT does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T4189964941"] = "Das Feld SUPPORT_CONTACT existiert nicht oder ist keine gültige Zeichenkette."
@@ -21648,6 +22236,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T10253
 -- Business
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T131837803"] = "Business"
 
+-- General
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1432485131"] = "Allgemein"
+
 -- Music
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1481252212"] = "Musik"
 
@@ -21656,6 +22247,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T15858
 
 -- Weather
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1726658099"] = "Wetter"
+
+-- Custom category
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T1885949922"] = "Eigene Kategorie"
 
 -- Industry
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T208409567"] = "Industrie"
@@ -21678,6 +22272,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T25870
 -- Shopping
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2704337693"] = "Einkaufen"
 
+-- AI Studio Development
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2830810750"] = "AI-Studio-Entwicklung"
+
 -- Fitness
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T2892517655"] = "Fitness"
 
@@ -21692,9 +22289,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T34217
 
 -- Entertainment
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T3562575449"] = "Unterhaltung"
-
--- Education
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T379048501"] = "Bildung"
 
 -- AI Studio Core
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T4005865962"] = "AI-Studio-Kern"
@@ -21719,6 +22313,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T85056
 
 -- Science
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T904504157"] = "Wissenschaft"
+
+-- Learning & Reflecting
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T912918956"] = "Lernen & Reflektieren"
 
 -- Content Creation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCATEGORYEXTENSIONS::T914642375"] = "Inhalte erstellen"
@@ -22875,11 +23472,11 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T
 -- The check of which passages fit your question failed. This answer uses all passages that were found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T392269104::INFORMAL"] = "Die Prüfung, welche Textstellen zu deiner Frage passen, ist fehlgeschlagen. Diese Antwort verwendet alle gefundenen Textstellen."
 
--- Automatic AI data source selection with heuristik source reduction
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCSELWITHDYNHEUR::T2339257645"] = "Automatische Auswahl der Datenquellen mittels KI und mit heuristischer Datenquellen-Reduktion"
+-- Automatic AI data source selection with heuristic source reduction
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AISRCSELWITHDYNHEUR::T1677447909"] = "Automatische Auswahl der Datenquellen mittels KI und mit heuristischer Datenquellen-Reduktion"
 
 -- Automatically selects the appropriate data sources based on the last prompt. Applies a heuristic reduction at the end to reduce the number of data sources.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCSELWITHDYNHEUR::T648937779"] = "Wählt automatisch die passenden Datenquellen basierend auf der letzten Eingabe aus. Wendet am Ende eine heuristische Reduzierung an, um die Anzahl der Datenquellen zu verringern."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AISRCSELWITHDYNHEUR::T648937779"] = "Wählt automatisch die passenden Datenquellen basierend auf der letzten Eingabe aus. Wendet am Ende eine heuristische Reduzierung an, um die Anzahl der Datenquellen zu verringern."
 
 -- This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3047786484"] = "Dieser RAG-Prozess filtert Datenquellen, wählt automatisch passende Quellen aus, ermöglicht optional die manuelle Auswahl von Quellen, ruft Daten ab und überprüft den Abrufkontext automatisch."
@@ -23124,8 +23721,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1
 -- The revision model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1411545143"] = "Das Überarbeitungsmodell hat keine brauchbare Antwort zurückgegeben."
 
+-- Your organization disabled these categories of your assistant: {0}. Please choose other categories.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1647997085"] = "Ihre Organisation hat diese Kategorien Ihres Assistenten deaktiviert: {0}. Bitte wählen Sie andere Kategorien aus."
+
+-- Your organization disabled these categories of your assistant: {0}. Please choose other categories.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1647997085::INFORMAL"] = "Deine Organisation hat diese Kategorien deines Assistenten deaktiviert: {0}. Bitte wähle andere Kategorien aus."
+
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1725856265"] = "Beschreibung"
+
+-- The categories of the revised assistant do not match the revised plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1778095727"] = "Die Kategorien des überarbeiteten Assistenten stimmen nicht mit denen des überarbeiteten Plugins überein."
 
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1809312323"] = "Bitte wählen Sie einen Anbieter aus."
@@ -23177,6 +23783,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3
 
 -- Assistant Plugin Revision
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3245954919"] = "Revision des Assistenten-Plugins"
+
+-- Your organization disabled the category '{0}'. Please choose another category for your assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3254953496"] = "Ihre Organisation hat die Kategorie „{0}“ deaktiviert. Bitte wählen Sie eine andere Kategorie für Ihren Assistenten aus."
+
+-- Your organization disabled the category '{0}'. Please choose another category for your assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3254953496::INFORMAL"] = "Deine Organisation hat die Kategorie „{0}“ deaktiviert. Bitte wähle eine andere Kategorie für deinen Assistenten aus."
 
 -- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3278037634"] = "Der Assistenten-Builder konnte das Plugin-Manifest nicht lesen und kann Ihren Assistenten daher derzeit nicht sicher erstellen."
@@ -23243,6 +23855,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4
 
 -- The draft model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4183375977"] = "Das Entwurfsmodell hat keine brauchbare Antwort zurückgegeben."
+
+-- The categories of the generated assistant do not match the generated plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4224887725"] = "Die Kategorien des generierten Assistenten stimmen nicht mit denen des generierten Plugins überein."
 
 -- The Assistant Builder response schema could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4235833611"] = "Das Antwortschema des Assistenten-Builders konnte nicht geladen werden."
@@ -23387,6 +24002,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2466659933"] = "
 
 -- The assistant chat launcher references data source '{0}', but that data source does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T289191545"] = "Der Chat-Schnellstart-Assistent verweist auf die Datenquelle „{0}“, aber diese Datenquelle existiert nicht."
+
+-- Your organization disabled the categories of this assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2988562427"] = "Ihre Organisation hat die Kategorien dieses Assistenten deaktiviert."
+
+-- Your organization disabled the categories of this assistant.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2988562427::INFORMAL"] = "Deine Organisation hat die Kategorien dieses Assistenten deaktiviert."
 
 -- The chat template '{0}' selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3082876173"] = "Die Chat-Vorlage „{0}“ wählt Datenquellen aus, aber für Chats ist kein Anbieter verfügbar. Bitte wählen Sie zuerst einen Standardanbieter für Chats aus. Es wurde kein Chat erstellt."
@@ -23928,14 +24549,26 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCECODELANGUAGES::T1041509726"] = "Text"
 -- Could not open the file location.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1118835751"] = "Der Speicherort der Datei konnte nicht geöffnet werden."
 
+-- As a Flatpak, AI Studio cannot open the document at its page: the sandbox of the Flatpak lets no page through to the program which shows the document. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1426315148"] = "Als Flatpak kann AI Studio das Dokument nicht auf der richtigen Seite öffnen: Die Sandbox des Flatpaks lässt keine Seitenzahl zu dem Programm durch, das das Dokument anzeigt. Die Textstelle steht auf Seite {0}."
+
 -- Could not open the file location: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T1455637941"] = "Der Speicherort der Datei konnte nicht geöffnet werden: {0}"
+
+-- AI Studio could not open the document at its page: the program which shows the document could not be started with the page, so it opened without it. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3168067729"] = "AI Studio konnte das Dokument nicht auf der richtigen Seite öffnen: Das Programm, das das Dokument anzeigt, ließ sich nicht mit der Seitenzahl starten und hat es deshalb ohne sie geöffnet. Die Textstelle steht auf Seite {0}."
 
 -- Unknown error
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3461425987"] = "Unbekannter Fehler"
 
 -- Could not open the document.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T3570758363"] = "Das Dokument konnte nicht geöffnet werden."
+
+-- AI Studio cannot open the document at its page: the program your system shows it with does not allow choosing a page. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T932584602"] = "AI Studio kann das Dokument nicht auf der richtigen Seite öffnen: Das Programm, mit dem Ihr System es anzeigt, erlaubt keine Wahl der Seite. Die Textstelle steht auf Seite {0}."
+
+-- AI Studio cannot open the document at its page: the program your system shows it with does not allow choosing a page. The passage is on page {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T932584602::INFORMAL"] = "AI Studio kann das Dokument nicht auf der richtigen Seite öffnen: Das Programm, mit dem dein System es anzeigt, erlaubt keine Wahl der Seite. Die Textstelle steht auf Seite {0}."
 
 -- Could not open the document: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEDOCUMENTLOCATIONEXTENSIONS::T945417289"] = "Das Dokument konnte nicht geöffnet werden: {0}"
@@ -24519,6 +25152,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSSERVICE::T40310
 -- The file path is null or empty and the file therefore can not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T932243993"] = "Der Dateipfad ist leer, daher kann die Datei nicht geladen werden."
 
+-- The API key for '{0}' contains a character which an API key cannot contain, such as a line break or an invisible character. Please enter the key again in the settings. If your organization provides the key, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3169974238"] = "Der API-Schlüssel für „{0}“ enthält ein Zeichen, das in einem API-Schlüssel nicht vorkommen kann, etwa einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte geben Sie den Schlüssel in den Einstellungen erneut ein. Wenn Ihre Organisation den Schlüssel bereitstellt, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The API key for '{0}' contains a character which an API key cannot contain, such as a line break or an invisible character. Please enter the key again in the settings. If your organization provides the key, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3169974238::INFORMAL"] = "Der API-Schlüssel für „{0}“ enthält ein Zeichen, das in einem API-Schlüssel nicht vorkommen kann, etwa einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte gib den Schlüssel in den Einstellungen erneut ein. Wenn deine Organisation den Schlüssel bereitstellt, wende dich bitte an deine IT-Abteilung."
+
+-- The API key contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the key and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3476635333"] = "Der API-Schlüssel enthält ein unsichtbares Zeichen. Solche Zeichen kommen oft mit, wenn Sie Text von einer Webseite oder aus einem Dokument kopieren. Bitte löschen Sie den Schlüssel und geben Sie ihn erneut ein."
+
+-- The API key contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the key and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3476635333::INFORMAL"] = "Der API-Schlüssel enthält ein unsichtbares Zeichen. Solche Zeichen kommen oft mit, wenn du Text von einer Webseite oder aus einem Dokument kopierst. Bitte lösche den Schlüssel und gib ihn erneut ein."
+
+-- The API key contains the character '{0}', which an API key cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3728920309"] = "Der API-Schlüssel enthält das Zeichen „{0}“, das in einem API-Schlüssel nicht vorkommen kann. Textverarbeitungsprogramme machen zum Beispiel aus Anführungszeichen und Bindestrichen solche Zeichen. Bitte überprüfen Sie den Schlüssel."
+
+-- The API key contains the character '{0}', which an API key cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T3728920309::INFORMAL"] = "Der API-Schlüssel enthält das Zeichen „{0}“, das in einem API-Schlüssel nicht vorkommen kann. Textverarbeitungsprogramme machen zum Beispiel aus Anführungszeichen und Bindestrichen solche Zeichen. Bitte überprüfe den Schlüssel."
+
+-- The API key contains a space or a line break, which an API key cannot contain. Please check whether you copied more than the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T839628124"] = "Der API-Schlüssel enthält ein Leerzeichen oder einen Zeilenumbruch. Beides kann in einem API-Schlüssel nicht vorkommen. Bitte überprüfen Sie, ob Sie mehr als nur den Schlüssel kopiert haben."
+
+-- The API key contains a space or a line break, which an API key cannot contain. Please check whether you copied more than the key.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::APIKEYVALIDATION::T839628124::INFORMAL"] = "Der API-Schlüssel enthält ein Leerzeichen oder einen Zeilenumbruch. Beides kann in einem API-Schlüssel nicht vorkommen. Bitte überprüfe, ob du mehr als nur den Schlüssel kopiert hast."
+
 -- The hostname is not a valid HTTP(S) URL.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1013354736"] = "Der Hostname ist keine gültige HTTP(S)-URL."
 
@@ -24698,6 +25355,66 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876"]
 
 -- Please enter the secret necessary for authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876::INFORMAL"] = "Bitte gib das für die Authentifizierung benötigte Geheimnis ein."
+
+-- The username contains the character '{0}', which the ERI server cannot receive: only letters without accents, digits, spaces, and common punctuation get through. Please check the username. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1126605556"] = "Der Benutzername enthält das Zeichen „{0}“, das der ERI-Server nicht empfangen kann: Übertragen werden nur Buchstaben ohne Akzente, Ziffern, Leerzeichen und gängige Satzzeichen. Bitte überprüfen Sie den Benutzernamen. Falls er tatsächlich ein solches Zeichen enthält, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The username contains the character '{0}', which the ERI server cannot receive: only letters without accents, digits, spaces, and common punctuation get through. Please check the username. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1126605556::INFORMAL"] = "Der Benutzername enthält das Zeichen „{0}“, das der ERI-Server nicht empfangen kann: Übertragen werden nur Buchstaben ohne Akzente, Ziffern, Leerzeichen und gängige Satzzeichen. Bitte überprüfe den Benutzernamen. Falls er tatsächlich ein solches Zeichen enthält, wende dich bitte an deine IT-Abteilung."
+
+-- The password of the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut, a line break, or an invisible character. Please enter the password again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1321099029"] = "Das Passwort der Datenquelle „{0}“ enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut, einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte geben Sie das Passwort in den Einstellungen der Datenquelle erneut ein. Wenn Ihre Organisation die Datenquelle bereitstellt, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The password of the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut, a line break, or an invisible character. Please enter the password again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T1321099029::INFORMAL"] = "Das Passwort der Datenquelle „{0}“ enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut, einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte gib das Passwort in den Einstellungen der Datenquelle erneut ein. Wenn deine Organisation die Datenquelle bereitstellt, wende dich bitte an deine IT-Abteilung."
+
+-- The access token contains a space or a line break, which an access token cannot contain. Please check whether you copied more than the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2361316190"] = "Das Zugangstoken enthält ein Leerzeichen oder einen Zeilenumbruch. Beides kann in einem Zugangstoken nicht vorkommen. Bitte überprüfen Sie, ob Sie mehr als nur das Token kopiert haben."
+
+-- The access token contains a space or a line break, which an access token cannot contain. Please check whether you copied more than the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2361316190::INFORMAL"] = "Das Zugangstoken enthält ein Leerzeichen oder einen Zeilenumbruch. Beides kann in einem Zugangstoken nicht vorkommen. Bitte überprüfe, ob du mehr als nur das Token kopiert hast."
+
+-- The access token of the data source '{0}' contains a character which an access token cannot contain, such as a line break or an invisible character. Please enter the token again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2819602693"] = "Das Zugangstoken der Datenquelle „{0}“ enthält ein Zeichen, das in einem Zugangstoken nicht vorkommen kann, etwa einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte geben Sie das Token in den Einstellungen der Datenquelle erneut ein. Wenn Ihre Organisation die Datenquelle bereitstellt, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The access token of the data source '{0}' contains a character which an access token cannot contain, such as a line break or an invisible character. Please enter the token again in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2819602693::INFORMAL"] = "Das Zugangstoken der Datenquelle „{0}“ enthält ein Zeichen, das in einem Zugangstoken nicht vorkommen kann, etwa einen Zeilenumbruch oder ein unsichtbares Zeichen. Bitte gib das Token in den Einstellungen der Datenquelle erneut ein. Wenn deine Organisation die Datenquelle bereitstellt, wende dich bitte an deine IT-Abteilung."
+
+-- The access token contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the token and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2930207847"] = "Das Zugangstoken enthält ein unsichtbares Zeichen. Solche Zeichen kommen oft mit, wenn Sie Text von einer Webseite oder aus einem Dokument kopieren. Bitte löschen Sie das Token und geben Sie es erneut ein."
+
+-- The access token contains an invisible character, which often comes along when you copy text from a web page or a document. Please delete the token and enter it again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T2930207847::INFORMAL"] = "Das Zugangstoken enthält ein unsichtbares Zeichen. Solche Zeichen kommen oft mit, wenn du Text von einer Webseite oder aus einem Dokument kopierst. Bitte lösche das Token und gib es erneut ein."
+
+-- The password contains a character which the ERI server cannot receive, such as an umlaut, 'ß', or a typographic quotation mark: only letters without accents, digits, spaces, and common punctuation get through. Please check the password. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3440410256"] = "Das Passwort enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut, ein „ß“ oder ein typografisches Anführungszeichen: Übertragen werden nur Buchstaben ohne Akzente, Ziffern, Leerzeichen und gängige Satzzeichen. Bitte überprüfen Sie das Passwort. Falls es tatsächlich ein solches Zeichen enthält, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The password contains a character which the ERI server cannot receive, such as an umlaut, 'ß', or a typographic quotation mark: only letters without accents, digits, spaces, and common punctuation get through. Please check the password. If it really contains such a character, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3440410256::INFORMAL"] = "Das Passwort enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut, ein „ß“ oder ein typografisches Anführungszeichen: Übertragen werden nur Buchstaben ohne Akzente, Ziffern, Leerzeichen und gängige Satzzeichen. Bitte überprüfe das Passwort. Falls es tatsächlich ein solches Zeichen enthält, wende dich bitte an deine IT-Abteilung."
+
+-- The password contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the password again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3690718143"] = "Das Passwort enthält einen Zeilenumbruch, einen Tabulator, ein besonderes Leerzeichen wie das geschützte Leerzeichen oder ein unsichtbares Zeichen. Solche Zeichen kann der ERI-Server nicht empfangen. Normale Leerzeichen sind in Ordnung. Bitte geben Sie das Passwort erneut ein."
+
+-- The password contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the password again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3690718143::INFORMAL"] = "Das Passwort enthält einen Zeilenumbruch, einen Tabulator, ein besonderes Leerzeichen wie das geschützte Leerzeichen oder ein unsichtbares Zeichen. Solche Zeichen kann der ERI-Server nicht empfangen. Normale Leerzeichen sind in Ordnung. Bitte gib das Passwort erneut ein."
+
+-- The access token contains the character '{0}', which an access token cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3718710191"] = "Das Zugangstoken enthält das Zeichen „{0}“, das in einem Zugangstoken nicht vorkommen kann. Textverarbeitungsprogramme machen zum Beispiel aus Anführungszeichen und Bindestrichen solche Zeichen. Bitte überprüfen Sie das Token."
+
+-- The access token contains the character '{0}', which an access token cannot contain. Word processors, for example, turn quotation marks and dashes into such characters. Please check the token.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T3718710191::INFORMAL"] = "Das Zugangstoken enthält das Zeichen „{0}“, das in einem Zugangstoken nicht vorkommen kann. Textverarbeitungsprogramme machen zum Beispiel aus Anführungszeichen und Bindestrichen solche Zeichen. Bitte überprüfe das Token."
+
+-- The username for the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut. Please check the username in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T4013716977"] = "Der Benutzername für die Datenquelle „{0}“ enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut. Bitte überprüfen Sie den Benutzernamen in den Einstellungen der Datenquelle. Wenn Ihre Organisation die Datenquelle bereitstellt, wenden Sie sich bitte an Ihre IT-Abteilung."
+
+-- The username for the data source '{0}' contains a character which the ERI server cannot receive, such as an umlaut. Please check the username in the settings of the data source. If your organization provides the data source, please contact your IT department.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T4013716977::INFORMAL"] = "Der Benutzername für die Datenquelle „{0}“ enthält ein Zeichen, das der ERI-Server nicht empfangen kann, etwa einen Umlaut. Bitte überprüfe den Benutzernamen in den Einstellungen der Datenquelle. Wenn deine Organisation die Datenquelle bereitstellt, wende dich bitte an deine IT-Abteilung."
+
+-- The username contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the username again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T588839531"] = "Der Benutzername enthält einen Zeilenumbruch, einen Tabulator, ein besonderes Leerzeichen wie das geschützte Leerzeichen oder ein unsichtbares Zeichen. Solche Zeichen kann der ERI-Server nicht empfangen. Normale Leerzeichen sind in Ordnung. Bitte geben Sie den Benutzernamen erneut ein."
+
+-- The username contains a line break, a tab, a special space such as a non-breaking space, or an invisible character, which the ERI server cannot receive. Ordinary spaces are fine. Please enter the username again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::ERICREDENTIALVALIDATION::T588839531::INFORMAL"] = "Der Benutzername enthält einen Zeilenumbruch, einen Tabulator, ein besonderes Leerzeichen wie das geschützte Leerzeichen oder ein unsichtbares Zeichen. Solche Zeichen kann der ERI-Server nicht empfangen. Normale Leerzeichen sind in Ordnung. Bitte gib den Benutzernamen erneut ein."
 
 -- AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1578559061"] = "AI Studio kann keine Bilder im Format {0} an ein KI-Modell übergeben. Bitte konvertieren Sie das Bild in JPG oder PNG."

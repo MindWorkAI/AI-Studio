@@ -25,8 +25,8 @@ public static class MailAttachmentPieces
     /// The largest attachment, as it travels, which can be fetched at all.
     /// </summary>
     /// <remarks>
-    /// The IMAP client addresses a piece by an offset of type int. With Base64, this allows for files
-    /// of about 1.5 GB, whereas mail servers rarely accept a mail a tenth as large.
+    /// With Base64, this allows for files of about 1.5 GB, whereas mail servers rarely accept a mail a
+    /// tenth as large. The limit also ends the fetching when a server keeps delivering full pieces.
     /// </remarks>
     public const long MAX_OCTETS = int.MaxValue;
 
@@ -41,7 +41,7 @@ public static class MailAttachmentPieces
     /// <param name="pieceBytes">How large a piece is, cf. PIECE_BYTES.</param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="InvalidDataException">The transfer encoding is unknown, or the server delivered more than it was asked for.</exception>
-    public static async Task WriteDecodedAsync(Func<int, CancellationToken, Task<Stream>> fetchPieceAsync, string? transferEncoding, Stream destination, int pieceBytes, CancellationToken token)
+    public static async Task WriteDecodedAsync(Func<long, CancellationToken, Task<Stream>> fetchPieceAsync, string? transferEncoding, Stream destination, int pieceBytes, CancellationToken token)
     {
         var encoding = GetEncoding(transferEncoding);
         await using var decoded = new FilteredStream(destination);
@@ -52,7 +52,7 @@ public static class MailAttachmentPieces
         for (var offset = 0L; offset <= MAX_OCTETS; offset += pieceBytes)
         {
             var pieceLength = 0L;
-            await using (var piece = await fetchPieceAsync((int)offset, token))
+            await using (var piece = await fetchPieceAsync(offset, token))
             {
                 int read;
                 while ((read = await piece.ReadAsync(buffer, token)) > 0)
@@ -80,7 +80,7 @@ public static class MailAttachmentPieces
     {
         // Without a transfer encoding, the content travels as it is, cf. RFC 2045, section 6.1:
         if (string.IsNullOrWhiteSpace(transferEncoding))
-            return ContentEncoding.Default;
+            return ContentEncoding.Unspecified;
 
         if (MimeUtils.TryParse(transferEncoding, out ContentEncoding encoding))
             return encoding;

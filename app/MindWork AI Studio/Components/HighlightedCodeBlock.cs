@@ -11,8 +11,9 @@ namespace AIStudio.Components;
 /// same classes, the same colors of the theme, and the same copy button.
 /// </summary>
 /// <remarks>
-/// Its parameters are strings only. Blazor then renders it again only when the code or the language
-/// change, so while an answer streams in, only the block which grows is highlighted again.
+/// Its parameters are strings and an enum only. Blazor then renders it again only when the code, the
+/// language, or the typography change, so while an answer streams in, only the block which grows is
+/// highlighted again.
 /// </remarks>
 public sealed class HighlightedCodeBlock : ComponentBase
 {
@@ -28,6 +29,12 @@ public sealed class HighlightedCodeBlock : ComponentBase
     [Parameter]
     public string Language { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The typography of the block: that of the body text, which MudMarkdown gives the code blocks it renders itself.
+    /// </summary>
+    [Parameter]
+    public Typo Typo { get; set; }
+
     #region Overrides of ComponentBase
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
@@ -39,12 +46,9 @@ public sealed class HighlightedCodeBlock : ComponentBase
         builder.AddComponentParameter(3, nameof(CodeBlockCopyButton.Text), this.Code);
         builder.CloseComponent();
 
-        //
-        // MudMarkdown leaves the typography of its code blocks at the default value, and so do we:
-        //
         builder.OpenComponent<MudText>(4);
         builder.AddComponentParameter(5, nameof(MudText.HtmlTag), "pre");
-        builder.AddComponentParameter(6, nameof(MudText.Typo), default(Typo));
+        builder.AddComponentParameter(6, nameof(MudText.Typo), this.Typo);
         builder.AddComponentParameter(7, nameof(MudText.ChildContent), (RenderFragment)this.RenderCode);
         builder.CloseComponent();
 

@@ -36,6 +36,19 @@ public static class MailHeaders
     }
 
     /// <summary>
+    /// Reads the address of a mailbox, with an internationalized domain in Unicode, e.g. "müller.example"
+    /// rather than "xn--mller-kva.example".
+    /// </summary>
+    /// <remarks>
+    /// MimeKit decoded such a domain by itself up to version 4, and the index keeps every address in
+    /// this form. The key of a mail depends on it, too, see MailContentKey: in another form, every mail
+    /// from such a domain would be embedded anew.
+    /// </remarks>
+    /// <param name="mailbox">The mailbox, as parsed from a header.</param>
+    /// <returns>The address.</returns>
+    public static string ReadAddress(MailboxAddress mailbox) => mailbox.GetAddress(idnEncode: false);
+
+    /// <summary>
     /// Reads the Message-IDs of a header, without their angle brackets.
     /// </summary>
     /// <param name="headers">The header block.</param>

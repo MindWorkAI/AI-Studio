@@ -96,7 +96,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
         if (toolExecutor is not null && runnableTools.Count > 0)
         {
             var adapter = new AnthropicToolCallingAdapter(chatModel, [..messages], systemPrompt, maxTokens, apiParameters, runnableTools,
-                (requestDto, requestToken) => this.StreamMessagesRequest(requestDto, requestedSecret, requestToken));
+                (requestDto, streamEnd, requestToken) => this.StreamMessagesRequest(requestDto, requestedSecret, streamEnd, requestToken));
 
             var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
             var loopContext = new ToolCallingLoopContext
@@ -139,7 +139,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             var request = new HttpRequestMessage(HttpMethod.Post, "messages");
 
             // Set the authorization header:
-            request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Headers.Add("x-api-key", await this.DecryptAPIKey(requestedSecret));
 
             // Set the Anthropic version:
             request.Headers.Add("anthropic-version", "2023-06-01");
@@ -161,18 +161,18 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     /// classification come from the shared stream reader, which the tool rounds used to go
     /// without; reading the events is the adapter's business.
     /// </remarks>
-    private IAsyncEnumerable<ServerSentEvent> StreamMessagesRequest(ChatRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    private IAsyncEnumerable<ServerSentEvent> StreamMessagesRequest(ChatRequest requestDto, RequestedSecret requestedSecret, ServerSentEventStreamEnd streamEnd, CancellationToken token)
     {
         async Task<HttpRequestMessage> RequestBuilder()
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "messages");
-            request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Headers.Add("x-api-key", await this.DecryptAPIKey(requestedSecret));
             request.Headers.Add("anthropic-version", "2023-06-01");
             request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
             return request;
         }
 
-        return this.ReadServerSentEventsAsync("Anthropic", "messages call", RequestBuilder, token);
+        return this.ReadServerSentEventsAsync("Anthropic", "messages call", RequestBuilder, streamEnd, token);
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

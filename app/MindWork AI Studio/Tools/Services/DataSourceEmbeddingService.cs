@@ -8,6 +8,7 @@ using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Media;
+using AIStudio.Tools.Pauses;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services.Indexing;
@@ -768,7 +769,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <param name="token">The token of the run.</param>
     private async Task WaitForPauseBetweenStepsAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
-        var range = PauseRange.FromSettings(settingsManager.ConfigurationData.App.DataSourceIndexing);
+        var range = settingsManager.ConfigurationData.App.DataSourceIndexing.EffectivePauseRange;
         var pause = this.pauseBetweenSteps.GetPauseBeforeNextStep(DateTimeOffset.UtcNow, range, rng);
         if (pause.Remaining <= TimeSpan.Zero)
             return;
@@ -1201,7 +1202,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// </summary>
     /// <remarks>
     /// The one place which knows where data sources are kept: in DataSources those which classic
-    /// RAG and the agents see as well, in Mailboxes those which only the mail tools read. Whatever
+    /// RAG and its AI operations see as well, in Mailboxes those which only the mail tools read. Whatever
     /// works through all of them, or looks one up by its id, goes through here.
     /// </remarks>
     /// <returns>The data sources, those from DataSources first.</returns>

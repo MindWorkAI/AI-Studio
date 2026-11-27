@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -19,12 +20,56 @@ namespace AIStudio.Tools.Mathematics;
 /// even with it, a != b is the factorial of a equated to b. This reader refuses such spellings
 /// instead of letting a model compute what it did not mean, and states how AngouriMath writes the
 /// thing instead. Its parse errors list over a thousand characters of expected tokens; the reader
-/// keeps the column and the cause.<br/><br/>
+/// keeps the column and the cause. Where AngouriMath refuses a name of its own, its message names
+/// the library, its C# API, and functions the tools do not support; the reader keeps the name.<br/><br/>
+/// It also refuses the functions which AngouriMath reads since version 2.7.0 or 2.8.0, except those the
+/// tools return, see UNSUPPORTED_FUNCTIONS and UNSUPPORTED_NODE_TYPES.<br/><br/>
 /// Call it inside a computation of MathComputationService: the parser needs the stack of its thread.
 /// </remarks>
 public static partial class MathExpressionReader
 {
     private const int MAX_REASON_LENGTH = 200;
+
+    private const int MAX_SHOWN_LENGTH = 120;
+
+    /// <summary>
+    /// The functions which AngouriMath reads since version 2.7.0 or 2.8.0, and which the tools do not support.
+    /// </summary>
+    /// <remarks>
+    /// AngouriMath computes some of them while it parses, such as det, dot, or jacobian of a matrix written
+    /// out, so nothing of them is left in the expression to refuse afterward. The reader therefore refuses
+    /// them by name before parsing, also those which AngouriMath refuses itself, such as nextprime, since its
+    /// messages name the library. lambertw, productlog, polygamma, and digamma stay readable, since solving,
+    /// integrating, and differentiating return them. AngouriMathBehaviorTests lists every name AngouriMath reads.
+    /// </remarks>
+    internal static readonly FrozenSet<string> UNSUPPORTED_FUNCTIONS = new[]
+    {
+        "arg", "beta", "catalannumber", "conj", "conjugate", "cross", "curl", "det", "divergence", "divisors", "divisorsigma", "dot",
+        "doublefactorial", "factorial2", "factorialpower", "factorization", "factorize", "fallingfactorial", "forwarddifference",
+        "fractionalpart", "gradient", "harmonicnumber", "heaviside", "hessian", "hurwitzzeta", "im", "Im", "imag", "isprime", "jacobian",
+        "laplacian", "mobius", "moebiusmu", "multinomial", "nextprime", "norm", "partialderivative", "pochhammer", "primefactors", "primenu",
+        "primeomega", "primepi", "quotient", "re", "Re", "real", "resultant", "riemannzeta", "risingfactorial", "trace", "transpose",
+        "unitstep", "zeta"
+    }.ToFrozenSet(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The kinds of nodes which AngouriMath has since version 2.7.0 or 2.8.0, and which the tools do not support.
+    /// </summary>
+    /// <remarks>
+    /// Most of them come from a function of UNSUPPORTED_FUNCTIONS, which the reader refuses by name before.
+    /// Three come without a name: the double factorial n!!, the entry A[1, 2] of a matrix, and the product
+    /// over a set, product(f, x in S). LambertWf, IncompleteGammaf, which gamma(a, z) reads into, and
+    /// Polygammaf stay readable, since solving, integrating, and differentiating return them.
+    /// </remarks>
+    internal static readonly FrozenSet<Type> UNSUPPORTED_NODE_TYPES = new[]
+    {
+        typeof(Entity.Argf), typeof(Entity.Betaf), typeof(Entity.CatalanNumberf), typeof(Entity.Conjugatef), typeof(Entity.CrossProductf),
+        typeof(Entity.Determinantf), typeof(Entity.DivisorSigmaf), typeof(Entity.DotProductf), typeof(Entity.DoubleFactorialf),
+        typeof(Entity.FallingFactorialf), typeof(Entity.HarmonicNumberf), typeof(Entity.Imf), typeof(Entity.MatrixEntryf), typeof(Entity.Mobiusf),
+        typeof(Entity.Normf), typeof(Entity.PartialDerivativef), typeof(Entity.PrimeFactorizationf), typeof(Entity.Set.PrimeFactorsf),
+        typeof(Entity.PrimeNuf), typeof(Entity.PrimeOmegaf), typeof(Entity.PrimePif), typeof(Entity.ProductOverSetf), typeof(Entity.Ref),
+        typeof(Entity.RisingFactorialf), typeof(Entity.Tracef), typeof(Entity.Transposef), typeof(Entity.Zetaf)
+    }.ToFrozenSet();
 
     /// <summary>
     /// Reads an expression, or refuses it.
@@ -32,7 +77,7 @@ public static partial class MathExpressionReader
     /// <param name="text">The expression as the model wrote it.</param>
     /// <param name="argumentName">The argument the expression came in, named in every message.</param>
     /// <returns>The expression as AngouriMath reads it.</returns>
-    /// <exception cref="MathComputationException">The expression is empty, too long, uses a spelling AngouriMath reads otherwise, or cannot be read.</exception>
+    /// <exception cref="MathComputationException">The expression is empty, too long, uses a spelling AngouriMath reads otherwise or a function the tools do not support, or cannot be read.</exception>
     public static Entity Read(string text, string argumentName)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -51,9 +96,17 @@ public static partial class MathExpressionReader
         if (equalsSigns > 1)
             throw new MathComputationException($"Argument '{argumentName}' contains {equalsSigns} equals signs, but an expression holds one equation at most. The tool would read a chain of them as several equations joined by 'and'.");
 
+        var unsupportedFunction = FunctionNames().Matches(text).Select(match => match.Groups["name"].Value).FirstOrDefault(UNSUPPORTED_FUNCTIONS.Contains);
+        if (unsupportedFunction is not null)
+            throw new MathComputationException($"Argument '{argumentName}' uses the function '{unsupportedFunction}', which the tool does not support.");
+
         var expression = Parse(text, argumentName);
         if (expression.Vars.Any(variable => variable.Name == "oo"))
             throw new MathComputationException($"Argument '{argumentName}' uses 'oo', which the tool reads as a variable. Infinity is written +oo or -oo.");
+
+        var unsupportedNode = expression.Nodes.FirstOrDefault(node => UNSUPPORTED_NODE_TYPES.Contains(node.GetType()));
+        if (unsupportedNode is not null)
+            throw new MathComputationException($"Argument '{argumentName}' contains '{unsupportedNode.ToString().Shorten(MAX_SHOWN_LENGTH)}', which the tool does not support.");
 
         return expression;
     }
@@ -79,6 +132,10 @@ public static partial class MathExpressionReader
         {
             throw new MathComputationException($"Argument '{argumentName}' cannot be read: {exception.Message}.");
         }
+        catch (UnrecognizedFunctionParseException exception)
+        {
+            throw new MathComputationException(DescribeUnrecognizedFunction(exception.Message, argumentName));
+        }
         catch (ParseException exception)
         {
             throw new MathComputationException(DescribeParseError(exception.Message, argumentName));
@@ -90,10 +147,11 @@ public static partial class MathExpressionReader
     /// </summary>
     /// <remarks>
     /// AngouriMath downcasts while it parses: it reads 0.1 as 1/10, but 6.62607015e-34 as an inexact
-    /// decimal and 1e-60 as 0, see AngouriMathBehaviorTests. Simplifying then drops an inexact decimal
-    /// from a sum, so 1 + 1e-40 would be exactly 1. The reader therefore parses without downcasting,
-    /// which leaves every number a decimal, and turns each into its fraction or integer. A literal
-    /// with an exponent beyond MathLimits.MAX_EXACT_DIGITS stays a decimal.
+    /// decimal and 1e-60 as 0, see AngouriMathBehaviorTests. An inexact decimal leaves every value it
+    /// takes part in inexact, and up to version 2.6.0, simplifying even dropped it from a sum, so
+    /// 1 + 1e-40 was exactly 1. The reader therefore parses without downcasting, which leaves every
+    /// number a decimal, and turns each into its fraction or integer. A literal with an exponent beyond
+    /// MathLimits.MAX_EXACT_DIGITS stays a decimal.
     /// </remarks>
     private static Entity WithExactLiterals(Entity expression) => expression.Replace(node => node is Entity.Number.Real literal and not Entity.Number.Rational ? ExactValueOf(literal) : node);
 
@@ -120,6 +178,14 @@ public static partial class MathExpressionReader
             return $"Argument '{argumentName}' has no operator between '{left}' and '(' at column {column}. The tool knows no function named '{left}', so it would read the name as a variable times the parentheses. Multiplication is written '*'.";
 
         return $"Argument '{argumentName}' has no operator between '{left}' and '{right}' at column {column}. Multiplication is written '*', as in 2*x, and a function takes its argument in parentheses, as in sin(x).";
+    }
+
+    private static string DescribeUnrecognizedFunction(string message, string argumentName)
+    {
+        var match = UnrecognizedFunctionName().Match(message);
+        return match.Success
+            ? $"Argument '{argumentName}' uses the function '{match.Groups["name"].Value}', which the tool does not support."
+            : $"Argument '{argumentName}' uses a function or an operator which the tool does not support.";
     }
 
     private static string DescribeParseError(string message, string argumentName)
@@ -155,9 +221,17 @@ public static partial class MathExpressionReader
         return count;
     }
 
+    // zeta(3), but neither x_zeta(3) nor zeta (3): the parser reads no function in either
+    [GeneratedRegex(@"(?<![\p{L}\p{N}_])(?<name>\p{L}[\p{L}\p{N}_]*)\(")]
+    private static partial Regex FunctionNames();
+
     // There should be an operator between [@0,0:0='2',<185>,1:0] and [@1,1:1='x',<189>,1:1], while parsing `2x`
     [GeneratedRegex(@"='(?<left>.*?)',<\d+>,\d+:\d+\] and \[@\d+,\d+:\d+='(?<right>.*?)',<\d+>,\d+:(?<column>\d+)\]")]
     private static partial Regex MissingOperatorTokens();
+
+    // there is no function trunc: AngouriMath has no rounding functions. …, or: isprime is not a function in AngouriMath: …
+    [GeneratedRegex(@"^(?:there is no function (?<name>[^\s:]+):|(?<name>[^\s:]+) is not a function\b)")]
+    private static partial Regex UnrecognizedFunctionName();
 
     // line 1:4 extraneous input '*' expecting {'-', '+', ...}, while parsing `2 + * 3`
     [GeneratedRegex(@"^line \d+:(?<column>\d+) (?<reason>.*?)(?: expecting .*)?(?:, while parsing `.*`)?$", RegexOptions.Singleline)]

@@ -108,7 +108,7 @@
                         @* A model plugin runs like a configuration plugin, without anybody switching it on: *@
                         @if (context is { IsInternal: false, Type: not (PluginType.CONFIGURATION or PluginType.MODEL) })
                         {
-                            var isEnabled = this.SettingsManager.IsPluginEnabled(context);
+                            var isEnabled = this.IsPluginWorking(context);
                             var activationSwitchDisabled = this.IsActivationSwitchDisabled(context, isEnabled);
                             <MudTooltip Text="@this.GetActivationTooltip(context, isEnabled)">
                                 <MudSwitch T="bool" Value="@isEnabled" ValueChanged="@(_ => this.PluginActivationStateChanged(context))" Disabled="@activationSwitchDisabled"/>

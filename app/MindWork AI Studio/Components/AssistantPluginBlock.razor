@@ -1,0 +1,23 @@
+@using AIStudio.Dialogs.Settings
+@inherits MSGComponentBase
+
+<AssistantBlock TSettings="NoSettingsPanel"
+                Component="Components.DYNAMIC_ASSISTANT"
+                Name="@this.Plugin.AssistantTitle"
+                Description="@this.Plugin.Description"
+                Icon="@AppIcons.ASSISTANT_PLUGIN"
+                Disabled="@(!this.SecurityState.CanStartAssistant)"
+                AssistantSessionInstanceId="@this.Plugin.Id.ToString()"
+                Link="@this.LaunchLink"
+                OnClick="@this.StartAsync">
+    <AdditionalActions>
+        <DirectChatLauncherSettingsAction Plugin="@this.Plugin" Compact="@true" />
+        @if (this.AvailablePlugin is not null)
+        {
+            <PluginDeleteAction Plugin="@this.AvailablePlugin" Compact="@true" />
+        }
+    </AdditionalActions>
+    <SecurityBadge>
+        <AssistantPluginSecurityCard Plugin="@this.Plugin" Compact="@true" />
+    </SecurityBadge>
+</AssistantBlock>

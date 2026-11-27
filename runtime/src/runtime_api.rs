@@ -1,6 +1,7 @@
 use log::info;
 use once_cell::sync::Lazy;
 use axum::extract::DefaultBodyLimit;
+use axum::http::StatusCode;
 use axum::middleware;
 use axum::routing::{delete, get, post};
 use axum::Router;
@@ -19,6 +20,10 @@ static RUSTLS_CRYPTO_PROVIDER_INIT: Once = Once::new();
 /// what a tool returns to a model well below this. The limit is headroom, not a working constraint.
 const PROMPT_INJECTION_BODY_LIMIT_BYTES: usize = 16 * 1024 * 1024;
 
+/// The request body limit for a batch of log events from the .NET server. A batch rarely takes more
+/// than a few hundred kilobytes; the limit leaves room for a batch full of stack traces.
+const LOG_EVENTS_BODY_LIMIT_BYTES: usize = 16 * 1024 * 1024;
+
 /// The port used for the runtime API server. In the development environment, we use a fixed
 /// port, in the production environment we use the next available port. This differentiation
 /// is necessary because we cannot communicate the port to the .NET server in the development
@@ -34,6 +39,7 @@ pub static API_SERVER_PORT: Lazy<u16> = Lazy::new(|| {
 /// Creates the router with every route of the runtime API, each of which requires the API token.
 fn create_router() -> Router {
     let router = Router::new()
+        .route("/system/alive", get(is_alive))
         .route("/system/dotnet/port", get(crate::dotnet::dotnet_port))
         .route("/system/dotnet/ready", get(crate::dotnet::dotnet_ready))
         .route("/system/qdrant-edge/info", get(crate::qdrant_edge_database::qdrant_edge_info))
@@ -91,7 +97,13 @@ fn create_router() -> Router {
         .route("/image/prepare", post(crate::image::prepare_image))
         .route("/image/prepare-for-model", post(crate::image::prepare_image_for_model))
         .route("/log/paths", get(crate::log::get_log_paths))
-        .route("/log/event", post(crate::log::log_event))
+        //
+        // A batch holds up to a few hundred log events of the .NET server, some with a stack trace,
+        // which can exceed Axum's 2 MB default. The runtime would refuse such a batch with 413, and
+        // its events would be lost.
+        //
+        .route("/log/events", post(crate::log::log_events)
+            .layer(DefaultBodyLimit::max(LOG_EVENTS_BODY_LIMIT_BYTES)))
         .route("/tokenizer/count", post(crate::tokenizer::token_count))
         .route("/tokenizer/validate", post(crate::tokenizer::validate_tokenizer))
         .route("/tokenizer/store", post(crate::tokenizer::store_tokenizer))
@@ -114,6 +126,15 @@ fn create_router() -> Router {
 /// last route. Unknown paths still answer 404 without checking the token.
 fn require_api_token(router: Router) -> Router {
     router.route_layer(middleware::from_extractor::<APIToken>())
+}
+
+/// Tells the .NET server that the runtime is alive.
+///
+/// The .NET server asks this route over a connection of its own whenever a call to the runtime
+/// failed. The handler does no work at all, so an answer proves exactly what the server wants to
+/// know: the runtime accepts a new connection and runs a handler. Nothing else can make it fail.
+async fn is_alive() -> StatusCode {
+    StatusCode::NO_CONTENT
 }
 
 /// Starts the runtime API server. The server is used to communicate with the .NET server and
@@ -292,6 +313,12 @@ mod tests {
         }
 
         assert!(unprotected_routes.is_empty(), "These routes answer without the API token: {unprotected_routes:#?}");
+    }
+
+    #[tokio::test]
+    async fn the_alive_route_answers_only_with_the_token() {
+        assert_eq!(send(create_router(), request("GET", "/system/alive", None, "")).await, StatusCode::UNAUTHORIZED);
+        assert_eq!(send(create_router(), request("GET", "/system/alive", Some(API_TOKEN.to_hex_text()), "")).await, StatusCode::NO_CONTENT);
     }
 
     #[tokio::test]

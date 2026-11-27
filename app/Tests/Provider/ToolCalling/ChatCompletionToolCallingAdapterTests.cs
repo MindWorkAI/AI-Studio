@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -163,6 +162,23 @@ public sealed class ChatCompletionToolCallingAdapterTests
         }
     }
 
+    [Test]
+    public async Task ARoundWhoseStreamWasCutOffEndsWithoutAnOutcome()
+    {
+        //
+        // A reasoning model stopped before its first word, or a connection which broke while it was thinking.
+        // Built from what arrived, the round would have neither text nor calls, and the loop would report a
+        // model which said nothing on top of the message about the stop or the broken connection:
+        //
+        string[] thinking = ["""{"choices":[{"index":0,"delta":{"reasoning_content":"Let me think."}}]}"""];
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(await ScriptedStream.RoundCompletesAsync(Adapter([..thinking, ScriptedStream.CUT_OFF])), Is.False, "A stream which was cut off is a failed round, not a silent one.");
+            Assert.That(await ScriptedStream.RoundCompletesAsync(Adapter(thinking)), Is.True, "The same stream, closed by the provider, completes the round although it never said [DONE].");
+        }
+    }
+
     /// <summary>
     /// Runs one round and returns the request it sent, as it goes over the wire.
     /// </summary>
@@ -270,23 +286,12 @@ public sealed class ChatCompletionToolCallingAdapterTests
             [],
             mayAskForSequentialToolCalls,
             [],
-            (request, token) =>
+            (request, streamEnd, token) =>
             {
                 sent(request);
-                return Lines(rounds[nextRound++], token);
+                return ScriptedStream.Lines(rounds[nextRound++], streamEnd, token);
             },
             _ => [],
             NullLogger.Instance);
-    }
-
-    private static async IAsyncEnumerable<ServerSentEvent> Lines(string[] data, [EnumeratorCancellation] CancellationToken token = default)
-    {
-        foreach (var line in data)
-        {
-            token.ThrowIfCancellationRequested();
-            yield return new ServerSentEvent($"data: {line}", line);
-        }
-
-        await Task.CompletedTask;
     }
 }

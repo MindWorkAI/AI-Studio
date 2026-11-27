@@ -56,7 +56,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
 
     protected override Func<Task> SubmitAction => () => this.TranslateText(true);
 
-    protected override bool SubmitDisabled => this.isAgentRunning;
+    protected override bool SubmitDisabled => this.isCleanerRunning;
 
     protected override string SendToChatVisibleUserPromptText =>
         $"""
@@ -73,7 +73,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         if (!this.MightPreselectValues())
         {
             this.showWebContentReader = false;
-            this.useContentCleanerAgent = false;
+            this.useContentCleaner = false;
             this.liveTranslation = false;
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
@@ -85,7 +85,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         if (this.SettingsManager.ConfigurationData.Translation.PreselectOptions)
         {
             this.showWebContentReader = this.SettingsManager.ConfigurationData.Translation.PreselectWebContentReader;
-            this.useContentCleanerAgent = this.SettingsManager.ConfigurationData.Translation.PreselectContentCleanerAgent;
+            this.useContentCleaner = this.SettingsManager.ConfigurationData.Translation.PreselectContentCleaner;
             this.liveTranslation = this.SettingsManager.ConfigurationData.Translation.PreselectLiveTranslation;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.Translation.PreselectOtherLanguage;
@@ -96,18 +96,18 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     }
     
     private bool showWebContentReader;
-    private bool useContentCleanerAgent;
+    private bool useContentCleaner;
     private bool liveTranslation;
-    private bool isAgentRunning;
+    private bool isCleanerRunning;
     private string webContentURL = string.Empty;
     private string inputText = string.Empty;
     private string inputTextLastTranslation = string.Empty;
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
     private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
-    private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
+    private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_STATE_KEY = new(nameof(useContentCleaner));
     private static readonly AssistantSessionStateKey<bool> LIVE_TRANSLATION_STATE_KEY = new(nameof(liveTranslation));
-    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning), isKeptOutOfDrafts: true);
+    private static readonly AssistantSessionStateKey<bool> IS_CLEANER_RUNNING_STATE_KEY = new(nameof(isCleanerRunning), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<string> WEB_CONTENT_URL_STATE_KEY = new(nameof(webContentURL));
     private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
     private static readonly AssistantSessionStateKey<string> INPUT_TEXT_LAST_TRANSLATION_STATE_KEY = new(nameof(inputTextLastTranslation));
@@ -118,9 +118,9 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
     {
         state.Set(SHOW_WEB_CONTENT_READER_STATE_KEY, this.showWebContentReader);
-        state.Set(USE_CONTENT_CLEANER_AGENT_STATE_KEY, this.useContentCleanerAgent);
+        state.Set(USE_CONTENT_CLEANER_STATE_KEY, this.useContentCleaner);
         state.Set(LIVE_TRANSLATION_STATE_KEY, this.liveTranslation);
-        state.Set(IS_AGENT_RUNNING_STATE_KEY, this.isAgentRunning);
+        state.Set(IS_CLEANER_RUNNING_STATE_KEY, this.isCleanerRunning);
         state.Set(WEB_CONTENT_URL_STATE_KEY, this.webContentURL);
         state.Set(INPUT_TEXT_STATE_KEY, this.inputText);
         state.Set(INPUT_TEXT_LAST_TRANSLATION_STATE_KEY, this.inputTextLastTranslation);
@@ -132,9 +132,9 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
         state.Restore(SHOW_WEB_CONTENT_READER_STATE_KEY, value => this.showWebContentReader = value);
-        state.Restore(USE_CONTENT_CLEANER_AGENT_STATE_KEY, value => this.useContentCleanerAgent = value);
+        state.Restore(USE_CONTENT_CLEANER_STATE_KEY, value => this.useContentCleaner = value);
         state.Restore(LIVE_TRANSLATION_STATE_KEY, value => this.liveTranslation = value);
-        state.Restore(IS_AGENT_RUNNING_STATE_KEY, value => this.isAgentRunning = value);
+        state.Restore(IS_CLEANER_RUNNING_STATE_KEY, value => this.isCleanerRunning = value);
         state.Restore(WEB_CONTENT_URL_STATE_KEY, value => this.webContentURL = value);
         state.Restore(INPUT_TEXT_STATE_KEY, value => this.inputText = value);
         state.Restore(INPUT_TEXT_LAST_TRANSLATION_STATE_KEY, value => this.inputTextLastTranslation = value);

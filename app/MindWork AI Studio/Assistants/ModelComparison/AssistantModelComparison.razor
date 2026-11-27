@@ -69,7 +69,7 @@
     <MudJustifiedText Typo="Typo.body1" Class="mb-2">
         @ModelComparisonTexts.WhatTheModelsReceive
     </MudJustifiedText>
-    <MudTextField T="string" @bind-Text="@this.inputQuestion" Validation="@this.ValidatingQuestion" AdornmentIcon="@AppIcons.QUESTIONS" Adornment="Adornment.Start" Label="@TA("Your question or task")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudTextField T="string" @bind-Value="@this.inputQuestion" Validation="@this.ValidatingQuestion" DebounceInterval="@TextFieldDefaults.VALIDATION_DEBOUNCE_MILLISECONDS" AdornmentIcon="@AppIcons.QUESTIONS" Adornment="Adornment.Start" Label="@TA("Your question or task")" Variant="Variant.Outlined" Lines="3" Sizing="InputSizing.Auto" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
     <MudText Typo="Typo.h6" Class="mb-1 mt-3">@T("Material (optional)")</MudText>
     <MudJustifiedText Typo="Typo.body1" Class="mb-2">
