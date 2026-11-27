@@ -423,12 +423,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- These tools are part of the selected policy and cannot be changed here. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when the policy permits it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1133257227"] = "Diese Werkzeuge sind Teil des ausgewählten Regelwerks und können hier nicht geändert werden. Jedes Werkzeug muss die Vertrauensanforderungen des ausgewählten Anbieters erfüllen. Daher kann ein Werkzeug weiterhin nicht verfügbar sein, selbst wenn das Regelwerk es zulässt."
 
--- Your organization requires a pause of at least {0} seconds between files.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1155517317"] = "Ihre Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen den Dateien."
-
--- Your organization requires a pause of at least {0} seconds between files.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1155517317::INFORMAL"] = "Deine Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen den Dateien."
-
 -- The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1164512104"] = "Die Ergebnistabelle enthält eine Zeile pro Dokument, beginnend mit dem Dateinamen. Hier können Sie die Spalte benennen, welche die Antwort der KI enthält, z. B. Zusammenfassung. Wenn Sie das Feld leer lassen, verwenden wir „Ergebnis“."
 
@@ -510,17 +504,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Waiting {0} seconds before starting the next file.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1708373046"] = "Die nächste Datei startet in {0} Sekunden."
 
--- seconds
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1723256298"] = "Sekunden"
-
 -- The selected folder does not exist.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T17705912"] = "Der ausgewählte Ordner existiert nicht."
 
 -- The image was no longer available while the model was asked about it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1805791865"] = "Das Bild war nicht mehr verfügbar, während das Modell dazu befragt wurde."
-
--- Minimum pause between files
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1829787634"] = "Mindestpause zwischen Dateien"
 
 -- Was not able to read the input folder: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1871021621"] = "Der Eingabeordner konnte nicht gelesen werden: {0}"
@@ -668,9 +656,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T324865195"] = "Das ausgewählte Modell kann keine Bilder lesen, daher schlägt die Verarbeitung der {0} Bilder unter den ausgewählten Dateien fehl. Alle anderen Dateien werden wie gewohnt verarbeitet."
-
--- Maximum pause between files
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3250003796"] = "Maximale Pause zwischen Dateien"
 
 -- Please select the folder that contains the documents you want to process.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T33077198"] = "Bitte wählen Sie den Ordner aus, der die zu verarbeitenden Dokumente enthält."
@@ -842,6 +827,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T9738678"] = "Das ausgewählte Modell kann keine Bilder lesen, daher schlägt die Verarbeitung des Bildes unter den ausgewählten Dateien fehl. Alle anderen Dateien werden wie gewohnt verarbeitet."
+
+-- Pause between files
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T976137570"] = "Pause zwischen Dateien"
 
 -- Comma (,)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T1676507543"] = "Komma (,)"
@@ -8754,6 +8742,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T95098799"] = "
 -- You have selected 1 item.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T95098799::INFORMAL"] = "Du hast 1 Element ausgewählt."
 
+-- No pause
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPAUSERANGE::T1202649384"] = "Keine Pause"
+
+-- {0} seconds
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPAUSERANGE::T2586010064"] = "{0} Sekunden"
+
+-- {0} to {1} seconds
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPAUSERANGE::T4176272400"] = "{0} bis {1} Sekunden"
+
 -- Preselected provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T1469984996"] = "Vorausgewählter Anbieter"
 
@@ -9237,9 +9234,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1084943026::INFORM
 -- Automatic local data source refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1208397349"] = "Automatische Aktualisierung lokaler Datenquellen"
 
--- Shortest pause between indexing steps
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1308136668"] = "Kürzeste Pause zwischen den Etappen der Indexierung"
-
 -- Refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T135637716"] = "Aktualisieren"
 
@@ -9261,12 +9255,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1592527757"] = "Di
 -- External (ERI)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1652430727"] = "Extern (ERI)"
 
--- Longest pause between indexing steps
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1654263778"] = "Längste Pause zwischen den Etappen der Indexierung"
-
--- seconds
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1723256298"] = "Sekunden"
-
 -- Delete Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1849107431"] = "Datenquelle löschen"
 
@@ -9276,14 +9264,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2067030738"] = "M�
 -- Are you sure you want to delete the mailbox '{0}'? Your mails stay on the server as they are. AI Studio only deletes its index of them and the stored password.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2067030738::INFORMAL"] = "Möchtest du das Postfach „{0}“ wirklich löschen? Deine E-Mails bleiben unverändert auf dem Server. AI Studio löscht lediglich den dazugehörigen Index und das gespeicherte Passwort."
 
+-- AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time within this range, at most 300 seconds (5 minutes). This spares an embedding server which many people share, for example in your organization. Move both ends to 0 seconds for no pause.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2111903307"] = "AI Studio indexiert große Datenquellen in Abständen von wenigen Minuten. Zwischen zwei Schritten wartet es eine zufällige Zeitspanne innerhalb dieses Bereichs, höchstens 300 Sekunden (5 Minuten). Das entlastet einen Embedding-Server, den sich viele Personen teilen, beispielsweise in Ihrer Organisation. Setzen Sie beide Werte auf 0 Sekunden, um keine Pause einzulegen."
+
+-- AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time within this range, at most 300 seconds (5 minutes). This spares an embedding server which many people share, for example in your organization. Move both ends to 0 seconds for no pause.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2111903307::INFORMAL"] = "AI Studio indexiert große Datenquellen in Abständen von wenigen Minuten. Zwischen zwei Schritten wartet es eine zufällige Zeitspanne innerhalb dieses Bereichs, höchstens 300 Sekunden (5 Minuten). Das entlastet einen Embedding-Server, den sich viele Personen teilen, beispielsweise in deiner Organisation. Setze beide Werte auf 0 Sekunden, um keine Pause einzulegen."
+
 -- Local Directory Data Source Information
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2146756020"] = "Informationen zur lokalen Ordner-Datenquelle"
-
--- AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time between the shortest and the longest pause. This spares an embedding server which many people share, for example in your organization. Leave both at 0 seconds for no pause.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2352821039"] = "AI Studio indexiert große Datenquellen in Etappen von wenigen Minuten. Zwischen zwei Etappen wartet AI Studio eine zufällige Zeit, die zwischen der kürzesten und der längsten Pause liegt. Das entlastet einen Einbettungsserver, den sich viele Nutzer teilen, zum Beispiel in Ihrer Organisation. Lassen Sie beide Werte auf 0 Sekunden, wenn keine Pause eingelegt werden soll."
-
--- AI Studio indexes large data sources in steps of a few minutes. Between two steps, it waits for a random time between the shortest and the longest pause. This spares an embedding server which many people share, for example in your organization. Leave both at 0 seconds for no pause.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2352821039::INFORMAL"] = "AI Studio indexiert große Datenquellen in Etappen von wenigen Minuten. Zwischen zwei Etappen wartet AI Studio eine zufällige Zeit, die zwischen der kürzesten und der längsten Pause liegt. Das entlastet einen Einbettungsserver, den sich viele Nutzer teilen, zum Beispiel in deiner Organisation. Lass beide Werte auf 0 Sekunden, wenn keine Pause eingelegt werden soll."
 
 -- Local data sources refresh when files change, mailboxes every 16 minutes.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2511157475"] = "Lokale Datenquellen werden aktualisiert, wenn sich Dateien ändern, Postfächer alle 16 Minuten."
@@ -9339,9 +9327,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3337072977"] = "M�
 -- Are you sure you want to delete the data source '{0}' of type '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3337072977::INFORMAL"] = "Möchtest du die Datenquelle „{0}“ vom Typ „{1}“ wirklich löschen?"
 
--- The upper end of the random pause between two indexing steps. AI Studio allows up to 300 seconds (5 minutes).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3401303590"] = "Das obere Ende der zufälligen Pause zwischen zwei Etappen der Indexierung. AI Studio erlaubt bis zu 300 Sekunden (5 Minuten)."
-
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3424652889"] = "Unbekannt"
 
@@ -9383,6 +9368,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4108252513"] = "Wa
 
 -- Information
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4256323669"] = "Information"
+
+-- Pause between indexing steps
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4289321676"] = "Pause zwischen den Indexierungsschritten"
 
 -- Cannot export this ERI data source because no enterprise encryption secret is configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T750361472"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Geheimnis für die Verschlüsselung des Unternehmens konfiguriert ist."
@@ -15951,11 +15939,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786
 -- Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786145170::INFORMAL"] = "Durch das Einklappen einer Kategorie bleibt die Assistentenseite übersichtlich. Leg fest, ob AI Studio ihre Assistenten weiterhin an anderer Stelle anbietet, z. B. im Menü „Senden an …“."
 
--- Default minimum pause between files
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1008440099"] = "Standardmäßige Mindestpause zwischen Dateien"
-
 -- Instructions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1221801316"] = "Anweisungen"
+
+-- Default pause between files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1294143443"] = "Standardpause zwischen Dateien"
 
 -- Include hidden files and folders by default?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1450016875"] = "Versteckte Dateien und Ordner standardmäßig einbeziehen?"
@@ -15968,9 +15956,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T15
 
 -- Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1624717965"] = "Als versteckt gelten Dateien und Ordner, deren Namen mit einem Punkt beginnen, z. B. .git oder .env, sowie solche, die das Betriebssystem als versteckt kennzeichnet. Ein Dateimuster, das mit einem Punkt beginnt, z. B. .gitignore, wählt solche Dateien trotzdem aus."
-
--- seconds
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1723256298"] = "Sekunden"
 
 -- Default prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1750564968"] = "Standard-Prompt"
@@ -16007,9 +15992,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T23
 
 -- Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats as well as images in JPG, PNG, WebP, GIF, BMP, and TIFF format.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T232588799::INFORMAL"] = "Trenne mehrere Dateimuster durch ein Semikolon, z. B. *.pdf;*.docx. Die Standardmuster umfassen alle unterstützten Audio- und Videoformate sowie Bilder im JPG-, PNG-, WebP-, GIF-, BMP- und TIFF-Format."
-
--- The lower end of the random pause interval. AI Studio never allows less than 6 seconds.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T237774509"] = "Das untere Ende des Intervalls für die zufällige Pause. AI Studio erlaubt niemals weniger als 6 Sekunden."
 
 -- A policy brings its own tools, so there is nothing to preselect here. You configure them with the policy in the Document Analysis Assistant.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2391906382"] = "Ein Regelwerk bringt seine eigenen Werkzeuge mit, daher gibt es hier nichts vorauszuwählen. Sie konfigurieren die Werkzeuge zusammen mit dem Regelwerk im Assistenten für die Dokumentenanalyse."
@@ -16053,9 +16035,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T29
 -- Only the selected folder is processed
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2958253681"] = "Nur der ausgewählte Ordner wird verarbeitet"
 
--- Default maximum pause between files
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3011459001"] = "Standardmäßige maximale Pause zwischen Dateien"
-
 -- Include subfolders by default?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3106330739"] = "Unterordner standardmäßig einbeziehen?"
 
@@ -16080,20 +16059,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T34
 -- Processing pace
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3428873429"] = "Verarbeitungsgeschwindigkeit"
 
--- The upper end of the random pause interval. The app-wide maximum is 300 seconds (5 minutes).
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3434290122"] = "Das obere Ende des zufälligen Pausenintervalls. Der appweite Höchstwert beträgt 300 Sekunden (5 Minuten)."
-
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3448155331"] = "Schließen"
 
 -- The current content of this Markdown file is loaded whenever the defaults are applied.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3468539567"] = "Der aktuelle Inhalt dieser Markdown-Datei wird geladen, wenn die Standardwerte angewendet werden."
-
--- Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3663516199"] = "Ihre Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen Dateien. Benutzer können nur die Obergrenze festlegen."
-
--- Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3663516199::INFORMAL"] = "Deine Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen Dateien. Benutzer können nur die Obergrenze festlegen."
 
 -- Load default prompt from file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3763644960"] = "Standard-Prompt aus Datei laden"
@@ -16148,6 +16118,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T70
 
 -- Restore default patterns
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T7425959"] = "Standardmuster wiederherstellen"
+
+-- Before the next file starts, AI Studio waits for a random time within this range, at least 6 seconds and at most 300 seconds (5 minutes).
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T754486332"] = "Bevor die nächste Datei verarbeitet wird, wartet AI Studio eine zufällige Zeit innerhalb dieses Bereichs: mindestens 6 Sekunden und höchstens 300 Sekunden (5 Minuten)."
 
 -- Leave empty when an input folder should be selected for every batch run.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T762890100"] = "Leer lassen, wenn für jeden Stapellauf ein Eingabeordner ausgewählt werden soll."
