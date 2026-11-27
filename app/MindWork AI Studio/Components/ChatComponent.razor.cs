@@ -1,5 +1,6 @@
 using System.Globalization;
 
+using AIStudio.AIOperations.ConversationSummary;
 using AIStudio.Chat;
 using AIStudio.Chat.Compression;
 using AIStudio.Dialogs;
@@ -848,9 +849,9 @@ public partial class ChatComponent : MSGComponentBase
                                       && this.ChatThread.IsLLMProviderAllowed(this.Provider);
 
     /// <summary>
-    /// Whether the model of the selected provider is too small to compress the chat, see ChatCompressionService.MIN_CONTEXT_WINDOW.
+    /// Whether the model of the selected provider is too small to compress the chat, see ConversationSummaryBudget.MIN_CONTEXT_WINDOW.
     /// </summary>
-    private bool IsWindowTooSmallForCompression => this.IsProviderSelected && !ChatCompressionService.CanSummarizeWith(this.Provider.GetModelProfile().Context);
+    private bool IsWindowTooSmallForCompression => this.IsProviderSelected && !ConversationSummaryBudget.CanSummarizeWith(this.Provider.GetModelProfile().Context);
 
     /// <summary>
     /// What the compress button says it does, or why it is switched off for the selected model.
@@ -859,7 +860,7 @@ public partial class ChatComponent : MSGComponentBase
     /// The minimum is a limit, so it is written out in full: the short form of the token count would round it.
     /// </remarks>
     private string CompressTooltip => this.IsWindowTooSmallForCompression
-        ? string.Format(T("Compressing a chat needs a model with a context window of at least {0} tokens."), ChatCompressionService.MIN_CONTEXT_WINDOW.ToString("N0", this.currentCulture))
+        ? string.Format(T("Compressing a chat needs a model with a context window of at least {0} tokens."), ConversationSummaryBudget.MIN_CONTEXT_WINDOW.ToString("N0", this.currentCulture))
         : T("Compress this chat & switch to a new chat with its summary.");
 
     /// <summary>

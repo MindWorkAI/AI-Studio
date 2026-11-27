@@ -1,3 +1,5 @@
+using AIStudio.AIOperations;
+using AIStudio.AIOperations.ConversationSummary;
 using AIStudio.Chat;
 using AIStudio.Chat.Compression;
 using AIStudio.Components;
@@ -21,7 +23,7 @@ public partial class ChatCompressionDialog : MSGComponentBase
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Inject]
-    private ChatCompressionService ChatCompressionService { get; init; } = null!;
+    private ConversationSummaryOperation ConversationSummary { get; init; } = null!;
 
     /// <summary>
     /// The chat to compress.
@@ -68,7 +70,7 @@ public partial class ChatCompressionDialog : MSGComponentBase
     private string focus = string.Empty;
     private string issue = string.Empty;
     private bool isSummarizing;
-    private ChatCompressionProgress progress;
+    private ConversationSummaryProgress progress;
 
     #region Overrides of ComponentBase
 
@@ -92,9 +94,9 @@ public partial class ChatCompressionDialog : MSGComponentBase
 
     private string ProgressMessage => this.progress.Step switch
     {
-        ChatCompressionStep.SUMMARIZING when this.progress.Total > 1 => string.Format(T("The AI is summarizing part {0} of {1}..."), this.progress.Current, this.progress.Total),
-        ChatCompressionStep.SUMMARIZING => T("The AI is summarizing the chat..."),
-        ChatCompressionStep.CONDENSING => T("The summary grew too long. The AI is shortening it..."),
+        ConversationSummaryStep.SUMMARIZING when this.progress.Total > 1 => string.Format(T("The AI is summarizing part {0} of {1}..."), this.progress.Current, this.progress.Total),
+        ConversationSummaryStep.SUMMARIZING => T("The AI is summarizing the chat..."),
+        ConversationSummaryStep.CONDENSING => T("The summary grew too long. The AI is shortening it..."),
 
         _ => T("AI Studio is reading the messages and their files..."),
     };
@@ -118,13 +120,13 @@ public partial class ChatCompressionDialog : MSGComponentBase
         this.progress = default;
         await this.InvokeAsync(this.StateHasChanged);
 
-        var progressReporter = new Progress<ChatCompressionProgress>(reported =>
+        var progressReporter = new Progress<ConversationSummaryProgress>(reported =>
         {
             this.progress = reported;
             this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(ChatCompressionDialog)}: showing the progress of the summary");
         });
 
-        var result = await this.ChatCompressionService.SummarizeAsync(this.SourceChat, this.Plan, this.ProviderSettings, this.focus, progressReporter, this.cancellationTokenSource.Token);
+        var result = await this.ConversationSummary.RunAsync(new ConversationSummaryRequest(this.SourceChat, this.Plan, this.focus, progressReporter), new AIOperationContext(this.ProviderSettings), this.cancellationTokenSource.Token);
 
         // The user canceled, and the dialog is gone already:
         if (this.cancellationTokenSource.IsCancellationRequested)

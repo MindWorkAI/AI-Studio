@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace AIStudio.Chat.Compression;
+namespace AIStudio.AIOperations.ConversationSummary;
 
 /// <summary>
 /// What the AI is told when it summarizes a chat.
@@ -18,7 +18,7 @@ namespace AIStudio.Chat.Compression;
 /// instructions of their own, which must not take over the summary. Only what the user
 /// asks the summary to pay attention to comes from the user, and it stands apart from the conversation.
 /// </remarks>
-public static class ChatCompressionPrompts
+public static class ConversationSummaryPrompts
 {
     /// <summary>
     /// The system prompt of every request for a summary.
@@ -51,7 +51,7 @@ public static class ChatCompressionPrompts
     /// Builds the request for one part of the conversation.
     /// </summary>
     /// <remarks>
-    /// A conversation too long for one request comes in parts, see ChatCompressionInput.TakePart.
+    /// A conversation too long for one request comes in parts, see ConversationSummaryInput.TakePart.
     /// Each part after the first one carries the summary of the parts before it, and the AI returns a
     /// complete summary every time, so the summary of the last part is the one of the whole chat. The
     /// quoted messages of the user have to survive every round, which the request says explicitly:
@@ -90,7 +90,7 @@ public static class ChatCompressionPrompts
     }
 
     /// <summary>
-    /// Builds the request which shortens a summary that grew too long, see ChatCompressionService.IsTooLong.
+    /// Builds the request which shortens a summary that grew too long, see ConversationSummaryBudget.IsTooLong.
     /// </summary>
     /// <remarks>
     /// The summary stands inside summary_so_far, which the system prompt names as material, so the

@@ -1,3 +1,4 @@
+using AIStudio.AIOperations.ConversationSummary;
 using AIStudio.Chat;
 using AIStudio.Chat.Compression;
 using AIStudio.Components;
@@ -113,7 +114,7 @@ public partial class ContextWindowFullDialog : MSGComponentBase
     /// </remarks>
     private string? CompressionIssue => this.Offer switch
     {
-        ChatCompressionOffer.WINDOW_TOO_SMALL => string.Format(T("Compressing is not possible with the selected model, since it needs a context window of at least {0} tokens."), ChatCompressionService.MIN_CONTEXT_WINDOW.ToString("N0", I18N.I.Culture)),
+        ChatCompressionOffer.WINDOW_TOO_SMALL => string.Format(T("Compressing is not possible with the selected model, since it needs a context window of at least {0} tokens."), ConversationSummaryBudget.MIN_CONTEXT_WINDOW.ToString("N0", I18N.I.Culture)),
         ChatCompressionOffer.MESSAGE_TOO_LONG => TA("Compressing would not help, since your message alone nearly fills the context window of the model."),
         ChatCompressionOffer.NOTHING_TO_SUMMARIZE => TA("Compressing would not help yet, since there is nothing to summarize before your last message and the last answer of the AI."),
         ChatCompressionOffer.KEEPS_TOO_MUCH when this.Subject is ContextWindowFullSubject.EMBEDDED_CHAT => TA("Compressing would not help, since the instructions of the assistant, your last message, and the last answer of the AI stay as they are, and together with your new message, they still nearly fill the context window of the model."),

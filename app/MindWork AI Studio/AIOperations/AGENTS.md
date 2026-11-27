@@ -7,8 +7,8 @@ These instructions cover the AI operations in `app/MindWork AI Studio/AIOperatio
 
 An AI operation is a task which AI Studio hands to a model on its own: one request in, one result out, without
 a loop. The text content cleaner, the data source selection and the retrieval context validation of the
-classic RAG process, and the security audit of plugins are AI operations. A conversation with the user, a loop
-of tool calls, or an agent which plans its own steps is not one.
+classic RAG process, the security audit of plugins, and the summary which compresses a chat are AI operations.
+A conversation with the user, a loop of tool calls, or an agent which plans its own steps is not one.
 
 The common types live in this folder; each operation lives in a folder of its own, `AIOperations/<Name>/`,
 with `<Name>Operation`, `<Name>Request`, and its result types.
@@ -26,7 +26,9 @@ operation which selects data sources lives in `DataSourceChoice/`.
 - **`AIOperationBase<TRequest, TResult>`** - `AskAsync` sends one request with a chat thread of its own to the
   provider of the context and waits for the whole answer. Right before, it checks the provider once more
   against a prohibition, the global minimum, and the confidence the request requires, but not against the
-  minimum of the operation, because a caller may exempt a fallback from it.
+  minimum of the operation, because a caller may exempt a fallback from it. A request whose content comes from a
+  chat passes the restrictions of that chat (`ChatThread.CaptureRestrictions`), so that its thread demands what
+  the chat demands, e.g., the data security of a data source.
 - **`AIOperationContext`** - what a call runs with apart from its request, the provider above all.
 - **`GetProviderSettings(SettingsManager)`** - every operation declares this public static method, which
   reads its preferred provider and its minimum confidence fresh on every call. It is static, so that a service

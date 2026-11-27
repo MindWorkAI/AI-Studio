@@ -1,4 +1,4 @@
-namespace AIStudio.Chat.Compression;
+namespace AIStudio.AIOperations.ConversationSummary;
 
 /// <summary>
 /// The summary the AI wrote of a chat, or why there is none.
@@ -6,9 +6,9 @@ namespace AIStudio.Chat.Compression;
 /// <param name="Success">Whether there is a summary.</param>
 /// <param name="Summary">The summary, as the AI wrote it. Not filtered for prompt injections yet.</param>
 /// <param name="Issue">Why there is no summary, for the user. Empty on success.</param>
-public sealed record ChatCompressionResult(bool Success, string Summary, string Issue)
+public sealed record ConversationSummaryResult(bool Success, string Summary, string Issue)
 {
-    public static ChatCompressionResult Succeeded(string summary) => new(true, summary, string.Empty);
+    public static ConversationSummaryResult Succeeded(string summary) => new(true, summary, string.Empty);
 
-    public static ChatCompressionResult Failed(string issue) => new(false, string.Empty, issue);
+    public static ConversationSummaryResult Failed(string issue) => new(false, string.Empty, issue);
 }
