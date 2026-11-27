@@ -81,6 +81,26 @@ public sealed class AssistantPluginDraftTests
         });
     }
 
+    [Test]
+    public void ClearingTheFlagsOfWorkInProgressKeepsTheInputs()
+    {
+        var form = CreateForm();
+        form.WebContent["page"].URL = "https://example.org";
+        form.WebContent["page"].Content = "The page";
+        form.WebContent["page"].CleanerIsRunning = true;
+
+        var draft = form.Clone();
+        draft.ClearFlagsOfWorkInProgress();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(draft.WebContent["page"].CleanerIsRunning, Is.False, "The cleaner ended with the component which started it, so its flag would keep the field locked for good.");
+            Assert.That(draft.WebContent["page"].URL, Is.EqualTo("https://example.org"));
+            Assert.That(draft.WebContent["page"].Content, Is.EqualTo("The page"));
+            Assert.That(form.WebContent["page"].CleanerIsRunning, Is.True, "The draft is a copy; the form keeps its own flag.");
+        });
+    }
+
     private static AssistantState CreateForm()
     {
         var form = new AssistantState();

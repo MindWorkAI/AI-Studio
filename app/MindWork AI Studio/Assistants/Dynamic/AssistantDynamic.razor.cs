@@ -158,7 +158,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     /// brings back neither the plugin, its audit, its security state, nor its system prompt, so that a
     /// blocked assistant stays blocked. What the user entered comes back only into the same version of a
     /// plugin which may start: the components of another version may differ, and a blocked assistant shows
-    /// no form.
+    /// no form. Flags of work in progress inside the form, such as a running content cleaner, stay cleared.
     /// </remarks>
     /// <param name="draft">The reader of the draft.</param>
     private void RestoreDraftState(AssistantSessionStateReader draft)
@@ -174,7 +174,12 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         if (!ReferenceEquals(pluginOfDraft, currentPlugin) && !string.Equals(pluginOfDraft.ComputeAuditHash(), currentPlugin.ComputeAuditHash(), StringComparison.Ordinal))
             return;
 
-        draft.Restore(ASSISTANT_STATE_STATE_KEY, value => this.assistantState.CopyFrom(value));
+        draft.Restore(ASSISTANT_STATE_STATE_KEY, value =>
+        {
+            this.assistantState.CopyFrom(value);
+            this.assistantState.ClearFlagsOfWorkInProgress();
+        });
+
         draft.RestoreDictionary(IMAGE_CACHE_STATE_KEY, this.imageCache);
     }
 

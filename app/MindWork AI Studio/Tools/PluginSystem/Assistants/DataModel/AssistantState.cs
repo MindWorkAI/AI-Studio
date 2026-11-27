@@ -71,6 +71,21 @@ public sealed class AssistantState : IAssistantSessionValue
         return clone;
     }
 
+    /// <summary>
+    /// Clears the flags of work in progress, such as a content cleaner which runs for a web page.
+    /// </summary>
+    /// <remarks>
+    /// Such work ends with the component which started it. A draft restores the whole state, though, and a
+    /// flag restored from it would stay set and keep its field locked for good. The built-in assistants keep
+    /// such flags out of drafts by their keys, see AssistantSessionStateKey.IsKeptOutOfDrafts; the flags of an
+    /// assistant plugin live inside this state instead.
+    /// </remarks>
+    public void ClearFlagsOfWorkInProgress()
+    {
+        foreach (var webContent in this.WebContent.Values)
+            webContent.CleanerIsRunning = false;
+    }
+
     /// <inheritdoc />
     /// <remarks>
     /// Compares the values of all fields. Whether a web content cleaner runs is no input and does not count,
