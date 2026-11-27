@@ -1283,7 +1283,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <returns>A task that completes after the session was attached.</returns>
     private async Task AttachAssistantSessionIfAvailable()
     {
-        // A draft gives way to a run, which is newer, and to a text sent here, which the user chose to work on:
+        //
+        // A draft gives way to a run, which is newer, and to a text sent here, which the user chose to work on.
+        // It is taken in any case, so that a draft from before the user chose to discard inputs is gone, too:
+        //
         var draft = this.AssistantSessionService.TryTakeDraft(this.assistantSessionKey);
 
         var snapshot = this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey);
@@ -1300,7 +1303,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             return;
         }
 
-        if (draft is not null && !this.holdsSentText)
+        if (draft is not null && !this.holdsSentText && this.KeepsInputsWhenLeaving)
             await this.RestoreDraft(draft);
     }
 
@@ -1323,16 +1326,27 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     }
 
     /// <summary>
+    /// Gets whether assistants keep the inputs of the user when the user leaves them, as the user or the
+    /// organization chose on the assistants page, see DataAssistantsPage.InputsWhenLeaving.
+    /// </summary>
+    /// <remarks>
+    /// When not, an assistant behaves as before v26.11.2: it stores no draft and starts anew. Runs are not
+    /// affected, since their sessions keep their state either way.
+    /// </remarks>
+    private bool KeepsInputsWhenLeaving => this.SettingsManager.ConfigurationData.AssistantsPage.InputsWhenLeaving is AssistantInputsWhenLeaving.KEEP_INPUTS;
+
+    /// <summary>
     /// Stores what this assistant holds as a draft, so that it is there again when the user comes back.
     /// </summary>
     /// <remarks>
     /// While a run goes on, its session keeps the state, so there is no draft. Neither is there one while
-    /// the assistant holds just its defaults, see IsWorthADraft. This runs while the component is disposed,
-    /// so it must neither wait nor throw.
+    /// the assistant holds just its defaults, see IsWorthADraft, nor when the user chose to discard the
+    /// inputs, see KeepsInputsWhenLeaving. This runs while the component is disposed, so it must neither
+    /// wait nor throw.
     /// </remarks>
     private void SaveDraftIfChanged()
     {
-        if (this.stateWithDefaults is null)
+        if (this.stateWithDefaults is null || !this.KeepsInputsWhenLeaving)
             return;
 
         try

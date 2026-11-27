@@ -6,7 +6,7 @@ namespace AIStudio.Dialogs.Settings;
 
 /// <summary>
 /// The settings of the assistants page: what happens to the assistants of collapsed and hidden categories,
-/// and which categories the page shows.
+/// whether assistants keep your inputs when you leave them, and which categories the page shows.
 /// </summary>
 public partial class SettingsDialogAssistantsPage : SettingsDialogBase
 {
@@ -23,4 +23,6 @@ public partial class SettingsDialogAssistantsPage : SettingsDialogBase
     private string CollapsedCategoriesHelp => TA("""Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.""");
 
     private string HiddenCategoriesHelp => TA("""Hiding a category says that you do not need its assistants. Choose whether AI Studio still offers them elsewhere, e.g., in the "Send to ..." menu.""");
+
+    private string InputsWhenLeavingHelp => TA("When you switch to the chat or to another assistant and come back, an assistant can still show your inputs, your options, and its last result. AI Studio keeps them in memory only, never on disk, until you reset the assistant or quit AI Studio. A text which you send to the assistant from elsewhere replaces them. An assistant which is still working keeps working in the background either way.");
 }

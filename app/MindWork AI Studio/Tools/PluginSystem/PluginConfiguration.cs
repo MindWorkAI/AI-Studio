@@ -346,6 +346,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantsPage, x => x.CollapsedCategoryAssistants, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantsPage, x => x.HiddenCategoryAssistants, this.Id, settingsTable, dryRun);
 
+        // Config: do assistants keep the inputs of users when they leave them?
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantsPage, x => x.InputsWhenLeaving, this.Id, settingsTable, dryRun);
+
         // Config: prohibit some providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProhibitedProviders, this.Id, settingsTable, dryRun);
         

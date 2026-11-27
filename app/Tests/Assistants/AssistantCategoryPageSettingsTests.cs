@@ -71,6 +71,7 @@ public sealed class AssistantCategoryPageSettingsTests
         {
             Assert.That(page.CollapsedCategoryAssistants, Is.EqualTo(AssistantOfferBehavior.KEEP_OFFERING));
             Assert.That(page.HiddenCategoryAssistants, Is.EqualTo(AssistantOfferBehavior.TREAT_AS_ABSENT));
+            Assert.That(page.InputsWhenLeaving, Is.EqualTo(AssistantInputsWhenLeaving.KEEP_INPUTS));
         }
     }
 
