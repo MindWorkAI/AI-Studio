@@ -87,7 +87,7 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
 
     public int MinimumDelaySeconds { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumDelaySeconds, DEFAULT_MIN_DELAY_SECONDS);
 
-    public int MaximumDelaySeconds { get; set; } = DEFAULT_MAX_DELAY_SECONDS;
+    public int MaximumDelaySeconds { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MaximumDelaySeconds, DEFAULT_MAX_DELAY_SECONDS);
 
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumProviderConfidence, ConfidenceLevel.NONE);
 

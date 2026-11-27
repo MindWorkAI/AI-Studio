@@ -519,9 +519,20 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvSeparator, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CustomCsvSeparator, this.Id, settingsTable, dryRun);
         
+        // Config: the random pause between two files of the Batch Processing Assistant
         var minimumDelayIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumDelaySeconds, this.Id, settingsTable, dryRun, validator: DataBatchProcessing.PAUSE_LIMITS.Allows);
         if (!minimumDelayIsValid && settingsTable.TryGetValue("DataBatchProcessing.MinimumDelaySeconds", out _))
             LOG.LogWarning("The Batch Processing minimum delay configured by plugin {ConfigPluginId} must be between {MinimumDelaySeconds} and {MaximumDelaySeconds} seconds.", this.Id, DataBatchProcessing.PAUSE_LIMITS.ShortestSeconds, DataBatchProcessing.PAUSE_LIMITS.LongestSeconds);
+
+        var maximumDelayIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MaximumDelaySeconds, this.Id, settingsTable, dryRun, validator: DataBatchProcessing.PAUSE_LIMITS.Allows);
+        if (!maximumDelayIsValid && settingsTable.TryGetValue("DataBatchProcessing.MaximumDelaySeconds", out _))
+            LOG.LogWarning("The Batch Processing maximum delay configured by plugin {ConfigPluginId} must be between {MinimumDelaySeconds} and {MaximumDelaySeconds} seconds.", this.Id, DataBatchProcessing.PAUSE_LIMITS.ShortestSeconds, DataBatchProcessing.PAUSE_LIMITS.LongestSeconds);
+
+        if (minimumDelayIsValid && maximumDelayIsValid
+            && settingsTable.TryGetValue("DataBatchProcessing.MinimumDelaySeconds", out var minimumDelayValue) && minimumDelayValue.TryRead<int>(out var minimumDelaySeconds)
+            && settingsTable.TryGetValue("DataBatchProcessing.MaximumDelaySeconds", out var maximumDelayValue) && maximumDelayValue.TryRead<int>(out var maximumDelaySeconds)
+            && maximumDelaySeconds < minimumDelaySeconds)
+            LOG.LogWarning("The Batch Processing maximum delay configured by plugin {ConfigPluginId} is below its minimum delay. The minimum delay of {MinimumDelaySeconds} seconds wins.", this.Id, minimumDelaySeconds);
 
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
