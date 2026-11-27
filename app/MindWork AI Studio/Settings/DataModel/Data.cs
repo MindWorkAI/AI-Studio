@@ -11,7 +11,7 @@ public sealed class Data
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; set; } = Version.V6;
+    public Version Version { get; set; } = Version.V7;
 
     /// <summary>
     /// List of configured providers.
@@ -195,9 +195,9 @@ public sealed class Data
 
     public DataTextContentCleaner TextContentCleaner { get; set; } = new(x => x.TextContentCleaner);
     
-    public DataAgentDataSourceSelection AgentDataSourceSelection { get; set; } = new(x => x.AgentDataSourceSelection);
+    public DataDataSourceSelection DataSourceSelection { get; set; } = new(x => x.DataSourceSelection);
     
-    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; set; } = new(x => x.AgentRetrievalContextValidation);
+    public DataRetrievalContextValidation RetrievalContextValidation { get; set; } = new(x => x.RetrievalContextValidation);
 
     public DataAssistantPluginAudit AssistantPluginAudit { get; set; } = new(x => x.AssistantPluginAudit);
     

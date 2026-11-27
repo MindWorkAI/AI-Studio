@@ -70,7 +70,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         _ => this.GenerateAssistantSpec,
     };
     
-    protected override bool SubmitDisabled => this.isAgentRunning || this.IsInstallFlowRunning;
+    protected override bool SubmitDisabled => this.isGenerating || this.IsInstallFlowRunning;
     
     protected override bool ShowResult => false;
     
@@ -91,7 +91,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     protected override Func<string> Result2Copy => () => !string.IsNullOrWhiteSpace(this.generatedLuaAssistant) ? this.generatedLuaAssistant : this.generatedAssistantSpec;
 
     private BuilderStep step = BuilderStep.DESCRIBE;
-    private bool isAgentRunning;
+    private bool isGenerating;
     private bool isCheckingPlugin;
     private bool isInstallingPlugin;
     private bool isAuditingPlugin;
@@ -129,7 +129,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     private BuilderInstallStep? failedInstallStep;
     private string installFlowIssue = string.Empty;
     private static readonly AssistantSessionStateKey<BuilderStep> STEP_STATE_KEY = new(nameof(step));
-    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
+    private static readonly AssistantSessionStateKey<bool> IS_GENERATING_STATE_KEY = new(nameof(isGenerating));
     private static readonly AssistantSessionStateKey<bool> IS_CHECKING_PLUGIN_STATE_KEY = new(nameof(isCheckingPlugin));
     private static readonly AssistantSessionStateKey<bool> IS_INSTALLING_PLUGIN_STATE_KEY = new(nameof(isInstallingPlugin));
     private static readonly AssistantSessionStateKey<bool> IS_AUDITING_PLUGIN_STATE_KEY = new(nameof(isAuditingPlugin));
@@ -286,7 +286,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
     {
         state.Set(STEP_STATE_KEY, this.step);
-        state.Set(IS_AGENT_RUNNING_STATE_KEY, this.isAgentRunning);
+        state.Set(IS_GENERATING_STATE_KEY, this.isGenerating);
         state.Set(IS_CHECKING_PLUGIN_STATE_KEY, this.isCheckingPlugin);
         state.Set(IS_INSTALLING_PLUGIN_STATE_KEY, this.isInstallingPlugin);
         state.Set(IS_AUDITING_PLUGIN_STATE_KEY, this.isAuditingPlugin);
@@ -328,7 +328,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
         state.Restore(STEP_STATE_KEY, value => this.step = value);
-        state.Restore(IS_AGENT_RUNNING_STATE_KEY, value => this.isAgentRunning = value);
+        state.Restore(IS_GENERATING_STATE_KEY, value => this.isGenerating = value);
         state.Restore(IS_CHECKING_PLUGIN_STATE_KEY, value => this.isCheckingPlugin = value);
         state.Restore(IS_INSTALLING_PLUGIN_STATE_KEY, value => this.isInstallingPlugin = value);
         state.Restore(IS_AUDITING_PLUGIN_STATE_KEY, value => this.isAuditingPlugin = value);
@@ -427,7 +427,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         if (!this.InputIsValid)
             return;
 
-        this.isAgentRunning = true;
+        this.isGenerating = true;
         try
         {
             var draft = await this.AssistantPluginGenerationService.GenerateAssistantDraftAsync(
@@ -461,7 +461,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         }
         finally
         {
-            this.isAgentRunning = false;
+            this.isGenerating = false;
         }
     }
 
@@ -477,7 +477,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
             return;
         }
 
-        this.isAgentRunning = true;
+        this.isGenerating = true;
         try
         {
             var draft = await this.AssistantPluginGenerationService.GenerateInitialLuaAsync(new(this.pluginId, this.generatedAssistantSpec, this.reviewNotes, this.CreateChatLaunchRequest()),
@@ -497,7 +497,7 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         }
         finally
         {
-            this.isAgentRunning = false;
+            this.isGenerating = false;
         }
     }
 

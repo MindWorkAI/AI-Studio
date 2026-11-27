@@ -133,7 +133,7 @@ public sealed class DataSourceService
     private IReadOnlyList<ParticipatingProvider> GetParticipatingProviders(string currentProviderId, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, ParticipatingProvider currentProvider)
     {
         var providers = new List<ParticipatingProvider> { currentProvider };
-        var retrievalContextValidationEnabled = this.settingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation;
+        var retrievalContextValidationEnabled = this.settingsManager.ConfigurationData.RetrievalContextValidation.EnableRetrievalContextValidation;
         foreach (var (component, role) in GetParticipatingOperations(dataSourceOptions, retrievalMode, retrievalContextValidationEnabled))
             this.AddOperationProvider(providers, component, currentProviderId, role);
 
@@ -160,10 +160,10 @@ public sealed class DataSourceService
 
         var operations = new List<(Components Component, string Role)>(2);
         if (dataSourceOptions.AutomaticDataSourceSelection)
-            operations.Add((Components.AGENT_DATA_SOURCE_SELECTION, "data source selection"));
+            operations.Add((Components.AI_TASK_DATA_SOURCE_SELECTION, "data source selection"));
 
         if (dataSourceOptions.AutomaticValidation && retrievalContextValidationEnabled)
-            operations.Add((Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, "retrieval context validation"));
+            operations.Add((Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION, "retrieval context validation"));
 
         return operations;
     }
@@ -180,8 +180,8 @@ public sealed class DataSourceService
     {
         var operationSettings = component switch
         {
-            Components.AGENT_DATA_SOURCE_SELECTION => DataSourceChoiceOperation.GetProviderSettings(this.settingsManager),
-            Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => RetrievalContextValidationOperation.GetProviderSettings(this.settingsManager),
+            Components.AI_TASK_DATA_SOURCE_SELECTION => DataSourceChoiceOperation.GetProviderSettings(this.settingsManager),
+            Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION => RetrievalContextValidationOperation.GetProviderSettings(this.settingsManager),
             _ => AIOperationProviderSettings.NONE,
         };
 

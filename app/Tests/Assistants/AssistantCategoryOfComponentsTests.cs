@@ -26,10 +26,10 @@ public sealed class AssistantCategoryOfComponentsTests
         ComponentKind.DYNAMIC_ASSISTANT,
         ComponentKind.WRITER,
         ComponentKind.APP_SETTINGS,
-        ComponentKind.AGENT_TEXT_CONTENT_CLEANER,
-        ComponentKind.AGENT_DATA_SOURCE_SELECTION,
-        ComponentKind.AGENT_RETRIEVAL_CONTEXT_VALIDATION,
-        ComponentKind.AGENT_ASSISTANT_PLUGIN_AUDIT,
+        ComponentKind.AI_TASK_TEXT_CONTENT_CLEANER,
+        ComponentKind.AI_TASK_DATA_SOURCE_SELECTION,
+        ComponentKind.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION,
+        ComponentKind.AI_TASK_ASSISTANT_PLUGIN_AUDIT,
     ];
 
     [Test]

@@ -29,7 +29,7 @@ public sealed class DataSourceParticipatingOperationsTests
     {
         var operations = DataSourceService.GetParticipatingOperations(Options(automaticSelection: true, automaticValidation: true), DataSourceRetrievalMode.EVERY_MESSAGE, retrievalContextValidationEnabled: true);
 
-        Assert.That(operations.Select(operation => operation.Component), Is.EqualTo(new[] { AIStudio.Tools.Components.AGENT_DATA_SOURCE_SELECTION, AIStudio.Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION }));
+        Assert.That(operations.Select(operation => operation.Component), Is.EqualTo(new[] { AIStudio.Tools.Components.AI_TASK_DATA_SOURCE_SELECTION, AIStudio.Tools.Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION }));
     }
 
     [Test]

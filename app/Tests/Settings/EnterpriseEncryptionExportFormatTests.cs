@@ -105,6 +105,32 @@ public sealed class EnterpriseEncryptionExportFormatTests
         Assert.That(settingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, Is.EqualTo(EnterpriseEncryptionFormat.V1));
     }
 
+    [Test]
+    public async Task SettingsOfVersionV6FromBeforeTheChoiceKeepTheLegacyFormat()
+    {
+        await File.WriteAllTextAsync(this.SettingsPath, """{"Version": "V6"}""");
+
+        var settingsManager = CreateSettingsManager();
+        await settingsManager.LoadSettings();
+
+        Assert.That(settingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, Is.EqualTo(EnterpriseEncryptionFormat.V1));
+    }
+
+    /// <summary>
+    /// Settings of version V6 were written by v26.10.1 and later as well, which store the format.
+    /// </summary>
+    [TestCase(EnterpriseEncryptionFormat.V1)]
+    [TestCase(EnterpriseEncryptionFormat.V2)]
+    public async Task AChosenFormatSurvivesTheMigrationOfVersionV6(EnterpriseEncryptionFormat format)
+    {
+        await File.WriteAllTextAsync(this.SettingsPath, $$$"""{"Version": "V6", "App": {"EnterpriseEncryptionExportFormat": "{{{format}}}"}}""");
+
+        var settingsManager = CreateSettingsManager();
+        await settingsManager.LoadSettings();
+
+        Assert.That(settingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, Is.EqualTo(format));
+    }
+
     [TestCase(EnterpriseEncryptionFormat.V1)]
     [TestCase(EnterpriseEncryptionFormat.V2)]
     public async Task AChosenFormatStays(EnterpriseEncryptionFormat format)

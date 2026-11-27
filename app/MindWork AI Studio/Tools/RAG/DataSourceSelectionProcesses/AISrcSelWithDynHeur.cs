@@ -8,19 +8,19 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.RAG.DataSourceSelectionProcesses;
 
-public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
+public class AISrcSelWithDynHeur : IDataSourceSelectionProcess
 {
-    private static readonly ILogger<AgenticSrcSelWithDynHeur> LOGGER = Program.LOGGER_FACTORY.CreateLogger<AgenticSrcSelWithDynHeur>();
+    private static readonly ILogger<AISrcSelWithDynHeur> LOGGER = Program.LOGGER_FACTORY.CreateLogger<AISrcSelWithDynHeur>();
     
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AgenticSrcSelWithDynHeur).Namespace, nameof(AgenticSrcSelWithDynHeur));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AISrcSelWithDynHeur).Namespace, nameof(AISrcSelWithDynHeur));
     
     #region Implementation of IDataSourceSelectionProcess
 
     /// <inheritdoc />
-    public string TechnicalName => "AgenticSrcSelWithDynHeur";
+    public string TechnicalName => "AISrcSelWithDynHeur";
 
     /// <inheritdoc />
-    public string UIName => TB("Automatic AI data source selection with heuristik source reduction");
+    public string UIName => TB("Automatic AI data source selection with heuristic source reduction");
 
     /// <inheritdoc />
     public string Description => TB("Automatically selects the appropriate data sources based on the last prompt. Applies a heuristic reduction at the end to reduce the number of data sources.");
@@ -30,7 +30,7 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
     {
         var proceedWithRAG = true;
         IReadOnlyList<IDataSource> selectedDataSources = [];
-        IReadOnlyList<DataSourceAgentSelected> finalAISelection = [];
+        IReadOnlyList<DataSourceAISelected> finalAISelection = [];
         
         var choiceOperation = Program.SERVICE_PROVIDER.GetRequiredService<DataSourceChoiceOperation>();
         var providerResolver = Program.SERVICE_PROVIDER.GetRequiredService<AIOperationProviderResolver>();
@@ -87,7 +87,7 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
             aiSelectedDataSources = aiSelectedDataSources.Where(x => allowedDataSources.ContainsKey(x.Id)).ToList();
 
             // Store the real AI-selected data sources:
-            finalAISelection = aiSelectedDataSources.Select(x => new DataSourceAgentSelected { DataSource = allowedDataSources[x.Id], AIDecision = x, Selected = false }).ToList();
+            finalAISelection = aiSelectedDataSources.Select(x => new DataSourceAISelected { DataSource = allowedDataSources[x.Id], AIDecision = x, Selected = false }).ToList();
 
             var numHallucinatedSources = totalAISelectedDataSources - aiSelectedDataSources.Count;
             if (numHallucinatedSources > 0)

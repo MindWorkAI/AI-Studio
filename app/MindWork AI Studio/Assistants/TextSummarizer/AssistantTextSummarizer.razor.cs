@@ -50,7 +50,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
 
     protected override Func<Task> SubmitAction => this.SummarizeText;
 
-    protected override bool SubmitDisabled => this.isAgentRunning;
+    protected override bool SubmitDisabled => this.isCleanerRunning;
     
     protected override string SendToChatVisibleUserPromptText => T("Create a summary of my text");
     
@@ -61,7 +61,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         if(!this.MightPreselectValues())
         {
             this.showWebContentReader = false;
-            this.useContentCleanerAgent = false;
+            this.useContentCleaner = false;
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
             this.selectedComplexity = Complexity.NO_CHANGE;
@@ -75,7 +75,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
         if (this.SettingsManager.ConfigurationData.TextSummarizer.PreselectOptions)
         {
             this.showWebContentReader = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectWebContentReader;
-            this.useContentCleanerAgent = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectContentCleanerAgent;
+            this.useContentCleaner = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectContentCleaner;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedOtherLanguage;
             this.selectedComplexity = this.SettingsManager.ConfigurationData.TextSummarizer.PreselectedComplexity;
@@ -88,20 +88,20 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     }
     
     private bool showWebContentReader;
-    private bool useContentCleanerAgent;
+    private bool useContentCleaner;
     private string webContentURL = string.Empty;
     private string inputText = string.Empty;
-    private bool isAgentRunning;
+    private bool isCleanerRunning;
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
     private Complexity selectedComplexity;
     private string expertInField = string.Empty;
     private string importantAspects = string.Empty;
     private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
-    private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
+    private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_STATE_KEY = new(nameof(useContentCleaner));
     private static readonly AssistantSessionStateKey<string> WEB_CONTENT_URL_STATE_KEY = new(nameof(webContentURL));
     private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
-    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
+    private static readonly AssistantSessionStateKey<bool> IS_CLEANER_RUNNING_STATE_KEY = new(nameof(isCleanerRunning));
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
     private static readonly AssistantSessionStateKey<Complexity> SELECTED_COMPLEXITY_STATE_KEY = new(nameof(selectedComplexity));
@@ -112,10 +112,10 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
     {
         state.Set(SHOW_WEB_CONTENT_READER_STATE_KEY, this.showWebContentReader);
-        state.Set(USE_CONTENT_CLEANER_AGENT_STATE_KEY, this.useContentCleanerAgent);
+        state.Set(USE_CONTENT_CLEANER_STATE_KEY, this.useContentCleaner);
         state.Set(WEB_CONTENT_URL_STATE_KEY, this.webContentURL);
         state.Set(INPUT_TEXT_STATE_KEY, this.inputText);
-        state.Set(IS_AGENT_RUNNING_STATE_KEY, this.isAgentRunning);
+        state.Set(IS_CLEANER_RUNNING_STATE_KEY, this.isCleanerRunning);
         state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
         state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
         state.Set(SELECTED_COMPLEXITY_STATE_KEY, this.selectedComplexity);
@@ -127,10 +127,10 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
         state.Restore(SHOW_WEB_CONTENT_READER_STATE_KEY, value => this.showWebContentReader = value);
-        state.Restore(USE_CONTENT_CLEANER_AGENT_STATE_KEY, value => this.useContentCleanerAgent = value);
+        state.Restore(USE_CONTENT_CLEANER_STATE_KEY, value => this.useContentCleaner = value);
         state.Restore(WEB_CONTENT_URL_STATE_KEY, value => this.webContentURL = value);
         state.Restore(INPUT_TEXT_STATE_KEY, value => this.inputText = value);
-        state.Restore(IS_AGENT_RUNNING_STATE_KEY, value => this.isAgentRunning = value);
+        state.Restore(IS_CLEANER_RUNNING_STATE_KEY, value => this.isCleanerRunning = value);
         state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
         state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
         state.Restore(SELECTED_COMPLEXITY_STATE_KEY, value => this.selectedComplexity = value);

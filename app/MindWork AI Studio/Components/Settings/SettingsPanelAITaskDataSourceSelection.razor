@@ -1,0 +1,13 @@
+@using AIStudio.Settings
+@inherits SettingsPanelBase
+
+<ExpansionPanel HeaderIcon="@AppIcons.DATA_SOURCE_SELECTION" HeaderText="@T("AI Task: Data Source Selection")">
+    <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("In classic RAG, which searches the data sources with every message, a model first selects the data sources which fit the current prompt.")
+        </MudJustifiedText>
+        <ConfigurationOption OptionDescription="@T("Preselect data source selection options?")" LabelOn="@T("Options are preselected")" LabelOff="@T("No options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.DataSourceSelection.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.DataSourceSelection.PreselectOptions = updatedState)" OptionHelp="@TA("When enabled, you can preselect the model for this task and the confidence it needs. Without a preselected model, AI Studio uses the model of the chat.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.DataSourceSelection, x => x.PreselectOptions, out var meta) && meta.IsLocked"/>
+        <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.DataSourceSelection.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.DataSourceSelection.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.DataSourceSelection.MinimumProviderConfidence = selectedValue)" IsLocked="() => ManagedConfiguration.TryGet(x => x.DataSourceSelection, x => x.MinimumProviderConfidence, out var meta) && meta.IsLocked"/>
+        <ConfigurationProviderSelection Component="Components.AI_TASK_DATA_SOURCE_SELECTION" EmptySelectionText="@T("Use the model of the chat")" Data="@this.AvailableLLMProvidersFunc()" Disabled="@(() => !this.SettingsManager.ConfigurationData.DataSourceSelection.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.DataSourceSelection.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.DataSourceSelection.PreselectedProvider = selectedValue)" IsLocked="() => ManagedConfiguration.TryGet(x => x.DataSourceSelection, x => x.PreselectedProvider, out var meta) && meta.IsLocked"/>
+    </MudPaper>
+</ExpansionPanel>

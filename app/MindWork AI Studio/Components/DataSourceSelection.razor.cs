@@ -29,7 +29,7 @@ public partial class DataSourceSelection : MSGComponentBase
     public EventCallback<DataSourceOptions> DataSourceOptionsChanged { get; set; }
 
     [Parameter]
-    public IReadOnlyList<DataSourceAgentSelected> DataSourcesAISelected { get; set; } = [];
+    public IReadOnlyList<DataSourceAISelected> DataSourcesAISelected { get; set; } = [];
     
     [Parameter]
     public string ConfigurationHeaderMessage { get; set; } = string.Empty;
@@ -230,13 +230,13 @@ public partial class DataSourceSelection : MSGComponentBase
 
     private SelectionMode GetListSelectionMode() => this.aiBasedSourceSelection ? MudBlazor.SelectionMode.SingleSelection : MudBlazor.SelectionMode.MultiSelection;
     
-    private IReadOnlyCollection<DataSourceAgentSelected> GetSelectedDataSourcesWithAI() => this.DataSourcesAISelected.Where(n => n.Selected).ToList();
+    private IReadOnlyCollection<DataSourceAISelected> GetSelectedDataSourcesWithAI() => this.DataSourcesAISelected.Where(n => n.Selected).ToList();
 
-    private string GetAIReasoning(DataSourceAgentSelected source) => $"AI reasoning (confidence {source.AIDecision.Confidence:P0}): {source.AIDecision.Reason}";
+    private string GetAIReasoning(DataSourceAISelected source) => $"AI reasoning (confidence {source.AIDecision.Confidence:P0}): {source.AIDecision.Reason}";
 
     private string GetConfidenceIconStyle(IInternalDataSource source) => $"{source.ConfidenceLevel.SetColorStyle(this.SettingsManager)} flex-shrink: 0;";
     
-    public void ChangeOptionWithoutSaving(DataSourceOptions options, IReadOnlyList<DataSourceAgentSelected>? aiSelectedDataSources = null)
+    public void ChangeOptionWithoutSaving(DataSourceOptions options, IReadOnlyList<DataSourceAISelected>? aiSelectedDataSources = null)
     {
         this.DataSourceOptions = options;
         this.DataSourcesAISelected = aiSelectedDataSources ?? [];
@@ -561,7 +561,7 @@ public partial class DataSourceSelection : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.RAG_AUTO_DATA_SOURCES_SELECTED:
-                if(data is IReadOnlyList<DataSourceAgentSelected> aiSelectedDataSources)
+                if(data is IReadOnlyList<DataSourceAISelected> aiSelectedDataSources)
                     this.DataSourcesAISelected = aiSelectedDataSources;
                     
                 this.StateHasChanged();

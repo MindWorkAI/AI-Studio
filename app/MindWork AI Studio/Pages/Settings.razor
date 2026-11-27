@@ -31,12 +31,12 @@
 
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <SettingsPanelAgentDataSourceSelection AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
-                <SettingsPanelAgentRetrievalContextValidation AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
+                <SettingsPanelAITaskDataSourceSelection AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
+                <SettingsPanelAITaskRetrievalContextValidation AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
             }
 
-            <SettingsPanelAgentContentCleaner AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
-            <SettingsPanelAgentAssistantAudit AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
+            <SettingsPanelAITaskContentCleaner AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
+            <SettingsPanelAITaskAssistantAudit AvailableLLMProvidersFunc="@(() => this.availableLLMProviders)"/>
 
             <ExpansionPanel HeaderIcon="@AppIcons.DATA_BACKUP" HeaderText="@T("Data Backup & Restore")">
                 <DataBackupPanel/>

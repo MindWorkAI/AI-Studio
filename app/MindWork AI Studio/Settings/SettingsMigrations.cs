@@ -25,7 +25,8 @@ public static class SettingsMigrations
                 configV1 = MigrateV2ToV3(logger, configV1);
                 var configV14 = MigrateV3ToV4(logger, configV1);
                 var configV15 = MigrateV4ToV5(logger, configV14);
-                return MigrateV5ToV6(logger, configV15);
+                var configV16 = MigrateV5ToV6(logger, configV15);
+                return MigrateV6ToV7(logger, configV16);
 
             case Version.V2:
                 var configV2 = JsonSerializer.Deserialize<DataV1V3>(configData, jsonOptions);
@@ -38,7 +39,8 @@ public static class SettingsMigrations
                 configV2 = MigrateV2ToV3(logger, configV2);
                 var configV24 = MigrateV3ToV4(logger, configV2);
                 var configV25 = MigrateV4ToV5(logger, configV24);
-                return MigrateV5ToV6(logger, configV25);
+                var configV26 = MigrateV5ToV6(logger, configV25);
+                return MigrateV6ToV7(logger, configV26);
 
             case Version.V3:
                 var configV3 = JsonSerializer.Deserialize<DataV1V3>(configData, jsonOptions);
@@ -50,7 +52,8 @@ public static class SettingsMigrations
 
                 var configV34 = MigrateV3ToV4(logger, configV3);
                 var configV35 = MigrateV4ToV5(logger, configV34);
-                return MigrateV5ToV6(logger, configV35);
+                var configV36 = MigrateV5ToV6(logger, configV35);
+                return MigrateV6ToV7(logger, configV36);
 
             case Version.V4:
                 var configV4 = JsonSerializer.Deserialize<DataV4>(configData, jsonOptions);
@@ -61,7 +64,8 @@ public static class SettingsMigrations
                 }
 
                 var configV45 = MigrateV4ToV5(logger, configV4);
-                return MigrateV5ToV6(logger, configV45);
+                var configV46 = MigrateV5ToV6(logger, configV45);
+                return MigrateV6ToV7(logger, configV46);
 
             case Version.V5:
                 var configV5 = JsonSerializer.Deserialize<DataV5>(configData, jsonOptions);
@@ -71,18 +75,29 @@ public static class SettingsMigrations
                     return new();
                 }
 
-                return MigrateV5ToV6(logger, configV5);
+                var configV56 = MigrateV5ToV6(logger, configV5);
+                return MigrateV6ToV7(logger, configV56);
 
-            default:
-                logger.LogInformation("No configuration migration is needed.");
-                var configV6 = JsonSerializer.Deserialize<Data>(configData, jsonOptions);
+            case Version.V6:
+                var configV6 = JsonSerializer.Deserialize<DataV6>(configData, jsonOptions);
                 if (configV6 is null)
                 {
                     logger.LogError("Failed to parse the v6 configuration. Using default values.");
                     return new();
                 }
 
-                return configV6;
+                return MigrateV6ToV7(logger, configV6);
+
+            default:
+                logger.LogInformation("No configuration migration is needed.");
+                var configV7 = JsonSerializer.Deserialize<Data>(configData, jsonOptions);
+                if (configV7 is null)
+                {
+                    logger.LogError("Failed to parse the v7 configuration. Using default values.");
+                    return new();
+                }
+
+                return configV7;
         }
     }
 
@@ -256,7 +271,7 @@ public static class SettingsMigrations
         };
     }
 
-    private static Data MigrateV5ToV6(ILogger<SettingsManager> logger, DataV5 previousConfig)
+    private static DataV6 MigrateV5ToV6(ILogger<SettingsManager> logger, DataV5 previousConfig)
     {
         //
         // Summary:
@@ -268,7 +283,7 @@ public static class SettingsMigrations
         {
             Version = Version.V6,
             Providers = previousConfig.Providers,
-            Confidence = new(x => x.Confidence)
+            Confidence = new()
             {
                 EnforceGlobalMinimumConfidence = previousConfig.LLMProviders.EnforceGlobalMinimumConfidence,
                 GlobalMinimumConfidence = previousConfig.LLMProviders.GlobalMinimumConfidence,
@@ -318,5 +333,181 @@ public static class SettingsMigrations
             BiasOfTheDay = previousConfig.BiasOfTheDay,
             I18N = previousConfig.I18N,
         };
+    }
+
+    /// <summary>
+    /// The names of the managed settings which changed with version V7, by their former names.
+    /// </summary>
+    /// <remarks>
+    /// The keys of ManagedLockedConfigurations, ManagedEditableDefaults, and ManagedUserValueSnapshots
+    /// name a setting by its class and its property, so the former names of the AI tasks live on there.
+    /// </remarks>
+    internal static readonly IReadOnlyDictionary<string, string> MANAGED_SETTING_NAMES_V6_TO_V7 = new Dictionary<string, string>
+    {
+        ["DataTextContentCleaner.PreselectAgentOptions"] = "DataTextContentCleaner.PreselectOptions",
+        ["DataTextContentCleaner.PreselectedAgentProvider"] = "DataTextContentCleaner.PreselectedProvider",
+        ["DataAgentDataSourceSelection.PreselectAgentOptions"] = "DataDataSourceSelection.PreselectOptions",
+        ["DataAgentDataSourceSelection.PreselectedAgentProvider"] = "DataDataSourceSelection.PreselectedProvider",
+        ["DataAgentDataSourceSelection.MinimumProviderConfidence"] = "DataDataSourceSelection.MinimumProviderConfidence",
+        ["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation"] = "DataRetrievalContextValidation.EnableRetrievalContextValidation",
+        ["DataAgentRetrievalContextValidation.PreselectAgentOptions"] = "DataRetrievalContextValidation.PreselectOptions",
+        ["DataAgentRetrievalContextValidation.PreselectedAgentProvider"] = "DataRetrievalContextValidation.PreselectedProvider",
+        ["DataAgentRetrievalContextValidation.MinimumProviderConfidence"] = "DataRetrievalContextValidation.MinimumProviderConfidence",
+        ["DataAgentRetrievalContextValidation.NumParallelValidations"] = "DataRetrievalContextValidation.NumParallelValidations",
+        ["DataAssistantPluginAudit.PreselectedAgentProvider"] = "DataAssistantPluginAudit.PreselectedProvider",
+    };
+
+    private static Data MigrateV6ToV7(ILogger<SettingsManager> logger, DataV6 previousConfig)
+    {
+        //
+        // Summary:
+        // The background agents became AI tasks, so their settings no longer speak of agents: the data
+        // source selection and the retrieval context validation got new classes, and every AI task
+        // calls its options and its provider like the assistants do. The managed settings follow.
+        //
+
+        logger.LogInformation("Migrating from v6 to v7...");
+        return new()
+        {
+            Version = Version.V7,
+            Providers = previousConfig.Providers,
+            Confidence = previousConfig.Confidence,
+            DataSourceSecurity = previousConfig.DataSourceSecurity,
+            EmbeddingProviders = previousConfig.EmbeddingProviders,
+            TranscriptionProviders = previousConfig.TranscriptionProviders,
+            DataSources = previousConfig.DataSources,
+            Mailboxes = previousConfig.Mailboxes,
+            MailboxSettings = previousConfig.MailboxSettings,
+            Profiles = previousConfig.Profiles,
+            ChatTemplates = previousConfig.ChatTemplates,
+            EnabledPlugins = previousConfig.EnabledPlugins,
+            ManagedEditableDefaults = RenameManagedSettingsV6ToV7(previousConfig.ManagedEditableDefaults),
+            ManagedLockedConfigurations = RenameManagedSettingsV6ToV7(previousConfig.ManagedLockedConfigurations),
+            ManagedUserValueSnapshots = RenameManagedSettingsV6ToV7(previousConfig.ManagedUserValueSnapshots),
+            AssistantPluginAudits = previousConfig.AssistantPluginAudits,
+            AppliedEnterpriseAssistantActivations = previousConfig.AppliedEnterpriseAssistantActivations,
+            StoredDataPathsAreRelative = previousConfig.StoredDataPathsAreRelative,
+            NextProviderNum = previousConfig.NextProviderNum,
+            NextEmbeddingNum = previousConfig.NextEmbeddingNum,
+            NextTranscriptionNum = previousConfig.NextTranscriptionNum,
+            NextDataSourceNum = previousConfig.NextDataSourceNum,
+            NextProfileNum = previousConfig.NextProfileNum,
+            NextChatTemplateNum = previousConfig.NextChatTemplateNum,
+            NextDocumentAnalysisPolicyNum = previousConfig.NextDocumentAnalysisPolicyNum,
+            App = previousConfig.App,
+            Chat = previousConfig.Chat,
+            AssistantsPage = previousConfig.AssistantsPage,
+            Workspace = previousConfig.Workspace,
+            IconFinder = previousConfig.IconFinder,
+            Translation = new()
+            {
+                DebounceIntervalMilliseconds = previousConfig.Translation.DebounceIntervalMilliseconds,
+                PreselectOptions = previousConfig.Translation.PreselectOptions,
+                PreselectLiveTranslation = previousConfig.Translation.PreselectLiveTranslation,
+                HideWebContentReader = previousConfig.Translation.HideWebContentReader,
+                PreselectWebContentReader = previousConfig.Translation.PreselectWebContentReader,
+                PreselectContentCleaner = previousConfig.Translation.PreselectContentCleanerAgent,
+                PreselectedTargetLanguage = previousConfig.Translation.PreselectedTargetLanguage,
+                PreselectOtherLanguage = previousConfig.Translation.PreselectOtherLanguage,
+                MinimumProviderConfidence = previousConfig.Translation.MinimumProviderConfidence,
+                PreselectedProvider = previousConfig.Translation.PreselectedProvider,
+            },
+            Coding = previousConfig.Coding,
+            ERI = previousConfig.ERI,
+            DocumentAnalysis = previousConfig.DocumentAnalysis,
+            BatchProcessing = previousConfig.BatchProcessing,
+            MandatoryInformation = previousConfig.MandatoryInformation,
+            TextSummarizer = new()
+            {
+                PreselectOptions = previousConfig.TextSummarizer.PreselectOptions,
+                HideWebContentReader = previousConfig.TextSummarizer.HideWebContentReader,
+                PreselectWebContentReader = previousConfig.TextSummarizer.PreselectWebContentReader,
+                PreselectContentCleaner = previousConfig.TextSummarizer.PreselectContentCleanerAgent,
+                PreselectedTargetLanguage = previousConfig.TextSummarizer.PreselectedTargetLanguage,
+                PreselectedOtherLanguage = previousConfig.TextSummarizer.PreselectedOtherLanguage,
+                PreselectedComplexity = previousConfig.TextSummarizer.PreselectedComplexity,
+                PreselectedExpertInField = previousConfig.TextSummarizer.PreselectedExpertInField,
+                PreselectedImportantAspects = previousConfig.TextSummarizer.PreselectedImportantAspects,
+                MinimumProviderConfidence = previousConfig.TextSummarizer.MinimumProviderConfidence,
+                PreselectedProvider = previousConfig.TextSummarizer.PreselectedProvider,
+            },
+            SWOTAnalysis = new()
+            {
+                PreselectOptions = previousConfig.SWOTAnalysis.PreselectOptions,
+                HideWebContentReader = previousConfig.SWOTAnalysis.HideWebContentReader,
+                PreselectWebContentReader = previousConfig.SWOTAnalysis.PreselectWebContentReader,
+                PreselectContentCleaner = previousConfig.SWOTAnalysis.PreselectContentCleanerAgent,
+                PreselectedTargetLanguage = previousConfig.SWOTAnalysis.PreselectedTargetLanguage,
+                PreselectedOtherLanguage = previousConfig.SWOTAnalysis.PreselectedOtherLanguage,
+                PreselectedImportantAspects = previousConfig.SWOTAnalysis.PreselectedImportantAspects,
+                MinimumProviderConfidence = previousConfig.SWOTAnalysis.MinimumProviderConfidence,
+                PreselectedProvider = previousConfig.SWOTAnalysis.PreselectedProvider,
+            },
+            TextContentCleaner = new(x => x.TextContentCleaner)
+            {
+                PreselectOptions = previousConfig.TextContentCleaner.PreselectAgentOptions,
+                PreselectedProvider = previousConfig.TextContentCleaner.PreselectedAgentProvider,
+                MinimumProviderConfidence = previousConfig.TextContentCleaner.MinimumProviderConfidence,
+            },
+            DataSourceSelection = new(x => x.DataSourceSelection)
+            {
+                PreselectOptions = previousConfig.AgentDataSourceSelection.PreselectAgentOptions,
+                PreselectedProvider = previousConfig.AgentDataSourceSelection.PreselectedAgentProvider,
+                MinimumProviderConfidence = previousConfig.AgentDataSourceSelection.MinimumProviderConfidence,
+            },
+            RetrievalContextValidation = new(x => x.RetrievalContextValidation)
+            {
+                EnableRetrievalContextValidation = previousConfig.AgentRetrievalContextValidation.EnableRetrievalContextValidation,
+                PreselectOptions = previousConfig.AgentRetrievalContextValidation.PreselectAgentOptions,
+                PreselectedProvider = previousConfig.AgentRetrievalContextValidation.PreselectedAgentProvider,
+                MinimumProviderConfidence = previousConfig.AgentRetrievalContextValidation.MinimumProviderConfidence,
+                NumParallelValidations = previousConfig.AgentRetrievalContextValidation.NumParallelValidations,
+            },
+            AssistantPluginAudit = new(x => x.AssistantPluginAudit)
+            {
+                RequireAuditBeforeActivation = previousConfig.AssistantPluginAudit.RequireAuditBeforeActivation,
+                PreselectedProvider = previousConfig.AssistantPluginAudit.PreselectedAgentProvider,
+                MinimumProviderConfidence = previousConfig.AssistantPluginAudit.MinimumProviderConfidence,
+                MinimumLevel = previousConfig.AssistantPluginAudit.MinimumLevel,
+                BlockActivationBelowMinimum = previousConfig.AssistantPluginAudit.BlockActivationBelowMinimum,
+                AutomaticallyAuditAssistants = previousConfig.AssistantPluginAudit.AutomaticallyAuditAssistants,
+                EnterpriseApprovedPlugins = previousConfig.AssistantPluginAudit.EnterpriseApprovedPlugins,
+            },
+            Agenda = previousConfig.Agenda,
+            GrammarSpelling = previousConfig.GrammarSpelling,
+            RewriteImprove = previousConfig.RewriteImprove,
+            PromptOptimizer = previousConfig.PromptOptimizer,
+            EMail = previousConfig.EMail,
+            SlideBuilder = previousConfig.SlideBuilder,
+            AssistantBuilder = previousConfig.AssistantBuilder,
+            VisualBriefing = previousConfig.VisualBriefing,
+            BeyondFactsLab = previousConfig.BeyondFactsLab,
+            ModelComparison = previousConfig.ModelComparison,
+            LegalCheck = new()
+            {
+                PreselectOptions = previousConfig.LegalCheck.PreselectOptions,
+                HideWebContentReader = previousConfig.LegalCheck.HideWebContentReader,
+                PreselectWebContentReader = previousConfig.LegalCheck.PreselectWebContentReader,
+                PreselectContentCleaner = previousConfig.LegalCheck.PreselectContentCleanerAgent,
+                MinimumProviderConfidence = previousConfig.LegalCheck.MinimumProviderConfidence,
+                PreselectedProvider = previousConfig.LegalCheck.PreselectedProvider,
+                PreselectedProfile = previousConfig.LegalCheck.PreselectedProfile,
+            },
+            Synonyms = previousConfig.Synonyms,
+            MyTasks = previousConfig.MyTasks,
+            JobPostings = previousConfig.JobPostings,
+            BiasOfTheDay = previousConfig.BiasOfTheDay,
+            I18N = previousConfig.I18N,
+            Tools = previousConfig.Tools,
+        };
+    }
+
+    private static Dictionary<string, TValue> RenameManagedSettingsV6ToV7<TValue>(Dictionary<string, TValue> managedStates)
+    {
+        var renamedStates = new Dictionary<string, TValue>(managedStates.Count);
+        foreach (var (settingName, state) in managedStates)
+            renamedStates[MANAGED_SETTING_NAMES_V6_TO_V7.GetValueOrDefault(settingName, settingName)] = state;
+
+        return renamedStates;
     }
 }

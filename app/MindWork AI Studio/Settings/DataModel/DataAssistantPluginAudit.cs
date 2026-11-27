@@ -26,7 +26,7 @@ public sealed class DataAssistantPluginAudit(Expression<Func<Data, DataAssistant
     /// Which provider should be used for the assistant plugin audit?
     /// When empty, the app-wide default provider is used.
     /// </summary>
-    public string PreselectedAgentProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedAgentProvider, string.Empty);
+    public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProvider, string.Empty);
 
     /// <summary>
     /// The minimum confidence level of the provider which audits the plugins.

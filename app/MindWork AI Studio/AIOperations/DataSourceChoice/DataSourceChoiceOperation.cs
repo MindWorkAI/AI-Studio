@@ -13,7 +13,7 @@ namespace AIStudio.AIOperations.DataSourceChoice;
 /// Chooses the data sources which fit a prompt, from the descriptions of the data sources.
 /// </summary>
 /// <remarks>
-/// The classic RAG process runs it before it searches, see AgenticSrcSelWithDynHeur.
+/// The classic RAG process runs it before it searches, see AISrcSelWithDynHeur.
 /// </remarks>
 public sealed class DataSourceChoiceOperation(ILogger<DataSourceChoiceOperation> logger, SettingsManager settingsManager, DataSourceDescriptionService descriptionService) : AIOperationBase<DataSourceChoiceRequest, DataSourceChoiceResult>(logger, settingsManager)
 {
@@ -79,9 +79,9 @@ public sealed class DataSourceChoiceOperation(ILogger<DataSourceChoiceOperation>
     /// <returns>The preferred provider and the minimum confidence, or none of them while the preselection is switched off.</returns>
     public static AIOperationProviderSettings GetProviderSettings(SettingsManager settingsManager)
     {
-        var settings = settingsManager.ConfigurationData.AgentDataSourceSelection;
-        return settings.PreselectAgentOptions
-            ? new(settings.PreselectedAgentProvider, settings.MinimumProviderConfidence)
+        var settings = settingsManager.ConfigurationData.DataSourceSelection;
+        return settings.PreselectOptions
+            ? new(settings.PreselectedProvider, settings.MinimumProviderConfidence)
             : AIOperationProviderSettings.NONE;
     }
 
@@ -91,7 +91,7 @@ public sealed class DataSourceChoiceOperation(ILogger<DataSourceChoiceOperation>
     public override string Id => "Data Source Selection";
 
     /// <inheritdoc />
-    public override Tools.Components Component => Tools.Components.AGENT_DATA_SOURCE_SELECTION;
+    public override Tools.Components Component => Tools.Components.AI_TASK_DATA_SOURCE_SELECTION;
 
     /// <summary>
     /// The model reads the descriptions of the data sources, so it has to reach what they require.

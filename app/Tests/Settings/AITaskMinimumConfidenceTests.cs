@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace AIStudio.Tests.Settings;
 
 /// <summary>
-/// Checks when the minimum confidence of a background task applies.
+/// Checks when the minimum confidence of an AI task applies.
 /// </summary>
 /// <remarks>
 /// The text content cleaner, the data source selection, and the retrieval context validation apply their
@@ -15,7 +15,7 @@ namespace AIStudio.Tests.Settings;
 /// one would find a namespace of this assembly first, see AIOperationProviderResolverTests.
 /// </remarks>
 [TestFixture]
-public sealed class BackgroundTaskMinimumConfidenceTests
+public sealed class AITaskMinimumConfidenceTests
 {
     [Test]
     public void TheTextContentCleanerAppliesItsMinimumOnlyWithItsPreselection()
@@ -23,25 +23,25 @@ public sealed class BackgroundTaskMinimumConfidenceTests
         var settingsManager = CreateSettingsManager();
         settingsManager.ConfigurationData.TextContentCleaner.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AGENT_TEXT_CONTENT_CLEANER, on => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions = on);
+        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_TEXT_CONTENT_CLEANER, on => settingsManager.ConfigurationData.TextContentCleaner.PreselectOptions = on);
     }
 
     [Test]
     public void TheDataSourceSelectionAppliesItsMinimumOnlyWithItsPreselection()
     {
         var settingsManager = CreateSettingsManager();
-        settingsManager.ConfigurationData.AgentDataSourceSelection.MinimumProviderConfidence = ConfidenceLevel.HIGH;
+        settingsManager.ConfigurationData.DataSourceSelection.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AGENT_DATA_SOURCE_SELECTION, on => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = on);
+        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_DATA_SOURCE_SELECTION, on => settingsManager.ConfigurationData.DataSourceSelection.PreselectOptions = on);
     }
 
     [Test]
     public void TheRetrievalContextValidationAppliesItsMinimumOnlyWithItsPreselection()
     {
         var settingsManager = CreateSettingsManager();
-        settingsManager.ConfigurationData.AgentRetrievalContextValidation.MinimumProviderConfidence = ConfidenceLevel.HIGH;
+        settingsManager.ConfigurationData.RetrievalContextValidation.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, on => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions = on);
+        AssertMinimumFollowsPreselection(settingsManager, AIStudio.Tools.Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION, on => settingsManager.ConfigurationData.RetrievalContextValidation.PreselectOptions = on);
     }
 
     [Test]
@@ -50,7 +50,7 @@ public sealed class BackgroundTaskMinimumConfidenceTests
         var settingsManager = CreateSettingsManager();
         settingsManager.ConfigurationData.AssistantPluginAudit.MinimumProviderConfidence = ConfidenceLevel.HIGH;
 
-        Assert.That(AIStudio.Tools.ComponentsExtensions.MinimumConfidence(AIStudio.Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, settingsManager), Is.EqualTo(ConfidenceLevel.HIGH), "The audit has no preselection switch, so nothing may turn its minimum off.");
+        Assert.That(AIStudio.Tools.ComponentsExtensions.MinimumConfidence(AIStudio.Tools.Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT, settingsManager), Is.EqualTo(ConfidenceLevel.HIGH), "The audit has no preselection switch, so nothing may turn its minimum off.");
     }
 
     private static void AssertMinimumFollowsPreselection(SettingsManager settingsManager, AIStudio.Tools.Components component, Action<bool> setPreselection)

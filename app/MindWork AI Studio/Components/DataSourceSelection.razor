@@ -76,7 +76,7 @@
                             }
 
                             @* With Semantic Search, no AI operation takes part: nothing would validate the retrieved data. *@
-                            @if (this.AllowsAutomaticSelection && this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && !this.IsSemanticSearchEffective)
+                            @if (this.AllowsAutomaticSelection && this.SettingsManager.ConfigurationData.RetrievalContextValidation.EnableRetrievalContextValidation && !this.IsSemanticSearchEffective)
                             {
                                 <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Dense="@true" Disabled="@this.ReadOnly"/>
                             }
@@ -137,7 +137,7 @@
                                         @if (!this.IsSemanticSearchEffective && this.DataSourcesAISelected.Count > 0)
                                         {
                                             <ExpansionPanel HeaderIcon="@AppIcons.AI_SELECTED_DATA_SOURCES" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("AI-Selected Data Sources")">
-                                                <MudList T="DataSourceAgentSelected" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
+                                                <MudList T="DataSourceAISelected" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
                                                     @foreach (var source in this.DataSourcesAISelected)
                                                     {
                                                         <MudListItem Value="@source">

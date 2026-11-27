@@ -120,7 +120,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             //
             if (chatThread.DataSourceOptions.AutomaticDataSourceSelection)
             {
-                var dataSourceSelectionProcess = new AgenticSrcSelWithDynHeur();
+                var dataSourceSelectionProcess = new AISrcSelWithDynHeur();
                 var result = await dataSourceSelectionProcess.SelectDataSourcesAsync(provider, lastUserPrompt, chatThread, dataSources, token);
                 proceedWithRAG = result.ProceedWithRAG;
                 selectedDataSources = result.SelectedDataSources;

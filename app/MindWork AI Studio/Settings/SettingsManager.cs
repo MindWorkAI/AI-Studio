@@ -20,7 +20,7 @@ public sealed class SettingsManager
     public readonly record struct ToolMinimumProviderConfidenceResolution(ConfidenceLevel ConfidenceLevel, string Source);
 
     private const string SETTINGS_FILENAME = "settings.json";
-    private const Version CURRENT_SETTINGS_VERSION = Version.V6;
+    private const Version CURRENT_SETTINGS_VERSION = Version.V7;
     
     private readonly record struct SettingsVersionReadResult(Version Version, SettingsWriteBlockReason FailureReason);
     
@@ -186,11 +186,13 @@ public sealed class SettingsManager
             }
 
             this.logger.LogInformation("No valid current-version settings backup was found. Migrating the settings file.");
-            settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion.Version, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            var settingsJson = await File.ReadAllTextAsync(settingsPath);
+            settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion.Version, settingsJson, JSON_OPTIONS);
 
             // Compatibility shim, remove after 2027-10-31, see KeepTheLegacyEncryptionExportFormat.
-            // Settings of an older version always come from before the export format existed:
-            settingsData.App.EnterpriseEncryptionExportFormat = EnterpriseEncryptionFormat.V1;
+            // Settings up to version V5 come from before the export format existed, but settings of
+            // version V6 may hold it already:
+            KeepTheLegacyEncryptionExportFormat(settingsData, settingsJson);
 
             this.PrepareLoadedSettings(settingsData);
             await this.StoreSettingsSnapshot(settingsData, settingsPath);

@@ -769,7 +769,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         foreach (var key in spec.Required)
         {
-            if (!propsTable.TryGetValue(key, out var luaVal))
+            if (!spec.TryGetValue(propsTable, key, out var luaVal))
             {
                 LOGGER.LogWarning($"Component {type} missing required prop '{key}'.");
                 return false;
@@ -784,7 +784,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         foreach (var key in spec.Optional)
         {
-            if (!propsTable.TryGetValue(key, out var luaVal))
+            if (!spec.TryGetValue(propsTable, key, out var luaVal))
                 continue;
 
             if (!this.TryConvertComponentPropValue(type, key, luaVal, out var dotNetVal))

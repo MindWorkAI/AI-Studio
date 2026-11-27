@@ -32,8 +32,8 @@ public sealed class TextContentCleaningOperation(ILogger<TextContentCleaningOper
     public static AIOperationProviderSettings GetProviderSettings(SettingsManager settingsManager)
     {
         var settings = settingsManager.ConfigurationData.TextContentCleaner;
-        return settings.PreselectAgentOptions
-            ? new(settings.PreselectedAgentProvider, settings.MinimumProviderConfidence)
+        return settings.PreselectOptions
+            ? new(settings.PreselectedProvider, settings.MinimumProviderConfidence)
             : AIOperationProviderSettings.NONE;
     }
 
@@ -43,7 +43,7 @@ public sealed class TextContentCleaningOperation(ILogger<TextContentCleaningOper
     public override string Id => "Text Content Cleaning";
 
     /// <inheritdoc />
-    public override Tools.Components Component => Tools.Components.AGENT_TEXT_CONTENT_CLEANER;
+    public override Tools.Components Component => Tools.Components.AI_TASK_TEXT_CONTENT_CLEANER;
 
     /// <summary>
     /// A web page requires nothing of its own: the user chose to read it with the assistant.
