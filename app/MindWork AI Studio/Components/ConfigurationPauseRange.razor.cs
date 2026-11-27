@@ -2,35 +2,40 @@ using AIStudio.Tools.Pauses;
 
 using Microsoft.AspNetCore.Components;
 
+using Timer = System.Timers.Timer;
+
 namespace AIStudio.Components;
 
 /// <summary>
-/// The two sliders of a random pause, e.g., between two indexing steps, with the shortest and the longest pause.
+/// One slider with two handles for a random pause, e.g., between two indexing steps: the shortest and the longest pause.
 /// </summary>
 /// <remarks>
-/// The sliders keep the bounds in order, as PauseRange.GetEffective works them out: raising the
-/// lower bound above the upper one raises the upper one along with it. A bound which a configuration
-/// plugin locks shows a lock and keeps its value, and the other bound adjusts to it.
+/// The slider shows the bounds which apply, as PauseRange.GetEffective works them out, and stores
+/// them that way: pushing the lower handle past the upper one takes the upper one along. A bound
+/// which a configuration plugin locks keeps its value, its handle cannot move, and the option shows
+/// a lock. The handles move in steps of five seconds; a bound off these steps, e.g., one which a
+/// configuration plugin sets, applies as it is, and only its handle shows the nearest step.
 /// </remarks>
-public partial class ConfigurationPauseRange : MSGComponentBase
+public partial class ConfigurationPauseRange : ConfigurationBaseCore
 {
+    /// <summary>
+    /// The seconds between two tick marks, and the step of the handles.
+    /// </summary>
+    private const int STEP_SECONDS = 5;
+
+    /// <summary>
+    /// Initializes the component, which shows the lock of the option while either bound is locked.
+    /// </summary>
+    public ConfigurationPauseRange()
+    {
+        this.IsLocked = () => this.IsMinimumLocked() || this.IsMaximumLocked();
+    }
+
     /// <summary>
     /// The shortest and the longest pause the feature allows.
     /// </summary>
     [Parameter, EditorRequired]
     public PauseLimits Limits { get; set; } = null!;
-
-    /// <summary>
-    /// The name of the lower bound.
-    /// </summary>
-    [Parameter]
-    public string MinimumDescription { get; set; } = string.Empty;
-
-    /// <summary>
-    /// What the lower bound does, in more detail. Optional.
-    /// </summary>
-    [Parameter]
-    public string MinimumHelp { get; set; } = string.Empty;
 
     /// <summary>
     /// The lower bound as set.
@@ -51,18 +56,6 @@ public partial class ConfigurationPauseRange : MSGComponentBase
     public Func<bool> IsMinimumLocked { get; set; } = () => false;
 
     /// <summary>
-    /// The name of the upper bound.
-    /// </summary>
-    [Parameter]
-    public string MaximumDescription { get; set; } = string.Empty;
-
-    /// <summary>
-    /// What the upper bound does, in more detail. Optional.
-    /// </summary>
-    [Parameter]
-    public string MaximumHelp { get; set; } = string.Empty;
-
-    /// <summary>
     /// The upper bound as set.
     /// </summary>
     [Parameter]
@@ -81,78 +74,121 @@ public partial class ConfigurationPauseRange : MSGComponentBase
     public Func<bool> IsMaximumLocked { get; set; } = () => false;
 
     /// <summary>
-    /// Whether both sliders are disabled, e.g., while a run uses the bounds.
+    /// Whether the bounds are settings, which a change stores and announces to the other options.
     /// </summary>
-    [Parameter]
-    public Func<bool> Disabled { get; set; } = () => false;
-
-    /// <summary>
-    /// Whether the bounds are settings, cf. ConfigurationSlider.IsSetting.
-    /// </summary>
+    /// <remarks>
+    /// Defaults to true. False for bounds which live elsewhere, e.g., in the session of an assistant.
+    /// </remarks>
     [Parameter]
     public bool IsSetting { get; set; } = true;
 
+    /// <summary>
+    /// Stores the settings once the user stopped moving a handle: storing them with every step
+    /// would make the slider stutter, since the store runs a while.
+    /// </summary>
+    private readonly Timer storeTimer = new(TimeSpan.FromMilliseconds(500))
+    {
+        AutoReset = false
+    };
+
+    /// <summary>
+    /// Whether a change waits for storeTimer.
+    /// </summary>
+    private bool isStorePending;
+
     private PauseRange EffectiveRange => PauseRange.GetEffective(this.Limits, this.Minimum(), this.IsMinimumLocked, this.Maximum(), this.IsMaximumLocked);
 
-    /// <remarks>
-    /// A slider moves a value which falls out of its range into it. A locked slider therefore keeps
-    /// the whole range, since its value belongs to the organization. A free one ends at the locked
-    /// upper bound, and the free value adjusts to it.
-    /// </remarks>
-    private int MinimumSliderMax => this.IsMaximumLocked() && !this.IsMinimumLocked()
-        ? this.EffectiveRange.MaximumSeconds
-        : this.Limits.LongestSeconds;
+    /// <summary>
+    /// The start of the track: the shortest pause, or the step right below it.
+    /// </summary>
+    private int TrackMin => this.Limits.ShortestSeconds / STEP_SECONDS * STEP_SECONDS;
 
-    /// <remarks>
-    /// The upper bound starts where the lower bound is, so raising the lower one above it raises the
-    /// upper one along with it. A locked slider keeps the whole range, cf. MinimumSliderMax.
-    /// </remarks>
-    private int MaximumSliderMin => this.IsMaximumLocked()
-        ? this.Limits.ShortestSeconds
-        : this.EffectiveRange.MinimumSeconds;
+    /// <summary>
+    /// The end of the track: the longest pause, or the step right above it.
+    /// </summary>
+    private int TrackMax => (this.Limits.LongestSeconds + STEP_SECONDS - 1) / STEP_SECONDS * STEP_SECONDS;
+
+    #region Overrides of ConfigurationBase
+
+    /// <inheritdoc />
+    protected override bool Stretch => true;
+
+    /// <inheritdoc />
+    protected override Variant Variant => Variant.Outlined;
+
+    protected override string Label => this.OptionDescription;
+
+    #endregion
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        // Off the renderer, which stays free while the settings are stored:
+        this.storeTimer.Elapsed += (_, _) => this.StoreAsync().Observe($"{nameof(ConfigurationPauseRange)}: storing the changed pause");
         await base.OnInitializedAsync();
-        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
     }
 
     #endregion
 
     #region Overrides of MSGComponentBase
 
-    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    protected override void DisposeResources()
     {
-        switch (triggeredEvent)
-        {
-            case Event.CONFIGURATION_CHANGED:
-                this.StateHasChanged();
-                break;
-        }
+        this.storeTimer.Stop();
+        this.storeTimer.Dispose();
 
-        return Task.CompletedTask;
+        // A change made right before closing still reaches the disk:
+        if (this.isStorePending)
+            this.StoreAsync().Observe($"{nameof(ConfigurationPauseRange)}: storing the changed pause while closing");
+
+        base.DisposeResources();
     }
 
     #endregion
 
-    /// <remarks>
-    /// Renders both sliders anew, since the range of the other one depends on this bound. A setting
-    /// announces its change to all options anyway, a value which lives elsewhere does not.
-    /// </remarks>
-    private void UpdateMinimum(int seconds)
+    private string GetRangeText(PauseRange range)
     {
-        this.MinimumUpdate(seconds);
-        this.StateHasChanged();
+        if (range.IsNone)
+            return T("No pause");
+
+        return range.MinimumSeconds == range.MaximumSeconds
+            ? string.Format(T("{0} seconds"), range.MinimumSeconds)
+            : string.Format(T("{0} to {1} seconds"), range.MinimumSeconds, range.MaximumSeconds);
     }
 
+    private void UpdateMinimum(int seconds) => this.ApplyBounds(seconds, this.Maximum());
+
+    private void UpdateMaximum(int seconds) => this.ApplyBounds(this.Minimum(), seconds);
+
+    /// <summary>
+    /// Sets both bounds as they apply, so that the handles show what is stored.
+    /// </summary>
     /// <remarks>
-    /// Renders both sliders anew, cf. UpdateMinimum.
+    /// A locked bound keeps its value, even when the slider reports another one, e.g., while it
+    /// puts its handles in order.
     /// </remarks>
-    private void UpdateMaximum(int seconds)
+    private void ApplyBounds(int minimumSeconds, int maximumSeconds)
     {
-        this.MaximumUpdate(seconds);
-        this.StateHasChanged();
+        var range = PauseRange.GetEffective(this.Limits, minimumSeconds, this.IsMinimumLocked, maximumSeconds, this.IsMaximumLocked);
+        if (!this.IsMinimumLocked())
+            this.MinimumUpdate(range.MinimumSeconds);
+
+        if (!this.IsMaximumLocked())
+            this.MaximumUpdate(range.MaximumSeconds);
+
+        if (!this.IsSetting)
+            return;
+
+        this.isStorePending = true;
+        this.storeTimer.Stop();
+        this.storeTimer.Start();
+    }
+
+    private async Task StoreAsync()
+    {
+        this.isStorePending = false;
+        await this.SettingsManager.StoreSettings();
+        await this.InformAboutChange();
     }
 }
