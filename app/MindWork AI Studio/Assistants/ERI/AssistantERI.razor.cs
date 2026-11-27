@@ -282,9 +282,27 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The lists of the form are those of the selected server, see MightPreselectValues, and on opening, that
+    /// is the first server. The restored lists therefore become lists of their own: filled into the lists of
+    /// the form, they would replace the lists of the first server with those of another one, and the next
+    /// time the settings are stored, the first server would lose its embeddings, retrieval processes, and
+    /// generated files. A server which no longer exists brings back nothing, so that its inputs do not end up
+    /// in the server selected on opening.
+    /// </remarks>
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
-        state.Restore(SELECTED_ERI_SERVER_STATE_KEY, value => this.selectedERIServer = value);
+        var serverStillExists = true;
+        state.Restore(SELECTED_ERI_SERVER_STATE_KEY, value =>
+        {
+            serverStillExists = value is null || this.SettingsManager.ConfigurationData.ERI.ERIServers.Contains(value);
+            if (serverStillExists)
+                this.selectedERIServer = value;
+        });
+
+        if (!serverStillExists)
+            return;
+
         state.Restore(AUTO_SAVE_STATE_KEY, value => this.autoSave = value);
         state.Restore(SERVER_NAME_STATE_KEY, value => this.serverName = value);
         state.Restore(SERVER_DESCRIPTION_STATE_KEY, value => this.serverDescription = value);
@@ -302,12 +320,12 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         state.Restore(AUTH_DESCRIPTION_STATE_KEY, value => this.authDescription = value);
         state.Restore(SELECTED_OPERATING_SYSTEM_STATE_KEY, value => this.selectedOperatingSystem = value);
         state.Restore(ALLOWED_LLM_PROVIDERS_STATE_KEY, value => this.allowedLLMProviders = value);
-        state.RestoreList(EMBEDDINGS_STATE_KEY, this.embeddings);
-        state.RestoreList(RETRIEVAL_PROCESSES_STATE_KEY, this.retrievalProcesses);
+        state.Restore(EMBEDDINGS_STATE_KEY, value => this.embeddings = [..value]);
+        state.Restore(RETRIEVAL_PROCESSES_STATE_KEY, value => this.retrievalProcesses = [..value]);
         state.Restore(ADDITIONAL_LIBRARIES_STATE_KEY, value => this.additionalLibraries = value);
         state.Restore(WRITE_TO_FILESYSTEM_STATE_KEY, value => this.writeToFilesystem = value);
         state.Restore(BASE_DIRECTORY_STATE_KEY, value => this.baseDirectory = value);
-        state.RestoreList(PREVIOUSLY_GENERATED_FILES_STATE_KEY, this.previouslyGeneratedFiles);
+        state.Restore(PREVIOUSLY_GENERATED_FILES_STATE_KEY, value => this.previouslyGeneratedFiles = [..value]);
     }
 
     private bool AreServerPresetsBlocked => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions;
