@@ -855,6 +855,44 @@ public sealed record ChatThread
         return ReportedHistory.Of(reported.ToTokenUsage(), ToolCallHistoryNote.TextForModel(this.Blocks[^1], answer.Text));
     }
 
+    /// <summary>
+    /// The managed transcripts this chat refers to, in its messages and in its draft.
+    /// </summary>
+    /// <remarks>
+    /// Walks the chat through ReplaceAttachments, which knows every place a chat keeps attachments; nothing is replaced.
+    /// </remarks>
+    /// <returns>The transcripts, in the order of the chat.</returns>
+    public List<ManagedTranscriptAttachment> ManagedTranscripts()
+    {
+        var transcripts = new List<ManagedTranscriptAttachment>();
+        this.ReplaceAttachments(attachment =>
+        {
+            if (attachment is ManagedTranscriptAttachment transcript)
+                transcripts.Add(transcript);
+
+            return attachment;
+        });
+
+        return transcripts;
+    }
+
+    /// <summary>
+    /// Deletes the files of those given transcripts which this chat no longer refers to.
+    /// </summary>
+    /// <remarks>
+    /// For a chat whose messages were replaced at once, e.g., by their summary when compressing in place, see
+    /// ChatCompressionTarget.SAME_CHAT: nothing refers to the transcripts of the summarized messages anymore, so their
+    /// files would stay behind in the folder of the chat. Take the transcripts with ManagedTranscripts before the
+    /// messages change.
+    /// </remarks>
+    /// <param name="formerTranscripts">The transcripts the chat referred to before its messages changed.</param>
+    public void DeleteTranscriptsNoLongerReferenced(IEnumerable<ManagedTranscriptAttachment> formerTranscripts)
+    {
+        var keptPaths = this.ManagedTranscripts().Select(transcript => transcript.FilePath).ToHashSet(PathTools.COMPARER);
+        foreach (var transcript in formerTranscripts.Where(transcript => !keptPaths.Contains(transcript.FilePath)))
+            ManagedTranscriptAttachment.TryDeleteOwnedFile(transcript);
+    }
+
     private static void DeleteManagedAttachments(ContentBlock block)
     {
         if (block.Content is not ContentText textContent)

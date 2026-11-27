@@ -1,7 +1,9 @@
 using System.Globalization;
 using System.Text;
 
-namespace AIStudio.Chat.Compression;
+using AIStudio.Chat;
+
+namespace AIStudio.AIOperations.ConversationSummary;
 
 /// <summary>
 /// Turns the messages to summarize into the text the AI reads, and splits that text into parts which fit the model.
@@ -18,7 +20,7 @@ namespace AIStudio.Chat.Compression;
 /// message larger than a whole part, e.g., one with a long document, is split across several
 /// parts, so that nothing of it gets lost.
 /// </remarks>
-public static class ChatCompressionInput
+public static class ConversationSummaryInput
 {
     /// <summary>
     /// Begins a part which carries on with a message the part before ended with.
@@ -93,7 +95,7 @@ public static class ChatCompressionInput
     public static IReadOnlyList<string> SplitIntoParts(IReadOnlyList<CountedMessage> messages, int tokensPerPart)
     {
         var parts = new List<string>();
-        var position = ChatCompressionPosition.START;
+        var position = ConversationSummaryPosition.START;
         while (position.Message < messages.Count)
         {
             var part = TakePart(messages, position, tokensPerPart);
@@ -121,7 +123,7 @@ public static class ChatCompressionInput
     /// <param name="start">Where the part begins: its first message, and the offset in its text, which is 0 unless the part before split the message.</param>
     /// <param name="tokensPerPart">How many tokens of messages the part may hold.</param>
     /// <returns>The text of the part, and where the next part begins.</returns>
-    internal static ChatCompressionPart TakePart(IReadOnlyList<CountedMessage> messages, ChatCompressionPosition start, int tokensPerPart)
+    internal static ConversationSummaryPart TakePart(IReadOnlyList<CountedMessage> messages, ConversationSummaryPosition start, int tokensPerPart)
     {
         var part = new StringBuilder();
         var partTokens = 0;

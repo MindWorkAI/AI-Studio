@@ -13,10 +13,12 @@ public sealed class EmbeddedChatTokenBudgetTests
 {
     private const int WINDOW = 32_000;
 
+    private const double SHARE_TO_ASK = 0.95;
+
     [Test]
     public void ACountWhichFailedTellsNothing()
     {
-        Assert.That(EmbeddedChatTokenBudget.Of(ConversationTokens.UNAVAILABLE), Is.EqualTo(EmbeddedChatTokenBudgetState.UNKNOWN));
+        Assert.That(EmbeddedChatTokenBudget.Of(ConversationTokens.UNAVAILABLE, SHARE_TO_ASK), Is.EqualTo(EmbeddedChatTokenBudgetState.UNKNOWN));
     }
 
     [Test]
@@ -24,7 +26,7 @@ public sealed class EmbeddedChatTokenBudgetTests
     {
         var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = 500_000, Window = ContextWindow.UNKNOWN };
 
-        Assert.That(EmbeddedChatTokenBudget.Of(tokens), Is.EqualTo(EmbeddedChatTokenBudgetState.UNKNOWN), "The chat cannot know when such a model is full, so it never stops sending.");
+        Assert.That(EmbeddedChatTokenBudget.Of(tokens, SHARE_TO_ASK), Is.EqualTo(EmbeddedChatTokenBudgetState.UNKNOWN), "The chat cannot know when such a model is full, so it never stops sending.");
     }
 
     [TestCase(0, EmbeddedChatTokenBudgetState.OK)]
@@ -37,7 +39,15 @@ public sealed class EmbeddedChatTokenBudgetTests
     {
         var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = historyTokens, Window = ContextWindow.Of(WINDOW) };
 
-        Assert.That(EmbeddedChatTokenBudget.Of(tokens), Is.EqualTo(expected));
+        Assert.That(EmbeddedChatTokenBudget.Of(tokens, SHARE_TO_ASK), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void TheChatWarnsBeforeALowerShareAsks()
+    {
+        var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = 16_000, Window = ContextWindow.Of(WINDOW) };
+
+        Assert.That(EmbeddedChatTokenBudget.Of(tokens, 0.5), Is.EqualTo(EmbeddedChatTokenBudgetState.WARNING), "The warning comes from the share on from which AI Studio asks, when the user lets it ask early.");
     }
 
     [Test]
@@ -45,7 +55,7 @@ public sealed class EmbeddedChatTokenBudgetTests
     {
         var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = 20_000, DraftTokens = 6_000, Window = ContextWindow.Of(WINDOW) };
 
-        Assert.That(EmbeddedChatTokenBudget.Of(tokens), Is.EqualTo(EmbeddedChatTokenBudgetState.WARNING));
+        Assert.That(EmbeddedChatTokenBudget.Of(tokens, SHARE_TO_ASK), Is.EqualTo(EmbeddedChatTokenBudgetState.WARNING));
     }
 
     [TestCase(20_000, 1_000, WINDOW, EmbeddedChatSendNotice.NONE, TestName = "A message which fits needs no notice")]
@@ -56,7 +66,7 @@ public sealed class EmbeddedChatTokenBudgetTests
     {
         var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = historyTokens, DraftTokens = messageTokens, Window = ContextWindow.Of(window) };
 
-        Assert.That(EmbeddedChatTokenBudget.NoticeBeforeSending(tokens, showsContextWindow: true), Is.EqualTo(expected));
+        Assert.That(EmbeddedChatTokenBudget.NoticeBeforeSending(tokens, showsContextWindow: true, SHARE_TO_ASK), Is.EqualTo(expected));
     }
 
     [Test]
@@ -64,7 +74,7 @@ public sealed class EmbeddedChatTokenBudgetTests
     {
         var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = 500_000, DraftTokens = 1_000, Window = ContextWindow.UNKNOWN };
 
-        Assert.That(EmbeddedChatTokenBudget.NoticeBeforeSending(tokens, showsContextWindow: true), Is.EqualTo(EmbeddedChatSendNotice.NONE), "Nobody wrote the window down, so nobody can say that it is full.");
+        Assert.That(EmbeddedChatTokenBudget.NoticeBeforeSending(tokens, showsContextWindow: true, SHARE_TO_ASK), Is.EqualTo(EmbeddedChatSendNotice.NONE), "Nobody wrote the window down, so nobody can say that it is full.");
     }
 
     [TestCase(950_000, 1_000, EmbeddedChatSendNotice.NONE, TestName = "A hidden window asks nothing before it is full")]
@@ -73,7 +83,7 @@ public sealed class EmbeddedChatTokenBudgetTests
     {
         var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = historyTokens, DraftTokens = messageTokens, Window = ContextWindow.Of(1_000_000) };
 
-        Assert.That(EmbeddedChatTokenBudget.NoticeBeforeSending(tokens, showsContextWindow: false), Is.EqualTo(expected), "Asking would name the window, which tells the models apart.");
+        Assert.That(EmbeddedChatTokenBudget.NoticeBeforeSending(tokens, showsContextWindow: false, SHARE_TO_ASK), Is.EqualTo(expected), "Asking would name the window, which tells the models apart.");
     }
 
     [TestCase(10_000, true, EmbeddedChatTokenBudgetState.OK)]
@@ -86,6 +96,6 @@ public sealed class EmbeddedChatTokenBudgetTests
     {
         var tokens = new ConversationTokens { IsKnown = true, HistoryTokens = historyTokens, Window = ContextWindow.Of(WINDOW) };
 
-        Assert.That(EmbeddedChatTokenBudget.Shown(tokens, showsContextWindow), Is.EqualTo(expected));
+        Assert.That(EmbeddedChatTokenBudget.Shown(tokens, showsContextWindow, SHARE_TO_ASK), Is.EqualTo(expected));
     }
 }

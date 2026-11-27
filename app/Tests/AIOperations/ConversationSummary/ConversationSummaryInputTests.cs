@@ -1,7 +1,7 @@
 using AIStudio.Chat;
-using AIStudio.Chat.Compression;
+using AIStudio.AIOperations.ConversationSummary;
 
-namespace AIStudio.Tests.Chat.Compression;
+namespace AIStudio.Tests.AIOperations.ConversationSummary;
 
 /// <summary>
 /// Checks what the AI reads when it summarizes a chat, and how a long conversation is split into parts.
@@ -20,7 +20,7 @@ public sealed class ChatCompressionInputTests
     [Test]
     public void AMessageNamesItsNumberAuthorAndTime()
     {
-        var rendered = ChatCompressionInput.Render(Block(ChatRole.USER), 3, "  What does the report say?  ", KeptMessage.NONE);
+        var rendered = ConversationSummaryInput.Render(Block(ChatRole.USER), 3, "  What does the report say?  ", KeptMessage.NONE);
 
         Assert.That(rendered, Is.EqualTo("[Message 3, user, 2026-11-07 14:03]\nWhat does the report say?\n"));
     }
@@ -36,7 +36,7 @@ public sealed class ChatCompressionInputTests
             new ManagedTranscriptAttachment("meeting-1.md", "C:/data/meeting-1.md", 1_000, "meeting.mp4", false),
         ];
 
-        var rendered = ChatCompressionInput.Render(block, 1, "Please compare both.\n\nThe following files are attached to this message: ...", KeptMessage.NONE);
+        var rendered = ConversationSummaryInput.Render(block, 1, "Please compare both.\n\nThe following files are attached to this message: ...", KeptMessage.NONE);
 
         using (Assert.EnterMultipleScope())
         {
@@ -48,9 +48,9 @@ public sealed class ChatCompressionInputTests
     [Test]
     public void HiddenMessagesAndTheLastExchangeAreMarked()
     {
-        var hidden = ChatCompressionInput.Render(Block(ChatRole.USER, hidden: true), 1, "Prompt of an assistant", KeptMessage.NONE);
-        var lastQuestion = ChatCompressionInput.Render(Block(ChatRole.USER), 2, "The question", KeptMessage.LAST_QUESTION);
-        var lastAnswer = ChatCompressionInput.Render(Block(ChatRole.AI), 3, "The answer", KeptMessage.LAST_ANSWER);
+        var hidden = ConversationSummaryInput.Render(Block(ChatRole.USER, hidden: true), 1, "Prompt of an assistant", KeptMessage.NONE);
+        var lastQuestion = ConversationSummaryInput.Render(Block(ChatRole.USER), 2, "The question", KeptMessage.LAST_QUESTION);
+        var lastAnswer = ConversationSummaryInput.Render(Block(ChatRole.AI), 3, "The answer", KeptMessage.LAST_ANSWER);
 
         using (Assert.EnterMultipleScope())
         {
@@ -63,7 +63,7 @@ public sealed class ChatCompressionInputTests
     [Test]
     public void MessagesWhichFitStayInOnePart()
     {
-        var parts = ChatCompressionInput.SplitIntoParts([new("first", 10), new("second", 10), new("third", 10)], 100);
+        var parts = ConversationSummaryInput.SplitIntoParts([new("first", 10), new("second", 10), new("third", 10)], 100);
 
         Assert.That(parts, Is.EqualTo(new[] { "first\nsecond\nthird" }));
     }
@@ -71,7 +71,7 @@ public sealed class ChatCompressionInputTests
     [Test]
     public void ALongConversationIsSplitBetweenMessages()
     {
-        var parts = ChatCompressionInput.SplitIntoParts([new("first", 40), new("second", 40), new("third", 40), new("fourth", 10)], 100);
+        var parts = ConversationSummaryInput.SplitIntoParts([new("first", 40), new("second", 40), new("third", 40), new("fourth", 10)], 100);
 
         Assert.That(parts, Is.EqualTo(new[] { "first\nsecond", "third\nfourth" }), "A message which fits into a part of its own is never split.");
     }
@@ -80,17 +80,17 @@ public sealed class ChatCompressionInputTests
     public void AMessageLargerThanAPartIsSplitAcrossPartsWithoutLosingAnything()
     {
         var longMessage = new string('a', 600) + new string('b', 400);
-        var parts = ChatCompressionInput.SplitIntoParts([new("first", 10), new(longMessage, 1_000), new("last", 10)], 100);
+        var parts = ConversationSummaryInput.SplitIntoParts([new("first", 10), new(longMessage, 1_000), new("last", 10)], 100);
 
-        var pieces = parts.Skip(1).Select(part => part.Replace(ChatCompressionInput.CONTINUATION_MARKER, string.Empty).Replace(ChatCompressionInput.TO_BE_CONTINUED_MARKER, string.Empty)).ToList();
+        var pieces = parts.Skip(1).Select(part => part.Replace(ConversationSummaryInput.CONTINUATION_MARKER, string.Empty).Replace(ConversationSummaryInput.TO_BE_CONTINUED_MARKER, string.Empty)).ToList();
         using (Assert.EnterMultipleScope())
         {
             Assert.That(parts[0], Is.EqualTo("first"), "The long message starts a part of its own.");
             Assert.That(parts.Count, Is.GreaterThan(10), "A message of 1,000 tokens takes more than ten parts of 100 tokens.");
             Assert.That(string.Concat(pieces).Replace("\n", string.Empty), Is.EqualTo(longMessage + "last"), "Nothing of the long message gets lost, as a document attached to it would.");
             Assert.That(pieces.Take(pieces.Count - 1), Has.All.Length.LessThanOrEqualTo(100), "Each piece fits into its part.");
-            Assert.That(parts[1], Does.EndWith(ChatCompressionInput.TO_BE_CONTINUED_MARKER), "The AI learns that the message goes on.");
-            Assert.That(parts[2], Does.StartWith(ChatCompressionInput.CONTINUATION_MARKER), "The AI learns where the message comes from.");
+            Assert.That(parts[1], Does.EndWith(ConversationSummaryInput.TO_BE_CONTINUED_MARKER), "The AI learns that the message goes on.");
+            Assert.That(parts[2], Does.StartWith(ConversationSummaryInput.CONTINUATION_MARKER), "The AI learns where the message comes from.");
         }
     }
 
@@ -99,13 +99,13 @@ public sealed class ChatCompressionInputTests
     {
         CountedMessage[] messages = [new("first", 40), new("second", 40), new("third", 40), new("fourth", 40)];
 
-        var firstPart = ChatCompressionInput.TakePart(messages, ChatCompressionPosition.START, 100);
-        var secondPart = ChatCompressionInput.TakePart(messages, firstPart.Next, 50);
+        var firstPart = ConversationSummaryInput.TakePart(messages, ConversationSummaryPosition.START, 100);
+        var secondPart = ConversationSummaryInput.TakePart(messages, firstPart.Next, 50);
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(firstPart.Text, Is.EqualTo("first\nsecond"));
-            Assert.That(firstPart.Next, Is.EqualTo(new ChatCompressionPosition(2, 0)));
+            Assert.That(firstPart.Next, Is.EqualTo(new ConversationSummaryPosition(2, 0)));
             Assert.That(secondPart.Text, Is.EqualTo("third"), "The summary so far takes room in the second request, so the second part is smaller.");
             Assert.That(secondPart.Next.Message, Is.EqualTo(3));
         }
@@ -116,12 +116,12 @@ public sealed class ChatCompressionInputTests
     {
         var text = new string('a', 85) + "\n" + new string('b', 200);
 
-        var part = ChatCompressionInput.TakePart([new(text, text.Length)], ChatCompressionPosition.START, 100);
+        var part = ConversationSummaryInput.TakePart([new(text, text.Length)], ConversationSummaryPosition.START, 100);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(part.Text, Is.EqualTo(new string('a', 85) + "\n" + ChatCompressionInput.TO_BE_CONTINUED_MARKER), "A line of a document stays whole when it ends close to where the part would.");
-            Assert.That(part.Next, Is.EqualTo(new ChatCompressionPosition(0, 86)));
+            Assert.That(part.Text, Is.EqualTo(new string('a', 85) + "\n" + ConversationSummaryInput.TO_BE_CONTINUED_MARKER), "A line of a document stays whole when it ends close to where the part would.");
+            Assert.That(part.Next, Is.EqualTo(new ConversationSummaryPosition(0, 86)));
         }
     }
 
@@ -131,9 +131,9 @@ public sealed class ChatCompressionInputTests
         var text = string.Concat(Enumerable.Repeat("😀", 100));
 
         // Chosen so that the piece would end between the halves of a pair: 45 characters would fit:
-        var part = ChatCompressionInput.TakePart([new(text, 200)], ChatCompressionPosition.START, 50);
+        var part = ConversationSummaryInput.TakePart([new(text, 200)], ConversationSummaryPosition.START, 50);
 
-        var piece = part.Text.Replace(ChatCompressionInput.TO_BE_CONTINUED_MARKER, string.Empty);
+        var piece = part.Text.Replace(ConversationSummaryInput.TO_BE_CONTINUED_MARKER, string.Empty);
         using (Assert.EnterMultipleScope())
         {
             Assert.That(part.Next.Offset % 2, Is.Zero, "The next part begins with a whole character.");

@@ -22,7 +22,7 @@ public enum ChatCompressionOffer
     OFFERED,
 
     /// <summary>
-    /// The model is too small to write a summary, see ChatCompressionService.MIN_CONTEXT_WINDOW.
+    /// The model is too small to write a summary, see ConversationSummaryBudget.MIN_CONTEXT_WINDOW.
     /// </summary>
     WINDOW_TOO_SMALL,
 

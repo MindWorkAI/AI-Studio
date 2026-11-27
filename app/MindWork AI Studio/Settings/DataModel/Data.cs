@@ -200,6 +200,11 @@ public sealed class Data
     public DataRetrievalContextValidation RetrievalContextValidation { get; set; } = new(x => x.RetrievalContextValidation);
 
     public DataAssistantPluginAudit AssistantPluginAudit { get; set; } = new(x => x.AssistantPluginAudit);
+
+    /// <summary>
+    /// Gets the managed settings of compressing a chat.
+    /// </summary>
+    public DataChatCompression ChatCompression { get; set; } = new(x => x.ChatCompression);
     
     public DataAgenda Agenda { get; set; } = new();
     

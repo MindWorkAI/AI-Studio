@@ -67,6 +67,7 @@ public sealed class AppUserAgentTests
     [TestCase(AIStudio.Tools.Components.AI_TASK_DATA_SOURCE_SELECTION, "AI_TASK_DATA_SOURCE_SELECTION")]
     [TestCase(AIStudio.Tools.Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION, "AI_TASK_RETRIEVAL_CONTEXT_VALIDATION")]
     [TestCase(AIStudio.Tools.Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT, "AI_TASK_ASSISTANT_PLUGIN_AUDIT")]
+    [TestCase(AIStudio.Tools.Components.AI_TASK_CHAT_COMPRESSION, "AI_TASK_CHAT_COMPRESSION")]
     public void AnAITaskIsNamedAsAnAITask(AIStudio.Tools.Components component, string expectedName)
     {
         Assert.That(AppUserAgent.ForComponent(component), Is.EqualTo($"{AppUserAgent.BASE} Component/{expectedName}"));

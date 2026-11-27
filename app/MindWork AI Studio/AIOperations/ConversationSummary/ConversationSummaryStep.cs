@@ -1,9 +1,9 @@
-namespace AIStudio.Chat.Compression;
+namespace AIStudio.AIOperations.ConversationSummary;
 
 /// <summary>
-/// What compressing a chat is busy with, see ChatCompressionService.SummarizeAsync.
+/// What compressing a chat is busy with, see ConversationSummaryOperation.RunAsync.
 /// </summary>
-public enum ChatCompressionStep
+public enum ConversationSummaryStep
 {
     /// <summary>
     /// AI Studio reads the messages to summarize and the documents attached to them.
@@ -16,7 +16,7 @@ public enum ChatCompressionStep
     SUMMARIZING,
 
     /// <summary>
-    /// The AI shortens a summary which grew too long, see ChatCompressionService.IsTooLong.
+    /// The AI shortens a summary which grew too long, see ConversationSummaryBudget.IsTooLong.
     /// </summary>
     CONDENSING,
 }

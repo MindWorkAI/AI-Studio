@@ -12,7 +12,8 @@ public enum ChatCompressionTarget
 
     /// <summary>
     /// In the same chat, whose earlier messages give way to the summary, e.g., the embedded chat of an assistant,
-    /// which has no workspace to keep a copy in, see EmbeddedChat.
+    /// which has no workspace to keep a copy in, see EmbeddedChat, or a chat whose user chose so or switched off the
+    /// workspaces, see ContextWindowFullHandling.TargetFor.
     /// </summary>
     SAME_CHAT,
 }

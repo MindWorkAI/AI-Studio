@@ -1712,6 +1712,47 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum.AllowUserOverride"] = false
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants.AllowUserOverride"] = false
 
+-- Configure compressing a chat, whose summary an AI task writes.
+--
+-- Configure a dedicated provider which writes the summary.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"]. Without one, the model
+-- of the chat writes the summary. AI Studio falls back to the model of the chat as well when the
+-- dedicated provider must not see what the chat holds, when its confidence is below the minimum
+-- below, or when its context window is too small.
+-- CONFIG["SETTINGS"]["DataChatCompression.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum confidence of the dedicated provider. It does not apply to the model of
+-- the chat, which saw everything the summary reads anyway.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataChatCompression.MinimumProviderConfidence"] = "NONE"
+--
+-- Configure what the summary should pay particular attention to. Users find it filled in when
+-- they compress a chat.
+-- CONFIG["SETTINGS"]["DataChatCompression.PreselectedFocus"] = "Keep every figure and every decision."
+--
+-- Configure the share of the context window, in percent, from which AI Studio acts before sending
+-- a message. Allowed values are between 50 and 95.
+-- CONFIG["SETTINGS"]["DataChatCompression.ContextWindowThresholdPercent"] = 95
+--
+-- Configure the most tokens a summary should take. Allowed values are between 1024 and 32768.
+-- A summary never takes more than a quarter of the context window of a model.
+-- CONFIG["SETTINGS"]["DataChatCompression.MaxSummaryTokens"] = 8192
+--
+-- Configure what AI Studio does when a message would fill the context window of the model:
+-- ASK asks the user, COMPRESS_INTO_NEW_CHAT compresses the chat and continues in a new one,
+-- COMPRESS_AND_REPLACE compresses the chat and replaces its messages with the summary, and
+-- SEND_WITHOUT_ASKING sends the message anyway, which the provider may refuse. Assistants cannot
+-- compress their requests, so both ways to compress ask there.
+-- CONFIG["SETTINGS"]["DataChatCompression.ContextWindowFullBehavior"] = "ASK"
+--
+-- Configure whether users can change these settings locally.
+-- CONFIG["SETTINGS"]["DataChatCompression.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.MinimumProviderConfidence.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.PreselectedFocus.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.ContextWindowThresholdPercent.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.MaxSummaryTokens.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChatCompression.ContextWindowFullBehavior.AllowUserOverride"] = true
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 

@@ -1,4 +1,4 @@
-namespace AIStudio.Chat.Compression;
+namespace AIStudio.AIOperations.ConversationSummary;
 
 /// <summary>
 /// Whether a message the AI reads for the summary follows the summary in the new chat word for word.

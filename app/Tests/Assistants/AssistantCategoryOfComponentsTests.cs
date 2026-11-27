@@ -30,6 +30,7 @@ public sealed class AssistantCategoryOfComponentsTests
         ComponentKind.AI_TASK_DATA_SOURCE_SELECTION,
         ComponentKind.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION,
         ComponentKind.AI_TASK_ASSISTANT_PLUGIN_AUDIT,
+        ComponentKind.AI_TASK_CHAT_COMPRESSION,
     ];
 
     [Test]

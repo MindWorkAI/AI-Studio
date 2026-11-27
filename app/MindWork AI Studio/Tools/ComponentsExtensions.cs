@@ -127,6 +127,7 @@ public static class ComponentsExtensions
             Components.AI_TASK_DATA_SOURCE_SELECTION => false,
             Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION => false,
             Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT => false,
+            Components.AI_TASK_CHAT_COMPRESSION => false,
             Components.META_ASSISTANT => false,
         
             _ => true,
@@ -227,6 +228,9 @@ public static class ComponentsExtensions
             Components.AI_TASK_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.DataSourceSelection.PreselectOptions ? settingsManager.ConfigurationData.DataSourceSelection.MinimumProviderConfidence : default,
             Components.AI_TASK_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.RetrievalContextValidation.PreselectOptions ? settingsManager.ConfigurationData.RetrievalContextValidation.MinimumProviderConfidence : default,
             Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT => settingsManager.ConfigurationData.AssistantPluginAudit.MinimumProviderConfidence,
+
+            // Without a switch for its preselection, and only for the provider picked for it, see DataChatCompression:
+            Components.AI_TASK_CHAT_COMPRESSION => settingsManager.ConfigurationData.ChatCompression.MinimumProviderConfidence,
 
             _ => default,
         };

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace AIStudio.Chat.Compression;
+namespace AIStudio.AIOperations.ConversationSummary;
 
 /// <summary>
 /// What the AI is told when it summarizes a chat.
@@ -18,24 +18,24 @@ namespace AIStudio.Chat.Compression;
 /// instructions of their own, which must not take over the summary. Only what the user
 /// asks the summary to pay attention to comes from the user, and it stands apart from the conversation.
 /// </remarks>
-public static class ChatCompressionPrompts
+public static class ConversationSummaryPrompts
 {
     /// <summary>
     /// The system prompt of every request for a summary.
     /// </summary>
     public const string SYSTEM_PROMPT = """
-        You compress a conversation between a user and an AI, so that it can continue in a new chat which costs far fewer tokens. The new chat starts with your summary, followed word for word by the messages marked as following your summary: the last answer of the AI and, mostly, the last message of the user before it, together with its files. The user keeps the original chat.
+        You compress a conversation between a user and an AI, so that it can go on with far fewer tokens. The conversation then continues with your summary, followed word for word by the messages marked as following your summary: the last answer of the AI and, mostly, the last message of the user before it, together with its files.
 
         Write the summary in Markdown, in the language the user wrote in, the section headings included, with these numbered sections:
 
         1. Primary request and intent: everything the user asked for and wants to achieve, in detail and in the order it came up.
         2. Key concepts and facts: the facts, figures, names, terms, and assumptions the conversation relies on, and the web pages, searches, and other sources the AI used, with their addresses.
-        3. Files and their content: every file attached to the messages you summarize, with its name and what it holds as far as it matters for the conversation, with the key passages, figures, and quotes. The contents of documents and transcripts are part of the messages. Images are only named, so keep what the conversation said about them, such as the text, figures, and findings the AI read from them. The new chat does not receive any of these files.
+        3. Files and their content: every file attached to the messages you summarize, with its name and what it holds as far as it matters for the conversation, with the key passages, figures, and quotes. The contents of documents and transcripts are part of the messages. Images are only named, so keep what the conversation said about them, such as the text, figures, and findings the AI read from them. None of these files goes along with your summary.
         4. Errors and corrections: what went wrong and how it was resolved, and everything the user corrected or rejected, with the reason where one was given.
         5. Problem solving and results: what has been worked out, answered, decided, or written, with the concrete outcome.
         6. All messages of the user: every message of the user, word for word, in their order. Shorten only a message longer than about 300 words: quote its beginning, and summarize the rest in square brackets. Do not quote messages marked as not shown to the user, since an assistant sent them; describe their request under Primary request and intent instead. Leave out the last message of the user, which follows your summary word for word.
         7. Pending tasks: what the user asked for and is not done yet, messages without an answer included.
-        8. Current work: what the conversation was busy with right before the messages which follow your summary, in detail, so that they can be understood without the original chat.
+        8. Current work: what the conversation was busy with right before the messages which follow your summary, in detail, so that they can be understood without the earlier messages.
         9. Next step: only when the user asked for something which is not done yet, the next step in line with their most recent request. Leave out this section otherwise.
 
         Keep concrete values exactly as they are: numbers, dates, names, quotes, file paths, code, and error messages. Shorten intermediate steps, repetitions, and the wording of the AI. Leave out a section which would be empty. When the summary has to be short, shorten the oldest messages and files first.
@@ -51,7 +51,7 @@ public static class ChatCompressionPrompts
     /// Builds the request for one part of the conversation.
     /// </summary>
     /// <remarks>
-    /// A conversation too long for one request comes in parts, see ChatCompressionInput.TakePart.
+    /// A conversation too long for one request comes in parts, see ConversationSummaryInput.TakePart.
     /// Each part after the first one carries the summary of the parts before it, and the AI returns a
     /// complete summary every time, so the summary of the last part is the one of the whole chat. The
     /// quoted messages of the user have to survive every round, which the request says explicitly:
@@ -90,7 +90,7 @@ public static class ChatCompressionPrompts
     }
 
     /// <summary>
-    /// Builds the request which shortens a summary that grew too long, see ChatCompressionService.IsTooLong.
+    /// Builds the request which shortens a summary that grew too long, see ConversationSummaryBudget.IsTooLong.
     /// </summary>
     /// <remarks>
     /// The summary stands inside summary_so_far, which the system prompt names as material, so the

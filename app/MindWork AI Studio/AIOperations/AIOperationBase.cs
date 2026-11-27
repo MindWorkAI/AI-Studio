@@ -41,15 +41,20 @@ public abstract class AIOperationBase<TRequest, TResult>(ILogger logger, Setting
     /// <remarks>
     /// The provider is checked once more right before: the organization must not have prohibited it, and it
     /// has to reach the global minimum and the confidence the content of the request requires. The minimum
-    /// of the operation itself is not checked here, because a caller may exempt a fallback from it.
+    /// of the operation itself is not checked here, because a caller may exempt a fallback from it.<br/><br/>
+    ///
+    /// Content from a chat brings the restrictions of that chat along, such as a data source whose data
+    /// only self-hosted models may see. The thread of the request then demands them of the provider, as the
+    /// chat itself would, see ChatThread.RequireRestrictions.
     /// </remarks>
     /// <param name="request">The request, for the confidence its content requires.</param>
     /// <param name="context">What the call runs with, the provider above all.</param>
     /// <param name="systemPrompt">The system prompt.</param>
     /// <param name="userPrompt">The user prompt.</param>
     /// <param name="token">The cancellation token.</param>
+    /// <param name="restrictions">The restrictions of the chat the content of the request comes from, or null when it comes from none.</param>
     /// <returns>The text of the answer, or null when the provider must not see the request or did not answer.</returns>
-    protected async Task<string?> AskAsync(TRequest request, AIOperationContext context, string systemPrompt, string userPrompt, CancellationToken token)
+    protected async Task<string?> AskAsync(TRequest request, AIOperationContext context, string systemPrompt, string userPrompt, CancellationToken token, ChatRestrictions? restrictions = null)
     {
         var provider = context.Provider;
         if (!this.MayAsk(provider, request))
@@ -64,6 +69,9 @@ public abstract class AIOperationBase<TRequest, TResult>(ILogger logger, Setting
             Blocks = [],
             RuntimeComponent = this.Component,
         };
+
+        if (restrictions is not null)
+            thread.RequireRestrictions(restrictions);
 
         var time = DateTimeOffset.Now;
         var prompt = new ContentText
