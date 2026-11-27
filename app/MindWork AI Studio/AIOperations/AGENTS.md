@@ -65,8 +65,8 @@ chooses one itself.
 
 Build the options of a caller in one place, so that a check in advance counts the providers which run:
 `ClassicRagProviderOptions` serves the classic RAG process and `DataSourceService`,
-`AssistantPluginAuditService.GetProviderOptions` the audit, and `ReadWebContent.GetCleanerProviderOptions` the
-text content cleaner.
+`AssistantPluginAuditService.GetProviderOptions` the audit, `ReadWebContent.GetCleanerProviderOptions` the text
+content cleaner, and `ChatCompressionService.GetProviderOptions` the summary of a chat.
 
 ## Settings
 

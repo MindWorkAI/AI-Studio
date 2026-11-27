@@ -40,4 +40,18 @@ public sealed class ConversationSummaryBudgetTests
     {
         Assert.That(ConversationSummaryBudget.TokensForTheSummary(windowTokens, maxSummaryTokens), Is.EqualTo(expected));
     }
+
+    [TestCase(128_000, 128_000, 8_192, TestName = "The same large model keeps what the settings allow")]
+    [TestCase(128_000, 10_000, 2_500, TestName = "A small model of the chat limits a large writer")]
+    [TestCase(10_000, 128_000, 2_500, TestName = "A small writer limits a large model of the chat")]
+    [TestCase(128_000, 0, 8_192, TestName = "An unknown window of the chat leaves the writer to decide")]
+    [TestCase(0, 10_000, 2_500, TestName = "An unknown window of the writer leaves the chat to decide")]
+    [TestCase(0, 0, 0, TestName = "Without a known window there is no room to keep")]
+    public void TheRoomForTheSummaryFitsBothWindows(int writerTokens, int targetTokens, int expected)
+    {
+        var writerWindow = writerTokens > 0 ? ContextWindow.Of(writerTokens) : ContextWindow.UNKNOWN;
+        var targetWindow = targetTokens > 0 ? ContextWindow.Of(targetTokens) : ContextWindow.UNKNOWN;
+
+        Assert.That(ConversationSummaryBudget.TokensForTheSummary(writerWindow, targetWindow, 8_192), Is.EqualTo(expected), "The writer holds the summary next to the next part, the chat next to the last exchange.");
+    }
 }

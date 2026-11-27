@@ -625,7 +625,7 @@ public partial class EmbeddedChat : MSGComponentBase
         {
             { x => x.SourceChat, thread },
             { x => x.Plan, plan },
-            { x => x.ProviderSettings, this.Provider },
+            { x => x.ChatProvider, this.Provider },
             { x => x.Target, ChatCompressionTarget.SAME_CHAT },
         };
 

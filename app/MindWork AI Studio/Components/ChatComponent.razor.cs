@@ -1,5 +1,6 @@
 using System.Globalization;
 
+using AIStudio.AIOperations;
 using AIStudio.AIOperations.ConversationSummary;
 using AIStudio.Chat;
 using AIStudio.Chat.Compression;
@@ -827,9 +828,10 @@ public partial class ChatComponent : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// Compressing copies the chat, so whatever stops a copy stops it as well, and it stores both
-    /// chats, which needs workspaces. Beyond that, the selected provider writes the summary, so it
-    /// has to be one the chat allows, with a model large enough for it, and the chat needs a
-    /// finished answer of the AI, which the new chat keeps word for word.
+    /// chats, which needs workspaces. Beyond that, the new chat continues with the selected provider,
+    /// so it has to be one the chat allows; some model has to be large enough for the summary, see
+    /// IsWindowTooSmallForCompression; and the chat needs a finished answer of the AI, which the new
+    /// chat keeps word for word.
     /// </remarks>
     private bool CanThreadBeCompressed => this.AllowsCompression
                                           && !this.IsWindowTooSmallForCompression
@@ -849,9 +851,16 @@ public partial class ChatComponent : MSGComponentBase
                                       && this.ChatThread.IsLLMProviderAllowed(this.Provider);
 
     /// <summary>
-    /// Whether the model of the selected provider is too small to compress the chat, see ConversationSummaryBudget.MIN_CONTEXT_WINDOW.
+    /// Whether no model is large enough to write the summary of this chat, see ConversationSummaryBudget.MIN_CONTEXT_WINDOW.
     /// </summary>
-    private bool IsWindowTooSmallForCompression => this.IsProviderSelected && !ConversationSummaryBudget.CanSummarizeWith(this.Provider.GetModelProfile().Context);
+    /// <remarks>
+    /// The model picked for compressing may write it for a chat whose own model is too small, see
+    /// ChatCompressionService.ChooseWriter. Other reasons why no model may write it rule out the chat itself
+    /// already, see AllowsCompression.
+    /// </remarks>
+    private bool IsWindowTooSmallForCompression => this.IsProviderSelected
+                                                   && this.ChatThread is { } chat
+                                                   && this.CompressionService.ChooseWriter(chat, this.Provider) is { HasProvider: false, FallbackIssue: AIOperationProviderIssue.CONTEXT_WINDOW_TOO_SMALL };
 
     /// <summary>
     /// What the compress button says it does, or why it is switched off for the selected model.
@@ -2262,8 +2271,9 @@ public partial class ChatComponent : MSGComponentBase
     /// The new chat is a copy of this one whose messages give way to the summary and the last exchange,
     /// see ChatCompression.TurnIntoContinuation. It thus keeps the workspace, the profile,
     /// the chat template, the tools, the data sources, and the restrictions of this chat, and it
-    /// continues with the provider which wrote the summary. The summary passes the prompt injection
-    /// filter before it becomes a message of the new chat, since a model reads it there again.<br/><br/>
+    /// continues with the provider of this chat, also when another model wrote the summary. The
+    /// summary passes the prompt injection filter before it becomes a message of the new chat, since
+    /// a model reads it there again.<br/><br/>
     ///
     /// The message the user is writing goes into the new chat, as with a copy. So does a last message
     /// which never got an answer, when the user writes nothing, see ChatCompressionPlan. The
@@ -2296,7 +2306,7 @@ public partial class ChatComponent : MSGComponentBase
         {
             { x => x.SourceChat, sourceChat },
             { x => x.Plan, plan },
-            { x => x.ProviderSettings, provider },
+            { x => x.ChatProvider, provider },
             { x => x.SuggestedName, ChatCompression.NameOfContinuation(sourceChat.Name) },
             { x => x.StoresChatFirst, storesChatFirst },
         };

@@ -110,11 +110,11 @@ public sealed class ConversationSummaryOperation(ConversationTokenCounter tokenC
             return ConversationSummaryResult.Failed(TA("Please select a provider first."));
 
         if (!sourceChat.IsLLMProviderAllowed(provider))
-            return ConversationSummaryResult.Failed(TA("The selected provider is not allowed in this chat due to data security or confidence-level requirements. Please select a different provider."));
+            return ConversationSummaryResult.Failed(TB("The model which writes the summary is not allowed in this chat due to data security or confidence-level requirements."));
 
         var window = provider.GetModelProfile().Context;
         if (!ConversationSummaryBudget.CanSummarizeWith(window))
-            return ConversationSummaryResult.Failed(TA("The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts."));
+            return ConversationSummaryResult.Failed(TA("The context window of the model which writes the summary is too small for this chat. Please select a model which takes longer texts."));
 
         try
         {
@@ -140,12 +140,13 @@ public sealed class ConversationSummaryOperation(ConversationTokenCounter tokenC
                 messages.Add(await this.CountAsync(provider, ConversationSummaryInput.Render(block, ++number, text, keptMessage), token));
             }
 
-            var tokensForTheSummary = window.IsKnown ? ConversationSummaryBudget.TokensForTheSummary(window.DefaultTokens, request.MaxSummaryTokens) : 0;
+            // The summary has to fit into the window of the model which writes it and of the one which continues with it:
+            var tokensForTheSummary = ConversationSummaryBudget.TokensForTheSummary(window, request.TargetWindow, request.MaxSummaryTokens);
             var tokensForMessagesAndSummary = window.IsKnown ? await this.TokensForMessagesAndSummaryAsync(provider, window.DefaultTokens, tokensForTheSummary, request.Focus, token) : int.MaxValue;
 
             // There has to be room for a part next to a summary so far which takes all the room kept for it, which a long focus may take away:
             if (window.IsKnown && tokensForMessagesAndSummary - tokensForTheSummary < MIN_TOKENS_PER_PART)
-                return ConversationSummaryResult.Failed(TA("The context window of the selected model is too small to summarize this chat. Please select a model which takes longer texts."));
+                return ConversationSummaryResult.Failed(TA("The context window of the model which writes the summary is too small for this chat. Please select a model which takes longer texts."));
 
             // A word takes more than one token in most languages, so half of the tokens is a safe number of words:
             var maxWords = tokensForTheSummary / 2;
@@ -163,7 +164,7 @@ public sealed class ConversationSummaryOperation(ConversationTokenCounter tokenC
 
                 var tokensPerPart = window.IsKnown ? tokensForMessagesAndSummary - summaryTokens : int.MaxValue;
                 if (tokensPerPart < MIN_TOKENS_PER_PART)
-                    return ConversationSummaryResult.Failed(TA("The summary grew too long for the context window of the selected model. Please select a model which takes longer texts."));
+                    return ConversationSummaryResult.Failed(TA("The summary grew too long for the context window of the model which writes it. Please select a model which takes longer texts."));
 
                 var conversation = ConversationSummaryInput.TakePart(messages, position, tokensPerPart);
                 var isLastPart = conversation.Next.Message >= messages.Count;
@@ -177,7 +178,8 @@ public sealed class ConversationSummaryOperation(ConversationTokenCounter tokenC
                 if (string.IsNullOrWhiteSpace(summary))
                     return ConversationSummaryResult.Failed(TA("The AI did not write a summary. Please check the messages about the provider, and try again."));
 
-                if (window.IsKnown)
+                // Without any known window, there is nothing to measure the summary against:
+                if (tokensForTheSummary > 0)
                 {
                     summaryTokens = (await this.CountAsync(provider, summary, token)).Tokens;
                     if (ConversationSummaryBudget.IsTooLong(summaryTokens, tokensForTheSummary))

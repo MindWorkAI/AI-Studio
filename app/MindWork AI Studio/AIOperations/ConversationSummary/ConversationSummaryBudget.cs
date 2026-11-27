@@ -63,6 +63,26 @@ public static class ConversationSummaryBudget
     public static int TokensForTheSummary(int windowTokens, int maxSummaryTokens) => Math.Clamp(windowTokens / 4, MIN_TOKENS_FOR_THE_SUMMARY, Math.Max(MIN_TOKENS_FOR_THE_SUMMARY, maxSummaryTokens));
 
     /// <summary>
+    /// How many tokens the summary should take when one model writes it and another one continues with it.
+    /// </summary>
+    /// <remarks>
+    /// The summary has to fit into both windows: the model which writes it holds it next to the next part of the
+    /// conversation, and the model of the chat holds it next to the last exchange. So the smaller room wins.
+    /// </remarks>
+    /// <param name="writerWindow">The context window of the model which writes the summary.</param>
+    /// <param name="targetWindow">The context window of the model which continues with the summary, e.g., the model of the chat.</param>
+    /// <param name="maxSummaryTokens">The most tokens a summary should take.</param>
+    /// <returns>The tokens kept free for the summary, or 0 when neither window is known.</returns>
+    public static int TokensForTheSummary(ContextWindow writerWindow, ContextWindow targetWindow, int maxSummaryTokens)
+    {
+        if (!writerWindow.IsKnown)
+            return targetWindow.IsKnown ? TokensForTheSummary(targetWindow.DefaultTokens, maxSummaryTokens) : 0;
+
+        var forTheWriter = TokensForTheSummary(writerWindow.DefaultTokens, maxSummaryTokens);
+        return targetWindow.IsKnown ? Math.Min(forTheWriter, TokensForTheSummary(targetWindow.DefaultTokens, maxSummaryTokens)) : forTheWriter;
+    }
+
+    /// <summary>
     /// Whether a summary grew so long beyond the room kept for it that the AI has to shorten it.
     /// </summary>
     /// <param name="summaryTokens">The tokens the summary takes.</param>

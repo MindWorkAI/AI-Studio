@@ -19,6 +19,15 @@
                 @this.SummaryScope
             </MudJustifiedText>
 
+            @if (!string.IsNullOrWhiteSpace(this.FallbackNotice))
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">
+                    <MudJustifiedText Typo="Typo.body2">
+                        @this.FallbackNotice
+                    </MudJustifiedText>
+                </MudAlert>
+            }
+
             @if (this.Plan.PendingQuestion is not null)
             {
                 <MudAlert Severity="Severity.Info" Dense="true">
