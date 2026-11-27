@@ -440,6 +440,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private static readonly AssistantSessionStateKey<ConfidenceLevel> POLICY_MINIMUM_PROVIDER_CONFIDENCE_STATE_KEY = new(nameof(policyMinimumProviderConfidence));
     private static readonly AssistantSessionStateKey<string> POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY = new(nameof(policyPreselectedProviderId));
     private static readonly AssistantSessionStateKey<ProfilePreselection> POLICY_PRESELECTED_PROFILE_STATE_KEY = new(nameof(policyPreselectedProfile));
+    private static readonly AssistantSessionStateKey<HashSet<string>> POLICY_ALLOWED_TOOL_IDS_STATE_KEY = new(nameof(policyAllowedToolIds));
     private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> LOADED_DOCUMENT_PATHS_STATE_KEY = new(nameof(loadedDocumentPaths));
     private static readonly AssistantSessionStateKey<string> ANALYZED_POLICY_NAME_STATE_KEY = new(nameof(analyzedPolicyName));
     private static readonly AssistantSessionStateKey<List<ConfigurationSelectData<string>>> AVAILABLE_LLM_PROVIDERS_STATE_KEY = new(nameof(availableLLMProviders));
@@ -458,6 +459,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         state.Set(POLICY_MINIMUM_PROVIDER_CONFIDENCE_STATE_KEY, this.policyMinimumProviderConfidence);
         state.Set(POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY, this.policyPreselectedProviderId);
         state.Set(POLICY_PRESELECTED_PROFILE_STATE_KEY, this.policyPreselectedProfile);
+        state.SetHashSet(POLICY_ALLOWED_TOOL_IDS_STATE_KEY, this.policyAllowedToolIds);
         state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Set(ANALYZED_POLICY_NAME_STATE_KEY, this.analyzedPolicyName);
         state.SetList(AVAILABLE_LLM_PROVIDERS_STATE_KEY, this.availableLLMProviders);
@@ -487,6 +489,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         state.Restore(POLICY_MINIMUM_PROVIDER_CONFIDENCE_STATE_KEY, value => this.policyMinimumProviderConfidence = value);
         state.Restore(POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY, value => this.policyPreselectedProviderId = value);
         state.Restore(POLICY_PRESELECTED_PROFILE_STATE_KEY, value => this.policyPreselectedProfile = value);
+
+        //
+        // The tools belong to the policy as well. On opening, the form holds those of the first policy,
+        // which AutoSave would otherwise write into the restored one:
+        //
+        state.Restore(POLICY_ALLOWED_TOOL_IDS_STATE_KEY, value => this.policyAllowedToolIds = [..value]);
         state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Restore(ANALYZED_POLICY_NAME_STATE_KEY, value => this.analyzedPolicyName = value);
         state.RestoreList(AVAILABLE_LLM_PROVIDERS_STATE_KEY, this.availableLLMProviders);
