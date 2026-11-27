@@ -39,27 +39,6 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
 
-    private static bool IsMinimumPauseLocked => ManagedConfiguration.TryGet(x => x.App.DataSourceIndexing, x => x.MinimumPauseBetweenStepsSeconds, out var meta) && meta.IsLocked;
-
-    private static bool IsMaximumPauseLocked => ManagedConfiguration.TryGet(x => x.App.DataSourceIndexing, x => x.MaximumPauseBetweenStepsSeconds, out var meta) && meta.IsLocked;
-
-    /// <remarks>
-    /// A slider moves a value which falls out of its range into it. A locked slider therefore keeps
-    /// the whole range, since its value belongs to the organization. A free one ends at the locked
-    /// upper bound, and the free value adjusts to it, cf. PauseRange.GetEffective.
-    /// </remarks>
-    private int MinimumPauseSliderMax => IsMaximumPauseLocked && !IsMinimumPauseLocked
-        ? this.SettingsManager.ConfigurationData.App.DataSourceIndexing.EffectivePauseRange.MaximumSeconds
-        : DataDataSourceIndexing.PAUSE_LIMITS.LongestSeconds;
-
-    /// <remarks>
-    /// The upper bound starts where the lower bound is, so raising the lower one above it raises the
-    /// upper one along with it. A locked slider keeps the whole range, cf. MinimumPauseSliderMax.
-    /// </remarks>
-    private int MaximumPauseSliderMin => IsMaximumPauseLocked
-        ? DataDataSourceIndexing.PAUSE_LIMITS.ShortestSeconds
-        : this.SettingsManager.ConfigurationData.App.DataSourceIndexing.EffectivePauseRange.MinimumSeconds;
-
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()

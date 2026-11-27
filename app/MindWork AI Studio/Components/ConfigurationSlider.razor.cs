@@ -55,6 +55,16 @@ public partial class ConfigurationSlider<T> : ConfigurationBaseCore where T : st
     public bool Immediate { get; set; } = true;
 
     /// <summary>
+    /// Whether the value is a setting, which a change stores and announces to the other options.
+    /// </summary>
+    /// <remarks>
+    /// Defaults to true. False for a value which lives elsewhere, e.g., in the session of an
+    /// assistant: storing all settings with every step of the slider would only cost time.
+    /// </remarks>
+    [Parameter]
+    public bool IsSetting { get; set; } = true;
+
+    /// <summary>
     /// The value the user drags the slider to, while the option waits for the release, see Immediate.
     /// </summary>
     private T? draggedValue;
@@ -91,6 +101,9 @@ public partial class ConfigurationSlider<T> : ConfigurationBaseCore where T : st
     {
         this.draggedValue = null;
         this.ValueUpdate(updatedValue);
+        if (!this.IsSetting)
+            return;
+
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
     }

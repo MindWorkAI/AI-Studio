@@ -1,0 +1,6 @@
+@inherits MSGComponentBase
+
+<MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+    <ConfigurationSlider T="int" OptionDescription="@this.MinimumDescription" Min="@this.Limits.ShortestSeconds" Max="@this.MinimumSliderMax" Step="1" Unit="@T("seconds")" Disabled="@this.Disabled" Value="@this.Minimum" ValueUpdate="@this.UpdateMinimum" OptionHelp="@this.MinimumHelp" IsLocked="@this.IsMinimumLocked" IsSetting="@this.IsSetting"/>
+    <ConfigurationSlider T="int" OptionDescription="@this.MaximumDescription" Min="@this.MaximumSliderMin" Max="@this.Limits.LongestSeconds" Step="1" Unit="@T("seconds")" Disabled="@this.Disabled" Value="@this.Maximum" ValueUpdate="@this.UpdateMaximum" OptionHelp="@this.MaximumHelp" IsLocked="@this.IsMaximumLocked" IsSetting="@this.IsSetting"/>
+</MudPaper>
