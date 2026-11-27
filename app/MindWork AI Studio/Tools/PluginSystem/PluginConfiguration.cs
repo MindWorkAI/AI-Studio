@@ -437,6 +437,20 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, this.Id, settingsTable, dryRun);
 
+        // Config: chat compression settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.PreselectedFocus, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.ContextWindowFullBehavior, this.Id, settingsTable, dryRun);
+
+        var thresholdIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.ContextWindowThresholdPercent, this.Id, settingsTable, dryRun, validator: DataChatCompression.IsValidContextWindowThresholdPercent);
+        if (!thresholdIsValid && settingsTable.TryGetValue("DataChatCompression.ContextWindowThresholdPercent", out _))
+            LOG.LogWarning("The share of the context window configured by plugin {ConfigPluginId} for chat compression must be between {MinimumPercent} and {MaximumPercent} percent.", this.Id, DataChatCompression.MIN_CONTEXT_WINDOW_THRESHOLD_PERCENT, DataChatCompression.MAX_CONTEXT_WINDOW_THRESHOLD_PERCENT);
+
+        var maxSummaryTokensIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.ChatCompression, x => x.MaxSummaryTokens, this.Id, settingsTable, dryRun, validator: DataChatCompression.IsValidMaxSummaryTokens);
+        if (!maxSummaryTokensIsValid && settingsTable.TryGetValue("DataChatCompression.MaxSummaryTokens", out _))
+            LOG.LogWarning("The most tokens of a summary configured by plugin {ConfigPluginId} for chat compression must be between {MinimumTokens} and {MaximumTokens}.", this.Id, DataChatCompression.MIN_SUMMARY_TOKENS, DataChatCompression.MAX_SUMMARY_TOKENS);
+
         // Config: enterprise-managed approvals for assistant plugins
         this.TryProcessEnterpriseApprovedAssistantPlugins(settingsTable, dryRun);
         

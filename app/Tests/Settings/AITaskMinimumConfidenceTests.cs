@@ -53,6 +53,15 @@ public sealed class AITaskMinimumConfidenceTests
         Assert.That(AIStudio.Tools.ComponentsExtensions.MinimumConfidence(AIStudio.Tools.Components.AI_TASK_ASSISTANT_PLUGIN_AUDIT, settingsManager), Is.EqualTo(ConfidenceLevel.HIGH), "The audit has no preselection switch, so nothing may turn its minimum off.");
     }
 
+    [Test]
+    public void TheChatCompressionAlwaysAppliesItsMinimum()
+    {
+        var settingsManager = CreateSettingsManager();
+        settingsManager.ConfigurationData.ChatCompression.MinimumProviderConfidence = ConfidenceLevel.HIGH;
+
+        Assert.That(AIStudio.Tools.ComponentsExtensions.MinimumConfidence(AIStudio.Tools.Components.AI_TASK_CHAT_COMPRESSION, settingsManager), Is.EqualTo(ConfidenceLevel.HIGH), "The chat compression has no preselection switch, so nothing may turn its minimum off.");
+    }
+
     private static void AssertMinimumFollowsPreselection(SettingsManager settingsManager, AIStudio.Tools.Components component, Action<bool> setPreselection)
     {
         setPreselection(false);
