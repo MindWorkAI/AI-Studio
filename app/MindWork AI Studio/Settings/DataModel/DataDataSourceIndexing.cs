@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
 
+using AIStudio.Tools.Pauses;
+
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
@@ -9,9 +11,9 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataDataSourceIndexing(Expression<Func<Data, DataDataSourceIndexing>>? configSelection = null)
 {
     /// <summary>
-    /// The longest pause between two indexing steps either bound may ask for.
+    /// The pauses between two indexing steps either bound may ask for: none at all, up to 300 seconds.
     /// </summary>
-    public const int MAX_PAUSE_BETWEEN_STEPS_SECONDS = 300;
+    public static readonly PauseLimits PAUSE_LIMITS = new(0, 300);
 
     /// <summary>
     /// Initializes an unmanaged instance, e.g., for the JSON deserializer.

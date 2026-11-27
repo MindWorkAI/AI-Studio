@@ -1,0 +1,6 @@
+@inherits ConfigurationBaseCore
+
+@{ var range = this.EffectiveRange; }
+<MudRangeSlider T="int" Range="true" Min="@this.TrackMin" Max="@this.TrackMax" Step="@STEP_SECONDS" MinDistance="0" TickMarks="true" Variant="Variant.Filled" Size="Size.Medium" ValueLabel="true" Immediate="true" Value="@range.MinimumSeconds" ValueChanged="@this.UpdateMinimum" UpperValue="@range.MaximumSeconds" UpperValueChanged="@this.UpdateMaximum" Disabled="@this.Disabled()" DisableMin="@this.IsMinimumLocked()" DisableMax="@this.IsMaximumLocked()" Class="mb-1">
+    @this.GetRangeText(range)
+</MudRangeSlider>

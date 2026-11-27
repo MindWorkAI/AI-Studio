@@ -1,5 +1,5 @@
-using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Pauses;
 
 using Microsoft.AspNetCore.Components;
 
@@ -10,27 +10,40 @@ public partial class AssistantBatchProcessing
     [Inject]
     private ThreadSafeRandom Rng { get; init; } = null!;
 
-    private static bool MinimumDelayIsManaged => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumDelaySeconds, out var meta)
-                                                 && meta.ManagedMode is not null;
+    /// <summary>
+    /// The lower bound of the pause between two files as it stands.
+    /// </summary>
+    /// <remarks>
+    /// A bound which a configuration plugin locks belongs to the organization, so it comes from the
+    /// settings, whatever this assistant held before, e.g., in a session from before the lock.
+    /// </remarks>
+    private int MinimumDelaySeconds => DataBatchProcessing.IsMinimumPauseLocked
+        ? this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds
+        : this.minimumDelaySeconds;
 
-    private int ManagedMinimumDelaySeconds => Math.Clamp(this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds,
-        DataBatchProcessing.MIN_DELAY_SECONDS,
-        DataBatchProcessing.MAX_DELAY_SECONDS);
+    /// <summary>
+    /// The upper bound of the pause between two files as it stands, cf. MinimumDelaySeconds.
+    /// </summary>
+    private int MaximumDelaySeconds => DataBatchProcessing.IsMaximumPauseLocked
+        ? this.SettingsManager.ConfigurationData.BatchProcessing.MaximumDelaySeconds
+        : this.maximumDelaySeconds;
 
-    private int EffectiveMinimumDelaySeconds => MinimumDelayIsManaged ? this.ManagedMinimumDelaySeconds
-        : Math.Clamp(this.minimumDelaySeconds, DataBatchProcessing.MIN_DELAY_SECONDS, DataBatchProcessing.MAX_DELAY_SECONDS);
-
-    private (int Minimum, int Maximum) GetEffectiveDelayRange()
-    {
-        var minimum = this.EffectiveMinimumDelaySeconds;
-        var maximum = Math.Clamp(this.maximumDelaySeconds, minimum, DataBatchProcessing.MAX_DELAY_SECONDS);
-        return (minimum, maximum);
-    }
+    /// <summary>
+    /// The bounds of the pause between two files which apply to a run, cf. PauseRange.GetEffective.
+    /// </summary>
+    private PauseRange EffectivePauseRange => PauseRange.GetEffective(
+        DataBatchProcessing.PAUSE_LIMITS,
+        this.MinimumDelaySeconds,
+        () => DataBatchProcessing.IsMinimumPauseLocked,
+        this.MaximumDelaySeconds,
+        () => DataBatchProcessing.IsMaximumPauseLocked);
 
     /// <summary>
     /// Waits for a random, inclusive duration before the next file starts.
     /// </summary>
-    private async Task WaitBeforeNextFileAsync(int minimumSeconds, int maximumSeconds, CancellationToken token)
+    /// <param name="range">The bounds of the pause, as they apply to the run.</param>
+    /// <param name="token">Ends the wait when the user stops the run.</param>
+    private async Task WaitBeforeNextFileAsync(PauseRange range, CancellationToken token)
     {
         if (token.IsCancellationRequested)
             return;
@@ -38,12 +51,12 @@ public partial class AssistantBatchProcessing
         // ThreadSafeRandom is the application-wide singleton. Batch runs must
         // not create private Random instances because several runs may execute
         // concurrently in different assistant sessions.
-        this.pauseBeforeNextFileSeconds = this.Rng.Next(minimumSeconds, maximumSeconds + 1);
+        this.pauseBeforeNextFileSeconds = this.Rng.Next(range.MinimumSeconds, range.MaximumSeconds + 1);
         this.Logger.LogInformation("Batch processing waits {DelaySeconds} seconds before starting the next file.", this.pauseBeforeNextFileSeconds);
 
         await this.CheckpointAssistantSession();
         await this.RefreshAssistantUIAsync();
-        
+
         try
         {
             await Task.Delay(TimeSpan.FromSeconds(this.pauseBeforeNextFileSeconds), token);

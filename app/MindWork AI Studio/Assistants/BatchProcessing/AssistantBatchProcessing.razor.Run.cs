@@ -119,7 +119,7 @@ public partial class AssistantBatchProcessing
     {
         this.isProcessingBatch = true;
         var stopwatch = Stopwatch.StartNew();
-        var delayRange = this.GetEffectiveDelayRange();
+        var pauseRange = this.EffectivePauseRange;
         this.Logger.LogInformation(
             "Batch processing started. InputDirectory='{InputDirectory}', OutputDirectory='{OutputDirectory}', TotalFiles={TotalFiles}, RestoredFiles={RestoredFiles}, Model='{Model}', MinimumDelaySeconds={MinimumDelaySeconds}, MaximumDelaySeconds={MaximumDelaySeconds}.",
             this.inputDirectory,
@@ -127,8 +127,8 @@ public partial class AssistantBatchProcessing
             this.fileResults.Count,
             this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.DONE),
             this.ProviderSettings.Model,
-            delayRange.Minimum,
-            delayRange.Maximum);
+            pauseRange.MinimumSeconds,
+            pauseRange.MaximumSeconds);
 
         // We use the cancellation token of the assistant base class, which
         // creates it before it calls us and disposes it after we returned.
@@ -166,7 +166,7 @@ public partial class AssistantBatchProcessing
 
                 var anotherFileIsWaiting = this.fileResults.Skip(index + 1).Any(nextFile => nextFile.Status is not BatchProcessingFileStatus.DONE);
                 if (anotherFileIsWaiting)
-                    await this.WaitBeforeNextFileAsync(delayRange.Minimum, delayRange.Maximum, token);
+                    await this.WaitBeforeNextFileAsync(pauseRange, token);
             }
         }
         finally

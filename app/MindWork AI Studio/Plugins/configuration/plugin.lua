@@ -869,10 +869,14 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator"] = "SEMICOLON"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator"] = "^"
 --
--- Enforce the lower end of the random pause between files for the organization.
--- The value must be between 6 and 300 seconds. Users can configure only the upper
--- end of the interval while this setting is managed by a configuration plugin.
+-- Configure the random pause between two files. Before the next file starts, AI Studio waits
+-- for a random number of whole seconds between the lower and the upper bound, both included.
+-- This spares your AI servers. Both values must be between 6 and 300 seconds; the defaults are
+-- 6 and 10 seconds. You may set one bound or both. A bound you set wins, and AI Studio adjusts
+-- the other one to it. Should the upper bound be below the lower bound, the lower bound wins.
+-- The upper bound requires AI Studio v26.11.2 or newer; older versions ignore it.
 -- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumDelaySeconds"] = 12
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaximumDelaySeconds"] = 30
 --
 -- Configure the minimum provider confidence and the default provider.
 -- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
@@ -899,6 +903,8 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumDelaySeconds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaximumDelaySeconds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumProviderConfidence.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedProvider.AllowUserOverride"] = true
 
