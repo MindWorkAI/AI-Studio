@@ -5,6 +5,7 @@ using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -80,7 +81,10 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
 
     [Inject]
     private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
-    
+
+    [Inject]
+    private WebContentImportService WebContentImportService { get; init; } = null!;
+
     private async Task OpenSettingsDialog()
     {
         if (!this.HasSettingsPanel)
@@ -91,7 +95,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
         await this.DialogService.ShowAsync<TSettings>(T("Open Settings"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
-    private string BorderColor => this.AssistantSessionSnapshot?.IsActive is true || this.MediaImportSnapshot?.IsBusy is true ? this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
+    private string BorderColor => this.AssistantSessionSnapshot?.IsActive is true || this.MediaImportSnapshot?.IsBusy is true || this.HasRunningWebContentImport ?this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
     {
         true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
         false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
@@ -153,18 +157,30 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
         _ => this.AssistantSessionIndicatorWithoutMedia,
     };
 
-    private AssistantSessionIndicatorData? AssistantSessionIndicatorWithoutMedia => this.AssistantSessionSnapshot?.Status switch
+    /// <summary>
+    /// Gets the indicator of the assistant session, unless web content for the assistant is still loading, which counts
+    /// as running as well.
+    /// </summary>
+    private AssistantSessionIndicatorData? AssistantSessionIndicatorWithoutMedia => this.HasRunningWebContentImport ? this.RunningIndicator : this.AssistantSessionSnapshot?.Status switch
     {
-        AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(AppIcons.RUNNING, Color.Info, this.T("Assistant is still running.")),
+        AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => this.RunningIndicator,
         AssistantSessionStatus.COMPLETED => new(AppIcons.SUCCESS, Color.Success, this.T("The result is ready.")),
         AssistantSessionStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.TA("Assistant failed. Open it to review the result.")),
         AssistantSessionStatus.CANCELED => new(AppIcons.CANCELED, Color.Warning, this.TA("Assistant was canceled. Open it to review the result.")),
         _ => null,
     };
 
+    private AssistantSessionIndicatorData RunningIndicator => new(AppIcons.RUNNING, Color.Info, this.T("Assistant is still running."));
+
+    /// <summary>
+    /// Gets whether one of the web content readers of the assistant is loading a page, see WebContentImportService.
+    /// </summary>
+    private bool HasRunningWebContentImport => this.WebContentImportService.GetSnapshots().Any(snapshot => this.OwnedByThisBlock(snapshot.Target.Owner));
+
     protected override async Task OnInitializedAsync()
     {
-        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        this.MediaTranscriptionService.StateChanged += this.OnImportStateChanged;
+        this.WebContentImportService.StateChanged += this.OnImportStateChanged;
         this.CategoryBlock?.RegisterAssistant(this);
         this.WarnAboutAnotherCategory();
         await base.OnInitializedAsync();
@@ -189,15 +205,20 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
             this.Logger.LogError("The assistants page shows the assistant '{Component}' under the category '{PageCategory}', but its category is '{Category}'. Please move it into the section of its category.", this.Component, this.CategoryBlock.Category.Category, category);
     }
 
-    private void OnMediaImportStateChanged(ImportOwner owner)
+    /// <summary>
+    /// Renders the block again when an import of its assistant changed, the transcription of a media file or the
+    /// loading of web content.
+    /// </summary>
+    private void OnImportStateChanged(ImportOwner owner)
     {
         if (this.OwnedByThisBlock(owner))
-            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<>)}: rendering a media import change");
+            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<>)}: rendering an import change");
     }
 
     protected override void DisposeResources()
     {
-        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.MediaTranscriptionService.StateChanged -= this.OnImportStateChanged;
+        this.WebContentImportService.StateChanged -= this.OnImportStateChanged;
         this.CategoryBlock?.UnregisterAssistant(this);
         base.DisposeResources();
     }
