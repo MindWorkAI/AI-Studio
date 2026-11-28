@@ -192,7 +192,8 @@ public partial class ReadWebContent : MSGComponentBase
     }
 
     /// <summary>
-    /// Takes over what the import of this field reached: its result once it ended, and whether it cleans.
+    /// Takes over what the import of this field reached: its options while it runs, its result once it ended, and
+    /// whether it cleans.
     /// </summary>
     /// <remarks>
     /// This runs when the reader starts, too: the user may have left the assistant while the import ran. The
@@ -204,7 +205,11 @@ public partial class ReadWebContent : MSGComponentBase
     private async Task SyncWithImportAsync()
     {
         var result = this.WebContentImportService.TryTakeResult(this.EffectiveImportTarget);
-        var isCleaning = this.CurrentImport?.Step is ReadWebContentSteps.CLEANING;
+        var currentImport = this.CurrentImport;
+        if (currentImport is not null)
+            await this.ShowRunningImportAsync(currentImport);
+
+        var isCleaning = currentImport?.Step is ReadWebContentSteps.CLEANING;
         if (isCleaning != this.CleanerIsRunning)
         {
             this.CleanerIsRunning = isCleaning;
@@ -213,6 +218,36 @@ public partial class ReadWebContent : MSGComponentBase
 
         if (result is not null)
             await this.ApplyResultAsync(result);
+    }
+
+    /// <summary>
+    /// Shows the options with which the import of this field runs: the reader expanded, the address it loads,
+    /// and whether it cleans the page.
+    /// </summary>
+    /// <remarks>
+    /// An assistant which starts anew when the user comes back, see AssistantInputsWhenLeaving.DISCARD_INPUTS,
+    /// holds its preselected values instead. The reader would then stay collapsed, with its switch locked and
+    /// the progress of the import hidden. The options belong to the assistant, so they go there as well.
+    /// </remarks>
+    private async Task ShowRunningImportAsync(WebContentImportSnapshot import)
+    {
+        if (!this.Preselect)
+        {
+            this.Preselect = true;
+            await this.PreselectChanged.InvokeAsync(this.Preselect);
+        }
+
+        if (this.URL != import.Url)
+        {
+            this.URL = import.Url;
+            await this.URLChanged.InvokeAsync(this.URL);
+        }
+
+        if (this.PreselectContentCleaner != import.CleanContent)
+        {
+            this.PreselectContentCleaner = import.CleanContent;
+            await this.PreselectContentCleanerChanged.InvokeAsync(this.PreselectContentCleaner);
+        }
     }
 
     private async Task ApplyResultAsync(WebContentImportResult result)

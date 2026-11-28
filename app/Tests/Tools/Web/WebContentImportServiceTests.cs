@@ -25,13 +25,15 @@ public sealed class WebContentImportServiceTests
 
     private static readonly ImportTarget FIELD = new(ASSISTANT, "primary");
 
+    private static readonly WebContentImportRequest REQUEST = new(URL, CleanContent: true, AIStudio.Settings.Provider.NONE);
+
     [Test]
     public async Task AnImportIsBusyUntilItEndsAndShowsItsStep()
     {
         var service = CreateService();
         var cleaning = NewSignal();
         var finish = NewSignal();
-        var running = service.Start(FIELD, URL, async reportStep =>
+        var running = service.Start(FIELD, REQUEST, async reportStep =>
         {
             reportStep(ReadWebContentSteps.CLEANING);
             cleaning.SetResult();
@@ -45,6 +47,8 @@ public sealed class WebContentImportServiceTests
         {
             Assert.That(service.IsBusy(ASSISTANT), Is.True);
             Assert.That(service.GetSnapshot(FIELD)?.Step, Is.EqualTo(ReadWebContentSteps.CLEANING));
+            Assert.That(service.GetSnapshot(FIELD)?.Url, Is.EqualTo(URL), "A reader which comes back shows the address being loaded.");
+            Assert.That(service.GetSnapshot(FIELD)?.CleanContent, Is.True, "A reader which comes back shows that the page is being cleaned.");
             Assert.That(service.TryTakeResult(FIELD), Is.Null, "Nothing waits while the import runs.");
         }
 
@@ -65,10 +69,10 @@ public sealed class WebContentImportServiceTests
         var otherAssistant = new ImportTarget(new(ImportOwnerKind.ASSISTANT, "LEGAL_CHECK_ASSISTANT:test"), "primary");
         var finish = NewSignal();
 
-        var first = service.Start(FIELD, URL, async _ => { await finish.Task; return new(URL, "First text"); });
-        var second = service.Start(FIELD, URL, _ => Task.FromResult(new WebContentImportResult(URL, "Second text")));
-        var ofOtherReader = service.Start(otherReader, URL, async _ => { await finish.Task; return new(URL, "Text of the other reader"); });
-        var ofOtherAssistant = service.Start(otherAssistant, URL, async _ => { await finish.Task; return new(URL, "Text of the other assistant"); });
+        var first = service.Start(FIELD, REQUEST, async _ => { await finish.Task; return new(URL, "First text"); });
+        var second = service.Start(FIELD, REQUEST, _ => Task.FromResult(new WebContentImportResult(URL, "Second text")));
+        var ofOtherReader = service.Start(otherReader, REQUEST, async _ => { await finish.Task; return new(URL, "Text of the other reader"); });
+        var ofOtherAssistant = service.Start(otherAssistant, REQUEST, async _ => { await finish.Task; return new(URL, "Text of the other assistant"); });
 
         using (Assert.EnterMultipleScope())
         {
@@ -88,7 +92,7 @@ public sealed class WebContentImportServiceTests
     public async Task TheResultWaitsForItsFieldAndArrivesOnce()
     {
         var service = CreateService();
-        await service.Start(FIELD, URL, _ => Task.FromResult(new WebContentImportResult(URL, "Loaded text")))!;
+        await service.Start(FIELD, REQUEST, _ => Task.FromResult(new WebContentImportResult(URL, "Loaded text")))!;
 
         using (Assert.EnterMultipleScope())
         {
@@ -103,9 +107,9 @@ public sealed class WebContentImportServiceTests
     {
         var service = CreateService();
         var otherReader = new ImportTarget(ASSISTANT, "second-reader");
-        await service.Start(FIELD, URL, _ => Task.FromResult(new WebContentImportResult(URL, "Loaded text")))!;
+        await service.Start(FIELD, REQUEST, _ => Task.FromResult(new WebContentImportResult(URL, "Loaded text")))!;
         var finish = NewSignal();
-        var running = service.Start(otherReader, URL, async _ => { await finish.Task; return new(URL, "Later text"); });
+        var running = service.Start(otherReader, REQUEST, async _ => { await finish.Task; return new(URL, "Later text"); });
 
         service.ClearOwnerState(ASSISTANT);
 
@@ -127,7 +131,7 @@ public sealed class WebContentImportServiceTests
         var owners = new ConcurrentQueue<ImportOwner>();
         service.StateChanged += owners.Enqueue;
 
-        await service.Start(FIELD, URL, reportStep =>
+        await service.Start(FIELD, REQUEST, reportStep =>
         {
             reportStep(ReadWebContentSteps.PARSING);
             reportStep(ReadWebContentSteps.CLEANING);
@@ -141,7 +145,7 @@ public sealed class WebContentImportServiceTests
     public async Task AnImportWhichFailsSaysWhyAndFreesItsField()
     {
         var service = CreateService();
-        await service.Start(FIELD, URL, _ => throw new HttpRequestException("The host does not answer."))!;
+        await service.Start(FIELD, REQUEST, _ => throw new HttpRequestException("The host does not answer."))!;
 
         var result = service.TryTakeResult(FIELD);
         using (Assert.EnterMultipleScope())
@@ -152,7 +156,7 @@ public sealed class WebContentImportServiceTests
             Assert.That(service.IsBusy(ASSISTANT), Is.False);
         }
 
-        var retry = service.Start(FIELD, URL, _ => Task.FromResult(new WebContentImportResult(URL, "Loaded text")));
+        var retry = service.Start(FIELD, REQUEST, _ => Task.FromResult(new WebContentImportResult(URL, "Loaded text")));
         Assert.That(retry, Is.Not.Null, "The field can load again.");
         await retry!;
     }

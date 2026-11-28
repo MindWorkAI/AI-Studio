@@ -38,8 +38,8 @@ public sealed class WebContentImportService(
     /// <summary>Protects the running imports and the waiting results.</summary>
     private readonly Lock stateLock = new();
 
-    /// <summary>The step each running import is at.</summary>
-    private readonly Dictionary<ImportTarget, ReadWebContentSteps> runningImports = [];
+    /// <summary>The state of each running import.</summary>
+    private readonly Dictionary<ImportTarget, WebContentImportSnapshot> runningImports = [];
 
     /// <summary>Results waiting for the reader of their field.</summary>
     private readonly Dictionary<ImportTarget, WebContentImportResult> results = [];
@@ -79,14 +79,14 @@ public sealed class WebContentImportService(
     public WebContentImportSnapshot? GetSnapshot(ImportTarget target)
     {
         lock (this.stateLock)
-            return this.runningImports.TryGetValue(target, out var step) ? new(target, step) : null;
+            return this.runningImports.GetValueOrDefault(target);
     }
 
     /// <summary>Gets copies of the states of all running imports, e.g., for the navigation.</summary>
     public IReadOnlyCollection<WebContentImportSnapshot> GetSnapshots()
     {
         lock (this.stateLock)
-            return [.. this.runningImports.Select(pair => new WebContentImportSnapshot(pair.Key, pair.Value))];
+            return [.. this.runningImports.Values];
     }
 
     /// <summary>
@@ -95,7 +95,7 @@ public sealed class WebContentImportService(
     /// <param name="target">The field to fill.</param>
     /// <param name="request">What to load.</param>
     /// <returns><c>true</c> when the import started.</returns>
-    public bool TryStart(ImportTarget target, WebContentImportRequest request) => this.Start(target, request.Url, reportStep => this.ImportAsync(request, reportStep)) is not null;
+    public bool TryStart(ImportTarget target, WebContentImportRequest request) => this.Start(target, request, reportStep => this.ImportAsync(request, reportStep)) is not null;
 
     /// <summary>
     /// Starts an import into a field, unless an import of that field still runs.
@@ -106,21 +106,21 @@ public sealed class WebContentImportService(
     /// import of their own.
     /// </remarks>
     /// <param name="target">The field to fill.</param>
-    /// <param name="url">The address to load the content from, for the result of an import which failed unexpectedly.</param>
+    /// <param name="request">What the import loads, for its state and for the result of an import which failed unexpectedly.</param>
     /// <param name="import">The work, which reports each step it reaches.</param>
     /// <returns>The running import, or <c>null</c> when an import of the field still runs.</returns>
-    internal Task? Start(ImportTarget target, string url, Func<Action<ReadWebContentSteps>, Task<WebContentImportResult>> import)
+    internal Task? Start(ImportTarget target, WebContentImportRequest request, Func<Action<ReadWebContentSteps>, Task<WebContentImportResult>> import)
     {
         lock (this.stateLock)
         {
-            if (!this.runningImports.TryAdd(target, ReadWebContentSteps.LOADING))
+            if (!this.runningImports.TryAdd(target, new(target, request.Url, request.CleanContent, ReadWebContentSteps.LOADING)))
                 return null;
 
             this.results.Remove(target);
         }
 
         this.NotifyStateChanged(target.Owner);
-        return Task.Run(() => this.RunAsync(target, url, import));
+        return Task.Run(() => this.RunAsync(target, request.Url, import));
     }
 
     /// <summary>
@@ -178,10 +178,10 @@ public sealed class WebContentImportService(
     {
         lock (this.stateLock)
         {
-            if (!this.runningImports.ContainsKey(target))
+            if (!this.runningImports.TryGetValue(target, out var snapshot))
                 return;
 
-            this.runningImports[target] = step;
+            this.runningImports[target] = snapshot with { Step = step };
         }
 
         this.NotifyStateChanged(target.Owner);
