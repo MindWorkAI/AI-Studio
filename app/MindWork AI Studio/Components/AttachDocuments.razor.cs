@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -14,10 +15,10 @@ using DialogOptions = Dialogs.DialogOptions;
 
 public partial class AttachDocuments : MSGComponentBase
 {
-    private readonly MediaImportOwner fallbackMediaImportOwner = new(MediaImportOwnerKind.CHAT, $"attachments:{Guid.NewGuid():N}");
+    private readonly ImportOwner fallbackImportOwner = new(ImportOwnerKind.CHAT, $"attachments:{Guid.NewGuid():N}");
 
     [CascadingParameter]
-    private MediaImportOwner? ImportOwner { get; set; }
+    private ImportOwner? ImportOwner { get; set; }
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AttachDocuments).Namespace, nameof(AttachDocuments));
 
@@ -122,11 +123,11 @@ public partial class AttachDocuments : MSGComponentBase
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
 
     private bool isFileDialogOpen;
-    private MediaImportOwner EffectiveImportOwner => this.OwnerChat is not null
-        ? MediaImportOwner.ForChat(this.OwnerChat.ChatId)
-        : this.ImportOwner ?? this.fallbackMediaImportOwner;
+    private ImportOwner EffectiveImportOwner => this.OwnerChat is not null
+        ? Tools.Imports.ImportOwner.ForChat(this.OwnerChat.ChatId)
+        : this.ImportOwner ?? this.fallbackImportOwner;
 
-    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, string.IsNullOrWhiteSpace(this.Name) ? "attachments" : this.Name);
+    private ImportTarget EffectiveImportTarget => new(this.EffectiveImportOwner, string.IsNullOrWhiteSpace(this.Name) ? "attachments" : this.Name);
 
     private bool IsUnavailable => this.Disabled || this.isFileDialogOpen || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
@@ -148,7 +149,7 @@ public partial class AttachDocuments : MSGComponentBase
     }
 
     /// <summary>Refreshes disabled controls when the shared import lane changes.</summary>
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    private void OnMediaImportStateChanged(ImportOwner owner)
     {
         if (owner == this.EffectiveImportOwner)
             this.InvokeAsync(async () =>
@@ -194,7 +195,7 @@ public partial class AttachDocuments : MSGComponentBase
     /// <summary>Reattaches completed owner results after progress updates or navigation.</summary>
     private async Task SyncCompletedMediaAttachmentsAsync()
     {
-        var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
+        var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveImportTarget);
         // Owners that persist their own sources have already taken the media over when the batch
         // started, so re-adding the delivered transcripts here would duplicate them.
         var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources
@@ -463,7 +464,7 @@ public partial class AttachDocuments : MSGComponentBase
             await this.OnChange(this.DocumentPaths);
         }
 
-        this.MediaTranscriptionService.TryStartAttachmentBatch(mediaPaths, this.EffectiveMediaImportTarget, this.OwnerChat);
+        this.MediaTranscriptionService.TryStartAttachmentBatch(mediaPaths, this.EffectiveImportTarget, this.OwnerChat);
         return attached;
     }
 

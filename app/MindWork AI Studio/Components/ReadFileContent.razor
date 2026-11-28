@@ -26,7 +26,7 @@
 
             @if (this.IsCurrentTargetBusy)
             {
-                <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
+                <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveImportTarget.TargetId" Compact="true"/>
             }
             else
             {
@@ -57,6 +57,6 @@ else
             </MudButton>
         }
 
-        <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
+        <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveImportTarget.TargetId" Compact="true"/>
     </MudStack>
 }

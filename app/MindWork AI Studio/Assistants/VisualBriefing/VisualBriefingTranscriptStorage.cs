@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 
 namespace AIStudio.Assistants.VisualBriefing;
@@ -11,15 +12,15 @@ public sealed class VisualBriefingTranscriptStorage(VisualBriefingStore store) :
     /// <summary>
     /// Defines <c>CanStore</c> for the visual briefing feature.
     /// </summary>
-    public bool CanStore(MediaImportOwner owner) =>
-        owner.Kind is MediaImportOwnerKind.VISUAL_BRIEFING &&
+    public bool CanStore(ImportOwner owner) =>
+        owner.Kind is ImportOwnerKind.VISUAL_BRIEFING &&
         Guid.TryParse(owner.Id, out _);
 
     /// <summary>
     /// Defines <c>StoreAsync</c> for the visual briefing feature.
     /// </summary>
     public async Task<FileAttachment> StoreAsync(
-        MediaImportTarget target,
+        ImportTarget target,
         string originalMediaPath,
         string transcript,
         CancellationToken token)

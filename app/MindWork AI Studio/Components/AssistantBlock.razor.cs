@@ -1,6 +1,7 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
@@ -112,30 +113,30 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
         ? this.AssistantSessionService.GetSnapshots().FirstOrDefault(snapshot => snapshot.Key.Component == this.Component)
         : this.AssistantSessionService.GetSnapshots().FirstOrDefault(snapshot => snapshot.Key.InstanceId == this.AssistantSessionInstanceId);
 
-    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(new AssistantSessionKey(this.Component, this.AssistantSessionInstanceId));
+    private ImportOwner CurrentImportOwner => ImportOwner.ForAssistant(new AssistantSessionKey(this.Component, this.AssistantSessionInstanceId));
 
     private MediaImportSnapshot? MediaImportSnapshot => this.MediaTranscriptionService.GetSnapshots()
         .FirstOrDefault(snapshot => this.OwnedByThisBlock(snapshot.Owner));
 
     /// <summary>
-    /// Gets whether a media-import owner belongs to the assistant represented by this block.
+    /// Gets whether an import owner belongs to the assistant represented by this block.
     /// </summary>
     /// <remarks>
     /// Owners that persist their own sources are keyed by the stored document rather than by an
     /// assistant session, so this block aggregates all of them for its component. Without a session
     /// instance we aggregate every owner of the component, otherwise we match the exact owner.
     /// </remarks>
-    /// <param name="owner">The media-import owner to test.</param>
+    /// <param name="owner">The import owner to test.</param>
     /// <returns><c>true</c> when this block represents the owner.</returns>
-    private bool OwnedByThisBlock(MediaImportOwner owner)
+    private bool OwnedByThisBlock(ImportOwner owner)
     {
         if (owner.Kind.PersistsOwnSources)
-            return owner.Kind == this.Component.MediaOwnerKind;
+            return owner.Kind == this.Component.ImportOwnerKind;
 
         if (string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId))
-            return owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal);
+            return owner.Kind is ImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal);
 
-        return owner == this.CurrentMediaImportOwner;
+        return owner == this.CurrentImportOwner;
     }
 
     /// <summary>
@@ -188,7 +189,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
             this.Logger.LogError("The assistants page shows the assistant '{Component}' under the category '{PageCategory}', but its category is '{Category}'. Please move it into the section of its category.", this.Component, this.CategoryBlock.Category.Category, category);
     }
 
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    private void OnMediaImportStateChanged(ImportOwner owner)
     {
         if (this.OwnedByThisBlock(owner))
             this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<>)}: rendering a media import change");

@@ -3,7 +3,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
-using AIStudio.Tools.Media;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Rust;
@@ -482,7 +482,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     }
 
     /// <summary>Refreshes navigation activity colors when a media import changes state.</summary>
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    private void OnMediaImportStateChanged(ImportOwner owner)
     {
         this.InvokeAsync(() =>
         {
@@ -499,8 +499,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
         var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();
-        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.CHAT });
-        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.ASSISTANT or MediaImportOwnerKind.VISUAL_BRIEFING });
+        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: ImportOwnerKind.CHAT });
+        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: ImportOwnerKind.ASSISTANT or ImportOwnerKind.VISUAL_BRIEFING });
         var hasActiveChatWork = this.AIJobService.HasActiveJobs || hasActiveChatMedia;
         var hasActiveAssistantWork = this.AssistantSessionService.HasActiveSessions || hasActiveAssistantMedia;
         var chatLightColor = hasActiveChatWork ? activityIndicatorLightColor : defaultLightColor;

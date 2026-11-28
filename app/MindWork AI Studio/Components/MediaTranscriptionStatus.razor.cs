@@ -1,3 +1,4 @@
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using Microsoft.AspNetCore.Components;
 
@@ -7,7 +8,7 @@ public partial class MediaTranscriptionStatus
 {
     /// <summary>The surface owner whose operation is rendered.</summary>
     [Parameter]
-    public MediaImportOwner Owner { get; set; }
+    public ImportOwner Owner { get; set; }
 
     /// <summary>Optional target filter used by embedded file controls.</summary>
     [Parameter]
@@ -58,7 +59,7 @@ public partial class MediaTranscriptionStatus
     }
 
     /// <summary>Schedules a render after an import state transition.</summary>
-    private void OnStateChanged(MediaImportOwner owner)
+    private void OnStateChanged(ImportOwner owner)
     {
         if (owner == this.Owner)
             this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(MediaTranscriptionStatus)}: rendering an import state transition");

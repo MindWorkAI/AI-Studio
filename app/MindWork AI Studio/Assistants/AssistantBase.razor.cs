@@ -8,6 +8,7 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
@@ -266,7 +267,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected CancellationTokenSource? CancellationTokenSource;
     private bool isDisposed;
     private AssistantSessionKey assistantSessionKey;
-    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(this.assistantSessionKey);
+    private ImportOwner CurrentImportOwner => ImportOwner.ForAssistant(this.assistantSessionKey);
     private Guid? assistantSessionId;
 
     /// <summary>
@@ -311,7 +312,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected bool HasAssistantSession => this.assistantSessionId is not null;
 
     /// <summary>Gets whether this assistant currently owns active media work.</summary>
-    protected bool IsMediaImportBusy => this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+    protected bool IsMediaImportBusy => this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner);
 
     /// <summary>
     /// Gets the assistant-specific identifier used to distinguish session slots.
@@ -429,7 +430,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             return;
         }
 
-        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner))
             return;
 
         var activeSession = this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey);
@@ -1112,11 +1113,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private async Task InnerResetForm()
     {
         if ((this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
-            || this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+            || this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner))
             return;
 
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
-        this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
+        this.MediaTranscriptionService.ClearOwnerState(this.CurrentImportOwner);
         this.assistantSessionId = null;
         this.ClearConversationState();
 
@@ -1181,9 +1182,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     }
 
     /// <summary>Refreshes assistant actions when the shared import lane changes.</summary>
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    private void OnMediaImportStateChanged(ImportOwner owner)
     {
-        if (owner == this.CurrentMediaImportOwner)
+        if (owner == this.CurrentImportOwner)
             this.InvokeAsync(async () =>
             {
                 await this.ConsumeMediaOutcomeAsync();
@@ -1194,7 +1195,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
     private async Task ConsumeMediaOutcomeAsync()
     {
-        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentMediaImportOwner);
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentImportOwner);
         if (outcome is null)
             return;
 

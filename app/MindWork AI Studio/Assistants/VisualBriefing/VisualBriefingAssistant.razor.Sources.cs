@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -11,9 +12,9 @@ public partial class VisualBriefingAssistant
     /// <summary>
     /// Defines <c>CurrentMediaOwner</c> for the visual briefing feature.
     /// </summary>
-    private MediaImportOwner CurrentMediaOwner => this.selectedBriefing is null
-        ? new(MediaImportOwnerKind.VISUAL_BRIEFING, Guid.Empty.ToString("D"))
-        : MediaImportOwner.ForVisualBriefing(this.selectedBriefing.BriefingId);
+    private ImportOwner CurrentMediaOwner => this.selectedBriefing is null
+        ? new(ImportOwnerKind.VISUAL_BRIEFING, Guid.Empty.ToString("D"))
+        : ImportOwner.ForVisualBriefing(this.selectedBriefing.BriefingId);
 
     /// <summary>
     /// Keeps source material and visual assets mutually exclusive after either list changed.
@@ -130,9 +131,9 @@ public partial class VisualBriefingAssistant
     /// <summary>
     /// Defines <c>MediaStateChanged</c> for the visual briefing feature.
     /// </summary>
-    private void MediaStateChanged(MediaImportOwner owner)
+    private void MediaStateChanged(ImportOwner owner)
     {
-        if (owner.Kind is not MediaImportOwnerKind.VISUAL_BRIEFING ||
+        if (owner.Kind is not ImportOwnerKind.VISUAL_BRIEFING ||
             !Guid.TryParse(owner.Id, out var briefingId))
             return;
 
@@ -167,7 +168,7 @@ public partial class VisualBriefingAssistant
     private async Task ConsumePendingMediaOutcomesAsync()
     {
         foreach (var project in this.projects)
-            await this.ConsumeMediaOutcomeAsync(MediaImportOwner.ForVisualBriefing(project.BriefingId));
+            await this.ConsumeMediaOutcomeAsync(ImportOwner.ForVisualBriefing(project.BriefingId));
     }
 
     /// <summary>
@@ -181,7 +182,7 @@ public partial class VisualBriefingAssistant
     /// different briefing is open still gets reported.
     /// </remarks>
     /// <param name="owner">The briefing whose media import finished.</param>
-    private async Task ConsumeMediaOutcomeAsync(MediaImportOwner owner)
+    private async Task ConsumeMediaOutcomeAsync(ImportOwner owner)
     {
         var outcome = this.MediaTranscriptionService.TryConsumeOutcome(owner);
         if (outcome is null)

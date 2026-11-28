@@ -1,4 +1,5 @@
 using AIStudio.Dialogs;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -10,13 +11,13 @@ namespace AIStudio.Components;
 
 public partial class ReadFileContent : MSGComponentBase
 {
-    private readonly MediaImportOwner fallbackMediaImportOwner = new(MediaImportOwnerKind.ASSISTANT, $"read-file-content:{Guid.NewGuid():N}");
+    private readonly ImportOwner fallbackImportOwner = new(ImportOwnerKind.ASSISTANT, $"read-file-content:{Guid.NewGuid():N}");
 
     [CascadingParameter]
-    private MediaImportOwner? ImportOwner { get; set; }
+    private ImportOwner? ImportOwner { get; set; }
 
     [Parameter]
-    public string MediaImportTargetId { get; set; } = string.Empty;
+    public string ImportTargetId { get; set; } = string.Empty;
 
     [Parameter]
     public string Text { get; set; } = string.Empty;
@@ -85,17 +86,17 @@ public partial class ReadFileContent : MSGComponentBase
     private string loadedFileName = string.Empty;
     
     private bool IsCurrentTargetBusy => this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner) is { IsBusy: true } snapshot
-                                        && snapshot.Target == this.EffectiveMediaImportTarget;
+                                        && snapshot.Target == this.EffectiveImportTarget;
     
     private bool IsUnavailable => this.Disabled || this.isFileDialogOpen || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
-    private MediaImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackMediaImportOwner;
+    private ImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackImportOwner;
     
-    private string EffectiveMediaImportTargetId => string.IsNullOrWhiteSpace(this.MediaImportTargetId)
+    private string EffectiveImportTargetId => string.IsNullOrWhiteSpace(this.ImportTargetId)
         ? string.IsNullOrWhiteSpace(this.Text) ? "primary" : this.Text
-        : this.MediaImportTargetId;
+        : this.ImportTargetId;
 
-    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId);
+    private ImportTarget EffectiveImportTarget => new(this.EffectiveImportOwner, this.EffectiveImportTargetId);
     
     #region Overrides of MSGComponentBase
 
@@ -120,7 +121,7 @@ public partial class ReadFileContent : MSGComponentBase
     }
 
     /// <summary>Refreshes disabled controls when the shared import lane changes.</summary>
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    private void OnMediaImportStateChanged(ImportOwner owner)
     {
         if (owner == this.EffectiveImportOwner)
             this.InvokeAsync(async () =>
@@ -167,12 +168,12 @@ public partial class ReadFileContent : MSGComponentBase
     /// <remarks>The transcript arrives filtered for prompt injections, cf. MediaTranscriptionService.</remarks>
     private async Task SyncCompletedMediaTextAsync()
     {
-        var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
+        var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveImportTarget);
         if (delivery is null || delivery.Text is not { } text)
             return;
 
         var fileName = this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner) is { Target: var target } snapshot
-                       && target == this.EffectiveMediaImportTarget
+                       && target == this.EffectiveImportTarget
             ? snapshot.CurrentFileName
             : string.Empty;
         await this.ApplyFileContentAsync(text, fileName);
@@ -319,7 +320,7 @@ public partial class ReadFileContent : MSGComponentBase
 
         return this.MediaTranscriptionService.TryStartTextImport(
             filePath,
-            this.EffectiveMediaImportTarget);
+            this.EffectiveImportTarget);
     }
 
     private string FileLoadedTooltip()

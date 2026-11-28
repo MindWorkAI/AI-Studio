@@ -33,7 +33,7 @@
 
                 @if (this.Body is not null)
                 {
-                    <CascadingValue Value="@this.CurrentMediaImportOwner">
+                    <CascadingValue Value="@this.CurrentImportOwner">
                         <CascadingValue Value="@this">
                             <CascadingValue Value="@this.Component">
                                 @this.Body
@@ -42,7 +42,7 @@
                     </CascadingValue>
                     
                     <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
-                        <MudButton Disabled="@(this.SubmitDisabled || this.IsProcessing || this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
+                        <MudButton Disabled="@(this.SubmitDisabled || this.IsProcessing || this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner))" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
                         @if (this.IsProcessing)
@@ -181,7 +181,7 @@
 
                 @if (this.ShowReset)
                 {
-                    <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@AppIcons.RESET" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)" OnClick="@(async () => await this.InnerResetForm())">
+                    <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@AppIcons.RESET" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner)" OnClick="@(async () => await this.InnerResetForm())">
                         @TB("Reset")
                     </MudButton>
                 }

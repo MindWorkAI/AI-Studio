@@ -13,6 +13,7 @@ using AIStudio.Tools.Databases.ProvenanceStore;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantLaunch;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 
@@ -302,7 +303,7 @@ public partial class ChatComponent : MSGComponentBase
         this.currentCulture = CommonTools.DeriveActiveCultureOrInvariant(activeLanguagePlugin.IETFTag);
     }
 
-    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForChat(this.ChatThread?.ChatId ?? this.draftMediaOwnerId);
+    private ImportOwner CurrentImportOwner => ImportOwner.ForChat(this.ChatThread?.ChatId ?? this.draftMediaOwnerId);
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -531,9 +532,9 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>Refreshes send and attachment controls when the media import lane changes.</summary>
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    private void OnMediaImportStateChanged(ImportOwner owner)
     {
-        if (owner == this.CurrentMediaImportOwner)
+        if (owner == this.CurrentImportOwner)
             this.InvokeAsync(async () =>
             {
                 await this.ConsumeMediaOutcomeAsync();
@@ -544,7 +545,7 @@ public partial class ChatComponent : MSGComponentBase
     /// <summary>Consumes a terminal media notification when its chat is visible.</summary>
     private async Task ConsumeMediaOutcomeAsync()
     {
-        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentMediaImportOwner);
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentImportOwner);
         if (outcome is null)
             return;
 
@@ -822,7 +823,7 @@ public partial class ChatComponent : MSGComponentBase
 
     private bool CanThreadBeSaved => this.ChatThread is not null && this.ChatThread.Blocks.Any(b => !b.HideFromUser);
 
-    private bool CanThreadBeCopied => this.CanThreadBeSaved && !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+    private bool CanThreadBeCopied => this.CanThreadBeSaved && !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner);
 
     /// <summary>
     /// Whether the open chat can be compressed into a new chat.
@@ -924,7 +925,7 @@ public partial class ChatComponent : MSGComponentBase
     /// Not while an answer is being written, just like the text of the message, and not while the
     /// audio or video files of the chat are being transcribed.
     /// </remarks>
-    private bool CanAttachFiles => !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+    private bool CanAttachFiles => !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner);
 
     // The chat template locks the profile for good, an answer being written only until it is complete:
     private string ProfileDisabledText => this.currentChatTemplate.AllowProfileUsage
@@ -943,7 +944,7 @@ public partial class ChatComponent : MSGComponentBase
     /// </remarks>
     private bool CanThreadBeMoved => this.ChatThread is not null
                                      && !this.IsCurrentChatStreaming
-                                     && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)
+                                     && !this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner)
                                      && WorkspaceBehaviour.IsChatExisting(new LoadChat(this.ChatThread.WorkspaceId, this.ChatThread.ChatId));
 
     private bool HasSentFileAttachments => this.ChatThread?.HasSentFileAttachments() ?? false;
@@ -1501,7 +1502,7 @@ public partial class ChatComponent : MSGComponentBase
             this.ComposerState.Clear();
             chat.WorkspaceId = await this.ResolveWorkspaceOfFirstThreadAsync();
         }
-        else if (unstoredChatBeingLeft is not null && (!unstoredChatBeingLeft.Draft.IsEmpty || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(unstoredChatBeingLeft.ChatId))))
+        else if (unstoredChatBeingLeft is not null && (!unstoredChatBeingLeft.Draft.IsEmpty || this.MediaTranscriptionService.IsBusy(ImportOwner.ForChat(unstoredChatBeingLeft.ChatId))))
         {
             // Deleting the workspace took the chat along. Storing it would bring the workspace back, as an unnamed one:
             if (!WorkspaceBehaviour.IsWorkspaceExisting(unstoredChatBeingLeft.WorkspaceId))
@@ -1724,7 +1725,7 @@ public partial class ChatComponent : MSGComponentBase
         if (this.IsCurrentChatStreaming || this.isCompressing)
             return;
 
-        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner))
             return;
 
         await this.RefreshProviderSelectionFromConfigurationAsync();

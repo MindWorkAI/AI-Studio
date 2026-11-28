@@ -1,7 +1,7 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Media;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
@@ -94,14 +94,14 @@ public static class ComponentsExtensions
         };
 
         /// <summary>
-        /// Gets the kind of media-import owner a component creates for its attachments.
+        /// Gets the kind of import owner a component creates for its attachments.
         /// </summary>
-        /// <value>The media-import owner kind.</value>
-        public MediaImportOwnerKind MediaOwnerKind => component switch
+        /// <value>The import owner kind.</value>
+        public ImportOwnerKind ImportOwnerKind => component switch
         {
-            Components.VISUAL_BRIEFING_ASSISTANT => MediaImportOwnerKind.VISUAL_BRIEFING,
+            Components.VISUAL_BRIEFING_ASSISTANT => ImportOwnerKind.VISUAL_BRIEFING,
 
-            _ => MediaImportOwnerKind.ASSISTANT,
+            _ => ImportOwnerKind.ASSISTANT,
         };
 
         public bool AllowSendTo => component switch
