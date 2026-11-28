@@ -3,11 +3,12 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
-using AIStudio.Tools.Media;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
@@ -42,7 +43,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     [Inject]
     private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
-    
+
+    [Inject]
+    private WebContentImportService WebContentImportService { get; init; } = null!;
+
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
     
@@ -99,7 +103,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     protected override async Task OnInitializedAsync()
     {
         this.NavigationManager.RegisterLocationChangingHandler(this.OnLocationChanging);
-        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        this.MediaTranscriptionService.StateChanged += this.OnImportStateChanged;
+        this.WebContentImportService.StateChanged += this.OnImportStateChanged;
         this.DataRestoreService.StateChanged += this.OnDataRestoreStateChanged;
         
         //
@@ -481,14 +486,14 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.navItems = new List<NavBarItem>(this.GetNavItems());
     }
 
-    /// <summary>Refreshes navigation activity colors when a media import changes state.</summary>
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    /// <summary>Refreshes navigation activity colors when an import changes state, the transcription of a media file or the loading of web content.</summary>
+    private void OnImportStateChanged(ImportOwner owner)
     {
         this.InvokeAsync(() =>
         {
             this.LoadNavItems();
             this.StateHasChanged();
-        }).Observe($"{nameof(MainLayout)}: refreshing the navigation after a media import change");
+        }).Observe($"{nameof(MainLayout)}: refreshing the navigation after an import change");
     }
     
     private IEnumerable<NavBarItem> GetNavItems()
@@ -499,10 +504,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
         var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();
-        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.CHAT });
-        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.ASSISTANT or MediaImportOwnerKind.VISUAL_BRIEFING });
+        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: ImportOwnerKind.CHAT });
+        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: ImportOwnerKind.ASSISTANT or ImportOwnerKind.VISUAL_BRIEFING });
         var hasActiveChatWork = this.AIJobService.HasActiveJobs || hasActiveChatMedia;
-        var hasActiveAssistantWork = this.AssistantSessionService.HasActiveSessions || hasActiveAssistantMedia;
+        var hasActiveWebContentImport = this.WebContentImportService.GetSnapshots().Count > 0;
+        var hasActiveAssistantWork = this.AssistantSessionService.HasActiveSessions || hasActiveAssistantMedia || hasActiveWebContentImport;
         var chatLightColor = hasActiveChatWork ? activityIndicatorLightColor : defaultLightColor;
         var chatDarkColor = hasActiveChatWork ? activityIndicatorDarkColor : defaultDarkColor;
         var assistantsLightColor = hasActiveAssistantWork ? activityIndicatorLightColor : defaultLightColor;
@@ -830,7 +836,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     public void Dispose()
     {
-        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.MediaTranscriptionService.StateChanged -= this.OnImportStateChanged;
+        this.WebContentImportService.StateChanged -= this.OnImportStateChanged;
         this.DataRestoreService.StateChanged -= this.OnDataRestoreStateChanged;
         this.CircuitState.ConnectionRestored -= this.OnConnectionRestored;
         this.MessageBus.Unregister(this);

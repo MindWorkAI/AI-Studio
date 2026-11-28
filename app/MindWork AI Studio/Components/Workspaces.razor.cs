@@ -5,6 +5,7 @@ using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 
@@ -403,11 +404,11 @@ public partial class Workspaces : MSGComponentBase
     /// Whether an answer is being written for the given chat, or a transcript is being made for it.
     /// </summary>
     /// <param name="chatId">The chat to check.</param>
-    private bool IsChatBusy(Guid chatId) => this.AIJobService.IsChatGenerationActive(chatId) || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(chatId));
+    private bool IsChatBusy(Guid chatId) => this.AIJobService.IsChatGenerationActive(chatId) || this.MediaTranscriptionService.IsBusy(ImportOwner.ForChat(chatId));
 
     private string GetChatTreeItemTextStyle(TreeItemData treeItem)
     {
-        var status = this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(treeItem.ChatId))?.Status;
+        var status = this.MediaTranscriptionService.GetSnapshot(ImportOwner.ForChat(treeItem.ChatId))?.Status;
         var color = status switch
         {
             MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => " color: var(--mud-palette-info);",
@@ -432,7 +433,7 @@ public partial class Workspaces : MSGComponentBase
 
     private string GetChatTreeIcon(Guid chatId, string defaultIcon)
     {
-        var mediaStatus = this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(chatId))?.Status;
+        var mediaStatus = this.MediaTranscriptionService.GetSnapshot(ImportOwner.ForChat(chatId))?.Status;
         if (mediaStatus is not null)
         {
             return mediaStatus switch
@@ -464,13 +465,13 @@ public partial class Workspaces : MSGComponentBase
     /// Colors the icon of a chat red when its media transcription failed, like every other error icon.
     /// </summary>
     /// <param name="treeItem">The chat in the tree.</param>
-    private Color GetChatTreeIconColor(TreeItemData treeItem) => this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(treeItem.ChatId))?.Status is MediaImportStatus.FAILED
+    private Color GetChatTreeIconColor(TreeItemData treeItem) => this.MediaTranscriptionService.GetSnapshot(ImportOwner.ForChat(treeItem.ChatId))?.Status is MediaImportStatus.FAILED
         ? Color.Error
         : Color.Default;
 
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    private void OnMediaImportStateChanged(ImportOwner owner)
     {
-        if (owner.Kind is MediaImportOwnerKind.CHAT)
+        if (owner.Kind is ImportOwnerKind.CHAT)
             this.SafeStateHasChanged().Observe($"{nameof(Workspaces)}: rendering a media import change");
     }
 
@@ -788,7 +789,7 @@ public partial class Workspaces : MSGComponentBase
         // Deleting a chat while it is being worked on would pull the ground from under that work.
         // We check before asking: nobody should confirm something that cannot happen anyway.
         //
-        var mediaOwner = MediaImportOwner.ForChat(chat.ChatId);
+        var mediaOwner = ImportOwner.ForChat(chat.ChatId);
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
             return false;
 
@@ -859,7 +860,7 @@ public partial class Workspaces : MSGComponentBase
         if (chat is null)
             return;
 
-        var mediaOwner = MediaImportOwner.ForChat(chat.ChatId);
+        var mediaOwner = ImportOwner.ForChat(chat.ChatId);
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
             return;
 
@@ -996,7 +997,7 @@ public partial class Workspaces : MSGComponentBase
         }
 
         foreach (var chatId in chatIds)
-            this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForChat(chatId));
+            this.MediaTranscriptionService.ClearOwnerState(ImportOwner.ForChat(chatId));
 
         await this.LoadTreeItemsAsync(startPrefetch: false);
 

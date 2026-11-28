@@ -1,10 +1,12 @@
 using AIStudio.Assistants.Dynamic;
 using AIStudio.Chat;
+using AIStudio.Tools.AssistantSessions;
+
 using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-public sealed class AssistantState
+public sealed class AssistantState : IAssistantSessionValue
 {
     public readonly Dictionary<string, string> Text = new(StringComparer.Ordinal);
     public readonly Dictionary<string, string> SingleSelect = new(StringComparer.Ordinal);
@@ -36,17 +38,22 @@ public sealed class AssistantState
     /// <summary>
     /// Copies all dynamic assistant state values from another state instance.
     /// </summary>
+    /// <remarks>
+    /// The copy shares nothing with the other state, not even the states of web content, file content, or
+    /// attachments, which the form changes in place. A snapshot of an assistant session holds such a copy, and
+    /// it must neither change along with the form nor look unchanged when the form changed one of them.
+    /// </remarks>
     /// <param name="other">The state instance to copy from.</param>
     public void CopyFrom(AssistantState other)
     {
         this.Clear();
         CopyDictionary(other.Text, this.Text);
         CopyDictionary(other.SingleSelect, this.SingleSelect);
-        CopyDictionary(other.MultiSelect, this.MultiSelect);
+        CopyDictionary(other.MultiSelect, this.MultiSelect, values => new HashSet<string>(values, values.Comparer));
         CopyDictionary(other.Booleans, this.Booleans);
-        CopyDictionary(other.WebContent, this.WebContent);
-        CopyDictionary(other.FileContent, this.FileContent);
-        CopyDictionary(other.FileAttachments, this.FileAttachments);
+        CopyDictionary(other.WebContent, this.WebContent, state => state.Copy());
+        CopyDictionary(other.FileContent, this.FileContent, state => state.Copy());
+        CopyDictionary(other.FileAttachments, this.FileAttachments, state => state.Copy());
         CopyDictionary(other.Colors, this.Colors);
         CopyDictionary(other.Dates, this.Dates);
         CopyDictionary(other.DateRanges, this.DateRanges);
@@ -65,17 +72,63 @@ public sealed class AssistantState
     }
 
     /// <summary>
+    /// Clears the flags of work in progress, such as a content cleaner which runs for a web page.
+    /// </summary>
+    /// <remarks>
+    /// Such work ends with the component which started it. A draft restores the whole state, though, and a
+    /// flag restored from it would stay set and keep its field locked for good. The built-in assistants keep
+    /// such flags out of drafts by their keys, see AssistantSessionStateKey.IsKeptOutOfDrafts; the flags of an
+    /// assistant plugin live inside this state instead.
+    /// </remarks>
+    public void ClearFlagsOfWorkInProgress()
+    {
+        foreach (var webContent in this.WebContent.Values)
+            webContent.CleanerIsRunning = false;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Compares the values of all fields. Whether a web content cleaner runs is not an input and does not count,
+    /// see WebContentState.HasSameInputsAs.
+    /// </remarks>
+    public bool HasSameValueAs(object other) => other is AssistantState otherState
+                                                && HaveSameEntries(this.Text, otherState.Text, IsSameText)
+                                                && HaveSameEntries(this.SingleSelect, otherState.SingleSelect, IsSameText)
+                                                && HaveSameEntries(this.MultiSelect, otherState.MultiSelect, (first, second) => first.SetEquals(second))
+                                                && HaveSameEntries(this.Booleans, otherState.Booleans, (first, second) => first == second)
+                                                && HaveSameEntries(this.WebContent, otherState.WebContent, (first, second) => first.HasSameInputsAs(second))
+                                                && HaveSameEntries(this.FileContent, otherState.FileContent, (first, second) => first.HasSameInputsAs(second))
+                                                && HaveSameEntries(this.FileAttachments, otherState.FileAttachments, (first, second) => first.HasSameInputsAs(second))
+                                                && HaveSameEntries(this.Colors, otherState.Colors, IsSameText)
+                                                && HaveSameEntries(this.Dates, otherState.Dates, IsSameText)
+                                                && HaveSameEntries(this.DateRanges, otherState.DateRanges, IsSameText)
+                                                && HaveSameEntries(this.Times, otherState.Times, IsSameText);
+
+    /// <summary>
     /// Copies all entries from one dictionary into another dictionary.
     /// </summary>
     /// <typeparam name="TKey">The dictionary key type.</typeparam>
     /// <typeparam name="TValue">The dictionary value type.</typeparam>
     /// <param name="source">The source dictionary.</param>
     /// <param name="target">The target dictionary.</param>
-    private static void CopyDictionary<TKey, TValue>(Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target) where TKey : notnull
+    /// <param name="copyValue">Copies a value which the form changes in place; null for a value nobody can change, such as a string.</param>
+    private static void CopyDictionary<TKey, TValue>(Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target, Func<TValue, TValue>? copyValue = null) where TKey : notnull
     {
         foreach (var (key, value) in source)
-            target[key] = value;
+            target[key] = copyValue is null ? value : copyValue(value);
     }
+
+    /// <summary>
+    /// Tells whether two dictionaries hold the same keys with the same values.
+    /// </summary>
+    /// <typeparam name="TValue">The dictionary value type.</typeparam>
+    /// <param name="first">The first dictionary.</param>
+    /// <param name="second">The second dictionary.</param>
+    /// <param name="isSame">Tells whether two values are the same.</param>
+    /// <returns><c>true</c> when both dictionaries hold the same entries; otherwise, <c>false</c>.</returns>
+    private static bool HaveSameEntries<TValue>(Dictionary<string, TValue> first, Dictionary<string, TValue> second, Func<TValue, TValue, bool> isSame) => first.Count == second.Count && first.All(entry => second.TryGetValue(entry.Key, out var otherValue) && isSame(entry.Value, otherValue));
+
+    private static bool IsSameText(string first, string second) => string.Equals(first, second, StringComparison.Ordinal);
 
     public bool TryApplyValue(string fieldName, LuaValue value, out string expectedType)
     {

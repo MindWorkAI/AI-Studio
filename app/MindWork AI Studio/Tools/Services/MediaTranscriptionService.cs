@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -34,31 +35,31 @@ public sealed class MediaTranscriptionService(
     private readonly HashSet<MediaOperation> operations = [];
 
     /// <summary>The active or queued import operation for each owner.</summary>
-    private readonly Dictionary<MediaImportOwner, MediaOperation> currentImports = [];
+    private readonly Dictionary<ImportOwner, MediaOperation> currentImports = [];
 
     /// <summary>The latest active or unacknowledged terminal state for each owner.</summary>
-    private readonly Dictionary<MediaImportOwner, MediaImportSnapshot> snapshots = [];
+    private readonly Dictionary<ImportOwner, MediaImportSnapshot> snapshots = [];
 
     /// <summary>Successful results waiting for their concrete UI target.</summary>
-    private readonly Dictionary<MediaImportTarget, PendingDelivery> pendingDeliveries = [];
+    private readonly Dictionary<ImportTarget, PendingDelivery> pendingDeliveries = [];
 
     /// <summary>Terminal notifications waiting for their owner surface to be displayed.</summary>
-    private readonly Dictionary<MediaImportOwner, MediaImportOutcome> outcomes = [];
+    private readonly Dictionary<ImportOwner, MediaImportOutcome> outcomes = [];
 
     /// <summary>Owners whose complete file batches are managed by this service.</summary>
-    private readonly HashSet<MediaImportOwner> activeBatches = [];
+    private readonly HashSet<ImportOwner> activeBatches = [];
 
     /// <summary>Batch-level cancellation keeps Stop effective between two files.</summary>
-    private readonly Dictionary<MediaImportOwner, CancellationTokenSource> batchCancellations = [];
+    private readonly Dictionary<ImportOwner, CancellationTokenSource> batchCancellations = [];
 
     /// <summary>Prevents new work after disposal.</summary>
     private bool disposed;
 
     /// <summary>Raised only with the owner whose copied state changed.</summary>
-    public event Action<MediaImportOwner>? StateChanged;
+    public event Action<ImportOwner>? StateChanged;
 
     /// <summary>Gets whether one owner has queued, running, or canceling media work.</summary>
-    public bool IsBusy(MediaImportOwner owner)
+    public bool IsBusy(ImportOwner owner)
     {
         lock (this.stateLock)
             return this.activeBatches.Contains(owner);
@@ -68,7 +69,7 @@ public sealed class MediaTranscriptionService(
     public bool HasUsableTranscriptionProvider => this.GetUsableProvider() is not null;
 
     /// <summary>Gets the last retained state for one owner.</summary>
-    public MediaImportSnapshot? GetSnapshot(MediaImportOwner owner)
+    public MediaImportSnapshot? GetSnapshot(ImportOwner owner)
     {
         lock (this.stateLock)
             return this.snapshots.GetValueOrDefault(owner);
@@ -82,7 +83,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Gets copied results that have not yet been applied by one target.</summary>
-    public MediaImportDelivery? GetPendingDelivery(MediaImportTarget target)
+    public MediaImportDelivery? GetPendingDelivery(ImportTarget target)
     {
         lock (this.stateLock)
         {
@@ -118,7 +119,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Consumes one terminal notification when its owner surface is displayed.</summary>
-    public MediaImportOutcome? TryConsumeOutcome(MediaImportOwner owner)
+    public MediaImportOutcome? TryConsumeOutcome(ImportOwner owner)
     {
         MediaImportOutcome? outcome;
         lock (this.stateLock)
@@ -135,7 +136,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Discards retained inactive state and deletes unclaimed managed transcript files.</summary>
-    public void ClearOwnerState(MediaImportOwner owner)
+    public void ClearOwnerState(ImportOwner owner)
     {
         List<FileAttachment> discardedAttachments = [];
         lock (this.stateLock)
@@ -160,7 +161,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Starts an owner-managed attachment batch and returns without holding the UI event handler.</summary>
-    public bool TryStartAttachmentBatch(IReadOnlyList<string> mediaPaths, MediaImportTarget target, ChatThread? ownerChat = null)
+    public bool TryStartAttachmentBatch(IReadOnlyList<string> mediaPaths, ImportTarget target, ChatThread? ownerChat = null)
     {
         this.ThrowIfDisposed();
         if (mediaPaths.Count is 0)
@@ -181,7 +182,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Starts a reattachable file-content import for one stable assistant field.</summary>
-    public bool TryStartTextImport(string mediaPath, MediaImportTarget target)
+    public bool TryStartTextImport(string mediaPath, ImportTarget target)
     {
         this.ThrowIfDisposed();
         lock (this.stateLock)
@@ -199,7 +200,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Completes a field import independently of the originating Blazor component.</summary>
-    private async Task RunTextImportAsync(string mediaPath, MediaImportTarget target)
+    private async Task RunTextImportAsync(string mediaPath, ImportTarget target)
     {
         CancellationTokenSource cancellation;
         lock (this.stateLock)
@@ -259,7 +260,7 @@ public sealed class MediaTranscriptionService(
     /// <param name="target">The field which receives the transcript.</param>
     /// <param name="mediaPath">The recording the transcript belongs to.</param>
     /// <param name="transcript">The transcript as the provider returned it.</param>
-    internal async Task AddCompletedTextAsync(MediaImportTarget target, string mediaPath, string transcript)
+    internal async Task AddCompletedTextAsync(ImportTarget target, string mediaPath, string transcript)
     {
         var text = await promptInjectionGuardService.SanitizeAsync(transcript, PromptInjectionSource.FileContent(mediaPath), reportingScope: null);
         lock (this.stateLock)
@@ -274,7 +275,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Serially transcribes a complete owner batch while retaining every successful result.</summary>
-    private async Task RunAttachmentBatchAsync(IReadOnlyList<string> mediaPaths, MediaImportTarget target, ChatThread? ownerChat)
+    private async Task RunAttachmentBatchAsync(IReadOnlyList<string> mediaPaths, ImportTarget target, ChatThread? ownerChat)
     {
         CancellationToken batchToken;
         lock (this.stateLock)
@@ -364,7 +365,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Adds a successful partial result to the retained owner snapshot.</summary>
-    private void AddCompletedAttachment(MediaImportTarget target, FileAttachment attachment)
+    private void AddCompletedAttachment(ImportTarget target, FileAttachment attachment)
     {
         lock (this.stateLock)
         {
@@ -385,7 +386,7 @@ public sealed class MediaTranscriptionService(
     /// <param name="target">Media import target.</param>
     /// <param name="token">Caller cancellation token.</param>
     /// <returns>A typed terminal result.</returns>
-    private async Task<MediaTranscriptionResult> TranscribeImportAsync(string mediaPath, MediaImportTarget target, CancellationToken token = default)
+    private async Task<MediaTranscriptionResult> TranscribeImportAsync(string mediaPath, ImportTarget target, CancellationToken token = default)
     {
         this.ThrowIfDisposed();
         var operation = this.CreateOperation(target, token);
@@ -470,7 +471,7 @@ public sealed class MediaTranscriptionService(
     public Task<MediaTranscriptionResult> TranscribeVoiceAsync(string mediaPath, CancellationToken token = default) => this.TranscribeAsync(mediaPath, token);
 
     /// <summary>Cancels only the queued or active operation belonging to one owner.</summary>
-    public async Task StopAsync(MediaImportOwner owner)
+    public async Task StopAsync(ImportOwner owner)
     {
         MediaOperation? operation;
         MediaImportSnapshot? snapshot;
@@ -798,7 +799,7 @@ public sealed class MediaTranscriptionService(
     /// <param name="target">Optional visible media import target.</param>
     /// <param name="token">Caller token linked to the operation.</param>
     /// <returns>The registered operation.</returns>
-    private MediaOperation CreateOperation(MediaImportTarget? target, CancellationToken token)
+    private MediaOperation CreateOperation(ImportTarget? target, CancellationToken token)
     {
         var operation = new MediaOperation(target, token);
         lock (this.stateLock)
@@ -818,7 +819,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Updates and publishes copied state for exactly one owner.</summary>
-    private void UpdateImportState(MediaImportTarget target, string fileName, MediaTranscriptionPhase phase, double? progress, MediaImportStatus status)
+    private void UpdateImportState(ImportTarget target, string fileName, MediaTranscriptionPhase phase, double? progress, MediaImportStatus status)
     {
         var snapshot = new MediaImportSnapshot
         {
@@ -838,7 +839,7 @@ public sealed class MediaTranscriptionService(
 
     /// <summary>Publishes one retained terminal result after an entire target batch ended.</summary>
     private void CompleteImport(
-        MediaImportTarget target,
+        ImportTarget target,
         string fileName,
         MediaImportStatus status,
         IReadOnlyList<MediaImportFailure> failures,
@@ -869,14 +870,14 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Publishes state changes without allowing one stale UI subscriber to fault a worker.</summary>
-    private void NotifyStateChanged(MediaImportOwner owner)
+    private void NotifyStateChanged(ImportOwner owner)
     {
         if (this.StateChanged is not { } stateChanged)
             return;
 
         foreach (var @delegate in stateChanged.GetInvocationList())
         {
-            var handler = (Action<MediaImportOwner>)@delegate;
+            var handler = (Action<ImportOwner>)@delegate;
             
             try
             {
@@ -984,14 +985,14 @@ public sealed class MediaTranscriptionService(
         /// <summary>Creates operation state linked to a caller token.</summary>
         /// <param name="target">Optional visible media import target.</param>
         /// <param name="token">Caller cancellation token.</param>
-        public MediaOperation(MediaImportTarget? target, CancellationToken token)
+        public MediaOperation(ImportTarget? target, CancellationToken token)
         {
             this.Target = target;
             this.Cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
         }
 
         /// <summary>Gets the optional visible import target; voice operations have none.</summary>
-        public MediaImportTarget? Target { get; }
+        public ImportTarget? Target { get; }
 
         /// <summary>Gets the unique temporary-path identifier.</summary>
         public Guid Id { get; } = Guid.NewGuid();

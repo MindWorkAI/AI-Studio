@@ -3,7 +3,7 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
-using AIStudio.Tools.Media;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Rust;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -142,7 +142,7 @@ public partial class VisualBriefingAssistant
             return;
 
         var id = this.selectedProject.BriefingId;
-        this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForVisualBriefing(id));
+        this.MediaTranscriptionService.ClearOwnerState(ImportOwner.ForVisualBriefing(id));
         await this.Store.DeleteAsync(id);
         await this.Store.ForgetSelectionAsync(id);
 

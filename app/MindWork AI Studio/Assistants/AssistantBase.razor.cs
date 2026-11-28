@@ -8,9 +8,11 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantLaunch;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components;
 
@@ -65,7 +67,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     [Inject]
     protected MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
-    
+
+    /// <summary>
+    /// Loads web content for the web content readers of this assistant, also while the user is elsewhere.
+    /// </summary>
+    [Inject]
+    private WebContentImportService WebContentImportService { get; init; } = null!;
+
     protected abstract string Title { get; }
     
     protected abstract string Description { get; }
@@ -266,7 +274,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected CancellationTokenSource? CancellationTokenSource;
     private bool isDisposed;
     private AssistantSessionKey assistantSessionKey;
-    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(this.assistantSessionKey);
+    private ImportOwner CurrentImportOwner => ImportOwner.ForAssistant(this.assistantSessionKey);
     private Guid? assistantSessionId;
 
     /// <summary>
@@ -286,6 +294,21 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private AssistantSessionSnapshot? lastAttachedAssistantSessionSnapshot;
 
     /// <summary>
+    /// What this assistant holds once its defaults are applied, before the user changed anything; null until
+    /// then, e.g., for a hidden assistant which sends the user to the overview instead.
+    /// </summary>
+    /// <remarks>
+    /// When the user leaves the assistant, it stores a draft only if its state differs from this one, see
+    /// SaveDraftIfChanged. A reset makes the state after the reset the new one.
+    /// </remarks>
+    private Dictionary<string, IAssistantSessionSnapshotField>? stateWithDefaults;
+
+    /// <summary>
+    /// Whether this assistant holds a text sent to it, which it keeps in a draft even when the user changed nothing else.
+    /// </summary>
+    private bool holdsSentText;
+
+    /// <summary>
     /// Gets whether the Blazor component instance has already been disposed.
     /// </summary>
     protected bool IsAssistantComponentDisposed => this.isDisposed;
@@ -296,7 +319,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected bool HasAssistantSession => this.assistantSessionId is not null;
 
     /// <summary>Gets whether this assistant currently owns active media work.</summary>
-    protected bool IsMediaImportBusy => this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+    protected bool IsMediaImportBusy => this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner);
 
     /// <summary>
     /// Gets the assistant-specific identifier used to distinguish session slots.
@@ -312,6 +335,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             this.transferredRestrictions = textLaunchPayload.Restrictions;
             this.ApplyTextLaunchPayload(textLaunchPayload);
+            this.holdsSentText = true;
         }
 
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
@@ -343,6 +367,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.SelectedToolIds = this.ToolRegistry.GetDefaultToolIds(this.Component);
         await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
+        this.stateWithDefaults = this.CaptureAssistantSessionState();
         await this.AttachAssistantSessionIfAvailable();
         await this.ConsumeMediaOutcomeAsync();
     }
@@ -412,7 +437,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             return;
         }
 
-        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner))
             return;
 
         var activeSession = this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey);
@@ -1095,11 +1120,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private async Task InnerResetForm()
     {
         if ((this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
-            || this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+            || this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner)
+            || this.WebContentImportService.IsBusy(this.CurrentImportOwner))
             return;
 
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
-        this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
+        this.MediaTranscriptionService.ClearOwnerState(this.CurrentImportOwner);
+        this.WebContentImportService.ClearOwnerState(this.CurrentImportOwner);
         this.assistantSessionId = null;
         this.ClearConversationState();
 
@@ -1119,6 +1146,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.InputIsValid = false;
         this.InputIssues = [];
         
+        // The draft is gone with the reset, see ClearAsync above, and the form starts anew:
+        this.stateWithDefaults = this.CaptureAssistantSessionState();
+        this.holdsSentText = false;
+
         if (this.Form is not null)
             await this.Form.ResetValidationAsync();
 
@@ -1143,6 +1174,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override void DisposeResources()
     {
+        this.SaveDraftIfChanged();
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         this.isDisposed = true;
         try
@@ -1159,9 +1191,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     }
 
     /// <summary>Refreshes assistant actions when the shared import lane changes.</summary>
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    private void OnMediaImportStateChanged(ImportOwner owner)
     {
-        if (owner == this.CurrentMediaImportOwner)
+        if (owner == this.CurrentImportOwner)
             this.InvokeAsync(async () =>
             {
                 await this.ConsumeMediaOutcomeAsync();
@@ -1172,7 +1204,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
     private async Task ConsumeMediaOutcomeAsync()
     {
-        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentMediaImportOwner);
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentImportOwner);
         if (outcome is null)
             return;
 
@@ -1261,6 +1293,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <returns>A task that completes after the session was attached.</returns>
     private async Task AttachAssistantSessionIfAvailable()
     {
+        //
+        // A draft gives way to a run, which is newer, and to a text sent here, which the user chose to work on.
+        // It is taken in any case, so that a draft from before the user chose to discard inputs is gone, too:
+        //
+        var draft = this.AssistantSessionService.TryTakeDraft(this.assistantSessionKey);
+
         var snapshot = this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey);
         if (snapshot?.IsActive ?? false)
         {
@@ -1269,10 +1307,73 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
 
         snapshot = this.AssistantSessionService.TryTakeInactiveSnapshot(this.assistantSessionKey);
-        if (snapshot is null)
+        if (snapshot is not null)
+        {
+            await this.AttachAssistantSession(snapshot, restoreClientOnlyContent: true);
+            return;
+        }
+
+        if (draft is not null && !this.holdsSentText && this.KeepsInputsWhenLeaving)
+            await this.RestoreDraft(draft);
+    }
+
+    /// <summary>
+    /// Restores what this assistant held when the user left it, see SaveDraftIfChanged.
+    /// </summary>
+    /// <remarks>
+    /// A draft is not a run, so this component takes over no session ID and does not count as attached to a
+    /// session: an assistant such as the I18N one loads its data anew, as on any other start. Flags of work
+    /// in progress stay as they are, see AssistantSessionStateKey.IsKeptOutOfDrafts.
+    /// </remarks>
+    /// <param name="draft">The draft to restore.</param>
+    /// <returns>A task that completes after the component was refreshed.</returns>
+    private async Task RestoreDraft(AssistantSessionSnapshot draft)
+    {
+        this.ImportAssistantSessionState(draft.State, isDraft: true);
+        await this.OnAssistantSessionAttachedAsync(draft);
+        this.pendingRenderedAssistantSessionSnapshot = draft;
+        await this.RefreshAssistantUIAsync();
+    }
+
+    /// <summary>
+    /// Gets whether assistants keep the inputs of the user when the user leaves them, as the user or the
+    /// organization chose on the assistants page, see DataAssistantsPage.InputsWhenLeaving.
+    /// </summary>
+    /// <remarks>
+    /// When not, an assistant behaves as before v26.11.2: it stores no draft and starts anew. Runs are not
+    /// affected, since their sessions keep their state either way.
+    /// </remarks>
+    private bool KeepsInputsWhenLeaving => this.SettingsManager.ConfigurationData.AssistantsPage.InputsWhenLeaving is AssistantInputsWhenLeaving.KEEP_INPUTS;
+
+    /// <summary>
+    /// Stores what this assistant holds as a draft, so that it is there again when the user comes back.
+    /// </summary>
+    /// <remarks>
+    /// While a run goes on, its session keeps the state, so there is no draft. Neither is there one while
+    /// the assistant holds just its defaults, see IsWorthADraft, nor when the user chose to discard the
+    /// inputs, see KeepsInputsWhenLeaving. This runs while the component is disposed, so it must neither
+    /// wait nor throw.
+    /// </remarks>
+    private void SaveDraftIfChanged()
+    {
+        if (this.stateWithDefaults is null || !this.KeepsInputsWhenLeaving)
             return;
 
-        await this.AttachAssistantSession(snapshot, restoreClientOnlyContent: true);
+        try
+        {
+            if (this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
+                return;
+
+            var state = this.CaptureAssistantSessionState();
+            if (!IsWorthADraft(state, this.stateWithDefaults, this.holdsSentText))
+                return;
+
+            this.AssistantSessionService.SaveDraft(this.assistantSessionKey, this.Title, this.ChatThread, state);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError(e, "Could not store the draft of the assistant '{AssistantTitle}'.", this.Title);
+        }
     }
 
     /// <summary>
@@ -1367,9 +1468,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// Restores the base assistant state and assistant-specific typed state values from a session snapshot.
     /// </summary>
     /// <param name="state">The captured assistant state to import.</param>
-    private void ImportAssistantSessionState(IReadOnlyDictionary<string, IAssistantSessionSnapshotField> state)
+    /// <param name="isDraft">Whether the state comes from a draft rather than from a run.</param>
+    private void ImportAssistantSessionState(IReadOnlyDictionary<string, IAssistantSessionSnapshotField> state, bool isDraft = false)
     {
-        var reader = new AssistantSessionStateReader(state, this.Title);
+        var reader = new AssistantSessionStateReader(state, this.Title, isDraft);
         reader.Restore(PROVIDER_SETTINGS_STATE_KEY, value => this.ProviderSettings = value);
         reader.Restore(INPUT_IS_VALID_STATE_KEY, value => this.InputIsValid = value);
         reader.Restore(CURRENT_PROFILE_STATE_KEY, value => this.CurrentProfile = value);

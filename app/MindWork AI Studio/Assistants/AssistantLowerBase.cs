@@ -29,14 +29,14 @@ public abstract class AssistantLowerBase : MSGComponentBase
     private protected static readonly TimeSpan STREAMING_CHECKPOINT_MIN_TIME = TimeSpan.FromSeconds(3);
 
     protected static readonly AssistantSessionStateKey<AIStudio.Settings.Provider> PROVIDER_SETTINGS_STATE_KEY = new(nameof(ProviderSettings));
-    protected static readonly AssistantSessionStateKey<bool> INPUT_IS_VALID_STATE_KEY = new(nameof(InputIsValid));
+    protected static readonly AssistantSessionStateKey<bool> INPUT_IS_VALID_STATE_KEY = new(nameof(InputIsValid), isDerived: true);
     protected static readonly AssistantSessionStateKey<Profile> CURRENT_PROFILE_STATE_KEY = new(nameof(CurrentProfile));
     protected static readonly AssistantSessionStateKey<ChatTemplate> CURRENT_CHAT_TEMPLATE_STATE_KEY = new(nameof(CurrentChatTemplate));
     protected static readonly AssistantSessionStateKey<ChatThread?> CHAT_THREAD_STATE_KEY = new(nameof(ChatThread));
     protected static readonly AssistantSessionStateKey<IContent?> LAST_USER_PROMPT_STATE_KEY = new(nameof(LastUserPrompt));
     protected static readonly AssistantSessionStateKey<ContentBlock?> RESULTING_CONTENT_BLOCK_STATE_KEY = new(nameof(ResultingContentBlock));
-    protected static readonly AssistantSessionStateKey<string[]> INPUT_ISSUES_STATE_KEY = new(nameof(InputIssues));
-    protected static readonly AssistantSessionStateKey<bool> IS_PROCESSING_STATE_KEY = new(nameof(IsProcessing));
+    protected static readonly AssistantSessionStateKey<string[]> INPUT_ISSUES_STATE_KEY = new(nameof(InputIssues), isDerived: true);
+    protected static readonly AssistantSessionStateKey<bool> IS_PROCESSING_STATE_KEY = new(nameof(IsProcessing), isKeptOutOfDrafts: true);
     protected static readonly AssistantSessionStateKey<HashSet<string>> SELECTED_TOOL_IDS_STATE_KEY = new("SelectedToolIds");
     protected static readonly AssistantSessionStateKey<ChatRestrictions> TRANSFERRED_RESTRICTIONS_STATE_KEY = new("TransferredRestrictions");
     protected static readonly AssistantSessionStateKey<string?> CUSTOM_CHAT_SYSTEM_PROMPT_STATE_KEY = new("CustomChatSystemPromptOfRun");
@@ -64,5 +64,31 @@ public abstract class AssistantLowerBase : MSGComponentBase
         this.ChatThread = null;
         this.LastUserPrompt = null;
         this.ResultingContentBlock = null;
+    }
+
+    /// <summary>
+    /// Decides whether an assistant which the user leaves stores what it holds as a draft.
+    /// </summary>
+    /// <remarks>
+    /// A text sent to the assistant is kept in any case. Otherwise, a draft needs a change from the state
+    /// with the defaults: a draft of just the defaults would bring back old defaults after the user changed
+    /// them in the settings. Only fields which count as a change are compared, see
+    /// IAssistantSessionSnapshotField.CountsAsChange: whether the form is valid, for example, follows from
+    /// the inputs and does not count as a change on its own.
+    /// </remarks>
+    /// <param name="state">The state the assistant holds now.</param>
+    /// <param name="stateWithDefaults">The state the assistant held once its defaults were applied.</param>
+    /// <param name="holdsSentText">Whether the assistant holds a text sent to it.</param>
+    /// <returns><c>true</c> when the assistant stores a draft; otherwise, <c>false</c>.</returns>
+    internal static bool IsWorthADraft(IReadOnlyDictionary<string, IAssistantSessionSnapshotField> state, IReadOnlyDictionary<string, IAssistantSessionSnapshotField> stateWithDefaults, bool holdsSentText)
+    {
+        if (holdsSentText)
+            return true;
+
+        var changeableFields = state.Where(field => field.Value.CountsAsChange).ToList();
+        var holdsSameValues = changeableFields.Count == stateWithDefaults.Count(field => field.Value.CountsAsChange)
+                              && changeableFields.All(field => stateWithDefaults.TryGetValue(field.Key, out var otherField) && field.Value.HasSameValueAs(otherField));
+
+        return !holdsSameValues;
     }
 }

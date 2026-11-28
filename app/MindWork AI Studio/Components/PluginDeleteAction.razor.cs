@@ -1,5 +1,5 @@
 using AIStudio.Dialogs;
-using AIStudio.Tools.Media;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -168,9 +168,9 @@ public partial class PluginDeleteAction : MSGComponentBase
         return await dialog.Result is { Canceled: false };
     }
 
-    private void OnMediaTranscriptionStateChanged(MediaImportOwner owner)
+    private void OnMediaTranscriptionStateChanged(ImportOwner owner)
     {
-        if (owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.EndsWith($":{this.Plugin.Id}", StringComparison.Ordinal))
+        if (owner.Kind is ImportOwnerKind.ASSISTANT && owner.Id.EndsWith($":{this.Plugin.Id}", StringComparison.Ordinal))
             this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(PluginDeleteAction)}: rendering a transcription state change");
     }
 }

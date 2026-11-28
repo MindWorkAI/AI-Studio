@@ -150,7 +150,7 @@ public sealed class TextContentCleaningProviderTests
     private static AIOperationProviderChoice Choose(SettingsManager settingsManager, AIStudio.Settings.Provider assistantProvider)
     {
         var resolver = new AIOperationProviderResolver(settingsManager, NullLogger<AIOperationProviderResolver>.Instance);
-        return resolver.Preview(TextContentCleaningOperation.GetProviderSettings(settingsManager), ConfidenceLevel.NONE, AIStudio.Components.ReadWebContent.GetCleanerProviderOptions(settingsManager, assistantProvider));
+        return resolver.Preview(TextContentCleaningOperation.GetProviderSettings(settingsManager), ConfidenceLevel.NONE, AIStudio.Tools.Web.WebContentImportService.GetCleanerProviderOptions(settingsManager, assistantProvider));
     }
 
     /// <summary>

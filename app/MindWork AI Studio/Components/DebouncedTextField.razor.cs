@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 using Timer = System.Timers.Timer;
 
@@ -64,14 +65,7 @@ public partial class DebouncedTextField : MudComponentBase, IDisposable
         this.debounceTimer.Elapsed += (_, _) =>
         {
             this.debounceTimer.Stop();
-            this.InvokeAsync(async () =>
-            {
-                // The parent hands this text back with its next render, which is no change of its own, cf. OnParametersSetAsync:
-                this.lastParameterText = this.text;
-                await this.TextChanged.InvokeAsync(this.text);
-            }).Observe($"{nameof(DebouncedTextField)}: notifying about changed text");
-            this.InvokeAsync(async () => await this.WhenTextChangedAsync(this.text)).Observe($"{nameof(DebouncedTextField)}: handling changed text asynchronously");
-            this.InvokeAsync(() => this.WhenTextCanged(this.text)).Observe($"{nameof(DebouncedTextField)}: handling changed text");
+            this.HandOnText();
         };
         
         this.isInitialized = true;
@@ -115,6 +109,38 @@ public partial class DebouncedTextField : MudComponentBase, IDisposable
         this.text = value ?? string.Empty;
         this.debounceTimer.Stop();
         this.debounceTimer.Start();
+    }
+
+    /// <summary>
+    /// Hands a text which still waits for the debounce time on at once, as soon as the user leaves the field.
+    /// </summary>
+    /// <remarks>
+    /// A click elsewhere, e.g., into the navigation, takes the focus first. So the parent gets the last characters
+    /// typed before it goes away, e.g., an assistant which keeps its inputs as a draft when the user leaves it.
+    /// Otherwise, they would be lost together with this field.
+    /// </remarks>
+    private void OnBlur(FocusEventArgs _)
+    {
+        if (!this.debounceTimer.Enabled)
+            return;
+
+        this.debounceTimer.Stop();
+        this.HandOnText();
+    }
+
+    /// <summary>
+    /// Hands the text on to the parent and to the handlers of a changed text.
+    /// </summary>
+    private void HandOnText()
+    {
+        this.InvokeAsync(async () =>
+        {
+            // The parent hands this text back with its next render, which is no change of its own, cf. OnParametersSetAsync:
+            this.lastParameterText = this.text;
+            await this.TextChanged.InvokeAsync(this.text);
+        }).Observe($"{nameof(DebouncedTextField)}: notifying about changed text");
+        this.InvokeAsync(async () => await this.WhenTextChangedAsync(this.text)).Observe($"{nameof(DebouncedTextField)}: handling changed text asynchronously");
+        this.InvokeAsync(() => this.WhenTextCanged(this.text)).Observe($"{nameof(DebouncedTextField)}: handling changed text");
     }
 
     #region IDisposable

@@ -205,6 +205,7 @@ internal sealed class Program
         builder.Services.AddSingleton<ModelImageService>();
         builder.Services.AddSingleton<ToolSettingsService>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
+        builder.Services.AddSingleton<WebContentImportService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
         builder.Services.AddSingleton<IToolImplementation, ConfluenceSearchTool>();
         builder.Services.AddSingleton<IWebSearchBackend, SearXNGSearchBackend>();

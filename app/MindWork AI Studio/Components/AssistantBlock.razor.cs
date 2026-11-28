@@ -1,9 +1,11 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -79,7 +81,10 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
 
     [Inject]
     private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
-    
+
+    [Inject]
+    private WebContentImportService WebContentImportService { get; init; } = null!;
+
     private async Task OpenSettingsDialog()
     {
         if (!this.HasSettingsPanel)
@@ -90,7 +95,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
         await this.DialogService.ShowAsync<TSettings>(T("Open Settings"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
-    private string BorderColor => this.AssistantSessionSnapshot?.IsActive is true || this.MediaImportSnapshot?.IsBusy is true ? this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
+    private string BorderColor => this.AssistantSessionSnapshot?.IsActive is true || this.MediaImportSnapshot?.IsBusy is true || this.HasRunningWebContentImport ?this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
     {
         true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
         false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
@@ -112,30 +117,30 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
         ? this.AssistantSessionService.GetSnapshots().FirstOrDefault(snapshot => snapshot.Key.Component == this.Component)
         : this.AssistantSessionService.GetSnapshots().FirstOrDefault(snapshot => snapshot.Key.InstanceId == this.AssistantSessionInstanceId);
 
-    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(new AssistantSessionKey(this.Component, this.AssistantSessionInstanceId));
+    private ImportOwner CurrentImportOwner => ImportOwner.ForAssistant(new AssistantSessionKey(this.Component, this.AssistantSessionInstanceId));
 
     private MediaImportSnapshot? MediaImportSnapshot => this.MediaTranscriptionService.GetSnapshots()
         .FirstOrDefault(snapshot => this.OwnedByThisBlock(snapshot.Owner));
 
     /// <summary>
-    /// Gets whether a media-import owner belongs to the assistant represented by this block.
+    /// Gets whether an import owner belongs to the assistant represented by this block.
     /// </summary>
     /// <remarks>
     /// Owners that persist their own sources are keyed by the stored document rather than by an
     /// assistant session, so this block aggregates all of them for its component. Without a session
     /// instance we aggregate every owner of the component, otherwise we match the exact owner.
     /// </remarks>
-    /// <param name="owner">The media-import owner to test.</param>
+    /// <param name="owner">The import owner to test.</param>
     /// <returns><c>true</c> when this block represents the owner.</returns>
-    private bool OwnedByThisBlock(MediaImportOwner owner)
+    private bool OwnedByThisBlock(ImportOwner owner)
     {
         if (owner.Kind.PersistsOwnSources)
-            return owner.Kind == this.Component.MediaOwnerKind;
+            return owner.Kind == this.Component.ImportOwnerKind;
 
         if (string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId))
-            return owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal);
+            return owner.Kind is ImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal);
 
-        return owner == this.CurrentMediaImportOwner;
+        return owner == this.CurrentImportOwner;
     }
 
     /// <summary>
@@ -152,18 +157,30 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
         _ => this.AssistantSessionIndicatorWithoutMedia,
     };
 
-    private AssistantSessionIndicatorData? AssistantSessionIndicatorWithoutMedia => this.AssistantSessionSnapshot?.Status switch
+    /// <summary>
+    /// Gets the indicator of the assistant session, unless web content for the assistant is still loading, which counts
+    /// as running as well.
+    /// </summary>
+    private AssistantSessionIndicatorData? AssistantSessionIndicatorWithoutMedia => this.HasRunningWebContentImport ? this.RunningIndicator : this.AssistantSessionSnapshot?.Status switch
     {
-        AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(AppIcons.RUNNING, Color.Info, this.T("Assistant is still running.")),
+        AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => this.RunningIndicator,
         AssistantSessionStatus.COMPLETED => new(AppIcons.SUCCESS, Color.Success, this.T("The result is ready.")),
         AssistantSessionStatus.FAILED => new(AppIcons.ERROR, Color.Error, this.TA("Assistant failed. Open it to review the result.")),
         AssistantSessionStatus.CANCELED => new(AppIcons.CANCELED, Color.Warning, this.TA("Assistant was canceled. Open it to review the result.")),
         _ => null,
     };
 
+    private AssistantSessionIndicatorData RunningIndicator => new(AppIcons.RUNNING, Color.Info, this.T("Assistant is still running."));
+
+    /// <summary>
+    /// Gets whether one of the web content readers of the assistant is loading a page, see WebContentImportService.
+    /// </summary>
+    private bool HasRunningWebContentImport => this.WebContentImportService.GetSnapshots().Any(snapshot => this.OwnedByThisBlock(snapshot.Target.Owner));
+
     protected override async Task OnInitializedAsync()
     {
-        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        this.MediaTranscriptionService.StateChanged += this.OnImportStateChanged;
+        this.WebContentImportService.StateChanged += this.OnImportStateChanged;
         this.CategoryBlock?.RegisterAssistant(this);
         this.WarnAboutAnotherCategory();
         await base.OnInitializedAsync();
@@ -188,15 +205,20 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
             this.Logger.LogError("The assistants page shows the assistant '{Component}' under the category '{PageCategory}', but its category is '{Category}'. Please move it into the section of its category.", this.Component, this.CategoryBlock.Category.Category, category);
     }
 
-    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    /// <summary>
+    /// Renders the block again when an import of its assistant changed, the transcription of a media file or the
+    /// loading of web content.
+    /// </summary>
+    private void OnImportStateChanged(ImportOwner owner)
     {
         if (this.OwnedByThisBlock(owner))
-            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<>)}: rendering a media import change");
+            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<>)}: rendering an import change");
     }
 
     protected override void DisposeResources()
     {
-        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.MediaTranscriptionService.StateChanged -= this.OnImportStateChanged;
+        this.WebContentImportService.StateChanged -= this.OnImportStateChanged;
         this.CategoryBlock?.UnregisterAssistant(this);
         base.DisposeResources();
     }

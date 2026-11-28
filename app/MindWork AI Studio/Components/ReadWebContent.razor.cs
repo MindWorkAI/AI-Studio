@@ -1,39 +1,48 @@
 using AIStudio.AIOperations;
 using AIStudio.AIOperations.TextContentCleaning;
 using AIStudio.Provider;
-using AIStudio.Settings;
-using AIStudio.Tools.Security;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
+/// <summary>
+/// Loads the content of a web page into a text field of an assistant.
+/// </summary>
+/// <remarks>
+/// The loading itself runs in WebContentImportService, so that it goes on while the user is elsewhere: this
+/// reader goes away together with its assistant. The reader starts the import, shows its progress, and takes
+/// its result, also when it is new and the import ran while the user was away.
+/// </remarks>
 public partial class ReadWebContent : MSGComponentBase
 {
     /// <summary>
-    /// How long loading one page may take.
+    /// The owner of the imports of a reader outside an assistant, which cascades no owner.
     /// </summary>
-    /// <remarks>
-    /// The user is watching a progress indicator while this runs, so it is shorter than what the
-    /// tools allow themselves for a page fetched in the background.
-    /// </remarks>
-    private const int TIMEOUT_SECONDS = 60;
+    private readonly ImportOwner fallbackImportOwner = new(ImportOwnerKind.ASSISTANT, $"read-web-content:{Guid.NewGuid():N}");
 
     [Inject]
-    private WebPageRetrievalService WebPageRetrievalService { get; init; } = null!;
-
-    [Inject]
-    private ILogger<ReadWebContent> Logger { get; init; } = null!;
-
-    [Inject]
-    private TextContentCleaningOperation TextContentCleaning { get; init; } = null!;
+    private WebContentImportService WebContentImportService { get; init; } = null!;
 
     [Inject]
     private AIOperationProviderResolver ProviderResolver { get; init; } = null!;
 
-    [Inject]
-    private PromptInjectionGuardService PromptInjectionGuardService { get; init; } = null!;
+    /// <summary>
+    /// The assistant around this reader, which owns its imports.
+    /// </summary>
+    [CascadingParameter]
+    private ImportOwner? ImportOwner { get; set; }
+
+    /// <summary>
+    /// Tells the readers of one assistant apart, e.g., by the name of the component of an assistant plugin.
+    /// </summary>
+    /// <remarks>
+    /// An assistant with a single reader keeps the default.
+    /// </remarks>
+    [Parameter]
+    public string ImportTargetId { get; set; } = "primary";
 
     [Parameter]
     public string Content { get; set; } = string.Empty;
@@ -76,7 +85,6 @@ public partial class ReadWebContent : MSGComponentBase
     public EventCallback<bool> PreselectContentCleanerChanged { get; set; }
 
     private readonly Process<ReadWebContentSteps> process = Process<ReadWebContentSteps>.INSTANCE;
-    private ProcessStepValue processStep;
 
     /// <summary>
     /// The model the content cleaner would run with, and why others were not chosen.
@@ -93,10 +101,12 @@ public partial class ReadWebContent : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.WebContentImportService.StateChanged += this.OnImportStateChanged;
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         this.ResolveProvider();
 
         await base.OnInitializedAsync();
+        await this.SyncWithImportAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -125,6 +135,15 @@ public partial class ReadWebContent : MSGComponentBase
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Stops following the imports. An import keeps running, and its result waits for the next reader of this field.
+    /// </summary>
+    protected override void DisposeResources()
+    {
+        this.WebContentImportService.StateChanged -= this.OnImportStateChanged;
+        base.DisposeResources();
+    }
+
     #endregion
 
     /// <summary>
@@ -135,106 +154,130 @@ public partial class ReadWebContent : MSGComponentBase
     /// parameter, and a parameter arrives whenever the parent renders. Resolving only once would
     /// leave the cleaner with whatever was set the first time this component was built.
     /// </remarks>
-    private void ResolveProvider() => this.cleanerChoice = this.ProviderResolver.Preview(TextContentCleaningOperation.GetProviderSettings(this.SettingsManager), ConfidenceLevel.NONE, GetCleanerProviderOptions(this.SettingsManager, this.ProviderSettings));
+    private void ResolveProvider() => this.cleanerChoice = this.ProviderResolver.Preview(TextContentCleaningOperation.GetProviderSettings(this.SettingsManager), ConfidenceLevel.NONE, WebContentImportService.GetCleanerProviderOptions(this.SettingsManager, this.ProviderSettings));
+
+    private ImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackImportOwner;
+
+    private ImportTarget EffectiveImportTarget => new(this.EffectiveImportOwner, this.ImportTargetId);
 
     /// <summary>
-    /// What the reader adds to the choice of the provider for the content cleaner.
+    /// The import which fills this field, while it runs.
+    /// </summary>
+    private WebContentImportSnapshot? CurrentImport => this.WebContentImportService.GetSnapshot(this.EffectiveImportTarget);
+
+    /// <summary>
+    /// Whether the content of this field is being loaded. The controls of the reader wait for the whole import,
+    /// from loading the page to cleaning it.
+    /// </summary>
+    private bool IsImporting => this.CurrentImport is not null;
+
+    private ProcessStepValue ProcessStep => this.process[this.CurrentImport?.Step ?? ReadWebContentSteps.START];
+
+    private void LoadFromWeb()
+    {
+        if(!this.IsReady || this.IsImporting)
+            return;
+
+        this.WebContentImportService.TryStart(this.EffectiveImportTarget, new(this.URL, this.PreselectContentCleaner, this.ProviderSettings));
+    }
+
+    private void OnImportStateChanged(ImportOwner owner)
+    {
+        if (owner == this.EffectiveImportOwner)
+            this.InvokeAsync(async () =>
+            {
+                await this.SyncWithImportAsync();
+                this.StateHasChanged();
+            }).Observe($"{nameof(ReadWebContent)}: following the web content import");
+    }
+
+    /// <summary>
+    /// Takes over what the import of this field reached: its options while it runs, its result once it ended, and
+    /// whether it cleans.
     /// </summary>
     /// <remarks>
-    /// Without a model of its own, the cleaner falls back on the model of the assistant, and then on
-    /// the app-wide default. Its minimum confidence applies to both of them: a model somebody picked
-    /// for the assistant has to clear the bar of the cleaner before the cleaner uses it.
+    /// This runs when the reader starts, too: the user may have left the assistant while the import ran. The
+    /// assistant restores its draft in OnInitializedAsync, before its first render creates this reader, so the
+    /// result lands on the draft and not under it, as the transcripts of ReadFileContent do. The assistant hears
+    /// about the cleaning only, as before, e.g., to lock its input field while the cleaner prepares the text
+    /// which replaces it.
     /// </remarks>
-    /// <param name="settingsManager">The settings, for the app-wide default.</param>
-    /// <param name="assistantProvider">The model of the assistant around the reader.</param>
-    /// <returns>The options for the provider resolver.</returns>
-    internal static AIOperationProviderOptions GetCleanerProviderOptions(SettingsManager settingsManager, AIStudio.Settings.Provider assistantProvider) => new()
+    private async Task SyncWithImportAsync()
     {
-        FallbackProviderIds = [assistantProvider.Id, settingsManager.AppDefaultProviderId],
-        OwnMinimumConfidenceAppliesToFallbacks = true,
-    };
+        var result = this.WebContentImportService.TryTakeResult(this.EffectiveImportTarget);
+        var currentImport = this.CurrentImport;
+        if (currentImport is not null)
+            await this.ShowRunningImportAsync(currentImport);
 
-    private async Task LoadFromWeb()
-    {
-        if(!this.IsReady)
-            return;
-        
-        var markdown = string.Empty;
-        try
+        var isCleaning = currentImport?.Step is ReadWebContentSteps.CLEANING;
+        if (isCleaning != this.CleanerIsRunning)
         {
-            this.processStep = this.process[ReadWebContentSteps.LOADING];
-            this.StateHasChanged();
-
-            //
-            // The same retrieval the read web page tool uses, so a page is fetched and read one
-            // way throughout AI Studio. The difference is the target policy: here the user typed
-            // the URL, so their own network is not off limits.
-            //
-            var retrievedPage = await this.WebPageRetrievalService.RetrieveAsync(
-                new Uri(this.URL),
-                new WebPageRetrievalOptions
-                {
-                    TimeoutSeconds = TIMEOUT_SECONDS,
-                    TargetChosenByUser = true,
-                });
-
-            this.processStep = this.process[ReadWebContentSteps.PARSING];
-            this.StateHasChanged();
-            markdown = retrievedPage.ExtractedPage.Markdown;
-            markdown = await this.PromptInjectionGuardService.SanitizeAsync(markdown, PromptInjectionSource.WebContent(this.URL));
-            
-            if (this.PreselectContentCleaner)
-            {
-                var request = new TextContentCleaningRequest(markdown, this.URL);
-                var choice = this.ProviderResolver.Resolve(this.TextContentCleaning, request, TextContentCleaningOperation.GetProviderSettings(this.SettingsManager), GetCleanerProviderOptions(this.SettingsManager, this.ProviderSettings));
-                if (!choice.HasProvider)
-                {
-                    //
-                    // Say that the cleaning did not happen. The user asked for it, the page arrives,
-                    // and without a word they would take the raw markdown -- navigation, cookie banner
-                    // and advertising included -- for the cleaned result.
-                    //
-                    await this.MessageBus.SendError(new(AppIcons.AI_OPERATION, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
-                }
-                else
-                {
-                    this.processStep = this.process[ReadWebContentSteps.CLEANING];
-                    this.CleanerIsRunning = true;
-                    await this.CleanerIsRunningChanged.InvokeAsync(this.CleanerIsRunning);
-                    this.StateHasChanged();
-
-                    var result = await this.TextContentCleaning.RunAsync(request, new(choice.Provider));
-                    markdown = result.Markdown;
-                    if (!result.IsCleaned)
-                        await this.MessageBus.SendWarning(new(AppIcons.AI_OPERATION, T("The content was loaded, but not cleaned: the model of the content cleaner gave no answer.")));
-
-                    this.processStep = this.process[ReadWebContentSteps.DONE];
-                    this.CleanerIsRunning = false;
-                    await this.CleanerIsRunningChanged.InvokeAsync(this.CleanerIsRunning);
-                    this.StateHasChanged();
-                }
-            }
+            this.CleanerIsRunning = isCleaning;
+            await this.CleanerIsRunningChanged.InvokeAsync(this.CleanerIsRunning);
         }
-        catch (Exception exception)
+
+        if (result is not null)
+            await this.ApplyResultAsync(result);
+    }
+
+    /// <summary>
+    /// Shows the options with which the import of this field runs: the reader expanded, the address it loads,
+    /// and whether it cleans the page.
+    /// </summary>
+    /// <remarks>
+    /// An assistant which starts anew when the user comes back, see AssistantInputsWhenLeaving.DISCARD_INPUTS,
+    /// holds its preselected values instead. The reader would then stay collapsed, with its switch locked and
+    /// the progress of the import hidden. The options belong to the assistant, so they go there as well.
+    /// </remarks>
+    private async Task ShowRunningImportAsync(WebContentImportSnapshot import)
+    {
+        if (!this.Preselect)
         {
-            if (this.CleanerIsRunning)
-            {
-                this.processStep = this.process[ReadWebContentSteps.START];
-                this.CleanerIsRunning = false;
-                await this.CleanerIsRunningChanged.InvokeAsync(this.CleanerIsRunning);
-                this.StateHasChanged();
-            }
+            this.Preselect = true;
+            await this.PreselectChanged.InvokeAsync(this.Preselect);
+        }
+
+        if (this.URL != import.Url)
+        {
+            this.URL = import.Url;
+            await this.URLChanged.InvokeAsync(this.URL);
+        }
+
+        if (this.PreselectContentCleaner != import.CleanContent)
+        {
+            this.PreselectContentCleaner = import.CleanContent;
+            await this.PreselectContentCleanerChanged.InvokeAsync(this.PreselectContentCleaner);
+        }
+    }
+
+    private async Task ApplyResultAsync(WebContentImportResult result)
+    {
+        switch (result.Issue)
+        {
+            //
+            // Say that the cleaning did not happen. The user asked for it, the page arrives,
+            // and without a word they would take the raw markdown -- navigation, cookie banner
+            // and advertising included -- for the cleaned result.
+            //
+            case WebContentImportIssue.NOT_CLEANED_NO_MODEL:
+                await this.MessageBus.SendError(new(AppIcons.AI_OPERATION, T("The content was loaded, but not cleaned: no model is available for the content cleaner.")));
+                break;
+
+            case WebContentImportIssue.NOT_CLEANED_NO_ANSWER:
+                await this.MessageBus.SendWarning(new(AppIcons.AI_OPERATION, T("The content was loaded, but not cleaned: the model of the content cleaner gave no answer.")));
+                break;
 
             //
             // Say why nothing was loaded. An empty text field looks like a page without content,
             // and the reasons a page cannot be read are things the user can act on: a link to a
             // PDF rather than a page, a host that does not answer, a server refusing the request.
             //
-            this.Logger.LogWarning(exception, "Could not load the web content from '{ProvidedUrl}'.", this.URL);
-            await this.MessageBus.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(this.T("The content of '{0}' could not be loaded: {1}"), this.URL, exception.Message)));
+            case WebContentImportIssue.LOAD_FAILED:
+                await this.MessageBus.SendError(new(AppIcons.PROVIDER_ERROR, string.Format(T("The content of '{0}' could not be loaded: {1}"), result.Url, result.ErrorMessage)));
+                break;
         }
 
-        this.Content = markdown;
+        this.Content = result.Markdown;
         await this.ContentChanged.InvokeAsync(this.Content);
     }
 

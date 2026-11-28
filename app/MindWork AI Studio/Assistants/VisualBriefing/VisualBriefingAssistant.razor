@@ -1,6 +1,6 @@
 @attribute [Route(Routes.ASSISTANT_VISUAL_BRIEFING)]
 @using AIStudio.Assistants.SlideBuilder
-@using AIStudio.Tools.Media
+@using AIStudio.Tools.Imports
 @using AIStudio.Tools.Rust
 @inherits MSGComponentBase
 
@@ -39,7 +39,7 @@
                                 }
                                 @if (project.IsAvailable)
                                 {
-                                    <MediaTranscriptionStatus Owner="@MediaImportOwner.ForVisualBriefing(project.BriefingId)" Compact="true"/>
+                                    <MediaTranscriptionStatus Owner="@ImportOwner.ForVisualBriefing(project.BriefingId)" Compact="true"/>
                                 }
                             </MudStack>
                         </MudListItem>

@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Tests.Tools.Security;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
@@ -133,7 +134,7 @@ public sealed class TranscriptPromptInjectionTests
 
     private MediaTranscriptionService CreateMediaTranscriptionService() => new(this.rustService, this.settingsManager, this.guardService, [], NullLogger<MediaTranscriptionService>.Instance);
 
-    private static MediaImportTarget NewFieldTarget() => new(new(MediaImportOwnerKind.ASSISTANT, $"test-{Guid.NewGuid():N}"), "primary");
+    private static ImportTarget NewFieldTarget() => new(new(ImportOwnerKind.ASSISTANT, $"test-{Guid.NewGuid():N}"), "primary");
 
     /// <summary>
     /// Stores a transcript next to the recording and looks it up, both as the Batch Processing assistant does.

@@ -39,7 +39,7 @@
         }
     </ChildContent>
     <FooterContent>
-        <MediaTranscriptionStatus Owner="@this.CurrentMediaImportOwner"/>
+        <MediaTranscriptionStatus Owner="@this.CurrentImportOwner"/>
         <MudElement Style="flex: 0 0 auto;">
             <MudTextField
                 T="string"
@@ -52,7 +52,7 @@
                 Label="@this.InputLabel"
                 Placeholder="@this.ProviderPlaceholder"
                 Adornment="Adornment.End"
-                AdornmentIcon="@(this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner) ? AppIcons.PENDING : AppIcons.SEND)"
+                AdornmentIcon="@(this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner) ? AppIcons.PENDING : AppIcons.SEND)"
                 OnAdornmentClick="() => this.SendMessage()"
                 Disabled="@this.IsInputForbidden()"
                 Immediate="@true"

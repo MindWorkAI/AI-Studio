@@ -101,7 +101,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_STATE_KEY = new(nameof(useContentCleaner));
     private static readonly AssistantSessionStateKey<string> WEB_CONTENT_URL_STATE_KEY = new(nameof(webContentURL));
     private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
-    private static readonly AssistantSessionStateKey<bool> IS_CLEANER_RUNNING_STATE_KEY = new(nameof(isCleanerRunning));
+    private static readonly AssistantSessionStateKey<bool> IS_CLEANER_RUNNING_STATE_KEY = new(nameof(isCleanerRunning), isKeptOutOfDrafts: true);
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
     private static readonly AssistantSessionStateKey<Complexity> SELECTED_COMPLEXITY_STATE_KEY = new(nameof(selectedComplexity));

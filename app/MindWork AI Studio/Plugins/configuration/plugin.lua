@@ -991,6 +991,17 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataAssistantsPage.CollapsedCategoryAssistants.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAssistantsPage.HiddenCategoryAssistants.AllowUserOverride"] = true
 
+-- When users switch to the chat or to another assistant and come back, assistants still show
+-- their inputs, their options, and their last result. Assistants keep them in memory only,
+-- until users reset the assistant or quit AI Studio. You can preset whether assistants do so.
+-- Requires AI Studio v26.11.2 or newer. Allowed values are:
+--   KEEP_INPUTS: assistants keep the inputs. This is the default.
+--   DISCARD_INPUTS: assistants start anew whenever users open them again.
+-- CONFIG["SETTINGS"]["DataAssistantsPage.InputsWhenLeaving"] = "DISCARD_INPUTS"
+--
+-- Allow users to change this option even though your organization set it above:
+-- CONFIG["SETTINGS"]["DataAssistantsPage.InputsWhenLeaving.AllowUserOverride"] = true
+
 -- Configure organization defaults for the Visual Briefing Assistant.
 -- The assistant turns documents, images, audio, and video into a self-contained interactive
 -- briefing. All settings below are defaults for new briefings; users can change them per briefing.

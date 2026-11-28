@@ -1,9 +1,11 @@
+using AIStudio.Tools.Imports;
+
 namespace AIStudio.Tools.Media;
 
 /// <summary>Terminal batch outcome retained until its owner is displayed.</summary>
 public sealed record MediaImportOutcome
 {
-    public required MediaImportOwner Owner { get; init; }
+    public required ImportOwner Owner { get; init; }
 
     public required MediaImportStatus Status { get; init; }
 

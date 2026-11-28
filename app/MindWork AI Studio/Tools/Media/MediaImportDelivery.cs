@@ -1,11 +1,12 @@
 using AIStudio.Chat;
+using AIStudio.Tools.Imports;
 
 namespace AIStudio.Tools.Media;
 
 /// <summary>Pending media results waiting for one concrete UI target.</summary>
 public sealed record MediaImportDelivery
 {
-    public required MediaImportTarget Target { get; init; }
+    public required ImportTarget Target { get; init; }
 
     public IReadOnlyList<FileAttachment> Attachments { get; init; } = [];
 

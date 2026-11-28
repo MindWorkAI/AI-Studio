@@ -45,6 +45,12 @@ public static class ConfigurationSelectDataFactory
         yield return new(TB("""Treat the assistants as if they did not exist, e.g., not in the "Send to ..." menu"""), AssistantOfferBehavior.TREAT_AS_ABSENT);
     }
 
+    public static IEnumerable<ConfigurationSelectData<AssistantInputsWhenLeaving>> GetAssistantInputsWhenLeavingData()
+    {
+        yield return new(TB("Keep my inputs and the last result until I reset the assistant or quit AI Studio"), AssistantInputsWhenLeaving.KEEP_INPUTS);
+        yield return new(TB("Reset the assistant, so that it starts anew next time"), AssistantInputsWhenLeaving.DISCARD_INPUTS);
+    }
+
     public static IEnumerable<ConfigurationSelectData<LoadingChatProviderBehavior>> GetLoadingChatProviderBehavior()
     {
         yield return new(TB("When possible, use the LLM provider which was used for each chat in the first place"), LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE);

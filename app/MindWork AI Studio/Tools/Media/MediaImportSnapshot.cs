@@ -1,11 +1,13 @@
+using AIStudio.Tools.Imports;
+
 namespace AIStudio.Tools.Media;
 
 /// <summary>Copied owner-specific state suitable for rendering after navigation.</summary>
 public sealed record MediaImportSnapshot
 {
-    public required MediaImportOwner Owner { get; init; }
+    public required ImportOwner Owner { get; init; }
 
-    public required MediaImportTarget Target { get; init; }
+    public required ImportTarget Target { get; init; }
 
     public required MediaTranscriptionPhase Phase { get; init; }
 

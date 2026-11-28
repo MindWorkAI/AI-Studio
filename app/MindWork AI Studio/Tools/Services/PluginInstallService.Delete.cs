@@ -1,6 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Media;
+using AIStudio.Tools.Imports;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 
@@ -72,7 +72,7 @@ public sealed partial class PluginInstallService
 
         var ownerIdSuffix = $":{instanceId}";
         return this.mediaTranscriptionService.GetSnapshots().Any(snapshot =>
-            snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.ASSISTANT } &&
+            snapshot is { IsBusy: true, Owner.Kind: ImportOwnerKind.ASSISTANT } &&
             snapshot.Owner.Id.EndsWith(ownerIdSuffix, StringComparison.Ordinal));
     }
 

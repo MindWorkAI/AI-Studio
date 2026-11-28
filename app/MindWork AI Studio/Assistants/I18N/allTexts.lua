@@ -16009,6 +16009,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T4
 -- The language in which the assistants you build answer.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T42126731::INFORMAL"] = "The language in which the assistants you build answer."
 
+-- When you switch to the chat or to another assistant and come back, an assistant can still show your inputs, your options, and its last result. AI Studio keeps them in memory only, never on disk, until you reset the assistant or quit AI Studio. A text which you send to the assistant from elsewhere replaces them. An assistant which is still working keeps working in the background either way.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2267376752"] = "When you switch to the chat or to another assistant and come back, an assistant can still show your inputs, your options, and its last result. AI Studio keeps them in memory only, never on disk, until you reset the assistant or quit AI Studio. A text which you send to the assistant from elsewhere replaces them. An assistant which is still working keeps working in the background either way."
+
+-- When you switch to the chat or to another assistant and come back, an assistant can still show your inputs, your options, and its last result. AI Studio keeps them in memory only, never on disk, until you reset the assistant or quit AI Studio. A text which you send to the assistant from elsewhere replaces them. An assistant which is still working keeps working in the background either way.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2267376752::INFORMAL"] = "When you switch to the chat or to another assistant and come back, an assistant can still show your inputs, your options, and its last result. AI Studio keeps them in memory only, never on disk, until you reset the assistant or quit AI Studio. A text which you send to the assistant from elsewhere replaces them. An assistant which is still working keeps working in the background either way."
+
 -- There are no categories to show or hide right now.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T2279201345"] = "There are no categories to show or hide right now."
 
@@ -16044,6 +16050,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T403
 
 -- Assistant Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T4124037832"] = "Assistant Settings"
+
+-- What should happen to your inputs when you leave an assistant?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T700558677"] = "What should happen to your inputs when you leave an assistant?"
+
+-- What should happen to your inputs when you leave an assistant?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T700558677::INFORMAL"] = "What should happen to your inputs when you leave an assistant?"
 
 -- Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the "Send to ..." menu.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTSPAGE::T786145170"] = "Collapsing a category keeps the assistants page tidy. Choose whether AI Studio keeps offering its assistants elsewhere, e.g., in the \"Send to ...\" menu."
@@ -20200,6 +20212,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1402851833
 -- Welcome
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1485461907"] = "Welcome"
 
+-- Keep my inputs and the last result until I reset the assistant or quit AI Studio
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1488089083"] = "Keep my inputs and the last result until I reset the assistant or quit AI Studio"
+
 -- Assistants
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1614176092"] = "Assistants"
 
@@ -20322,6 +20337,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T453866521"
 
 -- Chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T578410699"] = "Chat"
+
+-- Reset the assistant, so that it starts anew next time
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T715634053"] = "Reset the assistant, so that it starts anew next time"
 
 -- When possible, use the LLM provider which was used for each chat in the first place
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T75376144"] = "When possible, use the LLM provider which was used for each chat in the first place"
