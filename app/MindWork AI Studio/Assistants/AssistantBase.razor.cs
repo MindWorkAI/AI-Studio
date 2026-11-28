@@ -12,6 +12,7 @@ using AIStudio.Tools.Imports;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components;
 
@@ -66,7 +67,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     [Inject]
     protected MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
-    
+
+    /// <summary>
+    /// Loads web content for the web content readers of this assistant, also while the user is elsewhere.
+    /// </summary>
+    [Inject]
+    private WebContentImportService WebContentImportService { get; init; } = null!;
+
     protected abstract string Title { get; }
     
     protected abstract string Description { get; }
@@ -1113,11 +1120,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private async Task InnerResetForm()
     {
         if ((this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
-            || this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner))
+            || this.MediaTranscriptionService.IsBusy(this.CurrentImportOwner)
+            || this.WebContentImportService.IsBusy(this.CurrentImportOwner))
             return;
 
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
         this.MediaTranscriptionService.ClearOwnerState(this.CurrentImportOwner);
+        this.WebContentImportService.ClearOwnerState(this.CurrentImportOwner);
         this.assistantSessionId = null;
         this.ClearConversationState();
 
