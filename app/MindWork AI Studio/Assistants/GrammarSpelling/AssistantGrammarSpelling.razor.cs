@@ -15,30 +15,70 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     // The prompt of this assistant forbids explanations, so the chat gets a prompt of its own, which keeps the rules of the language:
     protected override ChatSystemPromptChoice ChatSystemPrompt => ChatSystemPromptChoice.Custom(this.CreateChatSystemPrompt);
 
-    protected override string SystemPrompt => 
-        $"""
-        You are an expert in languages and their rules. For example, you know how US and UK English or German in
-        Germany and German in Austria differ. You receive text as input. You check the spelling and grammar of
-        this text according to the rules of {this.SystemPromptLanguage()}. You never add information. You
-        never ask the user for additional information. You do not attempt to improve the wording of the text.
-        Your response includes only the corrected text. Do not explain your changes. If no changes are needed,
-        you return the text unchanged.
-        """;
+    protected override string SystemPrompt
+    {
+        get
+        {
+            var prompt = $"""
+                You are an expert in languages and their rules. For example, you know how US and UK English or German in
+                Germany and German in Austria differ. You receive text as input. You check the spelling and grammar of
+                this text according to the rules of {this.SystemPromptLanguage()}. You never add information. You
+                never ask the user for additional information. You do not attempt to improve the wording of the text.
+                Your response includes only the corrected text. Do not explain your changes. If no changes are needed,
+                you return the text unchanged.
+                """;
+
+            //
+            // Without this rule, models return a text in another language unchanged, because
+            // they find no mistake in it which a check of spelling and grammar could correct:
+            //
+            if (this.TargetLanguage() is not { } language)
+                return prompt;
+
+            return $"""
+                {prompt}
+
+                Text in another language does not follow the rules of {language}. When the text, or a part of it, is
+                written in a language other than {language}, you rewrite that part in {language} and keep its meaning.
+                Proper names, direct quotations, titles of works, code, and loanwords common in {language} stay as
+                they are. This is the only case in which you change more than spelling and grammar. Regional variants
+                of the same language, such as US and UK English, count as the same language: for them, you correct
+                only spelling and grammar.
+                """;
+        }
+    }
 
     /// <summary>
     /// Creates the system prompt of a chat which continues a check of spelling and grammar, for follow-up questions about it.
     /// </summary>
-    private string CreateChatSystemPrompt() =>
-        $"""
-        You are an expert in languages and their rules. For example, you know how US and UK English or German in
-        Germany and German in Austria differ. The user had a text checked for spelling and grammar according to the
-        rules of {this.SystemPromptLanguage()}: the conversation so far holds the text and its corrected version.
-        Now you answer the user's follow-up questions about the corrections, e.g., which rule applies or why a sentence
-        changed, and you check further texts or revise the corrected text when the user asks for it. When you correct a
-        text, you correct only its spelling and grammar and keep its wording, unless the user asks otherwise.
+    private string CreateChatSystemPrompt()
+    {
+        var prompt = $"""
+            You are an expert in languages and their rules. For example, you know how US and UK English or German in
+            Germany and German in Austria differ. The user had a text checked for spelling and grammar according to the
+            rules of {this.SystemPromptLanguage()}: the conversation so far holds the text and its corrected version.
+            Now you answer the user's follow-up questions about the corrections, e.g., which rule applies or why a sentence
+            changed, and you check further texts or revise the corrected text when the user asks for it. When you correct a
+            text, you correct only its spelling and grammar and keep its wording, unless the user asks otherwise.
+            """;
 
-        Answer questions in the language the user writes in.
-        """;
+        if (this.TargetLanguage() is { } language)
+            prompt = $"""
+                {prompt}
+
+                Text in another language does not follow the rules of {language}. Therefore, a correction rewrites each
+                part of a text which is written in a language other than {language} in {language} and keeps its meaning,
+                except for proper names, direct quotations, titles of works, code, and loanwords common in {language}.
+                Regional variants of the same language, such as US and UK English, count as the same language. When the
+                user asks why a text was translated, explain this rule.
+                """;
+
+        return $"""
+            {prompt}
+
+            Answer questions in the language the user writes in.
+            """;
+    }
     
     protected override bool AllowProfiles => false;
     
@@ -135,21 +175,19 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
         return null;
     }
     
-    private string SystemPromptLanguage()
+    private string SystemPromptLanguage() => this.TargetLanguage() ?? "the source language";
+
+    /// <summary>
+    /// The language whose rules the user chose, for the prompts; null when the assistant uses the language of the text.
+    /// The name of a common language comes in the language of the user interface, so its code follows it.
+    /// </summary>
+    private string? TargetLanguage() => this.selectedTargetLanguage switch
     {
-        var lang = this.selectedTargetLanguage switch
-        {
-            CommonLanguages.AS_IS => "the source language",
-            CommonLanguages.OTHER => this.customTargetLanguage,
-            
-            _ => $"{this.selectedTargetLanguage.Name}",
-        };
+        CommonLanguages.AS_IS => null,
+        CommonLanguages.OTHER => string.IsNullOrWhiteSpace(this.customTargetLanguage) ? null : this.customTargetLanguage,
 
-        if (string.IsNullOrWhiteSpace(lang))
-            return "the source language";
-
-        return lang;
-    }
+        _ => $"{this.selectedTargetLanguage.Name} ({this.selectedTargetLanguage})",
+    };
 
     private async Task ProofreadText()
     {
